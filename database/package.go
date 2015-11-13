@@ -32,8 +32,6 @@ const (
 	FieldPackageVersion         = "version"
 	FieldPackageNextVersion     = "nextVersion"
 	FieldPackagePreviousVersion = "previousVersion"
-
-	insertPackagesBatchSize = 5
 )
 
 var FieldPackageAll = []string{FieldPackageOS, FieldPackageName, FieldPackageVersion, FieldPackageNextVersion, FieldPackagePreviousVersion}
@@ -123,24 +121,11 @@ func InsertPackages(packageParameters []*Package) error {
 		}
 	}
 
-	// Create required data structures
-	t := cayley.NewTransaction()
-	packagesInTransaction := 0
-	cachedPackagesByBranch := make(map[string]map[string]*Package)
-
 	// Iterate over all the packages we need to insert
 	for _, packageParameter := range packageParameters {
-		branch := packageParameter.Branch()
+		t := cayley.NewTransaction()
 
 		// Is the package already existing ?
-		if _, branchExistsLocally := cachedPackagesByBranch[branch]; branchExistsLocally {
-			if pkg, _ := cachedPackagesByBranch[branch][packageParameter.Key()]; pkg != nil {
-				packageParameter.Node = pkg.Node
-				continue
-			}
-		} else {
-			cachedPackagesByBranch[branch] = make(map[string]*Package)
-		}
 		pkg, err := FindOnePackage(packageParameter.OS, packageParameter.Name, packageParameter.Version, []string{})
 		if err != nil && err != cerrors.ErrNotFound {
 			return err
@@ -155,9 +140,6 @@ func InsertPackages(packageParameters []*Package) error {
 		if err != nil {
 			return err
 		}
-		for _, p := range cachedPackagesByBranch[branch] {
-			branchPackages = append(branchPackages, p)
-		}
 
 		if len(branchPackages) == 0 {
 			// The branch does not exist yet
@@ -171,7 +153,6 @@ func InsertPackages(packageParameters []*Package) error {
 				Version: types.MaxVersion,
 			}
 			endPackage.Node = endPackage.GetNode()
-			cachedPackagesByBranch[branch][endPackage.Key()] = endPackage
 
 			t.AddQuad(cayley.Quad(endPackage.Node, FieldIs, FieldPackageIsValue, ""))
 			t.AddQuad(cayley.Quad(endPackage.Node, FieldPackageOS, endPackage.OS, ""))
@@ -188,7 +169,6 @@ func InsertPackages(packageParameters []*Package) error {
 					Version: packageParameter.Version,
 				}
 				newPackage.Node = newPackage.GetNode()
-				cachedPackagesByBranch[branch][newPackage.Key()] = newPackage
 
 				t.AddQuad(cayley.Quad(newPackage.Node, FieldIs, FieldPackageIsValue, ""))
 				t.AddQuad(cayley.Quad(newPackage.Node, FieldPackageOS, newPackage.OS, ""))
@@ -206,7 +186,6 @@ func InsertPackages(packageParameters []*Package) error {
 				Version: types.MinVersion,
 			}
 			startPackage.Node = startPackage.GetNode()
-			cachedPackagesByBranch[branch][startPackage.Key()] = startPackage
 
 			t.AddQuad(cayley.Quad(startPackage.Node, FieldIs, FieldPackageIsValue, ""))
 			t.AddQuad(cayley.Quad(startPackage.Node, FieldPackageOS, startPackage.OS, ""))
@@ -230,7 +209,6 @@ func InsertPackages(packageParameters []*Package) error {
 			// Create the package
 			newPackage := &Package{OS: packageParameter.OS, Name: packageParameter.Name, Version: packageParameter.Version}
 			newPackage.Node = "package:" + utils.Hash(newPackage.Key())
-			cachedPackagesByBranch[branch][newPackage.Key()] = newPackage
 			packageParameter.Node = newPackage.Node
 
 			t.AddQuad(cayley.Quad(newPackage.Node, FieldIs, FieldPackageIsValue, ""))
@@ -273,23 +251,7 @@ func InsertPackages(packageParameters []*Package) error {
 			t.AddQuad(cayley.Quad(newPackage.Node, FieldPackageNextVersion, succ.Node, ""))
 		}
 
-		packagesInTransaction = packagesInTransaction + 1
-
 		// Apply transaction
-		if packagesInTransaction >= insertPackagesBatchSize {
-			if err := store.ApplyTransaction(t); err != nil {
-				log.Errorf("failed transaction (InsertPackages): %s", err)
-				return ErrTransaction
-			}
-
-			t = cayley.NewTransaction()
-			cachedPackagesByBranch = make(map[string]map[string]*Package)
-			packagesInTransaction = 0
-		}
-	}
-
-	// Apply transaction
-	if packagesInTransaction > 0 {
 		if err := store.ApplyTransaction(t); err != nil {
 			log.Errorf("failed transaction (InsertPackages): %s", err)
 			return ErrTransaction
