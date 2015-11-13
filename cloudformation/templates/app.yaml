@@ -1,0 +1,155 @@
+{% macro nodedata() -%}
+#cloud-config
+
+ssh_authorized_keys:
+{{ ssh_public_keys() }}
+
+write_files:
+- path: /etc/certs/quay-sec.crt
+  permissions: '0600'
+  content: |
+    {{ app_public_key()|indent(4) }}
+- path: /etc/certs/quay-sec.key
+  permissions: '0600'
+  content: |
+    {{ app_private_key()|indent(4) }}
+- path: /etc/certs/ca.crt
+  permissions: '0600'
+  content: |
+    {{ app_ca()|indent(4) }}
+- path: /etc/sysctl.d/50-somaxconn.conf
+  content: net.core.somaxconn = 16384
+coreos:
+  update:
+    reboot-strategy: off
+    group: stable
+  units:
+    - name: systemd-sysctl.service
+      command: restart
+    {% set after = [] %}
+    {% block logentries scoped -%}
+    {% if logentries_token %}
+    {% do after.append('docker-logentries.service') %}
+    - name: docker-logentries.service
+      command: start
+      content: |
+        [Unit]
+        Description=Forward Docker container's log to LogEntries
+        After=docker.service
+        Requires=docker.service
+        [Service]
+        TimeoutStartSec=0
+        ExecStartPre=/usr/bin/docker pull logentries/docker-logentries
+        ExecStart=/bin/bash -c "/usr/bin/docker run --privileged -v /var/run/docker.sock:/var/run/docker.sock logentries/docker-logentries --no-stats --no-dockerEvents -t {{ logentries_token }} -a host=`uname -n`"
+    {% endif %}
+    {%- endblock %}
+    {% block app_container scoped -%}
+    {{ dockersystemd('quay-sec',
+      'quay.io/coreos/quay-sec',
+      'coreos+quaysec',
+      'AQMFTPHH5XMZAE0IRLJSO0K6SL9OP2896ENGY22PJLVUW9TTPDX5KOPE31DAQM23',
+      image_tag,
+      extra_args='-p 6060:6060 -p 6061:6061 -v /etc/certs:/etc/certs:ro',
+      command=app_arguments,
+      flattened=True,
+      after_units=after,
+    )|indent(4) }}
+    {%- endblock %}
+{%- endmacro %}
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Quay-sec on EC2 behind an ELB
+Resources:
+  AppServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Quay-sec App Server SecurityGroup
+      SecurityGroupIngress:
+      - CidrIp: 0.0.0.0/0
+        FromPort: '22'
+        IpProtocol: tcp
+        ToPort: '22'
+      - FromPort: '6060'
+        ToPort: '6060'
+        IpProtocol: tcp
+        SourceSecurityGroupOwnerId: 'amazon-elb'
+        SourceSecurityGroupName: 'amazon-elb-sg'
+      - FromPort: '6061'
+        ToPort: '6061'
+        IpProtocol: tcp
+        SourceSecurityGroupOwnerId: 'amazon-elb'
+        SourceSecurityGroupName: 'amazon-elb-sg'
+  AppServerLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      ImageId: {{ coreos_ami|default(load_coreos_ami('beta')) }}
+      InstanceType: m3.medium
+      KeyName: {{ ssh_key_name }}
+      SecurityGroups:
+      - {Ref: AppServerSecurityGroup}
+      UserData: {{ nodedata()|userdata|indent(6) }}
+  AppServerAutoScale:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AvailabilityZones:
+        Fn::GetAZs: ''
+      LaunchConfigurationName: {Ref: AppServerLaunchConfig}
+      {% block asg_parameters -%}
+      DesiredCapacity: '3'
+      MaxSize: '10'
+      MinSize: '3'
+      HealthCheckType: ELB
+      {%- endblock %}
+      HealthCheckGracePeriod: 600
+      LoadBalancerNames:
+      {{ elb_names()|indent(4) }}
+      Tags:
+      - Key: Name
+        PropagateAtLaunch: true
+        Value: {Ref: 'AWS::StackName'}
+  ScaleUp:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: {Ref: AppServerAutoScale}
+      ScalingAdjustment: '1'
+      Cooldown: '600'
+  ScaleDown:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: {Ref: AppServerAutoScale}
+      ScalingAdjustment: '-1'
+      Cooldown: '600'
+  ScaleUpAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: '2'
+      Statistic: Average
+      Threshold: '60'
+      AlarmDescription: Alarm if CPU too high or metric disappears indicating instance is down
+      Period: '60'
+      AlarmActions:
+      - {Ref: ScaleUp}
+      Namespace: AWS/EC2
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value: { Ref: AppServerAutoScale }
+      ComparisonOperator: GreaterThanThreshold
+      MetricName: CPUUtilization
+  ScaleDownAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: '3'
+      Statistic: Average
+      Threshold: '30'
+      AlarmDescription: Alarm if CPU too low
+      Period: '60'
+      AlarmActions:
+      - {Ref: ScaleDown}
+      Namespace: AWS/EC2
+      Dimensions:
+      - Name: AutoScalingGroupName
+        Value: { Ref: AppServerAutoScale }
+      ComparisonOperator: LessThanThreshold
+      MetricName: CPUUtilization

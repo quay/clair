@@ -1,0 +1,5 @@
+jinja2
+requests
+pyyaml
+boto
+git+https://github.com/DevTable/container-cloud-config.git
