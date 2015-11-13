@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: HTTPS ELB for Quay-sec
+Resources:
+  QuaySecLoadBalancer:
+    Type: AWS::ElasticLoadBalancing::LoadBalancer
+    Properties:
+      CrossZone: true
+      AvailabilityZones:
+        Fn::GetAZs: ''
+      Listeners:
+        - LoadBalancerPort: 6060
+          InstancePort: 6060
+          Protocol: TCP
+        - LoadBalancerPort: 6061
+          InstancePort: 6061
+          Protocol: TCP
+      HealthCheck:
+        Target: HTTP:6061/
+        HealthyThreshold: '2'
+        UnhealthyThreshold: '3'
+        Interval: '60'
+        Timeout: '30'
+      ConnectionSettings:
+        IdleTimeout: 3600
+      ConnectionDrainingPolicy:
+        Enabled: true
+        Timeout: 2000
+  ELBHealthyHostsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      EvaluationPeriods: '10'
+      Statistic: Minimum
+      Threshold: '2'
+      AlarmDescription: Alarm if the health host count falls below 2
+      Period: '60'
+      AlarmActions:
+      {{ alarm_actions()|indent(6) }}
+      InsufficientDataActions:
+      {{ alarm_actions()|indent(6) }}
+      Namespace: AWS/ELB
+      Dimensions:
+      - Name: LoadBalancerName
+        Value: {Ref: QuaySecLoadBalancer}
+      ComparisonOperator: LessThanThreshold
+      MetricName: HealthyHostCount
