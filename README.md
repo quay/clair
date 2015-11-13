@@ -1,6 +1,8 @@
 Clair
 =====
 
+[![Docker Repository on Quay](https://quay.io/repository/coreos/clair/status "Docker Repository on Quay")](https://quay.io/repository/coreos/clair)
+
 Clair is a container vulnerability analysis service. It provides the list of vulnerabilities that threaten each container and can sends notifications whenever new vulnerabilities that affect existing containers are released.
 
 We named the project « Clair », which means in French *clear*, *bright*, *transparent* because we believe that it enables users to have a clear insight into the security of their container infrastructure.
