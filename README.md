@@ -3,7 +3,7 @@ Clair
 
 [![Docker Repository on Quay.io](https://quay.io/repository/coreos/clair/status "Docker Repository on Quay.io")](https://quay.io/repository/coreos/clair)
 
-Clair is a container vulnerability analysis service. It provides the list of vulnerabilities that threaten each container and can sends notifications whenever new vulnerabilities that affect existing containers are released.
+Clair is a container vulnerability analysis service. It provides the list of vulnerabilities that threaten each container and can send notifications whenever new vulnerabilities that affect existing containers are released.
 
 We named the project « Clair », which means in French *clear*, *bright*, *transparent* because we believe that it enables users to have a clear insight into the security of their container infrastructure.
 
@@ -11,7 +11,7 @@ We named the project « Clair », which means in French *clear*, *bright*, *tran
 
 Clair is a single-binary server that exposes an JSON, HTTP API. It does not require any agent to sit on your containers neither does it need any specific container tweak to be done. It has been designed to perform massive analysis on the [Quay.io Container Registry](https://quay.io).
 
-Whether you host a container registry, a continuous-integration system, or build dozens to thousands containers, you would benefit from Clair. More generally, if you consider that container security matters (and, honestly, you should), you should give it a shot.
+Whether you host a container registry, a continuous-integration system, or build dozens to thousands of containers, you would benefit from Clair. More generally, if you consider that container security matters (and, honestly, you should), you should give it a shot.
 
 ## How Clair Detects Vulnerabilities
 
@@ -44,10 +44,10 @@ Querying this particular graph will tell us that our image is not vulnerable at 
 Clair is divided into X main modules (which represent Go packages):
 
 - **api** defines how users interact with Clair and exposes a [documented HTTP API](docs/API.md).
-- **worker** extracts useful informations from layers and store everything in the database.
+- **worker** extracts useful information from layers and stores everything in the database.
 - **updater** periodically updates Clair's vulnerability database from known vulnerability sources.
 - **notifier** dispatches [notifications](docs/Notifications.md) about vulnerable containers when vulnerabilities are released or updated.
-- **database** persists layers informations and vulnerabilities in [Cayley graph database](https://github.com/google/cayley).
+- **database** persists layers information and vulnerabilities in [Cayley graph database](https://github.com/google/cayley).
 - **health** summarizes health checks of every Clair's services.
 
 Multiple backend databases are supported, a testing deployment would use an in-memory storage while a production deployment should use [Bolt](https://github.com/boltdb/bolt) (single-instance deployment) or PostgreSQL (distributed deployment, probably behind a load-balancer). To learn more about how to run Clair, take a look at the [doc](docs/Run.md).
