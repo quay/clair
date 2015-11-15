@@ -35,7 +35,7 @@ func TestLock(t *testing.T) {
 	l, _ = Lock("test1", time.Minute, "owner2")
 	assert.False(t, l)
 	// Renew the lock
-	l, _ = Lock("test1", time.Minute, "owner1")
+	l, _ = Lock("test1", 2*time.Minute, "owner1")
 	assert.True(t, l)
 	// Unlock and then relock by someone else
 	Unlock("test1", "owner1")
