@@ -68,20 +68,32 @@ func Lock(name string, duration time.Duration, owner string) (bool, time.Time) {
 func Unlock(name, owner string) {
 	pruneLocks()
 
-	t := cayley.NewTransaction()
+	unlocked := 0
 	it, _ := cayley.StartPath(store, name).Has("locked", "locked").Has("locked_by", owner).Save("locked_until", "locked_until").BuildIterator().Optimize()
 	defer it.Close()
-
 	for cayley.RawNext(it) {
 		tags := make(map[string]graph.Value)
 		it.TagResults(tags)
 
+		t := cayley.NewTransaction()
 		t.RemoveQuad(cayley.Quad(name, "locked", "locked", ""))
 		t.RemoveQuad(cayley.Quad(name, "locked_until", store.NameOf(tags["locked_until"]), ""))
 		t.RemoveQuad(cayley.Quad(name, "locked_by", owner, ""))
-	}
+		err := store.ApplyTransaction(t)
+		if err != nil {
+			log.Errorf("failed transaction (Unlock): %s", err)
+		}
 
-	store.ApplyTransaction(t)
+		unlocked++
+	}
+	if it.Err() != nil {
+		log.Errorf("failed query in Unlock: %s", it.Err())
+	}
+	if unlocked > 1 {
+		// We should never see this, it would mean that our database doesn't ensure quad uniqueness
+		// and that the entire lock system is jeopardized.
+		log.Errorf("found inconsistency in Unlock: matched %d times a locked named: %s", unlocked, name)
+	}
 }
 
 // LockInfo returns the owner of a lock specified by its name and its
@@ -109,7 +121,6 @@ func pruneLocks() {
 	now := time.Now()
 
 	// Delete every expired locks
-	tr := cayley.NewTransaction()
 	it, _ := cayley.StartPath(store, "locked").In("locked").Save("locked_until", "locked_until").Save("locked_by", "locked_by").BuildIterator().Optimize()
 	defer it.Close()
 	for cayley.RawNext(it) {
@@ -123,12 +134,20 @@ func pruneLocks() {
 
 		if now.Unix() > tt {
 			log.Debugf("Lock %s owned by %s has expired.", n, o)
+
+			tr := cayley.NewTransaction()
 			tr.RemoveQuad(cayley.Quad(n, "locked", "locked", ""))
 			tr.RemoveQuad(cayley.Quad(n, "locked_until", t, ""))
 			tr.RemoveQuad(cayley.Quad(n, "locked_by", o, ""))
+			err := store.ApplyTransaction(tr)
+			if err != nil {
+				log.Errorf("failed transaction (pruneLocks): %s", err)
+			}
 		}
 	}
-	store.ApplyTransaction(tr)
+	if it.Err() != nil {
+		log.Errorf("failed query in Unlock: %s", it.Err())
+	}
 }
 
 // getLockedNodes returns every nodes that are currently locked
