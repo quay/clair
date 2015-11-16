@@ -283,7 +283,6 @@ func FindOnePackage(OS, name string, version types.Version, selectedFields []str
 // FindAllPackagesByNodes finds and returns all packages given by their nodes, selecting the specified fields
 func FindAllPackagesByNodes(nodes []string, selectedFields []string) ([]*Package, error) {
 	if len(nodes) == 0 {
-		log.Warning("could not FindAllPackagesByNodes with an empty nodes array.")
 		return []*Package{}, nil
 	}
 

@@ -23,11 +23,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/coreos/pkg/capnslog"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/worker/detectors"
+	"github.com/coreos/pkg/capnslog"
 )
 
 const (
@@ -125,7 +125,11 @@ func detectContent(ID, path string, parent *database.Layer) (OS string, installe
 	if err != nil {
 		return
 	}
-	log.Debugf("layer %s: OS is %s.", ID, OS)
+	if OS != "" {
+		log.Debugf("layer %s: OS is %s.", ID, OS)
+	} else {
+		log.Debugf("layer %s: OS is unknown.", ID)
+	}
 
 	packageList, err := detectors.DetectPackages(data)
 	if err != nil {
