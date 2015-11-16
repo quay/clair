@@ -21,9 +21,9 @@ import (
 	"os"
 
 	"github.com/barakmich/glog"
-	"github.com/coreos/pkg/capnslog"
 	"github.com/coreos/clair/health"
 	"github.com/coreos/clair/utils"
+	"github.com/coreos/pkg/capnslog"
 	"github.com/google/cayley"
 	"github.com/google/cayley/graph"
 	"github.com/google/cayley/graph/path"
@@ -70,23 +70,29 @@ func Open(dbType, dbPath string) error {
 	}
 
 	var err error
+	options := make(graph.Options)
 
-	// Try to create database if necessary
-	if dbType == "bolt" || dbType == "leveldb" {
+	switch dbType {
+	case "bolt", "leveldb":
 		if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-			// No, initialize it if possible
 			log.Infof("database at %s does not exist yet, creating it", dbPath)
 
-			if err = graph.InitQuadStore(dbType, dbPath, nil); err != nil {
+			err = graph.InitQuadStore(dbType, dbPath, options)
+			if err != nil {
 				log.Errorf("could not create database at %s : %s", dbPath, err)
 				return ErrCantOpen
 			}
 		}
-	} else if dbType == "sql" {
-		graph.InitQuadStore(dbType, dbPath, nil)
+	case "sql":
+		// Replaces the PostgreSQL's slow COUNT query with a fast estimator.
+		// See:
+		// Ref: https://wiki.postgresql.org/wiki/Count_estimate
+		options["use_estimates"] = true
+
+		graph.InitQuadStore(dbType, dbPath, options)
 	}
 
-	store, err = cayley.NewGraph(dbType, dbPath, nil)
+	store, err = cayley.NewGraph(dbType, dbPath, options)
 	if err != nil {
 		log.Errorf("could not open database at %s : %s", dbPath, err)
 		return ErrCantOpen

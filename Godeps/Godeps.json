@@ -42,7 +42,7 @@
 		{
 			"ImportPath": "github.com/google/cayley",
 			"Comment": "v0.4.1-160-gcdf0154",
-			"Rev": "cdf0154d1a34019651eb4f46ce666b31f4d8cae7"
+			"Rev": "6027e4c48b3385307bd4bea462149fd544577165"
 		},
 		{
 			"ImportPath": "github.com/julienschmidt/httprouter",
