@@ -117,7 +117,7 @@ func Process(ID, parentID, path string) error {
 func detectContent(ID, path string, parent *database.Layer) (OS string, installedPackagesNodes, removedPackagesNodes []string, err error) {
 	data, err := getLayerData(path)
 	if err != nil {
-		log.Errorf("layer %s: failed to extract data from %s: %s", ID, path, err)
+		log.Errorf("layer %s: failed to extract data from %s: %s", ID, utils.CleanURL(path), err)
 		return
 	}
 
