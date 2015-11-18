@@ -66,8 +66,6 @@ func Lock(name string, duration time.Duration, owner string) (bool, time.Time) {
 
 // Unlock unlocks a lock specified by its name if I own it
 func Unlock(name, owner string) {
-	pruneLocks()
-
 	unlocked := 0
 	it, _ := cayley.StartPath(store, name).Has("locked", "locked").Has("locked_by", owner).Save("locked_until", "locked_until").BuildIterator().Optimize()
 	defer it.Close()
@@ -133,7 +131,7 @@ func pruneLocks() {
 		tt, _ := strconv.ParseInt(t, 10, 64)
 
 		if now.Unix() > tt {
-			log.Debugf("Lock %s owned by %s has expired.", n, o)
+			log.Debugf("lock %s owned by %s has expired.", n, o)
 
 			tr := cayley.NewTransaction()
 			tr.RemoveQuad(cayley.Quad(n, "locked", "locked", ""))
@@ -142,7 +140,9 @@ func pruneLocks() {
 			err := store.ApplyTransaction(tr)
 			if err != nil {
 				log.Errorf("failed transaction (pruneLocks): %s", err)
+				continue
 			}
+			log.Debugf("lock %s has been successfully pruned.", n)
 		}
 	}
 	if it.Err() != nil {
