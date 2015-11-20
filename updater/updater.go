@@ -21,10 +21,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/coreos/pkg/capnslog"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/health"
 	"github.com/coreos/clair/utils"
+	"github.com/coreos/pkg/capnslog"
 	"github.com/pborman/uuid"
 )
 
@@ -93,22 +93,15 @@ func Run(interval time.Duration, st *utils.Stopper) {
 					doneC <- true
 				}()
 
-				// Refresh the lock until the update is done.
 				for done := false; !done; {
 					select {
 					case <-doneC:
 						done = true
 					case <-time.After(refreshLockDuration):
+						// Refresh the lock until the update is done.
 						database.Lock(flagName, lockDuration, whoAmI)
 					}
 				}
-
-				// Write the last update time to the database and set the next update
-				// time.
-				now := time.Now().UTC()
-				database.UpdateFlag(flagName, strconv.FormatInt(now.Unix(), 10))
-				healthLatestSuccessfulUpdate = now
-				nextUpdate = now.Add(interval)
 
 				// Unlock the update.
 				database.Unlock(flagName, whoAmI)
@@ -252,7 +245,11 @@ func Update() {
 
 	// Update health depending on the status of the fetchers.
 	updateHealth(status)
-
+	if status {
+		now := time.Now().UTC()
+		database.UpdateFlag(flagName, strconv.FormatInt(now.Unix(), 10))
+		healthLatestSuccessfulUpdate = now
+	}
 	log.Info("update finished")
 }
 
