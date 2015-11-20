@@ -26,12 +26,14 @@ import (
 )
 
 const (
-	FieldPackageIsValue         = "package"
 	FieldPackageOS              = "os"
 	FieldPackageName            = "name"
 	FieldPackageVersion         = "version"
 	FieldPackageNextVersion     = "nextVersion"
 	FieldPackagePreviousVersion = "previousVersion"
+
+	// This field is not selectable and is for internal use only.
+	fieldPackageIsValue = "package"
 )
 
 var FieldPackageAll = []string{FieldPackageOS, FieldPackageName, FieldPackageVersion, FieldPackageNextVersion, FieldPackagePreviousVersion}
@@ -49,7 +51,7 @@ type Package struct {
 // GetNode returns an unique identifier for the graph node
 // Requires the key fields: OS, Name, Version
 func (p *Package) GetNode() string {
-	return FieldPackageIsValue + ":" + utils.Hash(p.Key())
+	return fieldPackageIsValue + ":" + utils.Hash(p.Key())
 }
 
 // Key returns an unique string defining p
@@ -154,7 +156,7 @@ func InsertPackages(packageParameters []*Package) error {
 			}
 			endPackage.Node = endPackage.GetNode()
 
-			t.AddQuad(cayley.Quad(endPackage.Node, FieldIs, FieldPackageIsValue, ""))
+			t.AddQuad(cayley.Quad(endPackage.Node, fieldIs, fieldPackageIsValue, ""))
 			t.AddQuad(cayley.Quad(endPackage.Node, FieldPackageOS, endPackage.OS, ""))
 			t.AddQuad(cayley.Quad(endPackage.Node, FieldPackageName, endPackage.Name, ""))
 			t.AddQuad(cayley.Quad(endPackage.Node, FieldPackageVersion, endPackage.Version.String(), ""))
@@ -170,7 +172,7 @@ func InsertPackages(packageParameters []*Package) error {
 				}
 				newPackage.Node = newPackage.GetNode()
 
-				t.AddQuad(cayley.Quad(newPackage.Node, FieldIs, FieldPackageIsValue, ""))
+				t.AddQuad(cayley.Quad(newPackage.Node, fieldIs, fieldPackageIsValue, ""))
 				t.AddQuad(cayley.Quad(newPackage.Node, FieldPackageOS, newPackage.OS, ""))
 				t.AddQuad(cayley.Quad(newPackage.Node, FieldPackageName, newPackage.Name, ""))
 				t.AddQuad(cayley.Quad(newPackage.Node, FieldPackageVersion, newPackage.Version.String(), ""))
@@ -187,7 +189,7 @@ func InsertPackages(packageParameters []*Package) error {
 			}
 			startPackage.Node = startPackage.GetNode()
 
-			t.AddQuad(cayley.Quad(startPackage.Node, FieldIs, FieldPackageIsValue, ""))
+			t.AddQuad(cayley.Quad(startPackage.Node, fieldIs, fieldPackageIsValue, ""))
 			t.AddQuad(cayley.Quad(startPackage.Node, FieldPackageOS, startPackage.OS, ""))
 			t.AddQuad(cayley.Quad(startPackage.Node, FieldPackageName, startPackage.Name, ""))
 			t.AddQuad(cayley.Quad(startPackage.Node, FieldPackageVersion, startPackage.Version.String(), ""))
@@ -211,7 +213,7 @@ func InsertPackages(packageParameters []*Package) error {
 			newPackage.Node = "package:" + utils.Hash(newPackage.Key())
 			packageParameter.Node = newPackage.Node
 
-			t.AddQuad(cayley.Quad(newPackage.Node, FieldIs, FieldPackageIsValue, ""))
+			t.AddQuad(cayley.Quad(newPackage.Node, fieldIs, fieldPackageIsValue, ""))
 			t.AddQuad(cayley.Quad(newPackage.Node, FieldPackageOS, newPackage.OS, ""))
 			t.AddQuad(cayley.Quad(newPackage.Node, FieldPackageName, newPackage.Name, ""))
 			t.AddQuad(cayley.Quad(newPackage.Node, FieldPackageVersion, newPackage.Version.String(), ""))
@@ -265,7 +267,7 @@ func InsertPackages(packageParameters []*Package) error {
 // FindOnePackage finds and returns a single package having the given OS, name and version, selecting the specified fields
 func FindOnePackage(OS, name string, version types.Version, selectedFields []string) (*Package, error) {
 	packageParameter := Package{OS: OS, Name: name, Version: version}
-	p, err := toPackages(cayley.StartPath(store, packageParameter.GetNode()).Has(FieldIs, FieldPackageIsValue), selectedFields)
+	p, err := toPackages(cayley.StartPath(store, packageParameter.GetNode()).Has(fieldIs, fieldPackageIsValue), selectedFields)
 
 	if err != nil {
 		return nil, err
@@ -286,7 +288,7 @@ func FindAllPackagesByNodes(nodes []string, selectedFields []string) ([]*Package
 		return []*Package{}, nil
 	}
 
-	return toPackages(cayley.StartPath(store, nodes...).Has(FieldIs, FieldPackageIsValue), selectedFields)
+	return toPackages(cayley.StartPath(store, nodes...).Has(fieldIs, fieldPackageIsValue), selectedFields)
 }
 
 // FindAllPackagesByBranch finds and returns all packages that belong to the given Branch, selecting the specified fields

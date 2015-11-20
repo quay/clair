@@ -49,13 +49,13 @@ func TestToValue(t *testing.T) {
 	assert.Equal(t, "", v, "toValue should return an error and an empty string if the path leads to multiple values")
 
 	// toValues()
-	vs, err := toValues(cayley.StartPath(store, "CoreOS").Out(FieldIs))
+	vs, err := toValues(cayley.StartPath(store, "CoreOS").Out(fieldIs))
 	assert.Nil(t, err, "toValues should work even if the requested path leads to nothing")
 	assert.Len(t, vs, 0, "toValue should return an empty array if the requested path leads to nothing")
 	words := []string{"powerful", "lightweight"}
 	for i, word := range words {
-		store.AddQuad(cayley.Quad("CoreOS", FieldIs, word, ""))
-		v, err := toValues(cayley.StartPath(store, "CoreOS").Out(FieldIs))
+		store.AddQuad(cayley.Quad("CoreOS", fieldIs, word, ""))
+		v, err := toValues(cayley.StartPath(store, "CoreOS").Out(fieldIs))
 		assert.Nil(t, err, "toValues should have worked")
 		assert.Len(t, v, i+1, "toValues did not return the right amount of values")
 		for _, e := range words[:i+1] {
