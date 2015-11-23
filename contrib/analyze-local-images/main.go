@@ -126,7 +126,7 @@ func save(imageName string) (string, error) {
 	var stderr bytes.Buffer
 	save := exec.Command("docker", "save", imageName)
 	save.Stderr = &stderr
-	extract := exec.Command("tar", "xzf", "-", "-C"+path)
+	extract := exec.Command("tar", "xf", "-", "-C"+path)
 	extract.Stderr = &stderr
 	pipe, err := extract.StdinPipe()
 	if err != nil {
