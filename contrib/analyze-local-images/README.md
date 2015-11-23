@@ -8,7 +8,7 @@ There are absolutely no guarantees and it only uses a minimal subset of Clair's 
 
 You need to install this tool:
 
-    go install github.com/coreos/clair/contrib/analyze-local-image
+    go get -u github.com/coreos/clair/contrib/analyze-local-images
 
 You also need a working Clair instance, the bare minimal setup is to run Clair in a Docker instance without much configuration:
 
