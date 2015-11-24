@@ -142,6 +142,14 @@ func save(imageName string) (string, error) {
 	if err != nil {
 		return "", errors.New(stderr.String())
 	}
+	err = pipe.Close()
+	if err != nil {
+		return "", err
+	}
+	err = extract.Wait()
+	if err != nil {
+		return "", errors.New(stderr.String())
+	}
 
 	return path, nil
 }
