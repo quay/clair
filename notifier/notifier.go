@@ -55,7 +55,7 @@ type Notifier struct {
 }
 
 // Config represents the configuration of a Notifier.
-// The certificates are optionnals and enables client certificate authentification.
+// The certificates are optionnal and enable client certificate authentification.
 type Config struct {
 	Endpoint                  string
 	CertFile, KeyFile, CAFile string

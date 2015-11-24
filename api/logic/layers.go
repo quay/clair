@@ -19,12 +19,13 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/coreos/clair/api/jsonhttp"
+	"github.com/julienschmidt/httprouter"
+
 	"github.com/coreos/clair/database"
 	cerrors "github.com/coreos/clair/utils/errors"
+	httputils "github.com/coreos/clair/utils/http"
 	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/clair/worker"
-	"github.com/julienschmidt/httprouter"
 )
 
 // POSTLayersParameters represents the expected parameters for POSTLayers.
@@ -36,19 +37,19 @@ type POSTLayersParameters struct {
 // for the analysis.
 func POSTLayers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var parameters POSTLayersParameters
-	if s, err := jsonhttp.ParseBody(r, &parameters); err != nil {
-		jsonhttp.RenderError(w, s, err)
+	if s, err := httputils.ParseHTTPBody(r, &parameters); err != nil {
+		httputils.WriteHTTPError(w, s, err)
 		return
 	}
 
 	// Process data.
 	if err := worker.Process(parameters.ID, parameters.ParentID, parameters.Path); err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
 	// Get engine version and return.
-	jsonhttp.Render(w, http.StatusCreated, struct{ Version string }{Version: strconv.Itoa(worker.Version)})
+	httputils.WriteHTTP(w, http.StatusCreated, struct{ Version string }{Version: strconv.Itoa(worker.Version)})
 }
 
 // DeleteLayer deletes the specified layer and any child layers that are
@@ -56,11 +57,11 @@ func POSTLayers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 func DELETELayers(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	err := database.DeleteLayer(p.ByName("id"))
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
-	jsonhttp.Render(w, http.StatusNoContent, nil)
+	httputils.WriteHTTP(w, http.StatusNoContent, nil)
 }
 
 // GETLayersOS returns the operating system of a layer if it exists.
@@ -70,18 +71,18 @@ func GETLayersOS(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// Find layer.
 	layer, err := database.FindOneLayerByID(p.ByName("id"), []string{database.FieldLayerParent, database.FieldLayerOS})
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
 	// Get OS.
 	os, err := layer.OperatingSystem()
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
-	jsonhttp.Render(w, http.StatusOK, struct{ OS string }{OS: os})
+	httputils.WriteHTTP(w, http.StatusOK, struct{ OS string }{OS: os})
 }
 
 // GETLayersParent returns the parent ID of a layer if it exists.
@@ -90,14 +91,14 @@ func GETLayersParent(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	// Find layer
 	layer, err := database.FindOneLayerByID(p.ByName("id"), []string{database.FieldLayerParent})
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
 	// Get layer's parent.
 	parent, err := layer.Parent([]string{database.FieldLayerID})
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
@@ -105,7 +106,7 @@ func GETLayersParent(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	if parent != nil {
 		ID = parent.ID
 	}
-	jsonhttp.Render(w, http.StatusOK, struct{ ID string }{ID: ID})
+	httputils.WriteHTTP(w, http.StatusOK, struct{ ID string }{ID: ID})
 }
 
 // GETLayersPackages returns the complete list of packages that a layer has
@@ -114,14 +115,14 @@ func GETLayersPackages(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	// Find layer
 	layer, err := database.FindOneLayerByID(p.ByName("id"), []string{database.FieldLayerParent, database.FieldLayerPackages})
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
 	// Find layer's packages.
 	packagesNodes, err := layer.AllPackages()
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
@@ -129,12 +130,12 @@ func GETLayersPackages(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	if len(packagesNodes) > 0 {
 		packages, err = database.FindAllPackagesByNodes(packagesNodes, []string{database.FieldPackageOS, database.FieldPackageName, database.FieldPackageVersion})
 		if err != nil {
-			jsonhttp.RenderError(w, 0, err)
+			httputils.WriteHTTPError(w, 0, err)
 			return
 		}
 	}
 
-	jsonhttp.Render(w, http.StatusOK, struct{ Packages []*database.Package }{Packages: packages})
+	httputils.WriteHTTP(w, http.StatusOK, struct{ Packages []*database.Package }{Packages: packages})
 }
 
 // GETLayersPackagesDiff returns the list of packages that a layer installs and
@@ -143,7 +144,7 @@ func GETLayersPackagesDiff(w http.ResponseWriter, r *http.Request, p httprouter.
 	// Find layer.
 	layer, err := database.FindOneLayerByID(p.ByName("id"), []string{database.FieldLayerPackages})
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
@@ -152,19 +153,19 @@ func GETLayersPackagesDiff(w http.ResponseWriter, r *http.Request, p httprouter.
 	if len(layer.InstalledPackagesNodes) > 0 {
 		installedPackages, err = database.FindAllPackagesByNodes(layer.InstalledPackagesNodes, []string{database.FieldPackageOS, database.FieldPackageName, database.FieldPackageVersion})
 		if err != nil {
-			jsonhttp.RenderError(w, 0, err)
+			httputils.WriteHTTPError(w, 0, err)
 			return
 		}
 	}
 	if len(layer.RemovedPackagesNodes) > 0 {
 		removedPackages, err = database.FindAllPackagesByNodes(layer.RemovedPackagesNodes, []string{database.FieldPackageOS, database.FieldPackageName, database.FieldPackageVersion})
 		if err != nil {
-			jsonhttp.RenderError(w, 0, err)
+			httputils.WriteHTTPError(w, 0, err)
 			return
 		}
 	}
 
-	jsonhttp.Render(w, http.StatusOK, struct{ InstalledPackages, RemovedPackages []*database.Package }{InstalledPackages: installedPackages, RemovedPackages: removedPackages})
+	httputils.WriteHTTP(w, http.StatusOK, struct{ InstalledPackages, RemovedPackages []*database.Package }{InstalledPackages: installedPackages, RemovedPackages: removedPackages})
 }
 
 // GETLayersVulnerabilities returns the complete list of vulnerabilities that
@@ -175,32 +176,32 @@ func GETLayersVulnerabilities(w http.ResponseWriter, r *http.Request, p httprout
 	if minimumPriority == "" {
 		minimumPriority = "High" // Set default priority to High
 	} else if !minimumPriority.IsValid() {
-		jsonhttp.RenderError(w, 0, cerrors.NewBadRequestError("invalid priority"))
+		httputils.WriteHTTPError(w, 0, cerrors.NewBadRequestError("invalid priority"))
 		return
 	}
 
 	// Find layer
 	layer, err := database.FindOneLayerByID(p.ByName("id"), []string{database.FieldLayerParent, database.FieldLayerPackages})
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
 	// Find layer's packages.
 	packagesNodes, err := layer.AllPackages()
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
 	// Find vulnerabilities.
 	vulnerabilities, err := getVulnerabilitiesFromLayerPackagesNodes(packagesNodes, minimumPriority, []string{database.FieldVulnerabilityID, database.FieldVulnerabilityLink, database.FieldVulnerabilityPriority, database.FieldVulnerabilityDescription, database.FieldVulnerabilityCausedByPackage})
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
-	jsonhttp.Render(w, http.StatusOK, struct{ Vulnerabilities []*database.Vulnerability }{Vulnerabilities: vulnerabilities})
+	httputils.WriteHTTP(w, http.StatusOK, struct{ Vulnerabilities []*database.Vulnerability }{Vulnerabilities: vulnerabilities})
 }
 
 // GETLayersVulnerabilitiesDiff returns the list of vulnerabilities that a layer
@@ -211,14 +212,14 @@ func GETLayersVulnerabilitiesDiff(w http.ResponseWriter, r *http.Request, p http
 	if minimumPriority == "" {
 		minimumPriority = "High" // Set default priority to High
 	} else if !minimumPriority.IsValid() {
-		jsonhttp.RenderError(w, 0, cerrors.NewBadRequestError("invalid priority"))
+		httputils.WriteHTTPError(w, 0, cerrors.NewBadRequestError("invalid priority"))
 		return
 	}
 
 	// Find layer.
 	layer, err := database.FindOneLayerByID(p.ByName("id"), []string{database.FieldLayerPackages})
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
@@ -228,14 +229,14 @@ func GETLayersVulnerabilitiesDiff(w http.ResponseWriter, r *http.Request, p http
 	// Find vulnerabilities for installed packages.
 	addedVulnerabilities, err := getVulnerabilitiesFromLayerPackagesNodes(layer.InstalledPackagesNodes, minimumPriority, selectedFields)
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
 	// Find vulnerabilities for removed packages.
 	removedVulnerabilities, err := getVulnerabilitiesFromLayerPackagesNodes(layer.RemovedPackagesNodes, minimumPriority, selectedFields)
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
@@ -249,7 +250,7 @@ func GETLayersVulnerabilitiesDiff(w http.ResponseWriter, r *http.Request, p http
 		}
 	}
 
-	jsonhttp.Render(w, http.StatusOK, struct{ Adds, Removes []*database.Vulnerability }{Adds: addedVulnerabilities, Removes: removedVulnerabilities})
+	httputils.WriteHTTP(w, http.StatusOK, struct{ Adds, Removes []*database.Vulnerability }{Adds: addedVulnerabilities, Removes: removedVulnerabilities})
 }
 
 // POSTBatchLayersVulnerabilitiesParameters represents the expected parameters
@@ -263,12 +264,12 @@ type POSTBatchLayersVulnerabilitiesParameters struct {
 func POSTBatchLayersVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// Parse body
 	var parameters POSTBatchLayersVulnerabilitiesParameters
-	if s, err := jsonhttp.ParseBody(r, &parameters); err != nil {
-		jsonhttp.RenderError(w, s, err)
+	if s, err := httputils.ParseHTTPBody(r, &parameters); err != nil {
+		httputils.WriteHTTPError(w, s, err)
 		return
 	}
 	if len(parameters.LayersIDs) == 0 {
-		jsonhttp.RenderError(w, http.StatusBadRequest, errors.New("at least one LayerID query parameter must be provided"))
+		httputils.WriteHTTPError(w, http.StatusBadRequest, errors.New("at least one LayerID query parameter must be provided"))
 		return
 	}
 
@@ -277,7 +278,7 @@ func POSTBatchLayersVulnerabilities(w http.ResponseWriter, r *http.Request, p ht
 	if minimumPriority == "" {
 		minimumPriority = "High" // Set default priority to High
 	} else if !minimumPriority.IsValid() {
-		jsonhttp.RenderError(w, 0, cerrors.NewBadRequestError("invalid priority"))
+		httputils.WriteHTTPError(w, 0, cerrors.NewBadRequestError("invalid priority"))
 		return
 	}
 
@@ -287,28 +288,28 @@ func POSTBatchLayersVulnerabilities(w http.ResponseWriter, r *http.Request, p ht
 		// Find layer
 		layer, err := database.FindOneLayerByID(layerID, []string{database.FieldLayerParent, database.FieldLayerPackages})
 		if err != nil {
-			jsonhttp.RenderError(w, 0, err)
+			httputils.WriteHTTPError(w, 0, err)
 			return
 		}
 
 		// Find layer's packages.
 		packagesNodes, err := layer.AllPackages()
 		if err != nil {
-			jsonhttp.RenderError(w, 0, err)
+			httputils.WriteHTTPError(w, 0, err)
 			return
 		}
 
 		// Find vulnerabilities.
 		vulnerabilities, err := getVulnerabilitiesFromLayerPackagesNodes(packagesNodes, minimumPriority, []string{database.FieldVulnerabilityID, database.FieldVulnerabilityLink, database.FieldVulnerabilityPriority, database.FieldVulnerabilityDescription, database.FieldVulnerabilityCausedByPackage})
 		if err != nil {
-			jsonhttp.RenderError(w, 0, err)
+			httputils.WriteHTTPError(w, 0, err)
 			return
 		}
 
 		response[layerID] = struct{ Vulnerabilities []*database.Vulnerability }{Vulnerabilities: vulnerabilities}
 	}
 
-	jsonhttp.Render(w, http.StatusOK, response)
+	httputils.WriteHTTP(w, http.StatusOK, response)
 }
 
 // getSuccessorsFromPackagesNodes returns the node list of packages that have

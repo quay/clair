@@ -17,18 +17,16 @@
 package api
 
 import (
-	"io/ioutil"
 	"net"
 	"net/http"
 	"strconv"
 	"time"
 
-	"crypto/tls"
-	"crypto/x509"
-
 	"github.com/coreos/pkg/capnslog"
-	"github.com/coreos/clair/utils"
 	"github.com/tylerb/graceful"
+
+	"github.com/coreos/clair/utils"
+	httputils "github.com/coreos/clair/utils/http"
 )
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "api")
@@ -49,12 +47,20 @@ func RunMain(conf *Config, st *utils.Stopper) {
 		st.End()
 	}()
 
+	tlsConfig, err := httputils.LoadTLSClientConfigForServer(conf.CAFile)
+	if err != nil {
+		log.Fatalf("could not initialize client cert authentification: %s\n", err)
+	}
+	if tlsConfig != nil {
+		log.Info("api configured with client certificate authentification")
+	}
+
 	srv := &graceful.Server{
 		Timeout:          0,    // Already handled by our TimeOut middleware
 		NoSignalHandling: true, // We want to use our own Stopper
 		Server: &http.Server{
 			Addr:      ":" + strconv.Itoa(conf.Port),
-			TLSConfig: setupClientCert(conf.CAFile),
+			TLSConfig: tlsConfig,
 			Handler:   NewVersionRouter(conf.TimeOut),
 		},
 	}
@@ -100,27 +106,5 @@ func listenAndServeWithStopper(srv *graceful.Server, st *utils.Stopper, certFile
 
 	if opErr, ok := err.(*net.OpError); !ok || (ok && opErr.Op != "accept") {
 		log.Fatal(err)
-	}
-}
-
-// setupClientCert creates a tls.Config instance using a CA file path
-// (if provided) and and calls log.Fatal if it does not exist.
-func setupClientCert(caFile string) *tls.Config {
-	if len(caFile) > 0 {
-		log.Info("API: Client Certificate Authentification Enabled")
-		caCert, err := ioutil.ReadFile(caFile)
-		if err != nil {
-			log.Fatal(err)
-		}
-		caCertPool := x509.NewCertPool()
-		caCertPool.AppendCertsFromPEM(caCert)
-		return &tls.Config{
-			ClientCAs:  caCertPool,
-			ClientAuth: tls.RequireAndVerifyClientCert,
-		}
-	}
-
-	return &tls.Config{
-		ClientAuth: tls.NoClientCert,
 	}
 }

@@ -19,13 +19,13 @@ package wrappers
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
-	"github.com/coreos/clair/api/jsonhttp"
 	"github.com/julienschmidt/httprouter"
+
+	httputils "github.com/coreos/clair/utils/http"
 )
 
 // ErrHandlerTimeout is returned on ResponseWriter Write calls
@@ -77,7 +77,6 @@ func (tw *timeoutWriter) WriteHeader(status int) {
 // If the duration is 0, the wrapper does nothing.
 func TimeOut(d time.Duration, fn httprouter.Handle) httprouter.Handle {
 	if d == 0 {
-		fmt.Println("nope timeout")
 		return fn
 	}
 
@@ -97,7 +96,7 @@ func TimeOut(d time.Duration, fn httprouter.Handle) httprouter.Handle {
 			tw.mu.Lock()
 			defer tw.mu.Unlock()
 			if !tw.wroteHeader {
-				jsonhttp.RenderError(tw.ResponseWriter, http.StatusServiceUnavailable, ErrHandlerTimeout)
+				httputils.WriteHTTPError(tw.ResponseWriter, http.StatusServiceUnavailable, ErrHandlerTimeout)
 			}
 			tw.timedOut = true
 		}

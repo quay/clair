@@ -18,8 +18,18 @@ package http
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
+	"io"
 	"io/ioutil"
+	"net/http"
+
+	"github.com/coreos/clair/database"
+	cerrors "github.com/coreos/clair/utils/errors"
+	"github.com/coreos/clair/worker"
 )
+
+// MaxPostSize is the maximum number of bytes that ParseHTTPBody reads from an http.Request.Body.
+const MaxBodySize int64 = 1048576
 
 // LoadTLSClientConfig initializes a *tls.Config using the given certificates and private key, that
 // can be used to communicate with a server using client certificate authentificate.
@@ -52,4 +62,76 @@ func LoadTLSClientConfig(certFile, keyFile, caFile string) (*tls.Config, error) 
 	}
 
 	return tlsConfig, nil
+}
+
+// LoadTLSClientConfigForServer initializes a *tls.Config using the given CA, that can be used to
+// configure http server to do client certificate authentification.
+//
+// If no CA is given, a nil *tls.Config is returned: no client certificate will be required and
+// verified. In other words, authentification will be disabled.
+func LoadTLSClientConfigForServer(caFile string) (*tls.Config, error) {
+	if len(caFile) == 0 {
+		return nil, nil
+	}
+
+	caCert, err := ioutil.ReadFile(caFile)
+	if err != nil {
+		return nil, err
+	}
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+
+	tlsConfig := &tls.Config{
+		ClientCAs:  caCertPool,
+		ClientAuth: tls.RequireAndVerifyClientCert,
+	}
+
+	return tlsConfig, nil
+}
+
+// WriteHTTP writes a JSON-encoded object to a http.ResponseWriter, as well as
+// a HTTP status code.
+func WriteHTTP(w http.ResponseWriter, httpStatus int, v interface{}) {
+	w.WriteHeader(httpStatus)
+	if v != nil {
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		result, _ := json.Marshal(v)
+		w.Write(result)
+	}
+}
+
+// WriteHTTPError writes an error, wrapped in the Message field of a JSON-encoded
+// object to a http.ResponseWriter, as well as a HTTP status code.
+// If the status code is 0, handleError tries to guess the proper HTTP status
+// code from the error type.
+func WriteHTTPError(w http.ResponseWriter, httpStatus int, err error) {
+	if httpStatus == 0 {
+		httpStatus = http.StatusInternalServerError
+		// Try to guess the http status code from the error type
+		if _, isBadRequestError := err.(*cerrors.ErrBadRequest); isBadRequestError {
+			httpStatus = http.StatusBadRequest
+		} else {
+			switch err {
+			case cerrors.ErrNotFound:
+				httpStatus = http.StatusNotFound
+			case database.ErrTransaction, database.ErrBackendException:
+				httpStatus = http.StatusServiceUnavailable
+			case worker.ErrParentUnknown, worker.ErrUnsupported:
+				httpStatus = http.StatusBadRequest
+			}
+		}
+	}
+
+	WriteHTTP(w, httpStatus, struct{ Message string }{Message: err.Error()})
+}
+
+// ParseHTTPBody reads a JSON-encoded body from a http.Request and unmarshals it
+// into the provided object.
+func ParseHTTPBody(r *http.Request, v interface{}) (int, error) {
+	defer r.Body.Close()
+	err := json.NewDecoder(io.LimitReader(r.Body, MaxBodySize)).Decode(v)
+	if err != nil {
+		return http.StatusUnsupportedMediaType, err
+	}
+	return 0, nil
 }
