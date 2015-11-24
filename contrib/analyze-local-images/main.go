@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -86,15 +87,50 @@ func main() {
 
 	// Analyze layers
 	fmt.Printf("Analyzing %d layers\n", len(layerIDs))
+
 	for i := 0; i < len(layerIDs); i++ {
-		fmt.Printf("- Analyzing %s\n", layerIDs[i])
+
+		layerTarFile := path + "/" + layerIDs[i] + "/layer.tar"
+		fmt.Printf("- Analyzing %s at %s\n", layerIDs[i], layerTarFile)
 
 		var err error
-		if i > 0 {
-			err = analyzeLayer(*endpoint, path+"/"+layerIDs[i]+"/layer.tar", layerIDs[i], layerIDs[i-1])
-		} else {
-			err = analyzeLayer(*endpoint, path+"/"+layerIDs[i]+"/layer.tar", layerIDs[i], "")
+		var wg sync.WaitGroup
+
+		wg.Add(1)
+
+		go func() {
+			retrys := 0
+
+			for {
+				//retry until layer is unzipped
+				if _, err := os.Stat(layerTarFile); err == nil {
+					break
+				}
+				retrys++
+				fmt.Printf("\nretrying : %d", retrys)
+				time.Sleep(1 * time.Second)
+
+				if retrys == 10 {
+					err = errors.New("Time out waiting for layer being untarred.")
+					break
+				}
+			}
+
+			wg.Done()
+		}()
+
+		wg.Wait()
+
+		if err != nil {
+			log.Fatalf("- Could not analyze layer: %s\n", err)
 		}
+
+		if i > 0 {
+			err = analyzeLayer(*endpoint, layerTarFile, layerIDs[i], layerIDs[i-1])
+		} else {
+			err = analyzeLayer(*endpoint, layerTarFile, layerIDs[i], "")
+		}
+
 		if err != nil {
 			log.Fatalf("- Could not analyze layer: %s\n", err)
 		}
@@ -143,6 +179,10 @@ func save(imageName string) (string, error) {
 		return "", errors.New(stderr.String())
 	}
 
+	err = pipe.Close()
+	if err != nil {
+		return "", errors.New(stderr.String())
+	}
 	return path, nil
 }
 
