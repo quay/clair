@@ -51,6 +51,18 @@ func POSTLayers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	jsonhttp.Render(w, http.StatusCreated, struct{ Version string }{Version: strconv.Itoa(worker.Version)})
 }
 
+// DeleteLayer deletes the specified layer and any child layers that are
+// dependent on the specified layer.
+func DELETELayers(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	err := database.DeleteLayer(p.ByName("id"))
+	if err != nil {
+		jsonhttp.RenderError(w, 0, err)
+		return
+	}
+
+	jsonhttp.Render(w, http.StatusNoContent, nil)
+}
+
 // GETLayersOS returns the operating system of a layer if it exists.
 // It uses not only the specified layer but also its parent layers if necessary.
 // An empty OS string is returned if no OS has been detected.

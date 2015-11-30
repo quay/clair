@@ -131,6 +131,60 @@ func InsertLayer(layer *Layer) error {
 	return nil
 }
 
+// DeleteLayer deletes the specified layer and any child layers that are
+// dependent on the specified layer.
+func DeleteLayer(ID string) error {
+	layer, err := FindOneLayerByID(ID, []string{})
+	if err != nil {
+		return err
+	}
+	return deleteLayerTreeFrom(layer.Node, nil)
+}
+
+func deleteLayerTreeFrom(node string, t *graph.Transaction) error {
+	// Determine if that function call is the root call of the recursivity
+	// And create transaction if its the case.
+	root := (t == nil)
+	if root {
+		t = cayley.NewTransaction()
+	}
+
+	// Find layer.
+	layer, err := FindOneLayerByNode(node, FieldLayerAll)
+	if err != nil {
+		// Ignore missing layer.
+		return nil
+	}
+
+	// Remove all successor layers.
+	for _, succNode := range layer.SuccessorsNodes {
+		deleteLayerTreeFrom(succNode, t)
+	}
+
+	// Remove layer.
+	t.RemoveQuad(cayley.Quad(layer.Node, FieldIs, FieldLayerIsValue, ""))
+	t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerID, layer.ID, ""))
+	t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerParent, layer.ParentNode, ""))
+	t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerOS, layer.OS, ""))
+	t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerEngineVersion, strconv.Itoa(layer.EngineVersion), ""))
+	for _, pkg := range layer.InstalledPackagesNodes {
+		t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerInstalledPackages, pkg, ""))
+	}
+	for _, pkg := range layer.RemovedPackagesNodes {
+		t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerRemovedPackages, pkg, ""))
+	}
+
+	// Apply transaction if root call.
+	if root {
+		if err = store.ApplyTransaction(t); err != nil {
+			log.Errorf("failed transaction (deleteLayerTreeFrom): %s", err)
+			return ErrTransaction
+		}
+	}
+
+	return nil
+}
+
 // FindOneLayerByID finds and returns a single layer having the given ID,
 // selecting the specified fields and hardcoding its ID
 func FindOneLayerByID(ID string, selectedFields []string) (*Layer, error) {
