@@ -24,8 +24,8 @@ import (
 	"strings"
 
 	"github.com/coreos/clair/database"
-	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/updater"
+	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
 )
 
@@ -128,17 +128,14 @@ func (f *RHELFetcher) FetchUpdate() (resp updater.FetcherResponse, err error) {
 		}
 
 		// Parse the XML.
-		vs, err := parseRHSA(r.Body)
+		vs, pkgs, err := parseRHSA(r.Body)
 		if err != nil {
 			return resp, err
 		}
 
 		// Collect vulnerabilities.
-		for _, v := range vs {
-			if len(v.FixedIn) > 0 {
-				resp.Vulnerabilities = append(resp.Vulnerabilities, v)
-			}
-		}
+		resp.Vulnerabilities = append(resp.Vulnerabilities, vs...)
+		resp.Packages = append(resp.Packages, pkgs...)
 	}
 
 	// Set the flag if we found anything.
@@ -152,7 +149,7 @@ func (f *RHELFetcher) FetchUpdate() (resp updater.FetcherResponse, err error) {
 	return resp, nil
 }
 
-func parseRHSA(ovalReader io.Reader) (vulnerabilities []updater.FetcherVulnerability, err error) {
+func parseRHSA(ovalReader io.Reader) (vulnerabilities []*database.Vulnerability, packages []*database.Package, err error) {
 	// Decode the XML.
 	var ov oval
 	err = xml.NewDecoder(ovalReader).Decode(&ov)
@@ -163,18 +160,21 @@ func parseRHSA(ovalReader io.Reader) (vulnerabilities []updater.FetcherVulnerabi
 	}
 
 	// Iterate over the definitions and collect any vulnerabilities that affect
-	// more than one package.
+	// at least one package.
 	for _, definition := range ov.Definitions {
-		packages := toPackages(definition.Criteria)
-		if len(packages) > 0 {
-			vuln := updater.FetcherVulnerability{
+		pkgs := toPackages(definition.Criteria)
+		if len(pkgs) > 0 {
+			vulnerability := &database.Vulnerability{
 				ID:          name(definition),
 				Link:        link(definition),
 				Priority:    priority(definition),
 				Description: description(definition),
-				FixedIn:     packages,
 			}
-			vulnerabilities = append(vulnerabilities, vuln)
+			for _, p := range pkgs {
+				vulnerability.FixedInNodes = append(vulnerability.FixedInNodes, p.GetNode())
+			}
+			vulnerabilities = append(vulnerabilities, vulnerability)
+			packages = append(packages, pkgs...)
 		}
 	}
 

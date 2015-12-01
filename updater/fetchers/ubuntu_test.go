@@ -32,7 +32,7 @@ func TestUbuntuParser(t *testing.T) {
 	// Test parsing testdata/fetcher_
 	testData, _ := os.Open(path + "/testdata/fetcher_ubuntu_test.txt")
 	defer testData.Close()
-	vulnerability, unknownReleases, err := parseUbuntuCVE(testData)
+	vulnerability, packages, unknownReleases, err := parseUbuntuCVE(testData)
 	if assert.Nil(t, err) {
 		assert.Equal(t, "CVE-2015-4471", vulnerability.ID)
 		assert.Equal(t, types.Medium, vulnerability.Priority)
@@ -42,22 +42,27 @@ func TestUbuntuParser(t *testing.T) {
 		_, hasUnkownRelease := unknownReleases["unknown"]
 		assert.True(t, hasUnkownRelease)
 
-		if assert.Len(t, vulnerability.FixedIn, 3) {
-			assert.Contains(t, vulnerability.FixedIn, &database.Package{
+		expectedPackages := []*database.Package{
+			&database.Package{
 				OS:      "ubuntu:14.04",
 				Name:    "libmspack",
 				Version: types.MaxVersion,
-			})
-			assert.Contains(t, vulnerability.FixedIn, &database.Package{
+			},
+			&database.Package{
 				OS:      "ubuntu:15.04",
 				Name:    "libmspack",
 				Version: types.NewVersionUnsafe("0.4-3"),
-			})
-			assert.Contains(t, vulnerability.FixedIn, &database.Package{
+			},
+			&database.Package{
 				OS:      "ubuntu:15.10",
 				Name:    "libmspack-anotherpkg",
 				Version: types.NewVersionUnsafe("0.1"),
-			})
+			},
+		}
+
+		for _, expectedPackage := range expectedPackages {
+			assert.Contains(t, packages, expectedPackage)
+			assert.Contains(t, vulnerability.FixedInNodes, expectedPackage.GetNode())
 		}
 	}
 }
