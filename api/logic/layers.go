@@ -182,7 +182,7 @@ func GETLayersVulnerabilities(w http.ResponseWriter, r *http.Request, p httprout
 	}
 
 	// Find vulnerabilities.
-	vulnerabilities, err := getVulnerabilitiesFromLayerPackagesNodes(packagesNodes, minimumPriority, []string{database.FieldVulnerabilityID, database.FieldVulnerabilityLink, database.FieldVulnerabilityPriority, database.FieldVulnerabilityDescription})
+	vulnerabilities, err := getVulnerabilitiesFromLayerPackagesNodes(packagesNodes, minimumPriority, []string{database.FieldVulnerabilityID, database.FieldVulnerabilityLink, database.FieldVulnerabilityPriority, database.FieldVulnerabilityDescription, database.FieldVulnerabilityCausedByPackage})
 	if err != nil {
 		jsonhttp.RenderError(w, 0, err)
 		return
@@ -211,7 +211,7 @@ func GETLayersVulnerabilitiesDiff(w http.ResponseWriter, r *http.Request, p http
 	}
 
 	// Selected fields for vulnerabilities.
-	selectedFields := []string{database.FieldVulnerabilityID, database.FieldVulnerabilityLink, database.FieldVulnerabilityPriority, database.FieldVulnerabilityDescription}
+	selectedFields := []string{database.FieldVulnerabilityID, database.FieldVulnerabilityLink, database.FieldVulnerabilityPriority, database.FieldVulnerabilityDescription, database.FieldVulnerabilityCausedByPackage}
 
 	// Find vulnerabilities for installed packages.
 	addedVulnerabilities, err := getVulnerabilitiesFromLayerPackagesNodes(layer.InstalledPackagesNodes, minimumPriority, selectedFields)
@@ -287,7 +287,7 @@ func POSTBatchLayersVulnerabilities(w http.ResponseWriter, r *http.Request, p ht
 		}
 
 		// Find vulnerabilities.
-		vulnerabilities, err := getVulnerabilitiesFromLayerPackagesNodes(packagesNodes, minimumPriority, []string{database.FieldVulnerabilityID, database.FieldVulnerabilityLink, database.FieldVulnerabilityPriority, database.FieldVulnerabilityDescription})
+		vulnerabilities, err := getVulnerabilitiesFromLayerPackagesNodes(packagesNodes, minimumPriority, []string{database.FieldVulnerabilityID, database.FieldVulnerabilityLink, database.FieldVulnerabilityPriority, database.FieldVulnerabilityDescription, database.FieldVulnerabilityCausedByPackage})
 		if err != nil {
 			jsonhttp.RenderError(w, 0, err)
 			return
