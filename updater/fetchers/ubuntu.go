@@ -133,13 +133,14 @@ func (fetcher *UbuntuFetcher) FetchUpdate() (resp updater.FetcherResponse, err e
 		}
 		defer file.Close()
 
-		v, unknownReleases, err := parseUbuntuCVE(file)
+		v, pkgs, unknownReleases, err := parseUbuntuCVE(file)
 		if err != nil {
 			return resp, err
 		}
 
-		if len(v.FixedIn) > 0 {
+		if len(v.FixedInNodes) > 0 {
 			resp.Vulnerabilities = append(resp.Vulnerabilities, v)
+			resp.Packages = append(resp.Packages, pkgs...)
 		}
 
 		// Log any unknown releases.
@@ -255,7 +256,8 @@ func getRevisionNumber(pathToRepo string) (int, error) {
 	return revno, nil
 }
 
-func parseUbuntuCVE(fileContent io.Reader) (vulnerability updater.FetcherVulnerability, unknownReleases map[string]struct{}, err error) {
+func parseUbuntuCVE(fileContent io.Reader) (vulnerability *database.Vulnerability, packages []*database.Package, unknownReleases map[string]struct{}, err error) {
+	vulnerability = &database.Vulnerability{}
 	unknownReleases = make(map[string]struct{})
 	readingDescription := false
 	scanner := bufio.NewScanner(fileContent)
@@ -351,7 +353,13 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability updater.FetcherVulnera
 				}
 
 				// Create and add the new package.
-				vulnerability.FixedIn = append(vulnerability.FixedIn, &database.Package{OS: "ubuntu:" + database.UbuntuReleasesMapping[md["release"]], Name: md["package"], Version: version})
+				pkg := &database.Package{
+					OS:      "ubuntu:" + database.UbuntuReleasesMapping[md["release"]],
+					Name:    md["package"],
+					Version: version,
+				}
+				packages = append(packages, pkg)
+				vulnerability.FixedInNodes = append(vulnerability.FixedInNodes, pkg.GetNode())
 			}
 		}
 	}

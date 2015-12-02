@@ -24,8 +24,8 @@ import (
 	"strings"
 
 	"github.com/coreos/clair/database"
-	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/updater"
+	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
 )
 
@@ -114,7 +114,8 @@ func buildResponse(jsonReader io.Reader, latestKnownHash string) (resp updater.F
 	}
 
 	// Extract vulnerability data from Debian's JSON schema.
-	vulnerabilities, unknownReleases := parseDebianJSON(&data)
+	var unknownReleases map[string]struct{}
+	resp.Vulnerabilities, resp.Packages, unknownReleases = parseDebianJSON(&data)
 
 	// Log unknown releases
 	for k := range unknownReleases {
@@ -123,16 +124,11 @@ func buildResponse(jsonReader io.Reader, latestKnownHash string) (resp updater.F
 		log.Warning(note)
 	}
 
-	// Convert the vulnerabilities map to a slice in the response
-	for _, v := range vulnerabilities {
-		resp.Vulnerabilities = append(resp.Vulnerabilities, v)
-	}
-
 	return resp, nil
 }
 
-func parseDebianJSON(data *jsonData) (vulnerabilities map[string]updater.FetcherVulnerability, unknownReleases map[string]struct{}) {
-	vulnerabilities = make(map[string]updater.FetcherVulnerability)
+func parseDebianJSON(data *jsonData) (vulnerabilities []*database.Vulnerability, packages []*database.Package, unknownReleases map[string]struct{}) {
+	mvulnerabilities := make(map[string]*database.Vulnerability)
 	unknownReleases = make(map[string]struct{})
 
 	for pkgName, pkgNode := range *data {
@@ -150,9 +146,9 @@ func parseDebianJSON(data *jsonData) (vulnerabilities map[string]updater.Fetcher
 				}
 
 				// Get or create the vulnerability.
-				vulnerability, vulnerabilityAlreadyExists := vulnerabilities[vulnName]
+				vulnerability, vulnerabilityAlreadyExists := mvulnerabilities[vulnName]
 				if !vulnerabilityAlreadyExists {
-					vulnerability = updater.FetcherVulnerability{
+					vulnerability = &database.Vulnerability{
 						ID:          vulnName,
 						Link:        strings.Join([]string{cveURLPrefix, "/", vulnName}, ""),
 						Priority:    types.Unknown,
@@ -191,12 +187,18 @@ func parseDebianJSON(data *jsonData) (vulnerabilities map[string]updater.Fetcher
 					Name:    pkgName,
 					Version: version,
 				}
-				vulnerability.FixedIn = append(vulnerability.FixedIn, pkg)
+				vulnerability.FixedInNodes = append(vulnerability.FixedInNodes, pkg.GetNode())
+				packages = append(packages, pkg)
 
 				// Store the vulnerability.
-				vulnerabilities[vulnName] = vulnerability
+				mvulnerabilities[vulnName] = vulnerability
 			}
 		}
+	}
+
+	// Convert the vulnerabilities map to a slice
+	for _, v := range mvulnerabilities {
+		vulnerabilities = append(vulnerabilities, v)
 	}
 
 	return

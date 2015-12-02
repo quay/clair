@@ -38,39 +38,49 @@ func TestDebianParser(t *testing.T) {
 				assert.Equal(t, types.Low, vulnerability.Priority)
 				assert.Equal(t, "This vulnerability is not very dangerous.", vulnerability.Description)
 
-				if assert.Len(t, vulnerability.FixedIn, 2) {
-					assert.Contains(t, vulnerability.FixedIn, &database.Package{
+				expectedPackages := []*database.Package{
+					&database.Package{
 						OS:      "debian:8",
 						Name:    "aptdaemon",
 						Version: types.MaxVersion,
-					})
-					assert.Contains(t, vulnerability.FixedIn, &database.Package{
+					},
+					&database.Package{
 						OS:      "debian:unstable",
 						Name:    "aptdaemon",
 						Version: types.NewVersionUnsafe("1.1.1+bzr982-1"),
-					})
+					},
+				}
+
+				for _, expectedPackage := range expectedPackages {
+					assert.Contains(t, response.Packages, expectedPackage)
+					assert.Contains(t, vulnerability.FixedInNodes, expectedPackage.GetNode())
 				}
 			} else if vulnerability.ID == "CVE-2003-0779" {
 				assert.Equal(t, "https://security-tracker.debian.org/tracker/CVE-2003-0779", vulnerability.Link)
 				assert.Equal(t, types.High, vulnerability.Priority)
 				assert.Equal(t, "But this one is very dangerous.", vulnerability.Description)
 
-				if assert.Len(t, vulnerability.FixedIn, 3) {
-					assert.Contains(t, vulnerability.FixedIn, &database.Package{
+				expectedPackages := []*database.Package{
+					&database.Package{
 						OS:      "debian:8",
 						Name:    "aptdaemon",
 						Version: types.NewVersionUnsafe("0.7.0"),
-					})
-					assert.Contains(t, vulnerability.FixedIn, &database.Package{
+					},
+					&database.Package{
 						OS:      "debian:unstable",
 						Name:    "aptdaemon",
 						Version: types.NewVersionUnsafe("0.7.0"),
-					})
-					assert.Contains(t, vulnerability.FixedIn, &database.Package{
+					},
+					&database.Package{
 						OS:      "debian:8",
 						Name:    "asterisk",
 						Version: types.NewVersionUnsafe("0.5.56"),
-					})
+					},
+				}
+
+				for _, expectedPackage := range expectedPackages {
+					assert.Contains(t, response.Packages, expectedPackage)
+					assert.Contains(t, vulnerability.FixedInNodes, expectedPackage.GetNode())
 				}
 			} else {
 				assert.Fail(t, "Wrong vulnerability name: ", vulnerability.ID)

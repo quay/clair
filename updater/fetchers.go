@@ -14,10 +14,7 @@
 
 package updater
 
-import (
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/utils/types"
-)
+import "github.com/coreos/clair/database"
 
 var fetchers = make(map[string]Fetcher)
 
@@ -31,17 +28,8 @@ type FetcherResponse struct {
 	FlagName        string
 	FlagValue       string
 	Notes           []string
-	Vulnerabilities []FetcherVulnerability
-}
-
-// FetcherVulnerability represents an individual vulnerability processed from
-// an update.
-type FetcherVulnerability struct {
-	ID          string
-	Link        string
-	Description string
-	Priority    types.Priority
-	FixedIn     []*database.Package
+	Vulnerabilities []*database.Vulnerability
+	Packages        []*database.Package
 }
 
 // RegisterFetcher makes a Fetcher available by the provided name.
