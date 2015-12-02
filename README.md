@@ -1,6 +1,7 @@
 Clair
 =====
 
+[![Build Status](https://api.travis-ci.org/coreos/clair.svg?branch=master)](https://travis-ci.org/coreos/clair)
 [![Docker Repository on Quay](https://quay.io/repository/coreos/clair/status "Docker Repository on Quay")](https://quay.io/repository/coreos/clair)
 
 Clair is a container vulnerability analysis service. It provides a list of vulnerabilities that threaten a container, and can notify users when new vulnerabilities that affect existing containers become known.
