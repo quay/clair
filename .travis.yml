@@ -1,0 +1,16 @@
+language: go
+
+go:
+  - 1.5
+  - tip
+
+sudo: false
+
+before_install:
+  - export GO15VENDOREXPERIMENT=1
+
+script:
+  - go test -v $(go list ./... | grep -v /vendor/)
+
+notifications:
+  email: false
