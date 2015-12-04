@@ -19,6 +19,11 @@ import (
 	"github.com/google/cayley"
 )
 
+const (
+	fieldFlagValue = "value"
+	flagNodePrefix = "flag"
+)
+
 // UpdateFlag creates a flag or update an existing flag's value
 func UpdateFlag(name, value string) error {
 	if name == "" || value == "" {
@@ -36,11 +41,11 @@ func UpdateFlag(name, value string) error {
 	}
 
 	// Build transaction
-	name = "flag:" + name
+	name = flagNodePrefix + ":" + name
 	if currentValue != "" {
-		t.RemoveQuad(cayley.Quad(name, "value", currentValue, ""))
+		t.RemoveQuad(cayley.Quad(name, fieldFlagValue, currentValue, ""))
 	}
-	t.AddQuad(cayley.Quad(name, "value", value, ""))
+	t.AddQuad(cayley.Quad(name, fieldFlagValue, value, ""))
 
 	// Apply transaction
 	if err = store.ApplyTransaction(t); err != nil {
@@ -54,5 +59,5 @@ func UpdateFlag(name, value string) error {
 
 // GetFlagValue returns the value of the flag given by its name (or an empty string if the flag does not exist)
 func GetFlagValue(name string) (string, error) {
-	return toValue(cayley.StartPath(store, "flag:"+name).Out("value"))
+	return toValue(cayley.StartPath(store, flagNodePrefix+":"+name).Out(fieldFlagValue))
 }

@@ -25,16 +25,17 @@ import (
 )
 
 const (
-	FieldLayerIsValue           = "layer"
-	FieldLayerID                = "id"
-	FieldLayerParent            = "parent"
-	FieldLayerSuccessors        = "successors"
-	FieldLayerOS                = "os"
-	FieldLayerInstalledPackages = "adds"
-	FieldLayerRemovedPackages   = "removes"
-	FieldLayerEngineVersion     = "engineVersion"
+	FieldLayerID            = "id"
+	FieldLayerParent        = "parent"
+	FieldLayerSuccessors    = "successors"
+	FieldLayerOS            = "os"
+	FieldLayerEngineVersion = "engineVersion"
+	FieldLayerPackages      = "adds/removes"
 
-	FieldLayerPackages = "adds/removes"
+	// These fields are not selectable and are for internal use only.
+	fieldLayerIsValue           = "layer"
+	fieldLayerInstalledPackages = "adds"
+	fieldLayerRemovedPackages   = "removes"
 )
 
 var FieldLayerAll = []string{FieldLayerID, FieldLayerParent, FieldLayerSuccessors, FieldLayerOS, FieldLayerPackages, FieldLayerEngineVersion}
@@ -54,7 +55,7 @@ type Layer struct {
 // GetNode returns the node name of a Layer
 // Requires the key field: ID
 func (l *Layer) GetNode() string {
-	return FieldLayerIsValue + ":" + utils.Hash(l.ID)
+	return fieldLayerIsValue + ":" + utils.Hash(l.ID)
 }
 
 // InsertLayer insert a single layer in the database
@@ -97,17 +98,17 @@ func InsertLayer(layer *Layer) error {
 
 	if existingLayer == nil {
 		// Create case: add permanent nodes
-		t.AddQuad(cayley.Quad(layer.Node, FieldIs, FieldLayerIsValue, ""))
+		t.AddQuad(cayley.Quad(layer.Node, fieldIs, fieldLayerIsValue, ""))
 		t.AddQuad(cayley.Quad(layer.Node, FieldLayerID, layer.ID, ""))
 		t.AddQuad(cayley.Quad(layer.Node, FieldLayerParent, layer.ParentNode, ""))
 	} else {
 		// Update case: remove everything before we add updated data
 		t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerOS, existingLayer.OS, ""))
 		for _, pkg := range existingLayer.InstalledPackagesNodes {
-			t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerInstalledPackages, pkg, ""))
+			t.RemoveQuad(cayley.Quad(layer.Node, fieldLayerInstalledPackages, pkg, ""))
 		}
 		for _, pkg := range existingLayer.RemovedPackagesNodes {
-			t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerRemovedPackages, pkg, ""))
+			t.RemoveQuad(cayley.Quad(layer.Node, fieldLayerRemovedPackages, pkg, ""))
 		}
 		t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerEngineVersion, strconv.Itoa(existingLayer.EngineVersion), ""))
 	}
@@ -115,10 +116,10 @@ func InsertLayer(layer *Layer) error {
 	// Add OS/Packages
 	t.AddQuad(cayley.Quad(layer.Node, FieldLayerOS, layer.OS, ""))
 	for _, pkg := range layer.InstalledPackagesNodes {
-		t.AddQuad(cayley.Quad(layer.Node, FieldLayerInstalledPackages, pkg, ""))
+		t.AddQuad(cayley.Quad(layer.Node, fieldLayerInstalledPackages, pkg, ""))
 	}
 	for _, pkg := range layer.RemovedPackagesNodes {
-		t.AddQuad(cayley.Quad(layer.Node, FieldLayerRemovedPackages, pkg, ""))
+		t.AddQuad(cayley.Quad(layer.Node, fieldLayerRemovedPackages, pkg, ""))
 	}
 	t.AddQuad(cayley.Quad(layer.Node, FieldLayerEngineVersion, strconv.Itoa(layer.EngineVersion), ""))
 
@@ -162,16 +163,16 @@ func deleteLayerTreeFrom(node string, t *graph.Transaction) error {
 	}
 
 	// Remove layer.
-	t.RemoveQuad(cayley.Quad(layer.Node, FieldIs, FieldLayerIsValue, ""))
+	t.RemoveQuad(cayley.Quad(layer.Node, fieldIs, fieldLayerIsValue, ""))
 	t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerID, layer.ID, ""))
 	t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerParent, layer.ParentNode, ""))
 	t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerOS, layer.OS, ""))
 	t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerEngineVersion, strconv.Itoa(layer.EngineVersion), ""))
 	for _, pkg := range layer.InstalledPackagesNodes {
-		t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerInstalledPackages, pkg, ""))
+		t.RemoveQuad(cayley.Quad(layer.Node, fieldLayerInstalledPackages, pkg, ""))
 	}
 	for _, pkg := range layer.RemovedPackagesNodes {
-		t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerRemovedPackages, pkg, ""))
+		t.RemoveQuad(cayley.Quad(layer.Node, fieldLayerRemovedPackages, pkg, ""))
 	}
 
 	// Apply transaction if root call.
@@ -199,7 +200,7 @@ func FindOneLayerByID(ID string, selectedFields []string) (*Layer, error) {
 
 // FindOneLayerByNode finds and returns a single package by its node, selecting the specified fields
 func FindOneLayerByNode(node string, selectedFields []string) (*Layer, error) {
-	l, err := toLayers(cayley.StartPath(store, node).Has(FieldIs, FieldLayerIsValue), selectedFields)
+	l, err := toLayers(cayley.StartPath(store, node).Has(fieldIs, fieldLayerIsValue), selectedFields)
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +218,7 @@ func FindOneLayerByNode(node string, selectedFields []string) (*Layer, error) {
 // FindAllLayersByAddedPackageNodes finds and returns all layers that add the
 // given packages (by their nodes), selecting the specified fields
 func FindAllLayersByAddedPackageNodes(nodes []string, selectedFields []string) ([]*Layer, error) {
-	layers, err := toLayers(cayley.StartPath(store, nodes...).In(FieldLayerInstalledPackages), selectedFields)
+	layers, err := toLayers(cayley.StartPath(store, nodes...).In(fieldLayerInstalledPackages), selectedFields)
 	if err != nil {
 		return []*Layer{}, err
 	}
@@ -234,7 +235,7 @@ func FindAllLayersByAddedPackageNodes(nodes []string, selectedFields []string) (
 // 	}
 //
 // 	// Get all the layers which remove the package
-// 	layersNodesRemoving, err := toValues(cayley.StartPath(store, node).In(FieldLayerRemovedPackages).Has(FieldIs, FieldLayerIsValue))
+// 	layersNodesRemoving, err := toValues(cayley.StartPath(store, node).In(fieldLayerRemovedPackages).Has(fieldIs, fieldLayerIsValue))
 // 	if err != nil {
 // 		return []*Layer{}, err
 // 	}
@@ -243,7 +244,7 @@ func FindAllLayersByAddedPackageNodes(nodes []string, selectedFields []string) (
 // 		layersNodesRemovingMap[l] = struct{}{}
 // 	}
 //
-// 	layersToBrowse, err := toLayers(cayley.StartPath(store, node).In(FieldLayerInstalledPackages).Has(FieldIs, FieldLayerIsValue), only)
+// 	layersToBrowse, err := toLayers(cayley.StartPath(store, node).In(fieldLayerInstalledPackages).Has(fieldIs, fieldLayerIsValue), only)
 // 	if err != nil {
 // 		return []*Layer{}, err
 // 	}
@@ -270,7 +271,7 @@ func FindAllLayersByAddedPackageNodes(nodes []string, selectedFields []string) (
 func toLayers(path *path.Path, selectedFields []string) ([]*Layer, error) {
 	var layers []*Layer
 
-	saveFields(path, selectedFields, []string{FieldLayerSuccessors, FieldLayerPackages, FieldLayerInstalledPackages, FieldLayerRemovedPackages})
+	saveFields(path, selectedFields, []string{FieldLayerSuccessors, FieldLayerPackages, fieldLayerInstalledPackages, fieldLayerRemovedPackages})
 	it, _ := path.BuildIterator().Optimize()
 	defer it.Close()
 	for cayley.RawNext(it) {
@@ -295,16 +296,16 @@ func toLayers(path *path.Path, selectedFields []string) ([]*Layer, error) {
 				layer.OS = store.NameOf(tags[FieldLayerOS])
 			case FieldLayerPackages:
 				var err error
-				it, _ := cayley.StartPath(store, layer.Node).OutWithTags([]string{"predicate"}, FieldLayerInstalledPackages, FieldLayerRemovedPackages).BuildIterator().Optimize()
+				it, _ := cayley.StartPath(store, layer.Node).OutWithTags([]string{"predicate"}, fieldLayerInstalledPackages, fieldLayerRemovedPackages).BuildIterator().Optimize()
 				defer it.Close()
 				for cayley.RawNext(it) {
 					tags := make(map[string]graph.Value)
 					it.TagResults(tags)
 
 					predicate := store.NameOf(tags["predicate"])
-					if predicate == FieldLayerInstalledPackages {
+					if predicate == fieldLayerInstalledPackages {
 						layer.InstalledPackagesNodes = append(layer.InstalledPackagesNodes, store.NameOf(it.Result()))
-					} else if predicate == FieldLayerRemovedPackages {
+					} else if predicate == fieldLayerRemovedPackages {
 						layer.RemovedPackagesNodes = append(layer.RemovedPackagesNodes, store.NameOf(it.Result()))
 					}
 				}

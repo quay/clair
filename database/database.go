@@ -37,8 +37,8 @@ import (
 )
 
 const (
-	// FieldIs is the graph predicate defining the type of an entity.
-	FieldIs = "is"
+	// fieldIs is the graph predicate defining the type of an entity.
+	fieldIs = "is"
 )
 
 var (

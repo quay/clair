@@ -26,9 +26,16 @@ import (
 	"github.com/pborman/uuid"
 )
 
-// maxNotifications is the number of notifications that InsertNotifications
-// will accept at the same time. Above this number, notifications are ignored.
-const maxNotifications = 100
+const (
+	// maxNotifications is the number of notifications that InsertNotifications
+	// will accept at the same time. Above this number, notifications are ignored.
+	maxNotifications = 100
+
+	fieldNotificationIsValue = "notification"
+	fieldNotificationType    = "type"
+	fieldNotificationData    = "data"
+	fieldNotificationIsSent  = "isSent"
+)
 
 // A Notification defines an interface to a message that can be sent by a
 // notifier.Notifier.
@@ -331,11 +338,11 @@ func InsertNotifications(notifications []Notification, wrapper NotificationWrapp
 			return err
 		}
 
-		node := "notification:" + uuid.New()
-		t.AddQuad(cayley.Quad(node, FieldIs, "notification", ""))
-		t.AddQuad(cayley.Quad(node, "type", wrappedNotification.Type, ""))
-		t.AddQuad(cayley.Quad(node, "data", wrappedNotification.Data, ""))
-		t.AddQuad(cayley.Quad(node, "isSent", strconv.FormatBool(false), ""))
+		node := fieldNotificationIsValue + ":" + uuid.New()
+		t.AddQuad(cayley.Quad(node, fieldIs, fieldNotificationIsValue, ""))
+		t.AddQuad(cayley.Quad(node, fieldNotificationType, wrappedNotification.Type, ""))
+		t.AddQuad(cayley.Quad(node, fieldNotificationData, wrappedNotification.Data, ""))
+		t.AddQuad(cayley.Quad(node, fieldNotificationIsSent, strconv.FormatBool(false), ""))
 	}
 
 	// Apply transaction
@@ -350,13 +357,13 @@ func InsertNotifications(notifications []Notification, wrapper NotificationWrapp
 // FindOneNotificationToSend finds and returns a notification that is not sent
 // yet and not locked. Returns nil if there is none.
 func FindOneNotificationToSend(wrapper NotificationWrapper) (string, Notification, error) {
-	it, _ := cayley.StartPath(store, "notification").In(FieldIs).Has("isSent", strconv.FormatBool(false)).Except(getLockedNodes()).Save("type", "type").Save("data", "data").BuildIterator().Optimize()
+	it, _ := cayley.StartPath(store, fieldNotificationIsValue).In(fieldIs).Has(fieldNotificationIsSent, strconv.FormatBool(false)).Except(getLockedNodes()).Save(fieldNotificationType, fieldNotificationType).Save(fieldNotificationData, fieldNotificationData).BuildIterator().Optimize()
 	defer it.Close()
 	for cayley.RawNext(it) {
 		tags := make(map[string]graph.Value)
 		it.TagResults(tags)
 
-		notification, err := wrapper.Unwrap(&NotificationWrap{Type: store.NameOf(tags["type"]), Data: store.NameOf(tags["data"])})
+		notification, err := wrapper.Unwrap(&NotificationWrap{Type: store.NameOf(tags[fieldNotificationType]), Data: store.NameOf(tags[fieldNotificationData])})
 		if err != nil {
 			return "", nil, err
 		}
@@ -376,7 +383,7 @@ func FindOneNotificationToSend(wrapper NotificationWrapper) (string, Notificatio
 func CountNotificationsToSend() (int, error) {
 	c := 0
 
-	it, _ := cayley.StartPath(store, "notification").In(FieldIs).Has("isSent", strconv.FormatBool(false)).BuildIterator().Optimize()
+	it, _ := cayley.StartPath(store, fieldNotificationIsValue).In(fieldIs).Has(fieldNotificationIsSent, strconv.FormatBool(false)).BuildIterator().Optimize()
 	defer it.Close()
 	for cayley.RawNext(it) {
 		c = c + 1
@@ -394,8 +401,8 @@ func MarkNotificationAsSent(node string) {
 	// Initialize transaction
 	t := cayley.NewTransaction()
 
-	t.RemoveQuad(cayley.Quad(node, "isSent", strconv.FormatBool(false), ""))
-	t.AddQuad(cayley.Quad(node, "isSent", strconv.FormatBool(true), ""))
+	t.RemoveQuad(cayley.Quad(node, fieldNotificationIsSent, strconv.FormatBool(false), ""))
+	t.AddQuad(cayley.Quad(node, fieldNotificationIsSent, strconv.FormatBool(true), ""))
 
 	// Apply transaction
 	store.ApplyTransaction(t)
