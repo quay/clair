@@ -45,8 +45,10 @@ var (
 	cfgDbPath = kingpin.Flag("db-path", "Path to the database to use").String()
 
 	// Notifier configuration
-	cfgNotifierType    = kingpin.Flag("notifier-type", "Type of the notifier to use").Default("none").Enum("none", "http")
-	cfgNotifierHTTPURL = kingpin.Flag("notifier-http-url", "URL that will receive POST notifications").String()
+	cfgNotifierEndpoint = kingpin.Flag("notifier-endpoint", "URL that will receive POST notifications").String()
+	cfgNotifierCertFile = kingpin.Flag("notifier-cert-file", "Path to TLS Cert file").ExistingFile()
+	cfgNotifierKeyFile  = kingpin.Flag("notifier-key-file", "Path to TLS Key file").ExistingFile()
+	cfgNotifierCAFile   = kingpin.Flag("notifier-ca-file", "Path to CA for verifying TLS client certs").ExistingFile()
 
 	// Updater configuration
 	cfgUpdateInterval = kingpin.Flag("update-interval", "Frequency at which the vulnerability updater will run. Use 0 to disable the updater entirely.").Default("1h").Duration()
@@ -73,10 +75,6 @@ func main() {
 	kingpin.Parse()
 	if *cfgDbType != "memstore" && *cfgDbPath == "" {
 		kingpin.Errorf("required flag --db-path not provided, try --help")
-		os.Exit(1)
-	}
-	if *cfgNotifierType == "http" && *cfgNotifierHTTPURL == "" {
-		kingpin.Errorf("required flag --notifier-http-url not provided, try --help")
 		os.Exit(1)
 	}
 
@@ -110,17 +108,16 @@ func main() {
 	defer database.Close()
 
 	// Start notifier
-	var notifierService notifier.Notifier
-	switch *cfgNotifierType {
-	case "http":
-		notifierService, err = notifier.NewHTTPNotifier(*cfgNotifierHTTPURL)
-		if err != nil {
-			log.Fatalf("could not initialize HTTP notifier: %s", err)
-		}
-	}
-	if notifierService != nil {
+	if len(*cfgNotifierEndpoint) > 0 {
+		notifier := notifier.New(notifier.Config{
+			Endpoint: *cfgNotifierEndpoint,
+			CertFile: *cfgNotifierCertFile,
+			KeyFile:  *cfgNotifierKeyFile,
+			CAFile:   *cfgNotifierCAFile,
+		})
+
 		st.Begin()
-		go notifierService.Run(st)
+		go notifier.Serve(st)
 	}
 
 	// Start Main API and Health API

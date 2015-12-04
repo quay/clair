@@ -18,10 +18,11 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/coreos/clair/api/jsonhttp"
+	"github.com/julienschmidt/httprouter"
+
 	"github.com/coreos/clair/database"
 	cerrors "github.com/coreos/clair/utils/errors"
-	"github.com/julienschmidt/httprouter"
+	httputils "github.com/coreos/clair/utils/http"
 )
 
 // GETVulnerabilities returns a vulnerability identified by an ID if it exists.
@@ -29,36 +30,36 @@ func GETVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	// Find vulnerability.
 	vulnerability, err := database.FindOneVulnerability(p.ByName("id"), []string{database.FieldVulnerabilityID, database.FieldVulnerabilityLink, database.FieldVulnerabilityPriority, database.FieldVulnerabilityDescription, database.FieldVulnerabilityFixedIn})
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
 	abstractVulnerability, err := vulnerability.ToAbstractVulnerability()
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
-	jsonhttp.Render(w, http.StatusOK, abstractVulnerability)
+	httputils.WriteHTTP(w, http.StatusOK, abstractVulnerability)
 }
 
 // POSTVulnerabilities manually inserts a vulnerability into the database if it
 // does not exist yet.
 func POSTVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var parameters *database.AbstractVulnerability
-	if s, err := jsonhttp.ParseBody(r, &parameters); err != nil {
-		jsonhttp.RenderError(w, s, err)
+	if s, err := httputils.ParseHTTPBody(r, &parameters); err != nil {
+		httputils.WriteHTTPError(w, s, err)
 		return
 	}
 
 	// Ensure that the vulnerability does not exist.
 	vulnerability, err := database.FindOneVulnerability(parameters.ID, []string{})
 	if err != nil && err != cerrors.ErrNotFound {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 	if vulnerability != nil {
-		jsonhttp.RenderError(w, 0, cerrors.NewBadRequestError("vulnerability already exists"))
+		httputils.WriteHTTPError(w, 0, cerrors.NewBadRequestError("vulnerability already exists"))
 		return
 	}
 
@@ -66,7 +67,7 @@ func POSTVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 	packages := database.AbstractPackagesToPackages(parameters.AffectedPackages)
 	err = database.InsertPackages(packages)
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 	var pkgNodes []string
@@ -77,25 +78,25 @@ func POSTVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 	// Insert vulnerability.
 	notifications, err := database.InsertVulnerabilities([]*database.Vulnerability{parameters.ToVulnerability(pkgNodes)})
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
 	// Insert notifications.
 	err = database.InsertNotifications(notifications, database.GetDefaultNotificationWrapper())
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
-	jsonhttp.Render(w, http.StatusCreated, nil)
+	httputils.WriteHTTP(w, http.StatusCreated, nil)
 }
 
 // PUTVulnerabilities updates a vulnerability if it exists.
 func PUTVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	var parameters *database.AbstractVulnerability
-	if s, err := jsonhttp.ParseBody(r, &parameters); err != nil {
-		jsonhttp.RenderError(w, s, err)
+	if s, err := httputils.ParseHTTPBody(r, &parameters); err != nil {
+		httputils.WriteHTTPError(w, s, err)
 		return
 	}
 	parameters.ID = p.ByName("id")
@@ -103,7 +104,7 @@ func PUTVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	// Ensure that the vulnerability exists.
 	_, err := database.FindOneVulnerability(parameters.ID, []string{})
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
@@ -111,7 +112,7 @@ func PUTVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	packages := database.AbstractPackagesToPackages(parameters.AffectedPackages)
 	err = database.InsertPackages(packages)
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 	var pkgNodes []string
@@ -122,29 +123,29 @@ func PUTVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	// Insert vulnerability.
 	notifications, err := database.InsertVulnerabilities([]*database.Vulnerability{parameters.ToVulnerability(pkgNodes)})
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
 	// Insert notifications.
 	err = database.InsertNotifications(notifications, database.GetDefaultNotificationWrapper())
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
-	jsonhttp.Render(w, http.StatusCreated, nil)
+	httputils.WriteHTTP(w, http.StatusCreated, nil)
 }
 
 // DELVulnerabilities deletes a vulnerability if it exists.
 func DELVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	err := database.DeleteVulnerability(p.ByName("id"))
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
-	jsonhttp.Render(w, http.StatusNoContent, nil)
+	httputils.WriteHTTP(w, http.StatusNoContent, nil)
 }
 
 // GETVulnerabilitiesIntroducingLayers returns the list of layers that
@@ -155,13 +156,13 @@ func GETVulnerabilitiesIntroducingLayers(w http.ResponseWriter, r *http.Request,
 	// Find vulnerability to verify that it exists.
 	_, err := database.FindOneVulnerability(p.ByName("id"), []string{})
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
 	layers, err := database.FindAllLayersIntroducingVulnerability(p.ByName("id"), []string{database.FieldLayerID})
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
@@ -170,7 +171,7 @@ func GETVulnerabilitiesIntroducingLayers(w http.ResponseWriter, r *http.Request,
 		layersIDs = append(layersIDs, l.ID)
 	}
 
-	jsonhttp.Render(w, http.StatusOK, struct{ IntroducingLayersIDs []string }{IntroducingLayersIDs: layersIDs})
+	httputils.WriteHTTP(w, http.StatusOK, struct{ IntroducingLayersIDs []string }{IntroducingLayersIDs: layersIDs})
 }
 
 // POSTVulnerabilitiesAffectedLayersParameters represents the expected
@@ -184,19 +185,19 @@ type POSTVulnerabilitiesAffectedLayersParameters struct {
 func POSTVulnerabilitiesAffectedLayers(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	// Parse body.
 	var parameters POSTBatchLayersVulnerabilitiesParameters
-	if s, err := jsonhttp.ParseBody(r, &parameters); err != nil {
-		jsonhttp.RenderError(w, s, err)
+	if s, err := httputils.ParseHTTPBody(r, &parameters); err != nil {
+		httputils.WriteHTTPError(w, s, err)
 		return
 	}
 	if len(parameters.LayersIDs) == 0 {
-		jsonhttp.RenderError(w, http.StatusBadRequest, errors.New("getting the entire list of affected layers is not supported yet: at least one LayerID query parameter must be provided"))
+		httputils.WriteHTTPError(w, http.StatusBadRequest, errors.New("getting the entire list of affected layers is not supported yet: at least one LayerID query parameter must be provided"))
 		return
 	}
 
 	// Find vulnerability.
 	vulnerability, err := database.FindOneVulnerability(p.ByName("id"), []string{database.FieldVulnerabilityFixedIn})
 	if err != nil {
-		jsonhttp.RenderError(w, 0, err)
+		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
 
@@ -212,21 +213,21 @@ func POSTVulnerabilitiesAffectedLayers(w http.ResponseWriter, r *http.Request, p
 		// Find layer
 		layer, err := database.FindOneLayerByID(layerID, []string{database.FieldLayerParent, database.FieldLayerPackages, database.FieldLayerPackages})
 		if err != nil {
-			jsonhttp.RenderError(w, 0, err)
+			httputils.WriteHTTPError(w, 0, err)
 			return
 		}
 
 		// Find layer's packages.
 		packagesNodes, err := layer.AllPackages()
 		if err != nil {
-			jsonhttp.RenderError(w, 0, err)
+			httputils.WriteHTTPError(w, 0, err)
 			return
 		}
 
 		// Get successors packages of layer' packages.
 		successors, err := getSuccessorsFromPackagesNodes(packagesNodes)
 		if err != nil {
-			jsonhttp.RenderError(w, 0, err)
+			httputils.WriteHTTPError(w, 0, err)
 			return
 		}
 
@@ -243,5 +244,5 @@ func POSTVulnerabilitiesAffectedLayers(w http.ResponseWriter, r *http.Request, p
 		response[layerID] = struct{ Vulnerable bool }{Vulnerable: vulnerable}
 	}
 
-	jsonhttp.Render(w, http.StatusOK, response)
+	httputils.WriteHTTP(w, http.StatusOK, response)
 }

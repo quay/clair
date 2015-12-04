@@ -20,10 +20,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/coreos/clair/api/jsonhttp"
-	"github.com/coreos/clair/health"
-	"github.com/coreos/clair/worker"
 	"github.com/julienschmidt/httprouter"
+
+	"github.com/coreos/clair/health"
+	httputils "github.com/coreos/clair/utils/http"
+	"github.com/coreos/clair/worker"
 )
 
 // Version is an integer representing the API version.
@@ -31,7 +32,7 @@ const Version = 1
 
 // GETVersions returns API and Engine versions.
 func GETVersions(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	jsonhttp.Render(w, http.StatusOK, struct {
+	httputils.WriteHTTP(w, http.StatusOK, struct {
 		APIVersion    string
 		EngineVersion string
 	}{
@@ -49,6 +50,6 @@ func GETHealth(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 		httpStatus = http.StatusServiceUnavailable
 	}
 
-	jsonhttp.Render(w, httpStatus, statuses)
+	httputils.WriteHTTP(w, httpStatus, statuses)
 	return
 }
