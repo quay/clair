@@ -9,6 +9,9 @@ sudo: false
 before_install:
   - export GO15VENDOREXPERIMENT=1
 
+install:
+  - echo 'nop'
+
 script:
   - go test -v $(go list ./... | grep -v /vendor/)
 
