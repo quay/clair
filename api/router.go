@@ -68,6 +68,7 @@ func NewRouterV1(to time.Duration) *httprouter.Router {
 
 	// Layers
 	router.POST("/layers", wrap(logic.POSTLayers))
+	router.DELETE("/layers/:id", wrap(logic.DELETELayers))
 	router.GET("/layers/:id/os", wrap(logic.GETLayersOS))
 	router.GET("/layers/:id/parent", wrap(logic.GETLayersParent))
 	router.GET("/layers/:id/packages", wrap(logic.GETLayersPackages))

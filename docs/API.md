@@ -150,6 +150,41 @@ HTTP/1.1 400 Bad Request
 
 It could also return a `415 Unsupported Media Type` response with a `Message` if the request content is not valid JSON.
 
+## Delete a Layer
+
+It deletes a layer from the database and any child layers that are dependent on the specified layer.
+
+	DELETE /v1/layers/{ID}
+
+### Parameters
+
+|Name|Type|Description|
+|------|-----|-------------|
+|ID|String|Unique ID of the Layer|
+
+### Example
+
+```
+curl -s -X DELETE 127.0.0.1:6060/v1/layers/39bb80489af75406073b5364c9c326134015140e1f7976a370a8bd446889e6f8
+```
+
+### Success Response
+
+```
+HTTP/1.1 204 No Content
+```
+
+### Error Response
+
+```
+HTTP/1.1 404 Not Found
+{
+    "Message": "the resource cannot be found"
+}
+```
+
+//////////
+
 ## Get a Layer's operating system
 
 It returns the operating system a given Layer.
@@ -210,6 +245,7 @@ HTTP/1.1 200 OK
 ```
 
 ### Error Response
+
 ```
 HTTP/1.1 404 Not Found
 {
