@@ -52,17 +52,17 @@ func Lock(name string, duration time.Duration, owner string) (bool, time.Time) {
 		}
 
 		t := cayley.NewTransaction()
-		t.RemoveQuad(cayley.Quad(name, fieldLockLockedUntil, currentExpiration, ""))
-		t.AddQuad(cayley.Quad(name, fieldLockLockedUntil, untilString, ""))
+		t.RemoveQuad(cayley.Triple(name, fieldLockLockedUntil, currentExpiration))
+		t.AddQuad(cayley.Triple(name, fieldLockLockedUntil, untilString))
 		// It is not necessary to verify if the lock is ours again in the transaction
 		// because if someone took it, the lock's current expiration probably changed and the transaction will fail
 		return store.ApplyTransaction(t) == nil, until
 	}
 
 	t := cayley.NewTransaction()
-	t.AddQuad(cayley.Quad(name, fieldLockLocked, fieldLockLockedValue, "")) // Necessary to make the transaction fails if the lock already exists (and has not been pruned)
-	t.AddQuad(cayley.Quad(name, fieldLockLockedUntil, untilString, ""))
-	t.AddQuad(cayley.Quad(name, fieldLockLockedBy, owner, ""))
+	t.AddQuad(cayley.Triple(name, fieldLockLocked, fieldLockLockedValue)) // Necessary to make the transaction fails if the lock already exists (and has not been pruned)
+	t.AddQuad(cayley.Triple(name, fieldLockLockedUntil, untilString))
+	t.AddQuad(cayley.Triple(name, fieldLockLockedBy, owner))
 
 	glog.SetStderrThreshold("FATAL")
 	success := store.ApplyTransaction(t) == nil
@@ -81,9 +81,9 @@ func Unlock(name, owner string) {
 		it.TagResults(tags)
 
 		t := cayley.NewTransaction()
-		t.RemoveQuad(cayley.Quad(name, fieldLockLocked, fieldLockLockedValue, ""))
-		t.RemoveQuad(cayley.Quad(name, fieldLockLockedUntil, store.NameOf(tags[fieldLockLockedUntil]), ""))
-		t.RemoveQuad(cayley.Quad(name, fieldLockLockedBy, owner, ""))
+		t.RemoveQuad(cayley.Triple(name, fieldLockLocked, fieldLockLockedValue))
+		t.RemoveQuad(cayley.Triple(name, fieldLockLockedUntil, store.NameOf(tags[fieldLockLockedUntil])))
+		t.RemoveQuad(cayley.Triple(name, fieldLockLockedBy, owner))
 		err := store.ApplyTransaction(t)
 		if err != nil {
 			log.Errorf("failed transaction (Unlock): %s", err)
@@ -141,9 +141,9 @@ func pruneLocks() {
 			log.Debugf("lock %s owned by %s has expired.", n, o)
 
 			tr := cayley.NewTransaction()
-			tr.RemoveQuad(cayley.Quad(n, fieldLockLocked, fieldLockLockedValue, ""))
-			tr.RemoveQuad(cayley.Quad(n, fieldLockLockedUntil, t, ""))
-			tr.RemoveQuad(cayley.Quad(n, fieldLockLockedBy, o, ""))
+			tr.RemoveQuad(cayley.Triple(n, fieldLockLocked, fieldLockLockedValue))
+			tr.RemoveQuad(cayley.Triple(n, fieldLockLockedUntil, t))
+			tr.RemoveQuad(cayley.Triple(n, fieldLockLockedBy, o))
 			err := store.ApplyTransaction(tr)
 			if err != nil {
 				log.Errorf("failed transaction (pruneLocks): %s", err)

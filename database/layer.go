@@ -98,30 +98,30 @@ func InsertLayer(layer *Layer) error {
 
 	if existingLayer == nil {
 		// Create case: add permanent nodes
-		t.AddQuad(cayley.Quad(layer.Node, fieldIs, fieldLayerIsValue, ""))
-		t.AddQuad(cayley.Quad(layer.Node, FieldLayerID, layer.ID, ""))
-		t.AddQuad(cayley.Quad(layer.Node, FieldLayerParent, layer.ParentNode, ""))
+		t.AddQuad(cayley.Triple(layer.Node, fieldIs, fieldLayerIsValue))
+		t.AddQuad(cayley.Triple(layer.Node, FieldLayerID, layer.ID))
+		t.AddQuad(cayley.Triple(layer.Node, FieldLayerParent, layer.ParentNode))
 	} else {
 		// Update case: remove everything before we add updated data
-		t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerOS, existingLayer.OS, ""))
+		t.RemoveQuad(cayley.Triple(layer.Node, FieldLayerOS, existingLayer.OS))
 		for _, pkg := range existingLayer.InstalledPackagesNodes {
-			t.RemoveQuad(cayley.Quad(layer.Node, fieldLayerInstalledPackages, pkg, ""))
+			t.RemoveQuad(cayley.Triple(layer.Node, fieldLayerInstalledPackages, pkg))
 		}
 		for _, pkg := range existingLayer.RemovedPackagesNodes {
-			t.RemoveQuad(cayley.Quad(layer.Node, fieldLayerRemovedPackages, pkg, ""))
+			t.RemoveQuad(cayley.Triple(layer.Node, fieldLayerRemovedPackages, pkg))
 		}
-		t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerEngineVersion, strconv.Itoa(existingLayer.EngineVersion), ""))
+		t.RemoveQuad(cayley.Triple(layer.Node, FieldLayerEngineVersion, strconv.Itoa(existingLayer.EngineVersion)))
 	}
 
 	// Add OS/Packages
-	t.AddQuad(cayley.Quad(layer.Node, FieldLayerOS, layer.OS, ""))
+	t.AddQuad(cayley.Triple(layer.Node, FieldLayerOS, layer.OS))
 	for _, pkg := range layer.InstalledPackagesNodes {
-		t.AddQuad(cayley.Quad(layer.Node, fieldLayerInstalledPackages, pkg, ""))
+		t.AddQuad(cayley.Triple(layer.Node, fieldLayerInstalledPackages, pkg))
 	}
 	for _, pkg := range layer.RemovedPackagesNodes {
-		t.AddQuad(cayley.Quad(layer.Node, fieldLayerRemovedPackages, pkg, ""))
+		t.AddQuad(cayley.Triple(layer.Node, fieldLayerRemovedPackages, pkg))
 	}
-	t.AddQuad(cayley.Quad(layer.Node, FieldLayerEngineVersion, strconv.Itoa(layer.EngineVersion), ""))
+	t.AddQuad(cayley.Triple(layer.Node, FieldLayerEngineVersion, strconv.Itoa(layer.EngineVersion)))
 
 	// Apply transaction
 	if err = store.ApplyTransaction(t); err != nil {
@@ -163,16 +163,16 @@ func deleteLayerTreeFrom(node string, t *graph.Transaction) error {
 	}
 
 	// Remove layer.
-	t.RemoveQuad(cayley.Quad(layer.Node, fieldIs, fieldLayerIsValue, ""))
-	t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerID, layer.ID, ""))
-	t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerParent, layer.ParentNode, ""))
-	t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerOS, layer.OS, ""))
-	t.RemoveQuad(cayley.Quad(layer.Node, FieldLayerEngineVersion, strconv.Itoa(layer.EngineVersion), ""))
+	t.RemoveQuad(cayley.Triple(layer.Node, fieldIs, fieldLayerIsValue))
+	t.RemoveQuad(cayley.Triple(layer.Node, FieldLayerID, layer.ID))
+	t.RemoveQuad(cayley.Triple(layer.Node, FieldLayerParent, layer.ParentNode))
+	t.RemoveQuad(cayley.Triple(layer.Node, FieldLayerOS, layer.OS))
+	t.RemoveQuad(cayley.Triple(layer.Node, FieldLayerEngineVersion, strconv.Itoa(layer.EngineVersion)))
 	for _, pkg := range layer.InstalledPackagesNodes {
-		t.RemoveQuad(cayley.Quad(layer.Node, fieldLayerInstalledPackages, pkg, ""))
+		t.RemoveQuad(cayley.Triple(layer.Node, fieldLayerInstalledPackages, pkg))
 	}
 	for _, pkg := range layer.RemovedPackagesNodes {
-		t.RemoveQuad(cayley.Quad(layer.Node, fieldLayerRemovedPackages, pkg, ""))
+		t.RemoveQuad(cayley.Triple(layer.Node, fieldLayerRemovedPackages, pkg))
 	}
 
 	// Apply transaction if root call.

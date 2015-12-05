@@ -67,6 +67,7 @@ func createSQLTables(addr string, options graph.Options) error {
 	if err != nil {
 		return err
 	}
+	defer conn.Close()
 	tx, err := conn.Begin()
 	if err != nil {
 		glog.Errorf("Couldn't begin creation transaction: %s", err)
@@ -89,6 +90,11 @@ func createSQLTables(addr string, options graph.Options) error {
 		UNIQUE(subject_hash, predicate_hash, object_hash, label_hash)
 	);`)
 	if err != nil {
+		tx.Rollback()
+		errd := err.(*pq.Error)
+		if errd.Code == "42P07" {
+			return graph.ErrDatabaseExists
+		}
 		glog.Errorf("Cannot create quad table: %v", quadTable)
 		return err
 	}
@@ -105,6 +111,7 @@ func createSQLTables(addr string, options graph.Options) error {
 	`, factor, factor, factor))
 	if err != nil {
 		glog.Errorf("Cannot create indices: %v", index)
+		tx.Rollback()
 		return err
 	}
 	tx.Commit()
@@ -310,7 +317,9 @@ func (qs *QuadStore) Horizon() graph.PrimaryKey {
 	var horizon int64
 	err := qs.db.QueryRow("SELECT horizon FROM quads ORDER BY horizon DESC LIMIT 1;").Scan(&horizon)
 	if err != nil {
-		glog.Errorf("Couldn't execute horizon: %v", err)
+		if err != sql.ErrNoRows {
+			glog.Errorf("Couldn't execute horizon: %v", err)
+		}
 		return graph.NewSequentialKey(0)
 	}
 	return graph.NewSequentialKey(horizon)
