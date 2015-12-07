@@ -43,9 +43,9 @@ func UpdateFlag(name, value string) error {
 	// Build transaction
 	name = flagNodePrefix + ":" + name
 	if currentValue != "" {
-		t.RemoveQuad(cayley.Quad(name, fieldFlagValue, currentValue, ""))
+		t.RemoveQuad(cayley.Triple(name, fieldFlagValue, currentValue))
 	}
-	t.AddQuad(cayley.Quad(name, fieldFlagValue, value, ""))
+	t.AddQuad(cayley.Triple(name, fieldFlagValue, value))
 
 	// Apply transaction
 	if err = store.ApplyTransaction(t); err != nil {

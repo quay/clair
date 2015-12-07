@@ -78,18 +78,21 @@ func Open(dbType, dbPath string) error {
 			log.Infof("database at %s does not exist yet, creating it", dbPath)
 
 			err = graph.InitQuadStore(dbType, dbPath, options)
-			if err != nil {
+			if err != nil && err != graph.ErrDatabaseExists {
 				log.Errorf("could not create database at %s : %s", dbPath, err)
 				return ErrCantOpen
 			}
 		}
 	case "sql":
 		// Replaces the PostgreSQL's slow COUNT query with a fast estimator.
-		// See:
 		// Ref: https://wiki.postgresql.org/wiki/Count_estimate
 		options["use_estimates"] = true
 
-		graph.InitQuadStore(dbType, dbPath, options)
+		err := graph.InitQuadStore(dbType, dbPath, options)
+		if err != nil && err != graph.ErrDatabaseExists {
+			log.Errorf("could not create database at %s : %s", dbPath, err)
+			return ErrCantOpen
+		}
 	}
 
 	store, err = cayley.NewGraph(dbType, dbPath, options)
@@ -115,7 +118,7 @@ func Healthcheck() health.Status {
 	var err error
 	if store != nil {
 		t := cayley.NewTransaction()
-		q := cayley.Quad("cayley", "is", "healthy", "")
+		q := cayley.Triple("cayley", "is", "healthy")
 		t.AddQuad(q)
 		t.RemoveQuad(q)
 		glog.SetStderrThreshold("FATAL") // TODO REMOVE ME

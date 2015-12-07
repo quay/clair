@@ -38,12 +38,12 @@ func TestToValue(t *testing.T) {
 	assert.Nil(t, err, "toValue should work even if the requested path leads to nothing")
 	assert.Equal(t, "", v, "toValue should return an empty string if the requested path leads to nothing")
 
-	store.AddQuad(cayley.Quad("tests", "are", "awesome", ""))
+	store.AddQuad(cayley.Triple("tests", "are", "awesome"))
 	v, err = toValue(cayley.StartPath(store, "tests").Out("are"))
 	assert.Nil(t, err, "toValue should have worked")
 	assert.Equal(t, "awesome", v, "toValue did not return the expected value")
 
-	store.AddQuad(cayley.Quad("tests", "are", "running", ""))
+	store.AddQuad(cayley.Triple("tests", "are", "running"))
 	v, err = toValue(cayley.StartPath(store, "tests").Out("are"))
 	assert.NotNil(t, err, "toValue should return an error and an empty string if the path leads to multiple values")
 	assert.Equal(t, "", v, "toValue should return an error and an empty string if the path leads to multiple values")
@@ -54,7 +54,7 @@ func TestToValue(t *testing.T) {
 	assert.Len(t, vs, 0, "toValue should return an empty array if the requested path leads to nothing")
 	words := []string{"powerful", "lightweight"}
 	for i, word := range words {
-		store.AddQuad(cayley.Quad("CoreOS", fieldIs, word, ""))
+		store.AddQuad(cayley.Triple("CoreOS", fieldIs, word))
 		v, err := toValues(cayley.StartPath(store, "CoreOS").Out(fieldIs))
 		assert.Nil(t, err, "toValues should have worked")
 		assert.Len(t, v, i+1, "toValues did not return the right amount of values")
@@ -64,17 +64,17 @@ func TestToValue(t *testing.T) {
 	}
 
 	// toValue(s)() and empty values
-	store.AddQuad(cayley.Quad("bob", "likes", "", ""))
+	store.AddQuad(cayley.Triple("bob", "likes", ""))
 	v, err = toValue(cayley.StartPath(store, "bob").Out("likes"))
 	assert.Nil(t, err, "toValue should work even if the requested path leads to nothing")
 	assert.Equal(t, "", v, "toValue should return an empty string if the requested path leads to nothing")
 
-	store.AddQuad(cayley.Quad("bob", "likes", "running", ""))
+	store.AddQuad(cayley.Triple("bob", "likes", "running"))
 	v, err = toValue(cayley.StartPath(store, "bob").Out("likes"))
 	assert.Nil(t, err, "toValue should have worked")
 	assert.Equal(t, "running", v, "toValue did not return the expected value")
 
-	store.AddQuad(cayley.Quad("bob", "likes", "swimming", ""))
+	store.AddQuad(cayley.Triple("bob", "likes", "swimming"))
 	va, err := toValues(cayley.StartPath(store, "bob").Out("likes"))
 	assert.Nil(t, err, "toValues should have worked")
 	assert.Len(t, va, 2, "toValues should have returned 2 values")

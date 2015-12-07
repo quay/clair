@@ -156,11 +156,11 @@ func InsertPackages(packageParameters []*Package) error {
 			}
 			endPackage.Node = endPackage.GetNode()
 
-			t.AddQuad(cayley.Quad(endPackage.Node, fieldIs, fieldPackageIsValue, ""))
-			t.AddQuad(cayley.Quad(endPackage.Node, FieldPackageOS, endPackage.OS, ""))
-			t.AddQuad(cayley.Quad(endPackage.Node, FieldPackageName, endPackage.Name, ""))
-			t.AddQuad(cayley.Quad(endPackage.Node, FieldPackageVersion, endPackage.Version.String(), ""))
-			t.AddQuad(cayley.Quad(endPackage.Node, FieldPackageNextVersion, "", ""))
+			t.AddQuad(cayley.Triple(endPackage.Node, fieldIs, fieldPackageIsValue))
+			t.AddQuad(cayley.Triple(endPackage.Node, FieldPackageOS, endPackage.OS))
+			t.AddQuad(cayley.Triple(endPackage.Node, FieldPackageName, endPackage.Name))
+			t.AddQuad(cayley.Triple(endPackage.Node, FieldPackageVersion, endPackage.Version.String()))
+			t.AddQuad(cayley.Triple(endPackage.Node, FieldPackageNextVersion, ""))
 
 			// Create the inserted package if it is different than a start/end package
 			var newPackage *Package
@@ -172,11 +172,11 @@ func InsertPackages(packageParameters []*Package) error {
 				}
 				newPackage.Node = newPackage.GetNode()
 
-				t.AddQuad(cayley.Quad(newPackage.Node, fieldIs, fieldPackageIsValue, ""))
-				t.AddQuad(cayley.Quad(newPackage.Node, FieldPackageOS, newPackage.OS, ""))
-				t.AddQuad(cayley.Quad(newPackage.Node, FieldPackageName, newPackage.Name, ""))
-				t.AddQuad(cayley.Quad(newPackage.Node, FieldPackageVersion, newPackage.Version.String(), ""))
-				t.AddQuad(cayley.Quad(newPackage.Node, FieldPackageNextVersion, endPackage.Node, ""))
+				t.AddQuad(cayley.Triple(newPackage.Node, fieldIs, fieldPackageIsValue))
+				t.AddQuad(cayley.Triple(newPackage.Node, FieldPackageOS, newPackage.OS))
+				t.AddQuad(cayley.Triple(newPackage.Node, FieldPackageName, newPackage.Name))
+				t.AddQuad(cayley.Triple(newPackage.Node, FieldPackageVersion, newPackage.Version.String()))
+				t.AddQuad(cayley.Triple(newPackage.Node, FieldPackageNextVersion, endPackage.Node))
 
 				packageParameter.Node = newPackage.Node
 			}
@@ -189,14 +189,14 @@ func InsertPackages(packageParameters []*Package) error {
 			}
 			startPackage.Node = startPackage.GetNode()
 
-			t.AddQuad(cayley.Quad(startPackage.Node, fieldIs, fieldPackageIsValue, ""))
-			t.AddQuad(cayley.Quad(startPackage.Node, FieldPackageOS, startPackage.OS, ""))
-			t.AddQuad(cayley.Quad(startPackage.Node, FieldPackageName, startPackage.Name, ""))
-			t.AddQuad(cayley.Quad(startPackage.Node, FieldPackageVersion, startPackage.Version.String(), ""))
+			t.AddQuad(cayley.Triple(startPackage.Node, fieldIs, fieldPackageIsValue))
+			t.AddQuad(cayley.Triple(startPackage.Node, FieldPackageOS, startPackage.OS))
+			t.AddQuad(cayley.Triple(startPackage.Node, FieldPackageName, startPackage.Name))
+			t.AddQuad(cayley.Triple(startPackage.Node, FieldPackageVersion, startPackage.Version.String()))
 			if !insertingStartPackage && !insertingEndPackage {
-				t.AddQuad(cayley.Quad(startPackage.Node, FieldPackageNextVersion, newPackage.Node, ""))
+				t.AddQuad(cayley.Triple(startPackage.Node, FieldPackageNextVersion, newPackage.Node))
 			} else {
-				t.AddQuad(cayley.Quad(startPackage.Node, FieldPackageNextVersion, endPackage.Node, ""))
+				t.AddQuad(cayley.Triple(startPackage.Node, FieldPackageNextVersion, endPackage.Node))
 			}
 
 			// Set package node
@@ -213,10 +213,10 @@ func InsertPackages(packageParameters []*Package) error {
 			newPackage.Node = "package:" + utils.Hash(newPackage.Key())
 			packageParameter.Node = newPackage.Node
 
-			t.AddQuad(cayley.Quad(newPackage.Node, fieldIs, fieldPackageIsValue, ""))
-			t.AddQuad(cayley.Quad(newPackage.Node, FieldPackageOS, newPackage.OS, ""))
-			t.AddQuad(cayley.Quad(newPackage.Node, FieldPackageName, newPackage.Name, ""))
-			t.AddQuad(cayley.Quad(newPackage.Node, FieldPackageVersion, newPackage.Version.String(), ""))
+			t.AddQuad(cayley.Triple(newPackage.Node, fieldIs, fieldPackageIsValue))
+			t.AddQuad(cayley.Triple(newPackage.Node, FieldPackageOS, newPackage.OS))
+			t.AddQuad(cayley.Triple(newPackage.Node, FieldPackageName, newPackage.Name))
+			t.AddQuad(cayley.Triple(newPackage.Node, FieldPackageVersion, newPackage.Version.String()))
 
 			// Sort branchPackages by version (including the new package)
 			branchPackages = append(branchPackages, newPackage)
@@ -244,13 +244,13 @@ func InsertPackages(packageParameters []*Package) error {
 			}
 
 			// Link the new packages with the branch
-			t.RemoveQuad(cayley.Quad(pred.Node, FieldPackageNextVersion, succ.Node, ""))
+			t.RemoveQuad(cayley.Triple(pred.Node, FieldPackageNextVersion, succ.Node))
 
 			pred.NextVersionNode = newPackage.Node
-			t.AddQuad(cayley.Quad(pred.Node, FieldPackageNextVersion, newPackage.Node, ""))
+			t.AddQuad(cayley.Triple(pred.Node, FieldPackageNextVersion, newPackage.Node))
 
 			newPackage.NextVersionNode = succ.Node
-			t.AddQuad(cayley.Quad(newPackage.Node, FieldPackageNextVersion, succ.Node, ""))
+			t.AddQuad(cayley.Triple(newPackage.Node, FieldPackageNextVersion, succ.Node))
 		}
 
 		// Apply transaction

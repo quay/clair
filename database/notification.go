@@ -339,10 +339,10 @@ func InsertNotifications(notifications []Notification, wrapper NotificationWrapp
 		}
 
 		node := fieldNotificationIsValue + ":" + uuid.New()
-		t.AddQuad(cayley.Quad(node, fieldIs, fieldNotificationIsValue, ""))
-		t.AddQuad(cayley.Quad(node, fieldNotificationType, wrappedNotification.Type, ""))
-		t.AddQuad(cayley.Quad(node, fieldNotificationData, wrappedNotification.Data, ""))
-		t.AddQuad(cayley.Quad(node, fieldNotificationIsSent, strconv.FormatBool(false), ""))
+		t.AddQuad(cayley.Triple(node, fieldIs, fieldNotificationIsValue))
+		t.AddQuad(cayley.Triple(node, fieldNotificationType, wrappedNotification.Type))
+		t.AddQuad(cayley.Triple(node, fieldNotificationData, wrappedNotification.Data))
+		t.AddQuad(cayley.Triple(node, fieldNotificationIsSent, strconv.FormatBool(false)))
 	}
 
 	// Apply transaction
@@ -401,8 +401,8 @@ func MarkNotificationAsSent(node string) {
 	// Initialize transaction
 	t := cayley.NewTransaction()
 
-	t.RemoveQuad(cayley.Quad(node, fieldNotificationIsSent, strconv.FormatBool(false), ""))
-	t.AddQuad(cayley.Quad(node, fieldNotificationIsSent, strconv.FormatBool(true), ""))
+	t.RemoveQuad(cayley.Triple(node, fieldNotificationIsSent, strconv.FormatBool(false)))
+	t.AddQuad(cayley.Triple(node, fieldNotificationIsSent, strconv.FormatBool(true)))
 
 	// Apply transaction
 	store.ApplyTransaction(t)
