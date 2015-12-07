@@ -52,7 +52,7 @@ func POSTLayers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	httputils.WriteHTTP(w, http.StatusCreated, struct{ Version string }{Version: strconv.Itoa(worker.Version)})
 }
 
-// DeleteLayer deletes the specified layer and any child layers that are
+// DELETELayers deletes the specified layer and any child layers that are
 // dependent on the specified layer.
 func DELETELayers(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 	err := database.DeleteLayer(p.ByName("id"))

@@ -21,6 +21,7 @@ import (
 	"os"
 
 	"github.com/barakmich/glog"
+	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/health"
 	"github.com/coreos/clair/utils"
 	"github.com/coreos/pkg/capnslog"
@@ -63,23 +64,27 @@ func init() {
 }
 
 // Open opens a Cayley database, creating it if necessary and return its handle
-func Open(dbType, dbPath string) error {
+func Open(config *config.DatabaseConfig) error {
 	if store != nil {
-		log.Errorf("could not open database at %s : a database is already opened", dbPath)
+		log.Errorf("could not open database at %s : a database is already opened", config.Path)
+		return ErrCantOpen
+	}
+	if config.Type != "memstore" && config.Path == "" {
+		log.Errorf("could not open database : no path provided.")
 		return ErrCantOpen
 	}
 
 	var err error
 	options := make(graph.Options)
 
-	switch dbType {
+	switch config.Type {
 	case "bolt", "leveldb":
-		if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-			log.Infof("database at %s does not exist yet, creating it", dbPath)
+		if _, err := os.Stat(config.Path); os.IsNotExist(err) {
+			log.Infof("database at %s does not exist yet, creating it", config.Path)
 
-			err = graph.InitQuadStore(dbType, dbPath, options)
+			err = graph.InitQuadStore(config.Type, config.Path, options)
 			if err != nil && err != graph.ErrDatabaseExists {
-				log.Errorf("could not create database at %s : %s", dbPath, err)
+				log.Errorf("could not create database at %s : %s", config.Path, err)
 				return ErrCantOpen
 			}
 		}
@@ -88,16 +93,16 @@ func Open(dbType, dbPath string) error {
 		// Ref: https://wiki.postgresql.org/wiki/Count_estimate
 		options["use_estimates"] = true
 
-		err := graph.InitQuadStore(dbType, dbPath, options)
+		err := graph.InitQuadStore(config.Type, config.Path, options)
 		if err != nil && err != graph.ErrDatabaseExists {
-			log.Errorf("could not create database at %s : %s", dbPath, err)
+			log.Errorf("could not create database at %s : %s", config.Path, err)
 			return ErrCantOpen
 		}
 	}
 
-	store, err = cayley.NewGraph(dbType, dbPath, options)
+	store, err = cayley.NewGraph(config.Type, config.Path, options)
 	if err != nil {
-		log.Errorf("could not open database at %s : %s", dbPath, err)
+		log.Errorf("could not open database at %s : %s", config.Path, err)
 		return ErrCantOpen
 	}
 

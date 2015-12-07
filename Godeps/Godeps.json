@@ -80,14 +80,13 @@
 			"Rev": "7654728e381988afd88e58cabfd6363a5ea91810"
 		},
 		{
-			"ImportPath": "gopkg.in/alecthomas/kingpin.v2",
-			"Comment": "v2.0.10",
-			"Rev": "e1f37920c1d0ced4d1c92f9526a2a433183f02e9"
-		},
-		{
 			"ImportPath": "gopkg.in/mgo.v2",
 			"Comment": "r2015.05.29",
 			"Rev": "01ee097136da162d1dd3c9b44fbdf3abf4fd6552"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "f7716cbe52baa25d2e9b0d0da546fcf909fc16b4"
 		}
 	]
 }

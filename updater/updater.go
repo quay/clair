@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/health"
 	"github.com/coreos/clair/utils"
@@ -39,19 +40,18 @@ const (
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "updater")
 
-func init() {
-	health.RegisterHealthchecker("updater", Healthcheck)
-}
-
-// Run updates the vulnerability database at regular intervals
-func Run(interval time.Duration, st *utils.Stopper) {
+// Run updates the vulnerability database at regular intervals.
+func Run(config *config.UpdaterConfig, st *utils.Stopper) {
 	defer st.End()
 
-	// Do not run the updater if the interval is 0
-	if interval == 0 {
+	// Do not run the updater if there is no config or if the interval is 0.
+	if config == nil || config.Interval == 0 {
 		log.Infof("updater service is disabled.")
 		return
 	}
+
+	// Register healthchecker.
+	health.RegisterHealthchecker("updater", Healthcheck)
 
 	whoAmI := uuid.New()
 	log.Infof("updater service started. lock identifier: %s", whoAmI)
@@ -59,10 +59,10 @@ func Run(interval time.Duration, st *utils.Stopper) {
 	for {
 		// Set the next update time to (last update time + interval) or now if there
 		// is no last update time stored in database (first update) or if an error
-		// occurs
+		// occurs.
 		var nextUpdate time.Time
 		if lastUpdate := getLastUpdate(); !lastUpdate.IsZero() {
-			nextUpdate = lastUpdate.Add(interval)
+			nextUpdate = lastUpdate.Add(config.Interval)
 		} else {
 			nextUpdate = time.Now().UTC()
 		}

@@ -18,11 +18,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/coreos/clair/config"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestLock(t *testing.T) {
-	Open("memstore", "")
+	Open(&config.DatabaseConfig{Type: "memstore"})
 	defer Close()
 
 	var l bool

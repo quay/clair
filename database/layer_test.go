@@ -17,6 +17,7 @@ package database
 import (
 	"testing"
 
+	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/stretchr/testify/assert"
@@ -24,7 +25,7 @@ import (
 
 // TestInvalidLayers tries to insert invalid layers
 func TestInvalidLayers(t *testing.T) {
-	Open("memstore", "")
+	Open(&config.DatabaseConfig{Type: "memstore"})
 	defer Close()
 
 	assert.Error(t, InsertLayer(&Layer{ID: ""})) // No ID
@@ -33,7 +34,7 @@ func TestInvalidLayers(t *testing.T) {
 // TestLayerSimple inserts a single layer and ensures it can be retrieved and
 // that methods works
 func TestLayerSimple(t *testing.T) {
-	Open("memstore", "")
+	Open(&config.DatabaseConfig{Type: "memstore"})
 	defer Close()
 
 	// Insert a layer and find it back
@@ -78,7 +79,7 @@ func TestLayerSimple(t *testing.T) {
 
 // TestLayerTree inserts a tree of layers and ensure that the tree lgoic works
 func TestLayerTree(t *testing.T) {
-	Open("memstore", "")
+	Open(&config.DatabaseConfig{Type: "memstore"})
 	defer Close()
 
 	var layers []*Layer
@@ -138,7 +139,7 @@ func TestLayerTree(t *testing.T) {
 }
 
 func TestLayerUpdate(t *testing.T) {
-	Open("memstore", "")
+	Open(&config.DatabaseConfig{Type: "memstore"})
 	defer Close()
 
 	l1 := &Layer{ID: "l1", OS: "os1", InstalledPackagesNodes: []string{"p1", "p2"}, RemovedPackagesNodes: []string{"p3", "p4"}, EngineVersion: 1}

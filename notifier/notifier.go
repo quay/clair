@@ -26,6 +26,7 @@ import (
 	"github.com/coreos/pkg/capnslog"
 	"github.com/pborman/uuid"
 
+	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/health"
 	"github.com/coreos/clair/utils"
@@ -41,6 +42,8 @@ const (
 	lockDuration        = time.Minute*8 + refreshLockDuration
 )
 
+// TODO(Quentin-M): Allow registering custom notification handlers.
+
 // A Notification represents the structure of the notifications that are sent by a Notifier.
 type Notification struct {
 	Name, Type string
@@ -54,21 +57,20 @@ type Notifier struct {
 	client         *http.Client
 }
 
-// Config represents the configuration of a Notifier.
-// The certificates are optionnal and enable client certificate authentification.
-type Config struct {
-	Endpoint                  string
-	CertFile, KeyFile, CAFile string
-}
-
 // New initializes a new Notifier from the specified configuration.
-func New(cfg Config) *Notifier {
-	if _, err := url.Parse(cfg.Endpoint); err != nil {
-		log.Fatal("could not create a notifier with an invalid endpoint URL")
+func New(config *config.NotifierConfig) *Notifier {
+	if config == nil {
+		return &Notifier{}
 	}
 
-	// Initialize TLS
-	tlsConfig, err := httputils.LoadTLSClientConfig(cfg.CertFile, cfg.KeyFile, cfg.CAFile)
+	// Validate endpoint URL.
+	if _, err := url.Parse(config.Endpoint); err != nil {
+		log.Error("could not create a notifier with an invalid endpoint URL")
+		return &Notifier{}
+	}
+
+	// Initialize TLS.
+	tlsConfig, err := httputils.LoadTLSClientConfig(config.CertFile, config.KeyFile, config.CAFile)
 	if err != nil {
 		log.Fatalf("could not initialize client cert authentification: %s\n", err)
 	}
@@ -84,7 +86,7 @@ func New(cfg Config) *Notifier {
 
 	return &Notifier{
 		lockIdentifier: uuid.New(),
-		endpoint:       cfg.Endpoint,
+		endpoint:       config.Endpoint,
 		client:         httpClient,
 	}
 }
@@ -92,6 +94,14 @@ func New(cfg Config) *Notifier {
 // Serve starts the Notifier.
 func (n *Notifier) Serve(stopper *utils.Stopper) {
 	defer stopper.End()
+
+	// Do not run the updater if the endpoint is empty.
+	if n.endpoint == "" {
+		log.Infof("notifier service is disabled.")
+		return
+	}
+
+	// Register healthchecker.
 	health.RegisterHealthchecker("notifier", n.Healthcheck)
 
 	log.Infof("notifier service started. endpoint: %s. lock identifier: %s\n", n.endpoint, n.lockIdentifier)

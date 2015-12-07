@@ -20,12 +20,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestPackage(t *testing.T) {
-	Open("memstore", "")
+	Open(&config.DatabaseConfig{Type: "memstore"})
 	defer Close()
 
 	// Try to insert invalid packages

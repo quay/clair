@@ -17,12 +17,13 @@ package database
 import (
 	"testing"
 
+	"github.com/coreos/clair/config"
 	"github.com/google/cayley"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestHealthcheck(t *testing.T) {
-	Open("memstore", "")
+	Open(&config.DatabaseConfig{Type: "memstore"})
 	defer Close()
 
 	b := Healthcheck()
@@ -30,7 +31,7 @@ func TestHealthcheck(t *testing.T) {
 }
 
 func TestToValue(t *testing.T) {
-	Open("memstore", "")
+	Open(&config.DatabaseConfig{Type: "memstore"})
 	defer Close()
 
 	// toValue()

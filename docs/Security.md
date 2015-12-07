@@ -1,10 +1,11 @@
 # Security
 
-# Enabling HTTPS
+# Enabling HTTPS on the API
+
 HTTPS provides clients the ability to verify the server identity and provide transport security.
 
 For this you need your CA certificate (ca.crt) and signed key pair (server.crt, server.key) ready.
-To enable it, provide signed key pair using `--api-cert-file` and `--api-key-file` arguments.
+To enable it, provide the signed key pair files in the configuration under `api/keyfile` and `api/certfile` keys.
 
 To test it, you want to use curl like this:
 
@@ -14,13 +15,13 @@ You should be able to see the handshake succeed. Because we use self-signed cert
 
 **OSX 10.9+ Users**: curl 7.30.0 on OSX 10.9+ doesn't understand certificates passed in on the command line. Instead you must import the dummy ca.crt directly into the keychain or add the -k flag to curl to ignore errors. If you want to test without the -k flag run open ca.crt and follow the prompts. Please remove this certificate after you are done testing!
 
-# Enabling Client Certificate Auth
+# Enabling Client Certificate Auth on the API
 
 We can also use client certificates to prevent unauthorized access to the API.
 
 The clients will provide their certificates to the server and the server will check whether the cert is signed by the supplied CA and decide whether to serve the request.
 
-You need the same files mentioned in the HTTPS section, as well as a key pair for the client (client.crt, client.key) signed by the same certificate authority. To enable it, use the same arguments as above for HTTPS and the additional `--api-ca-file` parameter with the CA certificate.
+You need the same files mentioned in the HTTPS section, as well as a key pair for the client (client.crt, client.key) signed by the same certificate authority. To enable it, use the same configuration as above for HTTPS and the additional `api/cafile` key parameter with the CA certificate path.
 
 The test command from the HTTPS section should be rejected, instead we need to provide the client key pair:
 
