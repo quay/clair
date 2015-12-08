@@ -5,6 +5,7 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
@@ -15,7 +16,7 @@ import (
 )
 
 func TestDistUpgrade(t *testing.T) {
-	database.Open("memstore", "")
+	database.Open(&config.DatabaseConfig{Type: "memstore"})
 	defer database.Close()
 
 	_, f, _, _ := runtime.Caller(0)

@@ -25,66 +25,68 @@ import (
 	"github.com/coreos/pkg/capnslog"
 	"github.com/tylerb/graceful"
 
+	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/utils"
 	httputils "github.com/coreos/clair/utils/http"
 )
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "api")
 
-// Config represents the configuration for the Main API.
-type Config struct {
-	Port                      int
-	TimeOut                   time.Duration
-	CertFile, KeyFile, CAFile string
-}
-
-// RunMain launches the main API, which exposes every possible interactions
+// Run launches the main API, which exposes every possible interactions
 // with clair.
-func RunMain(conf *Config, st *utils.Stopper) {
-	log.Infof("starting API on port %d.", conf.Port)
-	defer func() {
-		log.Info("API stopped")
-		st.End()
-	}()
+func Run(config *config.APIConfig, st *utils.Stopper) {
+	defer st.End()
 
-	tlsConfig, err := httputils.LoadTLSClientConfigForServer(conf.CAFile)
+	// Do not run the API service if there is no config.
+	if config == nil {
+		log.Infof("main API service is disabled.")
+		return
+	}
+	log.Infof("starting main API on port %d.", config.Port)
+
+	tlsConfig, err := httputils.LoadTLSClientConfigForServer(config.CAFile)
 	if err != nil {
 		log.Fatalf("could not initialize client cert authentification: %s\n", err)
 	}
 	if tlsConfig != nil {
-		log.Info("api configured with client certificate authentification")
+		log.Info("main API configured with client certificate authentification")
 	}
 
 	srv := &graceful.Server{
 		Timeout:          0,    // Already handled by our TimeOut middleware
 		NoSignalHandling: true, // We want to use our own Stopper
 		Server: &http.Server{
-			Addr:      ":" + strconv.Itoa(conf.Port),
+			Addr:      ":" + strconv.Itoa(config.Port),
 			TLSConfig: tlsConfig,
-			Handler:   NewVersionRouter(conf.TimeOut),
+			Handler:   NewVersionRouter(config.Timeout),
 		},
 	}
-	listenAndServeWithStopper(srv, st, conf.CertFile, conf.KeyFile)
+	listenAndServeWithStopper(srv, st, config.CertFile, config.KeyFile)
+	log.Info("main API stopped")
 }
 
 // RunHealth launches the Health API, which only exposes a method to fetch
-// clair's health without any security or authentification mechanism.
-func RunHealth(port int, st *utils.Stopper) {
-	log.Infof("starting Health API on port %d.", port)
-	defer func() {
-		log.Info("Health API stopped")
-		st.End()
-	}()
+// Clair's health without any security or authentification mechanism.
+func RunHealth(config *config.APIConfig, st *utils.Stopper) {
+	defer st.End()
+
+	// Do not run the API service if there is no config.
+	if config == nil {
+		log.Infof("health API service is disabled.")
+		return
+	}
+	log.Infof("starting health API on port %d.", config.HealthPort)
 
 	srv := &graceful.Server{
 		Timeout:          10 * time.Second, // Interrupt health checks when stopping
 		NoSignalHandling: true,             // We want to use our own Stopper
 		Server: &http.Server{
-			Addr:    ":" + strconv.Itoa(port),
+			Addr:    ":" + strconv.Itoa(config.HealthPort),
 			Handler: NewHealthRouter(),
 		},
 	}
 	listenAndServeWithStopper(srv, st, "", "")
+	log.Info("health API stopped")
 }
 
 // listenAndServeWithStopper wraps graceful.Server's

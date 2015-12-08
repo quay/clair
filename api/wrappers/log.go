@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package logic implements all the available API methods.
-// Every methods are documented in docs/API.md.
-
 // Package wrappers contains httprouter.Handle wrappers that are used in the API.
 package wrappers
 

@@ -1,21 +1,27 @@
-# Build and Run with Docker
+# Running Clair
 
-The easiest way to run this tool is to deploy it using Docker.
-If you prefer to run it locally, reading the Dockerfile will tell you how.
+## Configuration
 
-To deploy it from the latest sources, follow this procedure:
-* Clone the repository and change your current directory
-* Build the container: `docker build -t <TAG> .`
-* Run it like this to see the available commands: `docker run -it <TAG>`. To get help about a specific command, use `docker run -it <TAG> help <COMMAND>`
+Clair makes uses of a configuration file in YAML.
 
-## Command-Line examples
+Copy [`config.example.yaml`](../config.example.yaml) to your choice of location, and update the values as required.
+The example configuration file is commented and explains every available key.
 
-When running multiple instances is not desired, using BoltDB backend is the best choice as it is lightning fast:
+## Docker
 
-    docker run -it <TAG> --db-type=bolt --db-path=/db/database
+The easiest way to run Clair is with Docker.
 
-Using PostgreSQL enables running multiple instances concurrently. Here is a command line example:
+```
+$ docker pull quay.io/coreos/clair:latest
+$ docker run -p 6060:6060 -p 6061:6061 -v <DIR_WITH_CONFIG>:/config:ro quay.io/coreos/clair:latest --config=/config/<CONFIG_FILENAME>.yaml
+```
 
-    docker run -it <TAG> --db-type=sql --db-path='host=awesome-database.us-east-1.rds.amazonaws.com port=5432 user=SuperSheep password=SuperSecret' --update-interval=2h --notifier-type=http --notifier-http-url="http://your-notification-endpoint"
+## Initial update & API
 
-The default API port is 6060, read the [API Documentation](API.md) to learn more.
+Right after Clair starts, it will update its vulnerability database.
+The initial update can take quite a long time depending on the database backend in use.
+Clair will announce the update completion.
+
+As soon as Clair has started, you can start querying the API to interact with it.
+Read the [API Documentation](API.md) to learn more.
+The [`contrib`](../contrib) folder contains some tools that may help you to get started.

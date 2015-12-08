@@ -1,0 +1,37 @@
+# The values specified here are the default values that Clair uses if no configuration file
+# is specified or if the keys are not defined.
+---
+database:
+  # Database backend.
+  #
+  # Possible values are "bolt", "leveldb", "memstore", "mongo", "sql".
+  #
+  # When running multiple instances is not desired, using BoltDB backend is the best choice as it is
+  # lightning fast. However, using PostgreSQL enables running multiple instances concurrently.
+  # The default is just an ephemeral database.
+  type: memstore
+  # Path to the database.
+  #
+  # Can be a file or a connection string.
+  path:
+api:
+  # Port on which the main API and the health API will listen on.
+  port: 6060
+  healthport: 6061
+  # Maximum time that API requests may take before they time-out with a HTTP 503 error.
+  timeout: 900s
+  # Paths to certificates to secure the main API with TLS and client certificate auth.
+  cafile:
+  keyfile:
+  certfile:
+updater:
+  # Frequency at which the vulnerability updater will run.
+  # Use 0 to disable the updater entirely.
+  interval: 2h
+notifier:
+  # HTTP endpoint that will receive notifications with POST requests.
+  endpoint:
+  # Path to certificates to call the endpoint securely with TLS and client certificate auth.
+  cafile:
+  keyfile:
+  certfile:

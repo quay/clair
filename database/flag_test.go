@@ -17,11 +17,12 @@ package database
 import (
 	"testing"
 
+	"github.com/coreos/clair/config"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestFlag(t *testing.T) {
-	Open("memstore", "")
+	Open(&config.DatabaseConfig{Type: "memstore"})
 	defer Close()
 
 	// Get non existing flag

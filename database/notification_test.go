@@ -21,6 +21,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/coreos/clair/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -84,7 +85,7 @@ func (n NotificationTest2) GetContent() (interface{}, error) {
 }
 
 func TestNotification(t *testing.T) {
-	Open("memstore", "")
+	Open(&config.DatabaseConfig{Type: "memstore"})
 	defer Close()
 
 	wrapper := &TestWrapper{}
