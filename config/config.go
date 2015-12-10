@@ -1,5 +1,3 @@
-package config
-
 // Copyright 2015 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +11,8 @@ package config
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+package config
 
 import (
 	"io/ioutil"
@@ -44,8 +44,11 @@ type UpdaterConfig struct {
 
 // NotifierConfig is the configuration for the Notifier service.
 type NotifierConfig struct {
-	Endpoint                  string
-	CertFile, KeyFile, CAFile string
+	Endpoint   string
+	ServerName string
+	CertFile   string
+	KeyFile    string
+	CAFile     string
 }
 
 // APIConfig is the configuration for the API service.

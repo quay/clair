@@ -31,7 +31,8 @@ updater:
 notifier:
   # HTTP endpoint that will receive notifications with POST requests.
   endpoint:
-  # Path to certificates to call the endpoint securely with TLS and client certificate auth.
+  # Server name and path to certificates to call the endpoint securely with TLS and client certificate auth.
+  servername:
   cafile:
   keyfile:
   certfile:

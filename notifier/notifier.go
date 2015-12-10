@@ -18,7 +18,10 @@ package notifier
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
@@ -30,7 +33,6 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/health"
 	"github.com/coreos/clair/utils"
-	httputils "github.com/coreos/clair/utils/http"
 )
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "notifier")
@@ -70,7 +72,7 @@ func New(config *config.NotifierConfig) *Notifier {
 	}
 
 	// Initialize TLS.
-	tlsConfig, err := httputils.LoadTLSClientConfig(config.CertFile, config.KeyFile, config.CAFile)
+	tlsConfig, err := loadTLSClientConfig(config)
 	if err != nil {
 		log.Fatalf("could not initialize client cert authentification: %s\n", err)
 	}
@@ -202,4 +204,38 @@ func (n *Notifier) handleTask(node string, notification database.Notification) b
 func (n *Notifier) Healthcheck() health.Status {
 	queueSize, err := database.CountNotificationsToSend()
 	return health.Status{IsEssential: false, IsHealthy: err == nil, Details: struct{ QueueSize int }{QueueSize: queueSize}}
+}
+
+// loadTLSClientConfig initializes a *tls.Config using the given notifier
+// configuration.
+//
+// If no certificates are given, (nil, nil) is returned.
+// The CA certificate is optional and falls back to the system default.
+func loadTLSClientConfig(cfg *config.NotifierConfig) (*tls.Config, error) {
+	if cfg.CertFile == "" || cfg.KeyFile == "" {
+		return nil, nil
+	}
+
+	cert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
+	if err != nil {
+		return nil, err
+	}
+
+	var caCertPool *x509.CertPool
+	if cfg.CAFile != "" {
+		caCert, err := ioutil.ReadFile(cfg.CAFile)
+		if err != nil {
+			return nil, err
+		}
+		caCertPool = x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+	}
+
+	tlsConfig := &tls.Config{
+		ServerName:   cfg.ServerName,
+		Certificates: []tls.Certificate{cert},
+		RootCAs:      caCertPool,
+	}
+
+	return tlsConfig, nil
 }

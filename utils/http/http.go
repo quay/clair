@@ -31,39 +31,6 @@ import (
 // MaxPostSize is the maximum number of bytes that ParseHTTPBody reads from an http.Request.Body.
 const MaxBodySize int64 = 1048576
 
-// LoadTLSClientConfig initializes a *tls.Config using the given certificates and private key, that
-// can be used to communicate with a server using client certificate authentificate.
-//
-// If no certificates are given, a nil *tls.Config is returned.
-// The CA certificate is optionnal, the system defaults are used if not provided.
-func LoadTLSClientConfig(certFile, keyFile, caFile string) (*tls.Config, error) {
-	if len(certFile) == 0 || len(keyFile) == 0 {
-		return nil, nil
-	}
-
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-	if err != nil {
-		return nil, err
-	}
-
-	var caCertPool *x509.CertPool
-	if len(caFile) > 0 {
-		caCert, err := ioutil.ReadFile(caFile)
-		if err != nil {
-			return nil, err
-		}
-		caCertPool = x509.NewCertPool()
-		caCertPool.AppendCertsFromPEM(caCert)
-	}
-
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		RootCAs:      caCertPool,
-	}
-
-	return tlsConfig, nil
-}
-
 // LoadTLSClientConfigForServer initializes a *tls.Config using the given CA, that can be used to
 // configure http server to do client certificate authentification.
 //
