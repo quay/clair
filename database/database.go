@@ -139,17 +139,19 @@ func Healthcheck() health.Status {
 // If the path leads to multiple values or if a database error occurs, an empty string and an error are returned
 func toValue(p *path.Path) (string, error) {
 	var value string
+	found := false
 
 	it, _ := p.BuildIterator().Optimize()
 	defer it.Close()
 	for cayley.RawNext(it) {
-		if value != "" {
+		if found {
 			log.Error("failed query in toValue: used on an iterator containing multiple values")
 			return "", ErrInconsistent
 		}
 
 		if it.Result() != nil {
 			value = store.NameOf(it.Result())
+			found = true
 		}
 	}
 	if it.Err() != nil {
@@ -170,10 +172,7 @@ func toValues(p *path.Path) ([]string, error) {
 	defer it.Close()
 	for cayley.RawNext(it) {
 		if it.Result() != nil {
-			value := store.NameOf(it.Result())
-			if value != "" {
-				values = append(values, value)
-			}
+			values = append(values, store.NameOf(it.Result()))
 		}
 	}
 	if it.Err() != nil {

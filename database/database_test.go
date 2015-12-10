@@ -72,11 +72,15 @@ func TestToValue(t *testing.T) {
 
 	store.AddQuad(cayley.Triple("bob", "likes", "running"))
 	v, err = toValue(cayley.StartPath(store, "bob").Out("likes"))
-	assert.Nil(t, err, "toValue should have worked")
-	assert.Equal(t, "running", v, "toValue did not return the expected value")
+	assert.NotNil(t, err, "toValue should return an error and an empty string if the path leads to multiple values")
+	assert.Equal(t, "", v, "toValue should return an error and an empty string if the path leads to multiple values")
 
 	store.AddQuad(cayley.Triple("bob", "likes", "swimming"))
 	va, err := toValues(cayley.StartPath(store, "bob").Out("likes"))
 	assert.Nil(t, err, "toValues should have worked")
-	assert.Len(t, va, 2, "toValues should have returned 2 values")
+	if assert.Len(t, va, 3, "toValues should have returned 2 values") {
+		assert.Contains(t, va, "running")
+		assert.Contains(t, va, "swimming")
+		assert.Contains(t, va, "")
+	}
 }
