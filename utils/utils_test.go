@@ -65,13 +65,13 @@ func TestTar(t *testing.T) {
 		testArchivePath := path.Join(path.Dir(filepath)) + filename
 
 		// Extract non compressed data
-		data, err = SelectivelyExtractArchive(bytes.NewReader([]byte("that string does not represent a tar or tar-gzip file")), []string{}, 0)
+		data, err = SelectivelyExtractArchive(bytes.NewReader([]byte("that string does not represent a tar or tar-gzip file")), "./", []string{}, 0)
 		assert.Error(t, err, "Extracting non compressed data should return an error")
 
 		// Extract an archive
 		f, _ := os.Open(testArchivePath)
 		defer f.Close()
-		data, err = SelectivelyExtractArchive(f, []string{"test/"}, 0)
+		data, err = SelectivelyExtractArchive(f, "./", []string{"test/"}, 0)
 		assert.Nil(t, err)
 
 		if c, n := data["test/test.txt"]; !n {
@@ -86,7 +86,7 @@ func TestTar(t *testing.T) {
 		// File size limit
 		f, _ = os.Open(testArchivePath)
 		defer f.Close()
-		data, err = SelectivelyExtractArchive(f, []string{"test"}, 50)
+		data, err = SelectivelyExtractArchive(f, "./", []string{"test"}, 50)
 		assert.Equal(t, ErrExtractedFileTooBig, err)
 	}
 }

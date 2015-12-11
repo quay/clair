@@ -37,7 +37,7 @@ var (
 
 // SelectivelyExtractArchive extracts the specified files and folders
 // from targz data read from the given reader and store them in a map indexed by file paths
-func SelectivelyExtractArchive(r io.Reader, toExtract []string, maxFileSize int64) (map[string][]byte, error) {
+func SelectivelyExtractArchive(r io.Reader, prefix string, toExtract []string, maxFileSize int64) (map[string][]byte, error) {
 	data := make(map[string][]byte)
 
 	// Create a tar or tar/tar-gzip reader
@@ -58,7 +58,7 @@ func SelectivelyExtractArchive(r io.Reader, toExtract []string, maxFileSize int6
 
 		// Get element filename
 		filename := hdr.Name
-		filename = strings.TrimPrefix(filename, "./")
+		filename = strings.TrimPrefix(filename, prefix)
 
 		// Determine if we should extract the element
 		toBeExtracted := false

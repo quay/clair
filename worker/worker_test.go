@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	// Register detectors
+	_ "github.com/coreos/clair/worker/detectors/data"
 	_ "github.com/coreos/clair/worker/detectors/os"
 	_ "github.com/coreos/clair/worker/detectors/packages"
 )
@@ -25,9 +26,9 @@ func TestDistUpgrade(t *testing.T) {
 	// blank.tar: MAINTAINER Quentin MACHU <quentin.machu.fr>
 	// wheezy.tar: FROM debian:wheezy
 	// jessie.tar: RUN sed -i "s/precise/trusty/" /etc/apt/sources.list && apt-get update && apt-get -y dist-upgrade
-	assert.Nil(t, Process("blank", "", path+"blank.tar.gz"))
-	assert.Nil(t, Process("wheezy", "blank", path+"wheezy.tar.gz"))
-	assert.Nil(t, Process("jessie", "wheezy", path+"jessie.tar.gz"))
+	assert.Nil(t, Process("blank", "", path+"blank.tar.gz", ""))
+	assert.Nil(t, Process("wheezy", "blank", path+"wheezy.tar.gz", ""))
+	assert.Nil(t, Process("jessie", "wheezy", path+"jessie.tar.gz", ""))
 
 	wheezy, err := database.FindOneLayerByID("wheezy", database.FieldLayerAll)
 	if assert.Nil(t, err) {
