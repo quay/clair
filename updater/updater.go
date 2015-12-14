@@ -61,6 +61,7 @@ func Run(config *config.UpdaterConfig, st *utils.Stopper) {
 		// is no last update time stored in database (first update) or if an error
 		// occurs.
 		var nextUpdate time.Time
+		var stop bool
 		if lastUpdate := getLastUpdate(); !lastUpdate.IsZero() {
 			nextUpdate = lastUpdate.Add(config.Interval)
 		} else {
@@ -80,19 +81,24 @@ func Run(config *config.UpdaterConfig, st *utils.Stopper) {
 					doneC <- true
 				}()
 
-				for done := false; !done; {
+				for done := false; !done && !stop; {
 					select {
 					case <-doneC:
 						done = true
 					case <-time.After(refreshLockDuration):
 						// Refresh the lock until the update is done.
 						database.Lock(flagName, lockDuration, whoAmI)
+					case <-st.Chan():
+						stop = true
 					}
 				}
 
 				// Unlock the update.
 				database.Unlock(flagName, whoAmI)
 
+				if stop {
+					break
+				}
 				continue
 			} else {
 				lockOwner, lockExpiration, err := database.LockInfo(flagName)
