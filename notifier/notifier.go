@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/coreos/pkg/capnslog"
+	"github.com/coreos/pkg/timeutil"
 	"github.com/pborman/uuid"
 
 	"github.com/coreos/clair/config"
@@ -31,10 +32,10 @@ import (
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "notifier")
 
 const (
-	checkInterval = 5 * time.Minute
-
+	checkInterval       = 5 * time.Minute
 	refreshLockDuration = time.Minute * 2
 	lockDuration        = time.Minute*8 + refreshLockDuration
+	maxBackOff          = 15 * time.Minute
 )
 
 // TODO(Quentin-M): Allow registering custom notification handlers.
@@ -114,7 +115,7 @@ func Run(config *config.NotifierConfig, stopper *utils.Stopper) {
 		// Handle task.
 		done := make(chan bool, 1)
 		go func() {
-			if handleTask(notification) {
+			if handleTask(notification, stopper, config.Attempts) {
 				database.MarkNotificationAsSent(node)
 			}
 			database.Unlock(node, whoAmI)
@@ -160,7 +161,7 @@ func findTask(whoAmI string, stopper *utils.Stopper) (string, database.Notificat
 	}
 }
 
-func handleTask(notification database.Notification) bool {
+func handleTask(notification database.Notification, st *utils.Stopper, maxAttempts int) bool {
 	// Get notification content.
 	// TODO(Quentin-M): Split big notifications.
 	notificationContent, err := notification.GetContent()
@@ -177,11 +178,34 @@ func handleTask(notification database.Notification) bool {
 	}
 
 	// Send notification.
-	// TODO(Quentin-M): Backoff / MaxRetries
 	for notifierName, notifier := range notifiers {
-		if err := notifier.Send(payload); err != nil {
+		var attempts int
+		var backOff time.Duration
+		for {
+			// Max attempts exceeded.
+			if attempts >= maxAttempts {
+				log.Infof("giving up on sending notification '%s' to notifier '%s': max attempts exceeded (%d)\n", notification.GetName(), notifierName, maxAttempts)
+				return false
+			}
+
+			// Backoff.
+			if backOff > 0 {
+				log.Infof("waiting %v before retrying to send notification '%s' to notifier '%s' (Attempt %d / %d)\n", backOff, notification.GetName(), notifierName, attempts+1, maxAttempts)
+				if !st.Sleep(backOff) {
+					return false
+				}
+			}
+
+			// Send using the current notifier.
+			if err := notifier.Send(payload); err == nil {
+				// Send has been successful. Go to the next one.
+				break
+			}
+
+			// Send failed; increase attempts/backoff and retry.
 			log.Errorf("could not send notification '%s' to notifier '%s': %s", notification.GetName(), notifierName, err)
-			return false
+			backOff = timeutil.ExpBackoff(backOff, maxBackOff)
+			attempts++
 		}
 	}
 

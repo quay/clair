@@ -44,7 +44,8 @@ type UpdaterConfig struct {
 
 // NotifierConfig is the configuration for the Notifier service and its registered notifiers.
 type NotifierConfig struct {
-	Params map[string]interface{} `yaml:",inline"`
+	Attempts int
+	Params   map[string]interface{} `yaml:",inline"`
 }
 
 // APIConfig is the configuration for the API service.
@@ -67,6 +68,9 @@ var DefaultConfig = Config{
 		Port:       6060,
 		HealthPort: 6061,
 		Timeout:    900 * time.Second,
+	},
+	Notifier: &NotifierConfig{
+		Attempts: 5,
 	},
 }
 

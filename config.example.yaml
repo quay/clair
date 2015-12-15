@@ -29,6 +29,8 @@ updater:
   # Use 0 to disable the updater entirely.
   interval: 2h
 notifier:
+  # How many attempts will the notifier do when a notifier backend fails.
+  attempts: 3
   # Configuration for HTTP notifier
   http:
     # Endpoint that will receive notifications with POST requests.
