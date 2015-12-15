@@ -58,7 +58,10 @@ func SelectivelyExtractArchive(r io.Reader, prefix string, toExtract []string, m
 
 		// Get element filename
 		filename := hdr.Name
-		filename = strings.TrimPrefix(filename, prefix)
+		filename = strings.TrimPrefix(filename, "./")
+		if prefix != "" {
+			filename = strings.TrimPrefix(filename, prefix)
+		}
 
 		// Determine if we should extract the element
 		toBeExtracted := false

@@ -42,5 +42,5 @@ func (detector *TarDataDetector) Supported(path string, format string) bool {
 }
 
 func (detector *TarDataDetector) Detect(layerReader io.ReadCloser, toExtract []string, maxFileSize int64) (map[string][]byte, error) {
-	return utils.SelectivelyExtractArchive(layerReader, "./", toExtract, maxFileSize)
+	return utils.SelectivelyExtractArchive(layerReader, "", toExtract, maxFileSize)
 }
