@@ -42,13 +42,9 @@ type UpdaterConfig struct {
 	Interval time.Duration
 }
 
-// NotifierConfig is the configuration for the Notifier service.
+// NotifierConfig is the configuration for the Notifier service and its registered notifiers.
 type NotifierConfig struct {
-	Endpoint   string
-	ServerName string
-	CertFile   string
-	KeyFile    string
-	CAFile     string
+	Params map[string]interface{} `yaml:",inline"`
 }
 
 // APIConfig is the configuration for the API service.
