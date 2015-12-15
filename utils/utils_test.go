@@ -60,9 +60,9 @@ func TestTar(t *testing.T) {
 	var err error
 	var data map[string][]byte
 	_, filepath, _, _ := runtime.Caller(0)
-
-	for _, filename := range []string{"/testdata/utils_test.tar.gz", "/testdata/utils_test.tar"} {
-		testArchivePath := path.Join(path.Dir(filepath)) + filename
+	testDataDir := "/testdata"
+	for _, filename := range []string{"utils_test.tar.gz", "utils_test.tar.bz2", "utils_test.tar.xz", "utils_test.tar"} {
+		testArchivePath := path.Join(path.Dir(filepath), testDataDir, filename)
 
 		// Extract non compressed data
 		data, err = SelectivelyExtractArchive(bytes.NewReader([]byte("that string does not represent a tar or tar-gzip file")), "", []string{}, 0)
