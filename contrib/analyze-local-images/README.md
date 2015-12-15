@@ -10,9 +10,10 @@ You need to install this tool:
 
     go get -u github.com/coreos/clair/contrib/analyze-local-images
 
-You also need a working Clair instance, the bare minimal setup is to run Clair in a Docker instance without much configuration:
+You also need a working Clair instance, the bare minimal setup is to run Clair in a Docker instance without much configuration,
+To learn more about how to run Clair, take a look at the [doc](https://github.com/coreos/clair/blob/master/docs/Run.md):
 
-    docker run -it -v /tmp:/tmp -p 6060:6060 -p 6061:6061 quay.io/coreos/clair --db-path=/db/bolt
+    docker run -it -v /tmp:/tmp -p 6060:6060 -p 6061:6061 -v <DIR_WITH_CONFIG>:/config:ro quay.io/coreos/clair:latest --config=/config/<CONFIG_FILENAME>.yaml
 
 You will need to let it do its initial vulnerability update, which may take some time.
 
