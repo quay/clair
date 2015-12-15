@@ -104,19 +104,24 @@ func Run(config *config.NotifierConfig, stopper *utils.Stopper) {
 	// Register healthchecker.
 	health.RegisterHealthchecker("notifier", Healthcheck)
 
-	for {
+	for running := true; running; {
 		// Find task.
 		// TODO(Quentin-M): Combine node and notification.
 		node, notification := findTask(whoAmI, stopper)
 		if node == "" && notification == nil {
+			// Interrupted while finding a task, Clair is stopping.
 			break
 		}
 
 		// Handle task.
 		done := make(chan bool, 1)
 		go func() {
-			if handleTask(notification, stopper, config.Attempts) {
+			success, interrupted := handleTask(notification, stopper, config.Attempts)
+			if success {
 				database.MarkNotificationAsSent(node)
+			}
+			if interrupted {
+				running = false
 			}
 			database.Unlock(node, whoAmI)
 			done <- true
@@ -161,13 +166,13 @@ func findTask(whoAmI string, stopper *utils.Stopper) (string, database.Notificat
 	}
 }
 
-func handleTask(notification database.Notification, st *utils.Stopper, maxAttempts int) bool {
+func handleTask(notification database.Notification, st *utils.Stopper, maxAttempts int) (bool, bool) {
 	// Get notification content.
 	// TODO(Quentin-M): Split big notifications.
 	notificationContent, err := notification.GetContent()
 	if err != nil {
 		log.Warningf("could not get content of notification '%s': %s", notification.GetName(), err)
-		return false
+		return false, false
 	}
 
 	// Create notification.
@@ -185,14 +190,14 @@ func handleTask(notification database.Notification, st *utils.Stopper, maxAttemp
 			// Max attempts exceeded.
 			if attempts >= maxAttempts {
 				log.Infof("giving up on sending notification '%s' to notifier '%s': max attempts exceeded (%d)\n", notification.GetName(), notifierName, maxAttempts)
-				return false
+				return false, false
 			}
 
 			// Backoff.
 			if backOff > 0 {
 				log.Infof("waiting %v before retrying to send notification '%s' to notifier '%s' (Attempt %d / %d)\n", backOff, notification.GetName(), notifierName, attempts+1, maxAttempts)
 				if !st.Sleep(backOff) {
-					return false
+					return false, true
 				}
 			}
 
@@ -210,7 +215,7 @@ func handleTask(notification database.Notification, st *utils.Stopper, maxAttemp
 	}
 
 	log.Infof("successfully sent notification '%s'\n", notification.GetName())
-	return true
+	return true, false
 }
 
 // Healthcheck returns the health of the notifier service.
