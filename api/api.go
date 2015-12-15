@@ -17,6 +17,9 @@
 package api
 
 import (
+	"crypto/tls"
+	"crypto/x509"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"strconv"
@@ -27,7 +30,6 @@ import (
 
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/utils"
-	httputils "github.com/coreos/clair/utils/http"
 )
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "api")
@@ -44,7 +46,7 @@ func Run(config *config.APIConfig, st *utils.Stopper) {
 	}
 	log.Infof("starting main API on port %d.", config.Port)
 
-	tlsConfig, err := httputils.LoadTLSClientConfigForServer(config.CAFile)
+	tlsConfig, err := tlsClientConfig(config.CAFile)
 	if err != nil {
 		log.Fatalf("could not initialize client cert authentification: %s\n", err)
 	}
@@ -109,4 +111,31 @@ func listenAndServeWithStopper(srv *graceful.Server, st *utils.Stopper, certFile
 	if opErr, ok := err.(*net.OpError); !ok || (ok && opErr.Op != "accept") {
 		log.Fatal(err)
 	}
+}
+
+// tlsClientConfig initializes a *tls.Config using the given CA. The resulting
+// *tls.Config is meant to be used to configure an HTTP server to do client
+// certificate authentication.
+//
+// If no CA is given, a nil *tls.Config is returned; no client certificate will
+// be required and verified. In other words, authentification will be disabled.
+func tlsClientConfig(caPath string) (*tls.Config, error) {
+	if caPath == "" {
+		return nil, nil
+	}
+
+	caCert, err := ioutil.ReadFile(caPath)
+	if err != nil {
+		return nil, err
+	}
+
+	caCertPool := x509.NewCertPool()
+	caCertPool.AppendCertsFromPEM(caCert)
+
+	tlsConfig := &tls.Config{
+		ClientCAs:  caCertPool,
+		ClientAuth: tls.RequireAndVerifyClientCert,
+	}
+
+	return tlsConfig, nil
 }
