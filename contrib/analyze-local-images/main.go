@@ -197,7 +197,7 @@ func history(imageName string) ([]string, error) {
 }
 
 func analyzeLayer(endpoint, path, layerID, parentLayerID string) error {
-	payload := struct{ ID, Path, ParentID string }{ID: layerID, Path: path, ParentID: parentLayerID}
+	payload := struct{ ID, Path, ParentID, ImageFormat string }{ID: layerID, Path: path, ParentID: parentLayerID, ImageFormat: "Docker"}
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return err

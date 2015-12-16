@@ -51,6 +51,7 @@ type AddLayoutRequestAPI struct {
 	ID       string `json:"ID"`
 	Path     string `json:"Path"`
 	ParantID string `json:"ParantID"`
+	ImageFormat string `json:"ImageFormat"`
 }
 
 type VulnerabilityItem struct {
@@ -223,7 +224,7 @@ func (clair ClairAPI) AddLayer(openvzMirror string, templateName string) error {
 		client = httpClient
 	}
 
-	jsonRequest, err := json.Marshal(AddLayoutRequestAPI{ID: templateName, Path: openvzMirror + "/" + templateName + ".tar.gz"})
+	jsonRequest, err := json.Marshal(AddLayoutRequestAPI{ID: templateName, Path: openvzMirror + "/" + templateName + ".tar.gz", ImageFormat: "Docker"})
 	if err != nil {
 		log.Println("Cannot convert to json request with error: ", err)
 		return err
