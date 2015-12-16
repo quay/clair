@@ -30,17 +30,12 @@ func init() {
 }
 
 func (detector *ACIDataDetector) Supported(path string, format string) bool {
-	switch format {
-	case "":
-		if strings.HasSuffix(path, ".aci") {
-			return true
-		}
-	case "aci":
+	if strings.EqualFold(format, "ACI") {
 		return true
 	}
 	return false
 }
 
 func (detector *ACIDataDetector) Detect(layerReader io.ReadCloser, toExtract []string, maxFileSize int64) (map[string][]byte, error) {
-	return utils.SelectivelyExtractArchive(layerReader, "./rootfs/", toExtract, maxFileSize)
+	return utils.SelectivelyExtractArchive(layerReader, "rootfs/", toExtract, maxFileSize)
 }

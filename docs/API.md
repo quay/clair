@@ -112,7 +112,8 @@ It processes and inserts a new Layer in the database.
 |------|-----|-------------|
 |ID|String|Unique ID of the Layer|
 |Path|String|Absolute path or HTTP link pointing to the Layer's tar file|
-|ParentID|String|(Optionnal) Unique ID of the Layer's parent
+|ParentID|String|(Optional) Unique ID of the Layer's parent|
+|ImageFormat|String|Image format of the Layer ('Docker' or 'ACI')|
 
 If the Layer has not parent, the ParentID field should be omitted or empty.
 
@@ -346,7 +347,7 @@ It returns the lists of vulnerabilities which affect a given Layer.
 |Name|Type|Description|
 |------|-----|-------------|
 |ID|String|Unique ID of the Layer|
-|minimumPriority|Priority|(Optionnal) The minimum priority of the returned vulnerabilities. Defaults to High|
+|minimumPriority|Priority|(Optional) The minimum priority of the returned vulnerabilities. Defaults to High|
 
 ### Example
 
@@ -389,7 +390,7 @@ It returns the lists of vulnerabilities which are introduced and removed by the 
 |Name|Type|Description|
 |------|-----|-------------|
 |ID|String|Unique ID of the Layer|
-|minimumPriority|Priority|(Optionnal) The minimum priority of the returned vulnerabilities|
+|minimumPriority|Priority|(Optional) The minimum priority of the returned vulnerabilities|
 
 ### Example
 
@@ -436,7 +437,7 @@ Counterintuitively, this request is actually a POST to be able to pass a lot of 
 |Name|Type|Description|
 |------|-----|-------------|
 |LayersIDs|Array of strings|Unique IDs of Layers|
-|minimumPriority|Priority|(Optionnal) The minimum priority of the returned vulnerabilities. Defaults to High|
+|minimumPriority|Priority|(Optional) The minimum priority of the returned vulnerabilities. Defaults to High|
 
 ### Example
 

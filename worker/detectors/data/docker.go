@@ -22,25 +22,20 @@ import (
 	"github.com/coreos/clair/worker/detectors"
 )
 
-// TarDataDetector implements DataDetector and detects layer data in 'tar' format
-type TarDataDetector struct{}
+// DockerDataDetector implements DataDetector and detects layer data in 'Docker' format
+type DockerDataDetector struct{}
 
 func init() {
-	detectors.RegisterDataDetector("tar", &TarDataDetector{})
+	detectors.RegisterDataDetector("Docker", &DockerDataDetector{})
 }
 
-func (detector *TarDataDetector) Supported(path string, format string) bool {
-	switch format {
-	case "":
-		if strings.HasSuffix(path, ".tar") || strings.HasSuffix(path, ".tar.gz") {
-			return true
-		}
-	case "tar":
+func (detector *DockerDataDetector) Supported(path string, format string) bool {
+	if strings.EqualFold(format, "Docker") {
 		return true
 	}
 	return false
 }
 
-func (detector *TarDataDetector) Detect(layerReader io.ReadCloser, toExtract []string, maxFileSize int64) (map[string][]byte, error) {
+func (detector *DockerDataDetector) Detect(layerReader io.ReadCloser, toExtract []string, maxFileSize int64) (map[string][]byte, error) {
 	return utils.SelectivelyExtractArchive(layerReader, "", toExtract, maxFileSize)
 }
