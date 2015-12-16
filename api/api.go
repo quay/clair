@@ -48,10 +48,10 @@ func Run(config *config.APIConfig, st *utils.Stopper) {
 
 	tlsConfig, err := tlsClientConfig(config.CAFile)
 	if err != nil {
-		log.Fatalf("could not initialize client cert authentification: %s\n", err)
+		log.Fatalf("could not initialize client cert authentication: %s\n", err)
 	}
 	if tlsConfig != nil {
-		log.Info("main API configured with client certificate authentification")
+		log.Info("main API configured with client certificate authentication")
 	}
 
 	srv := &graceful.Server{
@@ -68,7 +68,7 @@ func Run(config *config.APIConfig, st *utils.Stopper) {
 }
 
 // RunHealth launches the Health API, which only exposes a method to fetch
-// Clair's health without any security or authentification mechanism.
+// Clair's health without any security or authentication mechanism.
 func RunHealth(config *config.APIConfig, st *utils.Stopper) {
 	defer st.End()
 
@@ -118,7 +118,7 @@ func listenAndServeWithStopper(srv *graceful.Server, st *utils.Stopper, certFile
 // certificate authentication.
 //
 // If no CA is given, a nil *tls.Config is returned; no client certificate will
-// be required and verified. In other words, authentification will be disabled.
+// be required and verified. In other words, authentication will be disabled.
 func tlsClientConfig(caPath string) (*tls.Config, error) {
 	if caPath == "" {
 		return nil, nil

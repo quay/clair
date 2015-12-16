@@ -74,10 +74,10 @@ func New(config *config.NotifierConfig) *Notifier {
 	// Initialize TLS.
 	tlsConfig, err := loadTLSClientConfig(config)
 	if err != nil {
-		log.Fatalf("could not initialize client cert authentification: %s\n", err)
+		log.Fatalf("could not initialize client cert authentication: %s\n", err)
 	}
 	if tlsConfig != nil {
-		log.Info("notifier configured with client certificate authentification")
+		log.Info("notifier configured with client certificate authentication")
 	}
 
 	httpClient := &http.Client{
