@@ -131,7 +131,6 @@ func (fetcher *UbuntuFetcher) FetchUpdate() (resp updater.FetcherResponse, err e
 			// commit.
 			continue
 		}
-		defer file.Close()
 
 		v, pkgs, unknownReleases, err := parseUbuntuCVE(file)
 		if err != nil {
@@ -154,6 +153,13 @@ func (fetcher *UbuntuFetcher) FetchUpdate() (resp updater.FetcherResponse, err e
 			dbRevisionNumberInt, _ := strconv.Atoi(dbRevisionNumber)
 			revisionNumber = dbRevisionNumberInt
 		}
+
+		// Close the file manually.
+		//
+		// We do that instead of using defer because defer works on a function-level scope.
+		// We would open many files and close them all at once at the end of the function,
+		// which could lead to exceed fs.file-max.
+		file.Close()
 	}
 
 	// Add flag information
@@ -174,7 +180,6 @@ func collectModifiedVulnerabilities(revision int, dbRevision, repositoryLocalPat
 				log.Errorf("could not open Ubuntu vulnerabilities repository's folder: %s", err)
 				return nil, ErrFilesystem
 			}
-			defer d.Close()
 
 			// Get the FileInfo of all the files in the directory.
 			names, err := d.Readdirnames(-1)
@@ -189,6 +194,13 @@ func collectModifiedVulnerabilities(revision int, dbRevision, repositoryLocalPat
 					modifiedCVE[folder+"/"+name] = struct{}{}
 				}
 			}
+
+			// Close the file manually.
+			//
+			// We do that instead of using defer because defer works on a function-level scope.
+			// We would open many files and close them all at once at the end of the function,
+			// which could lead to exceed fs.file-max.
+			d.Close()
 		}
 
 		return modifiedCVE, nil
