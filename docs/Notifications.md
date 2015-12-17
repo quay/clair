@@ -2,7 +2,7 @@
 
 This tool can send notifications to external services when specific events happen, such as vulnerability updates.
 
-For now, it only supports transmitting them to an HTTP endpoint using POST requests, but it can be extended quite easily by registering a new Notifier kind.
+For now, it only supports transmitting them to an webhook endpoint using HTTP POST requests, but it can be extended quite easily by registering a new Notifier kind.
 To enable the notification system, you simply have to specify the appropriate configuration. See the [example configuration](../config.example.yaml).
 
 # Types of notifications

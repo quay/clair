@@ -32,14 +32,14 @@ import (
 	"github.com/coreos/clair/notifier"
 )
 
-// A HTTP notifier dispatches notifications to an HTTP endpoint.
-type HTTP struct {
+// A WebhookNotifier dispatches notifications to a webhook endpoint.
+type WebhookNotifier struct {
 	endpoint string
 	client   *http.Client
 }
 
-// A HTTPConfiguration represents the configuration of an HTTP notifier.
-type HTTPConfiguration struct {
+// A WebhookNotifierConfiguration represents the configuration of a WebhookNotifier.
+type WebhookNotifierConfiguration struct {
 	Endpoint   string
 	ServerName string
 	CertFile   string
@@ -48,12 +48,12 @@ type HTTPConfiguration struct {
 }
 
 func init() {
-	notifier.RegisterNotifier("http", &HTTP{})
+	notifier.RegisterNotifier("webhook", &WebhookNotifier{})
 }
 
-func (h *HTTP) Configure(config *config.NotifierConfig) (bool, error) {
+func (h *WebhookNotifier) Configure(config *config.NotifierConfig) (bool, error) {
 	// Get configuration
-	var httpConfig HTTPConfiguration
+	var httpConfig WebhookNotifierConfiguration
 	if config == nil {
 		return false, nil
 	}
@@ -92,14 +92,14 @@ func (h *HTTP) Configure(config *config.NotifierConfig) (bool, error) {
 	return true, nil
 }
 
-func (h *HTTP) Send(notification *notifier.Notification) error {
+func (h *WebhookNotifier) Send(notification *notifier.Notification) error {
 	// Marshal notification.
 	jsonNotification, err := json.Marshal(notification)
 	if err != nil {
 		return fmt.Errorf("could not marshal: %s", err)
 	}
 
-	// Send notification over HTTP.
+	// Send notification via HTTP POST.
 	resp, err := h.client.Post(h.endpoint, "application/json", bytes.NewBuffer(jsonNotification))
 	if err != nil || resp == nil || (resp.StatusCode != 200 && resp.StatusCode != 201) {
 		if resp != nil {
@@ -112,11 +112,11 @@ func (h *HTTP) Send(notification *notifier.Notification) error {
 	return nil
 }
 
-// loadTLSClientConfig initializes a *tls.Config using the given HTTPConfiguration.
+// loadTLSClientConfig initializes a *tls.Config using the given WebhookNotifierConfiguration.
 //
 // If no certificates are given, (nil, nil) is returned.
 // The CA certificate is optional and falls back to the system default.
-func loadTLSClientConfig(cfg *HTTPConfiguration) (*tls.Config, error) {
+func loadTLSClientConfig(cfg *WebhookNotifierConfiguration) (*tls.Config, error) {
 	if cfg.CertFile == "" || cfg.KeyFile == "" {
 		return nil, nil
 	}
