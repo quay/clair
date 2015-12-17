@@ -48,8 +48,7 @@ func Boot(config *config.Config) {
 
 	// Start notifier
 	st.Begin()
-	notifier := notifier.New(config.Notifier)
-	go notifier.Serve(st)
+	go notifier.Run(config.Notifier, st)
 
 	// Start API
 	st.Begin()

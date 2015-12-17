@@ -29,10 +29,14 @@ updater:
   # Use 0 to disable the updater entirely.
   interval: 2h
 notifier:
-  # HTTP endpoint that will receive notifications with POST requests.
-  endpoint:
-  # Server name and path to certificates to call the endpoint securely with TLS and client certificate auth.
-  servername:
-  cafile:
-  keyfile:
-  certfile:
+  # How many attempts will the notifier do when a notifier backend fails.
+  attempts: 3
+  # Configuration for HTTP notifier
+  http:
+    # Endpoint that will receive notifications with POST requests.
+    endpoint:
+    # Server name and path to certificates to call the endpoint securely with TLS and client certificate auth.
+    servername:
+    cafile:
+    keyfile:
+    certfile:

@@ -26,6 +26,7 @@ import (
 	"github.com/coreos/pkg/capnslog"
 
 	// Register components
+	_ "github.com/coreos/clair/notifier/notifiers"
 	_ "github.com/coreos/clair/updater/fetchers"
 	_ "github.com/coreos/clair/worker/detectors/os"
 	_ "github.com/coreos/clair/worker/detectors/packages"
