@@ -48,7 +48,7 @@ type WebhookNotifierConfiguration struct {
 }
 
 func init() {
-	notifier.RegisterNotifier("webhook", &WebhookNotifier{})
+	//notifier.RegisterNotifier("webhook", &WebhookNotifier{})
 }
 
 func (h *WebhookNotifier) Configure(config *config.NotifierConfig) (bool, error) {

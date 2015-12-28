@@ -33,8 +33,8 @@ type Config struct {
 // DatabaseConfig is the configuration used to specify how Clair connects
 // to a database.
 type DatabaseConfig struct {
-	Type string
-	Path string
+	Source    string
+	CacheSize int
 }
 
 // UpdaterConfig is the configuration for the Updater service.
@@ -59,7 +59,7 @@ type APIConfig struct {
 // DefaultConfig is a configuration that can be used as a fallback value.
 var DefaultConfig = Config{
 	Database: &DatabaseConfig{
-		Type: "memstore",
+		CacheSize: 16384,
 	},
 	Updater: &UpdaterConfig{
 		Interval: 1 * time.Hour,

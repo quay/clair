@@ -19,8 +19,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/coreos/clair/api/logic"
-	"github.com/coreos/clair/api/wrappers"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -30,9 +28,9 @@ type VersionRouter map[string]*httprouter.Router
 
 // NewVersionRouter instantiates a VersionRouter and every sub-routers that are
 // necessary to handle supported API versions.
-func NewVersionRouter(to time.Duration) *VersionRouter {
+func NewVersionRouter(to time.Duration, env *Env) *VersionRouter {
 	return &VersionRouter{
-		"/v1": NewRouterV1(to),
+		"/v1": NewRouterV1(to, env),
 	}
 }
 
@@ -56,42 +54,38 @@ func (vs VersionRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // NewRouterV1 creates a new router for the API (Version 1)
-func NewRouterV1(to time.Duration) *httprouter.Router {
+func NewRouterV1(to time.Duration, env *Env) *httprouter.Router {
 	router := httprouter.New()
-	wrap := func(fn httprouter.Handle) httprouter.Handle {
-		return wrappers.Log(wrappers.TimeOut(to, fn))
+
+	// Create a wrapper that will wrap a Handle into a httprouter.Handle and that adds
+	// logging and time-out capabilities.
+	wrap := func(fn Handle, e *Env) httprouter.Handle {
+		return Logger(TimeOut(to, WrapHandle(fn, e)))
 	}
 
 	// General
-	router.GET("/versions", wrap(logic.GETVersions))
-	router.GET("/health", wrap(logic.GETHealth))
+	router.GET("/versions", wrap(GETVersions, env))
+	router.GET("/health", wrap(GETHealth, env))
 
 	// Layers
-	router.POST("/layers", wrap(logic.POSTLayers))
-	router.DELETE("/layers/:id", wrap(logic.DELETELayers))
-	router.GET("/layers/:id/os", wrap(logic.GETLayersOS))
-	router.GET("/layers/:id/parent", wrap(logic.GETLayersParent))
-	router.GET("/layers/:id/packages", wrap(logic.GETLayersPackages))
-	router.GET("/layers/:id/packages/diff", wrap(logic.GETLayersPackagesDiff))
-	router.GET("/layers/:id/vulnerabilities", wrap(logic.GETLayersVulnerabilities))
-	router.GET("/layers/:id/vulnerabilities/diff", wrap(logic.GETLayersVulnerabilitiesDiff))
-	// # Batch version of "/layers/:id/vulnerabilities"
-	router.POST("/batch/layers/vulnerabilities", wrap(logic.POSTBatchLayersVulnerabilities))
+	router.POST("/layers", wrap(POSTLayers, env))
+	router.DELETE("/layers/:id", wrap(DELETELayers, env))
+	router.GET("/layers/:id", wrap(GETLayers, env))
 
 	// Vulnerabilities
-	router.POST("/vulnerabilities", wrap(logic.POSTVulnerabilities))
-	router.PUT("/vulnerabilities/:id", wrap(logic.PUTVulnerabilities))
-	router.GET("/vulnerabilities/:id", wrap(logic.GETVulnerabilities))
-	router.DELETE("/vulnerabilities/:id", wrap(logic.DELVulnerabilities))
-	router.GET("/vulnerabilities/:id/introducing-layers", wrap(logic.GETVulnerabilitiesIntroducingLayers))
-	router.POST("/vulnerabilities/:id/affected-layers", wrap(logic.POSTVulnerabilitiesAffectedLayers))
+	// router.POST("/vulnerabilities", wrap(logic.POSTVulnerabilities))
+	// router.PUT("/vulnerabilities/:id", wrap(logic.PUTVulnerabilities))
+	// router.GET("/vulnerabilities/:id", wrap(logic.GETVulnerabilities))
+	// router.DELETE("/vulnerabilities/:id", wrap(logic.DELVulnerabilities))
+	// router.GET("/vulnerabilities/:id/introducing-layers", wrap(logic.GETVulnerabilitiesIntroducingLayers))
+	// router.POST("/vulnerabilities/:id/affected-layers", wrap(logic.POSTVulnerabilitiesAffectedLayers))
 
 	return router
 }
 
 // NewHealthRouter creates a new router that only serve the Health function on /
-func NewHealthRouter() *httprouter.Router {
+func NewHealthRouter(env *Env) *httprouter.Router {
 	router := httprouter.New()
-	router.GET("/", logic.GETHealth)
+	router.GET("/", WrapHandle(GETHealth, env))
 	return router
 }

@@ -81,7 +81,7 @@ type criterion struct {
 type RHELFetcher struct{}
 
 func init() {
-	updater.RegisterFetcher("Red Hat", &RHELFetcher{})
+	//updater.RegisterFetcher("Red Hat", &RHELFetcher{})
 }
 
 // FetchUpdate gets vulnerability updates from the Red Hat OVAL definitions.

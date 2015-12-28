@@ -53,7 +53,7 @@ type jsonRel struct {
 type DebianFetcher struct{}
 
 func init() {
-	updater.RegisterFetcher("debian", &DebianFetcher{})
+	//updater.RegisterFetcher("debian", &DebianFetcher{})
 }
 
 // FetchUpdate fetches vulnerability updates from the Debian Security Tracker.

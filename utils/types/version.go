@@ -15,6 +15,7 @@
 package types
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"errors"
 	"strconv"
@@ -181,6 +182,19 @@ func (v *Version) UnmarshalJSON(b []byte) (err error) {
 	vp, err := NewVersion(str)
 	*v = vp
 	return
+}
+
+func (v *Version) Scan(value interface{}) (err error) {
+	val, ok := value.([]byte)
+	if !ok {
+		return errors.New("could not scan a Version from a non-string input")
+	}
+	*v, err = NewVersion(string(val))
+	return
+}
+
+func (v *Version) Value() (driver.Value, error) {
+	return v.String(), nil
 }
 
 func verrevcmp(t1, t2 string) int {

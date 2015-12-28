@@ -1,0 +1,127 @@
+-- +goose Up
+
+-- -----------------------------------------------------
+-- Table Namespace
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS Namespace (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(128) NULL);
+
+
+-- -----------------------------------------------------
+-- Table Layer
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS Layer (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(128) NOT NULL UNIQUE,
+  engineversion SMALLINT NOT NULL,
+  parent_id INT NULL REFERENCES Layer,
+  namespace_id INT NULL REFERENCES Namespace);
+
+CREATE INDEX ON Layer (parent_id);
+CREATE INDEX ON Layer (namespace_id);
+
+-- -----------------------------------------------------
+-- Table Feature
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS Feature (
+  id SERIAL PRIMARY KEY,
+  namespace_id INT NOT NULL REFERENCES Namespace,
+  name VARCHAR(128) NOT NULL,
+
+  UNIQUE (namespace_id, name));
+
+-- -----------------------------------------------------
+-- Table FeatureVersion
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS FeatureVersion (
+  id SERIAL PRIMARY KEY,
+  feature_id INT NOT NULL REFERENCES Feature,
+  version VARCHAR(128) NOT NULL);
+
+CREATE INDEX ON FeatureVersion (feature_id);
+
+
+-- -----------------------------------------------------
+-- Table Layer_diff_FeatureVersion
+-- -----------------------------------------------------
+CREATE TYPE modification AS ENUM ('add', 'del');
+
+CREATE TABLE IF NOT EXISTS Layer_diff_FeatureVersion (
+  id SERIAL PRIMARY KEY,
+  layer_id INT NOT NULL REFERENCES Layer ON DELETE CASCADE,
+  featureversion_id INT NOT NULL REFERENCES FeatureVersion,
+  modification modification NOT NULL,
+
+  UNIQUE (layer_id, featureversion_id));
+
+CREATE INDEX ON Layer_diff_FeatureVersion (layer_id);
+CREATE INDEX ON Layer_diff_FeatureVersion (featureversion_id);
+CREATE INDEX ON Layer_diff_FeatureVersion (featureversion_id, layer_id);
+
+
+-- -----------------------------------------------------
+-- Table Vulnerability
+-- -----------------------------------------------------
+CREATE TYPE severity AS ENUM ('Unknown', 'Negligible', 'Low', 'Medium', 'High', 'Critical', 'Defcon1');
+
+CREATE TABLE IF NOT EXISTS Vulnerability (
+  id SERIAL PRIMARY KEY,
+  namespace_id INT NOT NULL REFERENCES Namespace,
+  name VARCHAR(128) NOT NULL,
+  description TEXT NULL,
+  link VARCHAR(128) NULL,
+  severity severity NULL,
+
+  UNIQUE (namespace_id, name));
+
+
+-- -----------------------------------------------------
+-- Table Vulnerability_FixedIn_Feature
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS Vulnerability_FixedIn_Feature (
+  id SERIAL PRIMARY KEY,
+  vulnerability_id INT NOT NULL REFERENCES Vulnerability ON DELETE CASCADE,
+  feature_id INT NOT NULL REFERENCES Feature,
+  version VARCHAR(128) NOT NULL,
+
+  UNIQUE (vulnerability_id, feature_id));
+
+CREATE INDEX ON Vulnerability_FixedIn_Feature (feature_id, vulnerability_id);
+
+
+-- -----------------------------------------------------
+-- Table Vulnerability_Affects_FeatureVersion
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS Vulnerability_Affects_FeatureVersion (
+  id SERIAL PRIMARY KEY,
+  vulnerability_id INT NOT NULL REFERENCES Vulnerability ON DELETE CASCADE,
+  featureversion_id INT NOT NULL REFERENCES FeatureVersion,
+  fixedin_id INT NOT NULL REFERENCES Vulnerability_FixedIn_Feature,
+
+  UNIQUE (vulnerability_id, featureversion_id));
+
+CREATE INDEX ON Vulnerability_Affects_FeatureVersion (fixedin_id);
+CREATE INDEX ON Vulnerability_Affects_FeatureVersion (featureversion_id, vulnerability_id);
+
+
+-- -----------------------------------------------------
+-- Table KeyValue
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS KeyValue (
+  id SERIAL PRIMARY KEY,
+  key VARCHAR(128) NOT NULL UNIQUE,
+  value TEXT);
+
+-- +goose Down
+
+DROP TABLE IF EXISTS Namespace,
+                     Layer,
+                     Feature,
+                     FeatureVersion,
+                     Layer_diff_FeatureVersion,
+                     Vulnerability,
+                     Vulnerability_FixedIn_Feature,
+                     Vulnerability_Affects_FeatureVersion,
+                     KeyValue
+            CASCADE;
