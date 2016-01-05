@@ -15,6 +15,7 @@
 package packages
 
 import (
+	"os/exec"
 	"testing"
 
 	"github.com/coreos/clair/database"
@@ -42,5 +43,10 @@ var rpmPackagesTests = []packagesTest{
 }
 
 func TestRpmPackagesDetector(t *testing.T) {
+	_, err := exec.LookPath("rpm")
+	if err != nil {
+		log.Warningf("could not find rpm executable. skipping")
+		return
+	}
 	testPackagesDetector(t, &RpmPackagesDetector{}, rpmPackagesTests)
 }
