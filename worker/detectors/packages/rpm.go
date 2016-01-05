@@ -21,8 +21,8 @@ import (
 	"strings"
 
 	"github.com/coreos/clair/database"
-	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils"
+	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/clair/worker/detectors"
 )
@@ -96,13 +96,7 @@ func (detector *RpmPackagesDetector) Detect(data map[string][]byte) ([]*database
 		packagesMap[pkg.Key()] = pkg
 	}
 
-	// Convert the map to a slice
-	packages := make([]*database.Package, 0, len(packagesMap))
-	for _, pkg := range packagesMap {
-		packages = append(packages, pkg)
-	}
-
-	return packages, nil
+	return mapToSlices(packagesMap), nil
 }
 
 // GetRequiredFiles returns the list of files required for Detect, without
