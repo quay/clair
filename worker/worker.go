@@ -18,9 +18,6 @@ package worker
 
 import (
 	"errors"
-	"io"
-	"net/http"
-	"os"
 	"strings"
 
 	"github.com/coreos/clair/database"
@@ -52,19 +49,36 @@ var (
 
 	// SupportedOS is the list of operating system names that the worker supports.
 	SupportedOS = []string{"debian", "ubuntu", "centos"}
+
+	// SupportedImageFormat is the list of image formats that the worker supports.
+	SupportedImageFormat = []string{"Docker", "ACI"}
 )
 
 // Process detects the OS of a layer, the packages it installs/removes, and
 // then stores everything in the database.
-func Process(ID, parentID, path string) error {
+func Process(ID, parentID, path string, imageFormat string) error {
 	if ID == "" {
 		return cerrors.NewBadRequestError("could not process a layer which does not have ID")
 	}
 	if path == "" {
 		return cerrors.NewBadRequestError("could not process a layer which does not have a path")
 	}
+	if imageFormat == "" {
+		return cerrors.NewBadRequestError("could not process a layer which does not have a specified format")
+	} else {
+		isSupported := false
+		for _, format := range SupportedImageFormat {
+			if strings.EqualFold(imageFormat, format) {
+				isSupported = true
+				break
+			}
+		}
+		if !isSupported {
+			return cerrors.NewBadRequestError("could not process a layer which does not have a supported format")
+		}
+	}
 
-	log.Debugf("layer %s: processing (Location: %s, Engine version: %d, Parent: %s)", ID, utils.CleanURL(path), Version, parentID)
+	log.Debugf("layer %s: processing (Location: %s, Engine version: %d, Parent: %s, Format: %s)", ID, utils.CleanURL(path), Version, parentID, imageFormat)
 
 	// Check to see if the layer is already in the database.
 	layer, err := database.FindOneLayerByID(ID, []string{database.FieldLayerEngineVersion})
@@ -101,7 +115,7 @@ func Process(ID, parentID, path string) error {
 	}
 
 	// Analyze the content.
-	layer.OS, layer.InstalledPackagesNodes, layer.RemovedPackagesNodes, err = detectContent(ID, path, parent)
+	layer.OS, layer.InstalledPackagesNodes, layer.RemovedPackagesNodes, err = detectContent(ID, path, parent, imageFormat)
 	if err != nil {
 		return err
 	}
@@ -114,8 +128,8 @@ func Process(ID, parentID, path string) error {
 //
 // If parent is not nil, database.FieldLayerOS, database.FieldLayerPackages fields must be
 // has been selectioned.
-func detectContent(ID, path string, parent *database.Layer) (OS string, installedPackagesNodes, removedPackagesNodes []string, err error) {
-	data, err := getLayerData(path)
+func detectContent(ID, path string, parent *database.Layer, imageFormat string) (OS string, installedPackagesNodes, removedPackagesNodes []string, err error) {
+	data, err := getLayerData(path, imageFormat)
 	if err != nil {
 		log.Errorf("layer %s: failed to extract data from %s: %s", ID, utils.CleanURL(path), err)
 		return
@@ -182,23 +196,8 @@ func detectContent(ID, path string, parent *database.Layer) (OS string, installe
 }
 
 // getLayerData downloads/opens a layer archive and extracts it into memory.
-func getLayerData(path string) (data map[string][]byte, err error) {
-	var layerReader io.ReadCloser
-	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
-		r, err := http.Get(path)
-		if err != nil {
-			return nil, cerrors.ErrCouldNotDownload
-		}
-		layerReader = r.Body
-	} else {
-		layerReader, err = os.Open(path)
-		if err != nil {
-			return nil, cerrors.ErrNotFound
-		}
-	}
-	defer layerReader.Close()
-
-	data, err = utils.SelectivelyExtractArchive(layerReader, append(detectors.GetRequiredFilesPackages(), detectors.GetRequiredFilesOS()...), maxFileSize)
+func getLayerData(path string, imageFormat string) (data map[string][]byte, err error) {
+	data, err = detectors.DetectData(path, imageFormat, append(detectors.GetRequiredFilesPackages(), detectors.GetRequiredFilesOS()...), maxFileSize)
 	if err != nil {
 		return nil, err
 	}

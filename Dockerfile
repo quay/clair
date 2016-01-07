@@ -1,7 +1,7 @@
 FROM golang:1.5
 MAINTAINER Quentin Machu <quentin.machu@coreos.com>
 
-RUN apt-get update && apt-get install -y bzr rpm && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN apt-get update && apt-get install -y bzr rpm xz && apt-get autoremove -y && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 RUN mkdir         /db
 VOLUME            /db

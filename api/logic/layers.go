@@ -30,7 +30,7 @@ import (
 
 // POSTLayersParameters represents the expected parameters for POSTLayers.
 type POSTLayersParameters struct {
-	ID, Path, ParentID string
+	ID, Path, ParentID, ImageFormat string
 }
 
 // POSTLayers analyzes a layer and returns the engine version that has been used
@@ -43,7 +43,7 @@ func POSTLayers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	}
 
 	// Process data.
-	if err := worker.Process(parameters.ID, parameters.ParentID, parameters.Path); err != nil {
+	if err := worker.Process(parameters.ID, parameters.ParentID, parameters.Path, parameters.ImageFormat); err != nil {
 		httputils.WriteHTTPError(w, 0, err)
 		return
 	}

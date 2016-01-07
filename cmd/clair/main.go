@@ -28,6 +28,7 @@ import (
 	// Register components
 	_ "github.com/coreos/clair/notifier/notifiers"
 	_ "github.com/coreos/clair/updater/fetchers"
+	_ "github.com/coreos/clair/worker/detectors/data"
 	_ "github.com/coreos/clair/worker/detectors/os"
 	_ "github.com/coreos/clair/worker/detectors/packages"
 )
