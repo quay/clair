@@ -1,6 +1,9 @@
 package pgsql
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 var queries map[string]string
 
@@ -28,7 +31,7 @@ func init() {
 	queries["soi_feature"] = `
     WITH new_feature AS (
       INSERT INTO Feature(name, namespace_id)
-      SELECT CAST($1 AS VARCHAR), CAST($2 AS VARCHAR)
+      SELECT CAST($1 AS VARCHAR), CAST($2 AS INTEGER)
       WHERE NOT EXISTS (SELECT id FROM Feature WHERE name = $1 AND namespace_id = $2)
       RETURNING id
     )
@@ -36,23 +39,25 @@ func init() {
     UNION
     SELECT id FROM new_feature`
 
-	queries["l_share_vulnerability_fixedin_feature"] = `LOCK Vulnerability_FixedIn_Feature IN SHARE MODE`
+	queries["l_share_vulnerability_fixedin_feature"] = `
+    LOCK Vulnerability_FixedIn_Feature IN SHARE MODE
+  `
 
 	queries["soi_featureversion"] = `
     WITH new_featureversion AS (
       INSERT INTO FeatureVersion(feature_id, version)
-      SELECT CAST($1 AS VARCHAR), CAST($2 AS VARCHAR)
-      WHERE NOT EXISTS (SELECT id FROM Feature WHERE feature_id = $1 AND version = $2)
+      SELECT CAST($1 AS INTEGER), CAST($2 AS VARCHAR)
+      WHERE NOT EXISTS (SELECT id FROM FeatureVersion WHERE feature_id = $1 AND version = $2)
       RETURNING id
     )
-    SELECT 'exi', id FROM Feature WHERE feature_id = $1 AND version = $2
+    SELECT 'exi', id FROM FeatureVersion WHERE feature_id = $1 AND version = $2
     UNION
     SELECT 'new', id FROM new_featureversion
   `
 
 	queries["s_vulnerability_fixedin_feature"] = `
     SELECT id, vulnerability_id, version FROM Vulnerability_FixedIn_Feature
-    WHERE feature_id = ?`
+    WHERE feature_id = $1`
 
 	queries["i_vulnerability_affects_featureversion"] = `
     INSERT INTO Vulnerability_Affects_FeatureVersion(vulnerability_id,
@@ -60,7 +65,7 @@ func init() {
 
 	// layer.go
 	queries["s_layer"] = `
-    SELECT l.id, l.name, l.engineversion, p.name, n.name
+    SELECT l.id, l.name, l.engineversion, p.id, p.name, n.id, n.name
     FROM Layer l
       LEFT JOIN Layer p ON l.parent_id = p.id
       LEFT JOIN Namespace n ON l.namespace_id = n.id
@@ -102,7 +107,8 @@ func init() {
     ORDER BY ltree.ordering`
 
 	queries["s_featureversions_vulnerabilities"] = `
-    SELECT vafv.featureversion_id, v.id, v.name, v.description, v.link, v.severity, vn.name, vfif.version
+    SELECT vafv.featureversion_id, v.id, v.name, v.description, v.link, v.severity, vn.name,
+      vfif.version
     FROM Vulnerability_Affects_FeatureVersion vafv, Vulnerability v,
          Namespace vn, Vulnerability_FixedIn_Feature vfif
     WHERE vafv.featureversion_id = ANY($1::integer[])
@@ -110,9 +116,21 @@ func init() {
           AND vafv.fixedin_id = vfif.id
           AND v.namespace_id = vn.id`
 
-	queries["i_layer"] = `INSERT INTO Layer(name, engine_version, parent_id, namespace_id) VALUES($1, $2, $3, $4) RETURNING id`
+	queries["i_layer"] = `
+    INSERT INTO Layer(name, engineversion, parent_id, namespace_id)
+    VALUES($1, $2, $3, $4) RETURNING id`
 
-	queries["u_layer"] = `UPDATE LAYER SET engine_version = $2, namespace_id = $3) WHERE id = $1`
+	queries["u_layer"] = `UPDATE LAYER SET engineversion = $2, namespace_id = $3) WHERE id = $1`
+
+	queries["r_layer_diff_featureversion"] = `
+    DELETE FROM Layer_diff_FeatureVersion
+    WHERE layer_id = $1`
+
+	queries["i_layer_diff_featureversion"] = `
+    INSERT INTO Layer_diff_FeatureVersion(layer_id, featureversion_id, modification)
+      SELECT $1, fv.id, $2
+	    FROM FeatureVersion fv
+	    WHERE fv.id = ANY($3::integer[])`
 }
 
 func getQuery(name string) string {
@@ -120,4 +138,16 @@ func getQuery(name string) string {
 		return query
 	}
 	panic(fmt.Sprintf("pgsql: unknown query %v", name))
+}
+
+// buildInputArray constructs a PostgreSQL input array from the specified integers.
+// Useful to use the `= ANY($1::integer[])` syntax that let us use a IN clause while using
+// a single placeholder.
+func buildInputArray(ints []int) string {
+	str := "{"
+	for i := 0; i < len(ints)-1; i++ {
+		str = str + strconv.Itoa(ints[i]) + ","
+	}
+	str = str + strconv.Itoa(ints[len(ints)-1]) + "}"
+	return str
 }

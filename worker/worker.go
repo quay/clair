@@ -156,6 +156,14 @@ func detectContent(name, path, imageFormat string, parent *database.Layer) (name
 		return
 	}
 
+	// If there are no feature detected, use parent's features if possible.
+	// TODO(Quentin-M): We eventually want to give the choice to each detectors to use none/some
+	// parent's Features. It would be useful for dectectors that can't find their entire result using
+	// one Layer.
+	if len(features) == 0 && parent != nil {
+		features = parent.Features
+	}
+
 	log.Debugf("layer %s: detected %d features", name, len(features))
 	return
 }

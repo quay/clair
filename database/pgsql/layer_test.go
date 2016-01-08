@@ -121,6 +121,8 @@ func testInsertLayerInvalid(t *testing.T, datastore database.Datastore) {
 }
 
 func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
+	fmt.Println("- testInsertLayerTree")
+
 	f1 := database.FeatureVersion{
 		Feature: database.Feature{
 			Namespace: database.Namespace{Name: "TestInsertLayerNamespace2"},
@@ -152,7 +154,7 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 	f5 := database.FeatureVersion{
 		Feature: database.Feature{
 			Namespace: database.Namespace{Name: "TestInsertLayerNamespace3"},
-			Name:      "TestInsertLayerFeature2",
+			Name:      "TestInsertLayerFeature3",
 		},
 		Version: types.NewVersionUnsafe("0.57"),
 	}
@@ -180,10 +182,11 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 			Namespace: &database.Namespace{Name: "TestInsertLayerNamespace2"},
 			Features:  []database.FeatureVersion{f1, f2, f3},
 		},
-		// This layer covers the case where the last layer doesn't provide any Feature.
+		// This layer covers the case where the last layer doesn't provide any new Feature.
 		database.Layer{
-			Name:   "TestInsertLayer4a",
-			Parent: &database.Layer{Name: "TestInsertLayer3"},
+			Name:     "TestInsertLayer4a",
+			Parent:   &database.Layer{Name: "TestInsertLayer3"},
+			Features: []database.FeatureVersion{f1, f2, f3},
 		},
 		// This layer covers the case where the last layer provides Features.
 		// It also modifies the Namespace ("upgrade") but keeps some Features not upgraded, their
@@ -221,7 +224,9 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 	}
 
 	l4a := retrievedLayers["TestInsertLayer4a"]
-	assert.Equal(t, "TestInsertLayerNamespace2", l4a.Namespace.Name)
+	if assert.NotNil(t, l4a.Namespace) {
+		assert.Equal(t, "TestInsertLayerNamespace2", l4a.Namespace.Name)
+	}
 	assert.Len(t, l4a.Features, 3)
 	for _, featureVersion := range l4a.Features {
 		if cmpFV(featureVersion, f1) && cmpFV(featureVersion, f2) && cmpFV(featureVersion, f3) {
@@ -230,9 +235,11 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 	}
 
 	l4b := retrievedLayers["TestInsertLayer4b"]
-	assert.Equal(t, "TestInsertLayerNamespace3", l4a.Namespace.Name)
-	assert.Len(t, l4a.Features, 3)
-	for _, featureVersion := range l4a.Features {
+	if assert.NotNil(t, l4b.Namespace) {
+		assert.Equal(t, "TestInsertLayerNamespace3", l4b.Namespace.Name)
+	}
+	assert.Len(t, l4b.Features, 3)
+	for _, featureVersion := range l4b.Features {
 		if cmpFV(featureVersion, f2) && cmpFV(featureVersion, f5) && cmpFV(featureVersion, f6) {
 			assert.Error(t, fmt.Errorf("TestInsertLayer4a contains an unexpected package: %#v. Should contain %#v and %#v and %#v.", featureVersion, f2, f4, f6))
 		}

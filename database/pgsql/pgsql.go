@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"path"
 	"runtime"
-	"strconv"
 	"strings"
 
 	"bitbucket.org/liamstask/goose/lib/goose"
@@ -169,18 +168,6 @@ func OpenForTest(name string, withTestData bool) (*pgSQLTest, error) {
 	}
 
 	return &pgSQLTest{pgSQL: db.(*pgSQL), dataSource: dataSource, dbName: dbName}, nil
-}
-
-// buildInputArray constructs a PostgreSQL input array from the specified integers.
-// Useful to use the `= ANY($1::integer[])` syntax that let us use a IN clause while using
-// a single placeholder.
-func buildInputArray(ints []int) string {
-	str := "{"
-	for i := 0; i < len(ints)-1; i++ {
-		str = str + strconv.Itoa(ints[i]) + ","
-	}
-	str = str + strconv.Itoa(ints[len(ints)-1]) + "}"
-	return str
 }
 
 // isErrUniqueViolation determines is the given error is a unique contraint violation.

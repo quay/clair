@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/guregu/null/zero"
 )
@@ -11,11 +12,14 @@ import (
 func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities bool) (database.Layer, error) {
 	// Find the layer
 	var layer database.Layer
-	var parentName sql.NullString
+	var parentID zero.Int
+	var parentName zero.String
+	var namespaceID zero.Int
 	var namespaceName sql.NullString
 
 	err := pgSQL.QueryRow(getQuery("s_layer"), name).
-		Scan(&layer.ID, &layer.Name, &layer.EngineVersion, &parentName, &namespaceName)
+		Scan(&layer.ID, &layer.Name, &layer.EngineVersion, &parentID, &parentName, &namespaceID,
+		&namespaceName)
 
 	if err == sql.ErrNoRows {
 		return layer, cerrors.ErrNotFound
@@ -24,11 +28,17 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 		return layer, err
 	}
 
-	if parentName.Valid {
-		layer.Parent = &database.Layer{Name: parentName.String}
+	if !parentID.IsZero() {
+		layer.Parent = &database.Layer{
+			Model: database.Model{ID: int(parentID.Int64)},
+			Name:  parentName.String,
+		}
 	}
-	if namespaceName.Valid {
-		layer.Namespace = &database.Namespace{Name: namespaceName.String}
+	if !namespaceID.IsZero() {
+		layer.Namespace = &database.Namespace{
+			Model: database.Model{ID: int(namespaceID.Int64)},
+			Name:  namespaceName.String,
+		}
 	}
 
 	// Find its features
@@ -210,6 +220,11 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 			return err
 		}
 		namespaceID = zero.IntFrom(int64(n))
+	} else if layer.Namespace == nil && layer.Parent != nil {
+		// Import the Namespace from the parent if it has one and this layer doesn't specify one.
+		if layer.Parent.Namespace != nil {
+			namespaceID = zero.IntFrom(int64(layer.Parent.Namespace.ID))
+		}
 	}
 
 	if layer.ID == 0 {
@@ -222,11 +237,6 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 			}
 
 			parentID = zero.IntFrom(int64(layer.Parent.ID))
-
-			// Import the Namespace from the parent is this layer doesn't specify one.
-			if zero.IsNull(namespaceID) {
-				namespaceID = zero.IntFrom(int64(layer.Parent.Namespace.ID))
-			}
 		}
 
 		err = tx.QueryRow(getQuery("i_layer"), layer.Name, layer.EngineVersion, parentID, namespaceID).
@@ -247,10 +257,20 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 			tx.Rollback()
 			return err
 		}
+
+		// Remove all existing Layer_diff_FeatureVersion.
+		_, err = tx.Exec(getQuery("r_layer_diff_featureversion"), layer.ID)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
 	}
 
 	// Update Layer_diff_FeatureVersion now.
-	updateDiffFeatureVersions(tx, &layer, &existingLayer)
+	err = pgSQL.updateDiffFeatureVersions(tx, &layer, &existingLayer)
+	if err != nil {
+		return err
+	}
 
 	// Commit transaction.
 	err = tx.Commit()
@@ -262,19 +282,73 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	return nil
 }
 
-func updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *database.Layer) {
-	// TODO
+func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *database.Layer) error {
+	// add and del are the FeatureVersion diff we should insert.
+	var add []database.FeatureVersion
+	var del []database.FeatureVersion
 
-	if existingLayer != nil {
-		// We are updating a layer, we need to diff the Features with the existing Layer.
-
-	} else if layer.Parent == nil {
+	if layer.Parent == nil {
 		// There is no parent, every Features are added.
-
+		add = append(add, layer.Features...)
 	} else if layer.Parent != nil {
 		// There is a parent, we need to diff the Features with it.
 
+		// Build name:version strctures.
+		layerFeaturesMapNV, layerFeaturesNV := createNV(layer.Features)
+		parentLayerFeaturesMapNV, parentLayerFeaturesNV := createNV(layer.Parent.Features)
+
+		// Calculate the added and deleted FeatureVersions name:version.
+		addNV := utils.CompareStringLists(layerFeaturesNV, parentLayerFeaturesNV)
+		delNV := utils.CompareStringLists(parentLayerFeaturesNV, layerFeaturesNV)
+
+		// Fill the structures containing the added and deleted FeatureVersions
+		for _, nv := range addNV {
+			add = append(add, *layerFeaturesMapNV[nv])
+		}
+		for _, nv := range delNV {
+			del = append(del, *parentLayerFeaturesMapNV[nv])
+		}
 	}
+
+	// Insert FeatureVersions in the database.
+	addIDs, err := pgSQL.insertFeatureVersions(add)
+	if err != nil {
+		return err
+	}
+	delIDs, err := pgSQL.insertFeatureVersions(del)
+	if err != nil {
+		return err
+	}
+
+	// Insert diff in the database.
+	if len(addIDs) > 0 {
+		_, err = tx.Exec(getQuery("i_layer_diff_featureversion"), layer.ID, "add", buildInputArray(addIDs))
+		if err != nil {
+			return err
+		}
+	}
+	if len(delIDs) > 0 {
+		_, err = tx.Exec(getQuery("i_layer_diff_featureversion"), layer.ID, "del", buildInputArray(delIDs))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func createNV(features []database.FeatureVersion) (map[string]*database.FeatureVersion, []string) {
+	mapNV := make(map[string]*database.FeatureVersion, 0)
+	sliceNV := make([]string, 0, len(features))
+
+	for i := 0; i < len(features); i++ {
+		featureVersion := &features[i]
+		nv := featureVersion.Feature.Name + ":" + featureVersion.Version.String()
+		mapNV[nv] = featureVersion
+		sliceNV = append(sliceNV, nv)
+	}
+
+	return mapNV, sliceNV
 }
 
 func (pgSQL *pgSQL) DeleteLayer(name string) error {
