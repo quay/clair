@@ -5,7 +5,7 @@ import (
 	cerrors "github.com/coreos/clair/utils/errors"
 )
 
-func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (id int, err error) {
+func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (int, error) {
 	if namespace.Name == "" {
 		return 0, cerrors.NewBadRequestError("could not find/insert invalid Namespace")
 	}
@@ -16,11 +16,15 @@ func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (id int, err e
 		}
 	}
 
-	err = pgSQL.QueryRow(getQuery("soi_namespace"), namespace.Name).Scan(&id)
+	var id int
+	err := pgSQL.QueryRow(getQuery("soi_namespace"), namespace.Name).Scan(&id)
+	if err != nil {
+		return 0, handleError("soi_namespace", err)
+	}
 
 	if pgSQL.cache != nil {
 		pgSQL.cache.Add("namespace:"+namespace.Name, id)
 	}
 
-	return
+	return id, nil
 }

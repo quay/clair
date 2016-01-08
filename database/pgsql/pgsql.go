@@ -11,6 +11,7 @@ import (
 	"bitbucket.org/liamstask/goose/lib/goose"
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
+	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/pkg/capnslog"
 	"github.com/hashicorp/golang-lru"
 	"github.com/lib/pq"
@@ -33,14 +34,16 @@ func (pgSQL *pgSQL) Close() {
 // It will run immediately every necessary migration on the database.
 func Open(config *config.DatabaseConfig) (database.Datastore, error) {
 	// Run migrations.
-	if err := Migrate(config.Source); err != nil {
-		return nil, fmt.Errorf("could not run database migration: %v", err)
+	if err := migrate(config.Source); err != nil {
+		log.Error(err)
+		return nil, database.ErrCantOpen
 	}
 
 	// Open database.
 	db, err := sql.Open("postgres", config.Source)
 	if err != nil {
-		return nil, fmt.Errorf("could not open database (Open): %v", err)
+		log.Error(err)
+		return nil, database.ErrCantOpen
 	}
 
 	// Initialize cache.
@@ -53,8 +56,8 @@ func Open(config *config.DatabaseConfig) (database.Datastore, error) {
 	return &pgSQL{DB: db, cache: cache}, nil
 }
 
-// Migrate runs all available migrations on a pgSQL database.
-func Migrate(dataSource string) error {
+// migrate runs all available migrations on a pgSQL database.
+func migrate(dataSource string) error {
 	log.Info("running database migrations")
 
 	_, filename, _, _ := runtime.Caller(1)
@@ -85,9 +88,9 @@ func Migrate(dataSource string) error {
 	return nil
 }
 
-// CreateDatabase creates a new database.
+// createDatabase creates a new database.
 // The dataSource parameter should not contain a dbname.
-func CreateDatabase(dataSource, databaseName string) error {
+func createDatabase(dataSource, databaseName string) error {
 	// Open database.
 	db, err := sql.Open("postgres", dataSource)
 	if err != nil {
@@ -104,9 +107,9 @@ func CreateDatabase(dataSource, databaseName string) error {
 	return nil
 }
 
-// DropDatabase drops an existing database.
+// dropDatabase drops an existing database.
 // The dataSource parameter should not contain a dbname.
-func DropDatabase(dataSource, databaseName string) error {
+func dropDatabase(dataSource, databaseName string) error {
 	// Open database.
 	db, err := sql.Open("postgres", dataSource)
 	if err != nil {
@@ -133,7 +136,7 @@ type pgSQLTest struct {
 
 func (pgSQL *pgSQLTest) Close() {
 	pgSQL.DB.Close()
-	DropDatabase(pgSQL.dataSource+"dbname=postgres", pgSQL.dbName)
+	dropDatabase(pgSQL.dataSource+"dbname=postgres", pgSQL.dbName)
 }
 
 // OpenForTest creates a test Datastore backed by a new PostgreSQL database.
@@ -144,16 +147,18 @@ func OpenForTest(name string, withTestData bool) (*pgSQLTest, error) {
 	dbName := "test_" + strings.ToLower(name) + "_" + strings.Replace(uuid.New(), "-", "_", -1)
 
 	// Create database.
-	err := CreateDatabase(dataSource+"dbname=postgres", dbName)
+	err := createDatabase(dataSource+"dbname=postgres", dbName)
 	if err != nil {
-		return nil, err
+		log.Error(err)
+		return nil, database.ErrCantOpen
 	}
 
 	// Open database.
 	db, err := Open(&config.DatabaseConfig{Source: dataSource + "dbname=" + dbName, CacheSize: 0})
 	if err != nil {
-		DropDatabase(dataSource, dbName)
-		return nil, err
+		dropDatabase(dataSource, dbName)
+		log.Error(err)
+		return nil, database.ErrCantOpen
 	}
 
 	// Load test data if specified.
@@ -162,12 +167,29 @@ func OpenForTest(name string, withTestData bool) (*pgSQLTest, error) {
 		d, _ := ioutil.ReadFile(path.Join(path.Dir(filename)) + "/testdata/data.sql")
 		_, err = db.(*pgSQL).Exec(string(d))
 		if err != nil {
-			DropDatabase(dataSource, dbName)
-			return nil, err
+			dropDatabase(dataSource, dbName)
+			log.Error(err)
+			return nil, database.ErrCantOpen
 		}
 	}
 
 	return &pgSQLTest{pgSQL: db.(*pgSQL), dataSource: dataSource, dbName: dbName}, nil
+}
+
+// handleError logs an error with an extra description and masks the error if it's an SQL one.
+// This ensures we never return plain SQL errors and leak anything.
+func handleError(desc string, err error) error {
+	log.Errorf("%s: %v", desc, err)
+
+	if _, ok := err.(*pq.Error); ok {
+		return database.ErrBackendException
+	} else if err == sql.ErrNoRows {
+		return cerrors.ErrNotFound
+	} else if err == sql.ErrTxDone {
+		return database.ErrBackendException
+	}
+
+	return err
 }
 
 // isErrUniqueViolation determines is the given error is a unique contraint violation.

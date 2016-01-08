@@ -26,7 +26,7 @@ func (pgSQL *pgSQL) InsertKeyValue(key, value string) (err error) {
 		// First, try to update.
 		r, err := pgSQL.Exec(getQuery("u_keyvalue"), value, key)
 		if err != nil {
-			return err
+			return handleError("u_keyvalue", err)
 		}
 		if n, _ := r.RowsAffected(); n > 0 {
 			// Updated successfully.
@@ -41,7 +41,7 @@ func (pgSQL *pgSQL) InsertKeyValue(key, value string) (err error) {
 				// Got unique constraint violation, retry.
 				continue
 			}
-			return err
+			return handleError("i_keyvalue", err)
 		}
 
 		return nil
@@ -49,10 +49,16 @@ func (pgSQL *pgSQL) InsertKeyValue(key, value string) (err error) {
 }
 
 // GetValue reads a single key / value tuple and returns an empty string if the key doesn't exist.
-func (pgSQL *pgSQL) GetKeyValue(key string) (value string, err error) {
-	err = pgSQL.QueryRow(getQuery("s_keyvalue"), key).Scan(&value)
+func (pgSQL *pgSQL) GetKeyValue(key string) (string, error) {
+	var value string
+	err := pgSQL.QueryRow(getQuery("s_keyvalue"), key).Scan(&value)
+
 	if err == sql.ErrNoRows {
 		return "", nil
 	}
-	return
+	if err != nil {
+		return "", handleError("s_keyvalue", err)
+	}
+
+	return value, nil
 }

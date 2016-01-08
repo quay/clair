@@ -27,7 +27,7 @@ func (pgSQL *pgSQL) insertFeature(feature database.Feature) (int, error) {
 	var id int
 	err = pgSQL.QueryRow(getQuery("soi_feature"), feature.Name, namespaceID).Scan(&id)
 	if err != nil {
-		return 0, err
+		return 0, handleError("soi_feature", err)
 	}
 
 	if pgSQL.cache != nil {
@@ -59,7 +59,7 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 	tx, err := pgSQL.Begin()
 	if err != nil {
 		tx.Rollback()
-		return 0, err
+		return 0, handleError("insertFeatureVersion.Begin()", err)
 	}
 
 	// Find or create FeatureVersion.
@@ -68,7 +68,7 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 		Scan(&newOrExisting, &featureVersion.ID)
 	if err != nil {
 		tx.Rollback()
-		return 0, err
+		return 0, handleError("soi_featureversion", err)
 	}
 	if newOrExisting == "exi" {
 		// That featureVersion already exists, return its id.
@@ -83,14 +83,14 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 	_, err = tx.Exec(getQuery("l_share_vulnerability_fixedin_feature"))
 	if err != nil {
 		tx.Rollback()
-		return 0, err
+		return 0, handleError("l_share_vulnerability_fixedin_feature", err)
 	}
 
 	// Select every vulnerability and the fixed version that affect this Feature.
 	rows, err := tx.Query(getQuery("s_vulnerability_fixedin_feature"), featureID)
 	if err != nil {
 		tx.Rollback()
-		return 0, err
+		return 0, handleError("s_vulnerability_fixedin_feature", err)
 	}
 	defer rows.Close()
 
@@ -100,7 +100,7 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 		err := rows.Scan(&fixedInID, &vulnerabilityID, &fixedInVersion)
 		if err != nil {
 			tx.Rollback()
-			return 0, err
+			return 0, handleError("s_vulnerability_fixedin_feature.Scan()", err)
 		}
 
 		if featureVersion.Version.Compare(fixedInVersion) < 0 {
@@ -111,16 +111,19 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 				featureVersion.ID, fixedInID)
 			if err != nil {
 				tx.Rollback()
-				return 0, err
+				return 0, handleError("i_vulnerability_affects_featureversion", err)
 			}
 		}
+	}
+	if err = rows.Err(); err != nil {
+		return 0, handleError("s_vulnerability_fixedin_feature.Rows()", err)
 	}
 
 	// Commit transaction.
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return 0, err
+		return 0, handleError("insertFeatureVersion.Commit()", err)
 	}
 
 	if pgSQL.cache != nil {

@@ -25,7 +25,7 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 		return layer, cerrors.ErrNotFound
 	}
 	if err != nil {
-		return layer, err
+		return layer, handleError("s_layer", err)
 	}
 
 	if !parentID.IsZero() {
@@ -78,7 +78,7 @@ func (pgSQL *pgSQL) getLayerFeatureVersions(layerID int, idOnly bool) ([]databas
 	// Query
 	rows, err := pgSQL.Query(query, layerID)
 	if err != nil && err != sql.ErrNoRows {
-		return featureVersions, err
+		return featureVersions, handleError(query, err)
 	}
 	defer rows.Close()
 
@@ -91,14 +91,14 @@ func (pgSQL *pgSQL) getLayerFeatureVersions(layerID int, idOnly bool) ([]databas
 		if idOnly {
 			err = rows.Scan(&featureVersion.ID, &modification)
 			if err != nil {
-				return featureVersions, err
+				return featureVersions, handleError(query+".Scan()", err)
 			}
 		} else {
 			err = rows.Scan(&featureVersion.ID, &modification, &featureVersion.Feature.Namespace.ID,
 				&featureVersion.Feature.Namespace.Name, &featureVersion.Feature.ID,
 				&featureVersion.Feature.Name, &featureVersion.ID, &featureVersion.Version)
 			if err != nil {
-				return featureVersions, err
+				return featureVersions, handleError(query+".Scan()", err)
 			}
 		}
 
@@ -114,7 +114,7 @@ func (pgSQL *pgSQL) getLayerFeatureVersions(layerID int, idOnly bool) ([]databas
 		}
 	}
 	if err = rows.Err(); err != nil {
-		return featureVersions, err
+		return featureVersions, handleError(query+".Rows()", err)
 	}
 
 	// Build result by converting our map to a slice
@@ -141,7 +141,7 @@ func (pgSQL *pgSQL) loadAffectedBy(featureVersions []database.FeatureVersion) er
 	rows, err := pgSQL.Query(getQuery("s_featureversions_vulnerabilities"),
 		buildInputArray(featureVersionIDs))
 	if err != nil && err != sql.ErrNoRows {
-		return err
+		return handleError("s_featureversions_vulnerabilities", err)
 	}
 	defer rows.Close()
 
@@ -153,12 +153,12 @@ func (pgSQL *pgSQL) loadAffectedBy(featureVersions []database.FeatureVersion) er
 			&vulnerability.Description, &vulnerability.Link, &vulnerability.Severity,
 			&vulnerability.Namespace.Name, &vulnerability.FixedBy)
 		if err != nil {
-			return err
+			return handleError("s_featureversions_vulnerabilities.Scan()", err)
 		}
 		vulnerabilities[featureversionID] = append(vulnerabilities[featureversionID], vulnerability)
 	}
 	if err = rows.Err(); err != nil {
-		return err
+		return handleError("s_featureversions_vulnerabilities.Rows()", err)
 	}
 
 	// Assign vulnerabilities to every FeatureVersions
@@ -208,7 +208,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	tx, err := pgSQL.Begin()
 	if err != nil {
 		tx.Rollback()
-		return err
+		return handleError("InsertLayer.Begin()", err)
 	}
 
 	// Find or insert namespace if provided.
@@ -243,7 +243,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 			Scan(&layer.ID)
 		if err != nil {
 			tx.Rollback()
-			return err
+			return handleError("i_layer", err)
 		}
 	} else {
 		if existingLayer.EngineVersion >= layer.EngineVersion {
@@ -255,14 +255,14 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 		_, err = tx.Exec(getQuery("u_layer"), layer.ID, layer.EngineVersion, namespaceID)
 		if err != nil {
 			tx.Rollback()
-			return err
+			return handleError("u_layer", err)
 		}
 
 		// Remove all existing Layer_diff_FeatureVersion.
 		_, err = tx.Exec(getQuery("r_layer_diff_featureversion"), layer.ID)
 		if err != nil {
 			tx.Rollback()
-			return err
+			return handleError("r_layer_diff_featureversion", err)
 		}
 	}
 
@@ -276,7 +276,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return err
+		return handleError("InsertLayer.Commit()", err)
 	}
 
 	return nil
@@ -324,13 +324,13 @@ func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *
 	if len(addIDs) > 0 {
 		_, err = tx.Exec(getQuery("i_layer_diff_featureversion"), layer.ID, "add", buildInputArray(addIDs))
 		if err != nil {
-			return err
+			return handleError("i_layer_diff_featureversion.Add", err)
 		}
 	}
 	if len(delIDs) > 0 {
 		_, err = tx.Exec(getQuery("i_layer_diff_featureversion"), layer.ID, "del", buildInputArray(delIDs))
 		if err != nil {
-			return err
+			return handleError("i_layer_diff_featureversion.Del", err)
 		}
 	}
 
