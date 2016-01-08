@@ -1,6 +1,9 @@
 package database
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 var (
 	// ErrTransaction is an error that occurs when a database transaction fails.
@@ -39,9 +42,9 @@ type Datastore interface {
 	GetKeyValue(key string) (string, error)
 
 	// Lock
-	// Lock(name string, duration time.Duration, owner string) (bool, time.Time)
-	// Unlock(name, owner string)
-	// LockInfo(name string) (string, time.Time, error)
+	Lock(name string, owner string, duration time.Duration, renew bool) (bool, time.Time)
+	Unlock(name, owner string)
+	FindLock(name string) (string, time.Time, error)
 
 	Close()
 }

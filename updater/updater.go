@@ -101,7 +101,7 @@ func Run(config *config.UpdaterConfig, st *utils.Stopper) {
 				}
 				continue
 			} else {
-				lockOwner, lockExpiration, err := database.LockInfo(flagName)
+				lockOwner, lockExpiration, err := database.FindLock(flagName)
 				if err != nil {
 					log.Debug("update lock is already taken")
 					nextUpdate = hasLockUntil

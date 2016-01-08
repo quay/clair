@@ -15,11 +15,12 @@ CREATE TABLE IF NOT EXISTS Layer (
   id SERIAL PRIMARY KEY,
   name VARCHAR(128) NOT NULL UNIQUE,
   engineversion SMALLINT NOT NULL,
-  parent_id INT NULL REFERENCES Layer,
+  parent_id INT NULL REFERENCES Layer ON DELETE CASCADE,
   namespace_id INT NULL REFERENCES Namespace);
 
 CREATE INDEX ON Layer (parent_id);
 CREATE INDEX ON Layer (namespace_id);
+
 
 -- -----------------------------------------------------
 -- Table Feature
@@ -30,6 +31,7 @@ CREATE TABLE IF NOT EXISTS Feature (
   name VARCHAR(128) NOT NULL,
 
   UNIQUE (namespace_id, name));
+
 
 -- -----------------------------------------------------
 -- Table FeatureVersion
@@ -113,6 +115,18 @@ CREATE TABLE IF NOT EXISTS KeyValue (
   key VARCHAR(128) NOT NULL UNIQUE,
   value TEXT);
 
+
+-- -----------------------------------------------------
+-- Table Lock
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS Lock (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(64) NOT NULL UNIQUE,
+  owner VARCHAR(64) NOT NULL,
+  until TIMESTAMP WITH TIME ZONE);
+
+CREATE INDEX ON Lock (owner);
+
 -- +goose Down
 
 DROP TABLE IF EXISTS Namespace,
@@ -124,4 +138,5 @@ DROP TABLE IF EXISTS Namespace,
                      Vulnerability_FixedIn_Feature,
                      Vulnerability_Affects_FeatureVersion,
                      KeyValue
+                     Lock
             CASCADE;

@@ -131,6 +131,17 @@ func init() {
       SELECT $1, fv.id, $2
 	    FROM FeatureVersion fv
 	    WHERE fv.id = ANY($3::integer[])`
+
+	// lock.go
+	queries["i_lock"] = `INSERT INTO Lock(name, owner, until) VALUES($1, $2, $3)`
+
+	queries["f_lock"] = `SELECT owner, until FROM Lock WHERE name = $1`
+
+	queries["u_lock"] = `UPDATE Lock SET until = $3 WHERE name = $1 AND owner = $2`
+
+	queries["r_lock"] = `DELETE FROM Lock WHERE name = $1 AND owner = $2`
+
+	queries["r_lock_expired"] = `DELETE FROM LOCK WHERE until < CURRENT_TIMESTAMP`
 }
 
 func getQuery(name string) string {

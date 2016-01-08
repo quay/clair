@@ -352,6 +352,6 @@ func createNV(features []database.FeatureVersion) (map[string]*database.FeatureV
 }
 
 func (pgSQL *pgSQL) DeleteLayer(name string) error {
-	// TODO
+	// TODO(Quentin-M): Implement and test me.
 	return nil
 }
