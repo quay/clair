@@ -66,7 +66,7 @@ func (fetcher *ArchlinuxFetcher) FetchUpdate() (resp updater.FetcherResponse, er
 		log.Errorf("could not download Archlinux CVE wiki content: %s", err)
 		return resp, cerrors.ErrCouldNotDownload
 	}
-
+	defer r.Body.Close()
 	flag, err := database.GetFlagValue(archlinuxUpdaterFlag)
 	if err != nil {
 		return resp, err
