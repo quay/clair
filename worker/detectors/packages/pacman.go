@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package packages defines PackagesDetector for several sources.
 package packages
 
 import (
@@ -25,14 +24,15 @@ import (
 	"github.com/coreos/clair/worker/detectors"
 )
 
-// PacmanPackagesDetector implements PackagesDetector and detects pacman packages
+// PacmanPackagesDetector implements PackagesDetector and detects pacman
+// packages.
 type PacmanPackagesDetector struct{}
 
 func init() {
 	detectors.RegisterPackagesDetector("pacman", &PacmanPackagesDetector{})
 }
 
-// Detect detects packages using /var/lib/pacman/local from the input data
+// Detect detects packages using /var/lib/pacman/local from the input data.
 func (detector *PacmanPackagesDetector) Detect(data map[string][]byte) ([]*database.Package, error) {
 	log.Errorf("Pacman: %v", data)
 	db, hasFile := data["var/lib/pacman"]
