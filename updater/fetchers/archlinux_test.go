@@ -47,15 +47,15 @@ func TestArchLinuxCVEBuilder(t *testing.T) {
 
 func TestArchlinuxParser(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
-	testFile, _ := os.Open(
-		path.Join(path.Dir(filename)) + "/testdata/fetcher_archlinux.txt")
+	testFile, _ := os.Open(path.Join(path.Dir(filename), "/testdata/fetcher_archlinux.txt"))
 	response, err := parseArchLinuxWikiCVE(testFile, "")
+	defer testFile.Close()
 	if err != nil {
-		t.Fatalf("Error reading Arch CVE: %s %s",
+		t.Fatalf("Error parsing Arch Linux CVE: %s %s",
 			testFile.Name(), err.Error())
 	}
 	if response.Vulnerabilities == nil || len(response.Vulnerabilities) < 300 {
-		t.Fatalf("Arch vulnerabilities: %d", len(response.Vulnerabilities))
+		t.Fatalf("Arch Linux vulnerabilities: %d", len(response.Vulnerabilities))
 	}
 
 	// if response.Packages != nil {
