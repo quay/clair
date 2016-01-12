@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2015, 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ import (
 	"github.com/coreos/clair/database"
 )
 
-func mapToSlices(packagesMap map[string]*database.Package) []*database.Package {
+func mapToSlice(packagesMap map[string]*database.Package) []*database.Package {
 	packages := make([]*database.Package, 0, len(packagesMap))
 	for _, pkg := range packagesMap {
 		packages = append(packages, pkg)

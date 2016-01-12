@@ -67,7 +67,7 @@ func (detector *PacmanPackagesDetector) Detect(data map[string][]byte) ([]*datab
 		}
 		packagesMap[pkg.Key()] = pkg
 	}
-	return mapToSlices(packagesMap), nil
+	return mapToSlice(packagesMap), nil
 }
 
 // GetRequiredFiles returns the list of files required for Detect, without

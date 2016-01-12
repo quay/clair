@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2015, 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -100,7 +100,7 @@ func (detector *DpkgPackagesDetector) Detect(data map[string][]byte) ([]*databas
 		}
 	}
 
-	return mapToSlices(packagesMap), nil
+	return mapToSlice(packagesMap), nil
 }
 
 // GetRequiredFiles returns the list of files required for Detect, without
