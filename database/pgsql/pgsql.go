@@ -120,7 +120,7 @@ func dropDatabase(dataSource, databaseName string) error {
 	// Drop database.
 	_, err = db.Exec("DROP DATABASE " + databaseName + ";")
 	if err != nil {
-		return fmt.Errorf("could not create database: %v", err)
+		return fmt.Errorf("could not drop database: %v", err)
 	}
 
 	return nil
@@ -185,7 +185,7 @@ func handleError(desc string, err error) error {
 		return database.ErrBackendException
 	} else if err == sql.ErrNoRows {
 		return cerrors.ErrNotFound
-	} else if err == sql.ErrTxDone {
+	} else if err == sql.ErrTxDone || strings.HasPrefix(err.Error(), "sql:") {
 		return database.ErrBackendException
 	}
 

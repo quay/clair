@@ -77,7 +77,7 @@ func (pgSQL *pgSQL) getLayerFeatureVersions(layerID int, idOnly bool) ([]databas
 
 	// Query
 	rows, err := pgSQL.Query(query, layerID)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil {
 		return featureVersions, handleError(query, err)
 	}
 	defer rows.Close()
@@ -201,14 +201,23 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	if err != nil && err != cerrors.ErrNotFound {
 		return err
 	} else if err == nil {
+		if existingLayer.EngineVersion >= layer.EngineVersion {
+			// The layer exists and has an equal or higher engine verison, do nothing.
+			return nil
+		}
+
 		layer.ID = existingLayer.ID
 	}
 
-	// Begin transaction.
-	tx, err := pgSQL.Begin()
-	if err != nil {
-		tx.Rollback()
-		return handleError("InsertLayer.Begin()", err)
+	// Get parent ID.
+	var parentID zero.Int
+	if layer.Parent != nil {
+		if layer.Parent.ID == 0 {
+			log.Warning("Parent is expected to be retrieved from database when inserting a layer.")
+			return cerrors.NewBadRequestError("Parent is expected to be retrieved from database when inserting a layer.")
+		}
+
+		parentID = zero.IntFrom(int64(layer.Parent.ID))
 	}
 
 	// Find or insert namespace if provided.
@@ -216,7 +225,6 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	if layer.Namespace != nil {
 		n, err := pgSQL.insertNamespace(*layer.Namespace)
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 		namespaceID = zero.IntFrom(int64(n))
@@ -227,18 +235,15 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 		}
 	}
 
+	// Begin transaction.
+	tx, err := pgSQL.Begin()
+	if err != nil {
+		tx.Rollback()
+		return handleError("InsertLayer.Begin()", err)
+	}
+
 	if layer.ID == 0 {
 		// Insert a new layer.
-		var parentID zero.Int
-		if layer.Parent != nil {
-			if layer.Parent.ID == 0 {
-				log.Warning("Parent is expected to be retrieved from database when inserting a layer.")
-				return cerrors.NewBadRequestError("Parent is expected to be retrieved from database when inserting a layer.")
-			}
-
-			parentID = zero.IntFrom(int64(layer.Parent.ID))
-		}
-
 		err = tx.QueryRow(getQuery("i_layer"), layer.Name, layer.EngineVersion, parentID, namespaceID).
 			Scan(&layer.ID)
 		if err != nil {
@@ -246,11 +251,6 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 			return handleError("i_layer", err)
 		}
 	} else {
-		if existingLayer.EngineVersion >= layer.EngineVersion {
-			// The layer exists and has an equal or higher engine verison, do nothing.
-			return nil
-		}
-
 		// Update an existing layer.
 		_, err = tx.Exec(getQuery("u_layer"), layer.ID, layer.EngineVersion, namespaceID)
 		if err != nil {
@@ -269,6 +269,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	// Update Layer_diff_FeatureVersion now.
 	err = pgSQL.updateDiffFeatureVersions(tx, &layer, &existingLayer)
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
 
@@ -293,7 +294,7 @@ func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *
 	} else if layer.Parent != nil {
 		// There is a parent, we need to diff the Features with it.
 
-		// Build name:version strctures.
+		// Build name:version structures.
 		layerFeaturesMapNV, layerFeaturesNV := createNV(layer.Features)
 		parentLayerFeaturesMapNV, parentLayerFeaturesNV := createNV(layer.Parent.Features)
 

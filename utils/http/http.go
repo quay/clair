@@ -26,7 +26,7 @@ import (
 	"github.com/coreos/clair/worker"
 )
 
-// MaxPostSize is the maximum number of bytes that ParseHTTPBody reads from an http.Request.Body.
+// MaxBodySize is the maximum number of bytes that ParseHTTPBody reads from an http.Request.Body.
 const MaxBodySize int64 = 1048576
 
 // WriteHTTP writes a JSON-encoded object to a http.ResponseWriter, as well as
@@ -54,7 +54,7 @@ func WriteHTTPError(w http.ResponseWriter, httpStatus int, err error) {
 			switch err {
 			case cerrors.ErrNotFound:
 				httpStatus = http.StatusNotFound
-			case database.ErrTransaction, database.ErrBackendException:
+			case database.ErrBackendException:
 				httpStatus = http.StatusServiceUnavailable
 			case worker.ErrParentUnknown, worker.ErrUnsupported, utils.ErrCouldNotExtract, utils.ErrExtractedFileTooBig:
 				httpStatus = http.StatusBadRequest

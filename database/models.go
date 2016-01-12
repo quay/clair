@@ -2,6 +2,7 @@ package database
 
 import "github.com/coreos/clair/utils/types"
 
+// ID is only meant to be used by database implementations and should never be used for anything else.
 type Model struct {
 	ID int
 }
@@ -46,8 +47,9 @@ type Vulnerability struct {
 	Description string
 	Link        string
 	Severity    types.Priority
-	// FixedIn     map[types.Version]Feature // <<-- WRONG.
-	Affects []FeatureVersion
+
+	FixedIn []FeatureVersion
+	//Affects []FeatureVersion
 
 	// For output purposes. Only make sense when the vulnerability
 	// is already about a specific Feature/FeatureVersion.

@@ -3,6 +3,7 @@ INSERT INTO namespace (id, name) VALUES (2, 'debian:8');
 
 INSERT INTO feature (id, namespace_id, name) VALUES (1, 1, 'wechat');
 INSERT INTO feature (id, namespace_id, name) VALUES (2, 1, 'openssl');
+INSERT INTO feature (id, namespace_id, name) VALUES (4, 1, 'libssl');
 INSERT INTO feature (id, namespace_id, name) VALUES (3, 2, 'openssl');
 INSERT INTO featureversion (id, feature_id, version) VALUES (1, 1, '0.5');
 INSERT INTO featureversion (id, feature_id, version) VALUES (2, 2, '1.0');
@@ -23,8 +24,9 @@ INSERT INTO layer_diff_featureversion (id, layer_id, featureversion_id, modifica
 
 INSERT INTO vulnerability (id, namespace_id, name, description, link, severity) VALUES (1, 1, 'CVE-OPENSSL-1-DEB7', 'A vulnerability affecting OpenSSL < 2.0 on Debian 7.0', 'http://google.com/#q=CVE-OPENSSL-1-DEB7', 'High');
 INSERT INTO vulnerability_fixedin_feature (id, vulnerability_id, feature_id, version) VALUES (1, 1, 2, '2.0');
+INSERT INTO vulnerability_fixedin_feature (id, vulnerability_id, feature_id, version) VALUES (2, 1, 4, '1.9-abc');
 INSERT INTO vulnerability_affects_featureversion (id, vulnerability_id, featureversion_id, fixedin_id) VALUES (1, 1, 2, 1); -- CVE-OPENSSL-1-DEB7 affects Debian:7 OpenSSL 1.0
-INSERT INTO vulnerability (id, namespace_id, name, description, link, severity) VALUES (2, 1, 'CVE-NOPE', 'A vulnerability affecting nothing', 'http://google.com/#q=NOPE', 'Negligible');
+INSERT INTO vulnerability (id, namespace_id, name, description, link, severity) VALUES (2, 1, 'CVE-NOPE', 'A vulnerability affecting nothing', '', 'Unknown');
 
 SELECT pg_catalog.setval(pg_get_serial_sequence('namespace', 'id'), (SELECT MAX(id) FROM namespace)+1);
 SELECT pg_catalog.setval(pg_get_serial_sequence('feature', 'id'), (SELECT MAX(id) FROM feature)+1);

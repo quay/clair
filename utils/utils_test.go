@@ -29,7 +29,16 @@ const fileToDownload = "http://www.google.com/robots.txt"
 
 // TestDiff tests the diff.go source file
 func TestDiff(t *testing.T) {
-	assert.NotContains(t, CompareStringLists([]string{"a", "b", "a"}, []string{"a", "c"}), "a")
+	cmp := CompareStringLists([]string{"a", "b", "b", "a"}, []string{"a", "c"})
+	assert.Len(t, cmp, 1)
+	assert.NotContains(t, cmp, "a")
+	assert.Contains(t, cmp, "b")
+
+	cmp = CompareStringListsInBoth([]string{"a", "a", "b", "c"}, []string{"a", "c", "c"})
+	assert.Len(t, cmp, 2)
+	assert.NotContains(t, cmp, "b")
+	assert.Contains(t, cmp, "a")
+	assert.Contains(t, cmp, "c")
 }
 
 // TestExec tests the exec.go source file

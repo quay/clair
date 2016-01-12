@@ -1,6 +1,8 @@
 package pgsql
 
 import (
+	"database/sql"
+
 	"github.com/coreos/clair/database"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
@@ -54,12 +56,22 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 	if err != nil {
 		return 0, err
 	}
+	featureVersion.Feature.ID = featureID
 
 	// Begin transaction.
 	tx, err := pgSQL.Begin()
 	if err != nil {
 		tx.Rollback()
 		return 0, handleError("insertFeatureVersion.Begin()", err)
+	}
+
+	// Set transaction as SERIALIZABLE.
+	// This is how we ensure that the data in Vulnerability_Affects_FeatureVersion is always
+	// consistent.
+	_, err = tx.Exec(getQuery("set_tx_serializable"))
+	if err != nil {
+		tx.Rollback()
+		return 0, handleError("insertFeatureVersion.set_tx_serializable", err)
 	}
 
 	// Find or create FeatureVersion.
@@ -77,52 +89,15 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 
 	// Link the new FeatureVersion with every vulnerabilities that affect it, by inserting in
 	// Vulnerability_Affects_FeatureVersion.
-
-	// Lock Vulnerability_FixedIn_Feature because we can't let it to be modified while we modify
-	// Vulnerability_Affects_FeatureVersion.
-	_, err = tx.Exec(getQuery("l_share_vulnerability_fixedin_feature"))
+	err = linkFeatureVersionToVulnerabilities(tx, featureVersion)
 	if err != nil {
-		tx.Rollback()
-		return 0, handleError("l_share_vulnerability_fixedin_feature", err)
-	}
-
-	// Select every vulnerability and the fixed version that affect this Feature.
-	rows, err := tx.Query(getQuery("s_vulnerability_fixedin_feature"), featureID)
-	if err != nil {
-		tx.Rollback()
-		return 0, handleError("s_vulnerability_fixedin_feature", err)
-	}
-	defer rows.Close()
-
-	var fixedInID, vulnerabilityID int
-	var fixedInVersion types.Version
-	for rows.Next() {
-		err := rows.Scan(&fixedInID, &vulnerabilityID, &fixedInVersion)
-		if err != nil {
-			tx.Rollback()
-			return 0, handleError("s_vulnerability_fixedin_feature.Scan()", err)
-		}
-
-		if featureVersion.Version.Compare(fixedInVersion) < 0 {
-			// The version of the FeatureVersion we are inserting is lower than the fixed version on this
-			// Vulnerability, thus, this FeatureVersion is affected by it.
-			// TODO(Quentin-M): Prepare.
-			_, err := tx.Exec(getQuery("i_vulnerability_affects_featureversion"), vulnerabilityID,
-				featureVersion.ID, fixedInID)
-			if err != nil {
-				tx.Rollback()
-				return 0, handleError("i_vulnerability_affects_featureversion", err)
-			}
-		}
-	}
-	if err = rows.Err(); err != nil {
-		return 0, handleError("s_vulnerability_fixedin_feature.Rows()", err)
+		// tx.Rollback() is done in linkFeatureVersionToVulnerabilities.
+		return 0, err
 	}
 
 	// Commit transaction.
 	err = tx.Commit()
 	if err != nil {
-		tx.Rollback()
 		return 0, handleError("insertFeatureVersion.Commit()", err)
 	}
 
@@ -147,4 +122,43 @@ func (pgSQL *pgSQL) insertFeatureVersions(featureVersions []database.FeatureVers
 	}
 
 	return IDs, nil
+}
+
+func linkFeatureVersionToVulnerabilities(tx *sql.Tx, featureVersion database.FeatureVersion) error {
+	// Select every vulnerability and the fixed version that affect this Feature.
+	// TODO(Quentin-M): LIMIT
+	rows, err := tx.Query(getQuery("s_vulnerability_fixedin_feature"), featureVersion.Feature.ID)
+	if err != nil {
+		tx.Rollback()
+		return handleError("s_vulnerability_fixedin_feature", err)
+	}
+	defer rows.Close()
+
+	var fixedInID, vulnerabilityID int
+	var fixedInVersion types.Version
+	for rows.Next() {
+		err := rows.Scan(&fixedInID, &vulnerabilityID, &fixedInVersion)
+		if err != nil {
+			tx.Rollback()
+			return handleError("s_vulnerability_fixedin_feature.Scan()", err)
+		}
+
+		if featureVersion.Version.Compare(fixedInVersion) < 0 {
+			// The version of the FeatureVersion we are inserting is lower than the fixed version on this
+			// Vulnerability, thus, this FeatureVersion is affected by it.
+			// TODO(Quentin-M): Prepare.
+			_, err := tx.Exec(getQuery("i_vulnerability_affects_featureversion"), vulnerabilityID,
+				featureVersion.ID, fixedInID)
+			if err != nil {
+				tx.Rollback()
+				return handleError("i_vulnerability_affects_featureversion", err)
+			}
+		}
+	}
+	if err = rows.Err(); err != nil {
+		tx.Rollback()
+		return handleError("s_vulnerability_fixedin_feature.Rows()", err)
+	}
+
+	return nil
 }

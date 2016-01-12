@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS Vulnerability (
   name VARCHAR(128) NOT NULL,
   description TEXT NULL,
   link VARCHAR(128) NULL,
-  severity severity NULL,
+  severity severity NOT NULL,
 
   UNIQUE (namespace_id, name));
 
@@ -137,6 +137,6 @@ DROP TABLE IF EXISTS Namespace,
                      Vulnerability,
                      Vulnerability_FixedIn_Feature,
                      Vulnerability_Affects_FeatureVersion,
-                     KeyValue
+                     KeyValue,
                      Lock
             CASCADE;

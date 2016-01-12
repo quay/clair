@@ -22,7 +22,7 @@ import (
 
 var urlParametersRegexp = regexp.MustCompile(`(\?|\&)([^=]+)\=([^ &]+)`)
 
-// Hash returns an unique hash of the given string
+// Hash returns an unique hash of the given string.
 func Hash(str string) string {
 	h := sha1.New()
 	h.Write([]byte(str))
@@ -30,13 +30,13 @@ func Hash(str string) string {
 	return hex.EncodeToString(bs)
 }
 
-// CleanURL removes all parameters from an URL
+// CleanURL removes all parameters from an URL.
 func CleanURL(str string) string {
 	return urlParametersRegexp.ReplaceAllString(str, "")
 }
 
 // Contains looks for a string into an array of strings and returns whether
-// the string exists
+// the string exists.
 func Contains(needle string, haystack []string) bool {
 	for _, h := range haystack {
 		if h == needle {
@@ -46,22 +46,41 @@ func Contains(needle string, haystack []string) bool {
 	return false
 }
 
-// CompareStringLists returns the strings which are present in X but not in Y
+// CompareStringLists returns the strings that are present in X but not in Y.
 func CompareStringLists(X, Y []string) []string {
-	m := make(map[string]int)
+	m := make(map[string]bool)
 
 	for _, y := range Y {
-		m[y] = 1
+		m[y] = true
 	}
 
 	diff := []string{}
 	for _, x := range X {
-		if m[x] > 0 {
+		if m[x] {
 			continue
 		}
 
 		diff = append(diff, x)
-		m[x] = 1
+		m[x] = true
+	}
+
+	return diff
+}
+
+// CompareStringListsInBoth returns the strings that are present in both X and Y.
+func CompareStringListsInBoth(X, Y []string) []string {
+	m := make(map[string]struct{})
+
+	for _, y := range Y {
+		m[y] = struct{}{}
+	}
+
+	diff := []string{}
+	for _, x := range X {
+		if _, e := m[x]; e {
+			diff = append(diff, x)
+			delete(m, x)
+		}
 	}
 
 	return diff

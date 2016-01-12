@@ -10,6 +10,8 @@ var queries map[string]string
 func init() {
 	queries = make(map[string]string)
 
+	queries["set_tx_serializable"] = `SET TRANSACTION ISOLATION LEVEL SERIALIZABLE`
+
 	// keyvalue.go
 	queries["u_keyvalue"] = `UPDATE KeyValue SET value = $1 WHERE key = $2`
 	queries["i_keyvalue"] = `INSERT INTO KeyValue(key, value) VALUES($1, $2)`
@@ -38,10 +40,6 @@ func init() {
     SELECT id FROM Feature WHERE name = $1 AND namespace_id = $2
     UNION
     SELECT id FROM new_feature`
-
-	queries["l_share_vulnerability_fixedin_feature"] = `
-    LOCK Vulnerability_FixedIn_Feature IN SHARE MODE
-  `
 
 	queries["soi_featureversion"] = `
     WITH new_featureversion AS (
@@ -142,6 +140,41 @@ func init() {
 	queries["r_lock"] = `DELETE FROM Lock WHERE name = $1 AND owner = $2`
 
 	queries["r_lock_expired"] = `DELETE FROM LOCK WHERE until < CURRENT_TIMESTAMP`
+
+	// vulnerability.go
+	queries["f_vulnerability"] = `
+    SELECT v.id, n.id, v.description, v.link, v.severity, vfif.version, f.id, f.Name
+    FROM Vulnerability v
+      JOIN Namespace n ON v.namespace_id = n.id
+      LEFT JOIN Vulnerability_FixedIn_Feature vfif ON v.id = vfif.vulnerability_id
+      LEFT JOIN Feature f ON vfif.feature_id = f.id
+    WHERE n.Name = $1 AND v.Name = $2`
+
+	queries["i_vulnerability"] = `
+    INSERT INTO Vulnerability(namespace_id, name, description, link, severity)
+    VALUES($1, $2, $3, $4, $5)
+    RETURNING id`
+
+	queries["u_vulnerability"] = `
+    UPDATE Vulnerability SET description = $2, link = $3, severity = $4 WHERE id = $1`
+
+	queries["i_vulnerability_fixedin_feature"] = `
+    INSERT INTO Vulnerability_FixedIn_Feature(vulnerability_id, feature_id, version)
+    VALUES($1, $2, $3)
+    RETURNING id`
+
+	queries["u_vulnerability_fixedin_feature"] = `
+    UPDATE Vulnerability_FixedIn_Feature
+    SET version = $3
+    WHERE vulnerability_id = $1 AND feature_id = $2
+    RETURNING id`
+
+	queries["r_vulnerability_affects_featureversion"] = `
+    DELETE FROM Vulnerability_Affects_FeatureVersion
+    WHERE fixedin_id = $1`
+
+	queries["f_featureversion_by_feature"] = `
+    SELECT id, version FROM FeatureVersion WHERE feature_id = $1`
 }
 
 func getQuery(name string) string {

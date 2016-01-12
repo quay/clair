@@ -106,5 +106,5 @@ func (p *Priority) Scan(value interface{}) error {
 }
 
 func (p *Priority) Value() (driver.Value, error) {
-	return p, nil
+	return string(*p), nil
 }
