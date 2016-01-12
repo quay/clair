@@ -28,7 +28,7 @@ import (
 
 const (
 	archLinuxCVEURL      = "https://wiki.archlinux.org/api.php?action=query&titles=CVE&format=txt&prop=revisions&rvlimit=1&rvprop=content"
-	archlinuxUpdaterFlag = "archlinuxUpdater"
+	archLinuxUpdaterFlag = "archLinuxUpdater"
 	tokensRegexp         = "{|}|CVF|PKG|Pkg|pkg|\\[|\\]"
 )
 
@@ -37,8 +37,8 @@ type SecurityAdvisory struct {
 	URL  string
 }
 
-// ArchCVE represents a CVE for Arch Linux
-type ArchCVE struct {
+// ArchLinuxCVE represents a CVE for Arch Linux
+type ArchLinuxCVE struct {
 	CVEID           string
 	Package         string
 	DisclosureDate  string
@@ -49,30 +49,30 @@ type ArchCVE struct {
 	ASAID           SecurityAdvisory
 }
 
-// ArchlinuxFetcher implements updater.Fetcher for the Archlinux CVE
+// ArchLinuxFetcher implements updater.Fetcher for the Arch Linux CVE
 // (See wiki : https://wiki.archlinux.org/index.php/CVE).
-type ArchlinuxFetcher struct{}
+type ArchLinuxFetcher struct{}
 
 func init() {
-	updater.RegisterFetcher("archlinux", &ArchlinuxFetcher{})
+	updater.RegisterFetcher("archlinux", &ArchLinuxFetcher{})
 }
 
-// FetchUpdate fetches vulnerability updates from the Archlinux Security Tracker.
-func (fetcher *ArchlinuxFetcher) FetchUpdate() (resp updater.FetcherResponse, err error) {
-	log.Info("fetching Archlinux vulneratibilities")
+// FetchUpdate fetches vulnerability updates from the Arch Linux Security Tracker.
+func (fetcher *ArchLinuxFetcher) FetchUpdate() (resp updater.FetcherResponse, err error) {
+	log.Info("fetching ArchLinux vulneratibilities")
 
 	r, err := http.Get(archLinuxCVEURL)
 	if err != nil {
-		log.Errorf("could not download Archlinux CVE wiki content: %s", err)
+		log.Errorf("could not download ArchLinux CVE wiki content: %s", err)
 		return resp, cerrors.ErrCouldNotDownload
 	}
 	defer r.Body.Close()
-	flag, err := database.GetFlagValue(archlinuxUpdaterFlag)
+	flag, err := database.GetFlagValue(archLinuxUpdaterFlag)
 	if err != nil {
 		return resp, err
 	}
 
-	resp, err = parseArchlinuxWikiCVE(r.Body, flag)
+	resp, err = parseArchLinuxWikiCVE(r.Body, flag)
 	if err != nil {
 		return resp, err
 	}
@@ -80,14 +80,14 @@ func (fetcher *ArchlinuxFetcher) FetchUpdate() (resp updater.FetcherResponse, er
 	return resp, nil
 }
 
-func parseArchlinuxWikiCVE(reader io.Reader, flag string) (resp updater.FetcherResponse, err error) {
+func parseArchLinuxWikiCVE(reader io.Reader, flag string) (resp updater.FetcherResponse, err error) {
 	scanner := bufio.NewScanner(reader)
 	re := regexp.MustCompile(tokensRegexp)
 	for scanner.Scan() {
 		line := scanner.Text()
 		if strings.Contains(line, "{{CVE|CVE") {
 			if !strings.Contains(line, "CVE-2014-????") {
-				cve := buildArchlinuxCVE(re.ReplaceAllString(line, ""))
+				cve := buildArchLinuxCVE(re.ReplaceAllString(line, ""))
 				vulnerability := &database.Vulnerability{
 					ID:          cve.CVEID,
 					Link:        cve.ASAID.URL,
@@ -102,7 +102,7 @@ func parseArchlinuxWikiCVE(reader io.Reader, flag string) (resp updater.FetcherR
 	return resp, nil
 }
 
-func buildArchlinuxCVE(line string) ArchCVE {
+func buildArchLinuxCVE(line string) ArchLinuxCVE {
 	data := strings.Split(strings.TrimSpace(line), "||")
 	sa := SecurityAdvisory{}
 	if len(data) == 8 {
@@ -119,7 +119,7 @@ func buildArchlinuxCVE(line string) ArchCVE {
 	if len(dataTitle) >= 1 {
 		title = dataTitle[2]
 	}
-	return ArchCVE{
+	return ArchLinuxCVE{
 		CVEID:           title,
 		Package:         strings.Replace(strings.TrimSpace(data[1]), "|", "", -1),
 		DisclosureDate:  strings.TrimSpace(data[2]),

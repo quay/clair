@@ -28,8 +28,8 @@ import (
 func TestArchLinuxCVEBuilder(t *testing.T) {
 	line := "| {{CVE|CVE-2014-9687}} [http://www.openwall.com/lists/oss-security/2015/02/10/10 templink] || {{pkg|ecryptfs-utils}} || 2015-02-10 || <= 104-1 || 106-1 || 37d || Fixed ({{bug|44157}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000255.html ASA-201503-14]"
 	re := regexp.MustCompile(tokensRegexp)
-	cve := buildArchlinuxCVE(re.ReplaceAllString(line, ""))
-	expected := ArchCVE{
+	cve := buildArchLinuxCVE(re.ReplaceAllString(line, ""))
+	expected := ArchLinuxCVE{
 		CVEID:           "CVE-2014-9687 http://www.openwall.com/lists/oss-security/2015/02/10/10 templink",
 		Package:         "ecryptfs-utils",
 		DisclosureDate:  "2015-02-10",
@@ -49,7 +49,7 @@ func TestArchlinuxParser(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
 	testFile, _ := os.Open(
 		path.Join(path.Dir(filename)) + "/testdata/fetcher_archlinux.txt")
-	response, err := parseArchlinuxWikiCVE(testFile, "")
+	response, err := parseArchLinuxWikiCVE(testFile, "")
 	if err != nil {
 		t.Fatalf("Error reading Arch CVE: %s %s",
 			testFile.Name(), err.Error())
