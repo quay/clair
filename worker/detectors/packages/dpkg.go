@@ -104,7 +104,7 @@ func (detector *DpkgPackagesDetector) Detect(data map[string][]byte) ([]*databas
 }
 
 // GetRequiredFiles returns the list of files required for Detect, without
-// leading /
+// the leading /
 func (detector *DpkgPackagesDetector) GetRequiredFiles() []string {
 	return []string{"var/lib/dpkg/status"}
 }

@@ -34,7 +34,6 @@ func init() {
 
 // Detect detects packages using /var/lib/pacman/local from the input data.
 func (detector *PacmanPackagesDetector) Detect(data map[string][]byte) ([]*database.Package, error) {
-	log.Errorf("Pacman: %v", data)
 	db, hasFile := data["var/lib/pacman"]
 	if !hasFile {
 		return []*database.Package{}, nil
@@ -71,7 +70,7 @@ func (detector *PacmanPackagesDetector) Detect(data map[string][]byte) ([]*datab
 }
 
 // GetRequiredFiles returns the list of files required for Detect, without
-// leading /
+// the leading /
 func (detector *PacmanPackagesDetector) GetRequiredFiles() []string {
 	return []string{"var/lib/pacman"}
 }
