@@ -169,6 +169,11 @@ func init() {
     WHERE vulnerability_id = $1 AND feature_id = $2
     RETURNING id`
 
+	queries["r_vulnerability_fixedin_feature"] = `
+    DELETE FROM Vulnerability_FixedIn_Feature
+    WHERE vulnerability_id = $1 AND feature_id = $2
+    RETURNING id`
+
 	queries["r_vulnerability_affects_featureversion"] = `
     DELETE FROM Vulnerability_Affects_FeatureVersion
     WHERE fixedin_id = $1`
