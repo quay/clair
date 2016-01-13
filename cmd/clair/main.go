@@ -26,6 +26,10 @@ import (
 	"github.com/coreos/pkg/capnslog"
 
 	// Register components
+	_ "github.com/coreos/clair/notifier/notifiers"
+	_ "github.com/coreos/clair/updater/fetchers/debian"
+	_ "github.com/coreos/clair/updater/fetchers/rhel"
+	_ "github.com/coreos/clair/updater/fetchers/ubuntu"
 	_ "github.com/coreos/clair/worker/detectors/feature/dpkg"
 	_ "github.com/coreos/clair/worker/detectors/feature/rpm"
 	_ "github.com/coreos/clair/worker/detectors/namespace/aptsources"

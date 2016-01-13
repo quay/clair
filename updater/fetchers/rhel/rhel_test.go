@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fetchers
+package rhel
 
 import (
 	"os"
@@ -56,10 +56,10 @@ func TestRHELParser(t *testing.T) {
 			},
 		}
 
-			for _, expectedPackage := range expectedPackages {
-				assert.Contains(t, packages, expectedPackage)
-				assert.Contains(t, vulnerabilities[0].FixedInNodes, expectedPackage.GetNode())
-			}
+		for _, expectedPackage := range expectedPackages {
+			assert.Contains(t, packages, expectedPackage)
+			assert.Contains(t, vulnerabilities[0].FixedInNodes, expectedPackage.GetNode())
+		}
 	}
 
 	// Test parsing testdata/fetcher_rhel_test.2.xml
@@ -84,9 +84,9 @@ func TestRHELParser(t *testing.T) {
 			},
 		}
 
-			for _, expectedPackage := range expectedPackages {
-				assert.Contains(t, packages, expectedPackage)
-				assert.Contains(t, vulnerabilities[0].FixedInNodes, expectedPackage.GetNode())
-			}
+		for _, expectedPackage := range expectedPackages {
+			assert.Contains(t, packages, expectedPackage)
+			assert.Contains(t, vulnerabilities[0].FixedInNodes, expectedPackage.GetNode())
+		}
 	}
 }

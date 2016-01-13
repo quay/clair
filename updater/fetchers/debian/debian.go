@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package fetchers
+package debian
 
 import (
 	"crypto/sha1"
@@ -53,7 +53,7 @@ type jsonRel struct {
 type DebianFetcher struct{}
 
 func init() {
-	//updater.RegisterFetcher("debian", &DebianFetcher{})
+	updater.RegisterFetcher("debian", &DebianFetcher{})
 }
 
 // FetchUpdate fetches vulnerability updates from the Debian Security Tracker.
