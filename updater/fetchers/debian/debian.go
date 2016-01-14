@@ -143,8 +143,8 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 					continue
 				}
 
-				// Skip if the status is not determined.
-				if releaseNode.Status == "undetermined" {
+				// Skip if the status is not determined or the vulnerability is a temporary one.
+				if !strings.HasPrefix(vulnName, "CVE-") || releaseNode.Status == "undetermined" {
 					continue
 				}
 
