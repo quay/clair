@@ -2,18 +2,11 @@
 # is specified or if the keys are not defined.
 ---
 database:
-  # Database backend.
-  #
-  # Possible values are "bolt", "leveldb", "memstore", "mongo", "sql".
-  #
-  # When running multiple instances is not desired, using BoltDB backend is the best choice as it is
-  # lightning fast. However, using PostgreSQL enables running multiple instances concurrently.
-  # The default is just an ephemeral database.
-  type: memstore
-  # Path to the database.
-  #
-  # Can be a file or a connection string.
-  path:
+  # PostgreSQL Connection string.
+  # Reference: http://www.postgresql.org/docs/9.4/static/libpq-connect.html
+  source: 
+  # Number of elements to keep in the cache.
+  cacheSize: 16384
 api:
   # Port on which the main API and the health API will listen on.
   port: 6060
