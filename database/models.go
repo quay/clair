@@ -4,17 +4,17 @@ import "github.com/coreos/clair/utils/types"
 
 // ID is only meant to be used by database implementations and should never be used for anything else.
 type Model struct {
-	ID int
+	ID int `json:"-"`
 }
 
 type Layer struct {
 	Model
 
 	Name          string
-	EngineVersion int
-	Parent        *Layer
-	Namespace     *Namespace
-	Features      []FeatureVersion
+	EngineVersion int              `json:",omitempty"`
+	Parent        *Layer           `json:",omitempty"`
+	Namespace     *Namespace       `json:",omitempty"`
+	Features      []FeatureVersion `json:",omitempty"`
 }
 
 type Namespace struct {
@@ -36,7 +36,7 @@ type FeatureVersion struct {
 
 	Feature    Feature
 	Version    types.Version
-	AffectedBy []Vulnerability
+	AffectedBy []Vulnerability `json:",omitempty"`
 }
 
 type Vulnerability struct {
@@ -48,10 +48,10 @@ type Vulnerability struct {
 	Link        string
 	Severity    types.Priority
 
-	FixedIn []FeatureVersion
+	FixedIn []FeatureVersion `json:",omitempty"`
 	//Affects []FeatureVersion
 
 	// For output purposes. Only make sense when the vulnerability
 	// is already about a specific Feature/FeatureVersion.
-	FixedBy types.Version
+	FixedBy types.Version `json:",omitempty"`
 }

@@ -90,20 +90,14 @@ func DELETELayers(w http.ResponseWriter, r *http.Request, p httprouter.Params, e
 // GETLayers returns informations about an existing layer, optionally with its features
 // and vulnerabilities.
 func GETLayers(w http.ResponseWriter, r *http.Request, p httprouter.Params, e *Env) {
-	withFeatures := false
-	withVulnerabilities := false
-	if r.URL.Query().Get("withFeatures") == "true" {
-		withFeatures = true
-	}
-	if r.URL.Query().Get("withVulnerabilities") == "true" {
-		withFeatures = true
-		withVulnerabilities = true
-	}
+	_, withFeatures := r.URL.Query()["withFeatures"]
+	_, withVulnerabilities := r.URL.Query()["withVulnerabilities"]
 
 	layer, err := e.Datastore.FindLayer(p.ByName("id"), withFeatures, withVulnerabilities)
 	if err != nil {
 		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
+
 	httputils.WriteHTTP(w, http.StatusOK, struct{ Layer database.Layer }{Layer: layer})
 }
