@@ -10,7 +10,7 @@ var queries map[string]string
 func init() {
 	queries = make(map[string]string)
 
-	queries["set_tx_serializable"] = `SET TRANSACTION ISOLATION LEVEL SERIALIZABLE`
+	queries["l_vulnerability_affects_featureversion"] = `LOCK Vulnerability_Affects_FeatureVersion IN SHARE ROW EXCLUSIVE MODE`
 
 	// keyvalue.go
 	queries["u_keyvalue"] = `UPDATE KeyValue SET value = $1 WHERE key = $2`
@@ -180,6 +180,14 @@ func init() {
 
 	queries["f_featureversion_by_feature"] = `
     SELECT id, version FROM FeatureVersion WHERE feature_id = $1`
+
+	// complex_test.go
+	queries["s_complextest_featureversion_affects"] = `
+    SELECT v.name
+    FROM FeatureVersion fv
+      LEFT JOIN Vulnerability_Affects_FeatureVersion vaf ON fv.id = vaf.featureversion_id
+      JOIN Vulnerability v ON vaf.vulnerability_id = v.id
+    WHERE featureversion_id = $1`
 }
 
 func getQuery(name string) string {

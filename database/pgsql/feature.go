@@ -68,10 +68,10 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 	// Set transaction as SERIALIZABLE.
 	// This is how we ensure that the data in Vulnerability_Affects_FeatureVersion is always
 	// consistent.
-	_, err = tx.Exec(getQuery("set_tx_serializable"))
+	_, err = tx.Exec(getQuery("l_vulnerability_affects_featureversion"))
 	if err != nil {
 		tx.Rollback()
-		return 0, handleError("insertFeatureVersion.set_tx_serializable", err)
+		return 0, handleError("insertFeatureVersion.l_vulnerability_affects_featureversion", err)
 	}
 
 	// Find or create FeatureVersion.
@@ -162,6 +162,7 @@ func linkFeatureVersionToVulnerabilities(tx *sql.Tx, featureVersion database.Fea
 
 	// Insert into Vulnerability_Affects_FeatureVersion.
 	for _, affect := range affects {
+		// TODO(Quentin-M): Batch me.
 		_, err := tx.Exec(getQuery("i_vulnerability_affects_featureversion"), affect.vulnerabilityID,
 			featureVersion.ID, affect.fixedInID)
 		if err != nil {
