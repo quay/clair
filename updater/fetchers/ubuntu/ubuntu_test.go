@@ -32,9 +32,9 @@ func TestUbuntuParser(t *testing.T) {
 	// Test parsing testdata/fetcher_
 	testData, _ := os.Open(path + "/testdata/fetcher_ubuntu_test.txt")
 	defer testData.Close()
-	vulnerability, packages, unknownReleases, err := parseUbuntuCVE(testData)
+	vulnerability, unknownReleases, err := parseUbuntuCVE(testData)
 	if assert.Nil(t, err) {
-		assert.Equal(t, "CVE-2015-4471", vulnerability.ID)
+		assert.Equal(t, "CVE-2015-4471", vulnerability.Name)
 		assert.Equal(t, types.Medium, vulnerability.Severity)
 		assert.Equal(t, "Off-by-one error in the lzxd_decompress function in lzxd.c in libmspack before 0.5 allows remote attackers to cause a denial of service (buffer under-read and application crash) via a crafted CAB archive.", vulnerability.Description)
 
@@ -42,27 +42,32 @@ func TestUbuntuParser(t *testing.T) {
 		_, hasUnkownRelease := unknownReleases["unknown"]
 		assert.True(t, hasUnkownRelease)
 
-		expectedPackages := []*database.Package{
-			&database.Package{
-				OS:      "ubuntu:14.04",
-				Name:    "libmspack",
+		expectedFeatureVersions := []database.FeatureVersion{
+			database.FeatureVersion{
+				Feature: database.Feature{
+					Namespace: database.Namespace{Name: "ubuntu:14.04"},
+					Name:      "libmspack",
+				},
 				Version: types.MaxVersion,
 			},
-			&database.Package{
-				OS:      "ubuntu:15.04",
-				Name:    "libmspack",
+			database.FeatureVersion{
+				Feature: database.Feature{
+					Namespace: database.Namespace{Name: "ubuntu:15.04"},
+					Name:      "libmspack",
+				},
 				Version: types.NewVersionUnsafe("0.4-3"),
 			},
-			&database.Package{
-				OS:      "ubuntu:15.10",
-				Name:    "libmspack-anotherpkg",
+			database.FeatureVersion{
+				Feature: database.Feature{
+					Namespace: database.Namespace{Name: "ubuntu:15.10"},
+					Name:      "libmspack-anotherpkg",
+				},
 				Version: types.NewVersionUnsafe("0.1"),
 			},
 		}
 
-		for _, expectedPackage := range expectedPackages {
-			assert.Contains(t, packages, expectedPackage)
-			assert.Contains(t, vulnerability.FixedInNodes, expectedPackage.GetNode())
+		for _, expectedFeatureVersion := range expectedFeatureVersions {
+			assert.Contains(t, vulnerability.FixedIn, expectedFeatureVersion)
 		}
 	}
 }

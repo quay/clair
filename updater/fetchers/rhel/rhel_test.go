@@ -31,62 +31,70 @@ func TestRHELParser(t *testing.T) {
 
 	// Test parsing testdata/fetcher_rhel_test.1.xml
 	testFile, _ := os.Open(path + "/testdata/fetcher_rhel_test.1.xml")
-	vulnerabilities, packages, err := parseRHSA(testFile)
+	vulnerabilities, err := parseRHSA(testFile)
 	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, 1) {
 		assert.Equal(t, "RHSA-2015:1193", vulnerabilities[0].ID)
 		assert.Equal(t, "https://rhn.redhat.com/errata/RHSA-2015-1193.html", vulnerabilities[0].Link)
 		assert.Equal(t, types.Medium, vulnerabilities[0].Severity)
 		assert.Equal(t, `Xerces-C is a validating XML parser written in a portable subset of C++. A flaw was found in the way the Xerces-C XML parser processed certain XML documents. A remote attacker could provide specially crafted XML input that, when parsed by an application using Xerces-C, would cause that application to crash.`, vulnerabilities[0].Description)
 
-		expectedPackages := []*database.Package{
-			&database.Package{
-				OS:      "centos:7",
-				Name:    "xerces-c",
+		expectedFeatureVersions := []database.FeatureVersion{
+			database.FeatureVersion{
+				Feature: database.Feature{
+					Namespace: database.Namespace{Name: "centos:7"},
+					Name:      "xerces-c",
+				},
 				Version: types.NewVersionUnsafe("3.1.1-7.el7_1"),
 			},
-			&database.Package{
-				OS:      "centos:7",
-				Name:    "xerces-c-devel",
+			database.FeatureVersion{
+				Feature: database.Feature{
+					Namespace: database.Namespace{Name: "centos:7"},
+					Name:      "xerces-c-devel",
+				},
 				Version: types.NewVersionUnsafe("3.1.1-7.el7_1"),
 			},
-			&database.Package{
-				OS:      "centos:7",
-				Name:    "xerces-c-doc",
+			database.FeatureVersion{
+				Feature: database.Feature{
+					Namespace: database.Namespace{Name: "centos:7"},
+					Name:      "xerces-c-doc",
+				},
 				Version: types.NewVersionUnsafe("3.1.1-7.el7_1"),
 			},
 		}
 
-		for _, expectedPackage := range expectedPackages {
-			assert.Contains(t, packages, expectedPackage)
-			assert.Contains(t, vulnerabilities[0].FixedInNodes, expectedPackage.GetNode())
+		for _, expectedFeatureVersion := range expectedFeatureVersions {
+			assert.Contains(t, vulnerabilities[0].FixedIn, expectedFeatureVersion)
 		}
 	}
 
 	// Test parsing testdata/fetcher_rhel_test.2.xml
 	testFile, _ = os.Open(path + "/testdata/fetcher_rhel_test.2.xml")
-	vulnerabilities, packages, err = parseRHSA(testFile)
+	vulnerabilities, err = parseRHSA(testFile)
 	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, 1) {
 		assert.Equal(t, "RHSA-2015:1207", vulnerabilities[0].ID)
 		assert.Equal(t, "https://rhn.redhat.com/errata/RHSA-2015-1207.html", vulnerabilities[0].Link)
 		assert.Equal(t, types.Critical, vulnerabilities[0].Severity)
 		assert.Equal(t, `Mozilla Firefox is an open source web browser. XULRunner provides the XUL Runtime environment for Mozilla Firefox. Several flaws were found in the processing of malformed web content. A web page containing malicious content could cause Firefox to crash or, potentially, execute arbitrary code with the privileges of the user running Firefox.`, vulnerabilities[0].Description)
 
-		expectedPackages := []*database.Package{
-			&database.Package{
-				OS:      "centos:6",
-				Name:    "firefox",
+		expectedFeatureVersions := []database.FeatureVersion{
+			database.FeatureVersion{
+				Feature: database.Feature{
+					Namespace: database.Namespace{Name: "centos:6"},
+					Name:      "firefox",
+				},
 				Version: types.NewVersionUnsafe("38.1.0-1.el6_6"),
 			},
-			&database.Package{
-				OS:      "centos:7",
-				Name:    "firefox",
+			database.FeatureVersion{
+				Feature: database.Feature{
+					Namespace: database.Namespace{Name: "centos:7"},
+					Name:      "firefox",
+				},
 				Version: types.NewVersionUnsafe("38.1.0-1.el7_1"),
 			},
 		}
 
-		for _, expectedPackage := range expectedPackages {
-			assert.Contains(t, packages, expectedPackage)
-			assert.Contains(t, vulnerabilities[0].FixedInNodes, expectedPackage.GetNode())
+		for _, expectedFeatureVersion := range expectedFeatureVersions {
+			assert.Contains(t, vulnerabilities[0].FixedIn, expectedFeatureVersion)
 		}
 	}
 }

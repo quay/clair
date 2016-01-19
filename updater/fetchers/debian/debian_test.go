@@ -33,54 +33,63 @@ func TestDebianParser(t *testing.T) {
 	response, err := buildResponse(testFile, "")
 	if assert.Nil(t, err) && assert.Len(t, response.Vulnerabilities, 2) {
 		for _, vulnerability := range response.Vulnerabilities {
-			if vulnerability.ID == "CVE-2015-1323" {
+			if vulnerability.Name == "CVE-2015-1323" {
 				assert.Equal(t, "https://security-tracker.debian.org/tracker/CVE-2015-1323", vulnerability.Link)
 				assert.Equal(t, types.Low, vulnerability.Severity)
 				assert.Equal(t, "This vulnerability is not very dangerous.", vulnerability.Description)
 
-				expectedPackages := []*database.Package{
-					&database.Package{
-						OS:      "debian:8",
-						Name:    "aptdaemon",
+				expectedFeatureVersions := []database.FeatureVersion{
+					database.FeatureVersion{
+						Feature: database.Feature{
+							Namespace: database.Namespace{Name: "debian:8"},
+							Name:      "aptdaemon",
+						},
 						Version: types.MaxVersion,
 					},
-					&database.Package{
-						OS:      "debian:unstable",
-						Name:    "aptdaemon",
+					database.FeatureVersion{
+						Feature: database.Feature{
+							Namespace: database.Namespace{Name: "debian:unstable"},
+
+							Name: "aptdaemon",
+						},
 						Version: types.NewVersionUnsafe("1.1.1+bzr982-1"),
 					},
 				}
 
-				for _, expectedPackage := range expectedPackages {
-					assert.Contains(t, response.Packages, expectedPackage)
-					assert.Contains(t, vulnerability.FixedInNodes, expectedPackage.GetNode())
+				for _, expectedFeatureVersion := range expectedFeatureVersions {
+					assert.Contains(t, vulnerability.FixedIn, expectedFeatureVersion)
 				}
-			} else if vulnerability.ID == "CVE-2003-0779" {
+			} else if vulnerability.Name == "CVE-2003-0779" {
 				assert.Equal(t, "https://security-tracker.debian.org/tracker/CVE-2003-0779", vulnerability.Link)
 				assert.Equal(t, types.High, vulnerability.Severity)
 				assert.Equal(t, "But this one is very dangerous.", vulnerability.Description)
 
-				expectedPackages := []*database.Package{
-					&database.Package{
-						OS:      "debian:8",
-						Name:    "aptdaemon",
+				expectedFeatureVersions := []database.FeatureVersion{
+					database.FeatureVersion{
+						Feature: database.Feature{
+							Namespace: database.Namespace{Name: "debian:8"},
+							Name:      "aptdaemon",
+						},
 						Version: types.NewVersionUnsafe("0.7.0"),
 					},
-					&database.Package{
-						OS:      "debian:unstable",
-						Name:    "aptdaemon",
+					database.FeatureVersion{
+						Feature: database.Feature{
+							Namespace: database.Namespace{Name: "debian:unstable"},
+							Name:      "aptdaemon",
+						},
 						Version: types.NewVersionUnsafe("0.7.0"),
 					},
-					&database.Package{
-						OS:      "debian:8",
-						Name:    "asterisk",
+					database.FeatureVersion{
+						Feature: database.Feature{
+							Namespace: database.Namespace{Name: "debian:8"},
+							Name:      "asterisk",
+						},
 						Version: types.NewVersionUnsafe("0.5.56"),
 					},
 				}
 
-				for _, expectedPackage := range expectedPackages {
-					assert.Contains(t, response.Packages, expectedPackage)
-					assert.Contains(t, vulnerability.FixedInNodes, expectedPackage.GetNode())
+				for _, expectedFeatureVersion := range expectedFeatureVersions {
+					assert.Contains(t, vulnerability.FixedIn, expectedFeatureVersion)
 				}
 			} else {
 				assert.Fail(t, "Wrong vulnerability name: ", vulnerability.ID)

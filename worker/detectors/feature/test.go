@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package packages
+package feature
 
 import (
 	"io/ioutil"
@@ -25,23 +25,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type packagesTest struct {
-	packages []database.FeatureVersion
-	data     map[string][]byte
+type FeatureVersionTest struct {
+	FeatureVersions []database.FeatureVersion
+	Data            map[string][]byte
 }
 
-func loadFileForTest(name string) []byte {
+func LoadFileForTest(name string) []byte {
 	_, filename, _, _ := runtime.Caller(0)
 	d, _ := ioutil.ReadFile(path.Join(path.Dir(filename)) + "/" + name)
 	return d
 }
 
-func testFeaturesDetector(t *testing.T, detector detectors.FeaturesDetector, tests []packagesTest) {
+func TestFeaturesDetector(t *testing.T, detector detectors.FeaturesDetector, tests []FeatureVersionTest) {
 	for _, test := range tests {
-		packages, err := detector.Detect(test.data)
-		if assert.Nil(t, err) && assert.Len(t, packages, len(test.packages)) {
-			for _, expectedPkg := range test.packages {
-				assert.Contains(t, packages, expectedPkg)
+		featureVersions, err := detector.Detect(test.Data)
+		if assert.Nil(t, err) && assert.Len(t, featureVersions, len(test.FeatureVersions)) {
+			for _, expectedFeatureVersion := range test.FeatureVersions {
+				assert.Contains(t, featureVersions, expectedFeatureVersion)
 			}
 		}
 	}
