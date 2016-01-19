@@ -5,70 +5,114 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/coreos/clair/config"
+	// Register the required detectors.
+
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/database/pgsql"
 	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
 
 	// Register detectors
 	_ "github.com/coreos/clair/worker/detectors/data"
-	_ "github.com/coreos/clair/worker/detectors/os"
-	_ "github.com/coreos/clair/worker/detectors/packages"
+	_ "github.com/coreos/clair/worker/detectors/feature/dpkg"
+	_ "github.com/coreos/clair/worker/detectors/namespace/aptsources"
+	_ "github.com/coreos/clair/worker/detectors/namespace/osrelease"
 )
 
-func TestDistUpgrade(t *testing.T) {
-	database.Open(&config.DatabaseConfig{Type: "memstore"})
-	defer database.Close()
+func TestProcessWithDistUpgrade(t *testing.T) {
+	// TODO(Quentin-M): This should not be bound to a single database implementation.
+	datastore, err := pgsql.OpenForTest("ProcessWithDistUpgrade", false)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer datastore.Close()
 
 	_, f, _, _ := runtime.Caller(0)
 	path := path.Join(path.Dir(f)) + "/testdata/DistUpgrade/"
 
 	// blank.tar: MAINTAINER Quentin MACHU <quentin.machu.fr>
 	// wheezy.tar: FROM debian:wheezy
-	// jessie.tar: RUN sed -i "s/precise/trusty/" /etc/apt/sources.list && apt-get update && apt-get -y dist-upgrade
-	assert.Nil(t, Process("blank", "", path+"blank.tar.gz", "Docker"))
-	assert.Nil(t, Process("wheezy", "blank", path+"wheezy.tar.gz", "Docker"))
-	assert.Nil(t, Process("jessie", "wheezy", path+"jessie.tar.gz", "Docker"))
+	// jessie.tar: RUN sed -i "s/precise/trusty/" /etc/apt/sources.list && apt-get update &&
+	//             apt-get -y dist-upgrade
+	assert.Nil(t, Process(datastore, "blank", "", path+"blank.tar.gz", "Docker"))
+	assert.Nil(t, Process(datastore, "wheezy", "blank", path+"wheezy.tar.gz", "Docker"))
+	assert.Nil(t, Process(datastore, "jessie", "wheezy", path+"jessie.tar.gz", "Docker"))
 
-	err := Process("blank", "", path+"blank.tar.gz", "")
-	assert.Error(t, err, "could not process a layer which does not have a specified format")
-
-	err = Process("blank", "", path+"blank.tar.gz", "invalid")
-	assert.Error(t, err, "could not process a layer which does not have a supported format")
-
-	wheezy, err := database.FindOneLayerByID("wheezy", database.FieldLayerAll)
+	wheezy, err := datastore.FindLayer("wheezy", true, false)
 	if assert.Nil(t, err) {
-		assert.Equal(t, "debian:7", wheezy.OS)
-		assert.Len(t, wheezy.InstalledPackagesNodes, 52)
-		assert.Len(t, wheezy.RemovedPackagesNodes, 0)
+		assert.Equal(t, "debian:7", wheezy.Namespace.Name)
+		assert.Len(t, wheezy.Features, 52)
 
-		jessie, err := database.FindOneLayerByID("jessie", database.FieldLayerAll)
+		jessie, err := datastore.FindLayer("jessie", true, false)
 		if assert.Nil(t, err) {
-			assert.Equal(t, "debian:8", jessie.OS)
-			assert.Len(t, jessie.InstalledPackagesNodes, 66)
-			assert.Len(t, jessie.RemovedPackagesNodes, 44)
+			assert.Equal(t, "debian:8", jessie.Namespace.Name)
+			assert.Len(t, jessie.Features, 74)
 
-			packageNodes, err := jessie.AllPackages()
-			if assert.Nil(t, err) {
-				// These packages haven't been upgraded
-				nonUpgradedPackages := []database.Package{
-					database.Package{Name: "libtext-wrapi18n-perl", Version: types.NewVersionUnsafe("0.06-7")},
-					database.Package{Name: "libtext-charwidth-perl", Version: types.NewVersionUnsafe("0.04-7")},
-					database.Package{Name: "libtext-iconv-perl", Version: types.NewVersionUnsafe("1.7-5")},
-					database.Package{Name: "mawk", Version: types.NewVersionUnsafe("1.3.3-17")},
-					database.Package{Name: "insserv", Version: types.NewVersionUnsafe("1.14.0-5")},
-					database.Package{Name: "db", Version: types.NewVersionUnsafe("5.1.29-5")},
-					database.Package{Name: "ustr", Version: types.NewVersionUnsafe("1.0.4-3")},
-					database.Package{Name: "xz-utils", Version: types.NewVersionUnsafe("5.1.1alpha+20120614-2")},
+			// These FeatureVersions haven't been upgraded.
+			nonUpgradedFeatureVersions := []database.FeatureVersion{
+				database.FeatureVersion{
+					Feature: database.Feature{Name: "libtext-wrapi18n-perl"},
+					Version: types.NewVersionUnsafe("0.06-7"),
+				},
+				database.FeatureVersion{
+					Feature: database.Feature{Name: "libtext-charwidth-perl"},
+					Version: types.NewVersionUnsafe("0.04-7"),
+				},
+				database.FeatureVersion{
+					Feature: database.Feature{Name: "libtext-iconv-perl"},
+					Version: types.NewVersionUnsafe("1.7-5"),
+				},
+				database.FeatureVersion{
+					Feature: database.Feature{Name: "mawk"},
+					Version: types.NewVersionUnsafe("1.3.3-17"),
+				},
+				database.FeatureVersion{
+					Feature: database.Feature{Name: "insserv"},
+					Version: types.NewVersionUnsafe("1.14.0-5"),
+				},
+				database.FeatureVersion{
+					Feature: database.Feature{Name: "db"},
+					Version: types.NewVersionUnsafe("5.1.29-5"),
+				},
+				database.FeatureVersion{
+					Feature: database.Feature{Name: "ustr"},
+					Version: types.NewVersionUnsafe("1.0.4-3"),
+				},
+				database.FeatureVersion{
+					Feature: database.Feature{Name: "xz-utils"},
+					Version: types.NewVersionUnsafe("5.1.1alpha+20120614-2"),
+				},
+			}
+
+			for _, nufv := range nonUpgradedFeatureVersions {
+				nufv.Feature.Namespace.Name = "debian:7"
+
+				found := false
+				for _, fv := range jessie.Features {
+					if fv.Feature.Name == nufv.Feature.Name &&
+						fv.Feature.Namespace.Name == nufv.Feature.Namespace.Name &&
+						fv.Version == nufv.Version {
+						found = true
+						break
+					}
 				}
-				for _, p := range nonUpgradedPackages {
-					p.OS = "debian:7"
-					assert.Contains(t, packageNodes, p.GetNode(), "Jessie layer doesn't have %s but it should.", p)
+				assert.Equal(t, true, found, "Jessie layer doesn't have %#v but it should.", nufv)
+			}
+
+			for _, nufv := range nonUpgradedFeatureVersions {
+				nufv.Feature.Namespace.Name = "debian:8"
+
+				found := false
+				for _, fv := range jessie.Features {
+					if fv.Feature.Name == nufv.Feature.Name &&
+						fv.Feature.Namespace.Name == nufv.Feature.Namespace.Name &&
+						fv.Version == nufv.Version {
+						found = true
+						break
+					}
 				}
-				for _, p := range nonUpgradedPackages {
-					p.OS = "debian:8"
-					assert.NotContains(t, packageNodes, p.GetNode(), "Jessie layer has %s but it shouldn't.", p)
-				}
+				assert.Equal(t, false, found, "Jessie layer has %#v but it shouldn't.", nufv)
 			}
 		}
 	}

@@ -60,6 +60,7 @@ func (detector *DpkgFeaturesDetector) Detect(data map[string][]byte) ([]database
 			// Defines the name of the package
 
 			pkg.Feature.Name = strings.TrimSpace(strings.TrimPrefix(line, "Package: "))
+			pkg.Version = types.Version{}
 		} else if strings.HasPrefix(line, "Source: ") {
 			// Source line (Optionnal)
 			// Gives the name of the source package

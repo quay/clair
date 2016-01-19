@@ -143,7 +143,7 @@ func detectContent(name, path, imageFormat string, parent *database.Layer) (name
 	if err != nil {
 		return
 	}
-	if namespace.Name != "" {
+	if namespace != nil {
 		log.Debugf("layer %s: Namespace is %s.", name, namespace.Name)
 	} else {
 		log.Debugf("layer %s: OS is unknown.", name)
