@@ -17,6 +17,7 @@ package ubuntu
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -72,6 +73,9 @@ var (
 	affectsCaptureRegexpNames = affectsCaptureRegexp.SubexpNames()
 
 	log = capnslog.NewPackageLogger("github.com/coreos/clair", "updater/fetchers/ubuntu")
+
+	// ErrFilesystem is returned when a fetcher fails to interact with the local filesystem.
+	ErrFilesystem = errors.New("updater/fetchers: something went wrong when interacting with the fs")
 )
 
 // UbuntuFetcher implements updater.Fetcher and get vulnerability updates from
@@ -79,7 +83,7 @@ var (
 type UbuntuFetcher struct{}
 
 func init() {
-	//updater.RegisterFetcher("Ubuntu", &UbuntuFetcher{})
+	updater.RegisterFetcher("Ubuntu", &UbuntuFetcher{})
 }
 
 // FetchUpdate gets vulnerability updates from the Ubuntu CVE Tracker.
@@ -137,14 +141,13 @@ func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp up
 			continue
 		}
 
-		v, pkgs, unknownReleases, err := parseUbuntuCVE(file)
+		v, unknownReleases, err := parseUbuntuCVE(file)
 		if err != nil {
 			return resp, err
 		}
 
-		if len(v.FixedInNodes) > 0 {
+		if len(v.FixedIn) > 0 {
 			resp.Vulnerabilities = append(resp.Vulnerabilities, v)
-			resp.Packages = append(resp.Packages, pkgs...)
 		}
 
 		// Log any unknown releases.
@@ -273,8 +276,7 @@ func getRevisionNumber(pathToRepo string) (int, error) {
 	return revno, nil
 }
 
-func parseUbuntuCVE(fileContent io.Reader) (vulnerability *database.Vulnerability, packages []*database.Package, unknownReleases map[string]struct{}, err error) {
-	vulnerability = &database.Vulnerability{}
+func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability, unknownReleases map[string]struct{}, err error) {
 	unknownReleases = make(map[string]struct{})
 	readingDescription := false
 	scanner := bufio.NewScanner(fileContent)
@@ -289,7 +291,7 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability *database.Vulnerabilit
 
 		// Parse the name.
 		if strings.HasPrefix(line, "Candidate:") {
-			vulnerability.ID = strings.TrimSpace(strings.TrimPrefix(line, "Candidate:"))
+			vulnerability.Name = strings.TrimSpace(strings.TrimPrefix(line, "Candidate:"))
 			continue
 		}
 
@@ -308,7 +310,7 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability *database.Vulnerabilit
 				priority = priority[:strings.Index(priority, " ")]
 			}
 
-			vulnerability.Severity = ubuntuPriorityToPriority(priority)
+			vulnerability.Severity = ubuntuPriorityToSeverity(priority)
 			continue
 		}
 
@@ -342,9 +344,9 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability *database.Vulnerabilit
 				continue
 			}
 
-			// Only consider the package if its status is needed, active, deferred
-			// or released. Ignore DNE, needs-triage, not-affected, ignored, pending.
-			if md["status"] == "needed" || md["status"] == "active" || md["status"] == "deferred" || md["status"] == "released" {
+			// Only consider the package if its status is needed, active, deferred, not-affected or
+			// released. Ignore DNE (package does not exist), needs-triage, ignored, pending.
+			if md["status"] == "needed" || md["status"] == "active" || md["status"] == "deferred" || md["status"] == "released" || md["status"] == "not-affected" {
 				if _, isReleaseIgnored := ubuntuIgnoredReleases[md["release"]]; isReleaseIgnored {
 					continue
 				}
@@ -362,6 +364,8 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability *database.Vulnerabilit
 							log.Warningf("could not parse package version '%s': %s. skipping", md["note"], err)
 						}
 					}
+				} else if md["status"] == "not-affected" {
+					version = types.MinVersion
 				} else {
 					version = types.MaxVersion
 				}
@@ -370,13 +374,14 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability *database.Vulnerabilit
 				}
 
 				// Create and add the new package.
-				pkg := &database.Package{
-					OS:      "ubuntu:" + database.UbuntuReleasesMapping[md["release"]],
-					Name:    md["package"],
+				featureVersion := database.FeatureVersion{
+					Feature: database.Feature{
+						Namespace: database.Namespace{Name: "ubuntu:" + database.UbuntuReleasesMapping[md["release"]]},
+						Name:      md["package"],
+					},
 					Version: version,
 				}
-				packages = append(packages, pkg)
-				vulnerability.FixedInNodes = append(vulnerability.FixedInNodes, pkg.GetNode())
+				vulnerability.FixedIn = append(vulnerability.FixedIn, featureVersion)
 			}
 		}
 	}
@@ -397,7 +402,7 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability *database.Vulnerabilit
 	return
 }
 
-func ubuntuPriorityToPriority(priority string) types.Severity {
+func ubuntuPriorityToSeverity(priority string) types.Priority {
 	switch priority {
 	case "untriaged":
 		return types.Unknown
