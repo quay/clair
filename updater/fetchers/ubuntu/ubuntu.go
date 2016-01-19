@@ -132,8 +132,8 @@ func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp up
 		return resp, err
 	}
 
-	// Parse and add the vulnerabilities.
 	for cvePath := range modifiedCVE {
+		// Open the CVE file.
 		file, err := os.Open(repositoryLocalPath + "/" + cvePath)
 		if err != nil {
 			// This can happen when a file is modified and then moved in another
@@ -141,14 +141,14 @@ func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp up
 			continue
 		}
 
+		// Parse the vulnerability.
 		v, unknownReleases, err := parseUbuntuCVE(file)
 		if err != nil {
 			return resp, err
 		}
 
-		if len(v.FixedIn) > 0 {
-			resp.Vulnerabilities = append(resp.Vulnerabilities, v)
-		}
+		// Add the vulnerability to the response, splitting it by Namespaces.
+		resp.Vulnerabilities = append(resp.Vulnerabilities, updater.DoVulnerabilityNamespacing(v)...)
 
 		// Log any unknown releases.
 		for k := range unknownReleases {
