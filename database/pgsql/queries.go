@@ -69,23 +69,6 @@ func init() {
       LEFT JOIN Namespace n ON l.namespace_id = n.id
     WHERE l.name = $1;`
 
-	queries["s_layer_featureversion_id_only"] = `
-    WITH RECURSIVE layer_tree(id, parent_id, depth, path, cycle) AS(
-      SELECT l.id, l.parent_id, 1, ARRAY[l.id], false
-      FROM Layer l
-      WHERE l.id = $1
-    UNION ALL
-      SELECT l.id, l.parent_id, lt.depth + 1, path || l.id, l.id = ANY(path)
-      FROM Layer l, layer_tree lt
-      WHERE l.id = lt.parent_id
-    )
-    SELECT ldf.featureversion_id, ldf.modification
-    FROM Layer_diff_FeatureVersion ldf
-    JOIN (
-      SELECT row_number() over (ORDER BY depth DESC), id FROM layer_tree
-    ) AS ltree (ordering, id) ON ldf.layer_id = ltree.id
-    ORDER BY ltree.ordering`
-
 	queries["s_layer_featureversion"] = `
     WITH RECURSIVE layer_tree(id, parent_id, depth, path, cycle) AS(
       SELECT l.id, l.parent_id, 1, ARRAY[l.id], false

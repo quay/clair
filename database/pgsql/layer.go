@@ -43,7 +43,7 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 
 	// Find its features
 	if withFeatures || withVulnerabilities {
-		featureVersions, err := pgSQL.getLayerFeatureVersions(layer.ID, !withFeatures)
+		featureVersions, err := pgSQL.getLayerFeatureVersions(layer.ID)
 		if err != nil {
 			return layer, err
 		}
@@ -62,47 +62,30 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 }
 
 // getLayerFeatureVersions returns list of database.FeatureVersion that a database.Layer has.
-// if idOnly is specified, the returned structs will only have their ID filled. Otherwise,
-// it also gets their versions, feature's names, feature's namespace's names.
-func (pgSQL *pgSQL) getLayerFeatureVersions(layerID int, idOnly bool) ([]database.FeatureVersion, error) {
+func (pgSQL *pgSQL) getLayerFeatureVersions(layerID int) ([]database.FeatureVersion, error) {
 	var featureVersions []database.FeatureVersion
 
-	// Build query
-	var query string
-	if idOnly {
-		query = getQuery("s_layer_featureversion_id_only")
-	} else {
-		query = getQuery("s_layer_featureversion")
-	}
-
-	// Query
-	rows, err := pgSQL.Query(query, layerID)
+	// Query.
+	rows, err := pgSQL.Query(getQuery("s_layer_featureversion"), layerID)
 	if err != nil {
-		return featureVersions, handleError(query, err)
+		return featureVersions, handleError("s_layer_featureversion", err)
 	}
 	defer rows.Close()
 
-	// Scan query
+	// Scan query.
 	var modification string
 	mapFeatureVersions := make(map[int]database.FeatureVersion)
 	for rows.Next() {
 		var featureVersion database.FeatureVersion
 
-		if idOnly {
-			err = rows.Scan(&featureVersion.ID, &modification)
-			if err != nil {
-				return featureVersions, handleError(query+".Scan()", err)
-			}
-		} else {
-			err = rows.Scan(&featureVersion.ID, &modification, &featureVersion.Feature.Namespace.ID,
-				&featureVersion.Feature.Namespace.Name, &featureVersion.Feature.ID,
-				&featureVersion.Feature.Name, &featureVersion.ID, &featureVersion.Version)
-			if err != nil {
-				return featureVersions, handleError(query+".Scan()", err)
-			}
+		err = rows.Scan(&featureVersion.ID, &modification, &featureVersion.Feature.Namespace.ID,
+			&featureVersion.Feature.Namespace.Name, &featureVersion.Feature.ID,
+			&featureVersion.Feature.Name, &featureVersion.ID, &featureVersion.Version)
+		if err != nil {
+			return featureVersions, handleError("s_layer_featureversion.Scan()", err)
 		}
 
-		// Do transitive closure
+		// Do transitive closure.
 		switch modification {
 		case "add":
 			mapFeatureVersions[featureVersion.ID] = featureVersion
@@ -114,10 +97,10 @@ func (pgSQL *pgSQL) getLayerFeatureVersions(layerID int, idOnly bool) ([]databas
 		}
 	}
 	if err = rows.Err(); err != nil {
-		return featureVersions, handleError(query+".Rows()", err)
+		return featureVersions, handleError("s_layer_featureversion.Rows()", err)
 	}
 
-	// Build result by converting our map to a slice
+	// Build result by converting our map to a slice.
 	for _, featureVersion := range mapFeatureVersions {
 		featureVersions = append(featureVersions, featureVersion)
 	}
