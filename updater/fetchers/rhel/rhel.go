@@ -17,6 +17,7 @@ package rhel
 import (
 	"bufio"
 	"encoding/xml"
+	"errors"
 	"io"
 	"net/http"
 	"regexp"
@@ -51,6 +52,9 @@ var (
 	rhsaRegexp = regexp.MustCompile(`com.redhat.rhsa-(\d+).xml`)
 
 	log = capnslog.NewPackageLogger("github.com/coreos/clair", "updater/fetchers/rhel")
+
+	// ErrCouldNotParse is returned when a fetcher fails to parse the update data.
+	ErrCouldNotParse = errors.New("updater/fetchers: could not parse")
 )
 
 type oval struct {
@@ -84,7 +88,7 @@ type criterion struct {
 type RHELFetcher struct{}
 
 func init() {
-	//updater.RegisterFetcher("Red Hat", &RHELFetcher{})
+	updater.RegisterFetcher("Red Hat", &RHELFetcher{})
 }
 
 // FetchUpdate gets vulnerability updates from the Red Hat OVAL definitions.
@@ -131,14 +135,13 @@ func (f *RHELFetcher) FetchUpdate(datastore database.Datastore) (resp updater.Fe
 		}
 
 		// Parse the XML.
-		vs, pkgs, err := parseRHSA(r.Body)
+		vs, err := parseRHSA(r.Body)
 		if err != nil {
 			return resp, err
 		}
 
 		// Collect vulnerabilities.
 		resp.Vulnerabilities = append(resp.Vulnerabilities, vs...)
-		resp.Packages = append(resp.Packages, pkgs...)
 	}
 
 	// Set the flag if we found anything.
@@ -152,7 +155,7 @@ func (f *RHELFetcher) FetchUpdate(datastore database.Datastore) (resp updater.Fe
 	return resp, nil
 }
 
-func parseRHSA(ovalReader io.Reader) (vulnerabilities []*database.Vulnerability, packages []*database.Package, err error) {
+func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.Vulnerability, err error) {
 	// Decode the XML.
 	var ov oval
 	err = xml.NewDecoder(ovalReader).Decode(&ov)
@@ -165,19 +168,18 @@ func parseRHSA(ovalReader io.Reader) (vulnerabilities []*database.Vulnerability,
 	// Iterate over the definitions and collect any vulnerabilities that affect
 	// at least one package.
 	for _, definition := range ov.Definitions {
-		pkgs := toPackages(definition.Criteria)
+		pkgs := toFeatureVersions(definition.Criteria)
 		if len(pkgs) > 0 {
-			vulnerability := &database.Vulnerability{
-				ID:          name(definition),
+			vulnerability := database.Vulnerability{
+				Name:        name(definition),
 				Link:        link(definition),
-				Priority:    priority(definition),
+				Severity:    priority(definition),
 				Description: description(definition),
 			}
 			for _, p := range pkgs {
-				vulnerability.FixedInNodes = append(vulnerability.FixedInNodes, p.GetNode())
+				vulnerability.FixedIn = append(vulnerability.FixedIn, p)
 			}
 			vulnerabilities = append(vulnerabilities, vulnerability)
-			packages = append(packages, pkgs...)
 		}
 	}
 
@@ -259,17 +261,17 @@ func getPossibilities(node criteria) [][]criterion {
 	return possibilities
 }
 
-func toPackages(criteria criteria) []*database.Package {
+func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 	// There are duplicates in Red Hat .xml files.
 	// This map is for deduplication.
-	packagesParameters := make(map[string]*database.Package)
+	featureVersionParameters := make(map[string]database.FeatureVersion)
 
 	possibilities := getPossibilities(criteria)
 	for _, criterions := range possibilities {
 		var (
-			pkg       database.Package
-			osVersion int
-			err       error
+			featureVersion database.FeatureVersion
+			osVersion      int
+			err            error
 		)
 
 		// Attempt to parse package data from trees of criterions.
@@ -282,8 +284,8 @@ func toPackages(criteria criteria) []*database.Package {
 				}
 			} else if strings.Contains(c.Comment, " is earlier than ") {
 				const prefixLen = len(" is earlier than ")
-				pkg.Name = strings.TrimSpace(c.Comment[:strings.Index(c.Comment, " is earlier than ")])
-				pkg.Version, err = types.NewVersion(c.Comment[strings.Index(c.Comment, " is earlier than ")+prefixLen:])
+				featureVersion.Feature.Name = strings.TrimSpace(c.Comment[:strings.Index(c.Comment, " is earlier than ")])
+				featureVersion.Version, err = types.NewVersion(c.Comment[strings.Index(c.Comment, " is earlier than ")+prefixLen:])
 				if err != nil {
 					log.Warningf("could not parse package version '%s': %s. skipping", c.Comment[strings.Index(c.Comment, " is earlier than ")+prefixLen:], err.Error())
 				}
@@ -291,25 +293,25 @@ func toPackages(criteria criteria) []*database.Package {
 		}
 
 		if osVersion > firstConsideredRHEL {
-			pkg.OS = "centos" + ":" + strconv.Itoa(osVersion)
+			featureVersion.Feature.Namespace.Name = "centos" + ":" + strconv.Itoa(osVersion)
 		} else {
 			continue
 		}
 
-		if pkg.OS != "" && pkg.Name != "" && pkg.Version.String() != "" {
-			packagesParameters[pkg.Key()] = &pkg
+		if featureVersion.Feature.Namespace.Name != "" && featureVersion.Feature.Name != "" && featureVersion.Version.String() != "" {
+			featureVersionParameters[featureVersion.Feature.Namespace.Name+":"+featureVersion.Feature.Name] = featureVersion
 		} else {
 			log.Warningf("could not determine a valid package from criterions: %v", criterions)
 		}
 	}
 
 	// Convert the map to slice.
-	var packagesParametersArray []*database.Package
-	for _, p := range packagesParameters {
-		packagesParametersArray = append(packagesParametersArray, p)
+	var featureVersionParametersArray []database.FeatureVersion
+	for _, fv := range featureVersionParameters {
+		featureVersionParametersArray = append(featureVersionParametersArray, fv)
 	}
 
-	return packagesParametersArray
+	return featureVersionParametersArray
 }
 
 func description(def definition) (desc string) {
@@ -335,7 +337,7 @@ func link(def definition) (link string) {
 	return
 }
 
-func priority(def definition) types.Severity {
+func priority(def definition) types.Priority {
 	// Parse the priority.
 	priority := strings.TrimSpace(def.Title[strings.LastIndex(def.Title, "(")+1 : len(def.Title)-1])
 
