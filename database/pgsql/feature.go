@@ -28,7 +28,8 @@ func (pgSQL *pgSQL) insertFeature(feature database.Feature) (int, error) {
 	}
 
 	if pgSQL.cache != nil {
-		if id, found := pgSQL.cache.Get("feature:" + feature.Name); found {
+		id, found := pgSQL.cache.Get("feature:" + feature.Namespace.Name + ":" + feature.Name)
+		if found {
 			return id.(int), nil
 		}
 	}
@@ -47,7 +48,7 @@ func (pgSQL *pgSQL) insertFeature(feature database.Feature) (int, error) {
 	}
 
 	if pgSQL.cache != nil {
-		pgSQL.cache.Add("feature:"+feature.Name, id)
+		pgSQL.cache.Add("feature:"+feature.Namespace.Name+":"+feature.Name, id)
 	}
 
 	return id, nil
@@ -59,8 +60,9 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 	}
 
 	if pgSQL.cache != nil {
-		if id, found := pgSQL.cache.Get("featureversion:" + featureVersion.Feature.Name + ":" +
-			featureVersion.Version.String()); found {
+		id, found := pgSQL.cache.Get("featureversion:" + featureVersion.Feature.Namespace.Name + ":" +
+			featureVersion.Feature.Name + ":" + featureVersion.Version.String())
+		if found {
 			return id.(int), nil
 		}
 	}
@@ -118,7 +120,7 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 
 	if pgSQL.cache != nil {
 		pgSQL.cache.Add("featureversion:"+featureVersion.Feature.Name+":"+
-			featureVersion.Version.String(), featureVersion.ID)
+			featureVersion.Feature.Namespace.Name+":"+featureVersion.Version.String(), featureVersion.ID)
 	}
 
 	return featureVersion.ID, nil
