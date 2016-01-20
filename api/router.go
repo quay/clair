@@ -69,8 +69,8 @@ func NewRouterV1(to time.Duration, env *Env) *httprouter.Router {
 
 	// Layers
 	router.POST("/layers", wrap(POSTLayers, env))
-	router.DELETE("/layers/:id", wrap(DELETELayers, env))
-	router.GET("/layers/:id", wrap(GETLayers, env))
+	router.DELETE("/layers/:name", wrap(DELETELayers, env))
+	router.GET("/layers/:name", wrap(GETLayers, env))
 
 	// Vulnerabilities
 	// router.POST("/vulnerabilities", wrap(logic.POSTVulnerabilities))

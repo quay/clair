@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
+	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -101,7 +102,7 @@ func TestFindLayer(t *testing.T) {
 }
 
 func TestInsertLayer(t *testing.T) {
-	datastore, err := OpenForTest("InsertLayer", true)
+	datastore, err := OpenForTest("InsertLayer", false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -118,7 +119,20 @@ func TestInsertLayer(t *testing.T) {
 	// TODO(Quentin-M)
 
 	// Delete layer.
-	// TODO(Quentin-M)
+	err = datastore.DeleteLayer("TestInsertLayerX")
+	assert.Equal(t, cerrors.ErrNotFound, err)
+
+	err = datastore.DeleteLayer("TestInsertLayer3")
+	assert.Nil(t, err)
+
+	_, err = datastore.FindLayer("TestInsertLayer3", false, false)
+	assert.Equal(t, cerrors.ErrNotFound, err)
+
+	_, err = datastore.FindLayer("TestInsertLayer4a", false, false)
+	assert.Equal(t, cerrors.ErrNotFound, err)
+
+	_, err = datastore.FindLayer("TestInsertLayer4b", true, false)
+	assert.Equal(t, cerrors.ErrNotFound, err)
 }
 
 func testInsertLayerInvalid(t *testing.T, datastore database.Datastore) {
@@ -135,8 +149,6 @@ func testInsertLayerInvalid(t *testing.T, datastore database.Datastore) {
 }
 
 func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
-	fmt.Println("- testInsertLayerTree")
-
 	f1 := database.FeatureVersion{
 		Feature: database.Feature{
 			Namespace: database.Namespace{Name: "TestInsertLayerNamespace2"},

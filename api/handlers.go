@@ -80,7 +80,7 @@ func POSTLayers(w http.ResponseWriter, r *http.Request, _ httprouter.Params, e *
 // DELETELayers deletes the specified layer and any child layers that are
 // dependent on the specified layer.
 func DELETELayers(w http.ResponseWriter, r *http.Request, p httprouter.Params, e *Env) {
-	if err := e.Datastore.DeleteLayer(p.ByName("id")); err != nil {
+	if err := e.Datastore.DeleteLayer(p.ByName("name")); err != nil {
 		httputils.WriteHTTPError(w, 0, err)
 		return
 	}
@@ -93,7 +93,7 @@ func GETLayers(w http.ResponseWriter, r *http.Request, p httprouter.Params, e *E
 	_, withFeatures := r.URL.Query()["withFeatures"]
 	_, withVulnerabilities := r.URL.Query()["withVulnerabilities"]
 
-	layer, err := e.Datastore.FindLayer(p.ByName("id"), withFeatures, withVulnerabilities)
+	layer, err := e.Datastore.FindLayer(p.ByName("name"), withFeatures, withVulnerabilities)
 	if err != nil {
 		httputils.WriteHTTPError(w, 0, err)
 		return

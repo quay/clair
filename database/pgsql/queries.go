@@ -127,6 +127,8 @@ func init() {
 	    FROM FeatureVersion fv
 	    WHERE fv.id = ANY($3::integer[])`
 
+	queries["r_layer"] = `DELETE FROM Layer WHERE name = $1`
+
 	// lock.go
 	queries["i_lock"] = `INSERT INTO Lock(name, owner, until) VALUES($1, $2, $3)`
 

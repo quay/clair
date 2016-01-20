@@ -350,6 +350,19 @@ func createNV(features []database.FeatureVersion) (map[string]*database.FeatureV
 }
 
 func (pgSQL *pgSQL) DeleteLayer(name string) error {
-	// TODO(Quentin-M): Implement and test me.
+	result, err := pgSQL.Exec(getQuery("r_layer"), name)
+	if err != nil {
+		return handleError("r_layer", err)
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return handleError("r_layer.RowsAffected()", err)
+	}
+
+	if affected <= 0 {
+		return cerrors.ErrNotFound
+	}
+
 	return nil
 }
