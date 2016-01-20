@@ -27,6 +27,7 @@ import (
 	"github.com/coreos/clair/updater"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
+	"github.com/coreos/pkg/capnslog"
 )
 
 const (
@@ -34,6 +35,8 @@ const (
 	cveURLPrefix      = "https://security-tracker.debian.org/tracker"
 	debianUpdaterFlag = "debianUpdater"
 )
+
+var log = capnslog.NewPackageLogger("github.com/coreos/clair", "updater/fetchers/debian")
 
 type jsonData map[string]map[string]jsonVuln
 
@@ -57,7 +60,7 @@ func init() {
 }
 
 // FetchUpdate fetches vulnerability updates from the Debian Security Tracker.
-func (fetcher *DebianFetcher) FetchUpdate() (resp updater.FetcherResponse, err error) {
+func (fetcher *DebianFetcher) FetchUpdate(datastore database.Datastore) (resp updater.FetcherResponse, err error) {
 	log.Info("fetching Debian vulnerabilities")
 
 	// Download JSON.
@@ -68,7 +71,7 @@ func (fetcher *DebianFetcher) FetchUpdate() (resp updater.FetcherResponse, err e
 	}
 
 	// Get the SHA-1 of the latest update's JSON data
-	latestHash, err := database.GetFlagValue(debianUpdaterFlag)
+	latestHash, err := datastore.GetKeyValue(debianUpdaterFlag)
 	if err != nil {
 		return resp, err
 	}
@@ -103,7 +106,7 @@ func buildResponse(jsonReader io.Reader, latestKnownHash string) (resp updater.F
 	err = json.NewDecoder(teedJSONReader).Decode(&data)
 	if err != nil {
 		log.Errorf("could not unmarshal Debian's JSON: %s", err)
-		return resp, ErrCouldNotParse
+		return resp, cerrors.ErrCouldNotParse
 	}
 
 	// Calculate the hash and skip updating if the hash has been seen before.
@@ -115,7 +118,7 @@ func buildResponse(jsonReader io.Reader, latestKnownHash string) (resp updater.F
 
 	// Extract vulnerability data from Debian's JSON schema.
 	var unknownReleases map[string]struct{}
-	resp.Vulnerabilities, resp.Packages, unknownReleases = parseDebianJSON(&data)
+	resp.Vulnerabilities, unknownReleases = parseDebianJSON(&data)
 
 	// Log unknown releases
 	for k := range unknownReleases {
@@ -127,7 +130,7 @@ func buildResponse(jsonReader io.Reader, latestKnownHash string) (resp updater.F
 	return resp, nil
 }
 
-func parseDebianJSON(data *jsonData) (vulnerabilities []*database.Vulnerability, packages []*database.Package, unknownReleases map[string]struct{}) {
+func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, unknownReleases map[string]struct{}) {
 	mvulnerabilities := make(map[string]*database.Vulnerability)
 	unknownReleases = make(map[string]struct{})
 
@@ -140,18 +143,21 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []*database.Vulnerability,
 					continue
 				}
 
-				// Skip if the release is not affected.
-				if releaseNode.FixedVersion == "0" || releaseNode.Status == "undetermined" {
+				// Skip if the status is not determined.
+				if releaseNode.Status == "undetermined" {
 					continue
 				}
 
 				// Get or create the vulnerability.
-				vulnerability, vulnerabilityAlreadyExists := mvulnerabilities[vulnName]
+				namespaceName := "debian:" + database.DebianReleasesMapping[releaseName]
+				index := namespaceName + ":" + vulnName
+				vulnerability, vulnerabilityAlreadyExists := mvulnerabilities[index]
 				if !vulnerabilityAlreadyExists {
 					vulnerability = &database.Vulnerability{
-						ID:          vulnName,
+						Name:        vulnName,
+						Namespace:   database.Namespace{Name: namespaceName},
 						Link:        strings.Join([]string{cveURLPrefix, "/", vulnName}, ""),
-						Priority:    types.Unknown,
+						Severity:    types.Unknown,
 						Description: vulnNode.Description,
 					}
 				}
@@ -159,15 +165,18 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []*database.Vulnerability,
 				// Set the priority of the vulnerability.
 				// In the JSON, a vulnerability has one urgency per package it affects.
 				// The highest urgency should be the one set.
-				urgency := urgencyToPriority(releaseNode.Urgency)
-				if urgency.Compare(vulnerability.Priority) > 0 {
-					vulnerability.Priority = urgency
+				urgency := urgencyToSeverity(releaseNode.Urgency)
+				if urgency.Compare(vulnerability.Severity) > 0 {
+					vulnerability.Severity = urgency
 				}
 
 				// Determine the version of the package the vulnerability affects.
 				var version types.Version
 				var err error
-				if releaseNode.Status == "open" {
+				if releaseNode.FixedVersion == "0" {
+					// This means that the package is not affected by this vulnerability.
+					version = types.MinVersion
+				} else if releaseNode.Status == "open" {
 					// Open means that the package is currently vulnerable in the latest
 					// version of this Debian release.
 					version = types.MaxVersion
@@ -181,30 +190,28 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []*database.Vulnerability,
 					}
 				}
 
-				// Create and add the package.
-				pkg := &database.Package{
-					OS:      "debian:" + database.DebianReleasesMapping[releaseName],
-					Name:    pkgName,
+				// Create and add the feature version.
+				pkg := database.FeatureVersion{
+					Feature: database.Feature{Name: pkgName},
 					Version: version,
 				}
-				vulnerability.FixedInNodes = append(vulnerability.FixedInNodes, pkg.GetNode())
-				packages = append(packages, pkg)
+				vulnerability.FixedIn = append(vulnerability.FixedIn, pkg)
 
 				// Store the vulnerability.
-				mvulnerabilities[vulnName] = vulnerability
+				mvulnerabilities[index] = vulnerability
 			}
 		}
 	}
 
 	// Convert the vulnerabilities map to a slice
 	for _, v := range mvulnerabilities {
-		vulnerabilities = append(vulnerabilities, v)
+		vulnerabilities = append(vulnerabilities, *v)
 	}
 
 	return
 }
 
-func urgencyToPriority(urgency string) types.Priority {
+func urgencyToSeverity(urgency string) types.Priority {
 	switch urgency {
 	case "not yet assigned":
 		return types.Unknown

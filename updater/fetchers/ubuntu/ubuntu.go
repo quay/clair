@@ -30,6 +30,7 @@ import (
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
+	"github.com/coreos/pkg/capnslog"
 )
 
 const (
@@ -69,6 +70,8 @@ var (
 
 	affectsCaptureRegexp      = regexp.MustCompile(`(?P<release>.*)_(?P<package>.*): (?P<status>[^\s]*)( \(+(?P<note>[^()]*)\)+)?`)
 	affectsCaptureRegexpNames = affectsCaptureRegexp.SubexpNames()
+
+	log = capnslog.NewPackageLogger("github.com/coreos/clair", "updater/fetchers/ubuntu")
 )
 
 // UbuntuFetcher implements updater.Fetcher and get vulnerability updates from
@@ -80,7 +83,7 @@ func init() {
 }
 
 // FetchUpdate gets vulnerability updates from the Ubuntu CVE Tracker.
-func (fetcher *UbuntuFetcher) FetchUpdate() (resp updater.FetcherResponse, err error) {
+func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp updater.FetcherResponse, err error) {
 	log.Info("fetching Ubuntu vulnerabilities")
 
 	// Check to see if the repository does not already exist.
@@ -114,7 +117,7 @@ func (fetcher *UbuntuFetcher) FetchUpdate() (resp updater.FetcherResponse, err e
 	}
 
 	// Get the latest revision number we successfully applied in the database.
-	dbRevisionNumber, err := database.GetFlagValue("ubuntuUpdater")
+	dbRevisionNumber, err := datastore.GetKeyValue("ubuntuUpdater")
 	if err != nil {
 		return resp, err
 	}
@@ -305,7 +308,7 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability *database.Vulnerabilit
 				priority = priority[:strings.Index(priority, " ")]
 			}
 
-			vulnerability.Priority = ubuntuPriorityToPriority(priority)
+			vulnerability.Severity = ubuntuPriorityToPriority(priority)
 			continue
 		}
 
@@ -387,14 +390,14 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability *database.Vulnerabilit
 	}
 
 	// If no priority has been provided (CVE-2007-0667 for instance), set the priority to Unknown
-	if vulnerability.Priority == "" {
-		vulnerability.Priority = types.Unknown
+	if vulnerability.Severity == "" {
+		vulnerability.Severity = types.Unknown
 	}
 
 	return
 }
 
-func ubuntuPriorityToPriority(priority string) types.Priority {
+func ubuntuPriorityToPriority(priority string) types.Severity {
 	switch priority {
 	case "untriaged":
 		return types.Unknown

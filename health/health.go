@@ -19,6 +19,8 @@ package health
 import (
 	"fmt"
 	"sync"
+
+	"github.com/coreos/clair/database"
 )
 
 // Status defines a way to know the health status of a service
@@ -33,7 +35,7 @@ type Status struct {
 }
 
 // A Healthchecker function is a method returning the Status of the tested service
-type Healthchecker func() Status
+type Healthchecker func(database.Datastore) Status
 
 var (
 	healthcheckersLock sync.Mutex
@@ -59,12 +61,12 @@ func RegisterHealthchecker(name string, f Healthchecker) {
 }
 
 // Healthcheck calls every registered Healthchecker and summarize their output
-func Healthcheck() (bool, map[string]interface{}) {
+func Healthcheck(datastore database.Datastore) (bool, map[string]interface{}) {
 	globalHealth := true
 
 	statuses := make(map[string]interface{})
 	for serviceName, serviceChecker := range healthcheckers {
-		status := serviceChecker()
+		status := serviceChecker(datastore)
 
 		globalHealth = globalHealth && (!status.IsEssential || status.IsHealthy)
 		statuses[serviceName] = struct {

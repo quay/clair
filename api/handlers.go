@@ -46,8 +46,8 @@ func GETVersions(w http.ResponseWriter, r *http.Request, _ httprouter.Params, _ 
 }
 
 // GETHealth sums up the health of all the registered services.
-func GETHealth(w http.ResponseWriter, r *http.Request, _ httprouter.Params, _ *Env) {
-	globalHealth, statuses := health.Healthcheck()
+func GETHealth(w http.ResponseWriter, r *http.Request, _ httprouter.Params, e *Env) {
+	globalHealth, statuses := health.Healthcheck(e.Datastore)
 
 	httpStatus := http.StatusOK
 	if !globalHealth {

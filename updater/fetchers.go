@@ -20,7 +20,7 @@ var fetchers = make(map[string]Fetcher)
 
 // Fetcher represents anything that can fetch vulnerabilities.
 type Fetcher interface {
-	FetchUpdate() (FetcherResponse, error)
+	FetchUpdate(database.Datastore) (FetcherResponse, error)
 }
 
 // FetcherResponse represents the sum of results of an update.
@@ -28,8 +28,7 @@ type FetcherResponse struct {
 	FlagName        string
 	FlagValue       string
 	Notes           []string
-	Vulnerabilities []*database.Vulnerability
-	Packages        []*database.Package
+	Vulnerabilities []database.Vulnerability
 }
 
 // RegisterFetcher makes a Fetcher available by the provided name.

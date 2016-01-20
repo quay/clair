@@ -146,7 +146,6 @@ func linkFeatureVersionToVulnerabilities(tx *sql.Tx, featureVersion database.Fea
 		if featureVersion.Version.Compare(fixedInVersion) < 0 {
 			// The version of the FeatureVersion we are inserting is lower than the fixed version on this
 			// Vulnerability, thus, this FeatureVersion is affected by it.
-			// TODO(Quentin-M): Prepare.
 			_, err := tx.Exec(getQuery("i_vulnerability_affects_featureversion"), vulnerabilityID,
 				featureVersion.ID, fixedInID)
 			if err != nil {

@@ -25,6 +25,7 @@ import (
 	"github.com/coreos/clair/api"
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database/pgsql"
+	"github.com/coreos/clair/updater"
 	"github.com/coreos/clair/utils"
 	"github.com/coreos/pkg/capnslog"
 )
@@ -55,8 +56,8 @@ func Boot(config *config.Config) {
 	go api.RunHealth(config.API, &api.Env{Datastore: db}, st)
 
 	// Start updater
-	// st.Begin()
-	// go updater.Run(config.Updater, st)
+	st.Begin()
+	go updater.Run(config.Updater, db, st)
 
 	// Wait for interruption and shutdown gracefully.
 	waitForSignals(os.Interrupt)

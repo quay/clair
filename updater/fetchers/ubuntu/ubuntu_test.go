@@ -35,7 +35,7 @@ func TestUbuntuParser(t *testing.T) {
 	vulnerability, packages, unknownReleases, err := parseUbuntuCVE(testData)
 	if assert.Nil(t, err) {
 		assert.Equal(t, "CVE-2015-4471", vulnerability.ID)
-		assert.Equal(t, types.Medium, vulnerability.Priority)
+		assert.Equal(t, types.Medium, vulnerability.Severity)
 		assert.Equal(t, "Off-by-one error in the lzxd_decompress function in lzxd.c in libmspack before 0.5 allows remote attackers to cause a denial of service (buffer under-read and application crash) via a crafted CAB archive.", vulnerability.Description)
 
 		// Unknown release (line 28)

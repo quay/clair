@@ -99,7 +99,7 @@ func createDatabase(dataSource, databaseName string) error {
 	defer db.Close()
 
 	// Create database.
-	_, err = db.Exec("CREATE DATABASE " + databaseName + ";")
+	_, err = db.Exec("CREATE DATABASE " + databaseName)
 	if err != nil {
 		return fmt.Errorf("could not create database: %v", err)
 	}
@@ -118,7 +118,7 @@ func dropDatabase(dataSource, databaseName string) error {
 	defer db.Close()
 
 	// Drop database.
-	_, err = db.Exec("DROP DATABASE " + databaseName + ";")
+	_, err = db.Exec("DROP DATABASE " + databaseName)
 	if err != nil {
 		return fmt.Errorf("could not drop database: %v", err)
 	}
@@ -167,7 +167,7 @@ func OpenForTest(name string, withTestData bool) (*pgSQLTest, error) {
 		d, _ := ioutil.ReadFile(path.Join(path.Dir(filename)) + "/testdata/data.sql")
 		_, err = db.(*pgSQL).Exec(string(d))
 		if err != nil {
-			dropDatabase(dataSource, dbName)
+			dropDatabase(dataSource+"dbname=postgres", dbName)
 			log.Error(err)
 			return nil, database.ErrCantOpen
 		}

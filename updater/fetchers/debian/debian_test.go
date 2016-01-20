@@ -35,7 +35,7 @@ func TestDebianParser(t *testing.T) {
 		for _, vulnerability := range response.Vulnerabilities {
 			if vulnerability.ID == "CVE-2015-1323" {
 				assert.Equal(t, "https://security-tracker.debian.org/tracker/CVE-2015-1323", vulnerability.Link)
-				assert.Equal(t, types.Low, vulnerability.Priority)
+				assert.Equal(t, types.Low, vulnerability.Severity)
 				assert.Equal(t, "This vulnerability is not very dangerous.", vulnerability.Description)
 
 				expectedPackages := []*database.Package{
@@ -57,7 +57,7 @@ func TestDebianParser(t *testing.T) {
 				}
 			} else if vulnerability.ID == "CVE-2003-0779" {
 				assert.Equal(t, "https://security-tracker.debian.org/tracker/CVE-2003-0779", vulnerability.Link)
-				assert.Equal(t, types.High, vulnerability.Priority)
+				assert.Equal(t, types.High, vulnerability.Severity)
 				assert.Equal(t, "But this one is very dangerous.", vulnerability.Description)
 
 				expectedPackages := []*database.Package{
