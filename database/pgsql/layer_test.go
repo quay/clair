@@ -116,23 +116,10 @@ func TestInsertLayer(t *testing.T) {
 	testInsertLayerTree(t, datastore)
 
 	// Update layer.
-	// TODO(Quentin-M)
+	testInsertLayerUpdate(t, datastore)
 
 	// Delete layer.
-	err = datastore.DeleteLayer("TestInsertLayerX")
-	assert.Equal(t, cerrors.ErrNotFound, err)
-
-	err = datastore.DeleteLayer("TestInsertLayer3")
-	assert.Nil(t, err)
-
-	_, err = datastore.FindLayer("TestInsertLayer3", false, false)
-	assert.Equal(t, cerrors.ErrNotFound, err)
-
-	_, err = datastore.FindLayer("TestInsertLayer4a", false, false)
-	assert.Equal(t, cerrors.ErrNotFound, err)
-
-	_, err = datastore.FindLayer("TestInsertLayer4b", true, false)
-	assert.Equal(t, cerrors.ErrNotFound, err)
+	testInsertLayerDelete(t, datastore)
 }
 
 func testInsertLayerInvalid(t *testing.T, datastore database.Datastore) {
@@ -270,6 +257,90 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 			assert.Error(t, fmt.Errorf("TestInsertLayer4a contains an unexpected package: %#v. Should contain %#v and %#v and %#v.", featureVersion, f2, f4, f6))
 		}
 	}
+}
+
+func testInsertLayerUpdate(t *testing.T, datastore database.Datastore) {
+	f7 := database.FeatureVersion{
+		Feature: database.Feature{
+			Namespace: database.Namespace{Name: "TestInsertLayerNamespace3"},
+			Name:      "TestInsertLayerFeature7",
+		},
+		Version: types.NewVersionUnsafe("0.01"),
+	}
+
+	l3, _ := datastore.FindLayer("TestInsertLayer3", true, false)
+	l3u := database.Layer{
+		Name:      l3.Name,
+		Parent:    l3.Parent,
+		Namespace: &database.Namespace{Name: "TestInsertLayerNamespaceUpdated1"},
+		Features:  []database.FeatureVersion{f7},
+	}
+
+	l4u := database.Layer{
+		Name:          "TestInsertLayer4",
+		Parent:        &database.Layer{Name: "TestInsertLayer3"},
+		Features:      []database.FeatureVersion{f7},
+		EngineVersion: 2,
+	}
+
+	// Try to re-insert without increasing the EngineVersion.
+	err := datastore.InsertLayer(l3u)
+	assert.Nil(t, err)
+
+	l3uf, err := datastore.FindLayer(l3u.Name, true, false)
+	if assert.Nil(t, err) {
+		assert.Equal(t, l3.Namespace.Name, l3uf.Namespace.Name)
+		assert.Equal(t, l3.EngineVersion, l3uf.EngineVersion)
+		assert.Len(t, l3uf.Features, len(l3.Features))
+	}
+
+	// Update layer l3.
+	// Verify that the Namespace, EngineVersion and FeatureVersions got updated.
+	l3u.EngineVersion = 2
+	err = datastore.InsertLayer(l3u)
+	assert.Nil(t, err)
+
+	l3uf, err = datastore.FindLayer(l3u.Name, true, false)
+	if assert.Nil(t, err) {
+		assert.Equal(t, l3u.Namespace.Name, l3uf.Namespace.Name)
+		assert.Equal(t, l3u.EngineVersion, l3uf.EngineVersion)
+		if assert.Len(t, l3uf.Features, 1) {
+			assert.True(t, cmpFV(l3uf.Features[0], f7), "Updated layer should have %#v but actually have %#v", f7, l3uf.Features[0])
+		}
+	}
+
+	// Update layer l4.
+	// Verify that the Namespace got updated from its new Parent's, and also verify the
+	// EnginVersion and FeatureVersions.
+	l4u.Parent = &l3uf
+	err = datastore.InsertLayer(l4u)
+	assert.Nil(t, err)
+
+	l4uf, err := datastore.FindLayer(l3u.Name, true, false)
+	if assert.Nil(t, err) {
+		assert.Equal(t, l3u.Namespace.Name, l4uf.Namespace.Name)
+		assert.Equal(t, l4u.EngineVersion, l4uf.EngineVersion)
+		if assert.Len(t, l4uf.Features, 1) {
+			assert.True(t, cmpFV(l3uf.Features[0], f7), "Updated layer should have %#v but actually have %#v", f7, l4uf.Features[0])
+		}
+	}
+}
+
+func testInsertLayerDelete(t *testing.T, datastore database.Datastore) {
+	err := datastore.DeleteLayer("TestInsertLayerX")
+	assert.Equal(t, cerrors.ErrNotFound, err)
+
+	err = datastore.DeleteLayer("TestInsertLayer3")
+	assert.Nil(t, err)
+
+	_, err = datastore.FindLayer("TestInsertLayer3", false, false)
+	assert.Equal(t, cerrors.ErrNotFound, err)
+
+	_, err = datastore.FindLayer("TestInsertLayer4a", false, false)
+	assert.Equal(t, cerrors.ErrNotFound, err)
+
+	_, err = datastore.FindLayer("TestInsertLayer4b", true, false)
+	assert.Equal(t, cerrors.ErrNotFound, err)
 }
 
 func cmpFV(a, b database.FeatureVersion) bool {

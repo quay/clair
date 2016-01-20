@@ -115,7 +115,7 @@ func init() {
     INSERT INTO Layer(name, engineversion, parent_id, namespace_id)
     VALUES($1, $2, $3, $4) RETURNING id`
 
-	queries["u_layer"] = `UPDATE LAYER SET engineversion = $2, namespace_id = $3) WHERE id = $1`
+	queries["u_layer"] = `UPDATE LAYER SET engineversion = $2, namespace_id = $3 WHERE id = $1`
 
 	queries["r_layer_diff_featureversion"] = `
     DELETE FROM Layer_diff_FeatureVersion
