@@ -39,7 +39,7 @@ var (
 type Datastore interface {
 	// Layer
 	InsertLayer(Layer) error
-	FindLayer(name string, withFeatures, withVulnerabilities bool) (layer Layer, err error)
+	FindLayer(name string, withFeatures, withVulnerabilities bool) (Layer, error)
 	DeleteLayer(name string) error
 
 	// Vulnerability

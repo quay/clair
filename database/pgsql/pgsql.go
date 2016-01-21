@@ -194,16 +194,17 @@ func OpenForTest(name string, withTestData bool) (*pgSQLTest, error) {
 // handleError logs an error with an extra description and masks the error if it's an SQL one.
 // This ensures we never return plain SQL errors and leak anything.
 func handleError(desc string, err error) error {
-	log.Errorf("%s: %v", desc, err)
-
 	if _, ok := err.(*pq.Error); ok {
+		log.Errorf("%s: %v", desc, err)
 		return database.ErrBackendException
 	} else if err == sql.ErrNoRows {
 		return cerrors.ErrNotFound
 	} else if err == sql.ErrTxDone || strings.HasPrefix(err.Error(), "sql:") {
+		log.Errorf("%s: %v", desc, err)
 		return database.ErrBackendException
 	}
 
+	log.Errorf("%s: %v", desc, err)
 	return err
 }
 

@@ -34,10 +34,6 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 	err := pgSQL.QueryRow(getQuery("s_layer"), name).
 		Scan(&layer.ID, &layer.Name, &layer.EngineVersion, &parentID, &parentName, &namespaceID,
 		&namespaceName)
-
-	if err == sql.ErrNoRows {
-		return layer, cerrors.ErrNotFound
-	}
 	if err != nil {
 		return layer, handleError("s_layer", err)
 	}

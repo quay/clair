@@ -14,11 +14,7 @@
 
 package pgsql
 
-import (
-	"database/sql"
-
-	cerrors "github.com/coreos/clair/utils/errors"
-)
+import cerrors "github.com/coreos/clair/utils/errors"
 
 // InsertKeyValue stores (or updates) a single key / value tuple.
 func (pgSQL *pgSQL) InsertKeyValue(key, value string) (err error) {
@@ -66,10 +62,6 @@ func (pgSQL *pgSQL) InsertKeyValue(key, value string) (err error) {
 func (pgSQL *pgSQL) GetKeyValue(key string) (string, error) {
 	var value string
 	err := pgSQL.QueryRow(getQuery("s_keyvalue"), key).Scan(&value)
-
-	if err == sql.ErrNoRows {
-		return "", nil
-	}
 	if err != nil {
 		return "", handleError("s_keyvalue", err)
 	}

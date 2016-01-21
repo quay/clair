@@ -15,7 +15,6 @@
 package pgsql
 
 import (
-	"database/sql"
 	"time"
 
 	cerrors "github.com/coreos/clair/utils/errors"
@@ -83,10 +82,6 @@ func (pgSQL *pgSQL) FindLock(name string) (string, time.Time, error) {
 	var owner string
 	var until time.Time
 	err := pgSQL.QueryRow(getQuery("f_lock"), name).Scan(&owner, &until)
-
-	if err == sql.ErrNoRows {
-		return owner, until, cerrors.ErrNotFound
-	}
 	if err != nil {
 		return owner, until, handleError("f_lock", err)
 	}
