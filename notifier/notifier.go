@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package notifier fetches notifications from the database and sends them
-// to the specified remote handler.
+// Package notifier fetches notifications from the database and sends their names
+// to the specified remote handler, inviting the third party to actively query the API about it.
 package notifier
 
 import (
@@ -27,6 +27,7 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/health"
 	"github.com/coreos/clair/utils"
+	cerrors "github.com/coreos/clair/utils/errors"
 )
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "notifier")
@@ -37,8 +38,6 @@ const (
 	lockDuration        = time.Minute*8 + refreshLockDuration
 	maxBackOff          = 15 * time.Minute
 )
-
-// TODO(Quentin-M): Allow registering custom notification handlers.
 
 // A Notification represents the structure of the notifications that are sent by a Notifier.
 type Notification struct {
@@ -53,8 +52,8 @@ type Notifier interface {
 	// Configure attempts to initialize the notifier with the provided configuration.
 	// It returns whether the notifier is enabled or not.
 	Configure(*config.NotifierConfig) (bool, error)
-	// Send transmits the specified notification.
-	Send(notification *Notification) error
+	// Send transmits the specified notification name.
+	Send(notificationName string) error
 }
 
 // RegisterNotifier makes a Fetcher available by the provided name.
@@ -77,7 +76,7 @@ func RegisterNotifier(name string, n Notifier) {
 }
 
 // Run starts the Notifier service.
-func Run(config *config.NotifierConfig, stopper *utils.Stopper) {
+func Run(config *config.NotifierConfig, datastore database.Datastore, stopper *utils.Stopper) {
 	defer stopper.End()
 
 	// Configure registered notifiers.
@@ -107,8 +106,8 @@ func Run(config *config.NotifierConfig, stopper *utils.Stopper) {
 	for running := true; running; {
 		// Find task.
 		// TODO(Quentin-M): Combine node and notification.
-		node, notification := findTask(whoAmI, stopper)
-		if node == "" && notification == nil {
+		notificationName := findTask(datastore, config.RenotifyInterval, whoAmI, stopper)
+		if notificationName == "" {
 			// Interrupted while finding a task, Clair is stopping.
 			break
 		}
@@ -116,14 +115,14 @@ func Run(config *config.NotifierConfig, stopper *utils.Stopper) {
 		// Handle task.
 		done := make(chan bool, 1)
 		go func() {
-			success, interrupted := handleTask(notification, stopper, config.Attempts)
+			success, interrupted := handleTask(notificationName, stopper, config.Attempts)
 			if success {
-				database.MarkNotificationAsSent(node)
+				datastore.SetNotificationNotified(notificationName)
 			}
 			if interrupted {
 				running = false
 			}
-			database.Unlock(node, whoAmI)
+			datastore.Unlock(notificationName, whoAmI)
 			done <- true
 		}()
 
@@ -134,7 +133,7 @@ func Run(config *config.NotifierConfig, stopper *utils.Stopper) {
 			case <-done:
 				break outer
 			case <-time.After(refreshLockDuration):
-				database.Lock(node, lockDuration, whoAmI)
+				datastore.Lock(notificationName, whoAmI, lockDuration, true)
 			}
 		}
 	}
@@ -142,46 +141,33 @@ func Run(config *config.NotifierConfig, stopper *utils.Stopper) {
 	log.Info("notifier service stopped")
 }
 
-func findTask(whoAmI string, stopper *utils.Stopper) (string, database.Notification) {
+func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoAmI string, stopper *utils.Stopper) string {
 	for {
 		// Find a notification to send.
-		node, notification, err := database.FindOneNotificationToSend(database.GetDefaultNotificationWrapper())
+		notificationName, err := datastore.GetAvailableNotification(renotifyInterval)
 		if err != nil {
-			log.Warningf("could not get notification to send: %s", err)
-		}
-
-		// No notification or error: wait.
-		if notification == nil || err != nil {
-			if !stopper.Sleep(checkInterval) {
-				return "", nil
+			// There is no notification or an error occured.
+			if err != cerrors.ErrNotFound {
+				log.Warningf("could not get notification to send: %s", err)
 			}
+
+			// Wait.
+			if !stopper.Sleep(checkInterval) {
+				return ""
+			}
+
 			continue
 		}
 
 		// Lock the notification.
-		if hasLock, _ := database.Lock(node, lockDuration, whoAmI); hasLock {
-			log.Infof("found and locked a notification: %s", notification.GetName())
-			return node, notification
+		if hasLock, _ := datastore.Lock(notificationName, whoAmI, lockDuration, false); hasLock {
+			log.Infof("found and locked a notification: %s", notificationName)
+			return notificationName
 		}
 	}
 }
 
-func handleTask(notification database.Notification, st *utils.Stopper, maxAttempts int) (bool, bool) {
-	// Get notification content.
-	// TODO(Quentin-M): Split big notifications.
-	notificationContent, err := notification.GetContent()
-	if err != nil {
-		log.Warningf("could not get content of notification '%s': %s", notification.GetName(), err)
-		return false, false
-	}
-
-	// Create notification.
-	payload := &Notification{
-		Name:    notification.GetName(),
-		Type:    notification.GetType(),
-		Content: notificationContent,
-	}
-
+func handleTask(notificationName string, st *utils.Stopper, maxAttempts int) (bool, bool) {
 	// Send notification.
 	for notifierName, notifier := range notifiers {
 		var attempts int
@@ -189,37 +175,37 @@ func handleTask(notification database.Notification, st *utils.Stopper, maxAttemp
 		for {
 			// Max attempts exceeded.
 			if attempts >= maxAttempts {
-				log.Infof("giving up on sending notification '%s' to notifier '%s': max attempts exceeded (%d)\n", notification.GetName(), notifierName, maxAttempts)
+				log.Infof("giving up on sending notification '%s' to notifier '%s': max attempts exceeded (%d)\n", notificationName, notifierName, maxAttempts)
 				return false, false
 			}
 
 			// Backoff.
 			if backOff > 0 {
-				log.Infof("waiting %v before retrying to send notification '%s' to notifier '%s' (Attempt %d / %d)\n", backOff, notification.GetName(), notifierName, attempts+1, maxAttempts)
+				log.Infof("waiting %v before retrying to send notification '%s' to notifier '%s' (Attempt %d / %d)\n", backOff, notificationName, notifierName, attempts+1, maxAttempts)
 				if !st.Sleep(backOff) {
 					return false, true
 				}
 			}
 
 			// Send using the current notifier.
-			if err := notifier.Send(payload); err == nil {
-				// Send has been successful. Go to the next one.
-				break
+			if err := notifier.Send(notificationName); err != nil {
+				// Send failed; increase attempts/backoff and retry.
+				log.Errorf("could not send notification '%s' to notifier '%s': %s", notificationName, notifierName, err)
+				backOff = timeutil.ExpBackoff(backOff, maxBackOff)
+				attempts++
 			}
 
-			// Send failed; increase attempts/backoff and retry.
-			log.Errorf("could not send notification '%s' to notifier '%s': %s", notification.GetName(), notifierName, err)
-			backOff = timeutil.ExpBackoff(backOff, maxBackOff)
-			attempts++
+			// Send has been successful. Go to the next notifier.
+			break
 		}
 	}
 
-	log.Infof("successfully sent notification '%s'\n", notification.GetName())
+	log.Infof("successfully sent notification '%s'\n", notificationName)
 	return true, false
 }
 
 // Healthcheck returns the health of the notifier service.
-func Healthcheck() health.Status {
-	queueSize, err := database.CountNotificationsToSend()
+func Healthcheck(datastore database.Datastore) health.Status {
+	queueSize, err := datastore.CountAvailableNotifications()
 	return health.Status{IsEssential: false, IsHealthy: err == nil, Details: struct{ QueueSize int }{QueueSize: queueSize}}
 }

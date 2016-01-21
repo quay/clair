@@ -69,3 +69,14 @@ type Vulnerability struct {
 	// is already about a specific Feature/FeatureVersion.
 	FixedBy types.Version `json:",omitempty"`
 }
+
+type NewVulnerabilityNotification struct {
+	VulnerabilityID int
+}
+
+type NewVulnerabilityNotificationPage struct {
+	Vulnerability Vulnerability
+	Layers        []Layer
+}
+
+// ...

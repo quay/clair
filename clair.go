@@ -25,6 +25,7 @@ import (
 	"github.com/coreos/clair/api"
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database/pgsql"
+	"github.com/coreos/clair/notifier"
 	"github.com/coreos/clair/updater"
 	"github.com/coreos/clair/utils"
 	"github.com/coreos/pkg/capnslog"
@@ -46,8 +47,8 @@ func Boot(config *config.Config) {
 	defer db.Close()
 
 	// Start notifier
-	// st.Begin()
-	// go notifier.Run(config.Notifier, st)
+	st.Begin()
+	go notifier.Run(config.Notifier, db, st)
 
 	// Start API
 	st.Begin()

@@ -48,10 +48,11 @@ type Datastore interface {
 	FindVulnerability(namespaceName, name string) (Vulnerability, error)
 
 	// Notifications
-	// InsertNotifications([]Notification) error
-	// FindNotificationToSend() (Notification, error)
-	// CountNotificationsToSend() (int, error)
-	// MarkNotificationAsSent(id string)
+	CountAvailableNotifications() (int, error)
+	GetAvailableNotification(renotifyInterval time.Duration) (string, error)
+	GetNotification(name string, limit, page int) (string, interface{}, error)
+	SetNotificationNotified(name string) error
+	DeleteNotification(name string) error
 
 	// Key/Value
 	InsertKeyValue(key, value string) error

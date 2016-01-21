@@ -45,6 +45,7 @@ type UpdaterConfig struct {
 // NotifierConfig is the configuration for the Notifier service and its registered notifiers.
 type NotifierConfig struct {
 	Attempts int
+  RenotifyInterval time.Duration
 	Params   map[string]interface{} `yaml:",inline"`
 }
 
@@ -71,6 +72,7 @@ var DefaultConfig = Config{
 	},
 	Notifier: &NotifierConfig{
 		Attempts: 5,
+    RenotifyInterval: 2 * time.Hour,
 	},
 }
 

@@ -180,6 +180,29 @@ func init() {
 	queries["f_featureversion_by_feature"] = `
     SELECT id, version FROM FeatureVersion WHERE feature_id = $1`
 
+	// notification.go
+	queries["i_notification"] = `INSERT INTO Notification(name, kind, data) VALUES($1, $2, $3)`
+
+	queries["r_notification"] = `UPDATE Notification SET deleted_at = CURRENT_TIMESTAMP`
+
+	queries["c_notification_available"] = `
+    SELECT COUNT(name) FROM Notification
+    FROM Notification
+    WHERE notified_at = NULL
+          AND name NOT IN (SELECT name FROM Lock)
+    ORDER BY Random()
+    LIMIT 1`
+
+	queries["s_notification_available"] = `
+    SELECT name FROM Notification
+    FROM Notification
+    WHERE notified_at = NULL OR notified_at < $1
+          AND name NOT IN (SELECT name FROM Lock)
+    ORDER BY Random()
+    LIMIT 1`
+
+	queries["s_notification"] = `SELECT data FROM Notification WHERE name = $1`
+
 	// complex_test.go
 	queries["s_complextest_featureversion_affects"] = `
     SELECT v.name
