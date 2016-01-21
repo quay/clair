@@ -124,7 +124,8 @@ curl -s -H "Content-Type: application/json" -X POST -d \
 '{
 	"ID": "39bb80489af75406073b5364c9c326134015140e1f7976a370a8bd446889e6f8",
 	"Path": "https://layers_storage/39bb80489af75406073b5364c9c326134015140e1f7976a370a8bd446889e6f8.tar",
-	"ParentID": "df2a0347c9d081fa05ecb83669dcae5830c67b0676a6d6358218e55d8a45969c"
+	"ParentID": "df2a0347c9d081fa05ecb83669dcae5830c67b0676a6d6358218e55d8a45969c",
+	"ImageFormat": "Docker"
 }' \
 127.0.0.1:6060/v1/layers
 ```
