@@ -14,7 +14,7 @@ import (
 
 // do it in tx so we won't insert/update a vuln without notification and vice-versa.
 func (pgSQL *pgSQL) insertNotification(tx *sql.Tx, notification interface{}) error {
-	kind := reflect.Indirect(reflect.ValueOf(notification)).Type()
+	kind := reflect.Indirect(reflect.ValueOf(notification)).Type().String()
 	data, err := json.Marshal(notification)
 	if err != nil {
 		tx.Rollback()
