@@ -14,7 +14,11 @@
 
 package database
 
-import "github.com/coreos/clair/utils/types"
+import (
+	"time"
+
+	"github.com/coreos/clair/utils/types"
+)
 
 // ID is only meant to be used by database implementations and should never be used for anything else.
 type Model struct {
@@ -25,10 +29,10 @@ type Layer struct {
 	Model
 
 	Name          string
-	EngineVersion int              `json:",omitempty"`
-	Parent        *Layer           `json:",omitempty"`
-	Namespace     *Namespace       `json:",omitempty"`
-	Features      []FeatureVersion `json:",omitempty"`
+	EngineVersion int
+	Parent        *Layer
+	Namespace     *Namespace
+	Features      []FeatureVersion
 }
 
 type Namespace struct {
@@ -42,7 +46,6 @@ type Feature struct {
 
 	Name      string
 	Namespace Namespace
-	// FixedBy   map[types.Version]Vulnerability // <<-- WRONG.
 }
 
 type FeatureVersion struct {
@@ -50,7 +53,7 @@ type FeatureVersion struct {
 
 	Feature    Feature
 	Version    types.Version
-	AffectedBy []Vulnerability `json:",omitempty"`
+	AffectedBy []Vulnerability
 }
 
 type Vulnerability struct {
@@ -62,21 +65,21 @@ type Vulnerability struct {
 	Link        string
 	Severity    types.Priority
 
-	FixedIn []FeatureVersion `json:",omitempty"`
-	//Affects []FeatureVersion
+	FixedIn                        []FeatureVersion
+	LayersIntroducingVulnerability []Layer
 
 	// For output purposes. Only make sense when the vulnerability
 	// is already about a specific Feature/FeatureVersion.
 	FixedBy types.Version `json:",omitempty"`
 }
 
-type NewVulnerabilityNotification struct {
-	VulnerabilityID int
-}
+type VulnerabilityNotification struct {
+	Name string
 
-type NewVulnerabilityNotificationPage struct {
-	Vulnerability Vulnerability
-	Layers        []Layer
-}
+	Created  time.Time
+	Notified time.Time
+	Deleted  time.Time
 
-// ...
+	OldVulnerability *Vulnerability
+	NewVulnerability Vulnerability
+}

@@ -31,9 +31,32 @@ import (
 	"github.com/hashicorp/golang-lru"
 	"github.com/lib/pq"
 	"github.com/pborman/uuid"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
-var log = capnslog.NewPackageLogger("github.com/coreos/clair", "pgsql")
+var (
+	log = capnslog.NewPackageLogger("github.com/coreos/clair", "pgsql")
+
+	promErrorsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "clair_pgsql_errors_total",
+		Help: "Number of errors that PostgreSQL requests generates.",
+	}, []string{"request"})
+
+	promCacheHitsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "clair_pgsql_cache_hits_total",
+		Help: "Number of cache hits that the PostgreSQL backend does.",
+	}, []string{"object"})
+
+	promCacheQueriesTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "clair_pgsql_cache_queries_total",
+		Help: "Number of cache queries that the PostgreSQL backend does.",
+	}, []string{"object"})
+)
+
+func init() {
+	prometheus.MustRegister(promCacheHitsTotal)
+	prometheus.MustRegister(promCacheQueriesTotal)
+}
 
 type pgSQL struct {
 	*sql.DB
@@ -198,17 +221,17 @@ func OpenForTest(name string, withTestData bool) (*pgSQLTest, error) {
 // handleError logs an error with an extra description and masks the error if it's an SQL one.
 // This ensures we never return plain SQL errors and leak anything.
 func handleError(desc string, err error) error {
-	if _, ok := err.(*pq.Error); ok {
-		log.Errorf("%s: %v", desc, err)
-		return database.ErrBackendException
-	} else if err == sql.ErrNoRows {
+	if err == sql.ErrNoRows {
 		return cerrors.ErrNotFound
-	} else if err == sql.ErrTxDone || strings.HasPrefix(err.Error(), "sql:") {
-		log.Errorf("%s: %v", desc, err)
-		return database.ErrBackendException
 	}
 
 	log.Errorf("%s: %v", desc, err)
+	promErrorsTotal.WithLabelValues(desc).Inc()
+
+	if _, o := err.(*pq.Error); o || err == sql.ErrTxDone || strings.HasPrefix(err.Error(), "sql:") {
+		return database.ErrBackendException
+	}
+
 	return err
 }
 

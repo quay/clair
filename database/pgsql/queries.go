@@ -186,27 +186,24 @@ func init() {
           AND name = $2`
 
 	// notification.go
-	queries["i_notification"] = `INSERT INTO Notification(name, kind, data) VALUES($1, $2, $3)`
+	queries["i_notification"] = `
+    INSERT INTO Vulnerability_Notification(name, created_at, old_vulnerability, new_vulnerability)
+    VALUES($1, CURRENT_TIMESTAMP, $2, $3)`
 
-	queries["r_notification"] = `UPDATE Notification SET deleted_at = CURRENT_TIMESTAMP`
-
-	queries["c_notification_available"] = `
-    SELECT COUNT(name) FROM Notification
-    FROM Notification
-    WHERE notified_at = NULL
-          AND name NOT IN (SELECT name FROM Lock)
-    ORDER BY Random()
-    LIMIT 1`
+	queries["r_notification"] = `UPDATE Vulnerability_Notification SET deleted_at = CURRENT_TIMESTAMP`
 
 	queries["s_notification_available"] = `
-    SELECT name FROM Notification
-    FROM Notification
+    SELECT name, created_at, notified_at, deleted_at
+    FROM Vulnerability_Notification
     WHERE notified_at = NULL OR notified_at < $1
           AND name NOT IN (SELECT name FROM Lock)
     ORDER BY Random()
     LIMIT 1`
 
-	queries["s_notification"] = `SELECT data FROM Notification WHERE name = $1`
+	queries["s_notification"] = `
+    SELECT name, created_at, notified_at, deleted_at, old_vulnerability, new_vulnerability
+    FROM Vulnerability_Notification
+    WHERE name = $1`
 
 	// complex_test.go
 	queries["s_complextest_featureversion_affects"] = `

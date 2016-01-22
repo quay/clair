@@ -29,6 +29,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/coreos/clair/config"
+	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/notifier"
 )
 
@@ -48,7 +49,7 @@ type WebhookNotifierConfiguration struct {
 }
 
 func init() {
-	//notifier.RegisterNotifier("webhook", &WebhookNotifier{})
+	notifier.RegisterNotifier("webhook", &WebhookNotifier{})
 }
 
 func (h *WebhookNotifier) Configure(config *config.NotifierConfig) (bool, error) {
@@ -92,9 +93,9 @@ func (h *WebhookNotifier) Configure(config *config.NotifierConfig) (bool, error)
 	return true, nil
 }
 
-func (h *WebhookNotifier) Send(notification *notifier.Notification) error {
+func (h *WebhookNotifier) Send(notification database.VulnerabilityNotification) error {
 	// Marshal notification.
-	jsonNotification, err := json.Marshal(notification)
+	jsonNotification, err := json.Marshal(notification.Name)
 	if err != nil {
 		return fmt.Errorf("could not marshal: %s", err)
 	}

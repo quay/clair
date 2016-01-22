@@ -28,8 +28,10 @@ func (pgSQL *pgSQL) insertFeature(feature database.Feature) (int, error) {
 	}
 
 	if pgSQL.cache != nil {
+    promCacheQueriesTotal.WithLabelValues("feature").Inc()
 		id, found := pgSQL.cache.Get("feature:" + feature.Namespace.Name + ":" + feature.Name)
 		if found {
+      promCacheHitsTotal.WithLabelValues("feature").Inc()
 			return id.(int), nil
 		}
 	}
@@ -60,9 +62,11 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 	}
 
 	if pgSQL.cache != nil {
+    promCacheQueriesTotal.WithLabelValues("featureversion").Inc()
 		id, found := pgSQL.cache.Get("featureversion:" + featureVersion.Feature.Namespace.Name + ":" +
 			featureVersion.Feature.Name + ":" + featureVersion.Version.String())
 		if found {
+      promCacheHitsTotal.WithLabelValues("featureversion").Inc()
 			return id.(int), nil
 		}
 	}

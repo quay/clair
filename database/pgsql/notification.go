@@ -3,8 +3,6 @@ package pgsql
 import (
 	"database/sql"
 	"encoding/json"
-	"fmt"
-	"reflect"
 	"time"
 
 	"github.com/coreos/clair/database"
@@ -13,15 +11,22 @@ import (
 )
 
 // do it in tx so we won't insert/update a vuln without notification and vice-versa.
-func (pgSQL *pgSQL) insertNotification(tx *sql.Tx, notification interface{}) error {
-	kind := reflect.Indirect(reflect.ValueOf(notification)).Type().String()
-	data, err := json.Marshal(notification)
+// name and created doesn't matter.
+func (pgSQL *pgSQL) insertNotification(tx *sql.Tx, notification database.VulnerabilityNotification) error {
+	// Marshal old and new Vulnerabilities.
+	oldVulnerability, err := json.Marshal(notification.OldVulnerability)
 	if err != nil {
 		tx.Rollback()
-		return cerrors.NewBadRequestError("could not marshal notification in insertNotification")
+		return cerrors.NewBadRequestError("could not marshal old Vulnerability in insertNotification")
+	}
+	newVulnerability, err := json.Marshal(notification.NewVulnerability)
+	if err != nil {
+		tx.Rollback()
+		return cerrors.NewBadRequestError("could not marshal new Vulnerability in insertNotification")
 	}
 
-	_, err = tx.Exec(getQuery("i_notification"), uuid.New(), kind, data)
+	// Insert Notification.
+	_, err = tx.Exec(getQuery("i_notification"), uuid.New(), oldVulnerability, newVulnerability)
 	if err != nil {
 		tx.Rollback()
 		return handleError("i_notification", err)
@@ -30,51 +35,47 @@ func (pgSQL *pgSQL) insertNotification(tx *sql.Tx, notification interface{}) err
 	return nil
 }
 
-func (pgSQL *pgSQL) CountAvailableNotifications() (int, error) {
-	var count int
-	err := pgSQL.QueryRow(getQuery("c_notification_available")).Scan(&count)
-	if err != nil {
-		return 0, handleError("c_notification_available", err)
-	}
-
-	return count, nil
-}
-
-// Get one available notification (!locked && !deleted && (!notified || notified_but_timed-out)).
-func (pgSQL *pgSQL) GetAvailableNotification(renotifyInterval time.Duration) (string, error) {
+// Get one available notification name (!locked && !deleted && (!notified || notified_but_timed-out)).
+// Does not fill new/old vuln.
+func (pgSQL *pgSQL) GetAvailableNotification(renotifyInterval time.Duration) (database.VulnerabilityNotification, error) {
 	before := time.Now().Add(-renotifyInterval)
 
-	var name string
-	err := pgSQL.QueryRow(getQuery("s_notification_available"), before).Scan(&name)
+	var notification database.VulnerabilityNotification
+	err := pgSQL.QueryRow(getQuery("s_notification_available"), before).Scan(&notification.Name,
+		&notification.Created, &notification.Notified, &notification.Deleted)
 	if err != nil {
-		return "", handleError("s_notification_available", err)
+		return notification, handleError("s_notification_available", err)
 	}
 
-	return name, nil
+	return notification, nil
 }
 
-func (pgSQL *pgSQL) GetNotification(name string, limit, page int) (string, interface{}, error) {
-	var kind, data string
-	err := pgSQL.QueryRow(getQuery("s_notification"), name).Scan(&kind, &data)
+func (pgSQL *pgSQL) GetNotification(name string, limit, page int) (database.VulnerabilityNotification, error) {
+	// Get Notification.
+	var notification database.VulnerabilityNotification
+	var oldVulnerability []byte
+	var newVulnerability []byte
+
+	err := pgSQL.QueryRow(getQuery("s_notification"), name).Scan(&notification.Name,
+		&notification.Created, &notification.Notified, &notification.Deleted, &newVulnerability,
+		&oldVulnerability)
 	if err != nil {
-		return "", struct{}{}, handleError("s_notification", err)
+		return notification, handleError("s_notification", err)
 	}
 
-	return constructNotification(kind, data, limit, page)
-}
-
-func constructNotification(kind, data string, limit, page int) (string, interface{}, error) {
-	switch kind {
-	case "NotificationNewVulnerability":
-		var notificationPage database.NewVulnerabilityNotificationPage
-
-		// TODO: Request database to fill NewVulnerabilityNotificationPage properly.
-
-		return kind, notificationPage, nil
-	default:
-		msg := fmt.Sprintf("could not construct notification, '%s' is an unknown notification type", kind)
-		return "", struct{}{}, cerrors.NewBadRequestError(msg)
+	// Unmarshal old and new Vulnerabilities.
+	err = json.Unmarshal(oldVulnerability, notification.OldVulnerability)
+	if err != nil {
+		return notification, cerrors.NewBadRequestError("could not unmarshal old Vulnerability in GetNotification")
 	}
+	err = json.Unmarshal(newVulnerability, &notification.NewVulnerability)
+	if err != nil {
+		return notification, cerrors.NewBadRequestError("could not unmarshal new Vulnerability in GetNotification")
+	}
+
+	// TODO(Quentin-M): Fill LayersIntroducingVulnerability.
+
+	return notification, nil
 }
 
 func (pgSQL *pgSQL) SetNotificationNotified(name string) error {

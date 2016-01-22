@@ -48,9 +48,8 @@ type Datastore interface {
 	DeleteVulnerability(namespaceName, name string) error
 
 	// Notifications
-	CountAvailableNotifications() (int, error)
-	GetAvailableNotification(renotifyInterval time.Duration) (string, error)
-	GetNotification(name string, limit, page int) (string, interface{}, error)
+	GetAvailableNotification(renotifyInterval time.Duration) (VulnerabilityNotification, error) // Does not fill old/new Vulnerabilities.
+	GetNotification(name string, limit, page int) (VulnerabilityNotification, error)
 	SetNotificationNotified(name string) error
 	DeleteNotification(name string) error
 

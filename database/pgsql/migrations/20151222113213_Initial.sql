@@ -143,17 +143,18 @@ CREATE INDEX ON Lock (owner);
 
 
 -- -----------------------------------------------------
--- Table Notification
+-- Table VulnerabilityNotification
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS Notification (
+CREATE TABLE IF NOT EXISTS Vulnerability_Notification (
   id SERIAL PRIMARY KEY,
   name VARCHAR(64) NOT NULL UNIQUE,
-  kind VARCHAR(64) NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE,
   notified_at TIMESTAMP WITH TIME ZONE NULL,
   deleted_at TIMESTAMP WITH TIME ZONE NULL,
-  data TEXT);
+  old_vulnerability TEXT,
+  new_vulnerability TEXT);
 
-CREATE INDEX ON Notification (notified_at, deleted_at);
+CREATE INDEX ON Vulnerability_Notification (notified_at);
 
 -- +goose Down
 
@@ -165,7 +166,7 @@ DROP TABLE IF EXISTS Namespace,
                      Vulnerability,
                      Vulnerability_FixedIn_Feature,
                      Vulnerability_Affects_FeatureVersion,
+                     Vulnerability_Notification,
                      KeyValue,
-                     Lock,
-                     Notification
+                     Lock
             CASCADE;

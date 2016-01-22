@@ -25,7 +25,9 @@ func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (int, error) {
 	}
 
 	if pgSQL.cache != nil {
+		promCacheQueriesTotal.WithLabelValues("namespace").Inc()
 		if id, found := pgSQL.cache.Get("namespace:" + namespace.Name); found {
+			promCacheHitsTotal.WithLabelValues("namespace").Inc()
 			return id.(int), nil
 		}
 	}
