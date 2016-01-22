@@ -63,5 +63,6 @@ type Datastore interface {
 	Unlock(name, owner string)
 	FindLock(name string) (string, time.Time, error)
 
+	Ping() bool
 	Close()
 }

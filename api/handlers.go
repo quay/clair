@@ -21,7 +21,6 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/health"
 	httputils "github.com/coreos/clair/utils/http"
 	"github.com/coreos/clair/worker"
 )
@@ -47,14 +46,14 @@ func GETVersions(w http.ResponseWriter, r *http.Request, _ httprouter.Params, _ 
 
 // GETHealth sums up the health of all the registered services.
 func GETHealth(w http.ResponseWriter, r *http.Request, _ httprouter.Params, e *Env) {
-	globalHealth, statuses := health.Healthcheck(e.Datastore)
-
-	httpStatus := http.StatusOK
-	if !globalHealth {
-		httpStatus = http.StatusServiceUnavailable
-	}
-
-	httputils.WriteHTTP(w, httpStatus, statuses)
+	// globalHealth, statuses := health.Healthcheck(e.Datastore)
+	//
+	// httpStatus := http.StatusOK
+	// if !globalHealth {
+	// 	httpStatus = http.StatusServiceUnavailable
+	// }
+	//
+	// httputils.WriteHTTP(w, httpStatus, statuses)
 	return
 }
 

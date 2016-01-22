@@ -44,6 +44,10 @@ func (pgSQL *pgSQL) Close() {
 	pgSQL.DB.Close()
 }
 
+func (pgSQL *pgSQL) Ping() bool {
+	return pgSQL.Ping()
+}
+
 // Open creates a Datastore backed by a PostgreSQL database.
 //
 // It will run immediately every necessary migration on the database.

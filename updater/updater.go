@@ -24,7 +24,6 @@ import (
 
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/health"
 	"github.com/coreos/clair/utils"
 	"github.com/coreos/pkg/capnslog"
 	"github.com/pborman/uuid"
@@ -50,9 +49,6 @@ func Run(config *config.UpdaterConfig, datastore database.Datastore, st *utils.S
 		log.Infof("updater service is disabled.")
 		return
 	}
-
-	// Register healthchecker.
-	health.RegisterHealthchecker("updater", Healthcheck)
 
 	whoAmI := uuid.New()
 	log.Infof("updater service started. lock identifier: %s", whoAmI)
@@ -198,23 +194,6 @@ func fetch(datastore database.Datastore) (bool, []database.Vulnerability, map[st
 
 	close(responseC)
 	return status, vulnerabilities, flags, notes
-}
-
-// Healthcheck returns the health of the updater service.
-func Healthcheck(datastore database.Datastore) health.Status {
-	notes := getNotes(datastore)
-
-	return health.Status{
-		IsEssential: false,
-		IsHealthy:   len(notes) == 0,
-		Details: struct {
-			LatestSuccessfulUpdate time.Time
-			Notes                  []string `json:",omitempty"`
-		}{
-			LatestSuccessfulUpdate: getLastUpdate(datastore),
-			Notes: notes,
-		},
-	}
 }
 
 func getLastUpdate(datastore database.Datastore) time.Time {

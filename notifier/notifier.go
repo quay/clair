@@ -100,9 +100,6 @@ func Run(config *config.NotifierConfig, datastore database.Datastore, stopper *u
 	whoAmI := uuid.New()
 	log.Infof("notifier service started. lock identifier: %s\n", whoAmI)
 
-	// Register healthchecker.
-	health.RegisterHealthchecker("notifier", Healthcheck)
-
 	for running := true; running; {
 		// Find task.
 		// TODO(Quentin-M): Combine node and notification.
@@ -202,10 +199,4 @@ func handleTask(notificationName string, st *utils.Stopper, maxAttempts int) (bo
 
 	log.Infof("successfully sent notification '%s'\n", notificationName)
 	return true, false
-}
-
-// Healthcheck returns the health of the notifier service.
-func Healthcheck(datastore database.Datastore) health.Status {
-	queueSize, err := datastore.CountAvailableNotifications()
-	return health.Status{IsEssential: false, IsHealthy: err == nil, Details: struct{ QueueSize int }{QueueSize: queueSize}}
 }
