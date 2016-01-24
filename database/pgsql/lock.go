@@ -32,9 +32,6 @@ func (pgSQL *pgSQL) Lock(name string, owner string, duration time.Duration, rene
 
 	defer observeQueryTime("Lock", "all", time.Now())
 
-	// Prune locks.
-	pgSQL.pruneLocks()
-
 	// Compute expiration.
 	until := time.Now().Add(duration)
 
@@ -49,6 +46,9 @@ func (pgSQL *pgSQL) Lock(name string, owner string, duration time.Duration, rene
 			// Updated successfully.
 			return true, until
 		}
+	} else {
+		// Prune locks.
+		pgSQL.pruneLocks()
 	}
 
 	// Lock.
