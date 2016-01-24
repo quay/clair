@@ -16,6 +16,7 @@ package pgsql
 
 import (
 	"database/sql"
+	"time"
 
 	cerrors "github.com/coreos/clair/utils/errors"
 )
@@ -26,6 +27,8 @@ func (pgSQL *pgSQL) InsertKeyValue(key, value string) (err error) {
 		log.Warning("could not insert a flag which has an empty name or value")
 		return cerrors.NewBadRequestError("could not insert a flag which has an empty name or value")
 	}
+
+	defer observeQueryTime("InsertKeyValue", "all", time.Now())
 
 	// Upsert.
 	//
@@ -64,6 +67,8 @@ func (pgSQL *pgSQL) InsertKeyValue(key, value string) (err error) {
 
 // GetValue reads a single key / value tuple and returns an empty string if the key doesn't exist.
 func (pgSQL *pgSQL) GetKeyValue(key string) (string, error) {
+	defer observeQueryTime("GetKeyValue", "all", time.Now())
+
 	var value string
 	err := pgSQL.QueryRow(getQuery("s_keyvalue"), key).Scan(&value)
 

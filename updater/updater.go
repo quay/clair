@@ -17,7 +17,6 @@
 package updater
 
 import (
-	"encoding/json"
 	"math/rand"
 	"strconv"
 	"time"
@@ -27,6 +26,7 @@ import (
 	"github.com/coreos/clair/utils"
 	"github.com/coreos/pkg/capnslog"
 	"github.com/pborman/uuid"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const (
@@ -38,7 +38,30 @@ const (
 	refreshLockDuration = time.Minute * 8
 )
 
-var log = capnslog.NewPackageLogger("github.com/coreos/clair", "updater")
+var (
+	log = capnslog.NewPackageLogger("github.com/coreos/clair", "updater")
+
+	promUpdaterErrorsTotal = prometheus.NewCounter(prometheus.CounterOpts{
+		Name: "clair_updater_errors_total",
+		Help: "Numbers of errors that the updater generated.",
+	})
+
+	promUpdaterDurationSeconds = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "clair_updater_duration_seconds",
+		Help: "Time it takes to update the vulnerability database.",
+	})
+
+	promUpdaterNotesTotal = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "clair_updater_notes_total",
+		Help: "Number of notes that the vulnerability fetchers generated.",
+	})
+)
+
+func init() {
+	prometheus.MustRegister(promUpdaterErrorsTotal)
+	prometheus.MustRegister(promUpdaterDurationSeconds)
+	prometheus.MustRegister(promUpdaterNotesTotal)
+}
 
 // Run updates the vulnerability database at regular intervals.
 func Run(config *config.UpdaterConfig, datastore database.Datastore, st *utils.Stopper) {
@@ -126,6 +149,8 @@ func Run(config *config.UpdaterConfig, datastore database.Datastore, st *utils.S
 // Update fetches all the vulnerabilities from the registered fetchers, upserts
 // them into the database and then sends notifications.
 func Update(datastore database.Datastore) {
+	defer setUpdaterDuration(time.Now())
+
 	log.Info("updating vulnerabilities")
 
 	// Fetch updates.
@@ -137,24 +162,33 @@ func Update(datastore database.Datastore) {
 	log.Tracef("beginning insertion of %d vulnerabilities for update", len(vulnerabilities))
 	err := datastore.InsertVulnerabilities(vulnerabilities)
 	if err != nil {
+		promUpdaterErrorsTotal.Inc()
 		log.Errorf("an error occured when inserting vulnerabilities for update: %s", err)
 		return
 	}
 	vulnerabilities = nil
 
-	// Update flags and notes.
+	// Update flags.
 	for flagName, flagValue := range flags {
 		datastore.InsertKeyValue(flagName, flagValue)
 	}
 
-	bnotes, _ := json.Marshal(notes)
-	datastore.InsertKeyValue(notesFlagName, string(bnotes))
+	// Log notes.
+	for _, note := range notes {
+		log.Warningf("fetcher note: %s", note)
+	}
+	promUpdaterNotesTotal.Set(float64(len(notes)))
 
 	// Update last successful update if every fetchers worked properly.
 	if status {
 		datastore.InsertKeyValue(flagName, strconv.FormatInt(time.Now().UTC().Unix(), 10))
 	}
+
 	log.Info("update finished")
+}
+
+func setUpdaterDuration(start time.Time) {
+	promUpdaterDurationSeconds.Set(time.Since(start).Seconds())
 }
 
 // fetch get data from the registered fetchers, in parallel.
@@ -170,6 +204,7 @@ func fetch(datastore database.Datastore) (bool, []database.Vulnerability, map[st
 		go func(name string, fetcher Fetcher) {
 			response, err := fetcher.FetchUpdate(datastore)
 			if err != nil {
+				promUpdaterErrorsTotal.Inc()
 				log.Errorf("an error occured when fetching update '%s': %s.", name, err)
 				status = false
 				responseC <- nil
@@ -203,11 +238,4 @@ func getLastUpdate(datastore database.Datastore) time.Time {
 		}
 	}
 	return time.Time{}
-}
-
-func getNotes(datastore database.Datastore) (notes []string) {
-	if jsonNotes, err := datastore.GetKeyValue(notesFlagName); err == nil && jsonNotes != "" {
-		json.Unmarshal([]byte(jsonNotes), notes)
-	}
-	return
 }

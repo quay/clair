@@ -16,6 +16,7 @@ package pgsql
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/coreos/clair/database"
 	cerrors "github.com/coreos/clair/utils/errors"
@@ -27,14 +28,18 @@ func (pgSQL *pgSQL) insertFeature(feature database.Feature) (int, error) {
 		return 0, cerrors.NewBadRequestError("could not find/insert invalid Feature")
 	}
 
+	// Do cache lookup.
 	if pgSQL.cache != nil {
-    promCacheQueriesTotal.WithLabelValues("feature").Inc()
+		promCacheQueriesTotal.WithLabelValues("feature").Inc()
 		id, found := pgSQL.cache.Get("feature:" + feature.Namespace.Name + ":" + feature.Name)
 		if found {
-      promCacheHitsTotal.WithLabelValues("feature").Inc()
+			promCacheHitsTotal.WithLabelValues("feature").Inc()
 			return id.(int), nil
 		}
 	}
+
+	// We do `defer observeQueryTime` here because we don't want to observe cached features.
+	defer observeQueryTime("insertFeature", "all", time.Now())
 
 	// Find or create Namespace.
 	namespaceID, err := pgSQL.insertNamespace(feature.Namespace)
@@ -61,21 +66,29 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 		return 0, cerrors.NewBadRequestError("could not find/insert invalid FeatureVersion")
 	}
 
+	// Do cache lookup.
 	if pgSQL.cache != nil {
-    promCacheQueriesTotal.WithLabelValues("featureversion").Inc()
+		promCacheQueriesTotal.WithLabelValues("featureversion").Inc()
 		id, found := pgSQL.cache.Get("featureversion:" + featureVersion.Feature.Namespace.Name + ":" +
 			featureVersion.Feature.Name + ":" + featureVersion.Version.String())
 		if found {
-      promCacheHitsTotal.WithLabelValues("featureversion").Inc()
+			promCacheHitsTotal.WithLabelValues("featureversion").Inc()
 			return id.(int), nil
 		}
 	}
 
+	// We do `defer observeQueryTime` here because we don't want to observe cached featureversions.
+	defer observeQueryTime("insertFeatureVersion", "all", time.Now())
+
 	// Find or create Feature first.
+	t := time.Now()
 	featureID, err := pgSQL.insertFeature(featureVersion.Feature)
+	observeQueryTime("insertFeatureVersion", "insertFeature", t)
+
 	if err != nil {
 		return 0, err
 	}
+
 	featureVersion.Feature.ID = featureID
 
 	// Begin transaction.
@@ -85,10 +98,14 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 		return 0, handleError("insertFeatureVersion.Begin()", err)
 	}
 
-	// Set transaction as SERIALIZABLE.
-	// This is how we ensure that the data in Vulnerability_Affects_FeatureVersion is always
-	// consistent.
+	// Lock Vulnerability_Affects_FeatureVersion exclusively.
+	// We want to prevent InsertVulnerability to modify it.
+	promConcurrentLockVAFV.Inc()
+  defer promConcurrentLockVAFV.Dec()
+  t = time.Now()
 	_, err = tx.Exec(getQuery("l_vulnerability_affects_featureversion"))
+	observeQueryTime("insertFeatureVersion", "lock", t)
+
 	if err != nil {
 		tx.Rollback()
 		return 0, handleError("insertFeatureVersion.l_vulnerability_affects_featureversion", err)
@@ -96,12 +113,17 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 
 	// Find or create FeatureVersion.
 	var newOrExisting string
+
+	t = time.Now()
 	err = tx.QueryRow(getQuery("soi_featureversion"), featureID, &featureVersion.Version).
 		Scan(&newOrExisting, &featureVersion.ID)
+	observeQueryTime("insertFeatureVersion", "soi_featureversion", t)
+
 	if err != nil {
 		tx.Rollback()
 		return 0, handleError("soi_featureversion", err)
 	}
+
 	if newOrExisting == "exi" {
 		// That featureVersion already exists, return its id.
 		tx.Commit()
@@ -110,7 +132,10 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 
 	// Link the new FeatureVersion with every vulnerabilities that affect it, by inserting in
 	// Vulnerability_Affects_FeatureVersion.
+	t = time.Now()
 	err = linkFeatureVersionToVulnerabilities(tx, featureVersion)
+	observeQueryTime("insertFeatureVersion", "linkFeatureVersionToVulnerabilities", t)
+
 	if err != nil {
 		tx.Rollback()
 		return 0, err

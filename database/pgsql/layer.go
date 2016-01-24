@@ -16,6 +16,7 @@ package pgsql
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils"
@@ -24,6 +25,14 @@ import (
 )
 
 func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities bool) (database.Layer, error) {
+	subquery := "all"
+	if withFeatures {
+		subquery += "/features"
+	} else if withVulnerabilities {
+		subquery += "/features+vulnerabilities"
+	}
+	defer observeQueryTime("FindLayer", subquery, time.Now())
+
 	// Find the layer
 	var layer database.Layer
 	var parentID zero.Int
@@ -31,9 +40,12 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 	var namespaceID zero.Int
 	var namespaceName sql.NullString
 
+	t := time.Now()
 	err := pgSQL.QueryRow(getQuery("s_layer"), name).
 		Scan(&layer.ID, &layer.Name, &layer.EngineVersion, &parentID, &parentName, &namespaceID,
 		&namespaceName)
+	observeQueryTime("FindLayer", "s_layer", t)
+
 	if err != nil {
 		return layer, handleError("s_layer", err)
 	}
@@ -53,15 +65,22 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 
 	// Find its features
 	if withFeatures || withVulnerabilities {
+		t = time.Now()
 		featureVersions, err := pgSQL.getLayerFeatureVersions(layer.ID)
+		observeQueryTime("FindLayer", "getLayerFeatureVersions", t)
+
 		if err != nil {
 			return layer, err
 		}
+
 		layer.Features = featureVersions
 
 		if withVulnerabilities {
 			// Load the vulnerabilities that affect the FeatureVersions.
+			t = time.Now()
 			err := pgSQL.loadAffectedBy(layer.Features)
+			observeQueryTime("FindLayer", "loadAffectedBy", t)
+
 			if err != nil {
 				return layer, err
 			}
@@ -183,6 +202,8 @@ func (pgSQL *pgSQL) loadAffectedBy(featureVersions []database.FeatureVersion) er
 // been modified.
 // TODO(Quentin-M): This behavior should be implemented at the Feature detectors level.
 func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
+	tf := time.Now()
+
 	// Verify parameters
 	if layer.Name == "" {
 		log.Warning("could not insert a layer which has an empty Name")
@@ -201,6 +222,9 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 
 		layer.ID = existingLayer.ID
 	}
+
+	// We do `defer observeQueryTime` here because we don't want to observe existing layers.
+	defer observeQueryTime("InsertLayer", "all", tf)
 
 	// Get parent ID.
 	var parentID zero.Int
@@ -346,6 +370,8 @@ func createNV(features []database.FeatureVersion) (map[string]*database.FeatureV
 }
 
 func (pgSQL *pgSQL) DeleteLayer(name string) error {
+	defer observeQueryTime("DeleteLayer", "all", time.Now())
+
 	result, err := pgSQL.Exec(getQuery("r_layer"), name)
 	if err != nil {
 		return handleError("r_layer", err)

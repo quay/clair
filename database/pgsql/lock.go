@@ -30,6 +30,8 @@ func (pgSQL *pgSQL) Lock(name string, owner string, duration time.Duration, rene
 		return false, time.Time{}
 	}
 
+	defer observeQueryTime("Lock", "all", time.Now())
+
 	// Prune locks.
 	pgSQL.pruneLocks()
 
@@ -68,6 +70,8 @@ func (pgSQL *pgSQL) Unlock(name, owner string) {
 		return
 	}
 
+	defer observeQueryTime("Unlock", "all", time.Now())
+
 	pgSQL.Exec(getQuery("r_lock"), name, owner)
 }
 
@@ -78,6 +82,8 @@ func (pgSQL *pgSQL) FindLock(name string) (string, time.Time, error) {
 		log.Warning("could not find an invalid lock")
 		return "", time.Time{}, cerrors.NewBadRequestError("could not find an invalid lock")
 	}
+
+	defer observeQueryTime("FindLock", "all", time.Now())
 
 	var owner string
 	var until time.Time
@@ -91,6 +97,8 @@ func (pgSQL *pgSQL) FindLock(name string) (string, time.Time, error) {
 
 // pruneLocks removes every expired locks from the database
 func (pgSQL *pgSQL) pruneLocks() {
+	defer observeQueryTime("pruneLocks", "all", time.Now())
+
 	if _, err := pgSQL.Exec(getQuery("r_lock_expired")); err != nil {
 		handleError("r_lock_expired", err)
 	}

@@ -42,10 +42,15 @@ var (
 
 	notifiers = make(map[string]Notifier)
 
-	promNotifierLatencySeconds = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "clair_notifier_latency_seconds",
+	promNotifierLatencyMilliseconds = prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name: "clair_notifier_latency_milliseconds",
 		Help: "Time it takes to send a notification after it's been created.",
 	})
+
+	promNotifierBackendErrorsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
+		Name: "clair_notifier_backend_errors_total",
+		Help: "Number of errors that notifier backends generated.",
+	}, []string{"backend"})
 )
 
 // Notifier represents anything that can transmit notifications.
@@ -55,6 +60,11 @@ type Notifier interface {
 	Configure(*config.NotifierConfig) (bool, error)
 	// Send informs the existence of the specified notification.
 	Send(notification database.VulnerabilityNotification) error
+}
+
+func init() {
+	prometheus.MustRegister(promNotifierLatencyMilliseconds)
+	prometheus.MustRegister(promNotifierBackendErrorsTotal)
 }
 
 // RegisterNotifier makes a Fetcher available by the provided name.
@@ -114,7 +124,7 @@ func Run(config *config.NotifierConfig, datastore database.Datastore, stopper *u
 		go func() {
 			success, interrupted := handleTask(*notification, stopper, config.Attempts)
 			if success {
-				promNotifierLatencySeconds.Set(float64(time.Now().Sub(notification.Created)))
+				utils.PrometheusObserveTimeMilliseconds(promNotifierLatencyMilliseconds, notification.Created)
 				datastore.SetNotificationNotified(notification.Name)
 			}
 			if interrupted {
@@ -188,6 +198,7 @@ func handleTask(notification database.VulnerabilityNotification, st *utils.Stopp
 			// Send using the current notifier.
 			if err := notifier.Send(notification); err != nil {
 				// Send failed; increase attempts/backoff and retry.
+				promNotifierBackendErrorsTotal.WithLabelValues(notifierName).Inc()
 				log.Errorf("could not send notification '%s' to notifier '%s': %s", notification.Name, notifierName, err)
 				backOff = timeutil.ExpBackoff(backOff, maxBackOff)
 				attempts++

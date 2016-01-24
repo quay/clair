@@ -13,6 +13,8 @@ import (
 // do it in tx so we won't insert/update a vuln without notification and vice-versa.
 // name and created doesn't matter.
 func (pgSQL *pgSQL) insertNotification(tx *sql.Tx, notification database.VulnerabilityNotification) error {
+	defer observeQueryTime("insertNotification", "all", time.Now())
+
 	// Marshal old and new Vulnerabilities.
 	oldVulnerability, err := json.Marshal(notification.OldVulnerability)
 	if err != nil {
@@ -38,6 +40,8 @@ func (pgSQL *pgSQL) insertNotification(tx *sql.Tx, notification database.Vulnera
 // Get one available notification name (!locked && !deleted && (!notified || notified_but_timed-out)).
 // Does not fill new/old vuln.
 func (pgSQL *pgSQL) GetAvailableNotification(renotifyInterval time.Duration) (database.VulnerabilityNotification, error) {
+	defer observeQueryTime("GetAvailableNotification", "all", time.Now())
+
 	before := time.Now().Add(-renotifyInterval)
 
 	var notification database.VulnerabilityNotification
@@ -51,6 +55,8 @@ func (pgSQL *pgSQL) GetAvailableNotification(renotifyInterval time.Duration) (da
 }
 
 func (pgSQL *pgSQL) GetNotification(name string, limit, page int) (database.VulnerabilityNotification, error) {
+	defer observeQueryTime("GetNotification", "all", time.Now())
+
 	// Get Notification.
 	var notification database.VulnerabilityNotification
 	var oldVulnerability []byte
@@ -74,11 +80,14 @@ func (pgSQL *pgSQL) GetNotification(name string, limit, page int) (database.Vuln
 	}
 
 	// TODO(Quentin-M): Fill LayersIntroducingVulnerability.
+	// And time it.
 
 	return notification, nil
 }
 
 func (pgSQL *pgSQL) SetNotificationNotified(name string) error {
+	defer observeQueryTime("SetNotificationNotified", "all", time.Now())
+
 	if _, err := pgSQL.Exec(getQuery("u_notification_notified"), name); err != nil {
 		return handleError("u_notification_notified", err)
 	}
@@ -86,6 +95,8 @@ func (pgSQL *pgSQL) SetNotificationNotified(name string) error {
 }
 
 func (pgSQL *pgSQL) DeleteNotification(name string) error {
+	defer observeQueryTime("DeleteNotification", "all", time.Now())
+
 	result, err := pgSQL.Exec(getQuery("r_notification"), name)
 	if err != nil {
 		return handleError("r_notification", err)

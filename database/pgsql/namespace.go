@@ -15,6 +15,8 @@
 package pgsql
 
 import (
+	"time"
+
 	"github.com/coreos/clair/database"
 	cerrors "github.com/coreos/clair/utils/errors"
 )
@@ -31,6 +33,9 @@ func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (int, error) {
 			return id.(int), nil
 		}
 	}
+
+	// We do `defer observeQueryTime` here because we don't want to observe cached namespaces.
+	defer observeQueryTime("insertNamespace", "all", time.Now())
 
 	var id int
 	err := pgSQL.QueryRow(getQuery("soi_namespace"), namespace.Name).Scan(&id)
