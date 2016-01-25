@@ -34,11 +34,12 @@ var DebianReleasesMapping = map[string]string{
 // UbuntuReleasesMapping translates Ubuntu code names to version numbers
 // TODO That should probably be stored in the database or in a file
 var UbuntuReleasesMapping = map[string]string{
-	"precise": "12.04",
-	"quantal": "12.10",
-	"raring":  "13.04",
-	"trusty":  "14.04",
-	"utopic":  "14.10",
-	"vivid":   "15.04",
-	"wily":    "15.10",
+	"precise":           "12.04",
+	"quantal":           "12.10",
+	"raring":            "13.04",
+	"trusty":            "14.04",
+	"utopic":            "14.10",
+	"vivid":             "15.04",
+	"vivid/ubuntu-core": "15.04-core",
+	"wily":              "15.10",
 }
