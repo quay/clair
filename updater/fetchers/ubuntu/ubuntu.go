@@ -61,6 +61,7 @@ var (
 		"oneiric":  struct{}{},
 		"saucy":    struct{}{},
 
+		"vivid/ubuntu-core":          struct{}{},
 		"vivid/stable-phone-overlay": struct{}{},
 
 		// Syntax error
