@@ -33,7 +33,7 @@ func TestRHELParser(t *testing.T) {
 	testFile, _ := os.Open(path + "/testdata/fetcher_rhel_test.1.xml")
 	vulnerabilities, err := parseRHSA(testFile)
 	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, 1) {
-		assert.Equal(t, "RHSA-2015:1193", vulnerabilities[0].ID)
+		assert.Equal(t, "RHSA-2015:1193", vulnerabilities[0].Name)
 		assert.Equal(t, "https://rhn.redhat.com/errata/RHSA-2015-1193.html", vulnerabilities[0].Link)
 		assert.Equal(t, types.Medium, vulnerabilities[0].Severity)
 		assert.Equal(t, `Xerces-C is a validating XML parser written in a portable subset of C++. A flaw was found in the way the Xerces-C XML parser processed certain XML documents. A remote attacker could provide specially crafted XML input that, when parsed by an application using Xerces-C, would cause that application to crash.`, vulnerabilities[0].Description)
@@ -71,7 +71,7 @@ func TestRHELParser(t *testing.T) {
 	testFile, _ = os.Open(path + "/testdata/fetcher_rhel_test.2.xml")
 	vulnerabilities, err = parseRHSA(testFile)
 	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, 1) {
-		assert.Equal(t, "RHSA-2015:1207", vulnerabilities[0].ID)
+		assert.Equal(t, "RHSA-2015:1207", vulnerabilities[0].Name)
 		assert.Equal(t, "https://rhn.redhat.com/errata/RHSA-2015-1207.html", vulnerabilities[0].Link)
 		assert.Equal(t, types.Critical, vulnerabilities[0].Severity)
 		assert.Equal(t, `Mozilla Firefox is an open source web browser. XULRunner provides the XUL Runtime environment for Mozilla Firefox. Several flaws were found in the processing of malformed web content. A web page containing malicious content could cause Firefox to crash or, potentially, execute arbitrary code with the privileges of the user running Firefox.`, vulnerabilities[0].Description)

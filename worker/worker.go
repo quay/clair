@@ -56,6 +56,8 @@ var (
 
 // Process detects the Namespace of a layer, the features it adds/removes, and
 // then stores everything in the database.
+// TODO(Quentin-M): We could have a goroutine that looks for layers that have been analyzed with an
+// older engine version and that processes them.
 func Process(datastore database.Datastore, name, parentName, path, imageFormat string) error {
 	// Verify parameters.
 	if name == "" {
@@ -222,74 +224,3 @@ func detectFeatures(name string, data map[string][]byte, namespace *database.Nam
 
 	return
 }
-
-// // detectAndInsertInstalledAndRemovedPackages finds the installed and removed
-// // package nodes and inserts the installed packages into the database.
-// func detectAndInsertInstalledAndRemovedPackages(detectedOS string, packageList []database.FeatureVersion, parent *database.Layer) (installedNodes, removedNodes []string, err error) {
-// 	// Get the parent layer's packages.
-// 	parentPackageNodes, err := parent.AllPackages()
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-// 	parentPackages, err := database.FindAllPackagesByNodes(parentPackageNodes, []string{database.FieldPackageName, database.FieldPackageVersion})
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-//
-// 	// Map detected packages (name:version) string to packages.
-// 	packagesNVMapToPackage := make(map[string]*database.Package)
-// 	for _, p := range packageList {
-// 		packagesNVMapToPackage[p.Name+":"+p.Version.String()] = p
-// 	}
-//
-// 	// Map parent's packages (name:version) string to nodes.
-// 	parentPackagesNVMapToNodes := make(map[string]string)
-// 	for _, p := range parentPackages {
-// 		parentPackagesNVMapToNodes[p.Name+":"+p.Version.String()] = p.Node
-// 	}
-//
-// 	// Build a list of the parent layer's packages' node values.
-// 	var parentPackagesNV []string
-// 	for _, p := range parentPackages {
-// 		parentPackagesNV = append(parentPackagesNV, p.Name+":"+p.Version.String())
-// 	}
-//
-// 	// Build a list of the layer packages' node values.
-// 	var layerPackagesNV []string
-// 	for _, p := range packageList {
-// 		layerPackagesNV = append(layerPackagesNV, p.Name+":"+p.Version.String())
-// 	}
-//
-// 	// Calculate the installed and removed packages.
-// 	removedPackagesNV := utils.CompareStringLists(parentPackagesNV, layerPackagesNV)
-// 	installedPackagesNV := utils.CompareStringLists(layerPackagesNV, parentPackagesNV)
-//
-// 	// Build a list of all the installed packages.
-// 	var installedPackages []database.FeatureVersion
-// 	for _, nv := range installedPackagesNV {
-// 		p, _ := packagesNVMapToPackage[nv]
-// 		p.OS = detectedOS
-// 		installedPackages = append(installedPackages, p)
-// 	}
-//
-// 	// Insert that list into the database.
-// 	err = database.InsertPackages(installedPackages)
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-//
-// 	// Build the list of installed package nodes.
-// 	for _, p := range installedPackages {
-// 		if p.Node != "" {
-// 			installedNodes = append(installedNodes, p.Node)
-// 		}
-// 	}
-//
-// 	// Build the list of removed package nodes.
-// 	for _, nv := range removedPackagesNV {
-// 		node, _ := parentPackagesNVMapToNodes[nv]
-// 		removedNodes = append(removedNodes, node)
-// 	}
-//
-// 	return
-// }

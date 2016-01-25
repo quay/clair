@@ -31,7 +31,7 @@ func TestDebianParser(t *testing.T) {
 	// Test parsing testdata/fetcher_debian_test.json
 	testFile, _ := os.Open(path.Join(path.Dir(filename)) + "/testdata/fetcher_debian_test.json")
 	response, err := buildResponse(testFile, "")
-	if assert.Nil(t, err) && assert.Len(t, response.Vulnerabilities, 2) {
+	if assert.Nil(t, err) && assert.Len(t, response.Vulnerabilities, 3) {
 		for _, vulnerability := range response.Vulnerabilities {
 			if vulnerability.Name == "CVE-2015-1323" {
 				assert.Equal(t, "https://security-tracker.debian.org/tracker/CVE-2015-1323", vulnerability.Link)
@@ -85,6 +85,24 @@ func TestDebianParser(t *testing.T) {
 							Name:      "asterisk",
 						},
 						Version: types.NewVersionUnsafe("0.5.56"),
+					},
+				}
+
+				for _, expectedFeatureVersion := range expectedFeatureVersions {
+					assert.Contains(t, vulnerability.FixedIn, expectedFeatureVersion)
+				}
+			} else if vulnerability.Name == "CVE-2013-2685" {
+				assert.Equal(t, "https://security-tracker.debian.org/tracker/CVE-2013-2685", vulnerability.Link)
+				assert.Equal(t, types.Negligible, vulnerability.Severity)
+				assert.Equal(t, "Un-affected packages.", vulnerability.Description)
+
+				expectedFeatureVersions := []database.FeatureVersion{
+					database.FeatureVersion{
+						Feature: database.Feature{
+							Namespace: database.Namespace{Name: "debian:8"},
+							Name:      "asterisk",
+						},
+						Version: types.MinVersion,
 					},
 				}
 

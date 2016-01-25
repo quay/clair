@@ -148,8 +148,8 @@ func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp up
 			return resp, err
 		}
 
-		// Add the vulnerability to the response, splitting it by Namespaces.
-		resp.Vulnerabilities = append(resp.Vulnerabilities, updater.DoVulnerabilityNamespacing(v)...)
+		// Add the vulnerability to the response.
+		resp.Vulnerabilities = append(resp.Vulnerabilities, v)
 
 		// Store any unknown releases as notes.
 		for k := range unknownReleases {

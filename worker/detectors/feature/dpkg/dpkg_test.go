@@ -41,7 +41,7 @@ var dpkgPackagesTests = []feature.FeatureVersionTest{
 			},
 		},
 		Data: map[string][]byte{
-			"var/lib/dpkg/status": feature.LoadFileForTest("testdata/dpkg_status"),
+			"var/lib/dpkg/status": feature.LoadFileForTest("dpkg/testdata/status"),
 		},
 	},
 }

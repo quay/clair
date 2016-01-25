@@ -1,6 +1,7 @@
 package updater
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/coreos/clair/database"
@@ -8,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestDoVulnerabilityNamespacing(t *testing.T) {
+func TestDoVulnerabilitiesNamespacing(t *testing.T) {
 	fv1 := database.FeatureVersion{
 		Feature: database.Feature{
 			Namespace: database.Namespace{Name: "Namespace1"},
@@ -38,7 +39,7 @@ func TestDoVulnerabilityNamespacing(t *testing.T) {
 		FixedIn: []database.FeatureVersion{fv1, fv2, fv3},
 	}
 
-	vulnerabilities := DoVulnerabilityNamespacing(vulnerability)
+	vulnerabilities := doVulnerabilitiesNamespacing([]database.Vulnerability{vulnerability})
 	for _, vulnerability := range vulnerabilities {
 		switch vulnerability.Namespace.Name {
 		case fv1.Feature.Namespace.Name:
@@ -50,6 +51,7 @@ func TestDoVulnerabilityNamespacing(t *testing.T) {
 			assert.Contains(t, vulnerability.FixedIn, fv3)
 		default:
 			t.Errorf("Should not have a Vulnerability with '%s' as its Namespace.", vulnerability.Namespace.Name)
+			fmt.Printf("%#v\n", vulnerability)
 		}
 	}
 }

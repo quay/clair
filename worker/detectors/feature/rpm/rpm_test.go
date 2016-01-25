@@ -39,7 +39,7 @@ var rpmPackagesTests = []feature.FeatureVersionTest{
 			},
 		},
 		Data: map[string][]byte{
-			"var/lib/rpm/Packages": feature.LoadFileForTest("testdata/rpm_Packages"),
+			"var/lib/rpm/Packages": feature.LoadFileForTest("rpm/testdata/Packages"),
 		},
 	},
 }

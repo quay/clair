@@ -140,9 +140,9 @@ func (f *RHELFetcher) FetchUpdate(datastore database.Datastore) (resp updater.Fe
 			return resp, err
 		}
 
-		// Collect vulnerabilities, splitting them by Namespaces.
+		// Collect vulnerabilities.
 		for _, v := range vs {
-			resp.Vulnerabilities = append(resp.Vulnerabilities, updater.DoVulnerabilityNamespacing(v)...)
+			resp.Vulnerabilities = append(resp.Vulnerabilities, v)
 		}
 	}
 

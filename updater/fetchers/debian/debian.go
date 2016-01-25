@@ -149,13 +149,10 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 				}
 
 				// Get or create the vulnerability.
-				namespaceName := "debian:" + database.DebianReleasesMapping[releaseName]
-				index := namespaceName + ":" + vulnName
-				vulnerability, vulnerabilityAlreadyExists := mvulnerabilities[index]
+				vulnerability, vulnerabilityAlreadyExists := mvulnerabilities[vulnName]
 				if !vulnerabilityAlreadyExists {
 					vulnerability = &database.Vulnerability{
 						Name:        vulnName,
-						Namespace:   database.Namespace{Name: namespaceName},
 						Link:        strings.Join([]string{cveURLPrefix, "/", vulnName}, ""),
 						Severity:    types.Unknown,
 						Description: vulnNode.Description,
@@ -192,13 +189,18 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 
 				// Create and add the feature version.
 				pkg := database.FeatureVersion{
-					Feature: database.Feature{Name: pkgName},
+					Feature: database.Feature{
+            Name: pkgName,
+            Namespace:   database.Namespace{
+              Name: "debian:" + database.DebianReleasesMapping[releaseName],
+            },
+          },
 					Version: version,
 				}
 				vulnerability.FixedIn = append(vulnerability.FixedIn, pkg)
 
 				// Store the vulnerability.
-				mvulnerabilities[index] = vulnerability
+				mvulnerabilities[vulnName] = vulnerability
 			}
 		}
 	}

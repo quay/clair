@@ -219,7 +219,7 @@ func fetch(datastore database.Datastore) (bool, []database.Vulnerability, map[st
 	for i := 0; i < len(fetchers); i++ {
 		resp := <-responseC
 		if resp != nil {
-			vulnerabilities = append(vulnerabilities, resp.Vulnerabilities...)
+			vulnerabilities = append(vulnerabilities, doVulnerabilitiesNamespacing(resp.Vulnerabilities)...)
 			notes = append(notes, resp.Notes...)
 			if resp.FlagName != "" && resp.FlagValue != "" {
 				flags[resp.FlagName] = resp.FlagValue
@@ -238,4 +238,41 @@ func getLastUpdate(datastore database.Datastore) time.Time {
 		}
 	}
 	return time.Time{}
+}
+
+// doVulnerabilitiesNamespacing takes Vulnerabilities that don't have a Namespace and split them
+// into multiple vulnerabilities that have a Namespace and only contains the FixedIn
+// FeatureVersions corresponding to their Namespace.
+//
+// It helps simplifying the fetchers that share the same metadata about a Vulnerability regardless
+// of their actual namespace (ie. same vulnerability information for every version of a distro).
+func doVulnerabilitiesNamespacing(vulnerabilities []database.Vulnerability) []database.Vulnerability {
+	vulnerabilitiesMap := make(map[string]*database.Vulnerability)
+
+	for _, v := range vulnerabilities {
+		featureVersions := v.FixedIn
+		v.FixedIn = []database.FeatureVersion{}
+
+		for _, fv := range featureVersions {
+			index := fv.Feature.Namespace.Name + ":" + v.Name
+
+			if vulnerability, ok := vulnerabilitiesMap[index]; !ok {
+				newVulnerability := v
+				newVulnerability.Namespace.Name = fv.Feature.Namespace.Name
+				newVulnerability.FixedIn = []database.FeatureVersion{fv}
+
+				vulnerabilitiesMap[index] = &newVulnerability
+			} else {
+				vulnerability.FixedIn = append(vulnerability.FixedIn, fv)
+			}
+		}
+	}
+
+	// Convert map into a slice.
+	var response []database.Vulnerability
+	for _, vulnerability := range vulnerabilitiesMap {
+		response = append(response, *vulnerability)
+	}
+
+	return response
 }

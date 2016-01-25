@@ -49,38 +49,3 @@ func RegisterFetcher(name string, f Fetcher) {
 
 	fetchers[name] = f
 }
-
-// DoVulnerabilityNamespacing is an helper function for fetchers.
-//
-// It takes a Vulnerability that doesn't have a Namespace and split it into
-// potentially multiple vulnerabilities that have a Namespace and only contains the FixedIn
-// FeatureVersions corresponding to their Namespace.
-//
-// It helps simplifying the fetchers that share the same metadata about a Vulnerability regardless
-// of their actual namespace (ie. same vulnerability information for every version of a distro).
-func DoVulnerabilityNamespacing(v database.Vulnerability) []database.Vulnerability {
-	vulnerabilitiesMap := make(map[string]*database.Vulnerability)
-
-	featureVersions := v.FixedIn
-	v.FixedIn = []database.FeatureVersion{}
-
-	for _, fv := range featureVersions {
-		if vulnerability, ok := vulnerabilitiesMap[fv.Feature.Namespace.Name]; !ok {
-			newVulnerability := v
-			newVulnerability.Namespace.Name = fv.Feature.Namespace.Name
-			newVulnerability.FixedIn = []database.FeatureVersion{fv}
-
-			vulnerabilitiesMap[fv.Feature.Namespace.Name] = &newVulnerability
-		} else {
-			vulnerability.FixedIn = append(vulnerability.FixedIn, fv)
-		}
-	}
-
-	// Convert map into a slice.
-	var vulnerabilities []database.Vulnerability
-	for _, vulnerability := range vulnerabilitiesMap {
-		vulnerabilities = append(vulnerabilities, *vulnerability)
-	}
-
-	return vulnerabilities
-}
