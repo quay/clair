@@ -99,5 +99,5 @@ func DetectData(path string, format string, toExtract []string, maxFileSize int6
 		}
 	}
 
-	return nil, nil
+	return nil, cerrors.NewBadRequestError(fmt.Sprintf("unsupported image format '%s'", format))
 }

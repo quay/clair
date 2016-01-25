@@ -23,9 +23,9 @@ import (
 	"github.com/coreos/clair/database/pgsql"
 	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
-  
+
 	// Register the required detectors.
-	_ "github.com/coreos/clair/worker/detectors/data"
+	_ "github.com/coreos/clair/worker/detectors/data/docker"
 	_ "github.com/coreos/clair/worker/detectors/feature/dpkg"
 	_ "github.com/coreos/clair/worker/detectors/namespace/aptsources"
 	_ "github.com/coreos/clair/worker/detectors/namespace/osrelease"

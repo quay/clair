@@ -48,10 +48,11 @@ var (
 	ErrParentUnknown = errors.New("worker: parent layer is unknown, it must be processed first")
 
 	// SupportedNamespacePrefixes is the list of namespace prefixes that the worker supports.
+	// TODO(Quentin-M): We should remove this from here and allow registered Namespace Detectors to
+	// tell which prefixes are supported. Otherwise, it doesn't make sense to allow registering them.
+	// Similarly, we could do the same thing with Data Detectors to detect early unsupported
+	// ImageFormats.
 	SupportedNamespacePrefixes = []string{"debian:", "ubuntu:", "centos:"}
-
-	// SupportedImageFormat is the list of image formats that the worker supports.
-	SupportedImageFormat = []string{"Docker", "ACI"}
 )
 
 // Process detects the Namespace of a layer, the features it adds/removes, and
@@ -70,17 +71,6 @@ func Process(datastore database.Datastore, name, parentName, path, imageFormat s
 
 	if imageFormat == "" {
 		return cerrors.NewBadRequestError("could not process a layer which does not have a format")
-	}
-
-	isSupported := false
-	for _, format := range SupportedImageFormat {
-		if strings.EqualFold(imageFormat, format) {
-			isSupported = true
-			break
-		}
-	}
-	if !isSupported {
-		return cerrors.NewBadRequestError("could not process a layer which does not have a supported format")
 	}
 
 	log.Debugf("layer %s: processing (Location: %s, Engine version: %d, Parent: %s, Format: %s)",
