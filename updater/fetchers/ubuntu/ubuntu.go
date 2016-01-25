@@ -132,6 +132,7 @@ func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp up
 		return resp, err
 	}
 
+	notes := make(map[string]struct{})
 	for cvePath := range modifiedCVE {
 		// Open the CVE file.
 		file, err := os.Open(repositoryLocalPath + "/" + cvePath)
@@ -150,11 +151,10 @@ func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp up
 		// Add the vulnerability to the response, splitting it by Namespaces.
 		resp.Vulnerabilities = append(resp.Vulnerabilities, updater.DoVulnerabilityNamespacing(v)...)
 
-		// Log any unknown releases.
+		// Store any unknown releases as notes.
 		for k := range unknownReleases {
 			note := fmt.Sprintf("Ubuntu %s is not mapped to any version number (eg. trusty->14.04). Please update me.", k)
-			resp.Notes = append(resp.Notes, note)
-			log.Warning(note)
+			notes[note] = struct{}{}
 
 			// If we encountered unknown Ubuntu release, we don't want the revision
 			// number to be considered as managed.
@@ -170,9 +170,12 @@ func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp up
 		file.Close()
 	}
 
-	// Add flag information
+	// Add flag and notes.
 	resp.FlagName = ubuntuUpdaterFlag
 	resp.FlagValue = strconv.Itoa(revisionNumber)
+	for note := range notes {
+		resp.Notes = append(resp.Notes, note)
+	}
 
 	return
 }
