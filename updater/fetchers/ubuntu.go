@@ -59,6 +59,8 @@ var (
 		"oneiric":  struct{}{},
 		"saucy":    struct{}{},
 
+		"vivid/stable-phone-overlay": struct{}{},
+
 		// Syntax error
 		"Patches": struct{}{},
 		// Product
