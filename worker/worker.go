@@ -18,7 +18,6 @@ package worker
 
 import (
 	"errors"
-	"strings"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils"
@@ -46,13 +45,6 @@ var (
 	// ErrParentUnknown is the error that should be raised when a parent layer
 	// has yet to be processed for the current layer.
 	ErrParentUnknown = errors.New("worker: parent layer is unknown, it must be processed first")
-
-	// SupportedNamespacePrefixes is the list of namespace prefixes that the worker supports.
-	// TODO(Quentin-M): We should remove this from here and allow registered Namespace Detectors to
-	// tell which prefixes are supported. Otherwise, it doesn't make sense to allow registering them.
-	// Similarly, we could do the same thing with Data Detectors to detect early unsupported
-	// ImageFormats.
-	SupportedNamespacePrefixes = []string{"debian:", "ubuntu:", "centos:"}
 )
 
 // Process detects the Namespace of a layer, the features it adds/removes, and
@@ -168,20 +160,6 @@ func detectNamespace(data map[string][]byte, parent *database.Layer) (namespace 
 		namespace = parent.Namespace
 		if err != nil {
 			return
-		}
-	}
-
-	// Ensure that the detected namespace's prefix is supported.
-	if namespace != nil {
-		isSupported := false
-		for _, namespacePrefix := range SupportedNamespacePrefixes {
-			if strings.HasPrefix(namespace.Name, namespacePrefix) {
-				isSupported = true
-				break
-			}
-		}
-		if !isSupported {
-			return namespace, ErrUnsupported
 		}
 	}
 
