@@ -36,7 +36,7 @@ const (
 )
 
 func TestRaceAffects(t *testing.T) {
-	datastore, err := OpenForTest("TestRaceAffects", false)
+	datastore, err := OpenForTest("RaceAffects", false)
 	if err != nil {
 		t.Error(err)
 		return

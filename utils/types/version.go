@@ -179,7 +179,7 @@ func (v Version) MarshalJSON() ([]byte, error) {
 func (v *Version) UnmarshalJSON(b []byte) (err error) {
 	var str string
 	json.Unmarshal(b, &str)
-	vp, err := NewVersion(str)
+	vp := NewVersionUnsafe(str)
 	*v = vp
 	return
 }

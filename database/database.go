@@ -49,7 +49,7 @@ type Datastore interface {
 
 	// Notifications
 	GetAvailableNotification(renotifyInterval time.Duration) (VulnerabilityNotification, error) // Does not fill old/new Vulnerabilities.
-	GetNotification(name string, limit, page int) (VulnerabilityNotification, error)
+	GetNotification(name string, limit int, page VulnerabilityNotificationPageNumber) (VulnerabilityNotification, VulnerabilityNotificationPageNumber, error)
 	SetNotificationNotified(name string) error
 	DeleteNotification(name string) error
 

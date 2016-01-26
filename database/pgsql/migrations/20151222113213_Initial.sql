@@ -151,7 +151,7 @@ CREATE TABLE IF NOT EXISTS Vulnerability_Notification (
   created_at TIMESTAMP WITH TIME ZONE,
   notified_at TIMESTAMP WITH TIME ZONE NULL,
   deleted_at TIMESTAMP WITH TIME ZONE NULL,
-  old_vulnerability TEXT,
+  old_vulnerability TEXT NULL,
   new_vulnerability TEXT);
 
 CREATE INDEX ON Vulnerability_Notification (notified_at);

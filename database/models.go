@@ -22,7 +22,7 @@ import (
 
 // ID is only meant to be used by database implementations and should never be used for anything else.
 type Model struct {
-	ID int `json:"-"`
+	ID int
 }
 
 type Layer struct {
@@ -74,6 +74,8 @@ type Vulnerability struct {
 }
 
 type VulnerabilityNotification struct {
+	Model
+
 	Name string
 
 	Created  time.Time
@@ -83,3 +85,12 @@ type VulnerabilityNotification struct {
 	OldVulnerability *Vulnerability
 	NewVulnerability Vulnerability
 }
+
+type VulnerabilityNotificationPageNumber struct {
+	// -1 means that we reached the end already.
+	OldVulnerability int
+	NewVulnerability int
+}
+
+var VulnerabilityNotificationFirstPage = VulnerabilityNotificationPageNumber{0, 0}
+var NoVulnerabilityNotificationPage = VulnerabilityNotificationPageNumber{-1, -1}

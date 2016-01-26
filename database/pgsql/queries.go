@@ -190,20 +190,42 @@ func init() {
     INSERT INTO Vulnerability_Notification(name, created_at, old_vulnerability, new_vulnerability)
     VALUES($1, CURRENT_TIMESTAMP, $2, $3)`
 
-	queries["r_notification"] = `UPDATE Vulnerability_Notification SET deleted_at = CURRENT_TIMESTAMP`
+	queries["u_notification_notified"] = `
+    UPDATE Vulnerability_Notification
+    SET notified_at = CURRENT_TIMESTAMP
+    WHERE name = $1`
+
+	queries["r_notification"] = `
+    UPDATE Vulnerability_Notification
+    SET deleted_at = CURRENT_TIMESTAMP
+    WHERE name = $1`
 
 	queries["s_notification_available"] = `
-    SELECT name, created_at, notified_at, deleted_at
+    SELECT id, name, created_at, notified_at, deleted_at
     FROM Vulnerability_Notification
-    WHERE notified_at = NULL OR notified_at < $1
+    WHERE (notified_at IS NULL OR notified_at < $1)
+          AND deleted_at IS NULL
           AND name NOT IN (SELECT name FROM Lock)
     ORDER BY Random()
     LIMIT 1`
 
 	queries["s_notification"] = `
-    SELECT name, created_at, notified_at, deleted_at, old_vulnerability, new_vulnerability
+    SELECT id, name, created_at, notified_at, deleted_at, old_vulnerability, new_vulnerability
     FROM Vulnerability_Notification
     WHERE name = $1`
+
+	queries["s_notification_layer_introducing_vulnerability"] = `
+    SELECT l.ID, l.name
+    FROM Vulnerability v, Vulnerability_Affects_FeatureVersion vafv, FeatureVersion fv, Layer_diff_FeatureVersion ldfv, Layer l
+    WHERE v.id = $1
+          AND v.id = vafv.vulnerability_id
+          AND vafv.featureversion_id = fv.id
+          AND fv.id = ldfv.featureversion_id
+          AND ldfv.modification = 'add'
+          AND ldfv.layer_id = l.id
+          AND l.id >= $2
+    ORDER BY l.ID
+    LIMIT $3`
 
 	// complex_test.go
 	queries["s_complextest_featureversion_affects"] = `
