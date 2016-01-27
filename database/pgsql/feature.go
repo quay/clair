@@ -67,10 +67,10 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 	}
 
 	// Do cache lookup.
+	cacheIndex := "featureversion:" + featureVersion.Feature.Namespace.Name + ":" + featureVersion.Feature.Name + ":" + featureVersion.Version.String()
 	if pgSQL.cache != nil {
 		promCacheQueriesTotal.WithLabelValues("featureversion").Inc()
-		id, found := pgSQL.cache.Get("featureversion:" + featureVersion.Feature.Namespace.Name + ":" +
-			featureVersion.Feature.Name + ":" + featureVersion.Version.String())
+		id, found := pgSQL.cache.Get(cacheIndex)
 		if found {
 			promCacheHitsTotal.WithLabelValues("featureversion").Inc()
 			return id.(int), nil
@@ -101,8 +101,8 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 	// Lock Vulnerability_Affects_FeatureVersion exclusively.
 	// We want to prevent InsertVulnerability to modify it.
 	promConcurrentLockVAFV.Inc()
-  defer promConcurrentLockVAFV.Dec()
-  t = time.Now()
+	defer promConcurrentLockVAFV.Dec()
+	t = time.Now()
 	_, err = tx.Exec(getQuery("l_vulnerability_affects_featureversion"))
 	observeQueryTime("insertFeatureVersion", "lock", t)
 
@@ -148,8 +148,7 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 	}
 
 	if pgSQL.cache != nil {
-		pgSQL.cache.Add("featureversion:"+featureVersion.Feature.Name+":"+
-			featureVersion.Feature.Namespace.Name+":"+featureVersion.Version.String(), featureVersion.ID)
+		pgSQL.cache.Add(cacheIndex, featureVersion.ID)
 	}
 
 	return featureVersion.ID, nil
