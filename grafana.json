@@ -125,7 +125,7 @@
               "legendFormat": "",
               "metric": "clair_updater_notes_total",
               "refId": "A",
-              "step": 60
+              "step": 21
             }
           ],
           "thresholds": "",
@@ -401,7 +401,7 @@
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
-          "span": 8,
+          "span": 4,
           "stack": false,
           "steppedLine": false,
           "targets": [
@@ -427,6 +427,97 @@
           "y-axis": true,
           "y_formats": [
             "percent",
+            "short"
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": null,
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "leftLogBase": 1,
+            "leftMax": null,
+            "leftMin": 0,
+            "rightLogBase": 1,
+            "rightMax": null,
+            "rightMin": 0,
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 9,
+          "isNew": true,
+          "leftYAxisLabel": "",
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "rightYAxisLabel": "",
+          "seriesOverrides": [
+            {
+              "alias": "Concurrent transactions",
+              "yaxis": 2
+            }
+          ],
+          "span": 4,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "sum(rate(clair_pgsql_query_duration_milliseconds_sum{query=\"insertFeatureVersion\", subquery=\"lock\"}[$rate])) / sum(rate(clair_pgsql_query_duration_milliseconds_count{query=\"insertFeatureVersion\", subquery=\"lock\"}[$rate]))",
+              "intervalFactor": 2,
+              "legendFormat": "insertFeatureVersion wait duration",
+              "refId": "A",
+              "step": 2
+            },
+            {
+              "expr": "sum(rate(clair_pgsql_query_duration_milliseconds_sum{query=\"insertVulnerability\", subquery=\"lock\"}[$rate])) / sum(rate(clair_pgsql_query_duration_milliseconds_count{query=\"insertVulnerability\", subquery=\"lock\"}[$rate]))",
+              "intervalFactor": 2,
+              "legendFormat": "insertVulnerability wait duration",
+              "refId": "B",
+              "step": 2
+            },
+            {
+              "expr": "sum(clair_pgsql_concurrent_lock_vafv_total)",
+              "hide": false,
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "Concurrent transactions",
+              "refId": "C",
+              "step": 2
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Lock VAFV",
+          "tooltip": {
+            "shared": true,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "x-axis": true,
+          "y-axis": true,
+          "y_formats": [
+            "ms",
             "short"
           ]
         },
@@ -577,12 +668,13 @@
           ]
         }
       ],
+      "showTitle": false,
       "title": "PostgreSQL"
     },
     {
       "collapse": false,
       "editable": true,
-      "height": "250px",
+      "height": 271,
       "panels": [
         {
           "aliasColors": {},
@@ -597,22 +689,19 @@
             "leftMin": 0,
             "rightLogBase": 1,
             "rightMax": null,
-            "rightMin": 0,
+            "rightMin": null,
             "threshold1": null,
             "threshold1Color": "rgba(216, 200, 27, 0.27)",
             "threshold2": null,
             "threshold2Color": "rgba(234, 112, 112, 0.22)"
           },
-          "id": 9,
+          "id": 10,
           "isNew": true,
-          "leftYAxisLabel": "",
           "legend": {
-            "alignAsTable": false,
             "avg": false,
             "current": false,
             "max": false,
             "min": false,
-            "rightSide": false,
             "show": true,
             "total": false,
             "values": false
@@ -625,44 +714,23 @@
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
-          "rightYAxisLabel": "",
-          "seriesOverrides": [
-            {
-              "alias": "Concurrent transactions",
-              "yaxis": 2
-            }
-          ],
-          "span": 12,
+          "seriesOverrides": [],
+          "span": 10,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(clair_pgsql_query_duration_milliseconds_sum{query=\"insertFeatureVersion\", subquery=\"lock\"}[$rate])) / sum(rate(clair_pgsql_query_duration_milliseconds_count{query=\"insertFeatureVersion\", subquery=\"lock\"}[$rate]))",
+              "expr": "sum(rate(clair_api_query_duration_milliseconds_sum[$rate])) by (query, subquery) / sum(rate(clair_api_query_duration_milliseconds_count[$rate])) by (query)",
               "intervalFactor": 2,
-              "legendFormat": "insertFeatureVersion wait duration",
+              "legendFormat": "{{query}}",
+              "metric": "",
               "refId": "A",
-              "step": 2
-            },
-            {
-              "expr": "sum(rate(clair_pgsql_query_duration_milliseconds_sum{query=\"insertVulnerability\", subquery=\"lock\"}[$rate])) / sum(rate(clair_pgsql_query_duration_milliseconds_count{query=\"insertVulnerability\", subquery=\"lock\"}[$rate]))",
-              "intervalFactor": 2,
-              "legendFormat": "insertVulnerability wait duration",
-              "refId": "B",
-              "step": 2
-            },
-            {
-              "expr": "sum(clair_pgsql_concurrent_lock_vafv_total)",
-              "hide": false,
-              "interval": "",
-              "intervalFactor": 2,
-              "legendFormat": "Concurrent transactions",
-              "refId": "C",
               "step": 2
             }
           ],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Lock VAFV",
+          "title": "API - Query Duration",
           "tooltip": {
             "shared": true,
             "value_type": "cumulative"
@@ -674,13 +742,75 @@
             "ms",
             "short"
           ]
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": true,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "datasource": null,
+          "decimals": null,
+          "editable": true,
+          "error": false,
+          "format": "percent",
+          "id": 11,
+          "interval": null,
+          "isNew": true,
+          "links": [],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "span": 2,
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": true
+          },
+          "targets": [
+            {
+              "expr": "sum(rate(clair_api_query_duration_milliseconds_bucket{le=\"300\", query=\"GETLayers\"}[$rate])) / sum(rate(clair_api_query_duration_milliseconds_count{query=\"GETLayers\"}[$rate])) * 100",
+              "intervalFactor": 2,
+              "legendFormat": "",
+              "refId": "A",
+              "step": 21
+            }
+          ],
+          "thresholds": "0,90,95",
+          "title": "GETLayers [< 300 ms @ TP95]",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "avg"
         }
       ],
+      "showTitle": false,
       "title": "PostgreSQL"
+    },
+    {
+      "collapse": false,
+      "editable": true,
+      "height": "250px",
+      "panels": [],
+      "title": "New row"
     }
   ],
   "time": {
-    "from": "now-30m",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {
@@ -717,8 +847,8 @@
         "auto_count": 5,
         "current": {
           "tags": [],
-          "text": "15s",
-          "value": "15s"
+          "text": "5m",
+          "value": "5m"
         },
         "datasource": null,
         "hideLabel": false,
@@ -739,7 +869,7 @@
             "value": "5s"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "15s",
             "value": "15s"
           },
@@ -754,7 +884,7 @@
             "value": "1m"
           },
           {
-            "selected": false,
+            "selected": true,
             "text": "5m",
             "value": "5m"
           },
@@ -846,6 +976,6 @@
   },
   "refresh": "5s",
   "schemaVersion": 8,
-  "version": 17,
+  "version": 23,
   "links": []
 }
