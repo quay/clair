@@ -143,6 +143,80 @@ func (c *conn) handleDriverSettings(o values) (err error) {
 	return nil
 }
 
+func (c *conn) handlePgpass(o values) {
+	// if a password was supplied, do not process .pgpass
+	_, ok := o["password"]
+	if ok {
+		return
+	}
+	filename := os.Getenv("PGPASSFILE")
+	if filename == "" {
+		// XXX this code doesn't work on Windows where the default filename is
+		// XXX %APPDATA%\postgresql\pgpass.conf
+		user, err := user.Current()
+		if err != nil {
+			return
+		}
+		filename = filepath.Join(user.HomeDir, ".pgpass")
+	}
+	fileinfo, err := os.Stat(filename)
+	if err != nil {
+		return
+	}
+	mode := fileinfo.Mode()
+	if mode & (0x77) != 0 {
+		// XXX should warn about incorrect .pgpass permissions as psql does
+		return
+	}
+	file, err := os.Open(filename)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(io.Reader(file))
+	hostname := o.Get("host")
+	ntw, _ := network(o)
+	port := o.Get("port")
+	db := o.Get("dbname")
+	username := o.Get("user")
+	// From: https://github.com/tg/pgpass/blob/master/reader.go
+	getFields := func (s string) []string {
+		fs := make([]string, 0, 5)
+		f := make([]rune, 0, len(s))
+
+		var esc bool
+		for _, c := range s {
+			switch {
+			case esc:
+				f = append(f, c)
+				esc = false
+			case c == '\\':
+				esc = true
+			case c == ':':
+				fs = append(fs, string(f))
+				f = f[:0]
+			default:
+				f = append(f, c)
+			}
+		}
+		return append(fs, string(f))
+	}	
+	for scanner.Scan() {
+		line := scanner.Text()
+		if len(line) == 0 || line[0] == '#' {
+			continue
+		}
+		split := getFields(line)
+		if len(split) != 5 {
+			continue
+		}
+		if (split[0] == "*" || split[0] == hostname || (split[0] == "localhost" && (hostname == "" || ntw == "unix"))) && (split[1] == "*" || split[1] == port) && (split[2] == "*" || split[2] == db)  && (split[3] == "*" || split[3] == username)  {
+			o["password"] = split[4]
+			return
+		}
+	}
+}
+
 func (c *conn) writeBuf(b byte) *writeBuf {
 	c.scratch[0] = b
 	return &writeBuf{
@@ -234,6 +308,7 @@ func DialOpen(d Dialer, name string) (_ driver.Conn, err error) {
 	if err != nil {
 		return nil, err
 	}
+	cn.handlePgpass(o)
 
 	cn.c, err = dial(d, o)
 	if err != nil {
@@ -557,13 +632,15 @@ func (cn *conn) simpleQuery(q string) (res *rows, err error) {
 				cn.bad = true
 				errorf("unexpected message %q in simple query execution", t)
 			}
-			res = &rows{
-				cn:       cn,
-				colNames: st.colNames,
-				colTyps:  st.colTyps,
-				colFmts:  st.colFmts,
-				done:     true,
+			if res == nil {
+				res = &rows{
+					cn:       cn,
+					colNames: st.colNames,
+					colTyps:  st.colTyps,
+					colFmts:  st.colFmts,
+				}
 			}
+			res.done = true
 		case 'Z':
 			cn.processReadyForQuery(r)
 			// done
@@ -1369,6 +1446,10 @@ func (rs *rows) Next(dest []driver.Value) (err error) {
 			return io.EOF
 		case 'D':
 			n := rs.rb.int16()
+			if err != nil {
+				conn.bad = true
+				errorf("unexpected DataRow after error %s", err)
+			}
 			if n < len(dest) {
 				dest = dest[:n]
 			}
@@ -1622,6 +1703,10 @@ func (cn *conn) readExecuteResponse(protocolState string) (res driver.Result, co
 		t, r := cn.recv1()
 		switch t {
 		case 'C':
+			if err != nil {
+				cn.bad = true
+				errorf("unexpected CommandComplete after error %s", err)
+			}
 			res, commandTag = cn.parseComplete(r.string())
 		case 'Z':
 			cn.processReadyForQuery(r)
@@ -1629,6 +1714,10 @@ func (cn *conn) readExecuteResponse(protocolState string) (res driver.Result, co
 		case 'E':
 			err = parseError(r)
 		case 'T', 'D', 'I':
+			if err != nil {
+				cn.bad = true
+				errorf("unexpected %q after error %s", t, err)
+			}
 			// ignore any results
 		default:
 			cn.bad = true
@@ -1707,7 +1796,7 @@ func parseEnviron(env []string) (out map[string]string) {
 			accrue("user")
 		case "PGPASSWORD":
 			accrue("password")
-		case "PGPASSFILE", "PGSERVICE", "PGSERVICEFILE", "PGREALM":
+		case "PGSERVICE", "PGSERVICEFILE", "PGREALM":
 			unsupported()
 		case "PGOPTIONS":
 			accrue("options")
