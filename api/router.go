@@ -17,75 +17,50 @@ package api
 import (
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/julienschmidt/httprouter"
+
+	"github.com/coreos/clair/api/context"
+	"github.com/coreos/clair/api/v1"
 )
 
-// VersionRouter is an HTTP router that forwards requests to the appropriate
-// router depending on the API version specified in the requested URI.
-type VersionRouter map[string]*httprouter.Router
+// router is an HTTP router that forwards requests to the appropriate sub-router
+// depending on the API version specified in the request URI.
+type router map[string]*httprouter.Router
 
-// NewVersionRouter instantiates a VersionRouter and every sub-routers that are
-// necessary to handle supported API versions.
-func NewVersionRouter(to time.Duration, env *Env) *VersionRouter {
-	return &VersionRouter{
-		"/v1": NewRouterV1(to, env),
-	}
+// Let's hope we never have more than 99 API versions.
+const apiVersionLength = len("v99")
+
+func newAPIHandler(ctx *context.RouteContext) http.Handler {
+	router := make(router)
+	router["v1"] = v1.NewRouter(ctx)
+	return router
 }
 
-// ServeHTTP forwards requests to the appropriate router depending on the API
-// version specified in the requested URI and remove the version information
-// from the request URL.Path, without modifying the request uRequestURI.
-func (vs VersionRouter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (rtr router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	urlStr := r.URL.String()
 	var version string
-	if len(urlStr) >= 3 {
-		version = urlStr[:3]
+	if len(urlStr) >= apiVersionLength {
+		version = urlStr[:apiVersionLength]
 	}
-	if router, _ := vs[version]; router != nil {
+
+	if router, _ := rtr[version]; router != nil {
 		// Remove the version number from the request path to let the router do its
 		// job but do not update the RequestURI
 		r.URL.Path = strings.Replace(r.URL.Path, version, "", 1)
 		router.ServeHTTP(w, r)
 		return
 	}
+
 	http.NotFound(w, r)
 }
 
-// NewRouterV1 creates a new router for the API (Version 1)
-func NewRouterV1(to time.Duration, env *Env) *httprouter.Router {
+func newHealthHandler(ctx *context.RouteContext) http.Handler {
 	router := httprouter.New()
-
-	// Create a wrapper that will wrap a Handle into a httprouter.Handle and that adds
-	// logging and time-out capabilities.
-	wrap := func(fn Handle, e *Env) httprouter.Handle {
-		return Logger(TimeOut(to, WrapHandle(fn, e)))
-	}
-
-	// General
-	router.GET("/versions", wrap(GETVersions, env))
-	router.GET("/health", wrap(GETHealth, env))
-
-	// Layers
-	router.POST("/layers", wrap(POSTLayers, env))
-	router.DELETE("/layers/:name", wrap(DELETELayers, env))
-	router.GET("/layers/:name", wrap(GETLayers, env))
-
-	// Vulnerabilities
-	// router.POST("/vulnerabilities", wrap(logic.POSTVulnerabilities))
-	// router.PUT("/vulnerabilities/:id", wrap(logic.PUTVulnerabilities))
-	// router.GET("/vulnerabilities/:id", wrap(logic.GETVulnerabilities))
-	// router.DELETE("/vulnerabilities/:id", wrap(logic.DELVulnerabilities))
-	// router.GET("/vulnerabilities/:id/introducing-layers", wrap(logic.GETVulnerabilitiesIntroducingLayers))
-	// router.POST("/vulnerabilities/:id/affected-layers", wrap(logic.POSTVulnerabilitiesAffectedLayers))
-
+	router.GET("/health", context.HTTPHandler(getHealth, ctx))
 	return router
 }
 
-// NewHealthRouter creates a new router that only serve the Health function on /
-func NewHealthRouter(env *Env) *httprouter.Router {
-	router := httprouter.New()
-	router.GET("/", WrapHandle(GETHealth, env))
-	return router
+func getHealth(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
+	return 0
 }

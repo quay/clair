@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/coreos/clair/api"
+	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database/pgsql"
 	"github.com/coreos/clair/notifier"
@@ -52,9 +53,9 @@ func Boot(config *config.Config) {
 
 	// Start API
 	st.Begin()
-	go api.Run(config.API, &api.Env{Datastore: db}, st)
+	go api.Run(config.API, &context.RouteContext{db}, st)
 	st.Begin()
-	go api.RunHealth(config.API, &api.Env{Datastore: db}, st)
+	go api.RunHealth(config.API, &context.RouteContext{db}, st)
 
 	// Start updater
 	st.Begin()
