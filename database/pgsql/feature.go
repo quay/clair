@@ -127,6 +127,11 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 	if newOrExisting == "exi" {
 		// That featureVersion already exists, return its id.
 		tx.Commit()
+
+		if pgSQL.cache != nil {
+			pgSQL.cache.Add(cacheIndex, featureVersion.ID)
+		}
+
 		return featureVersion.ID, nil
 	}
 
