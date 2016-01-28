@@ -49,3 +49,27 @@ func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (int, error) {
 
 	return id, nil
 }
+
+func (pgSQL *pgSQL) ListNamespaces() (namespaces []database.Namespace, err error) {
+	rows, err := pgSQL.Query(getQuery("l_namespace"))
+	if err != nil {
+		return namespaces, handleError("l_namespace", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var namespace database.Namespace
+
+		err = rows.Scan(&namespace.ID, &namespace.Name)
+		if err != nil {
+			return namespaces, handleError("l_namespace.Scan()", err)
+		}
+
+		namespaces = append(namespaces, namespace)
+	}
+	if err = rows.Err(); err != nil {
+		return namespaces, handleError("l_namespace.Rows()", err)
+	}
+
+	return namespaces, err
+}

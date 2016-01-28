@@ -43,6 +43,8 @@ func init() {
     UNION
     SELECT id FROM new_namespace`
 
+	queries["l_namespace"] = `SELECT id, name FROM Namespace`
+
 	// feature.go
 	queries["soi_feature"] = `
     WITH new_feature AS (

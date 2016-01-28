@@ -16,7 +16,8 @@ package pgsql
 
 import (
 	"testing"
-
+  "fmt"
+  
 	"github.com/coreos/clair/database"
 	"github.com/stretchr/testify/assert"
 )
@@ -40,4 +41,26 @@ func TestInsertNamespace(t *testing.T) {
 	id2, err := datastore.insertNamespace(database.Namespace{Name: "TestInsertNamespace1"})
 	assert.Nil(t, err)
 	assert.Equal(t, id1, id2)
+}
+
+func TestListNamespace(t *testing.T) {
+	datastore, err := OpenForTest("ListNamespaces", true)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer datastore.Close()
+
+	namespaces, err := datastore.ListNamespaces()
+	assert.Nil(t, err)
+	if assert.Len(t, namespaces, 2) {
+		for _, namespace := range namespaces {
+			switch namespace.Name {
+			case "debian:7", "debian:8":
+				continue
+			default:
+				assert.Error(t, fmt.Errorf("ListNamespaces should not have returned '%s'", namespace.Name))
+			}
+		}
+	}
 }

@@ -37,6 +37,9 @@ var (
 )
 
 type Datastore interface {
+	// Namespace
+	ListNamespaces() ([]Namespace, error)
+
 	// Layer
 	InsertLayer(Layer) error
 	FindLayer(name string, withFeatures, withVulnerabilities bool) (Layer, error)
