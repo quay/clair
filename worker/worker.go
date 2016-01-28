@@ -17,13 +17,12 @@
 package worker
 
 import (
-	"errors"
+	"github.com/coreos/pkg/capnslog"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/worker/detectors"
-	"github.com/coreos/pkg/capnslog"
 )
 
 const (
@@ -40,11 +39,11 @@ var (
 
 	// ErrUnsupported is the error that should be raised when an OS or package
 	// manager is not supported.
-	ErrUnsupported = errors.New("worker: OS and/or package manager are not supported")
+	ErrUnsupported = cerrors.NewBadRequestError("worker: OS and/or package manager are not supported")
 
 	// ErrParentUnknown is the error that should be raised when a parent layer
 	// has yet to be processed for the current layer.
-	ErrParentUnknown = errors.New("worker: parent layer is unknown, it must be processed first")
+	ErrParentUnknown = cerrors.NewBadRequestError("worker: parent layer is unknown, it must be processed first")
 )
 
 // Process detects the Namespace of a layer, the features it adds/removes, and
