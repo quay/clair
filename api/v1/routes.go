@@ -56,9 +56,11 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 		if _, ok := err.(*cerrors.ErrBadRequest); ok {
 			w.WriteHeader(http.StatusBadRequest)
 			writeError(w, err, "BadRequest")
+			return http.StatusBadRequest
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		writeError(w, err, "InternalServerError")
+		return http.StatusInternalServerError
 	}
 
 	w.WriteHeader(http.StatusCreated)

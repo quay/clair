@@ -33,7 +33,7 @@ const apiVersionLength = len("v99")
 
 func newAPIHandler(ctx *context.RouteContext) http.Handler {
 	router := make(router)
-	router["v1"] = v1.NewRouter(ctx)
+	router["/v1"] = v1.NewRouter(ctx)
 	return router
 }
 
@@ -52,6 +52,7 @@ func (rtr router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Infof("%s %d %s %s", http.StatusNotFound, r.Method, r.RequestURI, r.RemoteAddr)
 	http.NotFound(w, r)
 }
 

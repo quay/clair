@@ -23,15 +23,17 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/prometheus/common/log"
 	"github.com/tylerb/graceful"
 
 	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/utils"
+	"github.com/coreos/pkg/capnslog"
 )
 
 const timeoutResponse = `{"Error":{"Message":"Clair failed to respond within the configured timeout window.","Type":"Timeout"}}`
+
+var log = capnslog.NewPackageLogger("github.com/coreos/clair", "api")
 
 func Run(config *config.APIConfig, ctx *context.RouteContext, st *utils.Stopper) {
 	defer st.End()
