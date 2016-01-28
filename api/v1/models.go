@@ -15,14 +15,23 @@
 package v1
 
 type ErrorResponse struct {
+	Error Error
+}
+
+type Error struct {
 	Error string
 	Type  string
+}
+
+type LayerRequest struct {
+	Layer Layer
 }
 
 type Layer struct {
 	Name             string
 	Path             string
-	Parent           string
+	ParentName       string
+	Format           string
 	IndexedByVersion int
 	Features         []Feature
 }
