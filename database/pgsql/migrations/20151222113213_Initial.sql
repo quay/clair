@@ -113,7 +113,7 @@ CREATE TABLE IF NOT EXISTS Vulnerability_Affects_FeatureVersion (
   id SERIAL PRIMARY KEY,
   vulnerability_id INT NOT NULL REFERENCES Vulnerability ON DELETE CASCADE,
   featureversion_id INT NOT NULL REFERENCES FeatureVersion,
-  fixedin_id INT NOT NULL REFERENCES Vulnerability_FixedIn_Feature,
+  fixedin_id INT NOT NULL REFERENCES Vulnerability_FixedIn_Feature ON DELETE CASCADE,
 
   UNIQUE (vulnerability_id, featureversion_id));
 

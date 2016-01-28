@@ -180,6 +180,11 @@ func init() {
 	queries["f_featureversion_by_feature"] = `
     SELECT id, version FROM FeatureVersion WHERE feature_id = $1`
 
+	queries["r_vulnerability"] = `
+    DELETE FROM Vulnerability
+    WHERE namespace_id = (SELECT id FROM Namespace WHERE name = $1)
+          AND name = $2`
+
 	// notification.go
 	queries["i_notification"] = `INSERT INTO Notification(name, kind, data) VALUES($1, $2, $3)`
 

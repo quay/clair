@@ -44,8 +44,8 @@ type Datastore interface {
 
 	// Vulnerability
 	InsertVulnerabilities([]Vulnerability) error
-	// DeleteVulnerability(id string) error
 	FindVulnerability(namespaceName, name string) (Vulnerability, error)
+	DeleteVulnerability(namespaceName, name string) error
 
 	// Notifications
 	CountAvailableNotifications() (int, error)
