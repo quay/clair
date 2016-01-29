@@ -120,14 +120,21 @@ func getLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *
 		}
 	}
 
-	// add envelope
 	writeResponse(w, LayerEnvelope{Layer: &layer})
 	return writeHeader(w, http.StatusOK)
 }
 
 func deleteLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
-	// ez
-	return 0
+	err := ctx.Store.DeleteLayer(p.ByName("layerName"))
+	if err == cerrors.ErrNotFound {
+		writeResponse(w, LayerEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusNotFound)
+	} else if err != nil {
+		writeResponse(w, LayerEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusInternalServerError)
+	}
+
+	return writeHeader(w, http.StatusOK)
 }
 
 func getNamespaces(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
