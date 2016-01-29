@@ -14,58 +14,55 @@
 
 package v1
 
-type ErrorResponse struct {
-	Error Error
-}
-
 type Error struct {
-	Message string
+	Message string `json:"Layer`
 }
 
-type LayerRequest struct {
-	Layer Layer
+type LayerEnvelope struct {
+	Layer Layer `json:"Layer,omitempty"`
+	Error Error `json:"Error,omitempty"`
 }
 
 type Layer struct {
-	Name             string
-	NamespaceName    string
-	Path             string
-	ParentName       string
-	Format           string
-	IndexedByVersion int
-	Features         []Feature
+	Name             string    `json:"Name,omitempty"`
+	NamespaceName    string    `json:"NamespaceName,omitempty"`
+	Path             string    `json:"Path,omitempty"`
+	ParentName       string    `json:"ParentName,omitempty"`
+	Format           string    `json:"Format,omitempty"`
+	IndexedByVersion int       `json:"IndexedByVersion,omitempty"`
+	Features         []Feature `json:"Features,omitempty"`
 }
 
 type Vulnerability struct {
-	Name          string
-	NamespaceName string
-	Description   string
-	Severity      string
-	FixedBy       string
-	FixedIn       []Feature
+	Name          string    `json:"Name,omitempty"`
+	NamespaceName string    `json:"NamespaceName,omitempty"`
+	Description   string    `json:"Description,omitempty"`
+	Severity      string    `json:"Severity,omitempty"`
+	FixedBy       string    `json:"FixedBy,omitempty"`
+	FixedIn       []Feature `json:"FixedIn,omitempty"`
 }
 
 type Feature struct {
-	Name            string
-	Namespace       string
-	Version         string
-	Vulnerabilities []Vulnerability
+	Name            string          `json:"Name,omitempty"`
+	Namespace       string          `json:"Namespace,omitempty"`
+	Version         string          `json:"Version,omitempty"`
+	Vulnerabilities []Vulnerability `json:"Vulnerabilities,omitempty"`
 }
 
 type Notification struct {
-	Name     string
-	Created  string
-	Notified string
-	Deleted  string
-	Limit    int
-	Page     string
-	NextPage string
-	Old      VulnerabilityWithLayers
-	New      VulnerabilityWithLayers
-	Changed  []string
+	Name     string                  `json:"Name,omitempty"`
+	Created  string                  `json:"Created,omitempty"`
+	Notified string                  `json:"Notified,omitempty"`
+	Deleted  string                  `json:"Deleted,omitempty"`
+	Limit    int                     `json:"Limit,omitempty"`
+	Page     string                  `json:"Page,omitempty"`
+	NextPage string                  `json:"NextPage,omitempty"`
+	Old      VulnerabilityWithLayers `json:"Old,omitempty"`
+	New      VulnerabilityWithLayers `json:"New,omitempty"`
+	Changed  []string                `json:"Changed,omitempty"`
 }
 
 type VulnerabilityWithLayers struct {
-	Vulnerability                  Vulnerability
-	LayersIntroducingVulnerability []string
+	Vulnerability                  Vulnerability `json:"Vulnerability,omitempty"`
+	LayersIntroducingVulnerability []string      `json:"LayersIntroducingVulnerability,omitempty"`
 }
