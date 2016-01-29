@@ -143,6 +143,11 @@ func Run(config *config.UpdaterConfig, datastore database.Datastore, st *utils.S
 		}
 	}
 
+	// Clean resources.
+	for _, fetcher := range fetchers {
+		fetcher.Clean()
+	}
+
 	log.Info("updater service stopped")
 }
 

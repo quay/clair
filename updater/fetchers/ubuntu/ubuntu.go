@@ -41,8 +41,6 @@ const (
 )
 
 var (
-	repositoryLocalPath string
-
 	ubuntuIgnoredReleases = map[string]struct{}{
 		"upstream": struct{}{},
 		"devel":    struct{}{},
@@ -79,9 +77,11 @@ var (
 	ErrFilesystem = errors.New("updater/fetchers: something went wrong when interacting with the fs")
 )
 
-// UbuntuFetcher implements updater.Fetcher and get vulnerability updates from
+// UbuntuFetcher implements updater.Fetcher and gets vulnerability updates from
 // the Ubuntu CVE Tracker.
-type UbuntuFetcher struct{}
+type UbuntuFetcher struct {
+	repositoryLocalPath string
+}
 
 func init() {
 	updater.RegisterFetcher("Ubuntu", &UbuntuFetcher{})
@@ -92,7 +92,7 @@ func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp up
 	log.Info("fetching Ubuntu vulnerabilities")
 
 	// Check to see if the repository does not already exist.
-	if _, pathExists := os.Stat(repositoryLocalPath); repositoryLocalPath == "" || os.IsNotExist(pathExists) {
+	if _, pathExists := os.Stat(fetcher.repositoryLocalPath); fetcher.repositoryLocalPath == "" || os.IsNotExist(pathExists) {
 		// Create a temporary folder and download the repository.
 		p, err := ioutil.TempDir(os.TempDir(), "ubuntu-cve-tracker")
 		if err != nil {
@@ -100,23 +100,23 @@ func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp up
 		}
 
 		// bzr wants an empty target directory.
-		repositoryLocalPath = p + "/repository"
+		fetcher.repositoryLocalPath = p + "/repository"
 
 		// Create the new repository.
-		err = createRepository(repositoryLocalPath)
+		err = createRepository(fetcher.repositoryLocalPath)
 		if err != nil {
 			return resp, err
 		}
 	} else {
 		// Update the repository that's already on disk.
-		err = updateRepository(repositoryLocalPath)
+		err = updateRepository(fetcher.repositoryLocalPath)
 		if err != nil {
 			return resp, err
 		}
 	}
 
 	// Get revision number.
-	revisionNumber, err := getRevisionNumber(repositoryLocalPath)
+	revisionNumber, err := getRevisionNumber(fetcher.repositoryLocalPath)
 	if err != nil {
 		return resp, err
 	}
@@ -128,7 +128,7 @@ func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp up
 	}
 
 	// Get the list of vulnerabilities that we have to update.
-	modifiedCVE, err := collectModifiedVulnerabilities(revisionNumber, dbRevisionNumber, repositoryLocalPath)
+	modifiedCVE, err := collectModifiedVulnerabilities(revisionNumber, dbRevisionNumber, fetcher.repositoryLocalPath)
 	if err != nil {
 		return resp, err
 	}
@@ -136,7 +136,7 @@ func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp up
 	notes := make(map[string]struct{})
 	for cvePath := range modifiedCVE {
 		// Open the CVE file.
-		file, err := os.Open(repositoryLocalPath + "/" + cvePath)
+		file, err := os.Open(fetcher.repositoryLocalPath + "/" + cvePath)
 		if err != nil {
 			// This can happen when a file is modified and then moved in another
 			// commit.
@@ -424,4 +424,9 @@ func ubuntuPriorityToSeverity(priority string) types.Priority {
 
 	log.Warning("Could not determine a vulnerability priority from: %s", priority)
 	return types.Unknown
+}
+
+// Clean deletes any allocated resources.
+func (fetcher *UbuntuFetcher) Clean() {
+	os.RemoveAll(fetcher.repositoryLocalPath)
 }

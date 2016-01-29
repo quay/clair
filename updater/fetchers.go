@@ -20,7 +20,12 @@ var fetchers = make(map[string]Fetcher)
 
 // Fetcher represents anything that can fetch vulnerabilities.
 type Fetcher interface {
+	// FetchUpdate gets vulnerability updates.
 	FetchUpdate(database.Datastore) (FetcherResponse, error)
+
+	// Clean deletes any allocated resources.
+	// It is invoked when Clair stops.
+	Clean()
 }
 
 // FetcherResponse represents the sum of results of an update.

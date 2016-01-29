@@ -190,11 +190,11 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 				// Create and add the feature version.
 				pkg := database.FeatureVersion{
 					Feature: database.Feature{
-            Name: pkgName,
-            Namespace:   database.Namespace{
-              Name: "debian:" + database.DebianReleasesMapping[releaseName],
-            },
-          },
+						Name: pkgName,
+						Namespace: database.Namespace{
+							Name: "debian:" + database.DebianReleasesMapping[releaseName],
+						},
+					},
 					Version: version,
 				}
 				vulnerability.FixedIn = append(vulnerability.FixedIn, pkg)
@@ -249,3 +249,6 @@ func urgencyToSeverity(urgency string) types.Priority {
 		return types.Unknown
 	}
 }
+
+// Clean deletes any allocated resources.
+func (fetcher *DebianFetcher) Clean() {}
