@@ -19,8 +19,8 @@ type Error struct {
 }
 
 type LayerEnvelope struct {
-	Layer Layer `json:"Layer,omitempty"`
-	Error Error `json:"Error,omitempty"`
+	Layer *Layer `json:"Layer,omitempty"`
+	Error *Error `json:"Error,omitempty"`
 }
 
 type Layer struct {
@@ -63,6 +63,6 @@ type Notification struct {
 }
 
 type VulnerabilityWithLayers struct {
-	Vulnerability                  Vulnerability `json:"Vulnerability,omitempty"`
-	LayersIntroducingVulnerability []string      `json:"LayersIntroducingVulnerability,omitempty"`
+	Vulnerability                  *Vulnerability `json:"Vulnerability,omitempty"`
+	LayersIntroducingVulnerability []string       `json:"LayersIntroducingVulnerability,omitempty"`
 }

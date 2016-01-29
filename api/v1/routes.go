@@ -52,17 +52,17 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 	request := LayerEnvelope{}
 	err := decodeJSON(r, &request)
 	if err != nil {
-		writeResponse(w, LayerEnvelope{Error: Error{err.Error()}})
+		writeResponse(w, LayerEnvelope{Error: &Error{err.Error()}})
 		return writeHeader(w, http.StatusBadRequest)
 	}
 
 	err = worker.Process(ctx.Store, request.Layer.Name, request.Layer.ParentName, request.Layer.Path, request.Layer.Format)
 	if err != nil {
 		if _, ok := err.(*cerrors.ErrBadRequest); ok {
-			writeResponse(w, LayerEnvelope{Error: Error{err.Error()}})
+			writeResponse(w, LayerEnvelope{Error: &Error{err.Error()}})
 			return writeHeader(w, http.StatusBadRequest)
 		}
-		writeResponse(w, LayerEnvelope{Error: Error{err.Error()}})
+		writeResponse(w, LayerEnvelope{Error: &Error{err.Error()}})
 		return writeHeader(w, http.StatusInternalServerError)
 	}
 
@@ -75,10 +75,10 @@ func getLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *
 
 	dbLayer, err := ctx.Store.FindLayer(p.ByName("layerName"), withFeatures, withVulnerabilities)
 	if err == cerrors.ErrNotFound {
-		writeResponse(w, LayerEnvelope{Error: Error{err.Error()}})
+		writeResponse(w, LayerEnvelope{Error: &Error{err.Error()}})
 		return writeHeader(w, http.StatusNotFound)
 	} else if err != nil {
-		writeResponse(w, LayerEnvelope{Error: Error{err.Error()}})
+		writeResponse(w, LayerEnvelope{Error: &Error{err.Error()}})
 		return writeHeader(w, http.StatusInternalServerError)
 	}
 
@@ -121,7 +121,7 @@ func getLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *
 	}
 
 	// add envelope
-	writeResponse(w, LayerEnvelope{Layer: layer})
+	writeResponse(w, LayerEnvelope{Layer: &layer})
 	return writeHeader(w, http.StatusOK)
 }
 
