@@ -18,14 +18,9 @@ type Error struct {
 	Message string `json:"Layer`
 }
 
-type LayerEnvelope struct {
-	Layer *Layer `json:"Layer,omitempty"`
-	Error *Error `json:"Error,omitempty"`
-}
-
 type Layer struct {
 	Name             string    `json:"Name,omitempty"`
-	NamespaceName    string    `json:"NamespaceName,omitempty"`
+	Namespace        string    `json:"Namespace,omitempty"`
 	Path             string    `json:"Path,omitempty"`
 	ParentName       string    `json:"ParentName,omitempty"`
 	Format           string    `json:"Format,omitempty"`
@@ -34,12 +29,12 @@ type Layer struct {
 }
 
 type Vulnerability struct {
-	Name          string    `json:"Name,omitempty"`
-	NamespaceName string    `json:"NamespaceName,omitempty"`
-	Description   string    `json:"Description,omitempty"`
-	Severity      string    `json:"Severity,omitempty"`
-	FixedBy       string    `json:"FixedBy,omitempty"`
-	FixedIn       []Feature `json:"FixedIn,omitempty"`
+	Name        string    `json:"Name,omitempty"`
+	Namespace   string    `json:"Namespace,omitempty"`
+	Description string    `json:"Description,omitempty"`
+	Severity    string    `json:"Severity,omitempty"`
+	FixedBy     string    `json:"FixedBy,omitempty"`
+	FixedIn     []Feature `json:"FixedIn,omitempty"`
 }
 
 type Feature struct {
@@ -65,4 +60,14 @@ type Notification struct {
 type VulnerabilityWithLayers struct {
 	Vulnerability                  *Vulnerability `json:"Vulnerability,omitempty"`
 	LayersIntroducingVulnerability []string       `json:"LayersIntroducingVulnerability,omitempty"`
+}
+
+type LayerEnvelope struct {
+	Layer *Layer `json:"Layer,omitempty"`
+	Error *Error `json:"Error,omitempty"`
+}
+
+type NamespaceEnvelope struct {
+	Namespaces *[]string `json:"Namespaces,omitempty"`
+	Error      *Error    `json:"Error,omitempty"`
 }

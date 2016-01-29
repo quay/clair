@@ -92,7 +92,7 @@ func getLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *
 	}
 
 	if dbLayer.Namespace != nil {
-		layer.NamespaceName = dbLayer.Namespace.Name
+		layer.Namespace = dbLayer.Namespace.Name
 	}
 
 	if withFeatures || withVulnerabilities && dbLayer.Features != nil {
@@ -105,10 +105,10 @@ func getLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *
 
 			for _, dbVuln := range dbFeatureVersion.AffectedBy {
 				vuln := Vulnerability{
-					Name:          dbVuln.Name,
-					NamespaceName: dbVuln.Namespace.Name,
-					Description:   dbVuln.Description,
-					Severity:      string(dbVuln.Severity),
+					Name:        dbVuln.Name,
+					Namespace:   dbVuln.Namespace.Name,
+					Description: dbVuln.Description,
+					Severity:    string(dbVuln.Severity),
 				}
 
 				if dbVuln.FixedBy != types.MaxVersion {
@@ -138,7 +138,18 @@ func deleteLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ct
 }
 
 func getNamespaces(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
-	return 0
+	dbNamespaces, err := ctx.Store.ListNamespaces()
+	if err != nil {
+		writeResponse(w, NamespaceEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusInternalServerError)
+	}
+	var namespaces []string
+	for _, dbNamespace := range dbNamespaces {
+		namespaces = append(namespaces, dbNamespace.Name)
+	}
+
+	writeResponse(w, NamespaceEnvelope{Namespaces: &namespaces})
+	return writeHeader(w, http.StatusOK)
 }
 
 func postVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
