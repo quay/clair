@@ -19,8 +19,7 @@ type ErrorResponse struct {
 }
 
 type Error struct {
-	Error string
-	Type  string
+	Message string
 }
 
 type LayerRequest struct {
@@ -29,6 +28,7 @@ type LayerRequest struct {
 
 type Layer struct {
 	Name             string
+	NamespaceName    string
 	Path             string
 	ParentName       string
 	Format           string
@@ -37,12 +37,12 @@ type Layer struct {
 }
 
 type Vulnerability struct {
-	Name        string
-	Namespace   string
-	Description string
-	Severity    string
-	FixedBy     string
-	FixedIn     []Feature
+	Name          string
+	NamespaceName string
+	Description   string
+	Severity      string
+	FixedBy       string
+	FixedIn       []Feature
 }
 
 type Feature struct {

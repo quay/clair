@@ -18,12 +18,14 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/coreos/clair/api/context"
 	cerrors "github.com/coreos/clair/utils/errors"
+	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/clair/worker"
 )
 
@@ -35,42 +37,104 @@ func decodeJSON(r *http.Request, v interface{}) error {
 	return json.NewDecoder(io.LimitReader(r.Body, maxBodySize)).Decode(v)
 }
 
-func writeError(w io.Writer, err error, errType string) {
-	err = json.NewEncoder(w).Encode(ErrorResponse{Error{err.Error(), errType}})
+func writeError(w http.ResponseWriter, err error) {
+	writeResponse(w, ErrorResponse{Error{err.Error()}})
+}
+
+func writeResponse(w io.Writer, resp interface{}) {
+	err := json.NewEncoder(w).Encode(resp)
 	if err != nil {
-		panic("v1: failed to marshal error response: " + err.Error())
+		panic("v1: failed to marshal response: " + err.Error())
 	}
+}
+
+func writeHeader(w http.ResponseWriter, status int) int {
+	w.WriteHeader(status)
+	return status
 }
 
 func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
 	request := LayerRequest{}
 	err := decodeJSON(r, &request)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		writeError(w, err, "BadRequest")
-		return http.StatusBadRequest
+		writeError(w, err)
+		return writeHeader(w, http.StatusBadRequest)
 	}
 
 	err = worker.Process(ctx.Store, request.Layer.Name, request.Layer.ParentName, request.Layer.Path, request.Layer.Format)
 	if err != nil {
 		if _, ok := err.(*cerrors.ErrBadRequest); ok {
-			w.WriteHeader(http.StatusBadRequest)
-			writeError(w, err, "BadRequest")
-			return http.StatusBadRequest
+			writeError(w, err)
+			return writeHeader(w, http.StatusBadRequest)
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		writeError(w, err, "InternalServerError")
-		return http.StatusInternalServerError
+		writeError(w, err)
+		return writeHeader(w, http.StatusInternalServerError)
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	return http.StatusCreated
+	return writeHeader(w, http.StatusCreated)
 }
 
 func getLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
-	// ez
-	return 0
+	parsedQuery, err := url.ParseQuery(r.URL.RawQuery)
+	if err != nil {
+		writeError(w, err)
+		return writeHeader(w, http.StatusBadRequest)
+	}
+
+	withFeatures := parsedQuery.Get("features") != ""
+	withVulnerabilities := parsedQuery.Get("vulnerabilities") != ""
+
+	dbLayer, err := ctx.Store.FindLayer(p.ByName("layerName"), withFeatures, withVulnerabilities)
+	if err == cerrors.ErrNotFound {
+		writeError(w, err)
+		return writeHeader(w, http.StatusNotFound)
+	} else if err != nil {
+		writeError(w, err)
+		return writeHeader(w, http.StatusInternalServerError)
+	}
+
+	layer := Layer{
+		Name:             dbLayer.Name,
+		IndexedByVersion: dbLayer.EngineVersion,
+	}
+
+	if dbLayer.Parent != nil {
+		layer.ParentName = dbLayer.Parent.Name
+	}
+
+	if dbLayer.Namespace != nil {
+		layer.NamespaceName = dbLayer.Namespace.Name
+	}
+
+	if withFeatures || withVulnerabilities && dbLayer.Features != nil {
+		for _, dbFeatureVersion := range dbLayer.Features {
+			feature := Feature{
+				Name:      dbFeatureVersion.Feature.Name,
+				Namespace: dbFeatureVersion.Feature.Namespace.Name,
+				Version:   dbFeatureVersion.Version.String(),
+			}
+
+			for _, dbVuln := range dbFeatureVersion.AffectedBy {
+				vuln := Vulnerability{
+					Name:          dbVuln.Name,
+					NamespaceName: dbVuln.Namespace.Name,
+					Description:   dbVuln.Description,
+					Severity:      string(dbVuln.Severity),
+				}
+
+				if dbVuln.FixedBy != types.MaxVersion {
+					vuln.FixedBy = dbVuln.FixedBy.String()
+				}
+				feature.Vulnerabilities = append(feature.Vulnerabilities, vuln)
+			}
+			layer.Features = append(layer.Features, feature)
+		}
+	}
+
+	writeResponse(w, layer)
+	return writeHeader(w, http.StatusOK)
 }
+
 func deleteLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
 	// ez
 	return 0
