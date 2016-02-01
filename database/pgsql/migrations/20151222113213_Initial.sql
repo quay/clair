@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS Vulnerability (
   description TEXT NULL,
   link VARCHAR(128) NULL,
   severity severity NOT NULL,
+  metadata TEXT NULL,
 
   UNIQUE (namespace_id, name));
 

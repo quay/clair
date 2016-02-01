@@ -19,6 +19,7 @@ package updater
 import (
 	"math/rand"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/coreos/clair/config"
@@ -144,6 +145,9 @@ func Run(config *config.UpdaterConfig, datastore database.Datastore, st *utils.S
 	}
 
 	// Clean resources.
+	for _, metadataFetcher := range metadataFetchers {
+		metadataFetcher.Clean()
+	}
 	for _, fetcher := range fetchers {
 		fetcher.Clean()
 	}
@@ -161,10 +165,8 @@ func Update(datastore database.Datastore) {
 	// Fetch updates.
 	status, vulnerabilities, flags, notes := fetch(datastore)
 
-	// TODO(Quentin-M): Complete informations using NVD
-
 	// Insert vulnerabilities.
-	log.Tracef("beginning insertion of %d vulnerabilities for update", len(vulnerabilities))
+	log.Tracef("inserting %d vulnerabilities for update", len(vulnerabilities))
 	err := datastore.InsertVulnerabilities(vulnerabilities)
 	if err != nil {
 		promUpdaterErrorsTotal.Inc()
@@ -204,6 +206,7 @@ func fetch(datastore database.Datastore) (bool, []database.Vulnerability, map[st
 	flags := make(map[string]string)
 
 	// Fetch updates in parallel.
+	log.Info("fetching vulnerability updates")
 	var responseC = make(chan *FetcherResponse, 0)
 	for n, f := range fetchers {
 		go func(name string, fetcher Fetcher) {
@@ -233,7 +236,52 @@ func fetch(datastore database.Datastore) (bool, []database.Vulnerability, map[st
 	}
 
 	close(responseC)
-	return status, vulnerabilities, flags, notes
+	return status, addMetadata(datastore, vulnerabilities), flags, notes
+}
+
+// Add metadata to the specified vulnerabilities using the registered MetadataFetchers, in parallel.
+func addMetadata(datastore database.Datastore, vulnerabilities []database.Vulnerability) []database.Vulnerability {
+	if len(metadataFetchers) == 0 {
+		return vulnerabilities
+	}
+
+	log.Info("adding metadata to vulnerabilities")
+
+	// Wrap vulnerabilities in VulnerabilityWithLock.
+	// It ensures that only one metadata fetcher at a time can modify the Metadata map.
+	vulnerabilitiesWithLocks := make([]*VulnerabilityWithLock, 0, len(vulnerabilities))
+	for i := 0; i < len(vulnerabilities); i++ {
+		vulnerabilitiesWithLocks = append(vulnerabilitiesWithLocks, &VulnerabilityWithLock{
+			Vulnerability: &vulnerabilities[i],
+		})
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(len(metadataFetchers))
+
+	for n, f := range metadataFetchers {
+		go func(name string, metadataFetcher MetadataFetcher) {
+			defer wg.Done()
+
+			// Load the metadata fetcher.
+			if err := metadataFetcher.Load(datastore); err != nil {
+				promUpdaterErrorsTotal.Inc()
+				log.Errorf("an error occured when loading metadata fetcher '%s': %s.", name, err)
+				return
+			}
+
+			// Add metadata to each vulnerability.
+			for _, vulnerability := range vulnerabilitiesWithLocks {
+				metadataFetcher.AddMetadata(vulnerability)
+			}
+
+			metadataFetcher.Unload()
+		}(n, f)
+	}
+
+	wg.Wait()
+
+	return vulnerabilities
 }
 
 func getLastUpdate(datastore database.Datastore) time.Time {

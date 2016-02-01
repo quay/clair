@@ -31,6 +31,7 @@ import (
 	_ "github.com/coreos/clair/updater/fetchers/debian"
 	_ "github.com/coreos/clair/updater/fetchers/rhel"
 	_ "github.com/coreos/clair/updater/fetchers/ubuntu"
+	_ "github.com/coreos/clair/updater/metadata_fetchers/nvd"
 
 	_ "github.com/coreos/clair/worker/detectors/data/aci"
 	_ "github.com/coreos/clair/worker/detectors/data/docker"

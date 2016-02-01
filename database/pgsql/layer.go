@@ -163,7 +163,7 @@ func (pgSQL *pgSQL) loadAffectedBy(featureVersions []database.FeatureVersion) er
 		var vulnerability database.Vulnerability
 		err := rows.Scan(&featureversionID, &vulnerability.ID, &vulnerability.Name,
 			&vulnerability.Description, &vulnerability.Link, &vulnerability.Severity,
-			&vulnerability.Namespace.Name, &vulnerability.FixedBy)
+			&vulnerability.Metadata, &vulnerability.Namespace.Name, &vulnerability.FixedBy)
 		if err != nil {
 			return handleError("s_featureversions_vulnerabilities.Scan()", err)
 		}

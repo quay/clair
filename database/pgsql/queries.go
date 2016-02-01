@@ -104,8 +104,8 @@ func init() {
     ORDER BY ltree.ordering`
 
 	queries["s_featureversions_vulnerabilities"] = `
-    SELECT vafv.featureversion_id, v.id, v.name, v.description, v.link, v.severity, vn.name,
-      vfif.version
+    SELECT vafv.featureversion_id, v.id, v.name, v.description, v.link, v.severity, v.metadata,
+      vn.name, vfif.version
     FROM Vulnerability_Affects_FeatureVersion vafv, Vulnerability v,
          Namespace vn, Vulnerability_FixedIn_Feature vfif
     WHERE vafv.featureversion_id = ANY($1::integer[])
@@ -144,7 +144,7 @@ func init() {
 
 	// vulnerability.go
 	queries["f_vulnerability"] = `
-    SELECT v.id, n.id, v.description, v.link, v.severity, vfif.version, f.id, f.Name
+    SELECT v.id, n.id, v.description, v.link, v.severity, v.metadata, vfif.version, f.id, f.Name
     FROM Vulnerability v
       JOIN Namespace n ON v.namespace_id = n.id
       LEFT JOIN Vulnerability_FixedIn_Feature vfif ON v.id = vfif.vulnerability_id
@@ -152,12 +152,14 @@ func init() {
     WHERE n.Name = $1 AND v.Name = $2`
 
 	queries["i_vulnerability"] = `
-    INSERT INTO Vulnerability(namespace_id, name, description, link, severity)
-    VALUES($1, $2, $3, $4, $5)
+    INSERT INTO Vulnerability(namespace_id, name, description, link, severity, metadata)
+    VALUES($1, $2, $3, $4, $5, $6)
     RETURNING id`
 
 	queries["u_vulnerability"] = `
-    UPDATE Vulnerability SET description = $2, link = $3, severity = $4 WHERE id = $1`
+    UPDATE Vulnerability
+    SET description = $2, link = $3, severity = $4, metadata = $5
+    WHERE id = $1`
 
 	queries["i_vulnerability_fixedin_feature"] = `
     INSERT INTO Vulnerability_FixedIn_Feature(vulnerability_id, feature_id, version)

@@ -14,21 +14,9 @@
 
 package utils
 
-import (
-	"crypto/sha1"
-	"encoding/hex"
-	"regexp"
-)
+import "regexp"
 
 var urlParametersRegexp = regexp.MustCompile(`(\?|\&)([^=]+)\=([^ &]+)`)
-
-// Hash returns an unique hash of the given string.
-func Hash(str string) string {
-	h := sha1.New()
-	h.Write([]byte(str))
-	bs := h.Sum(nil)
-	return hex.EncodeToString(bs)
-}
 
 // CleanURL removes all parameters from an URL.
 func CleanURL(str string) string {

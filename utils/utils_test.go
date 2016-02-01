@@ -56,9 +56,6 @@ func TestExec(t *testing.T) {
 
 // TestString tests the string.go file
 func TestString(t *testing.T) {
-	assert.Equal(t, Hash("abc123"), Hash("abc123"))
-	assert.NotEqual(t, Hash("abc123."), Hash("abc123"))
-
 	assert.False(t, Contains("", []string{}))
 	assert.True(t, Contains("a", []string{"a", "b"}))
 	assert.False(t, Contains("c", []string{"a", "b"}))

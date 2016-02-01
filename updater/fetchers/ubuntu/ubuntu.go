@@ -428,5 +428,7 @@ func ubuntuPriorityToSeverity(priority string) types.Priority {
 
 // Clean deletes any allocated resources.
 func (fetcher *UbuntuFetcher) Clean() {
-	os.RemoveAll(fetcher.repositoryLocalPath)
+	if fetcher.repositoryLocalPath != "" {
+		os.RemoveAll(fetcher.repositoryLocalPath)
+	}
 }

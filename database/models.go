@@ -15,6 +15,8 @@
 package database
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"time"
 
 	"github.com/coreos/clair/utils/types"
@@ -65,12 +67,29 @@ type Vulnerability struct {
 	Link        string
 	Severity    types.Priority
 
+	Metadata MetadataMap
+
 	FixedIn                        []FeatureVersion
 	LayersIntroducingVulnerability []Layer
 
 	// For output purposes. Only make sense when the vulnerability
 	// is already about a specific Feature/FeatureVersion.
 	FixedBy types.Version `json:",omitempty"`
+}
+
+type MetadataMap map[string]interface{}
+
+func (mm *MetadataMap) Scan(value interface{}) error {
+	val, ok := value.([]byte)
+	if !ok {
+		return nil
+	}
+	return json.Unmarshal(val, mm)
+}
+
+func (mm *MetadataMap) Value() (driver.Value, error) {
+	json, err := json.Marshal(*mm)
+	return string(json), err
 }
 
 type VulnerabilityNotification struct {
