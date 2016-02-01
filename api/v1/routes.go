@@ -25,7 +25,6 @@ import (
 	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/database"
 	cerrors "github.com/coreos/clair/utils/errors"
-	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/clair/worker"
 )
 
@@ -88,43 +87,7 @@ func getLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *
 		return writeHeader(w, http.StatusInternalServerError)
 	}
 
-	layer := Layer{
-		Name:             dbLayer.Name,
-		IndexedByVersion: dbLayer.EngineVersion,
-	}
-
-	if dbLayer.Parent != nil {
-		layer.ParentName = dbLayer.Parent.Name
-	}
-
-	if dbLayer.Namespace != nil {
-		layer.Namespace = dbLayer.Namespace.Name
-	}
-
-	if withFeatures || withVulnerabilities && dbLayer.Features != nil {
-		for _, dbFeatureVersion := range dbLayer.Features {
-			feature := Feature{
-				Name:      dbFeatureVersion.Feature.Name,
-				Namespace: dbFeatureVersion.Feature.Namespace.Name,
-				Version:   dbFeatureVersion.Version.String(),
-			}
-
-			for _, dbVuln := range dbFeatureVersion.AffectedBy {
-				vuln := Vulnerability{
-					Name:        dbVuln.Name,
-					Namespace:   dbVuln.Namespace.Name,
-					Description: dbVuln.Description,
-					Severity:    string(dbVuln.Severity),
-				}
-
-				if dbVuln.FixedBy != types.MaxVersion {
-					vuln.FixedBy = dbVuln.FixedBy.String()
-				}
-				feature.Vulnerabilities = append(feature.Vulnerabilities, vuln)
-			}
-			layer.Features = append(layer.Features, feature)
-		}
-	}
+	layer := LayerFromDatabaseModel(dbLayer, withFeatures, withVulnerabilities)
 
 	writeResponse(w, LayerEnvelope{Layer: &layer})
 	return writeHeader(w, http.StatusOK)
@@ -171,36 +134,10 @@ func postVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Para
 		return writeHeader(w, http.StatusBadRequest)
 	}
 
-	severity := types.Priority(request.Vulnerability.Severity)
-	if !severity.IsValid() {
-		writeResponse(w, VulnerabilityEnvelope{Error: &Error{"invalid severity"}})
+	vuln, err := request.Vulnerability.DatabaseModel()
+	if err != nil {
+		writeResponse(w, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return writeHeader(w, http.StatusBadRequest)
-	}
-
-	var dbFeatures []database.FeatureVersion
-	for _, feature := range request.Vulnerability.FixedIn {
-		version, err := types.NewVersion(feature.Version)
-		if err != nil {
-			writeResponse(w, VulnerabilityEnvelope{Error: &Error{err.Error()}})
-			return writeHeader(w, http.StatusBadRequest)
-		}
-
-		dbFeatures = append(dbFeatures, database.FeatureVersion{
-			Feature: database.Feature{
-				Name:      feature.Name,
-				Namespace: database.Namespace{Name: feature.Namespace},
-			},
-			Version: version,
-		})
-	}
-
-	vuln := database.Vulnerability{
-		Name:        request.Vulnerability.Name,
-		Namespace:   database.Namespace{Name: request.Vulnerability.Namespace},
-		Description: request.Vulnerability.Description,
-		Link:        request.Vulnerability.Link,
-		Severity:    severity,
-		FixedIn:     dbFeatures,
 	}
 
 	err = ctx.Store.InsertVulnerabilities([]database.Vulnerability{vuln})
@@ -213,8 +150,21 @@ func postVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Para
 }
 
 func getVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
-	// ez
-	return 0
+	_, withFixedIn := r.URL.Query()["fixedIn"]
+
+	dbVuln, err := ctx.Store.FindVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
+	if err == cerrors.ErrNotFound {
+		writeResponse(w, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusNotFound)
+	} else if err != nil {
+		writeResponse(w, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusInternalServerError)
+	}
+
+	vuln := VulnerabilityFromDatabaseModel(dbVuln, withFixedIn)
+
+	writeResponse(w, VulnerabilityEnvelope{Vulnerability: &vuln})
+	return writeHeader(w, http.StatusOK)
 }
 func patchVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
 	// ez

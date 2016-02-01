@@ -14,6 +14,13 @@
 
 package v1
 
+import (
+	"errors"
+
+	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/utils/types"
+)
+
 type Error struct {
 	Message string `json:"Layer`
 }
@@ -28,6 +35,48 @@ type Layer struct {
 	Features         []Feature `json:"Features,omitempty"`
 }
 
+func LayerFromDatabaseModel(dbLayer database.Layer, withFeatures, withVulnerabilities bool) Layer {
+	layer := Layer{
+		Name:             dbLayer.Name,
+		IndexedByVersion: dbLayer.EngineVersion,
+	}
+
+	if dbLayer.Parent != nil {
+		layer.ParentName = dbLayer.Parent.Name
+	}
+
+	if dbLayer.Namespace != nil {
+		layer.Namespace = dbLayer.Namespace.Name
+	}
+
+	if withFeatures || withVulnerabilities && dbLayer.Features != nil {
+		for _, dbFeatureVersion := range dbLayer.Features {
+			feature := Feature{
+				Name:      dbFeatureVersion.Feature.Name,
+				Namespace: dbFeatureVersion.Feature.Namespace.Name,
+				Version:   dbFeatureVersion.Version.String(),
+			}
+
+			for _, dbVuln := range dbFeatureVersion.AffectedBy {
+				vuln := Vulnerability{
+					Name:        dbVuln.Name,
+					Namespace:   dbVuln.Namespace.Name,
+					Description: dbVuln.Description,
+					Severity:    string(dbVuln.Severity),
+				}
+
+				if dbVuln.FixedBy != types.MaxVersion {
+					vuln.FixedBy = dbVuln.FixedBy.String()
+				}
+				feature.Vulnerabilities = append(feature.Vulnerabilities, vuln)
+			}
+			layer.Features = append(layer.Features, feature)
+		}
+	}
+
+	return layer
+}
+
 type Vulnerability struct {
 	Name        string    `json:"Name,omitempty"`
 	Namespace   string    `json:"Namespace,omitempty"`
@@ -36,6 +85,60 @@ type Vulnerability struct {
 	Severity    string    `json:"Severity,omitempty"`
 	FixedBy     string    `json:"FixedBy,omitempty"`
 	FixedIn     []Feature `json:"FixedIn,omitempty"`
+}
+
+func (v Vulnerability) DatabaseModel() (database.Vulnerability, error) {
+	severity := types.Priority(v.Severity)
+	if !severity.IsValid() {
+		return database.Vulnerability{}, errors.New("Invalid severity")
+	}
+
+	var dbFeatures []database.FeatureVersion
+	for _, feature := range v.FixedIn {
+		version, err := types.NewVersion(feature.Version)
+		if err != nil {
+			return database.Vulnerability{}, err
+		}
+
+		dbFeatures = append(dbFeatures, database.FeatureVersion{
+			Feature: database.Feature{
+				Name:      feature.Name,
+				Namespace: database.Namespace{Name: feature.Namespace},
+			},
+			Version: version,
+		})
+	}
+
+	return database.Vulnerability{
+		Name:        v.Name,
+		Namespace:   database.Namespace{Name: v.Namespace},
+		Description: v.Description,
+		Link:        v.Link,
+		Severity:    severity,
+		FixedIn:     dbFeatures,
+	}, nil
+}
+
+func VulnerabilityFromDatabaseModel(dbVuln database.Vulnerability, withFixedIn bool) Vulnerability {
+	vuln := Vulnerability{
+		Name:        dbVuln.Name,
+		Namespace:   dbVuln.Namespace.Name,
+		Description: dbVuln.Description,
+		Link:        dbVuln.Link,
+		Severity:    string(dbVuln.Severity),
+	}
+
+	if withFixedIn {
+		for _, dbFeatureVersion := range dbVuln.FixedIn {
+			vuln.FixedIn = append(vuln.FixedIn, Feature{
+				Name:      dbFeatureVersion.Feature.Name,
+				Namespace: dbFeatureVersion.Feature.Namespace.Name,
+				Version:   dbFeatureVersion.Version.String(),
+			})
+		}
+	}
+
+	return vuln
 }
 
 type Feature struct {
