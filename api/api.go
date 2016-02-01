@@ -69,6 +69,8 @@ func Run(config *config.APIConfig, ctx *context.RouteContext, st *utils.Stopper)
 }
 
 func RunHealth(config *config.APIConfig, ctx *context.RouteContext, st *utils.Stopper) {
+	defer st.End()
+
 	// Do not run the API service if there is no config.
 	if config == nil {
 		log.Infof("health API service is disabled.")
