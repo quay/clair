@@ -167,9 +167,37 @@ func getVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 	return writeHeader(w, http.StatusOK)
 }
 
-func patchVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
-	// ez
-	return 0
+func putVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
+	request := VulnerabilityEnvelope{}
+	err := decodeJSON(r, &request)
+	if err != nil {
+		writeResponse(w, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusBadRequest)
+	}
+
+	if request.Vulnerability == nil {
+		writeResponse(w, VulnerabilityEnvelope{Error: &Error{"failed to provide vulnerability"}})
+		return writeHeader(w, http.StatusBadRequest)
+	}
+
+	if len(request.Vulnerability.FixedIn) != 0 {
+		writeResponse(w, VulnerabilityEnvelope{Error: &Error{"Vulnerability.FixedIn must be empty"}})
+		return writeHeader(w, http.StatusBadRequest)
+	}
+
+	vuln, err := request.Vulnerability.DatabaseModel()
+	if err != nil {
+		writeResponse(w, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusBadRequest)
+	}
+
+	err = ctx.Store.InsertVulnerabilities([]database.Vulnerability{vuln})
+	if err != nil {
+		writeResponse(w, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusInternalServerError)
+	}
+
+	return writeHeader(w, http.StatusOK)
 }
 
 func deleteVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
