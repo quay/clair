@@ -23,6 +23,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/coreos/clair/api/context"
+	"github.com/coreos/clair/database"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/clair/worker"
@@ -53,6 +54,11 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 	err := decodeJSON(r, &request)
 	if err != nil {
 		writeResponse(w, LayerEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusBadRequest)
+	}
+
+	if request.Layer == nil {
+		writeResponse(w, LayerEnvelope{Error: &Error{"failed to provide layer"}})
 		return writeHeader(w, http.StatusBadRequest)
 	}
 
@@ -153,9 +159,59 @@ func getNamespaces(w http.ResponseWriter, r *http.Request, p httprouter.Params, 
 }
 
 func postVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
-	// ez
-	return 0
+	request := VulnerabilityEnvelope{}
+	err := decodeJSON(r, &request)
+	if err != nil {
+		writeResponse(w, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusBadRequest)
+	}
+
+	if request.Vulnerability == nil {
+		writeResponse(w, VulnerabilityEnvelope{Error: &Error{"failed to provide vulnerability"}})
+		return writeHeader(w, http.StatusBadRequest)
+	}
+
+	severity := types.Priority(request.Vulnerability.Severity)
+	if !severity.IsValid() {
+		writeResponse(w, VulnerabilityEnvelope{Error: &Error{"invalid severity"}})
+		return writeHeader(w, http.StatusBadRequest)
+	}
+
+	var dbFeatures []database.FeatureVersion
+	for _, feature := range request.Vulnerability.FixedIn {
+		version, err := types.NewVersion(feature.Version)
+		if err != nil {
+			writeResponse(w, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+			return writeHeader(w, http.StatusBadRequest)
+		}
+
+		dbFeatures = append(dbFeatures, database.FeatureVersion{
+			Feature: database.Feature{
+				Name:      feature.Name,
+				Namespace: database.Namespace{Name: feature.Namespace},
+			},
+			Version: version,
+		})
+	}
+
+	vuln := database.Vulnerability{
+		Name:        request.Vulnerability.Name,
+		Namespace:   database.Namespace{Name: request.Vulnerability.Namespace},
+		Description: request.Vulnerability.Description,
+		Link:        request.Vulnerability.Link,
+		Severity:    severity,
+		FixedIn:     dbFeatures,
+	}
+
+	err = ctx.Store.InsertVulnerabilities([]database.Vulnerability{vuln})
+	if err != nil {
+		writeResponse(w, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusInternalServerError)
+	}
+
+	return writeHeader(w, http.StatusCreated)
 }
+
 func getVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
 	// ez
 	return 0

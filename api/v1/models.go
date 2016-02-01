@@ -32,6 +32,7 @@ type Vulnerability struct {
 	Name        string    `json:"Name,omitempty"`
 	Namespace   string    `json:"Namespace,omitempty"`
 	Description string    `json:"Description,omitempty"`
+	Link        string    `json:"Link,omitempty"`
 	Severity    string    `json:"Severity,omitempty"`
 	FixedBy     string    `json:"FixedBy,omitempty"`
 	FixedIn     []Feature `json:"FixedIn,omitempty"`
@@ -70,4 +71,9 @@ type LayerEnvelope struct {
 type NamespaceEnvelope struct {
 	Namespaces *[]string `json:"Namespaces,omitempty"`
 	Error      *Error    `json:"Error,omitempty"`
+}
+
+type VulnerabilityEnvelope struct {
+	Vulnerability *Vulnerability `json:"Vulnerability,omitempty"`
+	Error         *Error         `json:"Error,omitempty"`
 }
