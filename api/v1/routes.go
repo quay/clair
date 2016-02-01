@@ -166,13 +166,23 @@ func getVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 	writeResponse(w, VulnerabilityEnvelope{Vulnerability: &vuln})
 	return writeHeader(w, http.StatusOK)
 }
+
 func patchVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
 	// ez
 	return 0
 }
+
 func deleteVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
-	// ez
-	return 0
+	err := ctx.Store.DeleteVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
+	if err == cerrors.ErrNotFound {
+		writeResponse(w, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusNotFound)
+	} else if err != nil {
+		writeResponse(w, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusInternalServerError)
+	}
+
+	return writeHeader(w, http.StatusOK)
 }
 
 func postFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
