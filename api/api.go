@@ -109,8 +109,10 @@ func listenAndServeWithStopper(srv *graceful.Server, st *utils.Stopper, certFile
 		err = srv.ListenAndServe()
 	}
 
-	if opErr, ok := err.(*net.OpError); !ok || (ok && opErr.Op != "accept") {
-		log.Fatal(err)
+	if err != nil {
+		if opErr, ok := err.(*net.OpError); !ok || (ok && opErr.Op != "accept") {
+			log.Fatal(err)
+		}
 	}
 }
 
