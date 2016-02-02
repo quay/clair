@@ -151,6 +151,14 @@ func init() {
       LEFT JOIN Feature f ON vfif.feature_id = f.id
     WHERE n.Name = $1 AND v.Name = $2`
 
+	queries["f_vulnerability_for_update"] = `
+    SELECT FOR UPDATE v.id, n.id, v.description, v.link, v.severity, v.metadata, vfif.version, f.id, f.Name
+    FROM Vulnerability v
+      JOIN Namespace n ON v.namespace_id = n.id
+      LEFT JOIN Vulnerability_FixedIn_Feature vfif ON v.id = vfif.vulnerability_id
+      LEFT JOIN Feature f ON vfif.feature_id = f.id
+    WHERE n.Name = $1 AND v.Name = $2`
+
 	queries["i_vulnerability"] = `
     INSERT INTO Vulnerability(namespace_id, name, description, link, severity, metadata)
     VALUES($1, $2, $3, $4, $5, $6)

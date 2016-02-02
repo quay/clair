@@ -74,6 +74,11 @@ func init() {
 	prometheus.MustRegister(promConcurrentLockVAFV)
 }
 
+type Queryer interface {
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryRow(query string, args ...interface{}) *sql.Row
+}
+
 type pgSQL struct {
 	*sql.DB
 	cache *lru.ARCCache
