@@ -172,6 +172,11 @@ func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotifica
 		*oldVuln = VulnerabilityWithLayersFromDatabaseModel(*dbNotification.OldVulnerability)
 	}
 
+	var nextPageStr string
+	if nextPage != database.NoVulnerabilityNotificationPage {
+		nextPageStr = DBPageNumberToString(nextPage)
+	}
+
 	// TODO(jzelinskie): implement "changed" key
 	return Notification{
 		Name:     dbNotification.Name,
@@ -180,7 +185,7 @@ func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotifica
 		Deleted:  fmt.Sprintf("%d", dbNotification.Deleted.Unix()),
 		Limit:    limit,
 		Page:     DBPageNumberToString(page),
-		NextPage: DBPageNumberToString(nextPage),
+		NextPage: nextPageStr,
 		Old:      oldVuln,
 		New:      VulnerabilityWithLayersFromDatabaseModel(dbNotification.NewVulnerability),
 	}
