@@ -715,7 +715,7 @@
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
-          "span": 10,
+          "span": 8,
           "stack": false,
           "steppedLine": false,
           "targets": [
@@ -785,7 +785,62 @@
             }
           ],
           "thresholds": "0,90,95",
-          "title": "GETLayers [< 300 ms @ TP95]",
+          "title": "getLayer [Percentage < 300 ms]",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "avg"
+        },
+        {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": true,
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "datasource": null,
+          "editable": true,
+          "error": false,
+          "format": "ms",
+          "id": 12,
+          "interval": null,
+          "isNew": true,
+          "links": [],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "span": 2,
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": true
+          },
+          "targets": [
+            {
+              "expr": "histogram_quantile(0.95, sum(rate(clair_api_query_duration_milliseconds_bucket{query=\"getLayer\"}[$rate])) by (le))",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "",
+              "metric": "clair_api_query_duration_milliseconds_bucket",
+              "refId": "A",
+              "step": 21
+            }
+          ],
+          "thresholds": "50,100,300",
+          "title": "getLayer [95th percentile]",
           "type": "singlestat",
           "valueFontSize": "80%",
           "valueMaps": [
@@ -847,8 +902,8 @@
         "auto_count": 5,
         "current": {
           "tags": [],
-          "text": "5m",
-          "value": "5m"
+          "text": "10m",
+          "value": "10m"
         },
         "datasource": null,
         "hideLabel": false,
@@ -884,12 +939,12 @@
             "value": "1m"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "5m",
             "value": "5m"
           },
           {
-            "selected": false,
+            "selected": true,
             "text": "10m",
             "value": "10m"
           },
@@ -956,11 +1011,6 @@
             "selected": true,
             "text": "All",
             "value": ".*"
-          },
-          {
-            "selected": false,
-            "text": "192.168.99.1:6061",
-            "value": "192\\.168\\.99\\.1\\:6061"
           }
         ],
         "query": "label_values(instance)",
@@ -976,6 +1026,6 @@
   },
   "refresh": "5s",
   "schemaVersion": 8,
-  "version": 23,
+  "version": 2,
   "links": []
 }
