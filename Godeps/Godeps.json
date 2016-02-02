@@ -10,26 +10,21 @@
 			"Rev": "8488cc47d90c8a502b1c41a462a6d9cc8ee0a895"
 		},
 		{
-			"ImportPath": "github.com/Sirupsen/logrus",
-			"Comment": "v0.8.7-55-gf7f79f7",
-			"Rev": "f7f79f729e0fbe2fcc061db48a9ba0263f588252"
-		},
-		{
 			"ImportPath": "github.com/beorn7/perks/quantile",
 			"Rev": "b965b613227fddccbfffe13eae360ed3fa822f8d"
 		},
 		{
 			"ImportPath": "github.com/coreos/go-systemd/journal",
-			"Comment": "v4-40-g2ed5b50",
-			"Rev": "2ed5b5012ccde5f057c197890a2c801295941149"
+			"Comment": "v4-34-g4f14f6d",
+			"Rev": "4f14f6deef2da87e4aa59e6c1c1f3e02ba44c5e1"
 		},
 		{
 			"ImportPath": "github.com/coreos/pkg/capnslog",
-			"Rev": "fa92df939cff437b00010275644a10882beaeca8"
+			"Rev": "2c77715c4df99b5420ffcae14ead08f52104065d"
 		},
 		{
 			"ImportPath": "github.com/coreos/pkg/timeutil",
-			"Rev": "fa92df939cff437b00010275644a10882beaeca8"
+			"Rev": "2c77715c4df99b5420ffcae14ead08f52104065d"
 		},
 		{
 			"ImportPath": "github.com/davecgh/go-spew/spew",
@@ -37,12 +32,12 @@
 		},
 		{
 			"ImportPath": "github.com/go-sql-driver/mysql",
-			"Comment": "v1.2-156-g7c7f556",
-			"Rev": "7c7f556282622f94213bc028b4d0a7b6151ba239"
+			"Comment": "v1.2-125-gd512f20",
+			"Rev": "d512f204a577a4ab037a1816604c48c9c13210be"
 		},
 		{
 			"ImportPath": "github.com/golang/protobuf/proto",
-			"Rev": "6aaa8d47701fa6cf07e914ec01fde3d4a1fe79c3"
+			"Rev": "5fc2294e655b78ed8a02082d37808d46c17d7e64"
 		},
 		{
 			"ImportPath": "github.com/guregu/null/zero",
@@ -55,8 +50,8 @@
 		},
 		{
 			"ImportPath": "github.com/julienschmidt/httprouter",
-			"Comment": "v1.1-16-gabb0dc9",
-			"Rev": "abb0dc9f755ff0a9d818db28d9d8b9810066e2b5"
+			"Comment": "v1.1-14-g21439ef",
+			"Rev": "21439ef4d70ba4f3e2a5ed9249e7b03af4019b40"
 		},
 		{
 			"ImportPath": "github.com/kylelemons/go-gypsy/yaml",
@@ -65,13 +60,13 @@
 		},
 		{
 			"ImportPath": "github.com/lib/pq",
-			"Comment": "go1.0-cutoff-74-g8ad2b29",
-			"Rev": "8ad2b298cadd691a77015666a5372eae5dbfac8f"
+			"Comment": "go1.0-cutoff-63-g11fc39a",
+			"Rev": "11fc39a580a008f1f39bb3d11d984fb34ed778d9"
 		},
 		{
 			"ImportPath": "github.com/mattn/go-sqlite3",
-			"Comment": "v1.1.0-32-gf33c976",
-			"Rev": "f33c9767fbdd0d10fab2b7bf056e80bdf30c8ed1"
+			"Comment": "v1.1.0-30-g5510da3",
+			"Rev": "5510da399572b4962c020184bb291120c0a412e2"
 		},
 		{
 			"ImportPath": "github.com/matttproud/golang_protobuf_extensions/pbutil",
@@ -83,7 +78,7 @@
 		},
 		{
 			"ImportPath": "github.com/pmezard/go-difflib/difflib",
-			"Rev": "792786c7400a136282c1664665ae0a8db921c6c2"
+			"Rev": "e8554b8641db39598be7f6342874b958f12ae1d4"
 		},
 		{
 			"ImportPath": "github.com/prometheus/client_golang/prometheus",
@@ -97,19 +92,15 @@
 		},
 		{
 			"ImportPath": "github.com/prometheus/common/expfmt",
-			"Rev": "14ca1097bbe21584194c15e391a9dab95ad42a59"
+			"Rev": "dba5e39d4516169e840def50e507ef5f21b985f9"
 		},
 		{
 			"ImportPath": "github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg",
-			"Rev": "14ca1097bbe21584194c15e391a9dab95ad42a59"
-		},
-		{
-			"ImportPath": "github.com/prometheus/common/log",
-			"Rev": "14ca1097bbe21584194c15e391a9dab95ad42a59"
+			"Rev": "dba5e39d4516169e840def50e507ef5f21b985f9"
 		},
 		{
 			"ImportPath": "github.com/prometheus/common/model",
-			"Rev": "14ca1097bbe21584194c15e391a9dab95ad42a59"
+			"Rev": "dba5e39d4516169e840def50e507ef5f21b985f9"
 		},
 		{
 			"ImportPath": "github.com/prometheus/procfs",
@@ -117,13 +108,13 @@
 		},
 		{
 			"ImportPath": "github.com/stretchr/testify/assert",
-			"Comment": "v1.1.3",
-			"Rev": "f390dcf405f7b83c997eac1b06768bb9f44dec18"
+			"Comment": "v1.0-91-g5b9da39",
+			"Rev": "5b9da39b66e8e994455c2525c4421c8cc00a7f93"
 		},
 		{
 			"ImportPath": "github.com/tylerb/graceful",
-			"Comment": "v1.2.4",
-			"Rev": "119c58e176bce26fd40698146d9a106c8f1723a5"
+			"Comment": "v1.2.3",
+			"Rev": "48afeb21e2fcbcff0f30bd5ad6b97747b0fae38e"
 		},
 		{
 			"ImportPath": "github.com/ziutek/mymysql/godrv",
@@ -142,11 +133,7 @@
 		},
 		{
 			"ImportPath": "golang.org/x/net/netutil",
-			"Rev": "04b9de9b512f58addf28c9853d50ebef61c3953e"
-		},
-		{
-			"ImportPath": "golang.org/x/sys/unix",
-			"Rev": "eb2c74142fd19a79b3f237334c7384d5167b1b46"
+			"Rev": "1d7a0b2100da090d8b02afcfb42f97e2c77e71a4"
 		},
 		{
 			"ImportPath": "gopkg.in/yaml.v2",

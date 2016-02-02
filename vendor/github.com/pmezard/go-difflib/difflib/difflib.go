@@ -585,15 +585,13 @@ func WriteUnifiedDiff(writer io.Writer, diff UnifiedDiff) error {
 			if len(diff.ToDate) > 0 {
 				toDate = "\t" + diff.ToDate
 			}
-			if diff.FromFile != "" || diff.ToFile != "" {
-				err := wf("--- %s%s%s", diff.FromFile, fromDate, diff.Eol)
-				if err != nil {
-					return err
-				}
-				err = wf("+++ %s%s%s", diff.ToFile, toDate, diff.Eol)
-				if err != nil {
-					return err
-				}
+			err := wf("--- %s%s%s", diff.FromFile, fromDate, diff.Eol)
+			if err != nil {
+				return err
+			}
+			err = wf("+++ %s%s%s", diff.ToFile, toDate, diff.Eol)
+			if err != nil {
+				return err
 			}
 		}
 		first, last := g[0], g[len(g)-1]
@@ -712,10 +710,8 @@ func WriteContextDiff(writer io.Writer, diff ContextDiff) error {
 			if len(diff.ToDate) > 0 {
 				toDate = "\t" + diff.ToDate
 			}
-			if diff.FromFile != "" || diff.ToFile != "" {
-				wf("*** %s%s%s", diff.FromFile, fromDate, diff.Eol)
-				wf("--- %s%s%s", diff.ToFile, toDate, diff.Eol)
-			}
+			wf("*** %s%s%s", diff.FromFile, fromDate, diff.Eol)
+			wf("--- %s%s%s", diff.ToFile, toDate, diff.Eol)
 		}
 
 		first, last := g[0], g[len(g)-1]

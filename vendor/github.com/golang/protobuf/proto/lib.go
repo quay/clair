@@ -235,7 +235,6 @@ To create and play with a Test object:
 		test := &pb.Test{
 			Label: proto.String("hello"),
 			Type:  proto.Int32(17),
-			Reps:  []int64{1, 2, 3},
 			Optionalgroup: &pb.Test_OptionalGroup{
 				RequiredField: proto.String("good bye"),
 			},

@@ -38,7 +38,6 @@ Optionally, a benchmark suite can be run as part of the tests:
 * Many libpq compatible environment variables
 * Unix socket support
 * Notifications: `LISTEN`/`NOTIFY`
-* pgpass support
 
 ## Future / Things you can help with
 
@@ -68,7 +67,6 @@ code still exists in here.
 * Everyone at The Go Team
 * Evan Shaw (edsrzf)
 * Ewan Chou (coocood)
-* Fazal Majid (fazalmajid)
 * Federico Romero (federomero)
 * Fumin (fumin)
 * Gary Burd (garyburd)
