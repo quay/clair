@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/prometheus/client_golang/prometheus"
@@ -227,9 +228,41 @@ func deleteFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 }
 
 func getNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
-	// ez
-	return 0
+	query := r.URL.Query()
+
+	limitStrs, limitExists := query["limit"]
+	if !limitExists {
+		writeResponse(w, NotificationEnvelope{Error: &Error{"must provide limit query parameter"}})
+		return writeHeader(w, http.StatusBadRequest)
+	}
+	limit, err := strconv.Atoi(limitStrs[0])
+	if err != nil {
+		writeResponse(w, NotificationEnvelope{Error: &Error{"invalid limit format: " + err.Error()}})
+		return writeHeader(w, http.StatusBadRequest)
+	}
+
+	page := database.VulnerabilityNotificationFirstPage
+	pageStrs, pageExists := query["page"]
+	if pageExists {
+		page, err = pageStringToDBPageNumber(pageStrs[0])
+		if err != nil {
+			writeResponse(w, NotificationEnvelope{Error: &Error{"invalid page format: " + err.Error()}})
+			return writeHeader(w, http.StatusBadRequest)
+		}
+	}
+
+	dbNotification, nextPage, err := ctx.Store.GetNotification(p.ByName("notificationName"), limit, page)
+	if err != nil {
+		writeResponse(w, NotificationEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusInternalServerError)
+	}
+
+	notification := NotificationFromDatabaseModel(dbNotification, limit, page, nextPage)
+
+	writeResponse(w, NotificationEnvelope{Notification: &notification})
+	return writeHeader(w, http.StatusOK)
 }
+
 func deleteNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
 	// ez
 	return 0

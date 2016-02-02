@@ -16,6 +16,7 @@ package v1
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils/types"
@@ -153,21 +154,55 @@ type Feature struct {
 }
 
 type Notification struct {
-	Name     string                  `json:"Name,omitempty"`
-	Created  string                  `json:"Created,omitempty"`
-	Notified string                  `json:"Notified,omitempty"`
-	Deleted  string                  `json:"Deleted,omitempty"`
-	Limit    int                     `json:"Limit,omitempty"`
-	Page     string                  `json:"Page,omitempty"`
-	NextPage string                  `json:"NextPage,omitempty"`
-	Old      VulnerabilityWithLayers `json:"Old,omitempty"`
-	New      VulnerabilityWithLayers `json:"New,omitempty"`
-	Changed  []string                `json:"Changed,omitempty"`
+	Name     string                   `json:"Name,omitempty"`
+	Created  string                   `json:"Created,omitempty"`
+	Notified string                   `json:"Notified,omitempty"`
+	Deleted  string                   `json:"Deleted,omitempty"`
+	Limit    int                      `json:"Limit,omitempty"`
+	Page     string                   `json:"Page,omitempty"`
+	NextPage string                   `json:"NextPage,omitempty"`
+	Old      *VulnerabilityWithLayers `json:"Old,omitempty"`
+	New      VulnerabilityWithLayers  `json:"New,omitempty"`
+	Changed  []string                 `json:"Changed,omitempty"`
+}
+
+func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotification, limit int, page, nextPage database.VulnerabilityNotificationPageNumber) Notification {
+	var oldVuln *VulnerabilityWithLayers
+	if dbNotification.OldVulnerability != nil {
+		*oldVuln = VulnerabilityWithLayersFromDatabaseModel(*dbNotification.OldVulnerability)
+	}
+
+	// TODO(jzelinskie): implement "changed" key
+	return Notification{
+		Name:     dbNotification.Name,
+		Created:  fmt.Sprintf("%d", dbNotification.Created.Unix()),
+		Notified: fmt.Sprintf("%d", dbNotification.Notified.Unix()),
+		Deleted:  fmt.Sprintf("%d", dbNotification.Deleted.Unix()),
+		Limit:    limit,
+		Page:     DBPageNumberToString(page),
+		NextPage: DBPageNumberToString(nextPage),
+		Old:      oldVuln,
+		New:      VulnerabilityWithLayersFromDatabaseModel(dbNotification.NewVulnerability),
+	}
 }
 
 type VulnerabilityWithLayers struct {
 	Vulnerability                  *Vulnerability `json:"Vulnerability,omitempty"`
 	LayersIntroducingVulnerability []string       `json:"LayersIntroducingVulnerability,omitempty"`
+}
+
+func VulnerabilityWithLayersFromDatabaseModel(dbVuln database.Vulnerability) VulnerabilityWithLayers {
+	vuln := VulnerabilityFromDatabaseModel(dbVuln, true)
+
+	var layers []string
+	for _, layer := range dbVuln.LayersIntroducingVulnerability {
+		layers = append(layers, layer.Name)
+	}
+
+	return VulnerabilityWithLayers{
+		Vulnerability:                  &vuln,
+		LayersIntroducingVulnerability: layers,
+	}
 }
 
 type LayerEnvelope struct {
@@ -183,4 +218,21 @@ type NamespaceEnvelope struct {
 type VulnerabilityEnvelope struct {
 	Vulnerability *Vulnerability `json:"Vulnerability,omitempty"`
 	Error         *Error         `json:"Error,omitempty"`
+}
+
+type NotificationEnvelope struct {
+	Notification *Notification `json:"Notification,omitempty"`
+	Error        *Error        `json:"Error,omitempty"`
+}
+
+func pageStringToDBPageNumber(pageStr string) (database.VulnerabilityNotificationPageNumber, error) {
+	// TODO(jzelinskie): turn pagination into an encrypted token
+	var old, new int
+	_, err := fmt.Sscanf(pageStr, "%d-%d", &old, &new)
+	return database.VulnerabilityNotificationPageNumber{old, new}, err
+}
+
+func DBPageNumberToString(page database.VulnerabilityNotificationPageNumber) string {
+	// TODO(jzelinskie): turn pagination into an encrypted token
+	return fmt.Sprintf("%d-%d", page.OldVulnerability, page.NewVulnerability)
 }
