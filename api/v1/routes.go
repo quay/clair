@@ -264,8 +264,16 @@ func getNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params
 }
 
 func deleteNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
-	// ez
-	return 0
+	err := ctx.Store.DeleteNotification(p.ByName("notificationName"))
+	if err == cerrors.ErrNotFound {
+		writeResponse(w, NotificationEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusNotFound)
+	} else if err != nil {
+		writeResponse(w, NotificationEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusInternalServerError)
+	}
+
+	return writeHeader(w, http.StatusOK)
 }
 
 func getMetrics(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
