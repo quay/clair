@@ -18,6 +18,5 @@ WORKDIR /go/src/github.com/coreos/clair/
 
 ENV GO15VENDOREXPERIMENT 1
 RUN go install -v github.com/coreos/clair/cmd/clair
-RUN go test $(go list ./... | grep -v /vendor/) # https://github.com/golang/go/issues/11659
 
 ENTRYPOINT ["clair"]
