@@ -37,7 +37,10 @@ func decodeJSON(r *http.Request, v interface{}) error {
 	return json.NewDecoder(io.LimitReader(r.Body, maxBodySize)).Decode(v)
 }
 
-func writeResponse(w io.Writer, resp interface{}) {
+func writeResponse(w http.ResponseWriter, resp interface{}) {
+	header := w.Header()
+	header.Set("Content-Type", "application/json;charset=utf-8")
+	header.Set("Server", "clair")
 	err := json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		panic("v1: failed to marshal response: " + err.Error())
