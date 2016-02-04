@@ -89,7 +89,7 @@ func (pgSQL *pgSQL) Close() {
 }
 
 func (pgSQL *pgSQL) Ping() bool {
-	return pgSQL.Ping()
+	return pgSQL.DB.Ping() == nil
 }
 
 // Open creates a Datastore backed by a PostgreSQL database.
