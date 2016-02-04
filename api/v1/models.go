@@ -129,11 +129,7 @@ func VulnerabilityFromDatabaseModel(dbVuln database.Vulnerability, withFixedIn b
 
 	if withFixedIn {
 		for _, dbFeatureVersion := range dbVuln.FixedIn {
-			vuln.FixedIn = append(vuln.FixedIn, Feature{
-				Name:      dbFeatureVersion.Feature.Name,
-				Namespace: dbFeatureVersion.Feature.Namespace.Name,
-				Version:   dbFeatureVersion.Version.String(),
-			})
+			vuln.FixedIn = append(vuln.FixedIn, FeatureFromDatabaseModel(dbFeatureVersion))
 		}
 	}
 
@@ -147,10 +143,29 @@ type Feature struct {
 	Vulnerabilities []Vulnerability `json:"Vulnerabilities,omitempty"`
 }
 
+func FeatureFromDatabaseModel(dbFeatureVersion database.FeatureVersion) Feature {
+	versionStr := dbFeatureVersion.Version.String()
+	if versionStr == types.MaxVersion.String() {
+		versionStr = "None"
+	}
+
+	return Feature{
+		Name:      dbFeatureVersion.Feature.Name,
+		Namespace: dbFeatureVersion.Feature.Namespace.Name,
+		Version:   versionStr,
+	}
+}
+
 func (f Feature) DatabaseModel() (database.FeatureVersion, error) {
-	version, err := types.NewVersion(f.Version)
-	if err != nil {
-		return database.FeatureVersion{}, err
+	var version types.Version
+	if f.Version == "None" {
+		version = types.MaxVersion
+	} else {
+		var err error
+		version, err = types.NewVersion(f.Version)
+		if err != nil {
+			return database.FeatureVersion{}, err
+		}
 	}
 
 	return database.FeatureVersion{
