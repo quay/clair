@@ -715,14 +715,14 @@
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
-          "span": 8,
+          "span": 5,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(clair_api_query_duration_milliseconds_sum[$rate])) by (query, subquery) / sum(rate(clair_api_query_duration_milliseconds_count[$rate])) by (query)",
+              "expr": "sum(rate(clair_api_response_duration_milliseconds_sum[$rate])) by (route) / sum(rate(clair_api_response_duration_milliseconds_count[$rate])) by (route)",
               "intervalFactor": 2,
-              "legendFormat": "{{query}}",
+              "legendFormat": "{{route}}",
               "metric": "",
               "refId": "A",
               "step": 2
@@ -740,6 +740,73 @@
           "y-axis": true,
           "y_formats": [
             "ms",
+            "short"
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "datasource": null,
+          "editable": true,
+          "error": false,
+          "fill": 1,
+          "grid": {
+            "leftLogBase": 1,
+            "leftMax": null,
+            "leftMin": null,
+            "rightLogBase": 1,
+            "rightMax": null,
+            "rightMin": null,
+            "threshold1": null,
+            "threshold1Color": "rgba(216, 200, 27, 0.27)",
+            "threshold2": null,
+            "threshold2Color": "rgba(234, 112, 112, 0.22)"
+          },
+          "id": 13,
+          "isNew": true,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 2,
+          "links": [],
+          "nullPointMode": "connected",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 3,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "sum(rate(clair_api_response_duration_milliseconds_count[$rate])) by (code)",
+              "intervalFactor": 2,
+              "legendFormat": "{{code}}",
+              "metric": "clair_api_response_duration_milliseconds_count",
+              "refId": "A",
+              "step": 2
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "API - Status code",
+          "tooltip": {
+            "shared": true,
+            "value_type": "cumulative"
+          },
+          "type": "graph",
+          "x-axis": true,
+          "y-axis": true,
+          "y_formats": [
+            "short",
             "short"
           ]
         },
@@ -777,7 +844,7 @@
           },
           "targets": [
             {
-              "expr": "sum(rate(clair_api_query_duration_milliseconds_bucket{le=\"300\", query=\"GETLayers\"}[$rate])) / sum(rate(clair_api_query_duration_milliseconds_count{query=\"GETLayers\"}[$rate])) * 100",
+              "expr": "sum(rate(clair_api_response_duration_milliseconds_bucket{le=\"300\", route=\"v1/getLayer\"}[$rate])) / sum(rate(clair_api_response_duration_milliseconds_count{route=\"v1/getLayer\"}[$rate])) * 100",
               "intervalFactor": 2,
               "legendFormat": "",
               "refId": "A",
@@ -830,11 +897,11 @@
           },
           "targets": [
             {
-              "expr": "histogram_quantile(0.95, sum(rate(clair_api_query_duration_milliseconds_bucket{query=\"getLayer\"}[$rate])) by (le))",
+              "expr": "histogram_quantile(0.95, sum(rate(clair_api_response_duration_milliseconds_bucket{route=\"v1/getLayer\"}[$rate])) by (le))",
               "interval": "",
               "intervalFactor": 2,
               "legendFormat": "",
-              "metric": "clair_api_query_duration_milliseconds_bucket",
+              "metric": "clair_api_response_duration_milliseconds_bucket",
               "refId": "A",
               "step": 21
             }
@@ -1026,6 +1093,6 @@
   },
   "refresh": "5s",
   "schemaVersion": 8,
-  "version": 2,
+  "version": 1,
   "links": []
 }
