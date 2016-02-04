@@ -102,7 +102,7 @@ func TestRaceAffects(t *testing.T) {
 		defer wg.Done()
 		for _, vulnerabilitiesM := range vulnerabilities {
 			for _, vulnerability := range vulnerabilitiesM {
-				err = datastore.InsertVulnerabilities([]database.Vulnerability{vulnerability})
+				err = datastore.InsertVulnerabilities([]database.Vulnerability{vulnerability}, true)
 				assert.Nil(t, err)
 			}
 		}

@@ -46,7 +46,7 @@ type Datastore interface {
 	DeleteLayer(name string) error
 
 	// Vulnerability
-	InsertVulnerabilities([]Vulnerability) error
+	InsertVulnerabilities(vulnerabilities []Vulnerability, createNotification bool) error
 	FindVulnerability(namespaceName, name string) (Vulnerability, error)
 	DeleteVulnerability(namespaceName, name string) error
 

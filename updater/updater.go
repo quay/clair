@@ -78,15 +78,17 @@ func Run(config *config.UpdaterConfig, datastore database.Datastore, st *utils.S
 	log.Infof("updater service started. lock identifier: %s", whoAmI)
 
 	for {
-		// Set the next update time to (last update time + interval) or now if there
-		// is no last update time stored in database (first update) or if an error
-		// occurs.
-		var nextUpdate time.Time
 		var stop bool
-		if lastUpdate := getLastUpdate(datastore); !lastUpdate.IsZero() {
+
+		// Determine if this is the first update and define the next update time.
+		// The next update time is (last update time + interval) or now if this is the first update.
+		nextUpdate := time.Now().UTC()
+		lastUpdate, firstUpdate, err := getLastUpdate(datastore)
+		if err != nil {
+			log.Errorf("an error occured while getting the last update time")
+			nextUpdate = nextUpdate.Add(config.Interval)
+		} else if firstUpdate == false {
 			nextUpdate = lastUpdate.Add(config.Interval)
-		} else {
-			nextUpdate = time.Now().UTC()
 		}
 
 		// If the next update timer is in the past, then try to update.
@@ -98,7 +100,7 @@ func Run(config *config.UpdaterConfig, datastore database.Datastore, st *utils.S
 				// Launch update in a new go routine.
 				doneC := make(chan bool, 1)
 				go func() {
-					Update(datastore)
+					Update(datastore, firstUpdate)
 					doneC <- true
 				}()
 
@@ -157,7 +159,7 @@ func Run(config *config.UpdaterConfig, datastore database.Datastore, st *utils.S
 
 // Update fetches all the vulnerabilities from the registered fetchers, upserts
 // them into the database and then sends notifications.
-func Update(datastore database.Datastore) {
+func Update(datastore database.Datastore, firstUpdate bool) {
 	defer setUpdaterDuration(time.Now())
 
 	log.Info("updating vulnerabilities")
@@ -167,7 +169,7 @@ func Update(datastore database.Datastore) {
 
 	// Insert vulnerabilities.
 	log.Tracef("inserting %d vulnerabilities for update", len(vulnerabilities))
-	err := datastore.InsertVulnerabilities(vulnerabilities)
+	err := datastore.InsertVulnerabilities(vulnerabilities, !firstUpdate)
 	if err != nil {
 		promUpdaterErrorsTotal.Inc()
 		log.Errorf("an error occured when inserting vulnerabilities for update: %s", err)
@@ -284,13 +286,23 @@ func addMetadata(datastore database.Datastore, vulnerabilities []database.Vulner
 	return vulnerabilities
 }
 
-func getLastUpdate(datastore database.Datastore) time.Time {
-	if lastUpdateTSS, err := datastore.GetKeyValue(flagName); err == nil && lastUpdateTSS != "" {
-		if lastUpdateTS, err := strconv.ParseInt(lastUpdateTSS, 10, 64); err == nil {
-			return time.Unix(lastUpdateTS, 0).UTC()
-		}
+func getLastUpdate(datastore database.Datastore) (time.Time, bool, error) {
+	lastUpdateTSS, err := datastore.GetKeyValue(flagName)
+	if err != nil {
+		return time.Time{}, false, err
 	}
-	return time.Time{}
+
+	if lastUpdateTSS == "" {
+		// This is the first update.
+		return time.Time{}, true, nil
+	}
+
+	lastUpdateTS, err := strconv.ParseInt(lastUpdateTSS, 10, 64)
+	if err != nil {
+		return time.Time{}, false, err
+	}
+
+	return time.Unix(lastUpdateTS, 0).UTC(), false, nil
 }
 
 // doVulnerabilitiesNamespacing takes Vulnerabilities that don't have a Namespace and split them

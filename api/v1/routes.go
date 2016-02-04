@@ -159,7 +159,7 @@ func postVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Para
 		return postVulnerabilityRoute, http.StatusBadRequest
 	}
 
-	err = ctx.Store.InsertVulnerabilities([]database.Vulnerability{vuln})
+	err = ctx.Store.InsertVulnerabilities([]database.Vulnerability{vuln}, true)
 	if err != nil {
 		writeResponse(w, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return postVulnerabilityRoute, http.StatusInternalServerError
@@ -211,7 +211,7 @@ func putVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 		return putVulnerabilityRoute, http.StatusBadRequest
 	}
 
-	err = ctx.Store.InsertVulnerabilities([]database.Vulnerability{vuln})
+	err = ctx.Store.InsertVulnerabilities([]database.Vulnerability{vuln}, true)
 	if err != nil {
 		writeResponse(w, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return putVulnerabilityRoute, http.StatusInternalServerError
