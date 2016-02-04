@@ -98,18 +98,12 @@ func (v Vulnerability) DatabaseModel() (database.Vulnerability, error) {
 
 	var dbFeatures []database.FeatureVersion
 	for _, feature := range v.FixedIn {
-		version, err := types.NewVersion(feature.Version)
+		dbFeature, err := feature.DatabaseModel()
 		if err != nil {
 			return database.Vulnerability{}, err
 		}
 
-		dbFeatures = append(dbFeatures, database.FeatureVersion{
-			Feature: database.Feature{
-				Name:      feature.Name,
-				Namespace: database.Namespace{Name: feature.Namespace},
-			},
-			Version: version,
-		})
+		dbFeatures = append(dbFeatures, dbFeature)
 	}
 
 	return database.Vulnerability{
@@ -151,6 +145,21 @@ type Feature struct {
 	Namespace       string          `json:"Namespace,omitempty"`
 	Version         string          `json:"Version,omitempty"`
 	Vulnerabilities []Vulnerability `json:"Vulnerabilities,omitempty"`
+}
+
+func (f Feature) DatabaseModel() (database.FeatureVersion, error) {
+	version, err := types.NewVersion(f.Version)
+	if err != nil {
+		return database.FeatureVersion{}, err
+	}
+
+	return database.FeatureVersion{
+		Feature: database.Feature{
+			Name:      f.Name,
+			Namespace: database.Namespace{Name: f.Namespace},
+		},
+		Version: version,
+	}, nil
 }
 
 type Notification struct {
@@ -233,6 +242,12 @@ type VulnerabilityEnvelope struct {
 type NotificationEnvelope struct {
 	Notification *Notification `json:"Notification,omitempty"`
 	Error        *Error        `json:"Error,omitempty"`
+}
+
+type FeatureEnvelope struct {
+	Feature  *Feature   `json:"Feature,omitempty"`
+	Features *[]Feature `json:"Features,omitempty"`
+	Error    *Error     `json:"Error,omitempty"`
 }
 
 func pageStringToDBPageNumber(pageStr string) (database.VulnerabilityNotificationPageNumber, error) {

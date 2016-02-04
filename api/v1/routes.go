@@ -214,17 +214,68 @@ func deleteVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 	return writeHeader(w, http.StatusOK)
 }
 
-func postFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
-	return 0
-}
 func getFixes(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
-	return 0
+	dbVuln, err := ctx.Store.FindVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
+	if err == cerrors.ErrNotFound {
+		writeResponse(w, FeatureEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusNotFound)
+	} else if err != nil {
+		writeResponse(w, FeatureEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusInternalServerError)
+	}
+
+	vuln := VulnerabilityFromDatabaseModel(dbVuln, true)
+	writeResponse(w, FeatureEnvelope{Features: &vuln.FixedIn})
+	return writeHeader(w, http.StatusOK)
 }
+
 func putFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
-	return 0
+	request := FeatureEnvelope{}
+	err := decodeJSON(r, &request)
+	if err != nil {
+		writeResponse(w, FeatureEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusBadRequest)
+	}
+
+	if request.Feature == nil {
+		writeResponse(w, FeatureEnvelope{Error: &Error{"failed to provide feature"}})
+		return writeHeader(w, http.StatusBadRequest)
+	}
+
+	if request.Feature.Name != p.ByName("fixName") {
+		writeResponse(w, FeatureEnvelope{Error: &Error{"feature name in URL and JSON do not match"}})
+		return writeHeader(w, http.StatusBadRequest)
+	}
+
+	dbFix, err := request.Feature.DatabaseModel()
+	if err != nil {
+		writeResponse(w, FeatureEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusBadRequest)
+	}
+
+	err = ctx.Store.InsertVulnerabilityFixes(p.ByName("vulnerabilityNamespace"), p.ByName("vulnerabilityName"), []database.FeatureVersion{dbFix})
+	if err == cerrors.ErrNotFound {
+		writeResponse(w, FeatureEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusNotFound)
+	} else if err != nil {
+		writeResponse(w, FeatureEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusInternalServerError)
+	}
+
+	return writeHeader(w, http.StatusCreated)
 }
+
 func deleteFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {
-	return 0
+	err := ctx.Store.DeleteVulnerabilityFix(p.ByName("vulnerabilityNamespace"), p.ByName("vulnerabilityName"), p.ByName("fixName"))
+	if err == cerrors.ErrNotFound {
+		writeResponse(w, FeatureEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusNotFound)
+	} else if err != nil {
+		writeResponse(w, FeatureEnvelope{Error: &Error{err.Error()}})
+		return writeHeader(w, http.StatusInternalServerError)
+	}
+
+	return writeHeader(w, http.StatusOK)
 }
 
 func getNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) int {

@@ -40,7 +40,6 @@ func NewRouter(ctx *context.RouteContext) *httprouter.Router {
 	router.DELETE("/namespaces/:namespaceName/vulnerabilities/:vulnerabilityName", context.HTTPHandler(deleteVulnerability, ctx))
 
 	// Fixes
-	router.POST("/namespaces/:namespaceName/vulnerabilities/:vulnerabilityName/fixes", context.HTTPHandler(postFix, ctx))
 	router.GET("/namespaces/:namespaceName/vulnerabilities/:vulnerabilityName/fixes", context.HTTPHandler(getFixes, ctx))
 	router.PUT("/namespaces/:namespaceName/vulnerabilities/:vulnerabilityName/fixes/:fixName", context.HTTPHandler(putFix, ctx))
 	router.DELETE("/namespaces/:namespaceName/vulnerabilities/:vulnerabilityName/fixes/:fixName", context.HTTPHandler(deleteFix, ctx))
