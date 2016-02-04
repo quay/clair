@@ -61,8 +61,9 @@ type FeatureVersion struct {
 type Vulnerability struct {
 	Model
 
-	Name        string
-	Namespace   Namespace
+	Name      string
+	Namespace Namespace
+
 	Description string
 	Link        string
 	Severity    types.Priority
@@ -102,7 +103,7 @@ type VulnerabilityNotification struct {
 	Deleted  time.Time
 
 	OldVulnerability *Vulnerability
-	NewVulnerability Vulnerability
+	NewVulnerability *Vulnerability
 }
 
 type VulnerabilityNotificationPageNumber struct {

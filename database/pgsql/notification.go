@@ -2,7 +2,6 @@ package pgsql
 
 import (
 	"database/sql"
-	"encoding/json"
 	"time"
 
 	"github.com/coreos/clair/database"
@@ -13,29 +12,13 @@ import (
 
 // do it in tx so we won't insert/update a vuln without notification and vice-versa.
 // name and created doesn't matter.
-// Vuln ID must be filled in.
-func (pgSQL *pgSQL) insertNotification(tx *sql.Tx, notification database.VulnerabilityNotification) error {
-	defer observeQueryTime("insertNotification", "all", time.Now())
-
-	// Marshal old and new Vulnerabilities.
-	var oldVulnerability sql.NullString
-	if notification.OldVulnerability != nil {
-		oldVulnerabilityJSON, err := json.Marshal(notification.OldVulnerability)
-		if err != nil {
-			tx.Rollback()
-			return cerrors.NewBadRequestError("could not marshal old Vulnerability in insertNotification")
-		}
-		oldVulnerability = sql.NullString{String: string(oldVulnerabilityJSON), Valid: true}
-	}
-
-	newVulnerability, err := json.Marshal(notification.NewVulnerability)
-	if err != nil {
-		tx.Rollback()
-		return cerrors.NewBadRequestError("could not marshal new Vulnerability in insertNotification")
-	}
+func createNotification(tx *sql.Tx, oldVulnerabilityID, newVulnerabilityID int) error {
+	defer observeQueryTime("createNotification", "all", time.Now())
 
 	// Insert Notification.
-	_, err = tx.Exec(getQuery("i_notification"), uuid.New(), oldVulnerability, newVulnerability)
+	oldVulnerabilityNullableID := sql.NullInt64{Int64: int64(oldVulnerabilityID), Valid: oldVulnerabilityID != 0}
+	newVulnerabilityNullableID := sql.NullInt64{Int64: int64(newVulnerabilityID), Valid: newVulnerabilityID != 0}
+	_, err := tx.Exec(getQuery("i_notification"), uuid.New(), oldVulnerabilityNullableID, newVulnerabilityNullableID)
 	if err != nil {
 		tx.Rollback()
 		return handleError("i_notification", err)
@@ -51,7 +34,7 @@ func (pgSQL *pgSQL) GetAvailableNotification(renotifyInterval time.Duration) (da
 
 	before := time.Now().Add(-renotifyInterval)
 	row := pgSQL.QueryRow(getQuery("s_notification_available"), before)
-	notification, err := scanNotification(row, false)
+	notification, err := pgSQL.scanNotification(row, false)
 
 	return notification, handleError("s_notification_available", err)
 }
@@ -60,20 +43,28 @@ func (pgSQL *pgSQL) GetNotification(name string, limit int, page database.Vulner
 	defer observeQueryTime("GetNotification", "all", time.Now())
 
 	// Get Notification.
-	notification, err := scanNotification(pgSQL.QueryRow(getQuery("s_notification"), name), true)
+	notification, err := pgSQL.scanNotification(pgSQL.QueryRow(getQuery("s_notification"), name), true)
 	if err != nil {
 		return notification, page, handleError("s_notification", err)
 	}
 
 	// Load vulnerabilities' LayersIntroducingVulnerability.
 	page.OldVulnerability, err = pgSQL.loadLayerIntroducingVulnerability(
-		notification.OldVulnerability, limit, page.OldVulnerability)
+		notification.OldVulnerability,
+		limit,
+		page.OldVulnerability,
+	)
+
 	if err != nil {
 		return notification, page, err
 	}
 
 	page.NewVulnerability, err = pgSQL.loadLayerIntroducingVulnerability(
-		&notification.NewVulnerability, limit, page.NewVulnerability)
+		notification.NewVulnerability,
+		limit,
+		page.NewVulnerability,
+	)
+
 	if err != nil {
 		return notification, page, err
 	}
@@ -81,22 +72,35 @@ func (pgSQL *pgSQL) GetNotification(name string, limit int, page database.Vulner
 	return notification, page, nil
 }
 
-func scanNotification(row *sql.Row, hasVulns bool) (notification database.VulnerabilityNotification, err error) {
+func (pgSQL *pgSQL) scanNotification(row *sql.Row, hasVulns bool) (database.VulnerabilityNotification, error) {
+	var notification database.VulnerabilityNotification
 	var created zero.Time
 	var notified zero.Time
 	var deleted zero.Time
-	var oldVulnerability []byte
-	var newVulnerability []byte
+	var oldVulnerabilityNullableID sql.NullInt64
+	var newVulnerabilityNullableID sql.NullInt64
 
-	// Query notification.
+	// Scan notification.
 	if hasVulns {
-		err = row.Scan(&notification.ID, &notification.Name, &created, &notified, &deleted,
-			&oldVulnerability, &newVulnerability)
+		err := row.Scan(
+			&notification.ID,
+			&notification.Name,
+			&created,
+			&notified,
+			&deleted,
+			&oldVulnerabilityNullableID,
+			&newVulnerabilityNullableID,
+		)
+
+		if err != nil {
+			return notification, err
+		}
 	} else {
-		err = row.Scan(&notification.ID, &notification.Name, &created, &notified, &deleted)
-	}
-	if err != nil {
-		return
+		err := row.Scan(&notification.ID, &notification.Name, &created, &notified, &deleted)
+
+		if err != nil {
+			return notification, err
+		}
 	}
 
 	notification.Created = created.Time
@@ -104,19 +108,26 @@ func scanNotification(row *sql.Row, hasVulns bool) (notification database.Vulner
 	notification.Deleted = deleted.Time
 
 	if hasVulns {
-		// Unmarshal old and new Vulnerabilities.
-		err = json.Unmarshal(oldVulnerability, notification.OldVulnerability)
-		if err != nil {
-			err = cerrors.NewBadRequestError("could not unmarshal old Vulnerability in GetNotification")
+		if oldVulnerabilityNullableID.Valid {
+			vulnerability, err := pgSQL.findVulnerabilityByIDWithDeleted(int(oldVulnerabilityNullableID.Int64))
+			if err != nil {
+				return notification, err
+			}
+
+			notification.OldVulnerability = &vulnerability
 		}
 
-		err = json.Unmarshal(newVulnerability, &notification.NewVulnerability)
-		if err != nil {
-			err = cerrors.NewBadRequestError("could not unmarshal new Vulnerability in GetNotification")
+		if newVulnerabilityNullableID.Valid {
+			vulnerability, err := pgSQL.findVulnerabilityByIDWithDeleted(int(newVulnerabilityNullableID.Int64))
+			if err != nil {
+				return notification, err
+			}
+
+			notification.NewVulnerability = &vulnerability
 		}
 	}
 
-	return
+	return notification, nil
 }
 
 // Fills Vulnerability.LayersIntroducingVulnerability.

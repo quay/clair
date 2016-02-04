@@ -4,8 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"fmt"
-
 	"github.com/coreos/clair/database"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
@@ -60,64 +58,68 @@ func TestNotification(t *testing.T) {
 		},
 	}
 
-	if assert.Nil(t, datastore.InsertLayer(l1)) && assert.Nil(t, datastore.InsertLayer(l2)) &&
-		assert.Nil(t, datastore.InsertLayer(l3)) {
-
-		// Insert a new vulnerability that is introduced by three layers.
-		v1 := database.Vulnerability{
-			Name:        "TestNotificationVulnerability1",
-			Namespace:   f1.Namespace,
-			Description: "TestNotificationDescription1",
-			Link:        "TestNotificationLink1",
-			Severity:    "Unknown",
-			FixedIn: []database.FeatureVersion{
-				database.FeatureVersion{
-					Feature: f1,
-					Version: types.NewVersionUnsafe("1.0"),
-				},
-			},
-		}
-		assert.Nil(t, datastore.insertVulnerability(v1))
-
-		// Get the notification associated to the previously inserted vulnerability.
-		notification, err := datastore.GetAvailableNotification(time.Second)
-		assert.Nil(t, err)
-		assert.NotEmpty(t, notification.Name)
-
-		// Verify the renotify behaviour.
-		if assert.Nil(t, datastore.SetNotificationNotified(notification.Name)) {
-			_, err := datastore.GetAvailableNotification(time.Second)
-			assert.Equal(t, cerrors.ErrNotFound, err)
-
-			time.Sleep(50 * time.Millisecond)
-			notificationB, err := datastore.GetAvailableNotification(20 * time.Millisecond)
-			assert.Nil(t, err)
-			assert.Equal(t, notification.Name, notificationB.Name)
-
-			datastore.SetNotificationNotified(notification.Name)
-		}
-
-		// Get notification.
-		filledNotification, nextPage, err := datastore.GetNotification(notification.Name, 2, database.VulnerabilityNotificationFirstPage)
-		assert.Nil(t, err)
-		assert.NotEqual(t, database.NoVulnerabilityNotificationPage, nextPage)
-		assert.Nil(t, filledNotification.OldVulnerability)
-		assert.Equal(t, v1.Name, filledNotification.NewVulnerability.Name)
-		assert.Len(t, filledNotification.NewVulnerability.LayersIntroducingVulnerability, 2)
-
-		// Get second page.
-		filledNotification, nextPage, err = datastore.GetNotification(notification.Name, 2, nextPage)
-		assert.Nil(t, err)
-		assert.Equal(t, database.NoVulnerabilityNotificationPage, nextPage)
-		assert.Nil(t, filledNotification.OldVulnerability)
-		assert.Equal(t, v1.Name, filledNotification.NewVulnerability.Name)
-		assert.Len(t, filledNotification.NewVulnerability.LayersIntroducingVulnerability, 1)
-
-		// Delete notification.
-		assert.Nil(t, datastore.DeleteNotification(notification.Name))
-
-		n, err := datastore.GetAvailableNotification(time.Millisecond)
-		assert.Equal(t, cerrors.ErrNotFound, err)
-		fmt.Println(n)
+	if !assert.Nil(t, datastore.InsertLayer(l1)) || !assert.Nil(t, datastore.InsertLayer(l2)) || !assert.Nil(t, datastore.InsertLayer(l3)) {
+		return
 	}
+
+	// Insert a new vulnerability that is introduced by three layers.
+	v1 := database.Vulnerability{
+		Name:        "TestNotificationVulnerability1",
+		Namespace:   f1.Namespace,
+		Description: "TestNotificationDescription1",
+		Link:        "TestNotificationLink1",
+		Severity:    "Unknown",
+		FixedIn: []database.FeatureVersion{
+			database.FeatureVersion{
+				Feature: f1,
+				Version: types.NewVersionUnsafe("1.0"),
+			},
+		},
+	}
+	assert.Nil(t, datastore.insertVulnerability(v1, false))
+
+	// Get the notification associated to the previously inserted vulnerability.
+	notification, err := datastore.GetAvailableNotification(time.Second)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, notification.Name)
+
+	// Verify the renotify behaviour.
+	if assert.Nil(t, datastore.SetNotificationNotified(notification.Name)) {
+		_, err := datastore.GetAvailableNotification(time.Second)
+		assert.Equal(t, cerrors.ErrNotFound, err)
+
+		time.Sleep(50 * time.Millisecond)
+		notificationB, err := datastore.GetAvailableNotification(20 * time.Millisecond)
+		assert.Nil(t, err)
+		assert.Equal(t, notification.Name, notificationB.Name)
+
+		datastore.SetNotificationNotified(notification.Name)
+	}
+
+	// Get notification.
+	filledNotification, nextPage, err := datastore.GetNotification(notification.Name, 2, database.VulnerabilityNotificationFirstPage)
+	assert.Nil(t, err)
+	assert.NotEqual(t, database.NoVulnerabilityNotificationPage, nextPage)
+	assert.Nil(t, filledNotification.OldVulnerability)
+	assert.Equal(t, v1.Name, filledNotification.NewVulnerability.Name)
+	assert.Len(t, filledNotification.NewVulnerability.LayersIntroducingVulnerability, 2)
+
+	// Get second page.
+	filledNotification, nextPage, err = datastore.GetNotification(notification.Name, 2, nextPage)
+	assert.Nil(t, err)
+	assert.Equal(t, database.NoVulnerabilityNotificationPage, nextPage)
+	assert.Nil(t, filledNotification.OldVulnerability)
+	assert.Equal(t, v1.Name, filledNotification.NewVulnerability.Name)
+	assert.Len(t, filledNotification.NewVulnerability.LayersIntroducingVulnerability, 1)
+
+	// Delete notification.
+	assert.Nil(t, datastore.DeleteNotification(notification.Name))
+
+	_, err = datastore.GetAvailableNotification(time.Millisecond)
+	assert.Equal(t, cerrors.ErrNotFound, err)
+
+	// Update a vulnerability and ensure that the old/new vulnerabilities are correct.
+
+	// Delete a vulnerability and verify the notification.
+
 }

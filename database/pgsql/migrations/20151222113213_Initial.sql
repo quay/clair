@@ -89,8 +89,8 @@ CREATE TABLE IF NOT EXISTS Vulnerability (
   link VARCHAR(128) NULL,
   severity severity NOT NULL,
   metadata TEXT NULL,
-
-  UNIQUE (namespace_id, name));
+  created_at TIMESTAMP WITH TIME ZONE,
+  deleted_at TIMESTAMP WITH TIME ZONE NULL);
 
 
 -- -----------------------------------------------------
@@ -152,8 +152,8 @@ CREATE TABLE IF NOT EXISTS Vulnerability_Notification (
   created_at TIMESTAMP WITH TIME ZONE,
   notified_at TIMESTAMP WITH TIME ZONE NULL,
   deleted_at TIMESTAMP WITH TIME ZONE NULL,
-  old_vulnerability TEXT NULL,
-  new_vulnerability TEXT);
+  old_vulnerability_id INT NULL REFERENCES Vulnerability ON DELETE CASCADE,
+  new_vulnerability_id INT NULL REFERENCES Vulnerability ON DELETE CASCADE);
 
 CREATE INDEX ON Vulnerability_Notification (notified_at);
 

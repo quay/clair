@@ -111,7 +111,8 @@ func init() {
     WHERE vafv.featureversion_id = ANY($1::integer[])
           AND vafv.vulnerability_id = v.id
           AND vafv.fixedin_id = vfif.id
-          AND v.namespace_id = vn.id`
+          AND v.namespace_id = vn.id
+          AND v.deleted_at IS NULL`
 
 	queries["i_layer"] = `
     INSERT INTO Layer(name, engineversion, parent_id, namespace_id)
@@ -143,63 +144,43 @@ func init() {
 	queries["r_lock_expired"] = `DELETE FROM LOCK WHERE until < CURRENT_TIMESTAMP`
 
 	// vulnerability.go
-	queries["f_vulnerability"] = `
-    SELECT v.id, n.id, v.description, v.link, v.severity, v.metadata, vfif.version, f.id, f.Name
-    FROM Vulnerability v
-      JOIN Namespace n ON v.namespace_id = n.id
-      LEFT JOIN Vulnerability_FixedIn_Feature vfif ON v.id = vfif.vulnerability_id
-      LEFT JOIN Feature f ON vfif.feature_id = f.id
-    WHERE n.Name = $1 AND v.Name = $2`
+	queries["f_vulnerability_base"] = `
+    SELECT v.id, v.name, n.id, n.name, v.description, v.link, v.severity, v.metadata
+    FROM Vulnerability v JOIN Namespace n ON v.namespace_id = n.id`
 
-	queries["f_vulnerability_for_update"] = `
-    SELECT FOR UPDATE v.id, n.id, v.description, v.link, v.severity, v.metadata, vfif.version, f.id, f.Name
-    FROM Vulnerability v
-      JOIN Namespace n ON v.namespace_id = n.id
-      LEFT JOIN Vulnerability_FixedIn_Feature vfif ON v.id = vfif.vulnerability_id
-      LEFT JOIN Feature f ON vfif.feature_id = f.id
-    WHERE n.Name = $1 AND v.Name = $2`
+	queries["f_vulnerability_for_update"] = ` FOR UPDATE OF v`
+	queries["f_vulnerability_+by_name_namespace"] = ` WHERE n.name = $1 AND v.name = $2 AND v.deleted_at IS NULL`
+	queries["f_vulnerability_+by_id"] = ` WHERE v.id = $1`
+
+	queries["f_vulnerability_fixedin"] = `
+    SELECT vfif.version, f.id, f.Name
+    FROM Vulnerability_FixedIn_Feature vfif JOIN Feature f ON vfif.feature_id = f.id
+    WHERE vfif.vulnerability_id = $1`
 
 	queries["i_vulnerability"] = `
     INSERT INTO Vulnerability(namespace_id, name, description, link, severity, metadata)
     VALUES($1, $2, $3, $4, $5, $6)
     RETURNING id`
 
-	queries["u_vulnerability"] = `
-    UPDATE Vulnerability
-    SET description = $2, link = $3, severity = $4, metadata = $5
-    WHERE id = $1`
-
 	queries["i_vulnerability_fixedin_feature"] = `
     INSERT INTO Vulnerability_FixedIn_Feature(vulnerability_id, feature_id, version)
     VALUES($1, $2, $3)
     RETURNING id`
 
-	queries["u_vulnerability_fixedin_feature"] = `
-    UPDATE Vulnerability_FixedIn_Feature
-    SET version = $3
-    WHERE vulnerability_id = $1 AND feature_id = $2
-    RETURNING id`
-
-	queries["r_vulnerability_fixedin_feature"] = `
-    DELETE FROM Vulnerability_FixedIn_Feature
-    WHERE vulnerability_id = $1 AND feature_id = $2
-    RETURNING id`
-
-	queries["r_vulnerability_affects_featureversion"] = `
-    DELETE FROM Vulnerability_Affects_FeatureVersion
-    WHERE fixedin_id = $1`
-
 	queries["f_featureversion_by_feature"] = `
     SELECT id, version FROM FeatureVersion WHERE feature_id = $1`
 
 	queries["r_vulnerability"] = `
-    DELETE FROM Vulnerability
+    UPDATE Vulnerability
+    SET deleted_at = CURRENT_TIMESTAMP
     WHERE namespace_id = (SELECT id FROM Namespace WHERE name = $1)
-          AND name = $2`
+          AND name = $2
+          AND deleted_at IS NULL
+    RETURNING id`
 
 	// notification.go
 	queries["i_notification"] = `
-    INSERT INTO Vulnerability_Notification(name, created_at, old_vulnerability, new_vulnerability)
+    INSERT INTO Vulnerability_Notification(name, created_at, old_vulnerability_id, new_vulnerability_id)
     VALUES($1, CURRENT_TIMESTAMP, $2, $3)`
 
 	queries["u_notification_notified"] = `
@@ -222,7 +203,7 @@ func init() {
     LIMIT 1`
 
 	queries["s_notification"] = `
-    SELECT id, name, created_at, notified_at, deleted_at, old_vulnerability, new_vulnerability
+    SELECT id, name, created_at, notified_at, deleted_at, old_vulnerability_id, new_vulnerability_id
     FROM Vulnerability_Notification
     WHERE name = $1`
 

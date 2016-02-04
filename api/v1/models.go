@@ -162,7 +162,7 @@ type Notification struct {
 	Page     string                   `json:"Page,omitempty"`
 	NextPage string                   `json:"NextPage,omitempty"`
 	Old      *VulnerabilityWithLayers `json:"Old,omitempty"`
-	New      VulnerabilityWithLayers  `json:"New,omitempty"`
+	New      *VulnerabilityWithLayers `json:"New,omitempty"`
 	Changed  []string                 `json:"Changed,omitempty"`
 }
 
@@ -170,6 +170,11 @@ func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotifica
 	var oldVuln *VulnerabilityWithLayers
 	if dbNotification.OldVulnerability != nil {
 		*oldVuln = VulnerabilityWithLayersFromDatabaseModel(*dbNotification.OldVulnerability)
+	}
+
+	var newVuln *VulnerabilityWithLayers
+	if dbNotification.NewVulnerability != nil {
+		*newVuln = VulnerabilityWithLayersFromDatabaseModel(*dbNotification.NewVulnerability)
 	}
 
 	var nextPageStr string
@@ -187,7 +192,7 @@ func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotifica
 		Page:     DBPageNumberToString(page),
 		NextPage: nextPageStr,
 		Old:      oldVuln,
-		New:      VulnerabilityWithLayersFromDatabaseModel(dbNotification.NewVulnerability),
+		New:      newVuln,
 	}
 }
 

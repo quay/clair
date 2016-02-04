@@ -155,6 +155,4 @@ func TestRaceAffects(t *testing.T) {
 		assert.Len(t, utils.CompareStringLists(expectedAffectedNames, actualAffectedNames), 0)
 		assert.Len(t, utils.CompareStringLists(actualAffectedNames, expectedAffectedNames), 0)
 	}
-
-	// TODO(Quentin-M): May be worth having a test for updates as well.
 }
