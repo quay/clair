@@ -115,8 +115,9 @@ func init() {
           AND v.deleted_at IS NULL`
 
 	queries["i_layer"] = `
-    INSERT INTO Layer(name, engineversion, parent_id, namespace_id)
-    VALUES($1, $2, $3, $4) RETURNING id`
+    INSERT INTO Layer(name, engineversion, parent_id, namespace_id, created_at)
+    VALUES($1, $2, $3, $4, CURRENT_TIMESTAMP)
+    RETURNING id`
 
 	queries["u_layer"] = `UPDATE LAYER SET engineversion = $2, namespace_id = $3 WHERE id = $1`
 
@@ -158,8 +159,8 @@ func init() {
     WHERE vfif.vulnerability_id = $1`
 
 	queries["i_vulnerability"] = `
-    INSERT INTO Vulnerability(namespace_id, name, description, link, severity, metadata)
-    VALUES($1, $2, $3, $4, $5, $6)
+    INSERT INTO Vulnerability(namespace_id, name, description, link, severity, metadata, created_at)
+    VALUES($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
     RETURNING id`
 
 	queries["i_vulnerability_fixedin_feature"] = `
