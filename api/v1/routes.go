@@ -89,6 +89,13 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	writeResponse(w, http.StatusCreated, LayerEnvelope{Layer: &Layer{
+		Name:             request.Layer.Name,
+		ParentName:       request.Layer.ParentName,
+		Path:             request.Layer.Path,
+		Format:           request.Layer.Format,
+		IndexedByVersion: worker.Version,
+	}})
 	return postLayerRoute, http.StatusCreated
 }
 
