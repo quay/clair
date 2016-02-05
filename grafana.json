@@ -120,10 +120,10 @@
           },
           "targets": [
             {
-              "expr": "clair_updater_notes_total",
+              "expr": "sum(clair_updater_notes_total)",
               "intervalFactor": 2,
               "legendFormat": "",
-              "metric": "clair_updater_notes_total",
+              "metric": "",
               "refId": "A",
               "step": 21
             }
