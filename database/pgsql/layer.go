@@ -265,6 +265,11 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 			Scan(&layer.ID)
 		if err != nil {
 			tx.Rollback()
+
+			if isErrUniqueViolation(err) {
+				// Ignore this error, another process collided.
+				return nil
+			}
 			return handleError("i_layer", err)
 		}
 	} else {
