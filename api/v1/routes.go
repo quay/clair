@@ -326,7 +326,10 @@ func getNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	}
 
 	dbNotification, nextPage, err := ctx.Store.GetNotification(p.ByName("notificationName"), limit, page)
-	if err != nil {
+	if err == cerrors.ErrNotFound {
+		writeResponse(w, http.StatusNotFound, NotificationEnvelope{Error: &Error{err.Error()}})
+		return deleteNotificationRoute, http.StatusNotFound
+	} else if err != nil {
 		writeResponse(w, http.StatusInternalServerError, NotificationEnvelope{Error: &Error{err.Error()}})
 		return getNotificationRoute, http.StatusInternalServerError
 	}

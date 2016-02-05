@@ -193,12 +193,14 @@ type Notification struct {
 func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotification, limit int, page, nextPage database.VulnerabilityNotificationPageNumber) Notification {
 	var oldVuln *VulnerabilityWithLayers
 	if dbNotification.OldVulnerability != nil {
-		*oldVuln = VulnerabilityWithLayersFromDatabaseModel(*dbNotification.OldVulnerability)
+		v := VulnerabilityWithLayersFromDatabaseModel(*dbNotification.OldVulnerability)
+		oldVuln = &v
 	}
 
 	var newVuln *VulnerabilityWithLayers
 	if dbNotification.NewVulnerability != nil {
-		*newVuln = VulnerabilityWithLayersFromDatabaseModel(*dbNotification.NewVulnerability)
+		v := VulnerabilityWithLayersFromDatabaseModel(*dbNotification.NewVulnerability)
+		newVuln = &v
 	}
 
 	var nextPageStr string
