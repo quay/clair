@@ -321,7 +321,7 @@ func getNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	page := database.VulnerabilityNotificationFirstPage
 	pageStrs, pageExists := query["page"]
 	if pageExists {
-		page, err = pageStringToDBPageNumber(pageStrs[0])
+		page, err = tokenToPageNumber(pageStrs[0], ctx.Config.PaginationKey)
 		if err != nil {
 			writeResponse(w, http.StatusBadRequest, NotificationEnvelope{Error: &Error{"invalid page format: " + err.Error()}})
 			return getNotificationRoute, http.StatusBadRequest
@@ -337,7 +337,7 @@ func getNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params
 		return getNotificationRoute, http.StatusInternalServerError
 	}
 
-	notification := NotificationFromDatabaseModel(dbNotification, limit, page, nextPage)
+	notification := NotificationFromDatabaseModel(dbNotification, limit, page, nextPage, ctx.Config.PaginationKey)
 
 	writeResponse(w, http.StatusOK, NotificationEnvelope{Notification: &notification})
 	return getNotificationRoute, http.StatusOK

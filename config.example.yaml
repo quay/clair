@@ -4,7 +4,7 @@
 database:
   # PostgreSQL Connection string.
   # Reference: http://www.postgresql.org/docs/9.4/static/libpq-connect.html
-  source: 
+  source:
   # Number of elements to keep in the cache.
   cacheSize: 16384
 api:
@@ -13,6 +13,8 @@ api:
   healthport: 6061
   # Maximum time that API requests may take before they time-out with a HTTP 503 error.
   timeout: 900s
+  # 32-bit key used to encrypt pagination tokens
+  paginationKey: "2E9IgrgWLNb4gjuU0WbiBIudLH8xolz_qxFn--vxJP8="
   # Paths to certificates to secure the main API with TLS and client certificate auth.
   cafile:
   keyfile:

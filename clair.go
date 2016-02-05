@@ -53,9 +53,9 @@ func Boot(config *config.Config) {
 
 	// Start API
 	st.Begin()
-	go api.Run(config.API, &context.RouteContext{db}, st)
+	go api.Run(config.API, &context.RouteContext{db, config.API}, st)
 	st.Begin()
-	go api.RunHealth(config.API, &context.RouteContext{db}, st)
+	go api.RunHealth(config.API, &context.RouteContext{db, config.API}, st)
 
 	// Start updater
 	st.Begin()

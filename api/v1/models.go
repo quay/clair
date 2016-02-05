@@ -15,12 +15,19 @@
 package v1
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils/types"
+	"github.com/coreos/pkg/capnslog"
+	"github.com/fernet/fernet-go"
 )
+
+var log = capnslog.NewPackageLogger("github.com/coreos/clair", "v1")
 
 type Error struct {
 	Message string `json:"Layer`
@@ -187,10 +194,9 @@ type Notification struct {
 	NextPage string                   `json:"NextPage,omitempty"`
 	Old      *VulnerabilityWithLayers `json:"Old,omitempty"`
 	New      *VulnerabilityWithLayers `json:"New,omitempty"`
-	Changed  []string                 `json:"Changed,omitempty"`
 }
 
-func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotification, limit int, page, nextPage database.VulnerabilityNotificationPageNumber) Notification {
+func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotification, limit int, page, nextPage database.VulnerabilityNotificationPageNumber, key string) Notification {
 	var oldVuln *VulnerabilityWithLayers
 	if dbNotification.OldVulnerability != nil {
 		v := VulnerabilityWithLayersFromDatabaseModel(*dbNotification.OldVulnerability)
@@ -205,7 +211,7 @@ func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotifica
 
 	var nextPageStr string
 	if nextPage != database.NoVulnerabilityNotificationPage {
-		nextPageStr = DBPageNumberToString(nextPage)
+		nextPageStr = pageNumberToToken(nextPage, key)
 	}
 
 	var created, notified, deleted string
@@ -227,7 +233,7 @@ func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotifica
 		Notified: notified,
 		Deleted:  deleted,
 		Limit:    limit,
-		Page:     DBPageNumberToString(page),
+		Page:     pageNumberToToken(page, key),
 		NextPage: nextPageStr,
 		Old:      oldVuln,
 		New:      newVuln,
@@ -279,14 +285,30 @@ type FeatureEnvelope struct {
 	Error    *Error     `json:"Error,omitempty"`
 }
 
-func pageStringToDBPageNumber(pageStr string) (database.VulnerabilityNotificationPageNumber, error) {
-	// TODO(jzelinskie): turn pagination into an encrypted token
-	var old, new int
-	_, err := fmt.Sscanf(pageStr, "%d-%d", &old, &new)
-	return database.VulnerabilityNotificationPageNumber{old, new}, err
+func tokenToPageNumber(token, key string) (database.VulnerabilityNotificationPageNumber, error) {
+	k, _ := fernet.DecodeKey(key)
+	msg := fernet.VerifyAndDecrypt([]byte(token), time.Hour, []*fernet.Key{k})
+	if msg == nil {
+		return database.VulnerabilityNotificationPageNumber{}, errors.New("invalid or expired pagination token")
+	}
+
+	page := database.VulnerabilityNotificationPageNumber{}
+	err := json.NewDecoder(bytes.NewBuffer(msg)).Decode(&page)
+	return page, err
 }
 
-func DBPageNumberToString(page database.VulnerabilityNotificationPageNumber) string {
-	// TODO(jzelinskie): turn pagination into an encrypted token
-	return fmt.Sprintf("%d-%d", page.OldVulnerability, page.NewVulnerability)
+func pageNumberToToken(page database.VulnerabilityNotificationPageNumber, key string) string {
+	var buf bytes.Buffer
+	err := json.NewEncoder(&buf).Encode(page)
+	if err != nil {
+		log.Fatal("failed to encode VulnerabilityNotificationPageNumber")
+	}
+
+	k, _ := fernet.DecodeKey(key)
+	tokenBytes, err := fernet.EncryptAndSign(buf.Bytes(), k)
+	if err != nil {
+		log.Fatal("failed to encrypt VulnerabilityNotificationpageNumber")
+	}
+
+	return string(tokenBytes)
 }

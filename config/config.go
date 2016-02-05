@@ -19,6 +19,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/fernet/fernet-go"
 	"gopkg.in/yaml.v2"
 )
 
@@ -44,9 +45,9 @@ type UpdaterConfig struct {
 
 // NotifierConfig is the configuration for the Notifier service and its registered notifiers.
 type NotifierConfig struct {
-	Attempts int
-  RenotifyInterval time.Duration
-	Params   map[string]interface{} `yaml:",inline"`
+	Attempts         int
+	RenotifyInterval time.Duration
+	Params           map[string]interface{} `yaml:",inline"`
 }
 
 // APIConfig is the configuration for the API service.
@@ -54,6 +55,7 @@ type APIConfig struct {
 	Port                      int
 	HealthPort                int
 	Timeout                   time.Duration
+	PaginationKey             string
 	CertFile, KeyFile, CAFile string
 }
 
@@ -71,8 +73,8 @@ var DefaultConfig = Config{
 		Timeout:    900 * time.Second,
 	},
 	Notifier: &NotifierConfig{
-		Attempts: 5,
-    RenotifyInterval: 2 * time.Hour,
+		Attempts:         5,
+		RenotifyInterval: 2 * time.Hour,
 	},
 }
 
@@ -96,5 +98,22 @@ func Load(path string) (config *Config, err error) {
 	}
 
 	err = yaml.Unmarshal(d, config)
+	if err != nil {
+		return
+	}
+
+	if config.API.PaginationKey == "" {
+		var key fernet.Key
+		if err = key.Generate(); err != nil {
+			return
+		}
+		config.API.PaginationKey = key.Encode()
+	} else {
+		_, err = fernet.DecodeKey(config.API.PaginationKey)
+		if err != nil {
+			return
+		}
+	}
+
 	return
 }

@@ -23,6 +23,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils"
 )
@@ -58,5 +59,6 @@ func HTTPHandler(handler Handler, ctx *RouteContext) httprouter.Handle {
 }
 
 type RouteContext struct {
-	Store database.Datastore
+	Store  database.Datastore
+	Config *config.APIConfig
 }

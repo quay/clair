@@ -31,6 +31,10 @@
 			"Rev": "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d"
 		},
 		{
+			"ImportPath": "github.com/fernet/fernet-go",
+			"Rev": "1b2437bc582b3cfbb341ee5a29f8ef5b42912ff2"
+		},
+		{
 			"ImportPath": "github.com/go-sql-driver/mysql",
 			"Comment": "v1.2-125-gd512f20",
 			"Rev": "d512f204a577a4ab037a1816604c48c9c13210be"
