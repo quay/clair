@@ -262,7 +262,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(clair_notifier_latency_seconds_sum[$rate]))/sum(rate(clair_notifier_latency_seconds_count[$rate]))",
+              "expr": "sum(rate(clair_notifier_latency_milliseconds_sum[$rate]))/sum(rate(clair_notifier_latency_milliseconds_count[$rate]))",
               "interval": "",
               "intervalFactor": 2,
               "legendFormat": "Notifier - Latency",
