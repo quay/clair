@@ -211,6 +211,9 @@ func putVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 		return putVulnerabilityRoute, http.StatusBadRequest
 	}
 
+	vuln.Namespace.Name = p.ByName("namespaceName")
+	vuln.Name = p.ByName("vulnerabilityName")
+
 	err = ctx.Store.InsertVulnerabilities([]database.Vulnerability{vuln}, true)
 	if err != nil {
 		writeResponse(w, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
