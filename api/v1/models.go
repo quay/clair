@@ -208,12 +208,24 @@ func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotifica
 		nextPageStr = DBPageNumberToString(nextPage)
 	}
 
+	var created, notified, deleted string
+	if !dbNotification.Created.IsZero() {
+		created = fmt.Sprintf("%d", dbNotification.Created.Unix())
+	}
+	if !dbNotification.Notified.IsZero() {
+		notified = fmt.Sprintf("%d", dbNotification.Notified.Unix())
+	}
+	if !dbNotification.Deleted.IsZero() {
+		deleted = fmt.Sprintf("%d", dbNotification.Deleted.Unix())
+	}
+
 	// TODO(jzelinskie): implement "changed" key
+	fmt.Println(dbNotification.Deleted.IsZero())
 	return Notification{
 		Name:     dbNotification.Name,
-		Created:  fmt.Sprintf("%d", dbNotification.Created.Unix()),
-		Notified: fmt.Sprintf("%d", dbNotification.Notified.Unix()),
-		Deleted:  fmt.Sprintf("%d", dbNotification.Deleted.Unix()),
+		Created:  created,
+		Notified: notified,
+		Deleted:  deleted,
 		Limit:    limit,
 		Page:     DBPageNumberToString(page),
 		NextPage: nextPageStr,
