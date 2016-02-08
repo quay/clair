@@ -135,7 +135,6 @@ func detectContent(name, path, imageFormat string, parent *database.Layer) (name
 	// Detect features.
 	features, err = detectFeatures(name, data, namespace)
 	if err != nil {
-		log.Errorf("layer %s: package list could not be determined: %s", name, err)
 		return
 	}
 
@@ -182,7 +181,7 @@ func detectFeatures(name string, data map[string][]byte, namespace *database.Nam
 			if namespace != nil {
 				features[i].Feature.Namespace = *namespace
 			} else {
-				log.Errorf("layer %s: Layer's namespace is unknown but non-namespaced features have been detected", name)
+				log.Warningf("layer %s: Layer's namespace is unknown but non-namespaced features have been detected", name)
 				err = ErrUnsupported
 				return
 			}
