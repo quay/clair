@@ -31,9 +31,9 @@ import (
 )
 
 const (
-	url               = "https://security-tracker.debian.org/tracker/data/json"
-	cveURLPrefix      = "https://security-tracker.debian.org/tracker"
-	debianUpdaterFlag = "debianUpdater"
+	url          = "https://security-tracker.debian.org/tracker/data/json"
+	cveURLPrefix = "https://security-tracker.debian.org/tracker"
+	updaterFlag  = "debianUpdater"
 )
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "updater/fetchers/debian")
@@ -71,7 +71,7 @@ func (fetcher *DebianFetcher) FetchUpdate(datastore database.Datastore) (resp up
 	}
 
 	// Get the SHA-1 of the latest update's JSON data
-	latestHash, err := datastore.GetKeyValue(debianUpdaterFlag)
+	latestHash, err := datastore.GetKeyValue(updaterFlag)
 	if err != nil {
 		return resp, err
 	}
@@ -91,7 +91,7 @@ func buildResponse(jsonReader io.Reader, latestKnownHash string) (resp updater.F
 	// Defer the addition of flag information to the response.
 	defer func() {
 		if err == nil {
-			resp.FlagName = debianUpdaterFlag
+			resp.FlagName = updaterFlag
 			resp.FlagValue = hash
 		}
 	}()

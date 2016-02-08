@@ -35,9 +35,10 @@ import (
 )
 
 const (
-	ubuntuTrackerURI  = "https://launchpad.net/ubuntu-cve-tracker"
-	ubuntuTracker     = "lp:ubuntu-cve-tracker"
-	ubuntuUpdaterFlag = "ubuntuUpdater"
+	trackerURI        = "https://launchpad.net/ubuntu-cve-tracker"
+	trackerRepository = "lp:ubuntu-cve-tracker"
+	updaterFlag       = "ubuntuUpdater"
+	cveURL            = "http://people.ubuntu.com/~ubuntu-security/cve/%s"
 )
 
 var (
@@ -172,7 +173,7 @@ func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp up
 	}
 
 	// Add flag and notes.
-	resp.FlagName = ubuntuUpdaterFlag
+	resp.FlagName = updaterFlag
 	resp.FlagValue = strconv.Itoa(revisionNumber)
 	for note := range notes {
 		resp.Notes = append(resp.Notes, note)
@@ -248,7 +249,7 @@ func collectModifiedVulnerabilities(revision int, dbRevision, repositoryLocalPat
 
 func createRepository(pathToRepo string) error {
 	// Branch repository
-	out, err := utils.Exec("/tmp/", "bzr", "branch", ubuntuTracker, pathToRepo)
+	out, err := utils.Exec("/tmp/", "bzr", "branch", trackerRepository, pathToRepo)
 	if err != nil {
 		log.Errorf("could not branch Ubuntu repository: %s. output: %s", err, out)
 		return cerrors.ErrCouldNotDownload
@@ -296,12 +297,7 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 		// Parse the name.
 		if strings.HasPrefix(line, "Candidate:") {
 			vulnerability.Name = strings.TrimSpace(strings.TrimPrefix(line, "Candidate:"))
-			continue
-		}
-
-		// Parse the link.
-		if vulnerability.Link == "" && strings.HasPrefix(line, "http") {
-			vulnerability.Link = strings.TrimSpace(line)
+			vulnerability.Link = fmt.Sprintf(cveURL, vulnerability.Name)
 			continue
 		}
 
@@ -395,7 +391,7 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 
 	// If no link has been provided (CVE-2006-NNN0 for instance), add the link to the tracker
 	if vulnerability.Link == "" {
-		vulnerability.Link = ubuntuTrackerURI
+		vulnerability.Link = trackerURI
 	}
 
 	// If no priority has been provided (CVE-2007-0667 for instance), set the priority to Unknown
