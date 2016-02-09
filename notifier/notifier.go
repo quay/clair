@@ -183,13 +183,13 @@ func handleTask(notification database.VulnerabilityNotification, st *utils.Stopp
 		for {
 			// Max attempts exceeded.
 			if attempts >= maxAttempts {
-				log.Infof("giving up on sending notification '%s' to notifier '%s': max attempts exceeded (%d)\n", notification.Name, notifierName, maxAttempts)
+				log.Infof("giving up on sending notification '%s' via notifier '%s': max attempts exceeded (%d)\n", notification.Name, notifierName, maxAttempts)
 				return false, false
 			}
 
 			// Backoff.
 			if backOff > 0 {
-				log.Infof("waiting %v before retrying to send notification '%s' to notifier '%s' (Attempt %d / %d)\n", backOff, notification.Name, notifierName, attempts+1, maxAttempts)
+				log.Infof("waiting %v before retrying to send notification '%s' via notifier '%s' (Attempt %d / %d)\n", backOff, notification.Name, notifierName, attempts+1, maxAttempts)
 				if !st.Sleep(backOff) {
 					return false, true
 				}
@@ -199,9 +199,10 @@ func handleTask(notification database.VulnerabilityNotification, st *utils.Stopp
 			if err := notifier.Send(notification); err != nil {
 				// Send failed; increase attempts/backoff and retry.
 				promNotifierBackendErrorsTotal.WithLabelValues(notifierName).Inc()
-				log.Errorf("could not send notification '%s' to notifier '%s': %s", notification.Name, notifierName, err)
+				log.Errorf("could not send notification '%s' via notifier '%s': %v", notification.Name, notifierName, err)
 				backOff = timeutil.ExpBackoff(backOff, maxBackOff)
 				attempts++
+				continue
 			}
 
 			// Send has been successful. Go to the next notifier.

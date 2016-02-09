@@ -104,7 +104,7 @@ func (h *WebhookNotifier) Send(notification database.VulnerabilityNotification) 
 	resp, err := h.client.Post(h.endpoint, "application/json", bytes.NewBuffer(jsonNotification))
 	if err != nil || resp == nil || (resp.StatusCode != 200 && resp.StatusCode != 201) {
 		if resp != nil {
-			return fmt.Errorf("(%d) %s", resp.StatusCode, err)
+			return fmt.Errorf("got status %d, expected 200/201", resp.StatusCode)
 		}
 		return err
 	}
