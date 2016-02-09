@@ -29,10 +29,8 @@ import (
 	"github.com/coreos/clair/worker"
 )
 
-// maxBodySize restricts client requests to 1MiB.
 const (
-	maxBodySize int64 = 1048576
-
+	// These are the route identifiers for prometheus.
 	postLayerRoute           = "v1/postLayer"
 	getLayerRoute            = "v1/getLayer"
 	deleteLayerRoute         = "v1/deleteLayer"
@@ -47,6 +45,9 @@ const (
 	getNotificationRoute     = "v1/getNotification"
 	deleteNotificationRoute  = "v1/deleteNotification"
 	getMetricsRoute          = "v1/getMetrics"
+
+	// maxBodySize restricts client request bodies to 1MiB.
+	maxBodySize int64 = 1048576
 )
 
 func decodeJSON(r *http.Request, v interface{}) error {
