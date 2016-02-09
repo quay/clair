@@ -19,12 +19,14 @@ package detectors
 import (
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"strings"
 	"sync"
 
 	cerrors "github.com/coreos/clair/utils/errors"
+	"github.com/coreos/pkg/capnslog"
 )
 
 // The DataDetector interface defines a way to detect the required data from input path
@@ -38,6 +40,8 @@ type DataDetector interface {
 var (
 	dataDetectorsLock sync.Mutex
 	dataDetectors     = make(map[string]DataDetector)
+
+	log = capnslog.NewPackageLogger("github.com/coreos/clair", "detectors")
 )
 
 // RegisterDataDetector provides a way to dynamically register an implementation of a
@@ -68,6 +72,14 @@ func DetectData(path string, format string, toExtract []string, maxFileSize int6
 	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
 		r, err := http.Get(path)
 		if err != nil {
+			return nil, cerrors.ErrCouldNotDownload
+		}
+		if err != nil {
+			log.Warningf("could not download layer: %s", err)
+			return nil, cerrors.ErrCouldNotDownload
+		}
+		if math.Floor(float64(r.StatusCode/100)) != 2 {
+			log.Warningf("could not download layer: got status code %d, expected 2XX", r.StatusCode)
 			return nil, cerrors.ErrCouldNotDownload
 		}
 		layerReader = r.Body
