@@ -15,10 +15,12 @@
 package v1
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/prometheus/client_golang/prometheus"
@@ -55,12 +57,22 @@ func decodeJSON(r *http.Request, v interface{}) error {
 	return json.NewDecoder(io.LimitReader(r.Body, maxBodySize)).Decode(v)
 }
 
-func writeResponse(w http.ResponseWriter, status int, resp interface{}) {
+func writeResponse(w http.ResponseWriter, r *http.Request, status int, resp interface{}) {
+	// Headers must be written before the response.
 	header := w.Header()
 	header.Set("Content-Type", "application/json;charset=utf-8")
 	header.Set("Server", "clair")
+
+	// Gzip the response if the client supports it.
+	var writer io.Writer = w
+	if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+		writer = gzip.NewWriter(w)
+		header.Set("Content-Encoding", "gzip")
+	}
+
+	// Write the response.
 	w.WriteHeader(status)
-	err := json.NewEncoder(w).Encode(resp)
+	err := json.NewEncoder(writer).Encode(resp)
 	if err != nil {
 		panic("v1: failed to marshal response: " + err.Error())
 	}
@@ -70,27 +82,27 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 	request := LayerEnvelope{}
 	err := decodeJSON(r, &request)
 	if err != nil {
-		writeResponse(w, http.StatusBadRequest, LayerEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusBadRequest, LayerEnvelope{Error: &Error{err.Error()}})
 		return postLayerRoute, http.StatusBadRequest
 	}
 
 	if request.Layer == nil {
-		writeResponse(w, http.StatusBadRequest, LayerEnvelope{Error: &Error{"failed to provide layer"}})
+		writeResponse(w, r, http.StatusBadRequest, LayerEnvelope{Error: &Error{"failed to provide layer"}})
 		return postLayerRoute, http.StatusBadRequest
 	}
 
 	err = worker.Process(ctx.Store, request.Layer.Name, request.Layer.ParentName, request.Layer.Path, request.Layer.Format)
 	if err != nil {
 		if _, ok := err.(*cerrors.ErrBadRequest); ok {
-			writeResponse(w, http.StatusBadRequest, LayerEnvelope{Error: &Error{err.Error()}})
+			writeResponse(w, r, http.StatusBadRequest, LayerEnvelope{Error: &Error{err.Error()}})
 			return postLayerRoute, http.StatusBadRequest
 		}
-		writeResponse(w, http.StatusInternalServerError, LayerEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusInternalServerError, LayerEnvelope{Error: &Error{err.Error()}})
 		return postLayerRoute, http.StatusInternalServerError
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	writeResponse(w, http.StatusCreated, LayerEnvelope{Layer: &Layer{
+	writeResponse(w, r, http.StatusCreated, LayerEnvelope{Layer: &Layer{
 		Name:             request.Layer.Name,
 		ParentName:       request.Layer.ParentName,
 		Path:             request.Layer.Path,
@@ -106,26 +118,26 @@ func getLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *
 
 	dbLayer, err := ctx.Store.FindLayer(p.ByName("layerName"), withFeatures, withVulnerabilities)
 	if err == cerrors.ErrNotFound {
-		writeResponse(w, http.StatusNotFound, LayerEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusNotFound, LayerEnvelope{Error: &Error{err.Error()}})
 		return getLayerRoute, http.StatusNotFound
 	} else if err != nil {
-		writeResponse(w, http.StatusInternalServerError, LayerEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusInternalServerError, LayerEnvelope{Error: &Error{err.Error()}})
 		return getLayerRoute, http.StatusInternalServerError
 	}
 
 	layer := LayerFromDatabaseModel(dbLayer, withFeatures, withVulnerabilities)
 
-	writeResponse(w, http.StatusOK, LayerEnvelope{Layer: &layer})
+	writeResponse(w, r, http.StatusOK, LayerEnvelope{Layer: &layer})
 	return getLayerRoute, http.StatusOK
 }
 
 func deleteLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
 	err := ctx.Store.DeleteLayer(p.ByName("layerName"))
 	if err == cerrors.ErrNotFound {
-		writeResponse(w, http.StatusNotFound, LayerEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusNotFound, LayerEnvelope{Error: &Error{err.Error()}})
 		return deleteLayerRoute, http.StatusNotFound
 	} else if err != nil {
-		writeResponse(w, http.StatusInternalServerError, LayerEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusInternalServerError, LayerEnvelope{Error: &Error{err.Error()}})
 		return deleteLayerRoute, http.StatusInternalServerError
 	}
 
@@ -136,7 +148,7 @@ func deleteLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ct
 func getNamespaces(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
 	dbNamespaces, err := ctx.Store.ListNamespaces()
 	if err != nil {
-		writeResponse(w, http.StatusInternalServerError, NamespaceEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusInternalServerError, NamespaceEnvelope{Error: &Error{err.Error()}})
 		return getNamespacesRoute, http.StatusInternalServerError
 	}
 	var namespaces []string
@@ -144,7 +156,7 @@ func getNamespaces(w http.ResponseWriter, r *http.Request, p httprouter.Params, 
 		namespaces = append(namespaces, dbNamespace.Name)
 	}
 
-	writeResponse(w, http.StatusOK, NamespaceEnvelope{Namespaces: &namespaces})
+	writeResponse(w, r, http.StatusOK, NamespaceEnvelope{Namespaces: &namespaces})
 	return getNamespacesRoute, http.StatusOK
 }
 
@@ -152,24 +164,24 @@ func postVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	request := VulnerabilityEnvelope{}
 	err := decodeJSON(r, &request)
 	if err != nil {
-		writeResponse(w, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return postVulnerabilityRoute, http.StatusBadRequest
 	}
 
 	if request.Vulnerability == nil {
-		writeResponse(w, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"failed to provide vulnerability"}})
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"failed to provide vulnerability"}})
 		return postVulnerabilityRoute, http.StatusBadRequest
 	}
 
 	vuln, err := request.Vulnerability.DatabaseModel()
 	if err != nil {
-		writeResponse(w, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return postVulnerabilityRoute, http.StatusBadRequest
 	}
 
 	err = ctx.Store.InsertVulnerabilities([]database.Vulnerability{vuln}, true)
 	if err != nil {
-		writeResponse(w, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return postVulnerabilityRoute, http.StatusInternalServerError
 	}
 
@@ -182,16 +194,16 @@ func getVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 
 	dbVuln, err := ctx.Store.FindVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
 	if err == cerrors.ErrNotFound {
-		writeResponse(w, http.StatusNotFound, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusNotFound, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return getVulnerabilityRoute, http.StatusNotFound
 	} else if err != nil {
-		writeResponse(w, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return getVulnerabilityRoute, http.StatusInternalServerError
 	}
 
 	vuln := VulnerabilityFromDatabaseModel(dbVuln, withFixedIn)
 
-	writeResponse(w, http.StatusOK, VulnerabilityEnvelope{Vulnerability: &vuln})
+	writeResponse(w, r, http.StatusOK, VulnerabilityEnvelope{Vulnerability: &vuln})
 	return getVulnerabilityRoute, http.StatusOK
 }
 
@@ -199,23 +211,23 @@ func putVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 	request := VulnerabilityEnvelope{}
 	err := decodeJSON(r, &request)
 	if err != nil {
-		writeResponse(w, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return putVulnerabilityRoute, http.StatusBadRequest
 	}
 
 	if request.Vulnerability == nil {
-		writeResponse(w, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"failed to provide vulnerability"}})
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"failed to provide vulnerability"}})
 		return putVulnerabilityRoute, http.StatusBadRequest
 	}
 
 	if len(request.Vulnerability.FixedIn) != 0 {
-		writeResponse(w, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"Vulnerability.FixedIn must be empty"}})
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"Vulnerability.FixedIn must be empty"}})
 		return putVulnerabilityRoute, http.StatusBadRequest
 	}
 
 	vuln, err := request.Vulnerability.DatabaseModel()
 	if err != nil {
-		writeResponse(w, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return putVulnerabilityRoute, http.StatusBadRequest
 	}
 
@@ -224,7 +236,7 @@ func putVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 
 	err = ctx.Store.InsertVulnerabilities([]database.Vulnerability{vuln}, true)
 	if err != nil {
-		writeResponse(w, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return putVulnerabilityRoute, http.StatusInternalServerError
 	}
 
@@ -235,10 +247,10 @@ func putVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 func deleteVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
 	err := ctx.Store.DeleteVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
 	if err == cerrors.ErrNotFound {
-		writeResponse(w, http.StatusNotFound, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusNotFound, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return deleteVulnerabilityRoute, http.StatusNotFound
 	} else if err != nil {
-		writeResponse(w, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return deleteVulnerabilityRoute, http.StatusInternalServerError
 	}
 
@@ -249,15 +261,15 @@ func deleteVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 func getFixes(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
 	dbVuln, err := ctx.Store.FindVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
 	if err == cerrors.ErrNotFound {
-		writeResponse(w, http.StatusNotFound, FeatureEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusNotFound, FeatureEnvelope{Error: &Error{err.Error()}})
 		return getFixesRoute, http.StatusNotFound
 	} else if err != nil {
-		writeResponse(w, http.StatusInternalServerError, FeatureEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusInternalServerError, FeatureEnvelope{Error: &Error{err.Error()}})
 		return getFixesRoute, http.StatusInternalServerError
 	}
 
 	vuln := VulnerabilityFromDatabaseModel(dbVuln, true)
-	writeResponse(w, http.StatusOK, FeatureEnvelope{Features: &vuln.FixedIn})
+	writeResponse(w, r, http.StatusOK, FeatureEnvelope{Features: &vuln.FixedIn})
 	return getFixesRoute, http.StatusOK
 }
 
@@ -265,32 +277,32 @@ func putFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *co
 	request := FeatureEnvelope{}
 	err := decodeJSON(r, &request)
 	if err != nil {
-		writeResponse(w, http.StatusBadRequest, FeatureEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusBadRequest, FeatureEnvelope{Error: &Error{err.Error()}})
 		return putFixRoute, http.StatusBadRequest
 	}
 
 	if request.Feature == nil {
-		writeResponse(w, http.StatusBadRequest, FeatureEnvelope{Error: &Error{"failed to provide feature"}})
+		writeResponse(w, r, http.StatusBadRequest, FeatureEnvelope{Error: &Error{"failed to provide feature"}})
 		return putFixRoute, http.StatusBadRequest
 	}
 
 	if request.Feature.Name != p.ByName("fixName") {
-		writeResponse(w, http.StatusBadRequest, FeatureEnvelope{Error: &Error{"feature name in URL and JSON do not match"}})
+		writeResponse(w, r, http.StatusBadRequest, FeatureEnvelope{Error: &Error{"feature name in URL and JSON do not match"}})
 		return putFixRoute, http.StatusBadRequest
 	}
 
 	dbFix, err := request.Feature.DatabaseModel()
 	if err != nil {
-		writeResponse(w, http.StatusBadRequest, FeatureEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusBadRequest, FeatureEnvelope{Error: &Error{err.Error()}})
 		return putFixRoute, http.StatusBadRequest
 	}
 
 	err = ctx.Store.InsertVulnerabilityFixes(p.ByName("vulnerabilityNamespace"), p.ByName("vulnerabilityName"), []database.FeatureVersion{dbFix})
 	if err == cerrors.ErrNotFound {
-		writeResponse(w, http.StatusNotFound, FeatureEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusNotFound, FeatureEnvelope{Error: &Error{err.Error()}})
 		return putFixRoute, http.StatusNotFound
 	} else if err != nil {
-		writeResponse(w, http.StatusInternalServerError, FeatureEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusInternalServerError, FeatureEnvelope{Error: &Error{err.Error()}})
 		return putFixRoute, http.StatusInternalServerError
 	}
 
@@ -301,10 +313,10 @@ func putFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *co
 func deleteFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
 	err := ctx.Store.DeleteVulnerabilityFix(p.ByName("vulnerabilityNamespace"), p.ByName("vulnerabilityName"), p.ByName("fixName"))
 	if err == cerrors.ErrNotFound {
-		writeResponse(w, http.StatusNotFound, FeatureEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusNotFound, FeatureEnvelope{Error: &Error{err.Error()}})
 		return deleteFixRoute, http.StatusNotFound
 	} else if err != nil {
-		writeResponse(w, http.StatusInternalServerError, FeatureEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusInternalServerError, FeatureEnvelope{Error: &Error{err.Error()}})
 		return deleteFixRoute, http.StatusInternalServerError
 	}
 
@@ -317,12 +329,12 @@ func getNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params
 
 	limitStrs, limitExists := query["limit"]
 	if !limitExists {
-		writeResponse(w, http.StatusBadRequest, NotificationEnvelope{Error: &Error{"must provide limit query parameter"}})
+		writeResponse(w, r, http.StatusBadRequest, NotificationEnvelope{Error: &Error{"must provide limit query parameter"}})
 		return getNotificationRoute, http.StatusBadRequest
 	}
 	limit, err := strconv.Atoi(limitStrs[0])
 	if err != nil {
-		writeResponse(w, http.StatusBadRequest, NotificationEnvelope{Error: &Error{"invalid limit format: " + err.Error()}})
+		writeResponse(w, r, http.StatusBadRequest, NotificationEnvelope{Error: &Error{"invalid limit format: " + err.Error()}})
 		return getNotificationRoute, http.StatusBadRequest
 	}
 
@@ -331,33 +343,33 @@ func getNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	if pageExists {
 		page, err = tokenToPageNumber(pageStrs[0], ctx.Config.PaginationKey)
 		if err != nil {
-			writeResponse(w, http.StatusBadRequest, NotificationEnvelope{Error: &Error{"invalid page format: " + err.Error()}})
+			writeResponse(w, r, http.StatusBadRequest, NotificationEnvelope{Error: &Error{"invalid page format: " + err.Error()}})
 			return getNotificationRoute, http.StatusBadRequest
 		}
 	}
 
 	dbNotification, nextPage, err := ctx.Store.GetNotification(p.ByName("notificationName"), limit, page)
 	if err == cerrors.ErrNotFound {
-		writeResponse(w, http.StatusNotFound, NotificationEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusNotFound, NotificationEnvelope{Error: &Error{err.Error()}})
 		return deleteNotificationRoute, http.StatusNotFound
 	} else if err != nil {
-		writeResponse(w, http.StatusInternalServerError, NotificationEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusInternalServerError, NotificationEnvelope{Error: &Error{err.Error()}})
 		return getNotificationRoute, http.StatusInternalServerError
 	}
 
 	notification := NotificationFromDatabaseModel(dbNotification, limit, page, nextPage, ctx.Config.PaginationKey)
 
-	writeResponse(w, http.StatusOK, NotificationEnvelope{Notification: &notification})
+	writeResponse(w, r, http.StatusOK, NotificationEnvelope{Notification: &notification})
 	return getNotificationRoute, http.StatusOK
 }
 
 func deleteNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
 	err := ctx.Store.DeleteNotification(p.ByName("notificationName"))
 	if err == cerrors.ErrNotFound {
-		writeResponse(w, http.StatusNotFound, NotificationEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusNotFound, NotificationEnvelope{Error: &Error{err.Error()}})
 		return deleteNotificationRoute, http.StatusNotFound
 	} else if err != nil {
-		writeResponse(w, http.StatusInternalServerError, NotificationEnvelope{Error: &Error{err.Error()}})
+		writeResponse(w, r, http.StatusInternalServerError, NotificationEnvelope{Error: &Error{err.Error()}})
 		return deleteNotificationRoute, http.StatusInternalServerError
 	}
 
