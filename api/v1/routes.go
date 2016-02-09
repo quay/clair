@@ -27,6 +27,7 @@ import (
 
 	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/worker"
 )
@@ -93,7 +94,8 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 
 	err = worker.Process(ctx.Store, request.Layer.Name, request.Layer.ParentName, request.Layer.Path, request.Layer.Format)
 	if err != nil {
-		if _, ok := err.(*cerrors.ErrBadRequest); ok {
+		_, badreq := err.(*cerrors.ErrBadRequest)
+		if badreq || err == utils.ErrCouldNotExtract || err == utils.ErrExtractedFileTooBig {
 			writeResponse(w, r, http.StatusBadRequest, LayerEnvelope{Error: &Error{err.Error()}})
 			return postLayerRoute, http.StatusBadRequest
 		}
