@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/worker"
 )
@@ -55,7 +56,7 @@ func WriteHTTPError(w http.ResponseWriter, httpStatus int, err error) {
 				httpStatus = http.StatusNotFound
 			case database.ErrTransaction, database.ErrBackendException:
 				httpStatus = http.StatusServiceUnavailable
-			case worker.ErrParentUnknown, worker.ErrUnsupported:
+			case worker.ErrParentUnknown, worker.ErrUnsupported, utils.ErrCouldNotExtract, utils.ErrExtractedFileTooBig:
 				httpStatus = http.StatusBadRequest
 			}
 		}
