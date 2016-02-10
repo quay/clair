@@ -93,9 +93,11 @@ func DetectData(path string, format string, toExtract []string, maxFileSize int6
 
 	for _, detector := range dataDetectors {
 		if detector.Supported(path, format) {
-			if data, err = detector.Detect(layerReader, toExtract, maxFileSize); err == nil {
-				return data, nil
+			data, err = detector.Detect(layerReader, toExtract, maxFileSize)
+			if err != nil {
+				return nil, err
 			}
+			return data, nil
 		}
 	}
 
