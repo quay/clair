@@ -181,18 +181,6 @@ func (pgSQL *pgSQL) loadAffectedBy(featureVersions []database.FeatureVersion) er
 	return nil
 }
 
-// InsertLayer insert a single layer in the database
-//
-// The Name and EngineVersion fields are required.
-// The Parent, Namespace, Features are optional.
-// However, please note that the Parent field, if provided, is expected to have been retrieved
-// using FindLayer with its Features.
-//
-// The Name must be unique for two different layers.
-//
-// If the Layer already exists and the EngineVersion value of the inserted layer is higher than the
-// stored value, the EngineVersion, the Namespace and the Feature list will be updated.
-//
 // Internally, only Feature additions/removals are stored for each layer. If a layer has a parent,
 // the Feature list will be compared to the parent's Feature list and the difference will be stored.
 // Note that when the Namespace of a layer differs from its parent, it is expected that several
@@ -200,7 +188,6 @@ func (pgSQL *pgSQL) loadAffectedBy(featureVersions []database.FeatureVersion) er
 // (happens when Feature detectors relies on the detected layer Namespace). However, if the listed
 // Feature has the same Name/Version as its parent, InsertLayer considers that the Feature hasn't
 // been modified.
-// TODO(Quentin-M): This behavior should be implemented at the Feature detectors level.
 func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	tf := time.Now()
 
