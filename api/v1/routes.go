@@ -103,7 +103,6 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 		return postLayerRoute, http.StatusInternalServerError
 	}
 
-	w.WriteHeader(http.StatusCreated)
 	writeResponse(w, r, http.StatusCreated, LayerEnvelope{Layer: &Layer{
 		Name:             request.Layer.Name,
 		ParentName:       request.Layer.ParentName,
