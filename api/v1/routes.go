@@ -67,7 +67,10 @@ func writeResponse(w http.ResponseWriter, r *http.Request, status int, resp inte
 	// Gzip the response if the client supports it.
 	var writer io.Writer = w
 	if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
-		writer = gzip.NewWriter(w)
+		gzipWriter := gzip.NewWriter(w)
+		defer gzipWriter.Close()
+		writer = gzipWriter
+
 		header.Set("Content-Encoding", "gzip")
 	}
 
