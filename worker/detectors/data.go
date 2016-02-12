@@ -72,6 +72,11 @@ func DetectData(path string, format string, toExtract []string, maxFileSize int6
 	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
 		r, err := http.Get(path)
 		if err != nil {
+			log.Warningf("could not download layer: %s", err)
+			return nil, cerrors.ErrCouldNotDownload
+		}
+		if math.Floor(float64(r.StatusCode/100)) != 2 {
+			log.Warningf("could not download layer: got status code %d, expected 2XX", r.StatusCode)
 			return nil, cerrors.ErrCouldNotDownload
 		}
 		if err != nil {
