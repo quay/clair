@@ -94,7 +94,7 @@ func TestNotification(t *testing.T) {
 			},
 		},
 	}
-	assert.Nil(t, datastore.insertVulnerability(v1, false))
+	assert.Nil(t, datastore.insertVulnerability(v1, false, true))
 
 	// Get the notification associated to the previously inserted vulnerability.
 	notification, err := datastore.GetAvailableNotification(time.Second)
@@ -158,7 +158,7 @@ func TestNotification(t *testing.T) {
 		},
 	}
 
-	if assert.Nil(t, datastore.insertVulnerability(v1b, false)) {
+	if assert.Nil(t, datastore.insertVulnerability(v1b, false, true)) {
 		notification, err = datastore.GetAvailableNotification(time.Second)
 		assert.Nil(t, err)
 		assert.NotEmpty(t, notification.Name)
