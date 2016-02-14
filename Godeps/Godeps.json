@@ -14,6 +14,11 @@
 			"Rev": "b965b613227fddccbfffe13eae360ed3fa822f8d"
 		},
 		{
+			"ImportPath": "github.com/codegangsta/negroni",
+			"Comment": "v0.1-70-gc7477ad",
+			"Rev": "c7477ad8e330bef55bf1ebe300cf8aa67c492d1b"
+		},
+		{
 			"ImportPath": "github.com/coreos/go-systemd/journal",
 			"Comment": "v4-34-g4f14f6d",
 			"Rev": "4f14f6deef2da87e4aa59e6c1c1f3e02ba44c5e1"
