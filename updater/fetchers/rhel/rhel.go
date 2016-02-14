@@ -17,7 +17,6 @@ package rhel
 import (
 	"bufio"
 	"encoding/xml"
-	"errors"
 	"io"
 	"net/http"
 	"regexp"
@@ -52,9 +51,6 @@ var (
 	rhsaRegexp = regexp.MustCompile(`com.redhat.rhsa-(\d+).xml`)
 
 	log = capnslog.NewPackageLogger("github.com/coreos/clair", "updater/fetchers/rhel")
-
-	// ErrCouldNotParse is returned when a fetcher fails to parse the update data.
-	ErrCouldNotParse = errors.New("updater/fetchers: could not parse")
 )
 
 type oval struct {
