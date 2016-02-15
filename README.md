@@ -14,6 +14,10 @@ Clair is a single-binary server that exposes a JSON HTTP API. It does not requir
 
 Whether you host a container registry, a continuous-integration system, or build anywhere from dozens to thousands of containers, you can benefit from Clair. More generally, if you consider that container security matters (and, honestly, you should), you should give it a try.
 
+## How do I run Clair?
+
+Refer to the documentation [here](docs/Run.md "How to run Clair") for a detailed overview of how to run Clair.
+
 ## How Clair Detects Vulnerabilities
 
 Clair analyzes each container layer once, and does not execute the container to perform its examination. The scanning engine extracts all required data to detect known vulnerabilities, and caches layer data for examination against vulnerabilities discovered in the future.
@@ -21,6 +25,7 @@ Clair analyzes each container layer once, and does not execute the container to 
 Detecting vulnerabilities can be achieved with several techniques. One option is to compute hashes of binaries. These are presented on a layer and then compared with a database. However, building this database would become tricky considering the number of different packages and library versions.
 
 To detect vulnerabilities, Clair instead takes advantage of common package managers, which quickly and comprehensively provide lists of installed binary and source packages. Package lists are extracted for each layer that composes your container image: the difference between the layer’s package list and its parent one is stored. This method is efficient in its use of storage, and allows Clair to scan each layer only once, though that layer may be used in many container images. Coupled with vulnerability databases such as the Debian’s Security Bug Tracker, Clair is able to tell which vulnerabilities threaten a container, and which layer and package introduced them.
+
 
 ### Graph
 
