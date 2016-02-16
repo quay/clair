@@ -29,21 +29,15 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/coreos/clair/api/v1"
 )
 
 const (
-	postLayerURI               = "/v1/layers"
-	getLayerVulnerabilitiesURI = "/v1/layers/%s/vulnerabilities?minimumPriority=%s"
-	httpPort                   = 9279
+	postLayerURI        = "/v1/layers"
+	getLayerFeaturesURI = "/v1/layers/%s?features=true"
+	httpPort            = 9279
 )
-
-type APIVulnerabilitiesResponse struct {
-	Vulnerabilities []APIVulnerability
-}
-
-type APIVulnerability struct {
-	ID, Link, Priority, Description, CausedByPackage string
-}
 
 func main() {
 	endpoint := flag.String("endpoint", "http://127.0.0.1:6060", "Address to Clair API")
@@ -118,20 +112,27 @@ func main() {
 	}
 
 	// Get vulnerabilities
-	fmt.Println("Getting image's vulnerabilities")
-	vulnerabilities, err := getVulnerabilities(*endpoint, layerIDs[len(layerIDs)-1], *minimumPriority)
+	fmt.Println("Getting image's features")
+	features, err := getFeatures(*endpoint, layerIDs[len(layerIDs)-1], *minimumPriority)
 	if err != nil {
-		log.Fatalf("- Could not get vulnerabilities: %s\n", err)
+		log.Fatalf("- Could not get features: %s\n", err)
 	}
-	if len(vulnerabilities) == 0 {
+
+	isSafe := true
+	for _, feature := range features {
+		if len(feature.Vulnerabilities) != 0 {
+			isSafe = false
+			fmt.Printf("- # Feature:  %s %s %s\n", feature.Name, feature.Namespace, feature.Version)
+			for _, vulnerability := range feature.Vulnerabilities {
+				fmt.Printf("\t  - Name:        %s\n", vulnerability.Name)
+				fmt.Printf("\t  - Priority:    %s\n", vulnerability.Severity)
+				fmt.Printf("\t  - Link:        %s\n", vulnerability.Link)
+				fmt.Printf("\t  - Description: %s\n", vulnerability.Description)
+			}
+		}
+	}
+	if isSafe {
 		fmt.Println("Bravo, your image looks SAFE !")
-	}
-	for _, vulnerability := range vulnerabilities {
-		fmt.Printf("- # %s\n", vulnerability.ID)
-		fmt.Printf("  - Priority:    %s\n", vulnerability.Priority)
-		fmt.Printf("  - Link:        %s\n", vulnerability.Link)
-		fmt.Printf("  - Package:     %s\n", vulnerability.CausedByPackage)
-		fmt.Printf("  - Description: %s\n", vulnerability.Description)
 	}
 }
 
@@ -227,8 +228,8 @@ func historyFromCommand(imageName string) ([]string, error) {
 	return layers, nil
 }
 
-func analyzeLayer(endpoint, path, layerID, parentLayerID string) error {
-	payload := struct{ ID, Path, ParentID, ImageFormat string }{ID: layerID, Path: path, ParentID: parentLayerID, ImageFormat: "Docker"}
+func analyzeLayer(endpoint, path, layerName, parentLayerName string) error {
+	payload := v1.LayerEnvelope{Layer: &v1.Layer{Name: layerName, Path: path, ParentName: parentLayerName, Format: "Docker"}}
 	jsonPayload, err := json.Marshal(payload)
 	if err != nil {
 		return err
@@ -255,25 +256,26 @@ func analyzeLayer(endpoint, path, layerID, parentLayerID string) error {
 	return nil
 }
 
-func getVulnerabilities(endpoint, layerID, minimumPriority string) ([]APIVulnerability, error) {
-	response, err := http.Get(endpoint + fmt.Sprintf(getLayerVulnerabilitiesURI, layerID, minimumPriority))
+func getFeatures(endpoint, layerID, minimumPriority string) ([]v1.Feature, error) {
+	response, err := http.Get(endpoint + fmt.Sprintf(getLayerFeaturesURI, layerID))
 	if err != nil {
-		return []APIVulnerability{}, err
+		return []v1.Feature{}, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != 200 {
 		body, _ := ioutil.ReadAll(response.Body)
-		return []APIVulnerability{}, fmt.Errorf("Got response %d with message %s", response.StatusCode, string(body))
+		return []v1.Feature{}, fmt.Errorf("Got response %d with message %s", response.StatusCode, string(body))
 	}
 
-	var apiResponse APIVulnerabilitiesResponse
-	err = json.NewDecoder(response.Body).Decode(&apiResponse)
-	if err != nil {
-		return []APIVulnerability{}, err
+	var apiResponse v1.LayerEnvelope
+	if err = json.NewDecoder(response.Body).Decode(&apiResponse); err != nil {
+		return []v1.Feature{}, err
+	} else if apiResponse.Error != nil {
+		return []v1.Feature{}, errors.New(apiResponse.Error.Message)
 	}
 
-	return apiResponse.Vulnerabilities, nil
+	return apiResponse.Layer.Features, nil
 }
 
 func restrictedFileServer(path, allowedHost string) http.Handler {
