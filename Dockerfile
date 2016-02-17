@@ -7,8 +7,6 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN mkdir /db
-VOLUME /db
 VOLUME /config
 
 EXPOSE 6060 6061
