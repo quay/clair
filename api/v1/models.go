@@ -63,6 +63,7 @@ func LayerFromDatabaseModel(dbLayer database.Layer, withFeatures, withVulnerabil
 				Name:      dbFeatureVersion.Feature.Name,
 				Namespace: dbFeatureVersion.Feature.Namespace.Name,
 				Version:   dbFeatureVersion.Version.String(),
+				AddedBy:   dbFeatureVersion.AddedBy.Name,
 			}
 
 			for _, dbVuln := range dbFeatureVersion.AffectedBy {
@@ -148,6 +149,7 @@ type Feature struct {
 	Namespace       string          `json:"Namespace,omitempty"`
 	Version         string          `json:"Version,omitempty"`
 	Vulnerabilities []Vulnerability `json:"Vulnerabilities,omitempty"`
+	AddedBy         string          `json:"AddedBy,omitempty"`
 }
 
 func FeatureFromDatabaseModel(dbFeatureVersion database.FeatureVersion) Feature {
@@ -160,6 +162,7 @@ func FeatureFromDatabaseModel(dbFeatureVersion database.FeatureVersion) Feature 
 		Name:      dbFeatureVersion.Feature.Name,
 		Namespace: dbFeatureVersion.Feature.Namespace.Name,
 		Version:   versionStr,
+		AddedBy:   dbFeatureVersion.AddedBy.Name,
 	}
 }
 

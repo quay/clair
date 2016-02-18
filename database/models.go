@@ -56,6 +56,9 @@ type FeatureVersion struct {
 	Feature    Feature
 	Version    types.Version
 	AffectedBy []Vulnerability
+
+	// For output purposes. Only make sense when the feature version is in the context of an image.
+	AddedBy Layer
 }
 
 type Vulnerability struct {

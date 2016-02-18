@@ -86,22 +86,22 @@ func init() {
     WHERE l.name = $1;`
 
 	queries["s_layer_featureversion"] = `
-    WITH RECURSIVE layer_tree(id, parent_id, depth, path, cycle) AS(
-      SELECT l.id, l.parent_id, 1, ARRAY[l.id], false
-      FROM Layer l
-      WHERE l.id = $1
-    UNION ALL
-      SELECT l.id, l.parent_id, lt.depth + 1, path || l.id, l.id = ANY(path)
-      FROM Layer l, layer_tree lt
-      WHERE l.id = lt.parent_id
-    )
-    SELECT ldf.featureversion_id, ldf.modification, fn.id, fn.name, f.id, f.name, fv.id, fv.version
-    FROM Layer_diff_FeatureVersion ldf
-    JOIN (
-      SELECT row_number() over (ORDER BY depth DESC), id FROM layer_tree
-    ) AS ltree (ordering, id) ON ldf.layer_id = ltree.id, FeatureVersion fv, Feature f, Namespace fn
-    WHERE ldf.featureversion_id = fv.id AND fv.feature_id = f.id AND f.namespace_id = fn.id
-    ORDER BY ltree.ordering`
+		WITH RECURSIVE layer_tree(id, name, parent_id, depth, path, cycle) AS(
+			SELECT l.id, l.name, l.parent_id, 1, ARRAY[l.id], false
+			FROM Layer l
+			WHERE l.id = $1
+		UNION ALL
+			SELECT l.id, l.name, l.parent_id, lt.depth + 1, path || l.id, l.id = ANY(path)
+			FROM Layer l, layer_tree lt
+			WHERE l.id = lt.parent_id
+		)
+		SELECT ldf.featureversion_id, ldf.modification, fn.id, fn.name, f.id, f.name, fv.id, fv.version, ltree.id, ltree.name
+		FROM Layer_diff_FeatureVersion ldf
+		JOIN (
+			SELECT row_number() over (ORDER BY depth DESC), id, name FROM layer_tree
+		) AS ltree (ordering, id, name) ON ldf.layer_id = ltree.id, FeatureVersion fv, Feature f, Namespace fn
+		WHERE ldf.featureversion_id = fv.id AND fv.feature_id = f.id AND f.namespace_id = fn.id
+		ORDER BY ltree.ordering`
 
 	queries["s_featureversions_vulnerabilities"] = `
     SELECT vafv.featureversion_id, v.id, v.name, v.description, v.link, v.severity, v.metadata,

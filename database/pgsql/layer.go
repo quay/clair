@@ -109,7 +109,8 @@ func (pgSQL *pgSQL) getLayerFeatureVersions(layerID int) ([]database.FeatureVers
 
 		err = rows.Scan(&featureVersion.ID, &modification, &featureVersion.Feature.Namespace.ID,
 			&featureVersion.Feature.Namespace.Name, &featureVersion.Feature.ID,
-			&featureVersion.Feature.Name, &featureVersion.ID, &featureVersion.Version)
+			&featureVersion.Feature.Name, &featureVersion.ID, &featureVersion.Version,
+			&featureVersion.AddedBy.ID, &featureVersion.AddedBy.Name)
 		if err != nil {
 			return featureVersions, handleError("s_layer_featureversion.Scan()", err)
 		}
