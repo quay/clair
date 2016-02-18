@@ -71,6 +71,7 @@ func LayerFromDatabaseModel(dbLayer database.Layer, withFeatures, withVulnerabil
 					Name:        dbVuln.Name,
 					Namespace:   dbVuln.Namespace.Name,
 					Description: dbVuln.Description,
+					Link:        dbVuln.Link,
 					Severity:    string(dbVuln.Severity),
 					Metadata:    dbVuln.Metadata,
 				}
