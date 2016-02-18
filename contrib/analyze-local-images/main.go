@@ -42,7 +42,7 @@ type APIVulnerabilitiesResponse struct {
 }
 
 type APIVulnerability struct {
-	ID, Link, Priority, Description string
+	ID, Link, Priority, Description, CausedByPackage string
 }
 
 func main() {
@@ -130,6 +130,7 @@ func main() {
 		fmt.Printf("- # %s\n", vulnerability.ID)
 		fmt.Printf("  - Priority:    %s\n", vulnerability.Priority)
 		fmt.Printf("  - Link:        %s\n", vulnerability.Link)
+		fmt.Printf("  - Package:     %s\n", vulnerability.CausedByPackage)
 		fmt.Printf("  - Description: %s\n", vulnerability.Description)
 	}
 }
