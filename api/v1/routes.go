@@ -51,6 +51,13 @@ const (
 
 	// maxBodySize restricts client request bodies to 1MiB.
 	maxBodySize int64 = 1048576
+
+	// statusUnprocessableEntity represents the 422 (Unprocessable Entity) status code, which means
+	// the server understands the content type of the request entity
+	// (hence a 415(Unsupported Media Type) status code is inappropriate), and the syntax of the
+	// request entity is correct (thus a 400 (Bad Request) status code is inappropriate) but was
+	// unable to process the contained instructions.
+	statusUnprocessableEntity = 422
 )
 
 func decodeJSON(r *http.Request, v interface{}) error {
@@ -97,11 +104,24 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 
 	err = worker.Process(ctx.Store, request.Layer.Name, request.Layer.ParentName, request.Layer.Path, request.Layer.Format)
 	if err != nil {
+		if err == cerrors.ErrNotFound || err == worker.ErrParentUnknown {
+			writeResponse(w, r, http.StatusNotFound, LayerEnvelope{Error: &Error{err.Error()}})
+			return postLayerRoute, http.StatusNotFound
+		}
+
+		if err == utils.ErrCouldNotExtract ||
+			err == utils.ErrExtractedFileTooBig ||
+			err == worker.ErrUnsupported {
+			writeResponse(w, r, statusUnprocessableEntity, LayerEnvelope{Error: &Error{err.Error()}})
+			return postLayerRoute, statusUnprocessableEntity
+		}
+
 		_, badreq := err.(*cerrors.ErrBadRequest)
 		if badreq || err == utils.ErrCouldNotExtract || err == utils.ErrExtractedFileTooBig {
 			writeResponse(w, r, http.StatusBadRequest, LayerEnvelope{Error: &Error{err.Error()}})
 			return postLayerRoute, http.StatusBadRequest
 		}
+
 		writeResponse(w, r, http.StatusInternalServerError, LayerEnvelope{Error: &Error{err.Error()}})
 		return postLayerRoute, http.StatusInternalServerError
 	}

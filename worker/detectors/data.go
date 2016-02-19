@@ -82,6 +82,8 @@ func DetectData(path string, format string, toExtract []string, maxFileSize int6
 		if err != nil {
 			log.Warningf("could not download layer: %s", err)
 			return nil, cerrors.ErrCouldNotDownload
+		if r.StatusCode == 404 {
+			return nil, cerrors.ErrNotFound
 		}
 		if math.Floor(float64(r.StatusCode/100)) != 2 {
 			log.Warningf("could not download layer: got status code %d, expected 2XX", r.StatusCode)
