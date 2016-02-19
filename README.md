@@ -5,8 +5,6 @@
 [![GoDoc](https://godoc.org/github.com/chihaya/chihaya?status.svg "GoDoc")](https://godoc.org/github.com/chihaya/chihaya)
 [![IRC Channel](https://img.shields.io/badge/freenode-%23clair-blue.svg "IRC Channel")](http://webchat.freenode.net/?channels=clair)
 
-![Simple Clair Diagram](img/simple_diagram.png)
-
 Clair is an open source project for the static analysis of vulnerabilities in [AppC](https://github.com/appc/spec) and [Docker](https://github.com/docker/docker/blob/master/image/spec/v1.md) containers.
 
 Clair imports vulnerability data from a known set of sources and indexes the contents of container images in order to produce a list of vulnerabilities that threaten a container.
@@ -75,6 +73,10 @@ $ ./$GOBIN/clair -config=config.yaml
 ```
 
 ## Architecture
+
+### At a glance
+
+![Simple Clair Diagram](img/simple_diagram.png)
 
 ### Vulnerability Analysis
 
