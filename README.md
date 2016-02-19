@@ -5,6 +5,8 @@
 [![GoDoc](https://godoc.org/github.com/chihaya/chihaya?status.svg "GoDoc")](https://godoc.org/github.com/chihaya/chihaya)
 [![IRC Channel](https://img.shields.io/badge/freenode-%23clair-blue.svg "IRC Channel")](http://webchat.freenode.net/?channels=clair)
 
+![Simple Clair Diagram](img/simple_diagram.png)
+
 Clair is an open source project for the static analysis of vulnerabilities in [AppC](https://github.com/appc/spec) and [Docker](https://github.com/docker/docker/blob/master/image/spec/v1.md) containers.
 
 Clair imports vulnerability data from a known set of sources and indexes the contents of container images in order to produce a list of vulnerabilities that threaten a container.
@@ -100,6 +102,15 @@ By indexing the features of an image into the database, Clair can query for affe
 [dpkg]: https://en.wikipedia.org/wiki/dpkg
 [rpm]: http://www.rpm.org
 
+
+### Custom Data Sources
+
+In addition to the default data sources, Clair has been designed in a way that allows extension without forking the project.
+*Fetchers*, which are Go packages that implement the fetching of upstream vulnerability data, are registered in [init()] similar to drivers for Go's standard [database/sql] package.
+A fetcher can live in its own repository and custom versions of clair can contain a small patch that adds the import statements of the desired fetchers in `main.go`.
+
+[init()]: https://golang.org/doc/effective_go.html#init
+[database/sql]: https://godoc.org/database/sql
 
 ## Related Links
 
