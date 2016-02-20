@@ -109,7 +109,7 @@ func init() {
     FROM Vulnerability_Affects_FeatureVersion vafv, Vulnerability v,
          Namespace vn, Vulnerability_FixedIn_Feature vfif
     WHERE vafv.featureversion_id = ANY($1::integer[])
-          AND vafv.vulnerability_id = v.id
+          AND vfif.vulnerability_id = v.id
           AND vafv.fixedin_id = vfif.id
           AND v.namespace_id = vn.id
           AND v.deleted_at IS NULL`
