@@ -25,6 +25,8 @@ func init() {
 	queries = make(map[string]string)
 
 	queries["l_vulnerability_affects_featureversion"] = `LOCK Vulnerability_Affects_FeatureVersion IN SHARE ROW EXCLUSIVE MODE`
+	queries["disable_hashjoin"] = `SET LOCAL enable_hashjoin = off`
+	queries["disable_mergejoin"] = `SET LOCAL enable_mergejoin = off`
 
 	// keyvalue.go
 	queries["u_keyvalue"] = `UPDATE KeyValue SET value = $1 WHERE key = $2`

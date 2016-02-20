@@ -65,8 +65,30 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 
 	// Find its features
 	if withFeatures || withVulnerabilities {
+		// Create a transaction to disable hash/merge joins as our experiments have shown that
+		// PostgreSQL 9.4 makes bad planning decisions about:
+		// - joining the layer tree to feature versions and feature
+		// - joining the feature versions to affected/fixed feature version and vulnerabilities
+		// It would for instance do a merge join between affected feature versions (300 rows, estimated
+		// 3000 rows) and fixed in feature version (100k rows). In this case, it is much more
+		// preferred to use a nested loop.
+		tx, err := pgSQL.Begin()
+		if err != nil {
+			return layer, handleError("FindLayer.Begin()", err)
+		}
+		defer tx.Commit()
+
+		_, err = tx.Exec(getQuery("disable_hashjoin"))
+		if err != nil {
+			log.Warningf("FindLayer: could not disable hash join: %s", err)
+		}
+		_, err = tx.Exec(getQuery("disable_mergejoin"))
+		if err != nil {
+			log.Warningf("FindLayer: could not disable merge join: %s", err)
+		}
+
 		t = time.Now()
-		featureVersions, err := pgSQL.getLayerFeatureVersions(layer.ID)
+		featureVersions, err := getLayerFeatureVersions(tx, layer.ID)
 		observeQueryTime("FindLayer", "getLayerFeatureVersions", t)
 
 		if err != nil {
@@ -78,7 +100,7 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 		if withVulnerabilities {
 			// Load the vulnerabilities that affect the FeatureVersions.
 			t = time.Now()
-			err := pgSQL.loadAffectedBy(layer.Features)
+			err := loadAffectedBy(tx, layer.Features)
 			observeQueryTime("FindLayer", "loadAffectedBy", t)
 
 			if err != nil {
@@ -91,11 +113,11 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 }
 
 // getLayerFeatureVersions returns list of database.FeatureVersion that a database.Layer has.
-func (pgSQL *pgSQL) getLayerFeatureVersions(layerID int) ([]database.FeatureVersion, error) {
+func getLayerFeatureVersions(tx *sql.Tx, layerID int) ([]database.FeatureVersion, error) {
 	var featureVersions []database.FeatureVersion
 
 	// Query.
-	rows, err := pgSQL.Query(getQuery("s_layer_featureversion"), layerID)
+	rows, err := tx.Query(getQuery("s_layer_featureversion"), layerID)
 	if err != nil {
 		return featureVersions, handleError("s_layer_featureversion", err)
 	}
@@ -140,7 +162,7 @@ func (pgSQL *pgSQL) getLayerFeatureVersions(layerID int) ([]database.FeatureVers
 
 // loadAffectedBy returns the list of database.Vulnerability that affect the given
 // FeatureVersion.
-func (pgSQL *pgSQL) loadAffectedBy(featureVersions []database.FeatureVersion) error {
+func loadAffectedBy(tx *sql.Tx, featureVersions []database.FeatureVersion) error {
 	if len(featureVersions) == 0 {
 		return nil
 	}
@@ -151,7 +173,7 @@ func (pgSQL *pgSQL) loadAffectedBy(featureVersions []database.FeatureVersion) er
 		featureVersionIDs = append(featureVersionIDs, featureVersions[i].ID)
 	}
 
-	rows, err := pgSQL.Query(getQuery("s_featureversions_vulnerabilities"),
+	rows, err := tx.Query(getQuery("s_featureversions_vulnerabilities"),
 		buildInputArray(featureVersionIDs))
 	if err != nil && err != sql.ErrNoRows {
 		return handleError("s_featureversions_vulnerabilities", err)
