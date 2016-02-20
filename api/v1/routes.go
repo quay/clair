@@ -84,8 +84,14 @@ func writeResponse(w http.ResponseWriter, r *http.Request, status int, resp inte
 	// Write the response.
 	w.WriteHeader(status)
 	err := json.NewEncoder(writer).Encode(resp)
+
 	if err != nil {
-		panic("v1: failed to marshal response: " + err.Error())
+		switch err.(type) {
+		case *json.MarshalerError, *json.UnsupportedTypeError, *json.UnsupportedValueError:
+			panic("v1: failed to marshal response: " + err.Error())
+		default:
+			log.Warningf("failed to write response: %s", err.Error())
+		}
 	}
 }
 
