@@ -54,7 +54,7 @@ func HTTPHandler(handler Handler, ctx *RouteContext) httprouter.Handle {
 		}
 		utils.PrometheusObserveTimeMilliseconds(promResponseDurationMilliseconds.WithLabelValues(route, statusStr), start)
 
-		log.Infof("%s \"%s %s\" %s", r.RemoteAddr, r.Method, r.RequestURI, statusStr)
+		log.Infof("%s \"%s %s\" %s (%s)", r.RemoteAddr, r.Method, r.RequestURI, statusStr, time.Since(start))
 	}
 }
 
