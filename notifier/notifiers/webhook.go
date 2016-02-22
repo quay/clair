@@ -25,6 +25,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"time"
 
 	"gopkg.in/yaml.v2"
 
@@ -32,6 +33,8 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/notifier"
 )
+
+const timeout = 5 * time.Second
 
 // A WebhookNotifier dispatches notifications to a webhook endpoint.
 type WebhookNotifier struct {
@@ -89,6 +92,7 @@ func (h *WebhookNotifier) Configure(config *config.NotifierConfig) (bool, error)
 		Transport: &http.Transport{
 			TLSClientConfig: tlsConfig,
 		},
+		Timeout: timeout,
 	}
 	return true, nil
 }
