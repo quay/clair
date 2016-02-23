@@ -58,7 +58,7 @@ func init() {
 
 // FetchUpdate fetches vulnerability updates from the Debian Security Tracker.
 func (fetcher *DebianFetcher) FetchUpdate() (resp updater.FetcherResponse, err error) {
-	log.Info("fetching Debian vulneratibilities")
+	log.Info("fetching Debian vulnerabilities")
 
 	// Download JSON.
 	r, err := http.Get(url)

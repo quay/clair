@@ -86,7 +86,7 @@ func init() {
 
 // FetchUpdate gets vulnerability updates from the Red Hat OVAL definitions.
 func (f *RHELFetcher) FetchUpdate() (resp updater.FetcherResponse, err error) {
-	log.Info("fetching Red Hat vulneratibilities")
+	log.Info("fetching Red Hat vulnerabilities")
 
 	// Get the first RHSA we have to manage.
 	flagValue, err := database.GetFlagValue(rhelUpdaterFlag)
