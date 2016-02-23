@@ -211,11 +211,17 @@ func postVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Para
 
 	err = ctx.Store.InsertVulnerabilities([]database.Vulnerability{vuln}, true)
 	if err != nil {
-		writeResponse(w, r, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
-		return postVulnerabilityRoute, http.StatusInternalServerError
+		switch err.(type) {
+		case *cerrors.ErrBadRequest:
+			writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+			return postVulnerabilityRoute, http.StatusBadRequest
+		default:
+			writeResponse(w, r, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+			return postVulnerabilityRoute, http.StatusInternalServerError
+		}
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	writeResponse(w, r, http.StatusCreated, VulnerabilityEnvelope{Vulnerability: request.Vulnerability})
 	return postVulnerabilityRoute, http.StatusCreated
 }
 
@@ -266,11 +272,17 @@ func putVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 
 	err = ctx.Store.InsertVulnerabilities([]database.Vulnerability{vuln}, true)
 	if err != nil {
-		writeResponse(w, r, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
-		return putVulnerabilityRoute, http.StatusInternalServerError
+		switch err.(type) {
+		case *cerrors.ErrBadRequest:
+			writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+			return putVulnerabilityRoute, http.StatusBadRequest
+		default:
+			writeResponse(w, r, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+			return putVulnerabilityRoute, http.StatusInternalServerError
+		}
 	}
 
-	w.WriteHeader(http.StatusOK)
+	writeResponse(w, r, http.StatusOK, VulnerabilityEnvelope{Vulnerability: request.Vulnerability})
 	return putVulnerabilityRoute, http.StatusOK
 }
 
@@ -328,15 +340,22 @@ func putFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *co
 	}
 
 	err = ctx.Store.InsertVulnerabilityFixes(p.ByName("vulnerabilityNamespace"), p.ByName("vulnerabilityName"), []database.FeatureVersion{dbFix})
-	if err == cerrors.ErrNotFound {
-		writeResponse(w, r, http.StatusNotFound, FeatureEnvelope{Error: &Error{err.Error()}})
-		return putFixRoute, http.StatusNotFound
-	} else if err != nil {
-		writeResponse(w, r, http.StatusInternalServerError, FeatureEnvelope{Error: &Error{err.Error()}})
-		return putFixRoute, http.StatusInternalServerError
+	if err != nil {
+		switch err.(type) {
+		case *cerrors.ErrBadRequest:
+			writeResponse(w, r, http.StatusBadRequest, FeatureEnvelope{Error: &Error{err.Error()}})
+			return putFixRoute, http.StatusBadRequest
+		default:
+			if err == cerrors.ErrNotFound {
+				writeResponse(w, r, http.StatusNotFound, FeatureEnvelope{Error: &Error{err.Error()}})
+				return putFixRoute, http.StatusNotFound
+			}
+			writeResponse(w, r, http.StatusInternalServerError, FeatureEnvelope{Error: &Error{err.Error()}})
+			return putFixRoute, http.StatusInternalServerError
+		}
 	}
 
-	w.WriteHeader(http.StatusOK)
+	writeResponse(w, r, http.StatusOK, FeatureEnvelope{Feature: request.Feature})
 	return putFixRoute, http.StatusOK
 }
 
