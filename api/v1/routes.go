@@ -336,8 +336,8 @@ func putFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *co
 		return putFixRoute, http.StatusInternalServerError
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	return putFixRoute, http.StatusCreated
+	w.WriteHeader(http.StatusOK)
+	return putFixRoute, http.StatusOK
 }
 
 func deleteFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
