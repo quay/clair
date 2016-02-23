@@ -81,7 +81,7 @@ func init() {
 
 // FetchUpdate gets vulnerability updates from the Ubuntu CVE Tracker.
 func (fetcher *UbuntuFetcher) FetchUpdate() (resp updater.FetcherResponse, err error) {
-	log.Info("fetching Ubuntu vulneratibilities")
+	log.Info("fetching Ubuntu vulnerabilities")
 
 	// Check to see if the repository does not already exist.
 	if _, pathExists := os.Stat(repositoryLocalPath); repositoryLocalPath == "" || os.IsNotExist(pathExists) {
