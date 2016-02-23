@@ -89,7 +89,7 @@ Features are anything that when present could be an indication of a vulnerabilit
 By indexing the features of an image into the database, Clair can query for affected images when new vulnerabilities get introduced without rescanning any images.
 
 [Static Analysis]: https://en.wikipedia.org/wiki/Static_program_analysis
-[Dynamic Analysis]: https://en.wikipedia.org/wiki/Dynamic_program_analysi://en.wikipedia.org/wiki/Dynamic_program_analysis
+[Dynamic Analysis]: https://en.wikipedia.org/wiki/Dynamic_program_analysis
 
 ### Data Sources
 
