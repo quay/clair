@@ -49,9 +49,9 @@ func (pgSQL *pgSQL) insertFeature(feature database.Feature) (int, error) {
 
 	// Find or create Feature.
 	var id int
-	err = pgSQL.QueryRow(getQuery("soi_feature"), feature.Name, namespaceID).Scan(&id)
+	err = pgSQL.QueryRow(soiFeature, feature.Name, namespaceID).Scan(&id)
 	if err != nil {
-		return 0, handleError("soi_feature", err)
+		return 0, handleError("soiFeature", err)
 	}
 
 	if pgSQL.cache != nil {
@@ -103,25 +103,25 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 	promConcurrentLockVAFV.Inc()
 	defer promConcurrentLockVAFV.Dec()
 	t = time.Now()
-	_, err = tx.Exec(getQuery("l_vulnerability_affects_featureversion"))
+	_, err = tx.Exec(lockVulnerabilityAffects)
 	observeQueryTime("insertFeatureVersion", "lock", t)
 
 	if err != nil {
 		tx.Rollback()
-		return 0, handleError("insertFeatureVersion.l_vulnerability_affects_featureversion", err)
+		return 0, handleError("insertFeatureVersion.lockVulnerabilityAffects", err)
 	}
 
 	// Find or create FeatureVersion.
 	var newOrExisting string
 
 	t = time.Now()
-	err = tx.QueryRow(getQuery("soi_featureversion"), featureID, &featureVersion.Version).
+	err = tx.QueryRow(soiFeatureVersion, featureID, &featureVersion.Version).
 		Scan(&newOrExisting, &featureVersion.ID)
-	observeQueryTime("insertFeatureVersion", "soi_featureversion", t)
+	observeQueryTime("insertFeatureVersion", "soiFeatureVersion", t)
 
 	if err != nil {
 		tx.Rollback()
-		return 0, handleError("soi_featureversion", err)
+		return 0, handleError("soiFeatureVersion", err)
 	}
 
 	if newOrExisting == "exi" {
@@ -183,9 +183,9 @@ type vulnerabilityAffectsFeatureVersion struct {
 func linkFeatureVersionToVulnerabilities(tx *sql.Tx, featureVersion database.FeatureVersion) error {
 	// Select every vulnerability and the fixed version that affect this Feature.
 	// TODO(Quentin-M): LIMIT
-	rows, err := tx.Query(getQuery("s_vulnerability_fixedin_feature"), featureVersion.Feature.ID)
+	rows, err := tx.Query(searchVulnerabilityFixedInFeature, featureVersion.Feature.ID)
 	if err != nil {
-		return handleError("s_vulnerability_fixedin_feature", err)
+		return handleError("searchVulnerabilityFixedInFeature", err)
 	}
 	defer rows.Close()
 
@@ -195,7 +195,7 @@ func linkFeatureVersionToVulnerabilities(tx *sql.Tx, featureVersion database.Fea
 
 		err := rows.Scan(&affect.fixedInID, &affect.vulnerabilityID, &affect.fixedInVersion)
 		if err != nil {
-			return handleError("s_vulnerability_fixedin_feature.Scan()", err)
+			return handleError("searchVulnerabilityFixedInFeature.Scan()", err)
 		}
 
 		if featureVersion.Version.Compare(affect.fixedInVersion) < 0 {
@@ -205,17 +205,17 @@ func linkFeatureVersionToVulnerabilities(tx *sql.Tx, featureVersion database.Fea
 		}
 	}
 	if err = rows.Err(); err != nil {
-		return handleError("s_vulnerability_fixedin_feature.Rows()", err)
+		return handleError("searchVulnerabilityFixedInFeature.Rows()", err)
 	}
 	rows.Close()
 
 	// Insert into Vulnerability_Affects_FeatureVersion.
 	for _, affect := range affects {
 		// TODO(Quentin-M): Batch me.
-		_, err := tx.Exec(getQuery("i_vulnerability_affects_featureversion"), affect.vulnerabilityID,
+		_, err := tx.Exec(insertVulnerabilityAffectsFeatureVersion, affect.vulnerabilityID,
 			featureVersion.ID, affect.fixedInID)
 		if err != nil {
-			return handleError("i_vulnerability_affects_featureversion", err)
+			return handleError("insertVulnerabilityAffectsFeatureVersion", err)
 		}
 	}
 

@@ -41,13 +41,13 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 	var namespaceName sql.NullString
 
 	t := time.Now()
-	err := pgSQL.QueryRow(getQuery("s_layer"), name).
+	err := pgSQL.QueryRow(searchLayer, name).
 		Scan(&layer.ID, &layer.Name, &layer.EngineVersion, &parentID, &parentName, &namespaceID,
 		&namespaceName)
-	observeQueryTime("FindLayer", "s_layer", t)
+	observeQueryTime("FindLayer", "searchLayer", t)
 
 	if err != nil {
-		return layer, handleError("s_layer", err)
+		return layer, handleError("searchLayer", err)
 	}
 
 	if !parentID.IsZero() {
@@ -78,11 +78,11 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 		}
 		defer tx.Commit()
 
-		_, err = tx.Exec(getQuery("disable_hashjoin"))
+		_, err = tx.Exec(disableHashJoin)
 		if err != nil {
 			log.Warningf("FindLayer: could not disable hash join: %s", err)
 		}
-		_, err = tx.Exec(getQuery("disable_mergejoin"))
+		_, err = tx.Exec(disableMergeJoin)
 		if err != nil {
 			log.Warningf("FindLayer: could not disable merge join: %s", err)
 		}
@@ -117,9 +117,9 @@ func getLayerFeatureVersions(tx *sql.Tx, layerID int) ([]database.FeatureVersion
 	var featureVersions []database.FeatureVersion
 
 	// Query.
-	rows, err := tx.Query(getQuery("s_layer_featureversion"), layerID)
+	rows, err := tx.Query(searchLayerFeatureVersion, layerID)
 	if err != nil {
-		return featureVersions, handleError("s_layer_featureversion", err)
+		return featureVersions, handleError("searchLayerFeatureVersion", err)
 	}
 	defer rows.Close()
 
@@ -134,7 +134,7 @@ func getLayerFeatureVersions(tx *sql.Tx, layerID int) ([]database.FeatureVersion
 			&featureVersion.Feature.Name, &featureVersion.ID, &featureVersion.Version,
 			&featureVersion.AddedBy.ID, &featureVersion.AddedBy.Name)
 		if err != nil {
-			return featureVersions, handleError("s_layer_featureversion.Scan()", err)
+			return featureVersions, handleError("searchLayerFeatureVersion.Scan()", err)
 		}
 
 		// Do transitive closure.
@@ -149,7 +149,7 @@ func getLayerFeatureVersions(tx *sql.Tx, layerID int) ([]database.FeatureVersion
 		}
 	}
 	if err = rows.Err(); err != nil {
-		return featureVersions, handleError("s_layer_featureversion.Rows()", err)
+		return featureVersions, handleError("searchLayerFeatureVersion.Rows()", err)
 	}
 
 	// Build result by converting our map to a slice.
@@ -173,10 +173,10 @@ func loadAffectedBy(tx *sql.Tx, featureVersions []database.FeatureVersion) error
 		featureVersionIDs = append(featureVersionIDs, featureVersions[i].ID)
 	}
 
-	rows, err := tx.Query(getQuery("s_featureversions_vulnerabilities"),
+	rows, err := tx.Query(searchFeatureVersionVulnerability,
 		buildInputArray(featureVersionIDs))
 	if err != nil && err != sql.ErrNoRows {
-		return handleError("s_featureversions_vulnerabilities", err)
+		return handleError("searchFeatureVersionVulnerability", err)
 	}
 	defer rows.Close()
 
@@ -188,12 +188,12 @@ func loadAffectedBy(tx *sql.Tx, featureVersions []database.FeatureVersion) error
 			&vulnerability.Description, &vulnerability.Link, &vulnerability.Severity,
 			&vulnerability.Metadata, &vulnerability.Namespace.Name, &vulnerability.FixedBy)
 		if err != nil {
-			return handleError("s_featureversions_vulnerabilities.Scan()", err)
+			return handleError("searchFeatureVersionVulnerability.Scan()", err)
 		}
 		vulnerabilities[featureversionID] = append(vulnerabilities[featureversionID], vulnerability)
 	}
 	if err = rows.Err(); err != nil {
-		return handleError("s_featureversions_vulnerabilities.Rows()", err)
+		return handleError("searchFeatureVersionVulnerability.Rows()", err)
 	}
 
 	// Assign vulnerabilities to every FeatureVersions
@@ -271,7 +271,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 
 	if layer.ID == 0 {
 		// Insert a new layer.
-		err = tx.QueryRow(getQuery("i_layer"), layer.Name, layer.EngineVersion, parentID, namespaceID).
+		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID).
 			Scan(&layer.ID)
 		if err != nil {
 			tx.Rollback()
@@ -280,21 +280,21 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 				// Ignore this error, another process collided.
 				return nil
 			}
-			return handleError("i_layer", err)
+			return handleError("insertLayer", err)
 		}
 	} else {
 		// Update an existing layer.
-		_, err = tx.Exec(getQuery("u_layer"), layer.ID, layer.EngineVersion, namespaceID)
+		_, err = tx.Exec(updateLayer, layer.ID, layer.EngineVersion, namespaceID)
 		if err != nil {
 			tx.Rollback()
-			return handleError("u_layer", err)
+			return handleError("updateLayer", err)
 		}
 
 		// Remove all existing Layer_diff_FeatureVersion.
-		_, err = tx.Exec(getQuery("r_layer_diff_featureversion"), layer.ID)
+		_, err = tx.Exec(removeLayerDiffFeatureVersion, layer.ID)
 		if err != nil {
 			tx.Rollback()
-			return handleError("r_layer_diff_featureversion", err)
+			return handleError("removeLayerDiffFeatureVersion", err)
 		}
 	}
 
@@ -355,15 +355,15 @@ func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *
 
 	// Insert diff in the database.
 	if len(addIDs) > 0 {
-		_, err = tx.Exec(getQuery("i_layer_diff_featureversion"), layer.ID, "add", buildInputArray(addIDs))
+		_, err = tx.Exec(insertLayerDiffFeatureVersion, layer.ID, "add", buildInputArray(addIDs))
 		if err != nil {
-			return handleError("i_layer_diff_featureversion.Add", err)
+			return handleError("insertLayerDiffFeatureVersion.Add", err)
 		}
 	}
 	if len(delIDs) > 0 {
-		_, err = tx.Exec(getQuery("i_layer_diff_featureversion"), layer.ID, "del", buildInputArray(delIDs))
+		_, err = tx.Exec(insertLayerDiffFeatureVersion, layer.ID, "del", buildInputArray(delIDs))
 		if err != nil {
-			return handleError("i_layer_diff_featureversion.Del", err)
+			return handleError("insertLayerDiffFeatureVersion.Del", err)
 		}
 	}
 
@@ -387,14 +387,14 @@ func createNV(features []database.FeatureVersion) (map[string]*database.FeatureV
 func (pgSQL *pgSQL) DeleteLayer(name string) error {
 	defer observeQueryTime("DeleteLayer", "all", time.Now())
 
-	result, err := pgSQL.Exec(getQuery("r_layer"), name)
+	result, err := pgSQL.Exec(removeLayer, name)
 	if err != nil {
-		return handleError("r_layer", err)
+		return handleError("removeLayer", err)
 	}
 
 	affected, err := result.RowsAffected()
 	if err != nil {
-		return handleError("r_layer.RowsAffected()", err)
+		return handleError("removeLayer.RowsAffected()", err)
 	}
 
 	if affected <= 0 {

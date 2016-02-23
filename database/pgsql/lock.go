@@ -37,9 +37,9 @@ func (pgSQL *pgSQL) Lock(name string, owner string, duration time.Duration, rene
 
 	if renew {
 		// Renew lock.
-		r, err := pgSQL.Exec(getQuery("u_lock"), name, owner, until)
+		r, err := pgSQL.Exec(updateLock, name, owner, until)
 		if err != nil {
-			handleError("u_lock", err)
+			handleError("updateLock", err)
 			return false, until
 		}
 		if n, _ := r.RowsAffected(); n > 0 {
@@ -52,10 +52,10 @@ func (pgSQL *pgSQL) Lock(name string, owner string, duration time.Duration, rene
 	}
 
 	// Lock.
-	_, err := pgSQL.Exec(getQuery("i_lock"), name, owner, until)
+	_, err := pgSQL.Exec(insertLock, name, owner, until)
 	if err != nil {
 		if !isErrUniqueViolation(err) {
-			handleError("i_lock", err)
+			handleError("insertLock", err)
 		}
 		return false, until
 	}
@@ -72,7 +72,7 @@ func (pgSQL *pgSQL) Unlock(name, owner string) {
 
 	defer observeQueryTime("Unlock", "all", time.Now())
 
-	pgSQL.Exec(getQuery("r_lock"), name, owner)
+	pgSQL.Exec(removeLock, name, owner)
 }
 
 // FindLock returns the owner of a lock specified by its name and its
@@ -87,9 +87,9 @@ func (pgSQL *pgSQL) FindLock(name string) (string, time.Time, error) {
 
 	var owner string
 	var until time.Time
-	err := pgSQL.QueryRow(getQuery("f_lock"), name).Scan(&owner, &until)
+	err := pgSQL.QueryRow(searchLock, name).Scan(&owner, &until)
 	if err != nil {
-		return owner, until, handleError("f_lock", err)
+		return owner, until, handleError("searchLock", err)
 	}
 
 	return owner, until, nil
@@ -99,7 +99,7 @@ func (pgSQL *pgSQL) FindLock(name string) (string, time.Time, error) {
 func (pgSQL *pgSQL) pruneLocks() {
 	defer observeQueryTime("pruneLocks", "all", time.Now())
 
-	if _, err := pgSQL.Exec(getQuery("r_lock_expired")); err != nil {
-		handleError("r_lock_expired", err)
+	if _, err := pgSQL.Exec(removeLockExpired); err != nil {
+		handleError("removeLockExpired", err)
 	}
 }

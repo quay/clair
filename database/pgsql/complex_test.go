@@ -128,7 +128,7 @@ func TestRaceAffects(t *testing.T) {
 		featureVersionVersion, _ := strconv.Atoi(featureVersion.Version.String())
 
 		// Get actual affects.
-		rows, err := datastore.Query(getQuery("s_complextest_featureversion_affects"),
+		rows, err := datastore.Query(searchComplexTestFeatureVersionAffects,
 			featureVersion.ID)
 		assert.Nil(t, err)
 		defer rows.Close()

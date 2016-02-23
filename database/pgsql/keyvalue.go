@@ -41,9 +41,9 @@ func (pgSQL *pgSQL) InsertKeyValue(key, value string) (err error) {
 
 	for {
 		// First, try to update.
-		r, err := pgSQL.Exec(getQuery("u_keyvalue"), value, key)
+		r, err := pgSQL.Exec(updateKeyValue, value, key)
 		if err != nil {
-			return handleError("u_keyvalue", err)
+			return handleError("updateKeyValue", err)
 		}
 		if n, _ := r.RowsAffected(); n > 0 {
 			// Updated successfully.
@@ -52,13 +52,13 @@ func (pgSQL *pgSQL) InsertKeyValue(key, value string) (err error) {
 
 		// Try to insert the key.
 		// If someone else inserts the same key concurrently, we could get a unique-key violation error.
-		_, err = pgSQL.Exec(getQuery("i_keyvalue"), key, value)
+		_, err = pgSQL.Exec(insertKeyValue, key, value)
 		if err != nil {
 			if isErrUniqueViolation(err) {
 				// Got unique constraint violation, retry.
 				continue
 			}
-			return handleError("i_keyvalue", err)
+			return handleError("insertKeyValue", err)
 		}
 
 		return nil
@@ -70,13 +70,13 @@ func (pgSQL *pgSQL) GetKeyValue(key string) (string, error) {
 	defer observeQueryTime("GetKeyValue", "all", time.Now())
 
 	var value string
-	err := pgSQL.QueryRow(getQuery("s_keyvalue"), key).Scan(&value)
+	err := pgSQL.QueryRow(searchKeyValue, key).Scan(&value)
 
 	if err == sql.ErrNoRows {
 		return "", nil
 	}
 	if err != nil {
-		return "", handleError("s_keyvalue", err)
+		return "", handleError("searchKeyValue", err)
 	}
 
 	return value, nil

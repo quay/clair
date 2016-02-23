@@ -38,9 +38,9 @@ func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (int, error) {
 	defer observeQueryTime("insertNamespace", "all", time.Now())
 
 	var id int
-	err := pgSQL.QueryRow(getQuery("soi_namespace"), namespace.Name).Scan(&id)
+	err := pgSQL.QueryRow(soiNamespace, namespace.Name).Scan(&id)
 	if err != nil {
-		return 0, handleError("soi_namespace", err)
+		return 0, handleError("soiNamespace", err)
 	}
 
 	if pgSQL.cache != nil {
@@ -51,9 +51,9 @@ func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (int, error) {
 }
 
 func (pgSQL *pgSQL) ListNamespaces() (namespaces []database.Namespace, err error) {
-	rows, err := pgSQL.Query(getQuery("l_namespace"))
+	rows, err := pgSQL.Query(listNamespace)
 	if err != nil {
-		return namespaces, handleError("l_namespace", err)
+		return namespaces, handleError("listNamespace", err)
 	}
 	defer rows.Close()
 
@@ -62,13 +62,13 @@ func (pgSQL *pgSQL) ListNamespaces() (namespaces []database.Namespace, err error
 
 		err = rows.Scan(&namespace.ID, &namespace.Name)
 		if err != nil {
-			return namespaces, handleError("l_namespace.Scan()", err)
+			return namespaces, handleError("listNamespace.Scan()", err)
 		}
 
 		namespaces = append(namespaces, namespace)
 	}
 	if err = rows.Err(); err != nil {
-		return namespaces, handleError("l_namespace.Rows()", err)
+		return namespaces, handleError("listNamespace.Rows()", err)
 	}
 
 	return namespaces, err
