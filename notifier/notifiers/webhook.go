@@ -97,9 +97,15 @@ func (h *WebhookNotifier) Configure(config *config.NotifierConfig) (bool, error)
 	return true, nil
 }
 
+type notificationEnvelope struct {
+	Notification struct {
+		Name string
+	}
+}
+
 func (h *WebhookNotifier) Send(notification database.VulnerabilityNotification) error {
 	// Marshal notification.
-	jsonNotification, err := json.Marshal(notification.Name)
+	jsonNotification, err := json.Marshal(notificationEnvelope{struct{ Name string }{notification.Name}})
 	if err != nil {
 		return fmt.Errorf("could not marshal: %s", err)
 	}
