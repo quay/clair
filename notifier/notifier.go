@@ -154,7 +154,7 @@ func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoA
 		// Find a notification to send.
 		notification, err := datastore.GetAvailableNotification(renotifyInterval)
 		if err != nil {
-			// There is no notification or an error occured.
+			// There is no notification or an error occurred.
 			if err != cerrors.ErrNotFound {
 				log.Warningf("could not get notification to send: %s", err)
 			}

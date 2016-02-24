@@ -64,7 +64,7 @@ type Datastore interface {
 	// necessary. A vulnerability is uniquely identified by its Namespace and its Name.
 	// The FixedIn field may only contain a partial list of Features that are affected by the
 	// Vulnerability, along with the version in which the vulnerability is fixed. It is the
-	// responsability of the implementation to update the list properly. A version equals to
+	// responsibility of the implementation to update the list properly. A version equals to
 	// types.MinVersion means that the given Feature is not being affected by the Vulnerability at
 	// all and thus, should be removed from the list. It is important that Features should be unique
 	// in the FixedIn list. For example, it doesn't make sense to have two `openssl` Feature listed as
