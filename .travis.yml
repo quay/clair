@@ -15,10 +15,14 @@ install:
 script:
   - go test -v $(go list ./... | grep -v /vendor/)
 
+services:
+  - postgresql
+
 addons:
   apt:
     packages:
       - rpm
+  postgresql: "9.4"
 
 notifications:
   email: false

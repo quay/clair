@@ -27,10 +27,22 @@ import (
 
 	// Register components
 	_ "github.com/coreos/clair/notifier/notifiers"
-	_ "github.com/coreos/clair/updater/fetchers"
-	_ "github.com/coreos/clair/worker/detectors/data"
-	_ "github.com/coreos/clair/worker/detectors/os"
-	_ "github.com/coreos/clair/worker/detectors/packages"
+
+	_ "github.com/coreos/clair/updater/fetchers/debian"
+	_ "github.com/coreos/clair/updater/fetchers/rhel"
+	_ "github.com/coreos/clair/updater/fetchers/ubuntu"
+	_ "github.com/coreos/clair/updater/metadata_fetchers/nvd"
+
+	_ "github.com/coreos/clair/worker/detectors/data/aci"
+	_ "github.com/coreos/clair/worker/detectors/data/docker"
+
+	_ "github.com/coreos/clair/worker/detectors/feature/dpkg"
+	_ "github.com/coreos/clair/worker/detectors/feature/rpm"
+
+	_ "github.com/coreos/clair/worker/detectors/namespace/aptsources"
+	_ "github.com/coreos/clair/worker/detectors/namespace/lsbrelease"
+	_ "github.com/coreos/clair/worker/detectors/namespace/osrelease"
+	_ "github.com/coreos/clair/worker/detectors/namespace/redhatrelease"
 )
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair/cmd/clair", "main")

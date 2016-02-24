@@ -25,12 +25,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"time"
 
 	"gopkg.in/yaml.v2"
 
 	"github.com/coreos/clair/config"
+	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/notifier"
 )
+
+const timeout = 5 * time.Second
 
 // A WebhookNotifier dispatches notifications to a webhook endpoint.
 type WebhookNotifier struct {
@@ -88,13 +92,20 @@ func (h *WebhookNotifier) Configure(config *config.NotifierConfig) (bool, error)
 		Transport: &http.Transport{
 			TLSClientConfig: tlsConfig,
 		},
+		Timeout: timeout,
 	}
 	return true, nil
 }
 
-func (h *WebhookNotifier) Send(notification *notifier.Notification) error {
+type notificationEnvelope struct {
+	Notification struct {
+		Name string
+	}
+}
+
+func (h *WebhookNotifier) Send(notification database.VulnerabilityNotification) error {
 	// Marshal notification.
-	jsonNotification, err := json.Marshal(notification)
+	jsonNotification, err := json.Marshal(notificationEnvelope{struct{ Name string }{notification.Name}})
 	if err != nil {
 		return fmt.Errorf("could not marshal: %s", err)
 	}
@@ -103,7 +114,7 @@ func (h *WebhookNotifier) Send(notification *notifier.Notification) error {
 	resp, err := h.client.Post(h.endpoint, "application/json", bytes.NewBuffer(jsonNotification))
 	if err != nil || resp == nil || (resp.StatusCode != 200 && resp.StatusCode != 201) {
 		if resp != nil {
-			return fmt.Errorf("(%d) %s", resp.StatusCode, err)
+			return fmt.Errorf("got status %d, expected 200/201", resp.StatusCode)
 		}
 		return err
 	}

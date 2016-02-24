@@ -12,184 +12,138 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package database implements every database models and the functions that
-// manipulate them.
+// Package database defines the Clair's models and a common interface for database implementations.
 package database
 
 import (
 	"errors"
-	"os"
-
-	"github.com/barakmich/glog"
-	"github.com/coreos/clair/config"
-	"github.com/coreos/clair/health"
-	"github.com/coreos/clair/utils"
-	"github.com/coreos/pkg/capnslog"
-	"github.com/google/cayley"
-	"github.com/google/cayley/graph"
-	"github.com/google/cayley/graph/path"
-
-	// Load all supported backends.
-	_ "github.com/google/cayley/graph/bolt"
-	_ "github.com/google/cayley/graph/leveldb"
-	_ "github.com/google/cayley/graph/memstore"
-	_ "github.com/google/cayley/graph/mongo"
-	_ "github.com/google/cayley/graph/sql"
-)
-
-const (
-	// fieldIs is the graph predicate defining the type of an entity.
-	fieldIs = "is"
+	"time"
 )
 
 var (
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "database")
-
-	// ErrTransaction is an error that occurs when a database transaction fails.
-	ErrTransaction = errors.New("database: transaction failed (concurrent modification?)")
 	// ErrBackendException is an error that occurs when the database backend does
 	// not work properly (ie. unreachable).
-	ErrBackendException = errors.New("database: could not query backend")
+	ErrBackendException = errors.New("database: an error occured when querying the backend")
+
 	// ErrInconsistent is an error that occurs when a database consistency check
 	// fails (ie. when an entity which is supposed to be unique is detected twice)
 	ErrInconsistent = errors.New("database: inconsistent database")
+
 	// ErrCantOpen is an error that occurs when the database could not be opened
 	ErrCantOpen = errors.New("database: could not open database")
-
-	store *cayley.Handle
 )
 
-func init() {
-	health.RegisterHealthchecker("database", Healthcheck)
-}
+// Datastore is the interface that describes a database backend implementation.
+type Datastore interface {
+	// # Namespace
+	// ListNamespaces returns the entire list of known Namespaces.
+	ListNamespaces() ([]Namespace, error)
 
-// Open opens a Cayley database, creating it if necessary and return its handle
-func Open(config *config.DatabaseConfig) error {
-	if store != nil {
-		log.Errorf("could not open database at %s : a database is already opened", config.Path)
-		return ErrCantOpen
-	}
-	if config.Type != "memstore" && config.Path == "" {
-		log.Errorf("could not open database : no path provided.")
-		return ErrCantOpen
-	}
+	// # Layer
+	// InsertLayer stores a Layer in the database.
+	// A Layer is uniquely identified by its Name. The Name and EngineVersion fields are mandatory.
+	// If a Parent is specified, it is expected that it has been retrieved using FindLayer.
+	// If a Layer that already exists is inserted and the EngineVersion of the given Layer is higher
+	// than the stored one, the stored Layer should be updated.
+	// The function has to be idempotent, inserting a layer that already exists shouln'd return an
+	// error.
+	InsertLayer(Layer) error
 
-	var err error
-	options := make(graph.Options)
+	// FindLayer retrieves a Layer from the database.
+	// withFeatures specifies whether the Features field should be filled. When withVulnerabilities is
+	// true, the Features field should be filled and their AffectedBy fields should contain every
+	// vulnerabilities that affect them.
+	FindLayer(name string, withFeatures, withVulnerabilities bool) (Layer, error)
 
-	switch config.Type {
-	case "bolt", "leveldb":
-		if _, err := os.Stat(config.Path); os.IsNotExist(err) {
-			log.Infof("database at %s does not exist yet, creating it", config.Path)
+	// DeleteLayer deletes a Layer from the database and every layers that are based on it,
+	// recursively.
+	DeleteLayer(name string) error
 
-			err = graph.InitQuadStore(config.Type, config.Path, options)
-			if err != nil && err != graph.ErrDatabaseExists {
-				log.Errorf("could not create database at %s : %s", config.Path, err)
-				return ErrCantOpen
-			}
-		}
-	case "sql":
-		// Replaces the PostgreSQL's slow COUNT query with a fast estimator.
-		// Ref: https://wiki.postgresql.org/wiki/Count_estimate
-		options["use_estimates"] = true
+	// # Vulnerability
+	// InsertVulnerabilities stores the given Vulnerabilities in the database, updating them if
+	// necessary. A vulnerability is uniquely identified by its Namespace and its Name.
+	// The FixedIn field may only contain a partial list of Features that are affected by the
+	// Vulnerability, along with the version in which the vulnerability is fixed. It is the
+	// responsability of the implementation to update the list properly. A version equals to
+	// types.MinVersion means that the given Feature is not being affected by the Vulnerability at
+	// all and thus, should be removed from the list. It is important that Features should be unique
+	// in the FixedIn list. For example, it doesn't make sense to have two `openssl` Feature listed as
+	// a Vulnerability can only be fixed in one Version. This is true because Vulnerabilities and
+	// Features are Namespaced (i.e. specific to one operating system).
+	// Each vulnerability insertion or update has to create a Notification that will contain the
+	// old and the updated Vulnerability, unless createNotification equals to true.
+	InsertVulnerabilities(vulnerabilities []Vulnerability, createNotification bool) error
 
-		err := graph.InitQuadStore(config.Type, config.Path, options)
-		if err != nil && err != graph.ErrDatabaseExists {
-			log.Errorf("could not create database at %s : %s", config.Path, err)
-			return ErrCantOpen
-		}
-	}
+	// FindVulnerability retrieves a Vulnerability from the database, including the FixedIn list.
+	FindVulnerability(namespaceName, name string) (Vulnerability, error)
 
-	store, err = cayley.NewGraph(config.Type, config.Path, options)
-	if err != nil {
-		log.Errorf("could not open database at %s : %s", config.Path, err)
-		return ErrCantOpen
-	}
+	// DeleteVulnerability removes a Vulnerability from the database.
+	// It has to create a Notification that will contain the old Vulnerability.
+	DeleteVulnerability(namespaceName, name string) error
 
-	return nil
-}
+	// InsertVulnerabilityFixes adds new FixedIn Feature or update the Versions of existing ones to
+	// the specified Vulnerability in the database.
+	// It has has to create a Notification that will contain the old and the updated Vulnerability.
+	InsertVulnerabilityFixes(vulnerabilityNamespace, vulnerabilityName string, fixes []FeatureVersion) error
 
-// Close closes a Cayley database
-func Close() {
-	if store != nil {
-		store.Close()
-		store = nil
-	}
-}
+	// DeleteVulnerabilityFix removes a FixedIn Feature from the specified Vulnerability in the
+	// database. It can be used to store the fact that a Vulnerability no longer affects the given
+	// Feature in any Version.
+	// It has has to create a Notification that will contain the old and the updated Vulnerability.
+	DeleteVulnerabilityFix(vulnerabilityNamespace, vulnerabilityName, featureName string) error
 
-// Healthcheck simply adds and then remove a quad in Cayley to ensure it is working
-// It returns true when everything is ok
-func Healthcheck() health.Status {
-	var err error
-	if store != nil {
-		t := cayley.NewTransaction()
-		q := cayley.Triple("cayley", "is", "healthy")
-		t.AddQuad(q)
-		t.RemoveQuad(q)
-		glog.SetStderrThreshold("FATAL") // TODO REMOVE ME
-		err = store.ApplyTransaction(t)
-		glog.SetStderrThreshold("ERROR") // TODO REMOVE ME
-	}
+	// # Notification
+	// GetAvailableNotification returns the Name, Created, Notified and Deleted fields of a
+	// Notification that should be handled. The renotify interval defines how much time after being
+	// marked as Notified by SetNotificationNotified, a Notification that hasn't been deleted should
+	// be returned again by this function. A Notification for which there is a valid Lock with the
+	// same Name should not be returned.
+	GetAvailableNotification(renotifyInterval time.Duration) (VulnerabilityNotification, error)
 
-	return health.Status{IsEssential: true, IsHealthy: err == nil, Details: nil}
-}
+	// GetNotification returns a Notification, including its OldVulnerability and NewVulnerability
+	// fields. On these Vulnerabilities, LayersIntroducingVulnerability should be filled with
+	// every Layer that introduces the Vulnerability (i.e. adds at least one affected FeatureVersion).
+	// The Limit and page parameters are used to paginate LayersIntroducingVulnerability. The first
+	// given page should be VulnerabilityNotificationFirstPage. The function will then return the next
+	// availage page. If there is no more page, NoVulnerabilityNotificationPage has to be returned.
+	GetNotification(name string, limit int, page VulnerabilityNotificationPageNumber) (VulnerabilityNotification, VulnerabilityNotificationPageNumber, error)
 
-// toValue returns a single value from a path
-// If the path does not lead to a value, an empty string is returned
-// If the path leads to multiple values or if a database error occurs, an empty string and an error are returned
-func toValue(p *path.Path) (string, error) {
-	var value string
-	found := false
+	// SetNotificationNotified marks a Notification as notified and thus, makes it unavailable for
+	// GetAvailableNotification, until the renotify duration is elapsed.
+	SetNotificationNotified(name string) error
 
-	it, _ := p.BuildIterator().Optimize()
-	defer it.Close()
-	for cayley.RawNext(it) {
-		if found {
-			log.Error("failed query in toValue: used on an iterator containing multiple values")
-			return "", ErrInconsistent
-		}
+	// DeleteNotification marks a Notification as deleted, and thus, makes it unavailable for
+	// GetAvailableNotification.
+	DeleteNotification(name string) error
 
-		if it.Result() != nil {
-			value = store.NameOf(it.Result())
-			found = true
-		}
-	}
-	if it.Err() != nil {
-		log.Errorf("failed query in toValue: %s", it.Err())
-		return "", ErrBackendException
-	}
+	// # Key/Value
+	// InsertKeyValue stores or updates a simple key/value pair in the database.
+	InsertKeyValue(key, value string) error
 
-	return value, nil
-}
+	// GetKeyValue retrieves a value from the database from the given key.
+	// It returns an empty string if there is no such key.
+	GetKeyValue(key string) (string, error)
 
-// toValues returns multiple values from a path
-// If the path does not lead to any value, an empty array is returned
-// If a database error occurs, an empty array and an error are returned
-func toValues(p *path.Path) ([]string, error) {
-	var values []string
+	// # Lock
+	// Lock creates or renew a Lock in the database with the given name, owner and duration.
+	// After the specified duration, the Lock expires by itself if it hasn't been unlocked, and thus,
+	// let other users create a Lock with the same name. However, the owner can renew its Lock by
+	// setting renew to true. Lock should not block, it should instead returns whether the Lock has
+	// been successfully acquired/renewed. If it's the case, the expiration time of that Lock is
+	// returned as well.
+	Lock(name string, owner string, duration time.Duration, renew bool) (bool, time.Time)
 
-	it, _ := p.BuildIterator().Optimize()
-	defer it.Close()
-	for cayley.RawNext(it) {
-		if it.Result() != nil {
-			values = append(values, store.NameOf(it.Result()))
-		}
-	}
-	if it.Err() != nil {
-		log.Errorf("failed query in toValues: %s", it.Err())
-		return []string{}, ErrBackendException
-	}
+	// Unlock releases an existing Lock.
+	Unlock(name, owner string)
 
-	return values, nil
-}
+	// FindLock returns the owner of a Lock specified by the name, and its experation time if it
+	// exists.
+	FindLock(name string) (string, time.Time, error)
 
-// saveFields appends cayley's Save method to a path for each field in
-// selectedFields, except the ones that appears also in exceptFields
-func saveFields(p *path.Path, selectedFields []string, exceptFields []string) {
-	for _, selectedField := range selectedFields {
-		if utils.Contains(selectedField, exceptFields) {
-			continue
-		}
-		p = p.Save(selectedField, selectedField)
-	}
+	// # Miscellaneous
+	// Ping returns the health status of the database.
+	Ping() bool
+
+	// Close closes the database and free any allocated resource.
+	Close()
 }

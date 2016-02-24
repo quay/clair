@@ -42,6 +42,9 @@ var (
 	dataDetectors     = make(map[string]DataDetector)
 
 	log = capnslog.NewPackageLogger("github.com/coreos/clair", "detectors")
+
+	// ErrCouldNotFindLayer is returned when we could not download or open the layer file.
+	ErrCouldNotFindLayer = cerrors.NewBadRequestError("could not find layer")
 )
 
 // RegisterDataDetector provides a way to dynamically register an implementation of a
@@ -72,32 +75,31 @@ func DetectData(path string, format string, toExtract []string, maxFileSize int6
 	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
 		r, err := http.Get(path)
 		if err != nil {
-			return nil, cerrors.ErrCouldNotDownload
-		}
-		if err != nil {
 			log.Warningf("could not download layer: %s", err)
-			return nil, cerrors.ErrCouldNotDownload
+			return nil, ErrCouldNotFindLayer
 		}
 		if math.Floor(float64(r.StatusCode/100)) != 2 {
 			log.Warningf("could not download layer: got status code %d, expected 2XX", r.StatusCode)
-			return nil, cerrors.ErrCouldNotDownload
+			return nil, ErrCouldNotFindLayer
 		}
 		layerReader = r.Body
 	} else {
 		layerReader, err = os.Open(path)
 		if err != nil {
-			return nil, cerrors.ErrNotFound
+			return nil, ErrCouldNotFindLayer
 		}
 	}
 	defer layerReader.Close()
 
 	for _, detector := range dataDetectors {
 		if detector.Supported(path, format) {
-			if data, err = detector.Detect(layerReader, toExtract, maxFileSize); err == nil {
-				return data, nil
+			data, err = detector.Detect(layerReader, toExtract, maxFileSize)
+			if err != nil {
+				return nil, err
 			}
+			return data, nil
 		}
 	}
 
-	return nil, nil
+	return nil, cerrors.NewBadRequestError(fmt.Sprintf("unsupported image format '%s'", format))
 }

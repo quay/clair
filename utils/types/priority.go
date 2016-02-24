@@ -15,6 +15,12 @@
 // Package types defines useful types that are used in database models.
 package types
 
+import (
+	"database/sql/driver"
+	"errors"
+	"fmt"
+)
+
 // Priority defines a vulnerability priority
 type Priority string
 
@@ -85,4 +91,20 @@ func (p Priority) Compare(p2 Priority) int {
 	}
 
 	return i1 - i2
+}
+
+func (p *Priority) Scan(value interface{}) error {
+	val, ok := value.([]byte)
+	if !ok {
+		return errors.New("could not scan a Priority from a non-string input")
+	}
+	*p = Priority(string(val))
+	if !p.IsValid() {
+		return fmt.Errorf("could not scan an invalid Priority (%v)", p)
+	}
+	return nil
+}
+
+func (p *Priority) Value() (driver.Value, error) {
+	return string(*p), nil
 }

@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package api provides a RESTful HTTP API, enabling external apps to interact
-// with clair.
 package api
 
 import (
@@ -25,18 +23,19 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/coreos/pkg/capnslog"
 	"github.com/tylerb/graceful"
 
+	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/utils"
+	"github.com/coreos/pkg/capnslog"
 )
+
+const timeoutResponse = `{"Error":{"Message":"Clair failed to respond within the configured timeout window.","Type":"Timeout"}}`
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "api")
 
-// Run launches the main API, which exposes every possible interactions
-// with clair.
-func Run(config *config.APIConfig, st *utils.Stopper) {
+func Run(config *config.APIConfig, ctx *context.RouteContext, st *utils.Stopper) {
 	defer st.End()
 
 	// Do not run the API service if there is no config.
@@ -60,16 +59,16 @@ func Run(config *config.APIConfig, st *utils.Stopper) {
 		Server: &http.Server{
 			Addr:      ":" + strconv.Itoa(config.Port),
 			TLSConfig: tlsConfig,
-			Handler:   NewVersionRouter(config.Timeout),
+			Handler:   http.TimeoutHandler(newAPIHandler(ctx), config.Timeout, timeoutResponse),
 		},
 	}
+
 	listenAndServeWithStopper(srv, st, config.CertFile, config.KeyFile)
+
 	log.Info("main API stopped")
 }
 
-// RunHealth launches the Health API, which only exposes a method to fetch
-// Clair's health without any security or authentication mechanism.
-func RunHealth(config *config.APIConfig, st *utils.Stopper) {
+func RunHealth(config *config.APIConfig, ctx *context.RouteContext, st *utils.Stopper) {
 	defer st.End()
 
 	// Do not run the API service if there is no config.
@@ -84,10 +83,12 @@ func RunHealth(config *config.APIConfig, st *utils.Stopper) {
 		NoSignalHandling: true,             // We want to use our own Stopper
 		Server: &http.Server{
 			Addr:    ":" + strconv.Itoa(config.HealthPort),
-			Handler: NewHealthRouter(),
+			Handler: http.TimeoutHandler(newHealthHandler(ctx), config.Timeout, timeoutResponse),
 		},
 	}
+
 	listenAndServeWithStopper(srv, st, "", "")
+
 	log.Info("health API stopped")
 }
 
@@ -108,8 +109,10 @@ func listenAndServeWithStopper(srv *graceful.Server, st *utils.Stopper, certFile
 		err = srv.ListenAndServe()
 	}
 
-	if opErr, ok := err.(*net.OpError); !ok || (ok && opErr.Op != "accept") {
-		log.Fatal(err)
+	if err != nil {
+		if opErr, ok := err.(*net.OpError); !ok || (ok && opErr.Op != "accept") {
+			log.Fatal(err)
+		}
 	}
 }
 
