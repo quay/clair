@@ -198,7 +198,7 @@ type Notification struct {
 	New      *VulnerabilityWithLayers `json:"New,omitempty"`
 }
 
-func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotification, limit int, page, nextPage database.VulnerabilityNotificationPageNumber, key string) Notification {
+func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotification, limit int, pageToken string, nextPage database.VulnerabilityNotificationPageNumber, key string) Notification {
 	var oldVuln *VulnerabilityWithLayers
 	if dbNotification.OldVulnerability != nil {
 		v := VulnerabilityWithLayersFromDatabaseModel(*dbNotification.OldVulnerability)
@@ -235,7 +235,7 @@ func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotifica
 		Notified: notified,
 		Deleted:  deleted,
 		Limit:    limit,
-		Page:     pageNumberToToken(page, key),
+		Page:     pageToken,
 		NextPage: nextPageStr,
 		Old:      oldVuln,
 		New:      newVuln,
