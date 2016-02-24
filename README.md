@@ -6,15 +6,18 @@
 [![GoDoc](https://godoc.org/github.com/chihaya/chihaya?status.svg "GoDoc")](https://godoc.org/github.com/chihaya/chihaya)
 [![IRC Channel](https://img.shields.io/badge/freenode-%23clair-blue.svg "IRC Channel")](http://webchat.freenode.net/?channels=clair)
 
-Clair is an open source project for the static analysis of vulnerabilities in [appc](https://github.com/appc/spec) and [docker](https://github.com/docker/docker/blob/master/image/spec/v1.md) containers.
+Clair is an open source project for the static analysis of vulnerabilities in [appc] and [docker] containers.
 
-Clair imports vulnerability data from a known set of sources and indexes the contents of container images in order to produce a list of vulnerabilities that threaten a container.
-When vulnerability data changes upstream, Clair can notify an endpoint via a webhook.
-This notification includes the ability for the endpoint to access the previous state and new state of the vulnerability and the images they affect.
-Clair can be programmatically extended with new data sources or data injected directly via API.
+Vulnerability data is continuously imported from a known set of sources and correlated with the indexed contents of container images in order to produce lists of vulnerabilities that threaten a container.
+When vulnerability data changes upstream, the previous state and new state of the vulnerability along with the images they affect can be sent via webhook to a configured endpoint.
+New data sources can be [added programmatically] at compile-time or data can be injected via HTTP API at runtime.
 
-Clair enables a more transparent view of the security of container-based infrastructure.
+Our goal is to enable a more transparent view of the security of container-based infrastructure.
 Thus, the project was named `Clair` after the French term which translates to *clear*, *bright*, *transparent*.
+
+[appc]: https://github.com/appc/spec
+[docker]: https://github.com/docker/docker/blob/master/image/spec/v1.md
+[added programmatically]: #custom-data-sources
 
 ## Common Use Cases
 
@@ -23,22 +26,24 @@ Thus, the project was named `Clair` after the French term which translates to *c
 You're building an application and want to depend on a third-party container image that you found by searching the internet.
 To make sure that you do not knowingly introduce a new vulnerability into your production service, you decide to scan the container for vulnerabilities.
 You `docker pull` the container to your development machine and start an instance of Clair.
-Once it finishes updating, you use the [local image image analysis tool](https://github.com/coreos/clair/tree/master/contrib/analyze-local-images) to analyze the container.
+Once it finishes updating, you use the [local image analysis tool] to analyze the container.
 You realize this container is vulnerable to many critical CVEs, so you decide to use another one.
+
+[local image analysis tool]: https://github.com/coreos/clair/tree/master/contrib/analyze-local-images
 
 ### Container Registry Integration
 
 Your company has a continuous-integration pipeline and you want to stop deployments if they introduce a dangerous vulnerability.
 A developer merges some code into the master branch of your codebase.
 The first step of your continuous-integration pipeline automates the testing and building of your container and pushes a new container to your container registry.
-Your container registry notifies Clair and Clair proceeds to download and index the images for the new container.
+Your container registry notifies Clair which causes the download and indexing of the images for the new container.
 Clair detects some vulnerabilities and sends a webhook to your continuous deployment tool to prevent this vulnerable build from seeing the light of day.
 
 ## Hello Heartbleed
 
 ### Requirements
 
-Clair requires an instance of [PostgreSQL] 9.4+.
+An instance of [PostgreSQL] 9.4+ is required.
 All instructions assume the user has already setup this instance.
 During the first run, Clair will bootstrap its database with vulnerability data from its data sources.
 This can take several minutes.
@@ -64,11 +69,8 @@ To build Clair, you need to latest stable version of [Go] and a working [Go envi
 [Go environment]: https://golang.org/doc/code.html
 
 ```sh
-$ mkdir -p $PWD/clair/src/github.com/coreos
-$ git clone git@github.com:coreos/clair.git $PWD/clair/src/github.com/coreos/clair
-$ export GOPATH=$PWD/clair
-$ cd $PWD/clair/src/github.com/coreos/clair
-$ go install ./cmd/clair
+$ go get github.com/coreos/clair
+$ go install github.com/coreos/clair/cmd/clair
 $ $EDITOR config.yaml # Add the URI for your postgres database
 $ ./$GOBIN/clair -config=config.yaml
 ```
@@ -82,11 +84,10 @@ $ ./$GOBIN/clair -config=config.yaml
 ### Vulnerability Analysis
 
 There are two major ways to perform analysis of programs: [Static Analysis] and [Dynamic Analysis].
-Clair has been designed to perform *static analysis*.
-Thus, Clair does not execute containers nor does it require execution alongside running containers.
-Rather, Clair inspects the filesystem of the container image and attempts to index *features* into a database.
+Clair has been designed to perform *static analysis*; containers never need to be executed.
+Rather, the filesystem of the container image is inspected and *features* are indexed into a database.
 Features are anything that when present could be an indication of a vulnerability (e.g. the presence of a file or an installed software package).
-By indexing the features of an image into the database, Clair can query for affected images when new vulnerabilities get introduced without rescanning any images.
+By indexing the features of an image into the database, images only need to be rescanned when new features are added.
 
 [Static Analysis]: https://en.wikipedia.org/wiki/Static_program_analysis
 [Dynamic Analysis]: https://en.wikipedia.org/wiki/Dynamic_program_analysis
