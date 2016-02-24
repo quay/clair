@@ -81,6 +81,13 @@ $ ./$GOBIN/clair -config=config.yaml
 
 ![Simple Clair Diagram](img/simple_diagram.png)
 
+### Documentation
+
+Documentation can be found in a README.md file located in the directory of the component.
+
+- [Notifier](https://github.com/coreos/clair/blob/master/notifier/README.md)
+- [v1 API](https://github.com/coreos/clair/blob/master/api/v1/README.md)
+
 ### Vulnerability Analysis
 
 There are two major ways to perform analysis of programs: [Static Analysis] and [Dynamic Analysis].
