@@ -15,8 +15,6 @@
 package v1
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -297,19 +295,15 @@ func tokenToPageNumber(token, key string) (database.VulnerabilityNotificationPag
 	}
 
 	page := database.VulnerabilityNotificationPageNumber{}
-	err := json.NewDecoder(bytes.NewBuffer(msg)).Decode(&page)
+	_, err := fmt.Sscanf(string(msg), "old:%d|new:%d", &page.OldVulnerability, &page.NewVulnerability)
 	return page, err
 }
 
 func pageNumberToToken(page database.VulnerabilityNotificationPageNumber, key string) string {
-	var buf bytes.Buffer
-	err := json.NewEncoder(&buf).Encode(page)
-	if err != nil {
-		log.Fatal("failed to encode VulnerabilityNotificationPageNumber")
-	}
+	unencryptedToken := []byte(fmt.Sprintf("old:%d|new:%d", page.OldVulnerability, page.NewVulnerability))
 
 	k, _ := fernet.DecodeKey(key)
-	tokenBytes, err := fernet.EncryptAndSign(buf.Bytes(), k)
+	tokenBytes, err := fernet.EncryptAndSign(unencryptedToken, k)
 	if err != nil {
 		log.Fatal("failed to encrypt VulnerabilityNotificationpageNumber")
 	}
