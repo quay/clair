@@ -2,11 +2,11 @@
 
 [![Build Status](https://api.travis-ci.org/coreos/clair.svg?branch=master "Build Status")](https://travis-ci.org/coreos/clair)
 [![Docker Repository on Quay](https://quay.io/repository/coreos/clair/status "Docker Repository on Quay")](https://quay.io/repository/coreos/clair)
-[![GoDoc](https://godoc.org/github.com/chihaya/chihaya?status.svg "GoDoc")](https://godoc.org/github.com/chihaya/chihaya)
 [![Go Report Card](https://goreportcard.com/badge/coreos/clair "Go Report Card")](https://goreportcard.com/report/coreos/clair)
+[![GoDoc](https://godoc.org/github.com/chihaya/chihaya?status.svg "GoDoc")](https://godoc.org/github.com/chihaya/chihaya)
 [![IRC Channel](https://img.shields.io/badge/freenode-%23clair-blue.svg "IRC Channel")](http://webchat.freenode.net/?channels=clair)
 
-Clair is an open source project for the static analysis of vulnerabilities in [AppC](https://github.com/appc/spec) and [Docker](https://github.com/docker/docker/blob/master/image/spec/v1.md) containers.
+Clair is an open source project for the static analysis of vulnerabilities in [appc](https://github.com/appc/spec) and [docker](https://github.com/docker/docker/blob/master/image/spec/v1.md) containers.
 
 Clair imports vulnerability data from a known set of sources and indexes the contents of container images in order to produce a list of vulnerabilities that threaten a container.
 When vulnerability data changes upstream, Clair can notify an endpoint via a webhook.
