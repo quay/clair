@@ -29,12 +29,12 @@ The HTTP status code of the response should indicate what type of failure occurr
 
 ###### Client Retry Behavior
 
-| Code | Name                  | Retry Behavior                                                                                                                                       |
-|------|-----------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 400  | Bad Request           | The body of the request invalid. The request must be changed before being retried.                                                                   |
-| 404  | Not Found             | The requested resource could not be found. The request must be changed before being retried.                                                         |
-| 422  | Unprocessable Entity  | The request body is valid, but lacks a pre-condition. This request should be retried eventually, but retrying it immediately will yield no progress. |
-| 500  | Internal Server Error | The server encountered an error while processing the request. This request should be retried without change.                                         |
+| Code | Name                  | Retry Behavior                                                                                                                                    |
+|------|-----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| 400  | Bad Request           | The body of the request invalid. The request either must be changed before being retried or depends on another request being processed before it. |
+| 404  | Not Found             | The requested resource could not be found. The request must be changed before being retried.                                                      |
+| 422  | Unprocessable Entity  | The request body is valid, but unsupported. This request should never be retried.                                                                 |
+| 500  | Internal Server Error | The server encountered an error while processing the request. This request should be retried without change.                                      |
 
 ###### Example Response
 
