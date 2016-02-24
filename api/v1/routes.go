@@ -110,11 +110,6 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 
 	err = worker.Process(ctx.Store, request.Layer.Name, request.Layer.ParentName, request.Layer.Path, request.Layer.Format)
 	if err != nil {
-		if err == cerrors.ErrNotFound || err == worker.ErrParentUnknown {
-			writeResponse(w, r, http.StatusNotFound, LayerEnvelope{Error: &Error{err.Error()}})
-			return postLayerRoute, http.StatusNotFound
-		}
-
 		if err == utils.ErrCouldNotExtract ||
 			err == utils.ErrExtractedFileTooBig ||
 			err == worker.ErrUnsupported {
@@ -122,8 +117,7 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 			return postLayerRoute, statusUnprocessableEntity
 		}
 
-		_, badreq := err.(*cerrors.ErrBadRequest)
-		if badreq || err == utils.ErrCouldNotExtract || err == utils.ErrExtractedFileTooBig {
+		if _, badreq := err.(*cerrors.ErrBadRequest); badreq {
 			writeResponse(w, r, http.StatusBadRequest, LayerEnvelope{Error: &Error{err.Error()}})
 			return postLayerRoute, http.StatusBadRequest
 		}
