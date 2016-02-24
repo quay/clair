@@ -16,6 +16,7 @@ package packages
 
 import (
 	"io/ioutil"
+	"os/exec"
 	"path"
 	"runtime"
 	"testing"
@@ -34,6 +35,11 @@ func loadFileForTest(name string) []byte {
 	_, filename, _, _ := runtime.Caller(0)
 	d, _ := ioutil.ReadFile(path.Join(path.Dir(filename)) + "/" + name)
 	return d
+}
+
+func checkPackageManager(name string) error {
+	_, err := exec.LookPath(name)
+	return err
 }
 
 func testPackagesDetector(t *testing.T, detector detectors.PackagesDetector, tests []packagesTest) {

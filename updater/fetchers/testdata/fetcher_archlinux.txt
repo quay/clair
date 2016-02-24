@@ -1,0 +1,898 @@
+Array
+(
+    [warnings] => Array
+        (
+            [txt] => Array
+                (
+                    [*] => format=txt has been deprecated. Please use format=json instead.
+                )
+
+            [query] => Array
+                (
+                    [*] => Formatting of continuation data has changed. To receive raw query-continue data, use the 'rawcontinue' parameter. To silence this warning, pass an empty string for 'continue' in the initial query.
+                )
+
+        )
+
+    [continue] => Array
+        (
+            [rvcontinue] => 20160103080733|414265
+            [continue] => ||
+        )
+
+    [query] => Array
+        (
+            [pages] => Array
+                (
+                    [17855] => Array
+                        (
+                            [pageid] => 17855
+                            [ns] => 0
+                            [title] => CVE
+                            [revisions] => Array
+                                (
+                                    [0] => Array
+                                        (
+                                            [contentformat] => text/x-wiki
+                                            [contentmodel] => wikitext
+                                            [*] => [[Category:Arch development]]
+[[Category:Security]]
+{{Related articles start}}
+{{Related|Arch CVE Monitoring Team}}
+{{Related|Security Advisories}}
+{{Related|Security Advisories/Examples}}
+{{Related articles end}}
+This article documents [[Wikipedia:Common_Vulnerabilities_and_Exposures|Common Vulnerabilities and Exposures]] (CVE's) that are found and fixed in Arch Linux.  
+
+== Introduction ==
+
+CVE's represent critical security vulnerabilities which must be addressed as quickly as possible. 
+
+Once a CVE has been located and fixed, it is added to the CVE documentation table below.
+
+== Helping ==
+
+This is a community driven project. Please consider joining the [[Arch CVE Monitoring Team]].  
+
+Also, join the [https://mailman.archlinux.org/mailman/listinfo/arch-security Arch security mailing list]. There is an IRC on irc://irc.freenode.net/archlinux-security.
+
+== Procedure ==
+
+When adding a CVE to the table, add it to the TOP of the table. Use Wiki markup to create links in the "CVE-ID", "Package", and "Status" columns. The following template may be used to ease the process of adding CVE entries into the table. The first line, "|-" represents the creation of a new row in the table, while the second line should be modified per CVE:
+
+{{hc|CVE Table Addition Template|<nowiki>
+|-
+| {{CVE|CVE-2014-????}} || {{Pkg|pkgname}} || Disclosure date || Affected versions || Fixed in version || Arch Linux response time || Status(Fixed|Pending|Invalid) (Bug reports) || {{ASA|ASA-??????-??}}
+</nowiki>}}
+
+{{Note|
+* If the CVE is not found in [http://nvd.nist.gov/home.cfm NVD], just include a link to different database in the first column: {{ic|<nowiki>[http://link.to.cve CVE-2014-????]</nowiki>}}
+* The "Disclosure date" field should be expressed in [[Wikipedia:ISO 8601|ISO 8601 format]] to avoid any confusion. Example: 2014-03-22.
+* The "Arch Linux response time" field corresponds to the time between the public release of a vulnerability and the date the package update fixing the vulnerability is made available in the official stable repositories. The "Time really vulnerable" is potentially much lengthier but is harder to estimate.
+}}
+
+The above "CVE-template" should be added after the line:
+
+{{bc|<nowiki>! scope="col" width="125px" data-sort-type="text" | CVE-ID !! Package !! Disclosure date !! Affected versions !! Fixed in version !! Arch Linux response time !! Status (and related bug reports) !! ASA-ID</nowiki>}}
+
+== Response time ==
+
+The response time is the time taken to get a fixed package to the stable repositories.
+
+== Documented CVE's ==
+
+{{Note|Refer to the [[#Procedure]] section when adding new entries.}}
+
+{| class="wikitable sortable" style="margin: 1em auto 1em auto; text-align: center;" width="100%"
+! height="50px" colspan="8" style="font-size: 125%;"| '''TRACKED CVE's'''
+|-
+! scope="col" width="130px" data-sort-type="text" | CVE-ID !! Package !! Disclosure date !! Affected versions !! Fixed in Arch Linux package version !! Arch Linux response time !! Status (and related bug reports) !! ASA-ID
+|-
+| {{CVE|CVE-2016-1283}} [https://bugs.exim.org/show_bug.cgi?id=1767] [http://article.gmane.org/gmane.comp.security.oss.general/18481] || {{pkg|pcre}} || 2016-01-02 || <= 8.38-2 || || || '''Vulnerable''' || 
+|-
+|[http://article.gmane.org/gmane.comp.security.oss.general/18466] || {{Pkg|rtmpdump}} || 2015-12-23 || <= 20140918-2 || 1:2.4.r96.fa8646d-1 || 7d || Fixed {{bug|47564}} || [https://lists.archlinux.org/pipermail/arch-security/2016-January/000480.html ASA-201601-1]
+|-
+| {{CVE|CVE-2015-8472}} [http://seclists.org/oss-sec/2015/q4/439] || {{pkg|libpng}} || 2015-12-03 || <= 1.6.19-1 || 1.6.20-1 || 25d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000477.html ASA-201512-18]
+|-
+| {{CVE|CVE-2015-8459}} {{CVE|CVE-2015-8460}} {{CVE|CVE-2015-8634}} {{CVE|CVE-2015-8635}} {{CVE|CVE-2015-8636}} {{CVE|CVE-2015-8638}} {{CVE|CVE-2015-8639}} {{CVE|CVE-2015-8640}} {{CVE|CVE-2015-8641}} {{CVE|CVE-2015-8642}} {{CVE|CVE-2015-8643}} {{CVE|CVE-2015-8644}} {{CVE|CVE-2015-8645}} {{CVE|CVE-2015-8646}} {{CVE|CVE-2015-8647}} {{CVE|CVE-2015-8648}} {{CVE|CVE-2015-8649}} {{CVE|CVE-2015-8650}} {{CVE|CVE-2015-8651}} [https://helpx.adobe.com/security/products/flash-player/apsb16-01.html] || {{pkg|flashplugin}} {{pkg|lib32-flashplugin}} || 2015-12-28 || <= 11.2.202.554-1 || 11.2.202.559-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000477.html ASA-201512-17]
+|-
+| {{CVE|CVE-2015-7554}} {{CVE|CVE-2015-8683}} [http://seclists.org/oss-sec/2015/q4/584] [http://seclists.org/oss-sec/2015/q4/590] || {{pkg|libtiff}} || 2015-12-25 || <= 4.0.6-2 || || || '''Vulnerable''' || 
+|-
+| {{CVE|CVE-2015-7201}} {{CVE|CVE-2015-7205}} {{CVE|CVE-2015-7212}} {{CVE|CVE-2015-7213}} {{CVE|CVE-2015-7214}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/thunderbird/#thunderbird38.5] || {{pkg|thunderbird}} || 2015-12-23 || <= 38.4.0-2 || 38.5.0-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000474.html ASA-201512-14]
+|-
+| {{CVE|CVE-2015-8612}} [http://seclists.org/oss-sec/2015/q4/541] || {{pkg|blueman}} || 2015-12-18 || <= 2.0.2-1 || || || '''Vulnerable''' ||
+|-
+| {{CVE|CVE-2015-8659}} [http://seclists.org/oss-sec/2015/q4/576] || {{pkg|nghttp2}} || 2015-12-23 || <= 1.5.0-2 || 1.6.0-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000476.html ASA-201512-16]
+|-
+| {{CVE|CVE-2015-7555}} [http://seclists.org/oss-sec/2015/q4/548] || {{pkg|giflib}} || 2015-12-21 || <= 5.1.1-1 || || || '''Vulnerable''' ||
+|-
+| {{CVE|CVE-2015-7557}} {{CVE|CVE-2015-7558}} [http://seclists.org/oss-sec/2015/q4/549] || {{pkg|librsvg}} || 2015-12-21 || <= 2:2.40.11-1 || || || '''Vulnerable''' ||
+|-
+| {{CVE|CVE-2015-2141}} [https://www.cryptopp.com/release563.html] || {{pkg|crypto++}} || 2015-12-20 || <= 5.6.2-4 || || || '''Vulnerable''' ||
+|-
+| {{CVE|CVE-2015-8622}} {{CVE|CVE-2015-8623}} {{CVE|CVE-2015-8624}} {{CVE|CVE-2015-8625}} {{CVE|CVE-2015-8626}} {{CVE|CVE-2015-8627}} {{CVE|CVE-2015-8628}} [http://seclists.org/oss-sec/2015/q4/552] || {{pkg|mediawiki}} || 2015-12-17 || <= 1.26.0-1 || 1.26.2-1 || 8d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000475.html ASA-201512-15]
+|-
+| {{CVE|CVE-2015-8614}} [http://www.thewildbeast.co.uk/claws-mail/bugzilla/show_bug.cgi?id=3557] || {{pkg|claws-mail}} || 2015-12-21 || <= 3.13.0-1 || 3.13.1-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000473.html ASA-201512-13]
+|-
+| {{CVE|CVE-2015-8369}} || {{pkg|cacti}} || 2015-12-17 || <= 0.8.8_f-3 || || || '''Vulnerable''' ||
+|-
+| [https://blog.fuzzing-project.org/32-Out-of-bounds-read-in-OpenVPN.html] || {{pkg|openvpn}} || 2015-12-18 || <= 2.3.8-2 || 2.3.9-1 || 9d || Fixed ({{bug|47498}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000479.html ASA-201512-19]
+|-
+| {{CVE|CVE-2015-8549}} [http://www.ocert.org/advisories/ocert-2015-011.html] || {{pkg|python2-pyamf}} || 2015-12-17 || <= 0.7.2-1 || 0.8.0-2 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000472.html ASA-201512-12]
+|-
+| {{CVE|CVE-2015-7551}} [https://www.ruby-lang.org/en/news/2015/12/16/unsafe-tainted-string-usage-in-fiddle-and-dl-cve-2015-7551/] || {{pkg|ruby}} || 2015-12-16 || <= 2.2.3-1 || 2.2.4-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000471.html ASA-201512-11]
+|-
+| {{CVE|CVE-2015-7201}} {{CVE|CVE-2015-7202}} {{CVE|CVE-2015-7203}} {{CVE|CVE-2015-7204}} {{CVE|CVE-2015-7205}} {{CVE|CVE-2015-7207}} {{CVE|CVE-2015-7208}} {{CVE|CVE-2015-7210}} {{CVE|CVE-2015-7211}} {{CVE|CVE-2015-7212}} {{CVE|CVE-2015-7213}} {{CVE|CVE-2015-7214}} {{CVE|CVE-2015-7215}} {{CVE|CVE-2015-7216}} {{CVE|CVE-2015-7217}} {{CVE|CVE-2015-7218}} {{CVE|CVE-2015-7219}} {{CVE|CVE-2015-7220}} {{CVE|CVE-2015-7221}} {{CVE|CVE-2015-7222}} {{CVE|CVE-2015-7223}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/firefox/#firefox43] || {{pkg|firefox}} || 2015-12-15 || <= 42.0-3 || 43.0-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000467.html ASA-201512-9]
+|-
+| {{CVE|CVE-2015-8000}} [https://kb.isc.org/article/AA-01317] || {{pkg|bind}} || 2015-12-15 || <= 9.10.3-2 || 9.10.3.P2-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000468.html ASA-201512-10]
+|-
+| {{CVE|CVE-2015-8370}} [http://hmarco.org/bugs/CVE-2015-8370-Grub2-authentication-bypass.html#fix] || {{pkg|grub}} || 2015-12-15 || <= 1:2.02.beta2-5 || 1:2.02.beta2-6 || 3d || Fixed ({{bug|47386}}) ||
+|-
+| {{CVE|CVE-2015-8378}} [https://www.keepassx.org/news/2015/12/551] || {{pkg|keepassx}} || 2015-12-08 || <= 0.4.3-7 || 0.4.4-1 || <2d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000466.html ASA-201512-8]
+|-
+| {{CVE|CVE-2015-8045}} {{CVE|CVE-2015-8047}} {{CVE|CVE-2015-8048}} {{CVE|CVE-2015-8049}} {{CVE|CVE-2015-8050}} {{CVE|CVE-2015-8055}} {{CVE|CVE-2015-8056}} {{CVE|CVE-2015-8057}} {{CVE|CVE-2015-8058}} {{CVE|CVE-2015-8059}} {{CVE|CVE-2015-8060}} {{CVE|CVE-2015-8061}} {{CVE|CVE-2015-8062}} {{CVE|CVE-2015-8063}} {{CVE|CVE-2015-8064}} {{CVE|CVE-2015-8065}} {{CVE|CVE-2015-8066}} {{CVE|CVE-2015-8067}} {{CVE|CVE-2015-8068}} {{CVE|CVE-2015-8069}} {{CVE|CVE-2015-8070}} {{CVE|CVE-2015-8071}} {{CVE|CVE-2015-8401}} {{CVE|CVE-2015-8402}} {{CVE|CVE-2015-8403}} {{CVE|CVE-2015-8404}} {{CVE|CVE-2015-8405}} {{CVE|CVE-2015-8406}} {{CVE|CVE-2015-8407}} {{CVE|CVE-2015-8408}} {{CVE|CVE-2015-8409}} {{CVE|CVE-2015-8410}} {{CVE|CVE-2015-8411}} {{CVE|CVE-2015-8412}} {{CVE|CVE-2015-8413}} {{CVE|CVE-2015-8414}} {{CVE|CVE-2015-8415}} {{CVE|CVE-2015-8416}} {{CVE|CVE-2015-8417}} {{CVE|CVE-2015-8418}} {{CVE|CVE-2015-8419}} {{CVE|CVE-2015-8420}} {{CVE|CVE-2015-8421}} {{CVE|CVE-2015-8422}} {{CVE|CVE-2015-8423}} {{CVE|CVE-2015-8424}} {{CVE|CVE-2015-8425}} {{CVE|CVE-2015-8426}} {{CVE|CVE-2015-8427}} {{CVE|CVE-2015-8428}} {{CVE|CVE-2015-8429}} {{CVE|CVE-2015-8430}} {{CVE|CVE-2015-8431}} {{CVE|CVE-2015-8432}} {{CVE|CVE-2015-8433}} {{CVE|CVE-2015-8434}} {{CVE|CVE-2015-8435}} {{CVE|CVE-2015-8436}} {{CVE|CVE-2015-8437}} {{CVE|CVE-2015-8438}} {{CVE|CVE-2015-8439}} {{CVE|CVE-2015-8440}} {{CVE|CVE-2015-8441}} {{CVE|CVE-2015-8442}} {{CVE|CVE-2015-8443}} {{CVE|CVE-2015-8444}} {{CVE|CVE-2015-8445}} {{CVE|CVE-2015-8446}} {{CVE|CVE-2015-8447}} {{CVE|CVE-2015-8448}} {{CVE|CVE-2015-8449}} {{CVE|CVE-2015-8450}} {{CVE|CVE-2015-8451}} {{CVE|CVE-2015-8452}} {{CVE|CVE-2015-8453}} {{CVE|CVE-2015-8454}} {{CVE|CVE-2015-8455}} [https://helpx.adobe.com/security/products/flash-player/apsb15-32.html] || {{pkg|flashplugin}} || 2015-12-08 || <= 11.2.202.548-1 || 11.2.202.554-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000465.html ASA-201512-7]
+|-
+| {{CVE|CVE-2015-6788}} {{CVE|CVE-2015-6789}} {{CVE|CVE-2015-6790}} {{CVE|CVE-2015-6791}} [http://googlechromereleases.blogspot.fr/2015/12/stable-channel-update_8.html] || {{pkg|chromium}} || 2015-12-08 || <= 47.0.2526.73-1 || 47.0.2526.80-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000463.html ASA-201512-5]
+|-
+| {{CVE|CVE-2015-3193}} {{CVE|CVE-2015-3194}} {{CVE|CVE-2015-3195}} {{CVE|CVE-2015-3196}} {{CVE|CVE-2015-1794}} [https://www.openssl.org/news/secadv/20151203.txt] || {{pkg|openssl}} {{pkg|lib32-openssl}} || 2015-12-03 || <= 1.0.2.d-1 || 1.0.2.e-1 || <3d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000459.html ASA-201512-2]
+|-
+| {{CVE|CVE-2015-6764}} {{CVE|CVE-2015-6765}} {{CVE|CVE-2015-6766}} {{CVE|CVE-2015-6767}} {{CVE|CVE-2015-6768}} {{CVE|CVE-2015-6769}} {{CVE|CVE-2015-6770}} {{CVE|CVE-2015-6771}} {{CVE|CVE-2015-6772}} {{CVE|CVE-2015-6773}} {{CVE|CVE-2015-6774}} {{CVE|CVE-2015-6775}} {{CVE|CVE-2015-6776}} {{CVE|CVE-2015-6777}} {{CVE|CVE-2015-6778}} {{CVE|CVE-2015-6779}} {{CVE|CVE-2015-6780}} {{CVE|CVE-2015-6781}} {{CVE|CVE-2015-6782}} {{CVE|CVE-2015-6783}} {{CVE|CVE-2015-6784}} {{CVE|CVE-2015-6785}} {{CVE|CVE-2015-6786}} {{CVE|CVE-2015-6787}} [http://googlechromereleases.blogspot.fr/2015/12/stable-channel-update.html] || {{pkg|chromium}} || 2015-12-01 || <= 46.0.2490.86-1 || 47.0.2526.73-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000440.html ASA-201512-1]
+|-
+| {{CVE|CVE-2015-6764}} {{CVE|CVE-2015-8027}} [https://nodejs.org/en/blog/vulnerability/cve-2015-8027_cve-2015-6764/] || {{pkg|nodejs}} || 2015-11-25 || <= 5.1.0-1 || 5.1.1-1 || 8d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000462.html ASA-201512-4]
+|-
+| {{CVE|CVE-2015-8213}} [https://www.djangoproject.com/weblog/2015/nov/24/security-releases-issued/ templink] || {{pkg|python-django}} {{pkg|python2-django}} || 2015-11-24 || <= 1.8.6-1 || 1.8.7-1 || 5d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000460.html ASA-201512-3]
+|-
+| {{CVE|CVE-2015-1819}} {{CVE|CVE-2015-5312}} {{CVE|CVE-2015-7941}} {{CVE|CVE-2015-7942}} {{CVE|CVE-2015-7497}} {{CVE|CVE-2015-7498}} {{CVE|CVE-2015-7499}} {{CVE|CVE-2015-7500}} {{CVE|CVE-2015-8035}} {{CVE|CVE-2015-8242}} [https://mail.gnome.org/archives/xml/2015-November/msg00012.html templink] || {{pkg|libxml2}} || 2015-11-20 || <= 2.9.2-2 || 2.9.3-1 || 19d || Fixed ({{bug|47095}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-December/000464.html ASA-201512-6]
+|-
+| {{CVE|CVE-2015-7981}} {{CVE|CVE-2015-8126}} [http://seclists.org/oss-sec/2015/q4/264 templink] [http://seclists.org/oss-sec/2015/q4/161 templink] || {{pkg|libpng}} {{pkg|lib32-libpng}} || 2015-11-12 || <= 1.6.18-1 || 1.6.19-1 || 5d || Fixed ({{bug|47069}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-November/000437.html ASA-201511-9] [https://lists.archlinux.org/pipermail/arch-security/2015-November/000438.html ASA-201511-10]
+|-
+| {{CVE|CVE-2015-5309}} [http://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist/vuln-ech-overflow.html templink] || {{pkg|putty}} || 2015-11-12 || <= 0.65-1 || 0.66-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-November/000435.html ASA-201511-7]
+|-
+| {{CVE|CVE-2015-7651}} {{CVE|CVE-2015-7652}} {{CVE|CVE-2015-7653}} {{CVE|CVE-2015-7654}} {{CVE|CVE-2015-7655}} {{CVE|CVE-2015-7656}} {{CVE|CVE-2015-7657}} {{CVE|CVE-2015-7658}} {{CVE|CVE-2015-7659}} {{CVE|CVE-2015-7660}} {{CVE|CVE-2015-7661}} {{CVE|CVE-2015-7662}} {{CVE|CVE-2015-7663}} {{CVE|CVE-2015-8042}} {{CVE|CVE-2015-8043}} {{CVE|CVE-2015-8044}} {{CVE|CVE-2015-8046}} [https://helpx.adobe.com/security/products/flash-player/apsb15-28.html templink] || {{pkg|flashplugin}} || 2015-11-10 || <= 11.2.202.540-1 || 11.2.202.548-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-November/000433.html ASA-201511-5]
+|-
+| {{CVE|CVE-2015-1302}} [http://googlechromereleases.blogspot.fr/2015/11/stable-channel-update.html templink] || {{pkg|chromium}} || 2015-11-10 || <= 46.0.2490.80-2 || 46.0.2490.86-1 || 2d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-November/000436.html ASA-201511-8]
+|-
+| {{CVE|CVE-2015-5311}} [https://doc.powerdns.com/md/security/powerdns-advisory-2015-03/ templink] || {{pkg|powerdns}} || 2015-11-09 || <= 3.4.6-2 || 3.4.7-1 || 3d || Fixed ({{bug|47014}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-November/000434.html ASA-201511-6]
+|-
+| {{CVE|CVE-2015-4513}} {{CVE|CVE-2015-4514}} {{CVE|CVE-2015-4515}} {{CVE|CVE-2015-4518}} {{CVE|CVE-2015-7181}} {{CVE|CVE-2015-7182}} {{CVE|CVE-2015-7183}} {{CVE|CVE-2015-7187}} {{CVE|CVE-2015-7188}} {{CVE|CVE-2015-7189}} {{CVE|CVE-2015-7193}} {{CVE|CVE-2015-7194}} {{CVE|CVE-2015-7195}} {{CVE|CVE-2015-7196}} {{CVE|CVE-2015-7197}} {{CVE|CVE-2015-7198}} {{CVE|CVE-2015-7199}} {{CVE|CVE-2015-7200}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/firefox/ templink] || {{pkg|firefox}} || 2015-11-03 || <= 41.0.2-2 || 42.0-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-November/000430.html ASA-201511-2]
+|-
+| {{CVE|CVE-2015-7183}} [http://www.mail-archive.com/dev-tech-crypto@lists.mozilla.org/msg12386.html templink] || {{pkg|nspr}} || 2015-11-03 || <= 4.10.9-1 || 4.10.10-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-November/000432.html ASA-201511-4]
+|-
+| {{CVE|CVE-2015-7181}} {{CVE|CVE-2015-7182}} [http://www.mail-archive.com/dev-tech-crypto@lists.mozilla.org/msg12386.html templink] || {{pkg|nss}} || 2015-11-03 || <= 3.20-1 || 3.20.1-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-November/000431.html ASA-201511-3]
+|-
+| {{CVE|CVE-2015-7696}} {{CVE|CVE-2015-7697}} [http://seclists.org/oss-sec/2015/q3/512 templink] || {{pkg|unzip}} || 2015-10-30 || <= 6.0-10 || 6.0-11 || 4d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-November/000429.html ASA-201511-1]
+|-
+| {{CVE|CVE-2015-8011}} {{CVE|CVE-2015-8012}} [http://seclists.org/oss-sec/2015/q4/198 templink] || {{pkg|lldpd}} || 2015-10-17 || <= 0.7.18-1 || 0.7.19-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000427.html ASA-201510-25]
+|-
+| {{CVE|CVE-2015-5714}} {{CVE|CVE-2015-5715}} {{CVE|CVE-2015-7989}} [https://codex.wordpress.org/Version_4.3.1 templink] || {{pkg|wordpress}} || 2015-10-18 || <= 4.3.0-1 || 4.3.1-1 || 11d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000426.html ASA-201510-24]
+|-
+| {{CVE|CVE-2015-7873}} [https://www.phpmyadmin.net/security/PMASA-2015-5/ templink] || {{pkg|phpmyadmin}} || 2015-10-23 || <= 4.5.0-1 || 4.5.1-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000425.html ASA-201510-23]
+|-
+| {{CVE|CVE-2015-7995}} [https://bugzilla.redhat.com/show_bug.cgi?id=1257962 templink] || {{pkg|libxslt}} || 2015-10-27 || <= 1.1.28-3 || || || '''Vulnerable''' || 
+|-
+| {{CVE|CVE-2015-7943}} [https://www.drupal.org/SA-CORE-2015-004 templink] || {{pkg|drupal}} || 2015-10-21 || <= 7.40-1 || 7.41-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000423.html ASA-201510-21]
+|-
+| {{CVE|CVE-2015-4913}} {{CVE|CVE-2015-4870}} {{CVE|CVE-2015-4861}} {{CVE|CVE-2015-4858}} {{CVE|CVE-2015-4836}} {{CVE|CVE-2015-4830}} {{CVE|CVE-2015-4826}} {{CVE|CVE-2015-4815}} {{CVE|CVE-2015-4802}} {{CVE|CVE-2015-4792}} || {{pkg|mariadb}} || 2015-10-22 || <= 10.0.21-3 || 10.0.22-1 || 8d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000428.html ASA-201510-26] 
+|-
+| {{CVE|CVE-2015-4734}} {{CVE|CVE-2015-4803}} {{CVE|CVE-2015-4805}} {{CVE|CVE-2015-4806}} {{CVE|CVE-2015-4810}} {{CVE|CVE-2015-4835}} {{CVE|CVE-2015-4840}} {{CVE|CVE-2015-4842}} {{CVE|CVE-2015-4843}} {{CVE|CVE-2015-4844}} {{CVE|CVE-2015-4860}} {{CVE|CVE-2015-4868}} {{CVE|CVE-2015-4872}} {{CVE|CVE-2015-4881}} {{CVE|CVE-2015-4882}} {{CVE|CVE-2015-4883}} {{CVE|CVE-2015-4893}} {{CVE|CVE-2015-4901}} {{CVE|CVE-2015-4902}} {{CVE|CVE-2015-4903}} {{CVE|CVE-2015-4906}} {{CVE|CVE-2015-4908}} {{CVE|CVE-2015-4911}} {{CVE|CVE-2015-4916}} || {{pkg|jdk8-openjdk}} {{pkg|jre8-openjdk}} {{pkg|jre8-openjdk-headless}} || 2015-09-22 || <= 8.u60-1 || 8.u65-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000420.html ASA-201510-18] [https://lists.archlinux.org/pipermail/arch-security/2015-October/000421.html ASA-201510-19] [https://lists.archlinux.org/pipermail/arch-security/2015-October/000422.html ASA-201510-20]
+|-
+| {{CVE|CVE-2015-4734}} {{CVE|CVE-2015-4803}} {{CVE|CVE-2015-4805}} {{CVE|CVE-2015-4806}} {{CVE|CVE-2015-4810}} {{CVE|CVE-2015-4835}} {{CVE|CVE-2015-4840}} {{CVE|CVE-2015-4842}} {{CVE|CVE-2015-4843}} {{CVE|CVE-2015-4844}} {{CVE|CVE-2015-4860}} {{CVE|CVE-2015-4871}} {{CVE|CVE-2015-4872}} {{CVE|CVE-2015-4881}} {{CVE|CVE-2015-4882}} {{CVE|CVE-2015-4883}} {{CVE|CVE-2015-4893}} {{CVE|CVE-2015-4902}} {{CVE|CVE-2015-4903}} {{CVE|CVE-2015-4911}} || {{pkg|jdk7-openjdk}} {{pkg|jre7-openjdk}} {{pkg|jre7-openjdk-headless}} || 2015-09-22 || <= 7.u85_2.6.1-2 || 7.u91_2.6.2-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000417.html ASA-201510-15] [https://lists.archlinux.org/pipermail/arch-security/2015-October/000418.html ASA-201510-16] [https://lists.archlinux.org/pipermail/arch-security/2015-October/000419.html ASA-201510-17]
+|-
+| {{CVE|CVE-2015-7691}} {{CVE|CVE-2015-7692}} {{CVE|CVE-2015-7701}} {{CVE|CVE-2015-7702}} {{CVE|CVE-2015-7703}} {{CVE|CVE-2015-7704}} {{CVE|CVE-2015-7705}} {{CVE|CVE-2015-7848}} {{CVE|CVE-2015-7849}} {{CVE|CVE-2015-7850}} {{CVE|CVE-2015-7851}} {{CVE|CVE-2015-7852}} {{CVE|CVE-2015-7853}} {{CVE|CVE-2015-7854}} {{CVE|CVE-2015-7855}}  {{CVE|CVE-2015-7871}} [http://support.ntp.org/bin/view/Main/SecurityNotice#Recent_Vulnerabilities templink] [http://blog.talosintel.com/2015/10/ntpd-vulnerabilities.html templink] || {{pkg|ntp}} || 2015-10-21 || <= 4.2.8.p3-1 || 4.2.8.p4-1  || 1d || Fixed ({{bug|46826}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000416.html ASA-201510-14]
+|-
+| {{CVE|CVE-2015-6031}} [http://talosintel.com/reports/TALOS-2015-0035/ templink] || {{pkg|miniupnpc}} || 2015-09-15 || <= 1.9.20150730-1 || 1.9.20151008-1 || 30d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000413.html ASA-201510-11]
+|-
+| {{CVE|CVE-2015-7645}} {{CVE|CVE-2015-7647}} {{CVE|CVE-2015-7648}} [https://helpx.adobe.com/security/products/flash-player/apsa15-05.html templink] [https://helpx.adobe.com/security/products/flash-player/apsb15-27.html templink] || {{pkg|flashplugin}} || 2015-10-14 || <= 11.2.202.535-1 || 11.2.202.540-1 || 2d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000414.html ASA-201510-12]
+|-
+| {{CVE|CVE-2015-7184}} [https://www.mozilla.org/en-US/security/advisories/mfsa2015-115/ templink] || {{pkg|firefox}} || 2015-10-15 || <= 41.0.1-1 || 41.0.2-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000412.html ASA-201510-10]
+|-
+| {{CVE|CVE-2015-5260}} {{CVE|CVE-2015-5261}} {{CVE|CVE-2015-3247}} [http://lists.freedesktop.org/archives/spice-devel/2015-October/022168.html templink] [https://bugzilla.redhat.com/show_bug.cgi?id=1260822 templink] [https://bugzilla.redhat.com/show_bug.cgi?id=1261889 templink] [https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=797976;msg=21 templink] || {{pkg|spice}} || 2015-09-08 || <= 0.12.5-1 || 0.12.6-1 || 41d || Fixed ({{bug|46738}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000415.html ASA-201510-13]
+|-
+| {{CVE|CVE-2015-6755}} {{CVE|CVE-2015-6756}} {{CVE|CVE-2015-6757}} {{CVE|CVE-2015-6758}} {{CVE|CVE-2015-6759}} {{CVE|CVE-2015-6760}} {{CVE|CVE-2015-6761}} {{CVE|CVE-2015-6762}} {{CVE|CVE-2015-6763}} [http://googlechromereleases.blogspot.fr/2015/10/stable-channel-update.html templink] || {{pkg|chromium}} || 2015-10-13 || <= 45.0.2454.101-2 || 46.0.2490.71-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000410.html ASA-201510-8]
+|-
+| {{CVE|CVE-2015-5569}} {{CVE|CVE-2015-7625}} {{CVE|CVE-2015-7626}} {{CVE|CVE-2015-7627}} {{CVE|CVE-2015-7628}} {{CVE|CVE-2015-7629}} {{CVE|CVE-2015-7630}} {{CVE|CVE-2015-7631}} {{CVE|CVE-2015-7632}} {{CVE|CVE-2015-7633}} {{CVE|CVE-2015-7634}} {{CVE|CVE-2015-7643}} {{CVE|CVE-2015-7644}} [https://helpx.adobe.com/security/products/flash-player/apsb15-25.html templink] || {{pkg|flashplugin}} || 2015-10-13 || <= 11.2.202.521-1 || 11.2.202.535-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000409.html ASA-201510-7]
+|-
+| {{CVE|CVE-2015-5291}} [https://tls.mbed.org/tech-updates/security-advisories/mbedtls-security-advisory-2015-01 templink] || {{pkg|mbedtls}} || 2015-10-05 || <= 2.1.1-1 || 2.1.2-1 || 10d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000411.html ASA-201510-9]
+|-
+| {{CVE|CVE-2015-7384}} [https://nodejs.org/en/blog/release/v4.1.2/ templink] || {{pkg|nodejs}} || 2015-10-05 || <= 4.1.1-1 || 4.1.2-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000405.html ASA-201510-3]
+|-
+| {{CVE|CVE-2015-7687}} [http://seclists.org/oss-sec/2015/q4/17 templink] [https://gitweb.gentoo.org/repo/gentoo.git/commit/?id=3f8e2fe24f3ff174d8515b82607e951e054f68f6 templink] || {{pkg|opensmtpd}} || 2015-10-02 || <= 5.7.1p1-1 || 5.7.3p1-1 || 6d || Fixed ({{bug|46605}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000407.html ASA-201510-5]
+|-
+| {{CVE|CVE-2015-7673}} {{CVE|CVE-2015-7674}} [http://seclists.org/oss-sec/2015/q4/18 templink] [http://seclists.org/oss-sec/2015/q4/19 templink] || {{pkg|gdk-pixbuf2}} || 2015-10-01 || <= 2.31.7-1 || 2.32.1-1 || 9d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000408.html ASA-201510-6]
+|-
+| {{CVE|CVE-2015-1335}} [https://github.com/lxc/lxc/commit/6de26af93d3dd87c8b21a42fdf20f30fa1c1948d templink] || {{pkg|lxc}} || 2015-09-29 || <= 1:1.1.3-2 || - || - || Rejected ({{bug|46574}}) || None
+|-
+| {{CVE|CVE-2015-6972}} {{CVE|CVE-2015-6973}} [http://hyp3rlinx.altervista.org/advisories/AS-OPENFIRE-XSS.txt templink] [http://hyp3rlinx.altervista.org/advisories/AS-OPENFIRE-CSRF.txt templink] || {{pkg|openfire}} || 2015-09-14 || <= 3.10.2-1 || || || '''Vulnerable''' ||
+|-
+| {{CVE|CVE-2015-4499}} [https://www.bugzilla.org/security/4.2.14/ templink] || {{pkg|bugzilla}} || 2015-09-10 || <= 5.0-1 || 5.0.1-1 || 28d || Fixed ({{bug|46573}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000406.html ASA-201510-4]
+|-
+| {{CVE|CVE-2015-4141}} {{CVE|CVE-2015-4142}} {{CVE|CVE-2015-4143}} {{CVE|CVE-2015-4144}} {{CVE|CVE-2015-4145}} {{CVE|CVE-2015-4146}} [http://w1.fi/security/2015-2/ templink] [http://w1.fi/security/2015-3/ templink] [http://w1.fi/security/2015-4/ templink] [http://w1.fi/security/2015-5/ templink] || {{pkg|hostapd}} || 2015-05-04 || <= 2.4-2 || 2.5-1 || ~150d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000404.html ASA-201510-2]
+|-
+| {{CVE|CVE-2015-3239}} [https://bugzilla.redhat.com/show_bug.cgi?id=1232265 templink] || {{pkg|libunwind}} || 2015-06-16 || <= 1.1-2 || 1.1-3 || ~110d || Fixed ({{bug|46474}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000403.html ASA-201510-1]
+|-
+| {{CVE|CVE-2015-1303}} {{CVE|CVE-2015-1304}} [http://googlechromereleases.blogspot.fr/2015/09/stable-channel-update_24.html templink] || {{pkg|chromium}} || 2015-09-24 || <= 45.0.2454.99-1 || 45.0.2454.101-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-September/000401.html ASA-201509-11]
+|-
+| {{CVE|CVE-2015-4500}} {{CVE|CVE-2015-4501}} {{CVE|CVE-2015-4502}} {{CVE|CVE-2015-4504}} {{CVE|CVE-2015-4506}} {{CVE|CVE-2015-4507}} {{CVE|CVE-2015-4508}} {{CVE|CVE-2015-4509}} {{CVE|CVE-2015-4510}} {{CVE|CVE-2015-4511}} {{CVE|CVE-2015-4512}} {{CVE|CVE-2015-4516}} {{CVE|CVE-2015-4517}} {{CVE|CVE-2015-4519}} {{CVE|CVE-2015-4520}} {{CVE|CVE-2015-4521}} {{CVE|CVE-2015-4522}} {{CVE|CVE-2015-7174}} {{CVE|CVE-2015-7175}} {{CVE|CVE-2015-7176}} {{CVE|CVE-2015-7177}} {{CVE|CVE-2015-7180}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/firefox/#firefox41 templink] || {{pkg|firefox}} || 2015-09-22 || <= 40.0.3-1 || 41.0-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-September/000399.html ASA-201509-9]
+|-
+| {{CVE|CVE-2015-5567}} {{CVE|CVE-2015-5568}} {{CVE|CVE-2015-5570}} {{CVE|CVE-2015-5571}} {{CVE|CVE-2015-5572}} {{CVE|CVE-2015-5573}} {{CVE|CVE-2015-5574}} {{CVE|CVE-2015-5575}} {{CVE|CVE-2015-5576}} {{CVE|CVE-2015-5577}} {{CVE|CVE-2015-5578}} {{CVE|CVE-2015-5579}} {{CVE|CVE-2015-5580}} {{CVE|CVE-2015-5581}} {{CVE|CVE-2015-5582}} {{CVE|CVE-2015-5584}} {{CVE|CVE-2015-5587}} {{CVE|CVE-2015-5588}} {{CVE|CVE-2015-6676}} {{CVE|CVE-2015-6677}} {{CVE|CVE-2015-6678}} {{CVE|CVE-2015-6679}} {{CVE|CVE-2015-6682}} [https://helpx.adobe.com/security/products/flash-player/apsb15-23.html templink] || {{pkg|flashplugin}} || 2015-09-21 || <= 11.2.202.508-1 || 11.2.202.521-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-September/000398.html ASA-201510-8]
+|-
+| {{CVE|CVE-2015-7236}} [http://seclists.org/oss-sec/2015/q3/561 templink] || {{pkg|rpcbind}} || 2015-09-17 || <= 0.2.3-1 || 0.2.3-2 || 7d || Fixed ({{bug|46341}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-September/000400.html ASA-201509-10]
+|-
+| {{CVE|CVE-2015-5714}} {{CVE|CVE-2015-5715}} [https://wordpress.org/news/2015/09/wordpress-4-3-1/ templink] || {{pkg|wordpress}} || 2015-09-15 || <= 4.3-1 || 4.3.1-1 || 5d || Fixed ({{bug|46340}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-September/000397.html ASA-201510-7]
+|-
+| {{CVE|CVE-2015-6908}} [http://www.openwall.com/lists/oss-security/2015/09/11/5 templink] || {{pkg|openldap}} || 2015-09-09 || <= 2.4.42-1 || 2.4.42-2 || 3d || Fixed ({{bug|46265}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-September/000393.html ASA-201509-4]
+|-
+| {{CVE|CVE-2015-5722}} {{CVE|CVE-2015-5986}} [https://www.isc.org/blogs/cve-2015-5986-an-incorrect-boundary-check-can-trigger-a-require-assertion-failure-in-openpgpkey_61-c/ templink] [https://www.isc.org/blogs/cve-2015-5722-parsing-malformed-keys-may-cause-bind-to-exit-due-to-a-failed-assertion-in-buffer-c/ templink] || {{pkg|bind}} || 2015-09-02 || <= 9.10.2.P3-1 || 9.10.2.P4-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-September/000391.html ASA-201509-2]
+|-
+| {{CVE|CVE-2015-5198}} {{CVE|CVE-2015-5199}} {{CVE|CVE-2015-5200}} [http://lists.x.org/archives/xorg-announce/2015-August/002630.html templink] || {{pkg|libvdpau}} {{pkg|lib32-libvdpau}} || 2015-08-31 || <= 1.1-1 || 1.1.1-1 || 13d || Fixed ({{bug|46266}}) ({{bug|46267}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-September/000394.html ASA-201509-5]
+|-
+| {{CVE|CVE-2015-1291}} {{CVE|CVE-2015-1292}} {{CVE|CVE-2015-1293}} {{CVE|CVE-2015-1294}} {{CVE|CVE-2015-1295}} {{CVE|CVE-2015-1296}} {{CVE|CVE-2015-1297}} {{CVE|CVE-2015-1298}} {{CVE|CVE-2015-1299}} {{CVE|CVE-2015-1300}} {{CVE|CVE-2015-1301}} [http://googlechromereleases.blogspot.fr/2015/09/stable-channel-update.html templink] || {{pkg|chromium}} || 2015-09-01 || <= 44.0.2403.157-1 || 45.0.2454.85-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-September/000390.html ASA-201509-1]
+|-
+| {{CVE|CVE-2015-5230}} [https://doc.powerdns.com/md/security/powerdns-advisory-2015-02/ templink] || {{pkg|powerdns}} || 2015-09-02 || <= 3.4.5-1 || 3.4.6-1 || 4d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-September/000392.html ASA-201509-3]
+|-
+| {{CVE|CVE-2015-5317}} {{CVE|CVE-2015-5318}} {{CVE|CVE-2015-5319}} {{CVE|CVE-2015-5320}} {{CVE|CVE-2015-5321}} {{CVE|CVE-2015-5322}} {{CVE|CVE-2015-5323}} {{CVE|CVE-2015-5324}} {{CVE|CVE-2015-5325}} {{CVE|CVE-2015-5326}} {{CVE|CVE-2015-8103}} [https://wiki.jenkins-ci.org/display/SECURITY/Jenkins+Security+Advisory+2015-11-11 templink] [http://seclists.org/bugtraq/2015/Aug/161 templink] || {{pkg|jenkins}} || 2015-08-28 || <= 1.627-1 || 1.638-1 || 60d || Fixed ({{bug|46268}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-November/000439.html ASA-201511-11]
+|-
+| {{CVE|CVE-2015-6749}} [http://seclists.org/oss-sec/2015/q3/457 templink] || {{pkg|vorbis-tools}} || 2015-08-30 || <= 1.4.0-5 || 1.4.0-6 || >60d || Fixed ({{bug|46269}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-October/000424.html ASA-201510-22]
+|-
+| {{CVE|CVE-2015-4497}} {{CVE|CVE-2015-4498}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/firefox/#firefox40.0.3 templink] || {{pkg|firefox}} || 2015-08-27 || <= 40.0.2-1 || 40.0.3-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-August/000389.html ASA-201508-12]
+|-
+| {{CVE|CVE-2015-5949}} [http://www.ocert.org/advisories/ocert-2015-009.html templink] || {{pkg|vlc}} || 2015-08-20 || <= 2.2.1-6 || || || '''Vulnerable''' ({{bug|46037}}) || 
+|-
+| {{CVE|CVE-2015-5963}} [https://www.djangoproject.com/weblog/2015/aug/18/security-releases/ templink] || {{pkg|python-django}} {{pkg|python2-django}} || 2015-08-18 || <= 1.8.3-1 || 1.8.4-1 || 3d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-August/000386.html ASA-201508-9]
+|-
+| {{CVE|CVE-2015-5221}} [http://seclists.org/oss-sec/2015/q3/408 templink] || {{pkg|jasper}} || 2015-08-16 || <= 1.900.1-14 || || || '''Vulnerable''' || 
+|-
+| {{CVE|CVE-2015-5203}} [http://seclists.org/oss-sec/2015/q3/366 templink] || {{pkg|jasper}} || 2015-08-16 || <= 1.900.1-13 || 1.900.1-14 || 6d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-August/000387.html ASA-201508-10]
+|-
+| CVE Pending [http://seclists.org/oss-sec/2015/q3/295 templink] || {{pkg|pcre}} || 2015-08-05 || <= 8.37-2 || 8.37-3 || 12d || Fixed ({{bug|45945}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-August/000388.html ASA-201508-11]
+|-
+| {{CVE|CVE-2015-4473}} {{CVE|CVE-2015-4474}} {{CVE|CVE-2015-4475}} {{CVE|CVE-2015-4477}} {{CVE|CVE-2015-4478}} {{CVE|CVE-2015-4479}} {{CVE|CVE-2015-4480}} {{CVE|CVE-2015-4482}} {{CVE|CVE-2015-4483}} {{CVE|CVE-2015-4484}} {{CVE|CVE-2015-4485}} {{CVE|CVE-2015-4486}} {{CVE|CVE-2015-4487}} {{CVE|CVE-2015-4488}} {{CVE|CVE-2015-4489}} {{CVE|CVE-2015-4490}} {{CVE|CVE-2015-4491}} {{CVE|CVE-2015-4492}} {{CVE|CVE-2015-4493}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/firefox/#firefox40 templink] || {{pkg|firefox}} || 2015-08-11 || <= 39.0.3-1 || 40.0-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-August/000381.html ASA-201508-4]
+|-
+| {{CVE|CVE-2014-8121}} [https://access.redhat.com/security/cve/CVE-2014-8121 templink] || {{pkg|glibc}} || 2015-02-23 || <= 2.21-4 || 2.22-1 || ~180d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-August/000384.html ASA-201508-7]
+|-
+| {{CVE|CVE-2015-4680}} [http://www.ocert.org/advisories/ocert-2015-008.html templink] || {{pkg|freeradius}} || 2015-06-22 || <= 3.0.8-2 || 3.0.9-1 || ~50d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-August/000383.html ASA-201508-6]
+|-
+| {{CVE|CVE-2015-3184}} {{CVE|CVE-2015-3187}} [https://subversion.apache.org/security/CVE-2015-3184-advisory.txt templink] [https://subversion.apache.org/security/CVE-2015-3187-advisory.txt templink] || {{pkg|subversion}} || 2015-08-05 || <= 1.8.13-2 || 1.9.0-1 || 7d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-August/000382.html ASA-201508-5]
+|-
+| {{CVE|CVE-2015-6251}} [http://www.gnutls.org/security.html#GNUTLS-SA-2015-3 templink] || {{pkg|gnutls}} || 2015-08-10 || <= 3.4.3-1 || 3.4.4.1-1 || 10d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-August/000385.html ASA-201508-8]
+|-
+| {{CVE|CVE-2015-4495}} [https://www.mozilla.org/en-US/security/advisories/mfsa2015-78/ templink] || {{pkg|firefox}} || 2015-08-06 || <= 39.0-1 || 39.0.3-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-August/000378.html ASA-201508-1]
+|-
+| {{CVE|CVE-2015-2213}} {{CVE|CVE-2015-5730}} {{CVE|CVE-2015-5731}} {{CVE|CVE-2015-5732}} {{CVE|CVE-2015-5733}} {{CVE|CVE-2015-5734}} [https://codex.wordpress.org/Version_4.2.4 templink] || {{pkg|wordpress}} || 2015-08-04 || <= 4.2.3-1 || 4.2.4.-1 || 2d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-August/000379.html ASA-201508-2]
+|-
+| {{CVE|CVE-2015-3245}} {{CVE|CVE-2015-3246}} [http://seclists.org/oss-sec/2015/q3/185 templink] || {{pkg|libuser}} || 2015-07-22 || <= 0.61-1 || 0.62-1 || 2d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000373.html ASA-201507-19]
+|-
+| {{CVE|CVE-2015-5600}} [https://kingcope.wordpress.com/2015/07/16/openssh-keyboard-interactive-authentication-brute-force-vulnerability-maxauthtries-bypass/ templink] || {{pkg|openssh}} || 2015-07-22 || <= 6.9p1-1 || 6.9p1-2 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000372.html ASA-201507-17]
+|-
+| {{CVE|CVE-2015-1270}} {{CVE|CVE-2015-1271}} {{CVE|CVE-2015-1272}} {{CVE|CVE-2015-1273}} {{CVE|CVE-2015-1274}} {{CVE|CVE-2015-1276}} {{CVE|CVE-2015-1277}} {{CVE|CVE-2015-1278}} {{CVE|CVE-2015-1279}} {{CVE|CVE-2015-1280}} {{CVE|CVE-2015-1281}} {{CVE|CVE-2015-1282}} {{CVE|CVE-2015-1283}} {{CVE|CVE-2015-1284}} {{CVE|CVE-2015-1285}} {{CVE|CVE-2015-1286}} {{CVE|CVE-2015-1287}} {{CVE|CVE-2015-1288}} {{CVE|CVE-2015-1289}} [http://googlechromereleases.blogspot.fr/2015/07/stable-channel-update_21.html templink] || {{pkg|chromium}} || 2015-07-21 || <= 43.0.2357.134-1 || 44.0.2403.89-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000371.html ASA-201507-18]
+|-
+| {{CVE|CVE-2015-2590}} {{CVE|CVE-2015-2601}} {{CVE|CVE-2015-2613}} {{CVE|CVE-2015-2621}} {{CVE|CVE-2015-2625}} {{CVE|CVE-2015-2628}} {{CVE|CVE-2015-2632}} {{CVE|CVE-2015-2808}} {{CVE|CVE-2015-4000}} {{CVE|CVE-2015-4731}} {{CVE|CVE-2015-4732}} {{CVE|CVE-2015-4733}} {{CVE|CVE-2015-4748}} {{CVE|CVE-2015-4749}} {{CVE|CVE-2015-4760}} [http://blog.fuseyism.com/index.php/2015/07/21/security-icedtea-2-6-1-for-openjdk-7-released/ templink] || {{pkg|jre7-openjdk}} || 2015-07-21 || <= 7.u80_2.6.0-1 || 7.u85_2.6.1-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000370.html ASA-201507-16]
+|-
+| {{CVE|CVE-2015-5122}} {{CVE|CVE-2015-5123}} [https://helpx.adobe.com/security/products/flash-player/apsb15-18.html templink] || {{pkg|lib32-flashplugin}} || 2015-07-09 || <= 11.2.202.481-1 || 11.2.202.491-1 || 7d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000368.html ASA-201507-14]
+|-
+| {{CVE|CVE-2015-5122}} {{CVE|CVE-2015-5123}} [https://helpx.adobe.com/security/products/flash-player/apsb15-18.html templink] || {{pkg|flashplugin}} || 2015-07-09 || <= 11.2.202.481-1 || 11.2.202.491-1 || 7d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000367.html ASA-201507-13]
+|-
+| {{CVE|CVE-2015-0228}} {{CVE|CVE-2015-0253}} {{CVE|CVE-2015-3183}} {{CVE|CVE-2015-3185}} [http://www.apache.org/dist/httpd/CHANGES_2.4.16 templink] || {{pkg|apache}} || 2015-07-15 || <= 2.4.12-4 || 2.4.16-1 || 2d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000369.html ASA-201507-15]
+|-
+| {{CVE|CVE-2015-2724}} {{CVE|CVE-2015-2725}} {{CVE|CVE-2015-2726}} {{CVE|CVE-2015-2731}} {{CVE|CVE-2015-2734}} {{CVE|CVE-2015-2735}} {{CVE|CVE-2015-2736}} {{CVE|CVE-2015-2737}} {{CVE|CVE-2015-2738}} {{CVE|CVE-2015-2739}} {{CVE|CVE-2015-2740}} {{CVE|CVE-2015-2741}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/thunderbird/#thunderbird38.1 templink] || {{pkg|thunderbird}} || 2015-07-09 || <= 38.0.1-1 || 38.1.0-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000363.html ASA-201507-9]
+|-
+| {{CVE|CVE-2015-1793}} [https://openssl.org/news/secadv_20150709.txt templink] || {{pkg|lib32-openssl}} || 2015-07-09 || <= 1.0.2.c-1 || 1.0.2.d-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000366.html ASA-201507-12]
+|-
+| {{CVE|CVE-2015-1793}} [https://openssl.org/news/secadv_20150709.txt templink] || {{pkg|openssl}} || 2015-07-09 || <= 1.0.2.c-1 || 1.0.2.d-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000362.html ASA-201507-8]
+|-
+| {{CVE|CVE-2014-0578}} {{CVE|CVE-2015-3114}} {{CVE|CVE-2015-3115}} {{CVE|CVE-2015-3116}} {{CVE|CVE-2015-3117}} {{CVE|CVE-2015-3118}} {{CVE|CVE-2015-3119}} {{CVE|CVE-2015-3120}} {{CVE|CVE-2015-3121}} {{CVE|CVE-2015-3122}} {{CVE|CVE-2015-3123}} {{CVE|CVE-2015-3124}} {{CVE|CVE-2015-3125}} {{CVE|CVE-2015-3126}} {{CVE|CVE-2015-3127}} {{CVE|CVE-2015-3128}} {{CVE|CVE-2015-3129}} {{CVE|CVE-2015-3130}} {{CVE|CVE-2015-3131}} {{CVE|CVE-2015-3132}} {{CVE|CVE-2015-3133}} {{CVE|CVE-2015-3134}} {{CVE|CVE-2015-3135}} {{CVE|CVE-2015-3136}} {{CVE|CVE-2015-3137}} {{CVE|CVE-2015-4428}} {{CVE|CVE-2015-4429}} {{CVE|CVE-2015-4430}} {{CVE|CVE-2015-4431}} {{CVE|CVE-2015-4432}} {{CVE|CVE-2015-4433}} {{CVE|CVE-2015-5116}} {{CVE|CVE-2015-5117}} {{CVE|CVE-2015-5118}} {{CVE|CVE-2015-5119}} [https://helpx.adobe.com/security/products/flash-player/apsb15-16.html templink] [https://www.kb.cert.org/vuls/id/561288 templink] || {{pkg|flashplugin}} || 2015-07-07 || <= 11.2.202.468-1 || 11.2.202.481-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000361.html ASA-201507-7]
+|-
+| {{CVE|CVE-2015-4620}} [https://kb.isc.org/article/AA-01267/ templink] || {{pkg|bind}} || 2015-07-07 || <= 9.10.2.P1-1 || 9.10.2.P2-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000360.html ASA-201507-6]
+|-
+| {{CVE|CVE-2015-5382}} [http://www.openwall.com/lists/oss-security/2015/07/07/3 templink] || {{pkg|roundcubemail}} || 2015-07-06 || <= 1.1.1-1 || 1.1.2-1 || <1d || Fixed || None
+|-
+| {{CVE|CVE-2014-5355}} {{CVE|CVE-2015-2694}} [http://krbdev.mit.edu/rt/NoAuth/krb5-1.13/fixed-1.13.2.html templink] || {{pkg|lib32-krb5}} || 2015-05-08 || <= 1.13.1-1 || 1.13.2-1 || 63d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000365.html ASA-201507-11]
+|-
+| {{CVE|CVE-2014-5355}} {{CVE|CVE-2015-2694}} [http://krbdev.mit.edu/rt/NoAuth/krb5-1.13/fixed-1.13.2.html templink] || {{pkg|krb5}} || 2015-05-08 || <= 1.13.1-1 || 1.13.2-1 || 63d || Fixed ({{bug|45575}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000364.html ASA-201507-10]
+|-
+| {{CVE|CVE-2015-3281}} [http://marc.info/?l=haproxy&m=143593901506748&w=2 templink] || {{pkg|haproxy}} || 2015-07-03 || <= 1.5.12-1 || 1.5.14-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000357.html ASA-201507-3]
+|-
+| {{CVE|CVE-2015-2722}} {{CVE|CVE-2015-2724}} {{CVE|CVE-2015-2725}} {{CVE|CVE-2015-2726}} {{CVE|CVE-2015-2727}} {{CVE|CVE-2015-2728}} {{CVE|CVE-2015-2729}} {{CVE|CVE-2015-2731}} {{CVE|CVE-2015-2733}} {{CVE|CVE-2015-2734}} {{CVE|CVE-2015-2735}} {{CVE|CVE-2015-2736}} {{CVE|CVE-2015-2737}} {{CVE|CVE-2015-2739}} {{CVE|CVE-2015-2740}} {{CVE|CVE-2015-2741}} {{CVE|CVE-2015-2743}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/firefox/ templink] || {{pkg|firefox}} || 2015-07-02 || <= 38.0.5 || 39.0-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000356.html ASA-201507-2]
+|- 
+| {{CVE|CVE-2015-5352}} [http://www.openwall.com/lists/oss-security/2015/07/01/10 templink] || {{pkg|openssh}} || 2015-06-29 || <= 6.8p1-3 || 6.9p1-1 || 5d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000358.html ASA-201507-4]
+|-
+| {{CVE|CVE-2015-5146}} [http://support.ntp.org/bin/view/Main/SecurityNotice#June_2015_NTP_Security_Vulnerabi templink] || {{pkg|ntp}} || 2015-06-29 || <= 4.2.8p2-1 || 4.2.8p3-1 || 8d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000359.html ASA-201507-5]
+|-
+| {{CVE|CVE-2015-2141}} [https://lists.ubuntu.com/archives/ubuntu-devel-discuss/2015-June/015585.html templink] [https://github.com/weidai11/cryptopp/commit/9425e16437439e68c7d96abef922167d68fafaff commit] || {{pkg|crypto++}} || 2015-06-28 || <= 5.6.2-2 || 5.6.2-3 || 28d || Fixed ({{bug|45498}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000374.html ASA-201507-20]
+|-
+| {{CVE|CVE-2015-5073}} [https://bugs.exim.org/show_bug.cgi?id=1651 templink] [http://vcs.pcre.org/pcre?view=revision&revision=1571 commit] || {{pkg|pcre}} || 2015-06-26 || <= 8.37-2 || 8.37-3 || ~52d || Fixed || 
+|-
+| {{CVE|CVE-2015-5069}} {{CVE|CVE-2015-5070}} [http://www.openwall.com/lists/oss-security/2015/06/25/12 templink] || {{pkg|wesnoth}} || 2015-06-24 || <= 1.12.2-3 || 1.12.4-1 || < 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-July/000355.html ASA-201507-1]
+|-
+| {{CVE|CVE-2015-3113}} [https://helpx.adobe.com/security/products/flash-player/apsb15-14.html templink] || {{pkg|flashplugin}} || 2015-06-23 || <= 11.2.202.466-1 || 11.2.202.468-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-June/000346.html ASA-201506-5]
+|-
+| {{CVE|CVE-2015-3236}} {{CVE|CVE-2015-3237}} [http://curl.haxx.se/docs/adv_20150617A.html templink] [http://curl.haxx.se/docs/adv_20150617B.html templink] || {{pkg|lib32-curl}} || 2015-06-17 || <= 7.42.1-1 || 7.43.0-1 || 47d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-June/000345.html ASA-201506-4]
+|-
+| {{CVE|CVE-2015-3236}} {{CVE|CVE-2015-3237}} [http://curl.haxx.se/docs/adv_20150617A.html templink] [http://curl.haxx.se/docs/adv_20150617B.html templink] || {{pkg|curl}} || 2015-06-17 || <= 7.42.1-1 || 7.43.0-1 || 5d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-June/000345.html ASA-201506-4]
+|-
+| {{CVE|CVE-2015-0848}} {{CVE|CVE-2015-4588}} [http://www.openwall.com/lists/oss-security/2015/06/16/4 templink] || {{pkg|libwmf}} || 2015-06-01 || <= 0.2.8.4-12 || || || '''Vulnerable''' ||
+|-
+| {{CVE|CVE-2015-2325}} {{CVE|CVE-2015-2326}} {{CVE|CVE-2015-3414}} {{CVE|CVE-2015-3415}} {{CVE|CVE-2015-3416}} [http://php.net/ChangeLog-5.php#5.6.10 templink] || {{pkg|php}} || 2015-06-11 || <= 5.6.9-2 || 5.6.10-1 || <1d || Fixed || None
+|-
+| {{CVE|CVE-2015-3885}} [http://www.ocert.org/advisories/ocert-2015-006.html templink] || {{pkg|libraw}} || 2015-05-11 || <= 0.16.0-3 || 0.16.1 || 5d || Fixed || None
+|-
+| {{CVE|CVE-2015-3885}} [http://www.ocert.org/advisories/ocert-2015-006.html templink] || {{pkg|dcraw}} || 2015-05-11 || <= 9.25.0-1 || 9.26.0-1 || ~1m || Fixed || None 
+|-
+| {{CVE|CVE-2015-3885}} [http://www.ocert.org/advisories/ocert-2015-006.html templink] || {{pkg|gimp-ufraw}} || 2015-05-11 || <= 0.21-1 || 0.22-1 || 45d || Fixed || None
+|-
+| {{CVE|CVE-2015-3885}} [http://www.ocert.org/advisories/ocert-2015-006.html templink] || {{pkg|rawtherapee}} || 2015-05-11 || <= 1:4.2-1 || || || '''Vulnerable''' || 
+|-
+| {{CVE|CVE-2015-3885}} [http://www.ocert.org/advisories/ocert-2015-006.html templink] || {{pkg|rawstudio}} || 2015-05-11 || <= 2.0-12 || || || '''Vulnerable''' ||
+|-
+| {{CVE|CVE-2015-1158}} {{CVE|CVE-2015-1159}} [http://www.cups.org/str.php?L4609 templink] || {{pkg|cups}} || 2015-06-08 || <= 2.0.2-4 || 2.0.3-1 || 1d || Fixed ({{bug|45279}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-June/000343.html ASA-201506-2]
+|-
+| {{CVE|CVE-2015-1788}} {{CVE|CVE-2015-1789}} {{CVE|CVE-2015-1790}} {{CVE|CVE-2015-1791}} {{CVE|CVE-2015-1792}} {{CVE|CVE-2015-4000}} [https://www.openssl.org/news/secadv_20150611.txt templink] [https://git.openssl.org/?p=openssl.git;a=commit;h=98ece4eebfb6cd45cc8d550c6ac0022965071afc templink] || {{pkg|openssl}} || 2015-06-11 || <= 1.0.2.a-1 || 1.0.2.b-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-June/000344.html ASA-201506-3]
+|-
+| {{CVE|CVE-2015-3210}} [https://bugs.exim.org/show_bug.cgi?id=1636 templink] || {{pkg|pcre}} || 2015-05-29 || <= 8.37-1 || 8.37-2 || 7d || Fixed ({{bug|45207}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-June/000342.html ASA-201506-1]
+|-
+| {{CVE|CVE-2015-3165}} {{CVE|CVE-2015-3166}} {{CVE|CVE-2015-3167}} [http://www.postgresql.org/about/news/1587/ templink] || {{pkg|postgresql}} || 2015-05-22 || <= 9.4.1-1 || 9.4.2-1 || 4d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-May/000338.html ASA-201505-17]
+|-
+| {{CVE|CVE-2015-4054}} [http://www.openwall.com/lists/oss-security/2015/05/22/5 templink] || {{pkg|pgbouncer}} || 2015-04-09 || <= 1.5.4-6 || 1.5.5-1 || 26d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-May/000337.html ASA-201505-16]
+|-
+| {{CVE|CVE-2015-1251}} {{CVE|CVE-2015-1252}} {{CVE|CVE-2015-1253}} {{CVE|CVE-2015-1254}} {{CVE|CVE-2015-1255}} {{CVE|CVE-2015-1256}} {{CVE|CVE-2015-1257}} {{CVE|CVE-2015-1258}} {{CVE|CVE-2015-1259}} {{CVE|CVE-2015-1260}} {{CVE|CVE-2015-1263}} {{CVE|CVE-2015-1264}} {{CVE|CVE-2015-1265}} [http://googlechromereleases.blogspot.fr/2015/05/stable-channel-update_19.html templink] || {{pkg|chromium}} || 2015-05-19 || <= 42.0.2311.135-1 || 43.0.2357.65-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-May/000335.html ASA-201505-14]
+|-
+| {{CVE|CVE-2015-3808}} {{CVE|CVE-2015-3809}} {{CVE|CVE-2015-3810}} {{CVE|CVE-2015-3811}} {{CVE|CVE-2015-3812}} {{CVE|CVE-2015-3813}} {{CVE|CVE-2015-3814}} {{CVE|CVE-2015-3815}} [https://wireshark.org/docs/relnotes/wireshark-1.12.5.html templink] || {{pkg|wireshark-cli}} {{pkg|wireshark-qt}} {{pkg|wireshark-gtk}} || 2015-05-11 || <= 1.12.4-4 || 1.12.5-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-May/000329.html ASA-201505-10] [https://lists.archlinux.org/pipermail/arch-security/2015-May/000330.html ASA-201505-11] [https://lists.archlinux.org/pipermail/arch-security/2015-May/000331.html ASA-201505-12]
+|-
+| {{CVE|CVE-2015-3456}} [https://securityblog.redhat.com/2015/05/13/venom-dont-get-bitten/ templink] || {{pkg|qemu}} || 2015-05-13 || <= 2.2.1-4 || 2.2.1-5 || 1d || Fixed ({{bug|44958}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-May/000328.html ASA-201505-9]
+|-
+| {{CVE|CVE-2014-0230}} [https://tomcat.apache.org/security-6.html#Fixed_in_Apache_Tomcat_6.0.44 templink] || {{pkg|tomcat6}} || 2015-04-09 || <= 6.0.43-2 || 6.0.44-1 || 34d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-May/000321.html ASA-201505-8]
+|-
+| {{CVE|CVE-2015-2708}} {{CVE|CVE-2015-2709}} {{CVE|CVE-2015-2710}} {{CVE|CVE-2015-2713}} {{CVE|CVE-2015-2716}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/thunderbird/#thunderbird31.7 templink] || {{pkg|thunderbird}} || 2015-05-12 || <= 31.6.0-2 || 31.7.0-1 || 4d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-May/000332.html ASA-201505-13]
+|-
+| {{CVE|CVE-2015-2708}} {{CVE|CVE-2015-2709}} {{CVE|CVE-2015-2710}} {{CVE|CVE-2015-2711}} {{CVE|CVE-2015-2712}} {{CVE|CVE-2015-2713}} {{CVE|CVE-2015-2715}} {{CVE|CVE-2015-2716}} {{CVE|CVE-2015-2717}} {{CVE|CVE-2015-2718}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/firefox/#firefox38 templink] || {{pkg|firefox}} || 2015-05-12 || <= 37.0.2-1 || 38.0-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-May/000320.html ASA-201505-7] 
+|-
+| {{CVE|CVE-2015-3622}} [http://git.savannah.gnu.org/gitweb/?p=libtasn1.git;a=commitdiff;h=f979435 templink] || {{pkg|libtasn1}} || 2015-04-20 || <= 4.5-1 || 4.4-1 || 16d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-May/000318.html ASA-201505-5]
+|-
+| {{CVE|CVE-2014-8964}} [https://mariadb.com/kb/en/mariadb/mariadb-10018-release-notes/ templink] || {{pkg|mariadb-clients}} || 2015-05-07 || <= 10.0.17-1 || 10.0.18-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-May/000317.html ASA-201505-4]
+|-
+| {{CVE|CVE-2014-8964}} {{CVE|CVE-2015-0499}} {{CVE|CVE-2015-0501}} {{CVE|CVE-2015-0505}} {{CVE|CVE-2015-2571}} [https://mariadb.com/kb/en/mariadb/mariadb-10018-release-notes/ templink] || {{pkg|mariadb}} || 2015-05-07 || <= 10.0.17-1 || 10.0.18-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-May/000316.html ASA-201505-3]
+|-
+| {{CVE|CVE-2015-3627}} {{CVE|CVE-2015-3629}} {{CVE|CVE-2015-3630}} {{CVE|CVE-2015-3631}} [http://seclists.org/oss-sec/2015/q2/389 templink] || {{pkg|docker}} || 2015-05-07 || <= 1:1.6.0-1 || 1:1.6.1-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-May/000319.html ASA-201505-6]
+|-
+| {{CVE|CVE-2015-0847}} [http://sourceforge.net/p/nbd/mailman/message/34091218/ templink] || {{pkg|nbd}} || 2015-05-07 || <= 3.10-1 || 3.11-1 || 19d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-May/000336.html ASA-201505-15]
+|-
+| {{CVE|CVE-2015-1858}} {{CVE|CVE-2015-1859}} {{CVE|CVE-2015-1860}} [http://lists.qt-project.org/pipermail/announce/2015-April/000067.html templink] || {{pkg|qt5-base}} || 2015-04-13 || <= 5.4.1-5 || 5.4.2-1 || 50d || Fixed || None 
+|-
+| {{CVE|CVE-2015-1858}} {{CVE|CVE-2015-1859}} {{CVE|CVE-2015-1860}} [http://lists.qt-project.org/pipermail/announce/2015-April/000067.html templink] || {{pkg|qt4}} || 2015-04-13 || <= 4.8.6-6 || 4.8.7-1 || 50d || Fixed || None 
+|-
+| {{CVE|CVE-2015-3414}} {{CVE|CVE-2015-3415}} {{CVE|CVE-2015-3416}} [http://seclists.org/fulldisclosure/2015/Apr/31 templink] || {{pkg|sqlite}} || 2015-04-24 || <= 3.8.8.3-1 || 3.8.9-1 || <1d || Fixed || None
+|-
+| {{CVE|CVE-2015-2170}} {{CVE|CVE-2015-2221}} {{CVE|CVE-2015-2222}} {{CVE|CVE-2015-2305}} {{CVE|CVE-2015-2668}} [http://blog.clamav.net/2015/04/clamav-0987-has-been-released.html templink] || {{pkg|clamav}} || 2015-04-29 || <= 0.98.6-1 || 0.98.7-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-May/000315.html ASA-201505-2]
+|-
+| {{CVE|CVE-2015-3455}} [http://www.openwall.com/lists/oss-security/2015/04/30/2 templink] || {{pkg|squid}} || 2015-04-29 || <= 3.5.3-2 || 3.5.4-1 || 2d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-May/000314.html ASA-201505-1]
+|-
+| {{CVE|CVE-2015-3451}} [http://www.openwall.com/lists/oss-security/2015/04/30/1 templink] || {{pkg|perl-xml-libxml}} || 2015-04-30 || <= 2.0118-3 || 2.0119-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000313.html ASA-201504-32]
+|-
+| {{CVE|CVE-2015-3152}} [http://www.openwall.com/lists/oss-security/2015/04/29/4 templink] || {{pkg|mariadb}} {{pkg|mariadb-clients}} || 2015-04-29 || <= 10.0.17-2 || 10.0.20-1 || 52d || Fixed || None
+|-
+| {{CVE|CVE-2015-3153}} [http://curl.haxx.se/docs/adv_20150429.html templink] || {{pkg|curl}} || 2015-04-29 || <= 7.42.0-1 || 7.42.1-1 || 29d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-May/000341.html ASA-201505-20]
+|-
+| {{CVE|CVE-2015-1243}} {{CVE|CVE-2015-1250}} [http://googlechromereleases.blogspot.fr/2015/04/stable-channel-update_28.html templink] || {{pkg|chromium}} || 2015-04-28 || <= 42.0.2311.90-1 || 42.0.2311.135-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000311.html ASA-201504-30]
+|-
+| {{CVE|CVE-2015-3420}} [http://seclists.org/oss-sec/2015/q2/288 templink] || {{pkg|dovecot}} || 2015-04-24 || <= 2.2.16-1 || 2.2.16-2 || 4d || Fixed ({{bug|44757}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000312.html ASA-201504-31]
+|-
+| {{CVE|CVE-2015-1868}} [https://doc.powerdns.com/md/security/powerdns-advisory-2015-01/ templink] || {{pkg|powerdns-recursor}} || 2015-04-23 || <= 3.7.1-1 || 3.7.2-1 || 1d || Fixed ({{Bug|44708}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000308.html ASA-201504-27]
+|-
+| {{CVE|CVE-2015-1868}} [https://doc.powerdns.com/md/security/powerdns-advisory-2015-01/ templink] || {{pkg|powerdns}} || 2015-04-23 || <= 3.4.3-2 || 3.4.4-1 || 1d || Fixed ({{Bug|44708}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000307.html ASA-201504-26]
+|-
+| {{CVE|CVE-2015-1863}} [http://w1.fi/security/2015-1/wpa_supplicant-p2p-ssid-overflow.txt templink] || {{pkg|wpa_supplicant}} || 2015-04-22 || <= 2.3-1 || 2.4-1 (1:2.3-1) || 2d || Fixed ({{Bug|44695}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000310.html ASA-201504-29]
+|-
+| {{CVE|CVE-2015-1781}} [https://sourceware.org/git/?p=glibc.git;a=commitdiff;h=2959eda9272a033863c271aff62095abd01bd4e3;hp=7bf8fb104226407b75103b95525364c4667c869f templink] || {{pkg|glibc}} || 2015-04-21 || <= 2.21-2 || 2.21-3 || 2d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000305.html ASA-201504-25]
+|-
+| {{CVE|CVE-2015-3143}} {{CVE|CVE-2015-3144}} {{CVE|CVE-2015-3145}} {{CVE|CVE-2015-3148}} [http://curl.haxx.se/docs/vuln-7.41.0.html templink] || {{pkg|curl}} || 2015-04-22 || <= 7.41.0-1 || 7.42.0-1 || 2d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000309.html ASA-201504-28]
+|-
+| {{CVE|CVE-2015-2706}} [https://www.mozilla.org/en-US/security/advisories/mfsa2015-45/ templink] || {{pkg|firefox}} || 2015-04-20 || <= 37.0.1-3 || 37.0.2-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000304.html ASA-201504-24]
+|-
+| {{CVE|CVE-2015-3138}} [https://github.com/the-tcpdump-group/tcpdump/issues/446 templink] || {{pkg|tcpdump}} || 2015-03-24 || <= 4.7.3-1 || 4.7.3-2 || 26d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000299.html ASA-201504-20]
+|-
+| {{CVE|CVE-2015-0346}} {{CVE|CVE-2015-0347}} {{CVE|CVE-2015-0348}} {{CVE|CVE-2015-0349}} {{CVE|CVE-2015-0350}} {{CVE|CVE-2015-0351}} {{CVE|CVE-2015-0352}} {{CVE|CVE-2015-0353}} {{CVE|CVE-2015-0354}} {{CVE|CVE-2015-0355}} {{CVE|CVE-2015-0356}} {{CVE|CVE-2015-0357}} {{CVE|CVE-2015-0358}} {{CVE|CVE-2015-0359}} {{CVE|CVE-2015-0360}} {{CVE|CVE-2015-3038}} {{CVE|CVE-2015-3039}} {{CVE|CVE-2015-3040}} {{CVE|CVE-2015-3041}} {{CVE|CVE-2015-3042}} {{CVE|CVE-2015-3043}} {{CVE|CVE-2015-3044}} [https://helpx.adobe.com/security/products/flash-player/apsb15-06.html templink] || {{pkg|flashplugin}} || 2015-04-14 || <= 11.2.202.451-1 || 11.2.202.457-1 || 3d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000297.html ASA-201504-18]
+|-
+| {{CVE|CVE-2015-1351}} {{CVE|CVE-2015-1352}} {{CVE|CVE-2015-2783}} {{CVE|CVE-2015-3330}} {{CVE|CVE-2015-3329}} [https://php.net/ChangeLog-5.php#5.6.8 templink] || {{pkg|php}} || 2015-04-17 || <= 5.6.7.-2 || 5.6.8-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000291.html ASA-201504-14]
+|-
+| {{CVE|CVE-2015-0460}} {{CVE|CVE-2015-0469}} {{CVE|CVE-2015-0470}} {{CVE|CVE-2015-0477}} {{CVE|CVE-2015-0478}} {{CVE|CVE-2015-0480}} {{CVE|CVE-2015-0488}} || {{pkg|jdk8-openjdk}} {{pkg|jre8-openjdk}} {{pkg|jre8-openjdk-headless}} || 2015-04-14 || <= 8.u40-1 || 8.u45-1 || 6d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000300.html ASA-201504-21] [https://lists.archlinux.org/pipermail/arch-security/2015-April/000301.html ASA-201504-22] [https://lists.archlinux.org/pipermail/arch-security/2015-April/000302.html ASA-201504-23]
+|-
+| {{CVE|CVE-2015-0460}} {{CVE|CVE-2015-0469}} {{CVE|CVE-2015-0477}} {{CVE|CVE-2015-0478}} {{CVE|CVE-2015-0480}} {{CVE|CVE-2015-0488}} [http://blog.fuseyism.com/index.php/2015/04/15/security-icedtea-2-5-5-for-openjdk-7-released/ templink] || {{pkg|jdk7-openjdk}} {{pkg|jre7-openjdk}} {{pkg|jre7-openjdk-headless}} || 2015-04-14 || <= 7.u75_2.5.4-1 || 7.u79_2.5.5-1 || 2d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000294.html ASA-201504-15] [https://lists.archlinux.org/pipermail/arch-security/2015-April/000295.html ASA-201504-16] [https://lists.archlinux.org/pipermail/arch-security/2015-April/000296.html ASA-201504-17]
+|-
+| {{CVE|CVE-2015-3310}} [http://www.openwall.com/lists/oss-security/2015/04/16/7 templink] || {{pkg|ppp}} || 2015-04-13 || <= 2.4.7-1 || 2.4.7-2 || ~4m || Fixed ({{bug|44607}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-August/000380.html ASA-201508-3]
+|-
+| {{CVE|CVE-2015-3308}} [http://www.openwall.com/lists/oss-security/2015/04/16/6 templink] || {{pkg|gnutls}} || 2015-03-30 || <= 3.3.13-1 || 3.3.14-1 || <1d || Fixed || None
+|-
+| {{CVE|CVE-2015-1235}} {{CVE|CVE-2015-1236}} {{CVE|CVE-2015-1237}} {{CVE|CVE-2015-1238}} {{CVE|CVE-2015-1240}} {{CVE|CVE-2015-1241}} {{CVE|CVE-2015-1242}} {{CVE|CVE-2015-1244}} {{CVE|CVE-2015-1245}} {{CVE|CVE-2015-1246}} {{CVE|CVE-2015-1247}} {{CVE|CVE-2015-1248}} {{CVE|CVE-2015-1249}} [http://googlechromereleases.blogspot.fr/2015/04/stable-channel-update_14.html templink] || {{pkg|chromium}} || 2015-04-14 || <= 41.0.2272.118-2 || 42.0.2311.90-1 || 3d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000298.html ASA-201504-19]
+|-
+| {{CVE|CVE-2015-1855}} [https://www.ruby-lang.org/en/news/2015/04/13/ruby-openssl-hostname-matching-vulnerability/ templink] || {{pkg|ruby}} || 2015-04-13 || <= 2.2.1-1 || 2.2.2-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000282.html ASA-201504-13]
+|-
+| {{CVE|CVE-2015-3026}} [http://seclists.org/oss-sec/2015/q2/80 templink] || {{pkg|icecast}} || 2015-04-08 || <= 2.4.1-1 || 2.4.2-1 || 3d || Fixed ({{bug|44503}})  || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000281.html ASA-201504-12]
+|-
+| {{CVE|CVE-2015-1798}} [http://seclists.org/oss-sec/2015/q2/63 templink] || {{pkg|chrony}} || 2015-04-08 || <= 1.31-2 || 1.31.1-1 || <1d || Fixed  || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000278.html ASA-201504-9]
+|-
+| {{CVE|CVE-2015-1798}} {{CVE|CVE-2015-1799}} [http://support.ntp.org/bin/view/Main/SecurityNotice#Recent_Vulnerabilities templink] || {{pkg|ntp}} || 2015-04-07 || <= 4.2.8p1 || 4.2.8p2-1 || <1d || Fixed ({{bug|44492}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000275.html ASA-201504-8]
+|-
+| {{CVE|CVE-2015-2931}} {{CVE|CVE-2015-2932}} {{CVE|CVE-2015-2933}} {{CVE|CVE-2015-2934}} {{CVE|CVE-2015-2935}} {{CVE|CVE-2015-2936}} {{CVE|CVE-2015-2937}} {{CVE|CVE-2015-2938}} {{CVE|CVE-2015-2939}} {{CVE|CVE-2015-2940}} {{CVE|CVE-2015-2941}} {{CVE|CVE-2015-2942}} [http://seclists.org/oss-sec/2015/q2/61 templink] || {{pkg|mediawiki}} || 2015-04-07 || <= 1.24.1-1 || 1.24.2-1 || 0d || Fixed ({{bug|44489}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000280.html ASA-201504-11]
+|-
+| {{CVE|CVE-2015-2928}} {{CVE|CVE-2015-2929}} [http://seclists.org/oss-sec/2015/q2/56 templink] || {{pkg|tor}} || 2015-04-06 || <= 0.2.5.11-1 || 0.2.5.12-1 ||  <1d || Fixed ({{bug|44482}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000274.html ASA-201504-7]
+|-
+| {{CVE|CVE-2015-0799}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/firefox/ templink] || {{pkg|firefox}} || 2015-04-03 || <= 37.0-1 || 37.0.1-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000271.html ASA-201504-4]
+|-
+| {{CVE|CVE-2015-1233}} {{CVE|CVE-2015-1234}} [http://googlechromereleases.blogspot.fr/2015/04/stable-channel-update.html templink] || {{pkg|chromium}} || 2015-04-01 || <= 41.0.2272.101-1 || 41.0.2272.118-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000269.html ASA-201504-2]
+|-
+| {{CVE|CVE-2015-0801}} {{CVE|CVE-2015-0807}} {{CVE|CVE-2015-0813}} {{CVE|CVE-2015-0814}} {{CVE|CVE-2015-0815}} {{CVE|CVE-2015-0816}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/thunderbird/ templink] || {{pkg|thunderbird}} || 2015-03-31 || <= 31.5.0-1 || 31.6.0-1|| 4d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000272.html ASA-201504-6]
+|-
+| {{CVE|CVE-2015-0801}} {{CVE|CVE-2015-0802}} {{CVE|CVE-2015-0803}} {{CVE|CVE-2015-0804}} {{CVE|CVE-2015-0805}} {{CVE|CVE-2015-0806}} {{CVE|CVE-2015-0807}} {{CVE|CVE-2015-0808}} {{CVE|CVE-2015-0811}} {{CVE|CVE-2015-0812}} {{CVE|CVE-2015-0813}} {{CVE|CVE-2015-0814}} {{CVE|CVE-2015-0815}} {{CVE|CVE-2015-0816}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/firefox/ templink] || {{pkg|firefox}} || 2015-03-31 || <= 36.0.4-1 || 37.0-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000268.html ASA-201504-1]
+|-
+| {{CVE|CVE-2015-1817}} [http://www.openwall.com/lists/oss-security/2015/03/30/3 templink] || {{pkg|musl}} || 2015-03-29 || <= 1.1.7-1 || 1.1.8-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000267.html ASA-201503-26]
+|-
+| {{CVE|CVE-2015-2782}} {{CVE|CVE-2015-0556}} {{CVE|CVE-2015-0557}}  [http://www.openwall.com/lists/oss-security/2015/03/29/1 templink] || {{pkg|arj}} || 2015-03-28 || <= 3.10.22-8 || 3.10.22-10 || 10d || Fixed ({{bug|44411}}) ({{bug|44488}}) || None
+|-
+| {{CVE|CVE-2015-0250}} [http://seclists.org/fulldisclosure/2015/Mar/142 templink] || {{pkg|java-batik}} || 2015-03-17 || <= 1.7-12 || 1.8-1 || 17d || Fixed ({{bug|44410}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000273.html ASA-201504-5]
+|-
+| {{CVE|CVE-2015-2806}} [http://git.savannah.gnu.org/gitweb/?p=libtasn1.git;a=commit;h=4d4f992826a4962790ecd0cce6fbba4a415ce149 templink] || {{pkg|libtasn1}} || 2015-03-29 || <= 4.3-1 || 4.4-1 || 5d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000270.html ASA-201504-3]
+|-
+| {{CVE|CVE-2015-0817}} {{CVE|CVE-2015-0818}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/firefox/ templink] || {{pkg|firefox}} || 2015-03-20 || <= 36.0.1-1 || 36.0.3-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000262.html ASA-201503-21]
+|-
+| {{CVE|CVE-2015-2559}} [https://www.drupal.org/SA-CORE-2015-001 templink] || {{pkg|drupal}} || 2015-03-19 || <= 7.34-1 || 7.35-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000259.html ASA-201503-18]
+|-
+| {{CVE|CVE-2015-0252}} [https://xerces.apache.org/xerces-c/secadv/CVE-2015-0252.txt templink] || {{pkg|xerces-c}} || 2015-03-19 || <= 3.1.1-5 || 3.2.1-1 || 1d || Fixed ({{bug|44272}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000260.html ASA-201503-19]
+|-
+| {{CVE|CVE-2015-2330}} [http://www.openwall.com/lists/oss-security/2015/03/18/4 templink] || {{pkg|webkitgtk}} {{pkg|webkitgtk2}} || 2015-03-17 || <= 2.4.8-1 || 2.4.9-1 || 30d || Fixed ({{bug|44237}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-May/000339.html ASA-201505-18] [https://lists.archlinux.org/pipermail/arch-security/2015-May/000340.html ASA-201505-19]
+|-
+| {{CVE|CVE-2015-2305}} {{CVE|CVE-2015-2331}} {{CVE|CVE-2015-2348}} {{CVE|CVE-2015-2787}} [https://bugs.php.net/bug.php?id=69253 templink] || {{pkg|php}} || 2015-03-18 || <= 5.6.6-1 || 5.6.7-1 || 10d || fixed ({{bug|44236}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000266.html ASA-201503-25]
+|-
+| {{CVE|CVE-2015-0204}} {{CVE|CVE-2015-0207}} {{CVE|CVE-2015-0208}} {{CVE|CVE-2015-0209}}  {{CVE|CVE-2015-0285}} {{CVE|CVE-2015-0286}} {{CVE|CVE-2015-0287}} {{CVE|CVE-2015-0288}} {{CVE|CVE-2015-0289}} {{CVE|CVE-2015-0290}} {{CVE|CVE-2015-0291}} {{CVE|CVE-2015-0293}} {{CVE|CVE-2015-1787}} [https://git.openssl.org/gitweb/?p=openssl.git;a=commitdiff;h=28a00bcd8e318da18031b2ac8778c64147cd54f9 commit-0288] [https://git.openssl.org/gitweb/?p=openssl.git;a=commitdiff;h=2b31fcc0b5e7329e13806822a5709dbd51c5c8a4 commit-0285] [https://git.openssl.org/gitweb/?p=openssl.git;a=commitdiff;h=ba5d0113e8bcb26857ae58a11b219aeb7bc2408a commit-0209] [https://security-tracker.debian.org/tracker/CVE-2015-0288 Debian-Bug-tracker] [https://www.openssl.org/news/secadv_20150319.txt advisory] || {{pkg|openssl}} {{pkg|lib32-openssl}} || 2015-03-17 || <= 1.0.2-1 || 1.0.2.a-1 || 2d || Fixed ({{bug|44227}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000257.html ASA-201503-16] [https://lists.archlinux.org/pipermail/arch-security/2015-March/000258.html ASA-201503-17]
+|-
+| {{CVE|CVE-2015-1802}} {{CVE|CVE-2015-1803}} {{CVE|CVE-2015-1804}} [http://www.openwall.com/lists/oss-security/2015/03/17/5 templink] || {{pkg|libxfont}} || 2015-03-17 || <= 1.5.0-1 || 1.5.1-1 || <1d || Fixed ({{bug|44226}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000256.html ASA-201503-15]
+|-
+| {{CVE|CVE-2015-0332}} {{CVE|CVE-2015-0333}} {{CVE|CVE-2015-0334}} {{CVE|CVE-2015-0335}} {{CVE|CVE-2015-0336}} {{CVE|CVE-2015-0337}} {{CVE|CVE-2015-0338}} {{CVE|CVE-2015-0339}} {{CVE|CVE-2015-0340}} {{CVE|CVE-2015-0341}} {{CVE|CVE-2015-0342}} [https://helpx.adobe.com/security/products/flash-player/apsb15-05.html templink] || {{pkg|flashplugin}} || 2015-03-12 || <= 11.2.202.442-1 || 11.2.202.451-1 || 3d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000252.html ASA-201503-11]
+|-
+| {{CVE|CVE-2014-9687}} [http://www.openwall.com/lists/oss-security/2015/02/10/10 templink] || {{pkg|ecryptfs-utils}} || 2015-02-10 || <= 104-1 || 106-1 || 37d || Fixed ({{bug|44157}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000255.html ASA-201503-14]
+|-
+| {{CVE|CVE-2015-1782}} [http://www.libssh2.org/adv_20150311.html templink] || {{pkg|libssh2}} || 2015-03-11 || <= 1.4.3-1 || 1.5.0-1 || 29d || Fixed ({{bug|44146}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-April/000279.html ASA-201504-10]
+|-
+| {{CVE|CVE-2015-2241}} [https://www.djangoproject.com/weblog/2015/mar/09/security-releases/ templink] || {{pkg|python-django}} {{pkg|python2-django}} || 2015-03-09 || <= 1.7.5-1 || 1.7.6-1 || 2d || Fixed ({{bug|44122}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000248.html ASA-201503-7]
+|-
+| {{CVE|CVE-2015-1212}} {{CVE|CVE-2015-1213}} {{CVE|CVE-2015-1214}} {{CVE|CVE-2015-1215}} {{CVE|CVE-2015-1216}} {{CVE|CVE-2015-1217}} {{CVE|CVE-2015-1218}} {{CVE|CVE-2015-1219}} {{CVE|CVE-2015-1220}} {{CVE|CVE-2015-1221}} {{CVE|CVE-2015-1222}} {{CVE|CVE-2015-1223}} {{CVE|CVE-2015-1224}} {{CVE|CVE-2015-1225}} {{CVE|CVE-2015-1226}} {{CVE|CVE-2015-1227}} {{CVE|CVE-2015-1228}} {{CVE|CVE-2015-1229}} {{CVE|CVE-2015-1230}} {{CVE|CVE-2015-1231}} [http://googlechromereleases.blogspot.fr/2015/03/stable-channel-update.html templink] || {{pkg|chromium}} || 2015-03-03 || <= 40.0.2214.115-1 || 41.0.2272.76-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000245.html ASA-201503-5]
+|-
+| {{CVE|CVE-2015-1572}} [https://git.kernel.org/cgit/fs/ext2/e2fsprogs.git/commit/?id=49d0fe2a14f2a23da2fe299643379b8c1d37df73 templink] || {{pkg|e2fsprogs}} || 2015-02-06 || <= 1.42.12-1 || 1.42.12-2 || 6d || Fixed ({{bug|44015}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000249.html ASA-201503-8]
+|-
+| {{CVE|CVE-2015-2157}} [http://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist/private-key-not-wiped-2.html templink] || {{pkg|putty}} || 2015-03-02 || <= 0.63-1 || 0.64-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000241.html ASA-201503-1]
+|-
+| {{CVE|CVE-2015-0822}} {{CVE|CVE-2015-0827}} {{CVE|CVE-2015-0831}} {{CVE|CVE-2015-0835}} {{CVE|CVE-2015-0836}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/thunderbird/ templink] || {{pkg|thunderbird}} || 2015-02-24 || <= 31.4.0-1 || 31.5.0-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-February/000238.html ASA-201502-15]
+|-
+| {{CVE|CVE-2015-0819}} {{CVE|CVE-2015-0821}} {{CVE|CVE-2015-0822}} {{CVE|CVE-2015-0823}} {{CVE|CVE-2015-0824}} {{CVE|CVE-2015-0825}} {{CVE|CVE-2015-0826}} {{CVE|CVE-2015-0827}} {{CVE|CVE-2015-0829}} {{CVE|CVE-2015-0830}} {{CVE|CVE-2015-0831}} {{CVE|CVE-2015-0832}} {{CVE|CVE-2015-0834}} {{CVE|CVE-2015-0835}} {{CVE|CVE-2015-0836}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/firefox/ templink] || {{pkg|firefox}} || 2015-02-24 || <= 35.0.1-1 || 36.0-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-February/000237.html ASA-201502-14]
+|-
+| {{CVE|CVE-2015-0240}} [https://www.samba.org/samba/history/samba-4.1.17.html templink] || {{pkg|samba}} || 2015-02-23 || <= 4.1.16-1 || 4.1.17-1 || <1d || Fixed ({{bug|43923}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-February/000236.html ASA-201502-13]
+|-
+| {{CVE|CVE-2014-9636}} [http://www.openwall.com/lists/oss-security/2014/11/02/2 templink] || {{pkg|unzip}} || 2014-11-02 || <= 6.0-9 || 6.0-10 || 75d || Fixed ({{bug|44171}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000250.html ASA-201503-9]
+|-
+| {{CVE|CVE-2015-1315}} [http://www.openwall.com/lists/oss-security/2015/02/17/4 templink] || {{pkg|unzip}} || 2014-11-02 || <= 6.0-9 || 6.0-9 || - || Invalid || None
+|-
+| {{CVE|CVE-2014-9680}} [http://www.sudo.ws/sudo/alerts/tz.html templink] || {{pkg|sudo}} || 2015-02-09 || <= 1.8.12-1 || 1.8.12-1 || 4d || Fixed || None
+|-
+| {{CVE|CVE-2014-5352}} {{CVE|CVE-2014-5353}} {{CVE|CVE-2014-5354}} {{CVE|CVE-2014-9421}} {{CVE|CVE-2014-9422}} {{CVE|CVE-2014-9423}} [http://web.mit.edu/kerberos/advisories/MITKRB5-SA-2015-001.txt templink] [http://www.openwall.com/lists/oss-security/2014/12/16/1 templink] || {{pkg|krb5}} || 2015-02-03 || <= 1.13-1 || 1.13.1-1 || 14d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-February/000235.html ASA-201502-12] 
+|-
+| {{CVE|CVE-2015-0255}} [http://www.x.org/wiki/Development/Security/Advisory-2015-02-10/ templink] || {{pkg|xorg-server}} || 2015-02-10 || <= 1.16.3-2|| 1.16.4-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-February/000234.html ASA-201502-11]
+|-
+| {{CVE|CVE-2015-1191}} [http://www.openwall.com/lists/oss-security/2015/01/18/3 templink] || {{pkg|pigz}} || 2015-01-18 || <= 2.3.1-1 || 2.3.3-1 || 21d || Fixed ({{bug|43748}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-February/000232.html ASA-201502-9]
+|-
+| {{CVE|CVE-2015-0245}} [http://lists.freedesktop.org/archives/dbus/2015-February/016553.html templink] || {{pkg|dbus}} || 2015-02-09 || <= 1.8.14-1 || 1.8.16-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-February/000233.html ASA-201502-10]
+|-
+| {{CVE|CVE-2015-1472}} {{CVE|CVE-2015-1473}} || {{pkg|glibc}} || 2015-02-05 || <= 2.20-6 || 2.21-1 ||4d || Fixed ({{bug|43747}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-February/000231.html ASA-201502-8]
+|-
+| {{CVE|CVE-2014-9297}} {{CVE|CVE-2014-9298}} [http://support.ntp.org/bin/view/Main/SecurityNotice#vallen_is_not_validated_in_sever templink] [http://support.ntp.org/bin/view/Main/SecurityNotice#1_can_be_spoofed_on_some_OSes_so templink]|| {{pkg|ntp}} || 2015-02-04 || <= 4.2.8-1 || 4.2.8.p1-1 || 2d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-February/000230.html ASA-201502-7]
+|-
+| {{CVE|CVE-2014-9328}} || {{pkg|clamav}} || 2015-01-28 || <= 0.98.5-1 || 0.98.6-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-February/000229.html ASA-201502-6]
+|-
+| {{CVE|CVE-2015-1209}} {{CVE|CVE-2015-1210}} {{CVE|CVE-2015-1211}} {{CVE|CVE-2015-1212}} [http://googlechromereleases.blogspot.fr/2015/02/stable-channel-update.html templink] || {{pkg|chromium}} || 2015-02-05 || <= 40.0.2214.94-1 || 40.0.2214.111-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-February/000228.html ASA-201502-5]
+|-
+| {{CVE|CVE-2015-0313}} {{CVE|CVE-2015-0314}} {{CVE|CVE-2015-0315}} {{CVE|CVE-2015-0316}} {{CVE|CVE-2015-0317}} {{CVE|CVE-2015-0318}} {{CVE|CVE-2015-0319}} {{CVE|CVE-2015-0320}} {{CVE|CVE-2015-0321}} {{CVE|CVE-2015-0322}} {{CVE|CVE-2015-0323}} {{CVE|CVE-2015-0324}} {{CVE|CVE-2015-0325}} {{CVE|CVE-2015-0326}} {{CVE|CVE-2015-0327}} {{CVE|CVE-2015-0328}} {{CVE|CVE-2015-0329}} {{CVE|CVE-2015-0330}} [https://helpx.adobe.com/security/products/flash-player/apsb15-04.html templink] || {{pkg|flashplugin}} || 2015-02-05 || <= 11.2.202.440-1 || 11.2.202.442-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-February/000225.html ASA-201502-2]
+|-
+| {{CVE|CVE-2014-8161}} {{CVE|CVE-2015-0241}} {{CVE|CVE-2015-0243}} {{CVE|CVE-2015-0244}} [http://www.postgresql.org/docs/9.4/static/release-9-4-1.html templink] || {{pkg|postgresql}} || 2015-02-05 || <= 9.4.0-1 || 9.4.1-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-February/000227.html ASA-201502-4]
+|-
+| {{CVE|CVE-2015-1380}} {{CVE|CVE-2015-1381}} {{CVE|CVE-2015-1382}} [http://seclists.org/oss-sec/2015/q1/285 templink] || {{pkg|privoxy}} || 2015-01-26 || <= 3.0.22-1 || 3.0.23-1 || 3d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-February/000224.html ASA-201502-1]
+|-
+| {{CVE|CVE-2015-0235}} [https://bugzilla.redhat.com/show_bug.cgi?id=CVE-2015-0235 templink] || {{pkg|glibc}} || 2015-01-27 || < 2.18-1 ? || 2.18-1 || < 1d || Fixed || None
+|-
+| {{CVE|CVE-2015-0311}} {{CVE|CVE-2015-0301}} {{CVE|CVE-2015-0302}} {{CVE|CVE-2015-0303}} {{CVE|CVE-2015-0304}} {{CVE|CVE-2015-0305}} {{CVE|CVE-2015-0306}} {{CVE|CVE-2015-0307}} {{CVE|CVE-2015-0308}} {{CVE|CVE-2015-0309}} [https://helpx.adobe.com/security/products/flash-player/apsb15-01.html templink] || {{pkg|flashplugin}} || 2015-01-23 || <= 11.2.202.438-1 || 11.2.202.440-1 || 3d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000220.html ASA-201501-22]
+|-
+| {{CVE|CVE-2015-0231}} {{CVE|CVE-2014-9427}} {{CVE|CVE-2015-0232}} [https://bugs.php.net/bug.php?id=68710 templink] [https://bugs.php.net/bug.php?id=68618 templink] [https://bugs.php.net/bug.php?id=68799 templink] || {{pkg|php}} || 2015-01-22 || <= 5.6.4-1 || 5.6.5-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000215.html ASA-201501-17]
+|-
+| {{CVE|CVE-2014-9638}} {{CVE|CVE-2014-9639}} {{CVE|CVE-2014-9640}} [http://www.openwall.com/lists/oss-security/2015/01/22/9 templink] || {{pkg|vorbis-tools}} || 2015-01-21 || <= 1.4.0-4 || 1.4.0-5 || 64d || Fixed ({{bug|44172}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000265.html ASA-201503-24]
+|-
+| {{CVE|CVE-2015-1345}} [http://seclists.org/oss-sec/2015/q1/179 templink] || {{pkg|grep}} || 2015-01-18 || <= 2.21-1 || 2.21-2 || 46d || Fixed ({{bug|44017}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000244.html ASA-201503-4]
+|-
+| {{CVE|CVE-2014-7923}} {{CVE|CVE-2014-7924}} {{CVE|CVE-2014-7925}} {{CVE|CVE-2014-7926}} {{CVE|CVE-2014-7927}} {{CVE|CVE-2014-7928}} {{CVE|CVE-2014-7930}} {{CVE|CVE-2014-7931}} {{CVE|CVE-2014-7929}} {{CVE|CVE-2014-7932}} {{CVE|CVE-2014-7933}} {{CVE|CVE-2014-7934}} {{CVE|CVE-2014-7935}} {{CVE|CVE-2014-7936}} {{CVE|CVE-2014-7937}} {{CVE|CVE-2014-7938}} {{CVE|CVE-2014-7939}} {{CVE|CVE-2014-7940}} {{CVE|CVE-2014-7941}} {{CVE|CVE-2014-7942}} {{CVE|CVE-2014-7943}} {{CVE|CVE-2014-7944}} {{CVE|CVE-2014-7945}} {{CVE|CVE-2014-7946}} {{CVE|CVE-2014-7947}} {{CVE|CVE-2014-7948}} {{CVE|CVE-2015-1205}} [http://googlechromereleases.blogspot.fr/2015/01/stable-update.html templink] || {{pkg|chromium}} || 2015-01-22 || <= 39.0.2171.99-1 || 40.0.2214.91-1 || 3d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000219.html ASA-201501-21]
+|-
+| {{CVE|CVE-2014-3566}} {{CVE|CVE-2014-6549}} {{CVE|CVE-2014-6585}} {{CVE|CVE-2014-6587}} {{CVE|CVE-2014-6591}} {{CVE|CVE-2014-6593}} {{CVE|CVE-2014-6601}} {{CVE|CVE-2015-0383}} {{CVE|CVE-2015-0395}} {{CVE|CVE-2015-0400}} {{CVE|CVE-2015-0403}} {{CVE|CVE-2015-0406}} {{CVE|CVE-2015-0407}} {{CVE|CVE-2015-0408}} {{CVE|CVE-2015-0410}} {{CVE|CVE-2015-0412}} {{CVE|CVE-2015-0413}} {{CVE|CVE-2015-0421}} {{CVE|CVE-2015-0437}} [http://www.oracle.com/technetwork/topics/security/cpujan2015verbose-1972976.html#JAVA templink] || {{pkg|jdk8-openjdk}} {{pkg|jre8-openjdk}} {{pkg|jre8-openjdk-headless}} || 2015-01-22 || <= 8.u25-2 || 8.u31-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000210.html ASA-201501-14] [https://lists.archlinux.org/pipermail/arch-security/2015-January/000211.html ASA-201501-15] [https://lists.archlinux.org/pipermail/arch-security/2015-January/000212.html ASA-201501-16]
+|-
+| {{CVE|CVE-2014-3566}} {{CVE|CVE-2014-6585}} {{CVE|CVE-2014-6587}} {{CVE|CVE-2014-6591}} {{CVE|CVE-2014-6593}} {{CVE|CVE-2014-6601}} {{CVE|CVE-2015-0383}} {{CVE|CVE-2015-0395}} {{CVE|CVE-2015-0407}} {{CVE|CVE-2015-0408}} {{CVE|CVE-2015-0410}} {{CVE|CVE-2015-0412}} [http://www.oracle.com/technetwork/topics/security/cpujan2015verbose-1972976.html#JAVA templink] || {{pkg|jdk7-openjdk}} {{pkg|jre7-openjdk}} {{pkg|jre7-openjdk-headless}} || 2015-01-22 || <= 7.u71_2.5.3-3 || || || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000216.html ASA-201501-18] [https://lists.archlinux.org/pipermail/arch-security/2015-January/000217.html ASA-201501-19] [https://lists.archlinux.org/pipermail/arch-security/2015-January/000218.html ASA-201501-20]
+|-
+| {{CVE|CVE-2014-8157}} {{CVE|CVE-2014-8158}} [http://seclists.org/oss-sec/2015/q1/210 templink] || {{pkg|jasper}} || 2015-01-22 || <= 1.900.1-12 ||  1.900.1-13 || 5d || Fixed ({{bug|43592}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000222.html ASA-201501-23]
+|-
+| {{CVE|CVE-2014-8132}} [http://www.libssh.org/2014/12/19/libssh-0-6-4-security-and-bugfix-release/ templink] || {{pkg|libssh}} || 2014-12-19 || <= 0.6.3-1 || 0.6.4-1 || 26d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000208.html ASA-201501-12]
+|-
+| {{CVE|CVE-2015-1182}} [https://polarssl.org/tech-updates/security-advisories/polarssl-security-advisory-2014-04 templink] || {{pkg|polarssl}} || 2012-09-19 || <= 1.3.9-1 || 1.3.9-2 || 1d || Fixed ({{bug|43508}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000209.html ASA-201501-13]
+|-
+| {{CVE|CVE-2012-3505}} [http://www.openwall.com/lists/oss-security/2012/08/18/1 templink] || {{pkg|tinyproxy}} || 2012-09-10 || <= 1.8.3-1 || 1.8.4-1 || > 740d || Fixed ({{bug|38400}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000207.html ASA-201501-11]
+|-
+| {{CVE|CVE-2014-9447}} [https://git.fedorahosted.org/cgit/elfutils.git/commit/?id=147018e729e7c22eeabf15b82d26e4bf68a0d18e templink] || {{pkg|elfutils}} || 2015-01-19 || <= 0.161-2 || 0.161-3 || 42d || Fixed ({{bug|44019}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000242.html ASA-201503-2]
+|-
+| {{CVE|CVE-2014-9447}} [https://git.fedorahosted.org/cgit/elfutils.git/commit/?id=147018e729e7c22eeabf15b82d26e4bf68a0d18e templink] || {{pkg|lib32-elfutils}} || 2015-01-19 || <= 0.161-1 || 0.161-2 || 42d || Fixed ({{bug|44020}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000243.html ASA-201503-3]
+|-
+| {{CVE|CVE-2014-8143}} [https://www.samba.org/samba/security/CVE-2014-8143 templink] || {{pkg|samba}} || 2015-01-15 || <= 4.1.15-1 || 4.1.16-1 || 4d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000206.html ASA-201501-10]
+|-
+| {{CVE|CVE-2015-1197}} [http://www.openwall.com/lists/oss-security/2015/01/18/7 templink] || {{pkg|cpio}} || 2015-01-16 || <= 2.11-5 || 2.11-6 || 65d || Fixed ({{bug|44173}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000263.html ASA-201503-22]
+|-
+| {{CVE|CVE-2015-1196}} {{CVE|CVE-2014-9637}} [http://www.openwall.com/lists/oss-security/2015/01/18/6 templink] [https://savannah.gnu.org/bugs/?44051 templink] || {{pkg|patch}} || 2015-01-14 || <= 2.7.1-3 || 2.7.3-1 || 14d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000223.html ASA-201501-24]
+|-
+| {{CVE|CVE-2014-9571}} {{CVE|CVE-2014-9572}} {{CVE|CVE-2014-9573}} {{CVE|CVE-2014-9624}} {{CVE|CVE-2015-1042}} [http://www.openwall.com/lists/oss-security/2015/01/17/1 templink] [http://www.openwall.com/lists/oss-security/2015/01/17/3 templink] [http://www.openwall.com/lists/oss-security/2015/01/17/2 templink] [http://www.openwall.com/lists/oss-security/2015/01/18/11 templink] || {{pkg|mantisbt}} || 2015-01-17 || <= 1.2.18-1 || 1.2.19-1 || 20d  || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-February/000226.html ASA-201502-3]
+|-
+| {{CVE|CVE-2014-8634}} {{CVE|CVE-2014-8635}} {{CVE|CVE-2014-8638}} {{CVE|CVE-2014-8639}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/thunderbird/ templink] || {{pkg|thunderbird}} || 2015-01-13 || <= 31.3.0-1 || 31.4.0-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000203.html ASA-201501-7]
+|-
+| {{CVE|CVE-2014-8634}} {{CVE|CVE-2014-8635}} {{CVE|CVE-2014-8636}} {{CVE|CVE-2014-8637}} {{CVE|CVE-2014-8638}} {{CVE|CVE-2014-8639}} {{CVE|CVE-2014-8640}} {{CVE|CVE-2014-8641}} {{CVE|CVE-2014-8642}} [https://www.mozilla.org/en-US/security/known-vulnerabilities/firefox/ templink] || {{pkg|firefox}} || 2015-01-13 || <= 34.0.5-1 || 35.0-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000202.html ASA-201501-6]
+|-
+| {{CVE|CVE-2014-3571}} {{CVE|CVE-2015-0206}} {{CVE|CVE-2014-3569}} {{CVE|CVE-2014-3572}} {{CVE|CVE-2015-0205}} {{CVE|CVE-2014-8275}} {{CVE|CVE-2014-3570}} [https://www.openssl.org/news/secadv_20150108.txt templink] || {{pkg|openssl}} || 2015-01-08 || <= 1.0.1.j-1 || 1.0.1.k-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000198.html ASA-201501-2]
+|-
+| {{CVE|CVE-2014-8150}} [http://curl.haxx.se/docs/adv_20150108B.html templink] || {{pkg|curl}} || 2015-01-08 || <= 7.39.0-1 || 7.40.0-1 || 10d || Fixed ({{bug|43379}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000205.html ASA-201501-9]
+|-
+| {{CVE|CVE-2014-6272}} [http://archives.seul.org/libevent/users/Jan-2015/msg00010.html templink] || {{pkg|libevent}} || 2015-01-05 || <= 2.0.21-3 || 2.0.22-1 || 7d || Fixed ({{bug|43366}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000200.html ASA-201501-4] 
+|-
+| {{CVE|CVE-2014-8139}} {{CVE|CVE-2014-8140}} {{CVE|CVE-2014-8141}} [http://www.ocert.org/advisories/ocert-2014-011.html templink] || {{pkg|unzip}} || 2014-12-22 || <= 6.0-7 || 6.0-9 || 17d || Fixed ({{bug|43300}}) ({{bug|43391}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000199.html ASA-201501-3]
+|-
+| {{CVE|CVE-2014-6395}} {{CVE|CVE-2014-6396}} {{CVE|CVE-2014-9376}} {{CVE|CVE-2014-9377}} {{CVE|CVE-2014-9378}} {{CVE|CVE-2014-9379}} {{CVE|CVE-2014-9380}} {{CVE|CVE-2014-9381}} [https://www.obrela.com/home/security-labs/advisories/osi-advisory-osi-1402/ templink] || {{pkg|ettercap}} {{pkg|ettercap-gtk}} || 2014-12-16 || <= 0.8.1-2 || 0.8.2-1 || 89d || Fixed ({{bug|44174}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000253.html ASA-201503-12] [https://lists.archlinux.org/pipermail/arch-security/2015-March/000254.html ASA-201503-13]
+|-
+| {{CVE|CVE-2014-9425}} [https://bugs.php.net/bug.php?id=68676 templink] || {{pkg|php}} || 2014-12-29 || <= 5.6.4-1 || 5.6.5-1 || 6d  || Fixed || None
+|-
+| {{CVE|CVE-2014-9295}} {{CVE|CVE-2014-9296}} [http://support.ntp.org/bin/view/Main/SecurityNotice#Buffer_overflow_in_ctl_putdata templink] || {{pkg|ntp}} || 2014-12-19 || < 4.2.8-1 || 4.2.8-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000189.html ASA-201412-24]
+|-
+| {{CVE|CVE-2014-8142}} [https://bugzilla.redhat.com/show_bug.cgi?id=1175718 templink] || {{pkg|php}} || 2014-12-18 || <= 5.6.3-1 || 5.6.4-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000183.html ASA-201412-23]
+|-
+| {{CVE|CVE-2014-8137}} {{CVE|CVE-2011-4516}} {{CVE|CVE-2011-4517}} [https://marc.info/?l=oss-security&m=141891163026757&w=2 templink] || {{pkg|jasper}} || 2014-12-18 || <= 1.900.1-11 || 1.900.1-12 || 1d || Fixed ({{bug|43155}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000182.html ASA-201412-22]
+|-
+| {{CVE|CVE-2014-9029}} [https://marc.info/?l=oss-security&m=141770163916268&w=2 templink] || {{pkg|jasper}} || 2014-12-04 || <= 1.900.1-10 || 1.900.1-12 || 6d || Fixed ({{bug|43044}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000182.html ASA-201412-22]
+|-
+| {{CVE|CVE-2012-3406}} {{CVE|CVE-2014-9402}} [http://www.openwall.com/lists/oss-security/2014/12/18/1 templink] || {{pkg|glibc}} {{pkg|lib32-glibc}} || 2014-12-17 || <= 2.20-4 || 2.20-5 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000181.html ASA-201412-21]
+|-
+| {{CVE|CVE-2014-9253}} [http://seclists.org/oss-sec/2014/q4/1050 templink] || {{pkg|dokuwiki}} || 2014-12-15 || <= 20140929_a-1 || 20140929_b-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000177.html ASA-201412-19]
+|-
+| {{CVE|CVE-2014-3580}} {{CVE|CVE-2014-8108}} [https://subversion.apache.org/security/CVE-2014-3580-advisory.txt templink] [https://subversion.apache.org/security/CVE-2014-8108-advisory.txt templink] || {{pkg|subversion}} || 2014-12-16 || <= 1.8.10-1 || 1.8.11-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000175.html ASA-201412-17]
+|-
+| {{CVE|CVE-2014-9356}} {{CVE|CVE-2014-9357}} {{CVE|CVE-2014-9358}} [http://www.securityfocus.com/archive/1/534215 templink] || {{pkg|docker}} || 2014-12-12 || <= 1:1.3.2-1 || 1:1.4.0-1 || 2d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000174.html ASA-201412-16]
+|-
+| {{CVE|CVE-2013-1752}} {{CVE|CVE-2013-1753}} {{CVE|CVE-2014-9365}} [https://hg.python.org/cpython/raw-file/v2.7.9/Misc/NEWS templink] || {{pkg|python2}} || 2014-12-11 || <= 2.7.8-1 || 2.7.9-1 || 3d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000173.html ASA-201412-15]
+|-
+| {{CVE|CVE-2014-0580}} {{CVE|CVE-2014-0587}} {{CVE|CVE-2014-8443}} {{CVE|CVE-2014-9162}} {{CVE|CVE-2014-9163}} {{CVE|CVE-2014-9164}} [https://helpx.adobe.com/security/products/flash-player/apsb14-27.html templink] || {{pkg|flashplugin}} || 2014-12-09 || <= 11.2.202.424-1 || 11.2.202.425-1 || 3d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000171.html ASA-201412-13]
+|-
+| {{CVE|CVE-2014-8091}} {{CVE|CVE-2014-8092}} {{CVE|CVE-2014-8093}} {{CVE|CVE-2014-8094}} {{CVE|CVE-2014-8095}} {{CVE|CVE-2014-8096}} {{CVE|CVE-2014-8097}} {{CVE|CVE-2014-8098}} {{CVE|CVE-2014-8099}} {{CVE|CVE-2014-8100}} {{CVE|CVE-2014-8101}} {{CVE|CVE-2014-8102}} {{CVE|CVE-2014-8103}} [http://www.x.org/wiki/Development/Security/Advisory-2014-12-09/ templink] || {{pkg|xorg-server}} || 2014-12-09 || <= 1.16.2-1 || 1.16.2.901-1 || 2d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000172.html ASA-201412-14]
+|-
+| {{CVE|CVE-2014-8093}} {{CVE|CVE-2014-8098}} {{CVE|CVE-2014-8298}} [https://nvidia.custhelp.com/app/answers/detail/a_id/3610 templink] || {{pkg|nvidia}} {{pkg|nvidia-lts}} || 2014-12-09 || <= 343.22-6 || 343.36-1 || 3d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000170.html ASA-201412-12]
+|-
+| {{CVE|CVE-2014-8093}} {{CVE|CVE-2014-8098}} {{CVE|CVE-2014-8298}} [https://nvidia.custhelp.com/app/answers/detail/a_id/3610 templink] || {{pkg|nvidia-340xx}} {{pkg|nvidia-340xx-lts}} || 2014-12-09 || <= 340.58-3 || 340.65-1 || 3d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000169.html ASA-201412-11]
+|-
+| {{CVE|CVE-2014-8093}} {{CVE|CVE-2014-8098}} {{CVE|CVE-2014-8298}} [https://nvidia.custhelp.com/app/answers/detail/a_id/3610 templink] || {{pkg|nvidia-304xx}} {{pkg|nvidia-304xx-lts}} || 2014-12-09 || < 304.125-1 || 304.125-1 || < 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000168.html ASA-201412-10]
+|-
+| {{CVE|CVE-2014-8601}} [http://doc.powerdns.com/md/security/powerdns-advisory-2014-02/ templink] || {{pkg|powerdns-recursor}} || 2014-12-09 || <= 3.6.1-1 || 3.6.2-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000167.html ASA-201412-9]
+|-
+| {{CVE|CVE-2014-8602}} [https://unbound.net/downloads/CVE-2014-8602.txt templink] || {{pkg|unbound}} || 2014-12-09 || <= 1.5.0-1 || 1.5.1-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000166.html ASA-201412-8]
+|-
+| {{CVE|CVE-2014-8500}} {{CVE|CVE-2014-8680}} [http://svnweb.freebsd.org/ports?view=revision&revision=374305 templink] || {{pkg|bind}} || 2014-12-08 || <= 9.10.1-2 || 9.10.1.P1-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000165.html ASA-201412-7]
+|-
+| {{CVE|CVE-2014-9274}} {{CVE|CVE-2014-9275}} [http://seclists.org/oss-sec/2014/q4/904 templink] || {{pkg|unrtf}} || 2014-12-04 || <= 0.21.5-1 || 0.21.7-1 || 10d || Fixed ({{bug|43131}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000178.html ASA-201412-20]
+|-
+| {{CVE|CVE-2014-1587}} {{CVE|CVE-2014-1588}} {{CVE|CVE-2014-1589}} {{CVE|CVE-2014-1590}} {{CVE|CVE-2014-1591}} {{CVE|CVE-2014-1592}} {{CVE|CVE-2014-1593}} {{CVE|CVE-2014-1594}} {{CVE|CVE-2014-8631}} {{CVE|CVE-2014-8632}} [https://www.mozilla.org/fr/security/known-vulnerabilities/firefox/ templink] || {{pkg|firefox}} || 2014-12-02 || <= 33.1.1-1 || 34.0.5-1 || < 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000161.html ASA-201412-3]
+|-
+| {{CVE|CVE-2014-9157}} [http://seclists.org/oss-sec/2014/q4/872 templink] || {{pkg|graphviz}} || 2014-11-25 || <= 2.38.0-2 || 2.38.0-3 || 8d || Fixed ({{bug|42983}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000162.html ASA-201412-4]
+|-
+| {{CVE|CVE-2014-8123}} [http://seclists.org/oss-sec/2014/q4/874 templink] || {{pkg|antiword}} || 2014-12-01 || <= 0.37-4 || 0.37-5 || 3d || Fixed ({{bug|42982}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000163.html ASA-201412-5]
+|-
+| {{CVE|CVE-2014-8104}} [https://forums.openvpn.net/topic17625.html templink] || {{pkg|openvpn}} || 2014-11-30 || <= 2.3.5-1 || 2.3.6-1 || 4d || Fixed ({{bug|42975}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000160.html ASA-201412-2]
+|-
+| {{CVE|CVE-2014-9087}} [http://seclists.org/oss-sec/2014/q4/801 templink] || {{pkg|gnupg}} || 2014-11-25 || <= 2.1.0-5 || 2.1.0-6 || 4d || Fixed ({{bug|42943}}) ||  [https://lists.archlinux.org/pipermail/arch-security/2014-December/000159.html ASA-201412-1]
+|-
+| {{CVE|CVE-2014-9087}} [http://seclists.org/oss-sec/2014/q4/801 templink] || {{pkg|libksba}} || 2014-11-25 || <= 1.3.1-1 || 1.3.2-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000156.html ASA-201411-31]
+|-
+| {{CVE|CVE-2014-9114}} [http://seclists.org/oss-sec/2014/q4/819 templink] || {{pkg|util-linux}} || 2014-11-27 || <= 2.25.2-1 || 2.26.1-3 || 117d || Fixed ({{bug|43886}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000264.html ASA-201503-23]
+|-
+| {{CVE|CVE-2014-9112}} [http://seclists.org/oss-sec/2014/q4/818 templink] || {{pkg|cpio}} || 2014-11-26 || <= 2.11-4 || 2.11-5 || 20d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2015-January/000201.html ASA-201501-5]
+|-
+| {{CVE|CVE-2014-9116}} [http://seclists.org/oss-sec/2014/q4/835 templink] || {{pkg|mutt}} || 2014-11-27 || <= 1.5.23-1 || 1.5.23-2 || 71d || Fixed ({{bug|44110}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000247.html ASA-201503-6]
+|-
+| {{CVE|CVE-2014-9093}} [https://bugs.freedesktop.org/show_bug.cgi?id=86449 templink] || {{pkg|libreoffice-fresh}} || 2014-11-19 || <= 4.3.4-1 ||4.3.5-1 || 31d || Fixed || None
+|-
+| {{CVE|CVE-2014-9092}} [https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=768369#114 templink] || {{pkg|libjpeg-turbo}} || 2014-11-26 || <= 1.3.1-2 || 1.3.1-3 || 2d || Fixed ({{bug|42922}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000158.html ASA-201411-33]
+|-
+| {{CVE|CVE-2014-9272}} {{CVE|CVE-2014-9270}} {{CVE|CVE-2014-8987}} {{CVE|CVE-2014-9271}} {{CVE|CVE-2014-9281}} {{CVE|CVE-2014-8986}} {{CVE|CVE-2014-9269}} {{CVE|CVE-2014-9280}} {{CVE|CVE-2014-9089}} {{CVE|CVE-2014-9279}} {{CVE|CVE-2014-8988}} {{CVE|CVE-2014-8553}} {{CVE|CVE-2014-6387}} {{CVE|CVE-2014-6316}} {{CVE|CVE-2014-9117}} [https://www.mantisbt.org/bugs/view.php?id=17841 templink] [https://www.mantisbt.org/bugs/view.php?id=17811 templink] [http://seclists.org/oss-sec/2014/q4/955 templink] || {{pkg|mantisbt}} || 2014-11-25 || <= 1.2.17-4 || 1.2.18-1 || 13d || Fixed ({{bug|42920}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000164.html ASA-201412-6]
+|-
+| {{CVE|CVE-2014-9090}} [https://marc.info/?l=oss-security&m=141698775601426&w=2 templink] || {{pkg|linux}}  {{pkg|linux-lts}} || 2014-11-26 || <= 3.18-rc6 || 3.19 || - || Invalid || None
+|-
+| {{CVE|CVE-2014-9018}} {{CVE|CVE-2014-9091}} [http://seclists.org/oss-sec/2014/q4/694 templink] || {{pkg|icecast}} || 2014-11-20 || <= 2.4.0-1 || 2.4.1-1 || 8d || Fixed ({{bug|42912}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000157.html ASA-201411-32]
+|-
+| {{CVE|CVE-2014-8964}} [http://bugs.exim.org/show_bug.cgi?id=1546 templink] || {{pkg|pcre}} || 2014-11-18 || <= 8.36-1 || 8.36-2 || 8d || Fixed ({{bug|42860}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000154.html ASA-201411-29]
+|-
+| {{CVE|CVE-2014-8962}} {{CVE|CVE-2014-9028}} [http://www.ocert.org/advisories/ocert-2014-008.html templink] || {{pkg|flac}} || 2014-11-25 || <= 1.3.0-4 || 1.3.0-5 || < 1d || Fixed ({{bug|42898}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000155.html ASA-201411-30]
+|-
+| {{CVE|CVE-2014-7899}} {{CVE|CVE-2014-7900}} {{CVE|CVE-2014-7901}} {{CVE|CVE-2014-7902}} {{CVE|CVE-2014-7903}} {{CVE|CVE-2014-7904}} {{CVE|CVE-2014-7906}} {{CVE|CVE-2014-7907}} {{CVE|CVE-2014-7908}} {{CVE|CVE-2014-7909}} {{CVE|CVE-2014-7910}} [http://googlechromereleases.blogspot.in/2014/11/stable-channel-update_18.html templink] || {{pkg|chromium}} || 2014-11-20 || <= 38.0.2125.122-1 || 39.0.2171.65-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000151.html ASA-201411-26]
+|-
+| {{CVE|CVE-2014-9015}} {{CVE|CVE-2014-9016}} [http://seclists.org/oss-sec/2014/q4/697 templink] || {{pkg|drupal}} || 2014-11-19 || <= 7.33-1 || 7.34-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000150.html ASA-201411-25]
+|-
+| {{CVE|CVE-2013-6497}} [http://seclists.org/oss-sec/2014/q4/673 templink] || {{pkg|clamav}} || 2014-11-18 || <= 0.98.4-1 || 0.98.5-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000146.html ASA-201411-21]
+|-
+| {{CVE|CVE-2014-7817}} [https://sourceware.org/bugzilla/show_bug.cgi?id=17625 templink] || {{pkg|glibc}} {{pkg|lib32-glibc}} || 2014-11-19 || <= 2.20-2 || 2.20.3 || 2d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000152.html ASA-201411-27]
+|-
+| {{CVE|CVE-2014-8600}} [https://www.kde.org/info/security/advisory-20141113-1.txt templink] || {{pkg|kwebkitpart}} || 2014-11-18 || <= 1.3.4-2 || 1.3.4-3 || 4d || Fixed ({{bug|44170}} {{bug|42775}}) || None
+|-
+| {{CVE|CVE-2014-8767}} {{CVE|CVE-2014-8768}} {{CVE|CVE-2014-8769}} {{CVE|CVE-2014-9140}} {{CVE|CVE-2015-0261}} {{CVE|CVE-2015-2153}} {{CVE|CVE-2015-2154}} {{CVE|CVE-2015-2155}} [http://www.securityfocus.com/archive/1/534011/30/0/threaded templink] [http://www.securityfocus.com/archive/1/534010/30/0/threaded templink] [http://www.securityfocus.com/archive/1/534009/30/0/threaded templink] [https://github.com/the-tcpdump-group/tcpdump/commit/0f95d441e4b5d7512cc5c326c8668a120e048eda templink] || {{pkg|tcpdump}} || 2014-11-18 || <= 4.6.2-1 || 4.7.3-1 || 88d || Fixed ({{bug|44153}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000261.html ASA-201503-20]
+|-
+| {{CVE|CVE-2014-8090}} || {{pkg|ruby}} || 2014-11-13 || <= 2.1.4-1 || 2.1.5-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000141.html ASA-201411-16]
+|-
+| {{CVE|CVE-2014-7823}} || {{pkg|libvirt}} || 2014-11-13 || <= 1.2.10-1 ||1.2.11-1 ||33d || Fixed || None
+|-
+| {{CVE|CVE-2014-8710}} {{CVE|CVE-2014-8711}} {{CVE|CVE-2014-8712}} {{CVE|CVE-2014-8713}} {{CVE|CVE-2014-8714}} [https://www.wireshark.org/security/wnpa-sec-2014-20.html templink] [https://www.wireshark.org/security/wnpa-sec-2014-21.html templink] [https://www.wireshark.org/security/wnpa-sec-2014-22.html templink] || {{pkg|wireshark-cli}} {{pkg|wireshark-gtk}} {{pkg|wireshark-qt}} || 2014-11-13 || <= 1.12.1-1 || 1.12.2-1 || 7d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000147.html ASA-201411-22] [https://lists.archlinux.org/pipermail/arch-security/2014-November/000148.html ASA-201411-23] [https://lists.archlinux.org/pipermail/arch-security/2014-November/000149.html ASA-201411-24]
+|-
+| {{CVE|CVE-2014-0573}} {{CVE|CVE-2014-0574}} {{CVE|CVE-2014-0576}} {{CVE|CVE-2014-0577}} {{CVE|CVE-2014-0581}} {{CVE|CVE-2014-0582}} {{CVE|CVE-2014-0583}} {{CVE|CVE-2014-0584}} {{CVE|CVE-2014-0585}} {{CVE|CVE-2014-0586}} {{CVE|CVE-2014-0588}} {{CVE|CVE-2014-0589}} {{CVE|CVE-2014-0590}} {{CVE|CVE-2014-8437}} {{CVE|CVE-2014-8438}} {{CVE|CVE-2014-8440}} {{CVE|CVE-2014-8441}} {{CVE|CVE-2014-8442}} [https://helpx.adobe.com/security/products/flash-player/apsb14-24.html templink] || {{pkg|flashplugin}} || 2014-11-11 || <= 11.2.202.411-1 || 11.2.202.418-1 || <1d || Fixed ({{bug|42769}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000136.html ASA-201411-11]
+|-
+| {{CVE|CVE-2014-3710}} [https://bugzilla.redhat.com/show_bug.cgi?id=1155071 templink] || {{pkg|php}} || 2014-10-29 || <= 5.6.2-2 || 5.6.3-1 || 14d || Fixed ({{bug|42764}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000138.html ASA-201411-13]
+|-
+| {{CVE|CVE-2014-8564}} [http://www.gnutls.org/security.html#GNUTLS-SA-2014-5 templink]|| {{pkg|gnutls}} || 2014-11-10 || <= 3.3.9-1 ||3.3.10-1 ||<1d || Fixed  || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000135.html ASA-201411-10]
+|-
+| {{CVE|CVE-2014-8716}} [http://seclists.org/oss-sec/2014/q4/591 templink]|| {{pkg|imagemagick}} || 2014-11-12 || <= 6.8.9.9-1 || 6.8.9.10-1 || 1d || Fixed  || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000137.html ASA-201411-12]
+|-
+| {{CVE|CVE-2014-3710}} [https://bugzilla.redhat.com/show_bug.cgi?id=1155071 templink] || {{pkg|file}} || 2014-10-29 || <= 5.20-1 || 5.20-2 || 12d || Fixed ({{bug|42759}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000134.html ASA-201411-9]
+|-
+| {{CVE|CVE-2014-1569}} [https://bugzilla.mozilla.org/show_bug.cgi?id=1064670 templink] || {{pkg|nss}} || 2014-11-07 || <= 3.17.2-1 || 3.17.3-1 || 22d || Fixed ({{bug|42760}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-December/000176.html ASA-201412-18]
+|-
+| {{CVE|CVE-2014-7824}} [http://www.openwall.com/lists/oss-security/2014/11/10/2 templink] || {{pkg|dbus}} || 2014-11-10 || <= 1.8.8-1 || 1.8.10-1 || 14d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000153.html ASA-201411-28]
+|-
+| {{CVE|CVE-2014-8598}} {{CVE|CVE-2014-7146}} [http://www.openwall.com/lists/oss-security/2014/11/07/27 templink] [http://www.openwall.com/lists/oss-security/2014/11/07/28 templink]|| {{pkg|mantisbt}} || 2014-11-08 || <= 1.2.17-3 || 1.2.17-4 || <4d || Fixed ({{bug|42761}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000133.html ASA-201411-8]
+|-
+| {{CVE|CVE-2014-8483}} [https://www.kde.org/info/security/advisory-20141104-1.txt templink] || {{pkg|konversation}} || 2014-11-04 || <= 1.5-1 ||  1.5.1-1 || <4d || Fixed ({{bug|42698}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000130.html ASA-201411-5]
+|-
+| {{CVE|CVE-2014-3707}} [http://curl.haxx.se/docs/adv_20141105.html templink]|| {{pkg|curl}} || 2014-11-05 || <= 7.38.0-3 || 7.39.0-1 || 6d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000132.html ASA-201411-7]
+|-
+| {{CVE|CVE-2014-8651}} [http://seclists.org/oss-sec/2014/q4/520 templink]|| {{pkg|kdebase-workspace}} || 2014-11-04 || <= 4.11.13-1 || 4.11.13-2 || 6d || Fixed ({{bug|42679}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000131.html ASA-201411-6]
+|-
+| {{CVE|CVE-2014-8627}} {{CVE|CVE-2014-8628}} [http://www.openwall.com/lists/oss-security/2014/11/04/6 templink]|| {{pkg|polarssl}} || 2014-10-23 || <= 1.3.8-3 || 1.3.9-1 || 11d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000129.html ASA-201411-4]
+|-
+| {{CVE|CVE-2014-8321}} {{CVE|CVE-2014-8322}} {{CVE|CVE-2014-8323}} {{CVE|CVE-2014-8324}} [http://www.securityfocus.com/archive/1/533869/30/0/threaded templink]|| {{pkg|aircrack-ng}} || 2014-11-02 || <= 1.2beta3-1 || 1.2rc1-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000127.html ASA-201411-2]
+|-
+| {{CVE|CVE-2014-8554}} [http://www.openwall.com/lists/oss-security/2014/10/30/9 templink]|| {{pkg|mantisbt}} || 2014-10-30 || <= 1.2.17-2 || 1.2.17-3 || 5d || Fixed ({{bug|42683}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000128.html ASA-201411-3]
+|-
+| {{CVE|CVE-2014-8354}} {{CVE|CVE-2014-8355}} {{CVE|CVE-2014-8561}} {{CVE|CVE-2014-8562}} [http://seclists.org/oss-sec/2014/q4/466 templink]|| {{pkg|imagemagick}} || 2014-10-29 || <= 6.8.9.8-1 || 6.8.9.9-1 || <1d || Fixed || None
+|-
+| {{CVE|CVE-2014-8517}} [http://seclists.org/oss-sec/2014/q4/459 templink]|| {{pkg|tnftp}} || 2014-10-28 || <= 20130505-2 || 20141031-1 || 4d || Fixed ({{bug|42646}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000126.html ASA-201411-1]
+|-
+| {{CVE|CVE-2014-4877}} [http://git.savannah.gnu.org/cgit/wget.git/commit/?id=18b0979357ed7dc4e11d4f2b1d7e0f5932d82aa7 templink]|| {{pkg|wget}} || 2014-10-27 || <= 1.15-1 || 1.16-1 || <2d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-October/000125.html ASA-201410-14]
+|-
+| {{CVE|CVE-2014-8484}} {{CVE|CVE-2014-8485}} {{CVE|CVE-2014-8501}} {{CVE|CVE-2014-8502}} {{CVE|CVE-2014-8503}} {{CVE|CVE-2014-8504}} {{CVE|CVE-2014-8737}} {{CVE|CVE-2014-8738}} [http://seclists.org/oss-sec/2014/q4/424 templink] [http://seclists.org/oss-sec/2014/q4/599 tmplink] [http://seclists.org/oss-sec/2014/q4/600 templink] || {{pkg|avr-binutils}} || 2014-10-23 || <= 2.24-2 || 2.24-3 || 27d || Fixed ({{bug|42773}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000145.html ASA-201411-20]
+|-
+| {{CVE|CVE-2014-8484}} {{CVE|CVE-2014-8485}} {{CVE|CVE-2014-8501}} {{CVE|CVE-2014-8502}} {{CVE|CVE-2014-8503}} {{CVE|CVE-2014-8504}} {{CVE|CVE-2014-8737}} {{CVE|CVE-2014-8738}} [http://seclists.org/oss-sec/2014/q4/424 templink] [http://seclists.org/oss-sec/2014/q4/599 tmplink] [http://seclists.org/oss-sec/2014/q4/600 templink] || {{pkg|mingw-w64-binutils}} || 2014-10-23 || <= 2.24-1 || 2.24-2 || 26d || Fixed ({{bug|42773}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000144.html ASA-201411-19]
+|-
+| {{CVE|CVE-2014-8484}} {{CVE|CVE-2014-8485}} {{CVE|CVE-2014-8501}} {{CVE|CVE-2014-8502}} {{CVE|CVE-2014-8503}} {{CVE|CVE-2014-8504}} {{CVE|CVE-2014-8737}} {{CVE|CVE-2014-8738}} [http://seclists.org/oss-sec/2014/q4/424 templink] [http://seclists.org/oss-sec/2014/q4/599 tmplink] [http://seclists.org/oss-sec/2014/q4/600 templink] || {{pkg|arm-none-eabi-binutils}} || 2014-10-23 || <= 2.24-2 || 2.24-3 || 26d || Fixed ({{bug|42773}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000143.html ASA-201411-18]
+|-
+| {{CVE|CVE-2014-8484}} {{CVE|CVE-2014-8485}} {{CVE|CVE-2014-8501}} {{CVE|CVE-2014-8502}} {{CVE|CVE-2014-8503}} {{CVE|CVE-2014-8504}} {{CVE|CVE-2014-8737}} {{CVE|CVE-2014-8738}} [http://seclists.org/oss-sec/2014/q4/424 templink] [http://seclists.org/oss-sec/2014/q4/599 tmplink] [http://seclists.org/oss-sec/2014/q4/600 templink] || {{pkg|binutils}} || 2014-10-23 || <= 2.24-7 || 2.24-8 || 26d || Fixed ({{bug|42773}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000142.html ASA-201411-17]
+|-
+| {{CVE|CVE-2014-8559}} [http://www.openwall.com/lists/oss-security/2014/10/30/7 templink] || {{pkg|linux}}, {{pkg|linux-lts}} || 2014-10-30 || <= 3.17.3-1, <= 3.14.24-1 ||3.17.4-1 3.14.25-1 ||23d 22d || Fixed || None
+|-
+| {{CVE|CVE-2014-3610}} {{CVE|CVE-2014-3611}} {{CVE|CVE-2014-3646}} {{CVE|CVE-2014-3647}} {{CVE|CVE-2014-7825}} {{CVE|CVE-2014-7826}} {{CVE|CVE-2014-8369}}  [http://permalink.gmane.org/gmane.comp.security.oss.general/14526 templink] [http://seclists.org/oss-sec/2014/q4/548 templink] || {{pkg|linux}}, {{pkg|linux-lts}} || 2014-10-21 || <= 3.17.2-1, <= 3.14.23-1 || 3.17.3-1, 3.14.24-1 ||  || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000139.html ASA-201411-14] [https://lists.archlinux.org/pipermail/arch-security/2014-November/000140.html ASA-201411-15]
+|-
+| {{CVE|CVE-2014-8480}} {{CVE|CVE-2014-8481}} [http://permalink.gmane.org/gmane.comp.security.oss.general/14526 templink] || {{pkg|linux}} || 2014-10-21 || <= 3.17.2-1 || 3.17.3-1 ||  || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-November/000139.html ASA-201411-14]
+|-
+| {{CVE|CVE-2014-3695}} {{CVE|CVE-2014-3696}} {{CVE|CVE-2014-3698}} [https://pidgin.im/news/security/ templink] || {{pkg|libpurple}} || 2014-10-22 || <= 2.10.9-2 || 2.10.10-1 || < 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-October/000120.html ASA-201410-9]
+|-
+| {{CVE|CVE-2014-8760}} || {{pkg|ejabberd}} || 2014-10-13 || <= 14.07-1 || 14.07-2 || 14d || Fixed ({{bug|42541}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-October/000124.html ASA-201410-13]
+|-
+| {{CVE|CVE-2014-3686}} || {{pkg|wpa_supplicant}}, {{pkg|hostapd}} || 2014-10-09 || <= 2.2-2 || 2.3-1 || ~10d || Fixed ({{bug|42401}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-October/000119.html ASA-201410-8]
+|-
+| {{CVE|CVE-2014-0191}} {{CVE|CVE-2014-3660}} || {{pkg|libxml2}} || 2014-10-16 || <= 2.9.1-5 || 2.9.2-1 || 8d || Fixed ({{bug|40790}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-October/000123.html ASA-201410-12]
+|-
+| {{CVE|CVE-2014-3704}} [https://www.drupal.org/SA-CORE-2014-005 templink] || {{pkg|drupal}} || 2014-10-15 || <= 7.31-2 || 7.32-1 || 1d || Fixed ({{bug|42388}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-October/000118.html ASA-201410-7]
+|-
+| {{CVE|CVE-2014-3513}} {{CVE|CVE-2014-3566}} {{CVE|CVE-2014-3567}} {{CVE|CVE-2014-3568}} [https://www.openssl.org/news/secadv_20141015.txt templink] [https://www.openssl.org/~bodo/ssl-poodle.pdf temp link] || {{pkg|openssl}} || 2014-10-15 || <= 1.0.1.i-1 || 1.0.1.j-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-October/000117.html ASA-201410-6]
+|-
+| {{CVE|CVE-2014-8242}} [http://www.openwall.com/lists/oss-security/2014/10/13/2 temp link] || {{pkg|librsync}} || 2014-10-12 || <= 0.9.7-7 || 1.0.0-1 || 166d || Fixed ({{bug|44175}}) || [https://lists.archlinux.org/pipermail/arch-security/2015-March/000251.html ASA-201503-10]
+|-
+| {{CVE|CVE-2014-7203}} {{CVE|CVE-2014-7202}} [http://seclists.org/oss-sec/2014/q3/776 temp link] || {{pkg|zeromq}} || 2014-09-27 || <= 4.0.4-4 || 4.0.5-1 || 18d || Fixed ({{bug|42381}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-October/000116.html ASA-201410-4]
+|-
+| {{CVE|CVE-2014-6051}} {{CVE|CVE-2014-6052}} {{CVE|CVE-2014-6053}} {{CVE|CVE-2014-6054}} {{CVE|CVE-2014-6055}} [http://seclists.org/oss-sec/2014/q3/639 temp link] || {{pkg|libvncserver}} || 2014-09-23 || <= 0.9.9-3 || 0.9.10-1 || 31d || Fixed ({{bug|42321}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-October/000121.html ASA-201410-10]
+|-
+| {{CVE|CVE-2014-3683}} [http://www.rsyslog.com/remote-syslog-pri-vulnerability-cve-2014-3683/ temp link] || {{pkg|rsyslog}} || 2014-10-02 || <= 8.4.1-1 || 8.4.2-1 || 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-October/000115.html ASA-201410-5]
+|-
+| {{CVE|CVE-2014-7204}} [http://seclists.org/oss-sec/2014/q3/842 temp link] || {{pkg|ctags}} || 2014-09-29 || <= 5.8-4 || 5.8-5 || 26d || Fixed ({{bug|42246}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-October/000122.html ASA-201410-11]
+|-
+| {{CVE|CVE-2014-7295}} [https://lists.wikimedia.org/pipermail/mediawiki-announce/2014-October/000163.html temp link] || {{pkg|mediawiki}} || 2014-10-02 || <= 1.23.4-1 || 1.23.5-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-October/000114.html ASA-201410-3]
+|-
+| {{CVE|CVE-2014-3661}} {{CVE|CVE-2014-3662}} {{CVE|CVE-2014-3663}} {{CVE|CVE-2014-3664}} {{CVE|CVE-2014-3680}} {{CVE|CVE-2014-3681}} {{CVE|CVE-2014-3666}} {{CVE|CVE-2014-3667}} {{CVE|CVE-2013-2186}} {{CVE|CVE-2014-1869}} {{CVE|CVE-2014-3678}} {{CVE|CVE-2014-3679}} [https://wiki.jenkins-ci.org/display/SECURITY/Jenkins+Security+Advisory+2014-10-01 temp link] || {{pkg|jenkins}} || 2014-10-01 || <= 1.582-1 || 1.583-1 || <1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-October/000113.html ASA-201410-2]
+|-
+| {{CVE|CVE-2014-3634}} [http://www.rsyslog.com/remote-syslog-pri-vulnerability/ temp link] || {{pkg|rsyslog}} || 2014-09-30 || <= 8.4.0-1 || 8.4.1-1 || 1d || Fixed ({{bug|42200}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-October/000112.html ASA-201410-1]
+|-
+| {{CVE|CVE-2014-3657}} {{CVE|CVE-2014-3633}} [https://www.debian.org/security/2014/dsa-3038 temp link] || {{pkg|libvirt}} || 2014-09-26 || <= 1.2.8-1 || 1.2.8-2 || 3d || Fixed ({{bug|42159}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-September/000111.html ASA-201409-5]
+|-
+| {{CVE|CVE-2014-7199}} [https://lists.wikimedia.org/pipermail/mediawiki-announce/2014-September/000161.html temp link] || {{pkg|mediawiki}} || 2014-09-24 || <= 1.23.3-1 || 1.23.4-1 || 5d || Fixed ({{bug|42161}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-September/000109.html ASA-201409-4]
+|-
+| {{CVE|CVE-2014-7185}} [http://bugs.python.org/issue21831 temp link] || {{pkg|python2}} || 2014-09-24 || < 2.7.8 || 2.7.8-1 || < 1d || Fixed || [https://lists.archlinux.org/pipermail/arch-security/2014-September/000102.html ASA-201409-3]
+|-
+| {{CVE|CVE-2014-1568}} [https://www.mozilla.org/security/announce/2014/mfsa2014-73.html temp link] || {{pkg|nss}} || 2014-09-24 || < 3.17.1 || 3.17.1-1 || < 1d || Fixed  || [https://lists.archlinux.org/pipermail/arch-security/2014-September/000097.html ASA-201409-1]
+|-
+| {{CVE|CVE-2014-6271}} {{CVE|CVE-2014-7169}} {{CVE|CVE-2014-7186}} {{CVE|CVE-2014-7187}} {{CVE|CVE-2014-6277}} {{CVE|CVE-2014-6278}} [http://seclists.org/oss-sec/2014/q3/649 temp link] || {{pkg|bash}} || 2014-09-24 || <= 4.3.024-1 || 4.3.026-1 || 2d || Fixed ({{bug|42109}}) || [https://lists.archlinux.org/pipermail/arch-security/2014-September/000099.html ASA-201409-2]
+|-
+| {{CVE|CVE-2014-3635}} {{CVE|CVE-2014-3636}} {{CVE|CVE-2014-3637}} {{CVE|CVE-2014-3638}} {{CVE|CVE-2014-3639}} [http://www.openwall.com/lists/oss-security/2014/09/16/9 temp link] || {{pkg|dbus}} {{pkg|libdbus}} {{pkg|lib32-libdbus}} || 2014-09-16 || < 1.8.8 || 1.8.8-1 || 1d || Fixed ({{bug|41993}}) ||
+|-
+| {{CVE|CVE-2014-3613}} {{CVE|CVE-2014-3620}} [http://curl.haxx.se/docs/security.html temp link] || {{pkg|curl}} {{pkg|lib32-curl}}|| 2014-09-10 || < 7.38.0 || 7.38.0-1 || 5d ({{pkg|curl}}), 7d ({{pkg|lib32-curl}}) || Fixed  ||
+|-
+| {{CVE|CVE-2014-3609}} [http://www.squid-cache.org/Advisories/SQUID-2014_2.txt temp link] || {{pkg|squid}} || 2014-08-28 || < 3.4.7 || 3.4.7-1 || < 1d || Fixed ||
+|-
+| {{CVE|CVE-2014-5119}} [https://sourceware.org/bugzilla/show_bug.cgi?id=17187 temp link] || {{pkg|glibc}} || 2014-07-21 || <= 2.19 || 2.20-2 || 55d || Fixed ({{bug|41713}}) ||
+|-
+| {{CVE|CVE-2014-3508}} {{CVE|CVE-2014-5139}} {{CVE|CVE-2014-3509}} {{CVE|CVE-2014-3505}} {{CVE|CVE-2014-3506}} {{CVE|CVE-2014-3507}} {{CVE|CVE-2014-3510}} {{CVE|CVE-2014-3511}} {{CVE|CVE-2014-3512}} [https://www.openssl.org/news/secadv_20140806.txt temp link] || {{pkg|openssl}} || 2014-08-06 || < 1.0.1.i || 1.0.1.i-1 || <1d || Fixed  ||
+|-
+| {{CVE|CVE-2014-0226}} [http://www.zerodayinitiative.com/advisories/ZDI-14-236/ temp link] || {{pkg|apache}} || 2014-07-15 || < 2.4.10 || 2.4.10-1 || ~7d || Fixed ({{bug|41244}}) ||
+|-
+| {{CVE|CVE-2014-4943}} [http://www.openwall.com/lists/oss-security/2014/07/17/1 temp link] || {{pkg|linux}}, {{pkg|linux-lts}}, {{pkg|linux-grsec}} || 2014-07-16 || || 3.15.5.201407170639-1 {{pkg|linux-grsec}}, 3.14.16 ({{pkg|linux-lts}}), 3.16 ({{pkg|linux}}) || 1d ({{pkg|linux-grsec}}), 23d ({{pkg|linux-lts}}), 27d {{pkg|linux}} || Fixed in {{pkg|linux}}, {{pkg|linux-lts}} ({{bug|41231}}), Fixed in {{pkg|linux-grsec}} ||
+|-
+| {{CVE|CVE-2014-0475}} [http://www.openwall.com/lists/oss-security/2014/07/10/7 temp link] || {{pkg|glibc}} || 2014-07-10 || <=2.19 || 2.20-2 || 66d || Fixed ({{bug|41166}}) ||
+|-
+| {{CVE|CVE-2014-4699}} [http://www.openwall.com/lists/oss-security/2014/07/04/4 temp link] || {{Pkg|linux}}, {{pkg|linux-lts}}, {{pkg|linux-grsec}} || 2014-07-04 || || 3.15.3.201407060933-1 {{pkg|linux-grsec}}, 3.15.4-1 {{pkg|linux}}, 3.14.11-1 {{pkg|linux-lts}} || 2d ({{pkg|linux-grsec}}), 3d ({{pkg|linux}}, {{pkg|linux-lts}}) || Fixed ({{bug|41115}}) ||
+|-
+| {{CVE|CVE-2014-4715}} [http://www.openwall.com/lists/oss-security/2014/07/02/13 temp link] || {{Pkg|lz4}} || 2014-07-02 || || 119-1 || <1d || Fixed ||
+|-
+| {{CVE|CVE-2014-4611}} [http://www.openwall.com/lists/oss-security/2014/06/26/25 temp link] || {{Pkg|linux}}, {{pkg|linux-grsec}}, {{pkg|lz4}} || 2014-06-26 || || 3.15.2-1 ({{pkg|linux}}), 3.15.2.201406262058-1 ({{pkg|linux-grsec}}), 118-1 {{pkg|lz4}} || <1d ({{pkg|linux}}, {{pkg|linux-grsec}}, {{pkg|lz4}}) || Fixed in {{pkg|linux}} ({{bug|40992}}), Fixed in {{pkg|linux-grsec}}, Fixed in {{pkg|lz4}} ({{bug|40997}}) ||
+|-
+| {{CVE|CVE-2014-4610}} [http://www.openwall.com/lists/oss-security/2014/06/26/23 temp link] || {{Pkg|ffmpeg}} || 2014-06-26 || || 1:2.2.4-1 || -2d || Fixed ||
+|-
+| {{CVE|CVE-2014-4609}} [http://www.openwall.com/lists/oss-security/2014/06/26/22 temp link] || {{Pkg|gst-libav}} || 2014-06-26 || 1.2.4-1 ||  1.2.4-2 (with libav 9.14) || 2d || Fixed ({{bug|40995}}) ||
+|-
+| {{CVE|CVE-2014-4608}} [http://www.openwall.com/lists/oss-security/2014/06/26/21 temp link] || {{Pkg|linux}}, {{pkg|linux-lts}}, {{pkg|linux-grsec}} || 2014-06-26 || || 3.15.2-1 ({{pkg|linux}}), 3.10.45-1 ({{pkg|linux-lts}}), 3.15.2.201406262058-1 ({{pkg|linux-grsec}}) || <1d ({{pkg|linux}}, {{pkg|linux-lts}}, {{pkg|linux-grsec}}) || Fixed in {{pkg|linux}} and {{pkg|linux-lts}} ({{bug|40992}}), Fixed in {{pkg|linux-grsec}} ||
+|-
+| {{CVE|CVE-2014-4607}} [http://www.openwall.com/lists/oss-security/2014/06/26/20 temp link] || {{Pkg|lzo2}} || 2014-06-26 || || 2.07-2 || 3d || Fixed ({{bug|40993}}) ||
+|-
+| {{CVE|CVE-2014-4617}} [http://lists.gnupg.org/pipermail/gnupg-announce/2014q2/000345.html temp link] || {{Pkg|gnupg}} || 2014-06-24 || < 2.0.24 || 2.0.24 || 7d || Fixed ||
+|-
+| {{CVE|CVE-2014-0244}} {{CVE|CVE-2014-3493}} [https://www.samba.org/samba/history/samba-4.1.9.html temp link] || {{Pkg|samba}} || 2014-06-23 || < 4.1.9 || 4.1.9 || <1d || Fixed ||
+|-
+| {{CVE|CVE-2014-1545}} [https://www.mozilla.org/security/announce/2014/mfsa2014-55.html temp link] || {{Pkg|nspr}} || 2014-06-10 || < 4.10.6 || 4.10.6 || ~1d || Fixed ||
+|-
+| {{CVE|CVE-2014-3859}} || {{Pkg|bind}} || 2014-06-11 || 9.10.0, 9.10.0-P1 || 9.10.0-P2 || <1d || Fixed ||
+|-
+| {{CVE|CVE-2014-3477}} || {{Pkg|dbus}} || 2014-06-10 || <= 1.8.2 || 1.8.4 || 3d || Fixed ||
+|-
+| {{CVE|CVE-2014-0195}} {{CVE|CVE-2014-0198}} {{CVE|CVE-2010-5298}} {{CVE|CVE-2014-3470}} {{CVE|CVE-2014-0224}} {{CVE|CVE-2014-0221}} [http://www.openssl.org/news/secadv_20140605.txt temp link] || {{Pkg|openssl}} || 2014-06-05 || 1.0.1 - 1.0.1g || 1.0.1h || <1d || Fixed ||
+|-
+| {{CVE|CVE-2014-3153}} [http://seclists.org/oss-sec/2014/q2/467 temp link]|| {{Pkg|linux}}, {{pkg|linux-lts}}, {{Pkg|linux-grsec}} || 2014-06-05 || ? || 3.14.6 ({{pkg|linux}}), 3.10.42-1 ({{pkg|linux-lts}}), 3.14.5.201406051310-1 ({{pkg|linux-grsec}})|| 3d ({{pkg|linux}}, {{pkg|linux-lts}}), <1d ({{pkg|linux-grsec}}) || Fixed in {{pkg|linux}} ({{bug|40715}}), Fixed in {{pkg|linux-lts}}, Fixed in {{pkg|linux-grsec}} ||
+|-
+| {{CVE|CVE-2014-3466}} [https://bugzilla.redhat.com/show_bug.cgi?id=1101932 temp link]|| {{Pkg|gnutls}} || 2014-05-30 || < 3.3.3 || 3.3.3 || <1d || Fixed ||
+|-
+| {{CVE|CVE-2014-0209}} {{CVE|CVE-2014-0210}} {{CVE|CVE-2014-0211}}|| {{Pkg|libxfont}} || 2014-05-13 || < 1.4.18 || 1.4.18 || 3d || Fixed ({{Bug|40409 }}) ||
+|-
+| {{CVE|CVE-2014-0196}} [https://bugzilla.redhat.com/show_bug.cgi?id=1094232 temp-link] || {{Pkg|linux}}, {{Pkg|linux-lts}}, {{pkg|linux-grsec}} || 2014-05-05 || 2.6.31 - 3.14 || 3.14.3-2 ({{pkg|linux}}), 3.10.39-2 ({{pkg|linux-lts}}), 3.14.3.201405121814-1 ({{pkg|linux-grsec}}) || 7d ({{pkg|linux}}), 8d {{pkg|linux-lts}}, <1d ({{pkg|linux-grsec}}) || Fixed in {{pkg|linux}} ({{Bug|40232}}), Fixed in {{pkg|linux-lts}}, Fixed in {{pkg|linux-grsec}} ||
+|-
+| {{CVE|CVE-2014-2905}} {{CVE|CVE-2014-2906}} {{CVE|CVE-2014-2914}} [https://bugzilla.redhat.com/show_bug.cgi?id=1092091 temp-link] || {{Pkg|fish}} || 2014-04-28 || 1.16.0 - 2.1.0 || 2.2.1 || <0 || Fixed ||
+|-
+| {{CVE|CVE-2014-0160}} || {{Pkg|openssl}} || 2014-04-07 || 1.0.1 - 1.0.1f || 1.0.1g || ~1d || Fixed ({{Bug|39775}}) ||
+|-
+| {{CVE|CVE-2014-1700}} {{CVE|CVE-2014-1701}} {{CVE|CVE-2014-1702}} {{CVE|CVE-2014-1703}} {{CVE|CVE-2014-1704}} {{CVE|CVE-2014-1705}} {{CVE|CVE-2014-1713}} {{CVE|CVE-2014-1715}} || {{Pkg|chromium}} {{Pkg|v8}} || 2014-03-11 || 32 || 33 || 4d || Fixed  ||
+|-
+| {{CVE|CVE-2014-0098}} {{CVE|CVE-2013-6438}}|| {{Pkg|apache}} || 2014-03-17 || 2.4.8 || 2.4.9 || -1d || Fixed  ||
+|-
+| {{CVE|CVE-2014-1492}} || {{Pkg|nss}} || 2014-03-18 || 3.15.5 || 3.16 || 22d || Fixed ||
+|-
+ | {{CVE|CVE-2014-1493}} {{CVE|CVE-2014-1494}} {{CVE|CVE-2014-1497}} {{CVE|CVE-2014-1498}} {{CVE|CVE-2014-1499}} {{CVE|CVE-2014-1500}} {{CVE|CVE-2014-1502}} {{CVE|CVE-2014-1504}} {{CVE|CVE-2014-1505}} {{CVE|CVE-2014-1508}} {{CVE|CVE-2014-1509}}  {{CVE|CVE-2014-1510}} {{CVE|CVE-2014-1511}} {{CVE|CVE-2014-1512}} {{CVE|CVE-2014-1513}} {{CVE|CVE-2014-1514}} || {{Pkg|firefox}} {{Pkg|thunderbird}}  || 2014-03-18 || 27 || 28 || 1d || Fixed  ||
+|-
+| {{CVE|CVE-2014-2240}} {{CVE|CVE-2014-2241}}|| {{Pkg|freetype2}} || ? || 2.5.2 || 2.5.3 || ? || Fixed  ||
+|-
+| {{CVE|CVE-2014-2029}}|| {{Pkg|xtrabackup}} || 2014-02-16 || 2.1.7 || 2.1.8 || 28d || Fixed  ||
+|-
+| {{CVE|CVE-2014-1958}} {{CVE|CVE-2014-2030}}|| {{Pkg|imagemagick}} || ? || ? || 6.8.8.9-1 || ? || Fixed  ||
+|-
+| {{CVE|CVE-2014-1943}} {{CVE|CVE-2014-2270}}|| {{Pkg|php}} || 2014-03-06 || 5.5.9 || 5.5.110 || -1d || Fixed  ||
+|-
+| {{CVE|CVE-2014-0404}} {{CVE|CVE-2014-0406}} {{CVE|CVE-2014-0407}} || {{Pkg|virtualbox}} || 2014-02-28 || 4.3.4 || 4.3.6 || ? || Fixed  ||
+|-
+| {{CVE|CVE-2014-2323}} {{CVE|CVE-2014-2324}} || {{Pkg|lighttpd}} || 2014-03-12 || 1.4.34 || 1.4.35 || 0d || Fixed  ||
+|-
+| {{CVE|CVE-2014-0333}} || {{Pkg|libpng}} || 2014-02-28 || 1.6.9 || 1.6.10 || 9d || Fixed  ||
+|-
+| {{CVE|CVE-2014-0017}} || {{Pkg|libssh}} || 2014-03-04 || ? || 3.5.7.29 || 5d || Fixed   ||
+|-
+| [http://seclists.org/oss-sec/2014/q1/628 CVE-2013-7339] || {{Pkg|linux}} || 2014-03-20 || < 3.5.7.29 || 3.5.7.29 || 0d || Fixed   ||
+|-
+| [https://access.redhat.com/security/cve/CVE-2014-2568 CVE-2014-2568] || {{Pkg|linux}} || 2014-03-18 || ? || ? || ? || Invalid ({{Bug|39566}}) ||
+|-
+| [https://access.redhat.com/security/cve/CVE-2014-2524 CVE-2014-2524] || {{Pkg|tigervnc}} || 2014-03-19 || ? || 1.3.1 || 1d || Fixed ||
+|-
+| [http://seclists.org/oss-sec/2014/q1/595 CVE-2013-7338] || {{Pkg|python}} || 2014-03-19 || 3.4beta (?) || 3.4 || 2013-12-27:? || Fixed ({{Bug|39540}}) ||
+|-
+| [http://mailman.nginx.org/pipermail/nginx-announce/2014/000135.html CVE-2014-0133 ] || {{Pkg|nginx}} || 2014-03-18 || ? || 1.4.7 || 0d || Fixed ||
+|-
+| [https://access.redhat.com/security/cve/CVE-2013-7336 CVE-2013-7336 ] || {{Pkg|libvirt}} || 2013-09-19 || ? || 1.1.1-7 (in RHEL 7) || 0d || Fixed ||
+|-
+| [https://access.redhat.com/security/cve/CVE-2014-2523 CVE-2014-2523 ] || {{Pkg|linux}} || 2014-03-17 || ? ||  3.13-rc5 || ? || Fixed ||
+|-
+| {{CVE|CVE-2014-0004}} || {{Pkg|udisks2}} & {{Pkg|udisks}} || 2014-03-10 || 2.1.3 / 1.0.5 || 2.1.3 / 1.0.5 || 3d || Fixed ||
+|-
+| {{CVE|CVE-2014-2281}} {{CVE|CVE-2014-2282}} {{CVE|CVE-2014-2283}} {{CVE|CVE-2014-2299}} || {{Pkg|wireshark-cli}}  || 2014-03-10 || 1.10.6 || 1.10.6 || ? || Fixed ||
+|-
+| {{CVE|CVE-2014-0050}} || {{Pkg|tomcat7}}  || 2014-02-06 || 7.0.51 || 7.0.51 || ? || Fixed ||
+|-
+| {{CVE|CVE-2014-0033}} || {{Pkg|tomcat6}}  || 2014-01-10 || 6.0.37 || 6.0.37 || ? || Fixed ||
+|-
+| {{CVE|CVE-2014-0032}} || {{Pkg|subversion}}  || 2014-01-10 || 1.8.6 || 1.8.6 || ? || Fixed ||
+|-
+| {{CVE|CVE-2014-0060}} {{CVE|CVE-2014-0061}} {{CVE|CVE-2014-0062}} {{CVE|CVE-2014-0063}} {{CVE|CVE-2014-0064}} {{CVE|CVE-2014-0065}} {{CVE|CVE-2014-0066}} {{CVE|CVE-2014-0067}} || {{Pkg|postgresql}}  || 2014-02-20 || 9.3.3 || 9.33 || 0d || Fixed ||
+|-
+| {{CVE|CVE-2014-1912}} || {{Pkg|python}} {{Pkg|python2}} || 2014-02-07 || ? || ? || ? || Fixed ||
+|-
+| {{CVE|CVE-2013-4496}} {{CVE|CVE-2013-6442}} || {{Pkg|samba}} || 2014-03-14 || ? || 4.1.6 || 2d || Fixed ({{Bug|39424}}) ||
+|-
+| {{CVE|CVE-2014-0504}} || {{Pkg|flashplugin}} || 2014-03-12 || ? || 11.2.202.346 || 1d || Fixed ({{Bug|39385}}) ||
+|-
+| {{CVE|CVE-2014-0106}} || {{Pkg|sudo}} || 1.8.9.p5 || 1.8.10 || ? || ? || Fixed ||
+|-
+| {{CVE|CVE-2014-2285}} {{CVE|CVE-2014-2284}} || {{Pkg|net-snmp}} || 2014-03-05 || ? || ? || 8d || Fixed ({{Bug|39190}}) ||
+|-
+| {{CVE|CVE-2014-0092}} || {{Pkg|gnutls}} || 2014-03-04 || <3.2.12 || 3.2.12-1 || 1d || Fixed ||
+|-
+| {{CVE|CVE-2014-2242}} {{CVE|CVE-2014-2243}} {{CVE|CVE-2014-2244}} || {{Pkg|mediawiki}} || 2014-03-14 || <1.22.3 || 1.22.3 || 1d || Fixed ||
+|-
+| {{CVE|CVE-2014-2093}} {{CVE|CVE-2014-2094}} {{CVE|CVE-2014-2095}} {{CVE|CVE-2014-2096}} || {{Pkg|catfish}} || 2014-02-25 || <1.0.1 || 1.0.1 || 8d || Fixed ||
+|-
+| {{CVE|CVE-2014-0497}} || {{Pkg|flashplugin}} || 2014-02-04 || ? || ? || 1d || ? ||
+|-
+| {{CVE|CVE-2014-0015}} || {{Pkg|curl}} || 2014-01-29 || <7.35 || 7.35 || 0d || Fixed ||
+|-
+| {{CVE|CVE-2014-1610}} || {{Pkg|mediawiki}} || 2014-01-29 || <1.22.2 || 1.22.2 || 0d || Fixed ||
+|-
+| {{CVE|CVE-2014-0021}} || {{Pkg|chrony}} || 2014-01-17 || <1.29.1-1 || 1.29.1-1 || 14d || Fixed ||
+|-
+| {{CVE|CVE-2014-1875}} || {{Pkg|perl-capture-tiny}} || 2014-02-06 || ? || ? || 4d || Fixed ({{Bug|38862}}) ||
+|-
+| {{CVE|CVE-2013-6493}} || {{Pkg|icedtea-web-java7}} || 2014-02-05 || <1.4.2 || 1.4.2 || 0d || Fixed ||
+|- 
+| {{CVE|CVE-2014-1858}} {{CVE|CVE-2014-1859}} || {{Pkg|python-numpy}} || 2014-02-06 || ? || ? || 4d || Fixed ({{Bug|38863}}) ||
+|-
+| {{CVE|CVE-2014-1932}} {{CVE|CVE-2014-1933}} || {{Pkg|python-pillow}} || 2014-02-10 || <2.3.1 || 2.3.1 || ? || Fixed ||
+|-
+| {{CVE|CVE-2014-1935}} || {{Pkg|9base}} || 2014-02-10 || ? || ? || ? || ? ||
+|-
+| {{CVE|CVE-2014-1949}} [http://people.canonical.com/~ubuntu-security/cve/2014/CVE-2014-1949.html temp link] || {{Pkg|cinnamon-screensaver}} || 2014-02-12 || 2.0.3 || ? || ? || ? ||
+|-
+| {{CVE|CVE-2014-1959}} || {{Pkg|gnutls}} || 2014-02-13 || <3.2.11 || 3.2.11 || 2d || Fixed ||
+|- 
+| {{CVE|CVE-2014-1943}} {{CVE|CVE-2014-2270}}  || {{Pkg|file}} || 2014-02-10 || <5.17 || 5.17-1 || 3d || Fixed ||
+|-
+| {{CVE|CVE-2014-0001}} {{CVE|CVE-2014-0412}} {{CVE|CVE-2014-0437}}  {{CVE|CVE-2014-0420}} {{CVE|CVE-2014-0393}} {{CVE|CVE-2014-0386}}  {{CVE|CVE-2014-0401}} {{CVE|CVE-2014-0402}} || {{Pkg|mariadb}} || 2014-01-31 || <5.5.35 || 5.5.35-1 || 1d || Fixed ||
+|-
+| {{CVE|CVE-2014-1447}} || {{Pkg|libvirt}} || 2014-01-16 || <1.2.1 || 1.2.1 || 0d || Fixed ||
+|-
+| {{CVE|CVE-2014-0979}} || lightdm-gtk* || 2014-01-07 || ? || ? || 25d || Fixed ({{Bug|38715}}) ||
+|-
+| {{CVE|CVE-2014-1475}} {{CVE|CVE-2014-1476}} || {{Pkg|drupal}} || 2014-01-15 || <7.26 || 7.26-1 || 12d || Fixed ||
+|-
+| {{CVE|CVE-2014-0019}} || {{Pkg|socat}} || 2014-01-29 || <1.7.2.3 || 1.7.2.3 || 0d || Fixed ||
+|- 
+| {{CVE|CVE-2014-1838}} {{CVE|CVE-2014-1839}} || {{Pkg|python-logilab-common}} || 2014-01-31 || ? || ? || 3d || Fixed [https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=737051] ||
+|-
+| {{CVE|CVE-2014-0368}} {{CVE|CVE-2014-0373}} {{CVE|CVE-2014-0376}} {{CVE|CVE-2014-0411}} {{CVE|CVE-2014-0416}} {{CVE|CVE-2014-0422}} {{CVE|CVE-2014-0423}} {{CVE|CVE-2014-0428}} || *-openjdk-* || 2014-01-15 || ? || ? || 2d || ? ||
+|-
+| {{CVE|CVE-2014-1402}} || {{Pkg|python-jinja}} || 2014-01-10 || <2.7.2 || 2.7.2 || 1d || Fixed ||
+|-
+| {{CVE|CVE-2013-6462}} || {{Pkg|libxfont}} || 2014-01-07 || <1.4.7 || 1.4.7 || 0d || Fixed ||
+|-
+| {{CVE|CVE-2014-1235}} || {{Pkg|graphviz}} || 2014-01-07 || ? || ? || 3d || Fixed ({{Bug|38441}}) ||
+|-
+| {{CVE|CVE-2014-0978}} ||  {{Pkg|freerdp}} || 2014-01-10 || <1.0.2 || 1.0.2-5 || 67d || Fixed ({{Bug|38802}}) ||
+|-
+|}
+                                        )
+
+                                )
+
+                        )
+
+                )
+
+        )
+
+)

@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2015, 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import (
 	"strings"
 
 	"github.com/coreos/clair/database"
-	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils"
+	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/clair/worker/detectors"
 )
@@ -96,13 +96,7 @@ func (detector *RpmPackagesDetector) Detect(data map[string][]byte) ([]*database
 		packagesMap[pkg.Key()] = pkg
 	}
 
-	// Convert the map to a slice
-	packages := make([]*database.Package, 0, len(packagesMap))
-	for _, pkg := range packagesMap {
-		packages = append(packages, pkg)
-	}
-
-	return packages, nil
+	return mapToSlice(packagesMap), nil
 }
 
 // GetRequiredFiles returns the list of files required for Detect, without

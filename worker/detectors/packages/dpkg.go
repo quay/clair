@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2015, 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,10 +20,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/coreos/pkg/capnslog"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/clair/worker/detectors"
+	"github.com/coreos/pkg/capnslog"
 )
 
 var (
@@ -100,17 +100,11 @@ func (detector *DpkgPackagesDetector) Detect(data map[string][]byte) ([]*databas
 		}
 	}
 
-	// Convert the map to a slice
-	packages := make([]*database.Package, 0, len(packagesMap))
-	for _, pkg := range packagesMap {
-		packages = append(packages, pkg)
-	}
-
-	return packages, nil
+	return mapToSlice(packagesMap), nil
 }
 
 // GetRequiredFiles returns the list of files required for Detect, without
-// leading /
+// the leading /
 func (detector *DpkgPackagesDetector) GetRequiredFiles() []string {
 	return []string{"var/lib/dpkg/status"}
 }

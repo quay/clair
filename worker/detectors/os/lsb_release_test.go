@@ -39,6 +39,17 @@ DISTRIB_CODENAME=wheezy
 DISTRIB_DESCRIPTION="Debian 7.1"`),
 		},
 	},
+	osTest{
+		expectedOS:      "arch",
+		expectedVersion: "rolling",
+		data: map[string][]byte{
+			"etc/lsb-release": []byte(
+				`LSB_VERSION=1.4
+DISTRIB_ID=Arch
+DISTRIB_RELEASE=rolling
+DISTRIB_DESCRIPTION="Arch Linux"`),
+		},
+	},
 }
 
 func TestLsbReleaseOSDetector(t *testing.T) {

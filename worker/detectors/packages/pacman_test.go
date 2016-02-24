@@ -21,30 +21,33 @@ import (
 	"github.com/coreos/clair/utils/types"
 )
 
-var rpmPackagesTests = []packagesTest{
-	// Test a CentOS 7 RPM database
-	// Memo: Use the following command on a RPM-based system to shrink a database: rpm -qa --qf "%{NAME}\n" |tail -n +3| xargs rpm -e --justdb
+var pacmanPackagesTests = []packagesTest{
 	packagesTest{
 		packages: []*database.Package{
 			&database.Package{
-				Name:    "centos-release", // Two packages from this source are installed, it should only appear one time
-				Version: types.NewVersionUnsafe("7-1.1503.el7.centos.2.8"),
+				Name:    "pam",
+				Version: types.NewVersionUnsafe("1.2.1-1"),
 			},
 			&database.Package{
-				Name:    "filesystem", // Two packages from this source are installed, it should only appear one time
-				Version: types.NewVersionUnsafe("3.2-18.el7"),
+				Name:    "emacs",
+				Version: types.NewVersionUnsafe("24.5-2"),
+			},
+			&database.Package{
+				Name:    "gcc",
+				Version: types.NewVersionUnsafe("5.2.0-2"),
 			},
 		},
 		data: map[string][]byte{
-			"var/lib/rpm/Packages": loadFileForTest("testdata/rpm_Packages"),
+			"var/lib/pacman": []byte("testdata/archlinux"),
 		},
 	},
 }
 
-func TestRpmPackagesDetector(t *testing.T) {
-	if checkPackageManager("rpm") != nil {
-		log.Warningf("could not find rpm executable. skipping")
+func TestPacmanPackagesDetector(t *testing.T) {
+	if checkPackageManager("pacman") != nil {
+		log.Warningf("could not find Pacman executable. skipping")
 		return
 	}
-	testPackagesDetector(t, &RpmPackagesDetector{}, rpmPackagesTests)
+
+	testPackagesDetector(t, &PacmanPackagesDetector{}, pacmanPackagesTests)
 }
