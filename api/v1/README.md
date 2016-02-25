@@ -560,6 +560,7 @@ Server: clair
 ###### Description
 
 The delete route for the Notifications resource marks a Notification as read.
+If a notification is not marked as read, Clair will continue to notify the provided endpoints.
 The time at which this Notification was marked as read can be seen in the `Notified` property of the response GET route for Notification.
 
 ###### Example Request

@@ -1,8 +1,9 @@
 # Notifications
 
 Notifications are a way for Clair to inform an endpoint that changes to tracked vulnerabilities have occurred.
-Notifications should contain only the name of a notification.
-Because notification data can require pagination, it is expected that the receiving endpoint calls the Clair API for reading notifications and marking them as read after being notified.
+Because notification data can require pagination, Clair should only send the name of a notification.
+It is expected that the receiving endpoint calls the Clair API for reading notifications and marking them as read after being notified.
+If the notification is never marked as read, Clair will continue attempting to send the same notification to the endpoint indefinitely.
 
 ## Webhook
 
