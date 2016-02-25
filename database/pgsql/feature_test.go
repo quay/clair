@@ -55,25 +55,25 @@ func TestInsertFeature(t *testing.T) {
 
 	// Insert invalid FeatureVersion.
 	for _, invalidFeatureVersion := range []database.FeatureVersion{
-		database.FeatureVersion{
+		{
 			Feature: database.Feature{},
 			Version: types.NewVersionUnsafe("1.0"),
 		},
-		database.FeatureVersion{
+		{
 			Feature: database.Feature{
 				Namespace: database.Namespace{},
 				Name:      "TestInsertFeature2",
 			},
 			Version: types.NewVersionUnsafe("1.0"),
 		},
-		database.FeatureVersion{
+		{
 			Feature: database.Feature{
 				Namespace: database.Namespace{Name: "TestInsertFeatureNamespace2"},
 				Name:      "TestInsertFeature2",
 			},
 			Version: types.NewVersionUnsafe(""),
 		},
-		database.FeatureVersion{
+		{
 			Feature: database.Feature{
 				Namespace: database.Namespace{Name: "TestInsertFeatureNamespace2"},
 				Name:      "TestInsertFeature2",

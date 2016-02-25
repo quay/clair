@@ -24,18 +24,18 @@ import (
 
 var dpkgPackagesTests = []feature.FeatureVersionTest{
 	// Test an Ubuntu dpkg status file
-	feature.FeatureVersionTest{
+	{
 		FeatureVersions: []database.FeatureVersion{
 			// Two packages from this source are installed, it should only appear one time
-			database.FeatureVersion{
+			{
 				Feature: database.Feature{Name: "pam"},
 				Version: types.NewVersionUnsafe("1.1.8-3.1ubuntu3"),
 			},
-			database.FeatureVersion{
+			{
 				Feature: database.Feature{Name: "makedev"},         // The source name and the package name are equals
 				Version: types.NewVersionUnsafe("2.3.1-93ubuntu1"), // The version comes from the "Version:" line
 			},
-			database.FeatureVersion{
+			{
 				Feature: database.Feature{Name: "gcc-5"},
 				Version: types.NewVersionUnsafe("5.1.1-12ubuntu1"), // The version comes from the "Source:" line
 			},

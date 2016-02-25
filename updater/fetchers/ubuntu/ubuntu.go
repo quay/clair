@@ -43,30 +43,30 @@ const (
 
 var (
 	ubuntuIgnoredReleases = map[string]struct{}{
-		"upstream": struct{}{},
-		"devel":    struct{}{},
+		"upstream": {},
+		"devel":    {},
 
-		"dapper":   struct{}{},
-		"edgy":     struct{}{},
-		"feisty":   struct{}{},
-		"gutsy":    struct{}{},
-		"hardy":    struct{}{},
-		"intrepid": struct{}{},
-		"jaunty":   struct{}{},
-		"karmic":   struct{}{},
-		"lucid":    struct{}{},
-		"maverick": struct{}{},
-		"natty":    struct{}{},
-		"oneiric":  struct{}{},
-		"saucy":    struct{}{},
+		"dapper":   {},
+		"edgy":     {},
+		"feisty":   {},
+		"gutsy":    {},
+		"hardy":    {},
+		"intrepid": {},
+		"jaunty":   {},
+		"karmic":   {},
+		"lucid":    {},
+		"maverick": {},
+		"natty":    {},
+		"oneiric":  {},
+		"saucy":    {},
 
-		"vivid/ubuntu-core":          struct{}{},
-		"vivid/stable-phone-overlay": struct{}{},
+		"vivid/ubuntu-core":          {},
+		"vivid/stable-phone-overlay": {},
 
 		// Syntax error
-		"Patches": struct{}{},
+		"Patches": {},
 		// Product
-		"product": struct{}{},
+		"product": {},
 	}
 
 	affectsCaptureRegexp      = regexp.MustCompile(`(?P<release>.*)_(?P<package>.*): (?P<status>[^\s]*)( \(+(?P<note>[^()]*)\)+)?`)

@@ -22,7 +22,7 @@ import (
 )
 
 var lsbReleaseOSTests = []namespace.NamespaceTest{
-	namespace.NamespaceTest{
+	{
 		ExpectedNamespace: database.Namespace{Name: "ubuntu:12.04"},
 		Data: map[string][]byte{
 			"etc/lsb-release": []byte(
@@ -32,7 +32,7 @@ DISTRIB_CODENAME=precise
 DISTRIB_DESCRIPTION="Ubuntu 12.04 LTS"`),
 		},
 	},
-	namespace.NamespaceTest{ // We don't care about the minor version of Debian
+	{ // We don't care about the minor version of Debian
 		ExpectedNamespace: database.Namespace{Name: "debian:7"},
 		Data: map[string][]byte{
 			"etc/lsb-release": []byte(

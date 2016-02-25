@@ -22,13 +22,13 @@ import (
 )
 
 var redhatReleaseTests = []namespace.NamespaceTest{
-	namespace.NamespaceTest{
+	{
 		ExpectedNamespace: database.Namespace{Name: "centos:6"},
 		Data: map[string][]byte{
 			"etc/centos-release": []byte(`CentOS release 6.6 (Final)`),
 		},
 	},
-	namespace.NamespaceTest{
+	{
 		ExpectedNamespace: database.Namespace{Name: "centos:7"},
 		Data: map[string][]byte{
 			"etc/system-release": []byte(`CentOS Linux release 7.1.1503 (Core)`),

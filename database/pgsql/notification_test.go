@@ -36,7 +36,7 @@ func TestNotification(t *testing.T) {
 	l1 := database.Layer{
 		Name: "TestNotificationLayer1",
 		Features: []database.FeatureVersion{
-			database.FeatureVersion{
+			{
 				Feature: f1,
 				Version: types.NewVersionUnsafe("0.1"),
 			},
@@ -46,7 +46,7 @@ func TestNotification(t *testing.T) {
 	l2 := database.Layer{
 		Name: "TestNotificationLayer2",
 		Features: []database.FeatureVersion{
-			database.FeatureVersion{
+			{
 				Feature: f1,
 				Version: types.NewVersionUnsafe("0.2"),
 			},
@@ -56,7 +56,7 @@ func TestNotification(t *testing.T) {
 	l3 := database.Layer{
 		Name: "TestNotificationLayer3",
 		Features: []database.FeatureVersion{
-			database.FeatureVersion{
+			{
 				Feature: f1,
 				Version: types.NewVersionUnsafe("0.3"),
 			},
@@ -66,7 +66,7 @@ func TestNotification(t *testing.T) {
 	l4 := database.Layer{
 		Name: "TestNotificationLayer4",
 		Features: []database.FeatureVersion{
-			database.FeatureVersion{
+			{
 				Feature: f2,
 				Version: types.NewVersionUnsafe("0.1"),
 			},
@@ -88,7 +88,7 @@ func TestNotification(t *testing.T) {
 		Link:        "TestNotificationLink1",
 		Severity:    "Unknown",
 		FixedIn: []database.FeatureVersion{
-			database.FeatureVersion{
+			{
 				Feature: f1,
 				Version: types.NewVersionUnsafe("1.0"),
 			},
@@ -148,11 +148,11 @@ func TestNotification(t *testing.T) {
 	v1b := v1
 	v1b.Severity = types.High
 	v1b.FixedIn = []database.FeatureVersion{
-		database.FeatureVersion{
+		{
 			Feature: f1,
 			Version: types.MinVersion,
 		},
-		database.FeatureVersion{
+		{
 			Feature: f2,
 			Version: types.MaxVersion,
 		},

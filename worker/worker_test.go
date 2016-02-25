@@ -63,35 +63,35 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 
 			// These FeatureVersions haven't been upgraded.
 			nonUpgradedFeatureVersions := []database.FeatureVersion{
-				database.FeatureVersion{
+				{
 					Feature: database.Feature{Name: "libtext-wrapi18n-perl"},
 					Version: types.NewVersionUnsafe("0.06-7"),
 				},
-				database.FeatureVersion{
+				{
 					Feature: database.Feature{Name: "libtext-charwidth-perl"},
 					Version: types.NewVersionUnsafe("0.04-7"),
 				},
-				database.FeatureVersion{
+				{
 					Feature: database.Feature{Name: "libtext-iconv-perl"},
 					Version: types.NewVersionUnsafe("1.7-5"),
 				},
-				database.FeatureVersion{
+				{
 					Feature: database.Feature{Name: "mawk"},
 					Version: types.NewVersionUnsafe("1.3.3-17"),
 				},
-				database.FeatureVersion{
+				{
 					Feature: database.Feature{Name: "insserv"},
 					Version: types.NewVersionUnsafe("1.14.0-5"),
 				},
-				database.FeatureVersion{
+				{
 					Feature: database.Feature{Name: "db"},
 					Version: types.NewVersionUnsafe("5.1.29-5"),
 				},
-				database.FeatureVersion{
+				{
 					Feature: database.Feature{Name: "ustr"},
 					Version: types.NewVersionUnsafe("1.0.4-3"),
 				},
-				database.FeatureVersion{
+				{
 					Feature: database.Feature{Name: "xz-utils"},
 					Version: types.NewVersionUnsafe("5.1.1alpha+20120614-2"),
 				},

@@ -22,7 +22,7 @@ import (
 )
 
 var osReleaseOSTests = []namespace.NamespaceTest{
-	namespace.NamespaceTest{
+	{
 		ExpectedNamespace: database.Namespace{Name: "debian:8"},
 		Data: map[string][]byte{
 			"etc/os-release": []byte(
@@ -36,7 +36,7 @@ SUPPORT_URL="http://www.debian.org/support/"
 BUG_REPORT_URL="https://bugs.debian.org/"`),
 		},
 	},
-	namespace.NamespaceTest{
+	{
 		ExpectedNamespace: database.Namespace{Name: "ubuntu:15.10"},
 		Data: map[string][]byte{
 			"etc/os-release": []byte(
@@ -51,7 +51,7 @@ SUPPORT_URL="http://help.ubuntu.com/"
 BUG_REPORT_URL="http://bugs.launchpad.net/ubuntu/"`),
 		},
 	},
-	namespace.NamespaceTest{ // Doesn't have quotes around VERSION_ID
+	{ // Doesn't have quotes around VERSION_ID
 		ExpectedNamespace: database.Namespace{Name: "fedora:20"},
 		Data: map[string][]byte{
 			"etc/os-release": []byte(

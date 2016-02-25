@@ -124,9 +124,9 @@ func TestInsertLayer(t *testing.T) {
 
 func testInsertLayerInvalid(t *testing.T, datastore database.Datastore) {
 	invalidLayers := []database.Layer{
-		database.Layer{},
-		database.Layer{Name: "layer0", Parent: &database.Layer{}},
-		database.Layer{Name: "layer0", Parent: &database.Layer{Name: "UnknownLayer"}},
+		{},
+		{Name: "layer0", Parent: &database.Layer{}},
+		{Name: "layer0", Parent: &database.Layer{Name: "UnknownLayer"}},
 	}
 
 	for _, invalidLayer := range invalidLayers {
@@ -180,23 +180,23 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 	}
 
 	layers := []database.Layer{
-		database.Layer{
+		{
 			Name: "TestInsertLayer1",
 		},
-		database.Layer{
+		{
 			Name:      "TestInsertLayer2",
 			Parent:    &database.Layer{Name: "TestInsertLayer1"},
 			Namespace: &database.Namespace{Name: "TestInsertLayerNamespace1"},
 		},
 		// This layer changes the namespace and adds Features.
-		database.Layer{
+		{
 			Name:      "TestInsertLayer3",
 			Parent:    &database.Layer{Name: "TestInsertLayer2"},
 			Namespace: &database.Namespace{Name: "TestInsertLayerNamespace2"},
 			Features:  []database.FeatureVersion{f1, f2, f3},
 		},
 		// This layer covers the case where the last layer doesn't provide any new Feature.
-		database.Layer{
+		{
 			Name:     "TestInsertLayer4a",
 			Parent:   &database.Layer{Name: "TestInsertLayer3"},
 			Features: []database.FeatureVersion{f1, f2, f3},
@@ -204,7 +204,7 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 		// This layer covers the case where the last layer provides Features.
 		// It also modifies the Namespace ("upgrade") but keeps some Features not upgraded, their
 		// Namespaces should then remain unchanged.
-		database.Layer{
+		{
 			Name:      "TestInsertLayer4b",
 			Parent:    &database.Layer{Name: "TestInsertLayer3"},
 			Namespace: &database.Namespace{Name: "TestInsertLayerNamespace3"},

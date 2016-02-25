@@ -25,15 +25,15 @@ import (
 var rpmPackagesTests = []feature.FeatureVersionTest{
 	// Test a CentOS 7 RPM database
 	// Memo: Use the following command on a RPM-based system to shrink a database: rpm -qa --qf "%{NAME}\n" |tail -n +3| xargs rpm -e --justdb
-	feature.FeatureVersionTest{
+	{
 		FeatureVersions: []database.FeatureVersion{
 			// Two packages from this source are installed, it should only appear once
-			database.FeatureVersion{
+			{
 				Feature: database.Feature{Name: "centos-release"},
 				Version: types.NewVersionUnsafe("7-1.1503.el7.centos.2.8"),
 			},
 			// Two packages from this source are installed, it should only appear once
-			database.FeatureVersion{
+			{
 				Feature: database.Feature{Name: "filesystem"},
 				Version: types.NewVersionUnsafe("3.2-18.el7"),
 			},
