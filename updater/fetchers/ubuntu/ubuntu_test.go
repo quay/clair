@@ -43,21 +43,21 @@ func TestUbuntuParser(t *testing.T) {
 		assert.True(t, hasUnkownRelease)
 
 		expectedFeatureVersions := []database.FeatureVersion{
-			database.FeatureVersion{
+			{
 				Feature: database.Feature{
 					Namespace: database.Namespace{Name: "ubuntu:14.04"},
 					Name:      "libmspack",
 				},
 				Version: types.MaxVersion,
 			},
-			database.FeatureVersion{
+			{
 				Feature: database.Feature{
 					Namespace: database.Namespace{Name: "ubuntu:15.04"},
 					Name:      "libmspack",
 				},
 				Version: types.NewVersionUnsafe("0.4-3"),
 			},
-			database.FeatureVersion{
+			{
 				Feature: database.Feature{
 					Namespace: database.Namespace{Name: "ubuntu:15.10"},
 					Name:      "libmspack-anotherpkg",

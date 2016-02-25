@@ -39,14 +39,14 @@ func TestDebianParser(t *testing.T) {
 				assert.Equal(t, "This vulnerability is not very dangerous.", vulnerability.Description)
 
 				expectedFeatureVersions := []database.FeatureVersion{
-					database.FeatureVersion{
+					{
 						Feature: database.Feature{
 							Namespace: database.Namespace{Name: "debian:8"},
 							Name:      "aptdaemon",
 						},
 						Version: types.MaxVersion,
 					},
-					database.FeatureVersion{
+					{
 						Feature: database.Feature{
 							Namespace: database.Namespace{Name: "debian:unstable"},
 
@@ -65,21 +65,21 @@ func TestDebianParser(t *testing.T) {
 				assert.Equal(t, "But this one is very dangerous.", vulnerability.Description)
 
 				expectedFeatureVersions := []database.FeatureVersion{
-					database.FeatureVersion{
+					{
 						Feature: database.Feature{
 							Namespace: database.Namespace{Name: "debian:8"},
 							Name:      "aptdaemon",
 						},
 						Version: types.NewVersionUnsafe("0.7.0"),
 					},
-					database.FeatureVersion{
+					{
 						Feature: database.Feature{
 							Namespace: database.Namespace{Name: "debian:unstable"},
 							Name:      "aptdaemon",
 						},
 						Version: types.NewVersionUnsafe("0.7.0"),
 					},
-					database.FeatureVersion{
+					{
 						Feature: database.Feature{
 							Namespace: database.Namespace{Name: "debian:8"},
 							Name:      "asterisk",
@@ -97,7 +97,7 @@ func TestDebianParser(t *testing.T) {
 				assert.Equal(t, "Un-affected packages.", vulnerability.Description)
 
 				expectedFeatureVersions := []database.FeatureVersion{
-					database.FeatureVersion{
+					{
 						Feature: database.Feature{
 							Namespace: database.Namespace{Name: "debian:8"},
 							Name:      "asterisk",

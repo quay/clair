@@ -48,9 +48,9 @@ type ClairAPI struct {
 }
 
 type AddLayoutRequestAPI struct {
-	ID       string `json:"ID"`
-	Path     string `json:"Path"`
-	ParantID string `json:"ParantID"`
+	ID          string `json:"ID"`
+	Path        string `json:"Path"`
+	ParentID    string `json:"ParentID"`
 	ImageFormat string `json:"ImageFormat"`
 }
 
@@ -333,7 +333,7 @@ func CheckPriority(priority string) (result string, err error) {
 		return "", err
 	}
 	if match {
-		result = strings.ToUpper(string(priority[0])) + strings.ToLower(priority[1:len(priority)])
+		result = strings.ToUpper(string(priority[0])) + strings.ToLower(priority[1:])
 		return
 	}
 	return "", errors.New("Unknown priority " + priority)

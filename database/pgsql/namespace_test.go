@@ -15,9 +15,9 @@
 package pgsql
 
 import (
+	"fmt"
 	"testing"
-  "fmt"
-  
+
 	"github.com/coreos/clair/database"
 	"github.com/stretchr/testify/assert"
 )

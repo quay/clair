@@ -83,7 +83,7 @@ func TestRaceAffects(t *testing.T) {
 			Name:      uuid.New(),
 			Namespace: feature.Namespace,
 			FixedIn: []database.FeatureVersion{
-				database.FeatureVersion{
+				{
 					Feature: feature,
 					Version: types.NewVersionUnsafe(strconv.Itoa(version)),
 				},

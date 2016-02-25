@@ -22,7 +22,7 @@ import (
 )
 
 var aptSourcesOSTests = []namespace.NamespaceTest{
-	namespace.NamespaceTest{
+	{
 		ExpectedNamespace: database.Namespace{Name: "debian:unstable"},
 		Data: map[string][]byte{
 			"etc/os-release": []byte(
