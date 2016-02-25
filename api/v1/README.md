@@ -555,7 +555,7 @@ Server: clair
 }
 ```
 
-#### DELETE /notification/`:name`
+#### DELETE /notifications/`:name`
 
 ###### Description
 
