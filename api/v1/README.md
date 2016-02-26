@@ -205,7 +205,7 @@ The POST route for the Vulnerabilities resource creates a new Vulnerability.
 ###### Example Request
 
 ```json
-POST /namespaces/debian%3A8/vulnerabilities HTTP/1.1
+POST http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities HTTP/1.1
 
 {
     "Vulnerability": {
@@ -281,7 +281,7 @@ The GET route for the Vulnerabilities resource displays the current data for a g
 ###### Example Request
 
 ```json
-GET /namespaces/debian%3A8/vulnerabilities/CVE-2014-9471?fixedIn HTTP/1.1
+GET http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471?fixedIn HTTP/1.1
 ```
 
 ###### Example Response
@@ -437,7 +437,7 @@ The PUT route for the Fixes resource updates a Feature that is the fix for a giv
 ###### Example Request
 
 ```json
-PUT http://localhost:6060/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471/fixes/coreutils HTTP/1.1
+PUT http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471/fixes/coreutils HTTP/1.1
 
 {
   "Feature": {
@@ -472,7 +472,7 @@ The DELETE route for the Fixes resource removes a Feature as fix for the given V
 ###### Example Request
 
 ```json
-DELETE http://localhost:6060/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471/fixes/coreutils
+DELETE http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471/fixes/coreutils
 ```
 
 ###### Example Response
