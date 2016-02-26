@@ -34,6 +34,7 @@ func NewRouter(ctx *context.RouteContext) *httprouter.Router {
 	router.GET("/namespaces", context.HTTPHandler(getNamespaces, ctx))
 
 	// Vulnerabilities
+	router.GET("/namespaces/:namespaceName/vulnerabilities", context.HTTPHandler(getVulnerabilities, ctx))
 	router.POST("/namespaces/:namespaceName/vulnerabilities", context.HTTPHandler(postVulnerability, ctx))
 	router.GET("/namespaces/:namespaceName/vulnerabilities/:vulnerabilityName", context.HTTPHandler(getVulnerability, ctx))
 	router.PUT("/namespaces/:namespaceName/vulnerabilities/:vulnerabilityName", context.HTTPHandler(putVulnerability, ctx))

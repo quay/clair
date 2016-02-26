@@ -144,6 +144,9 @@ const (
 	searchVulnerabilityForUpdate          = ` FOR UPDATE OF v`
 	searchVulnerabilityByNamespaceAndName = ` WHERE n.name = $1 AND v.name = $2 AND v.deleted_at IS NULL`
 	searchVulnerabilityByID               = ` WHERE v.id = $1`
+	searchVulnerabilityByNamespace        = ` WHERE n.name = $1 AND v.deleted_at IS NULL
+						  ORDER BY v.name
+						  LIMIT $2 offset $3`
 
 	searchVulnerabilityFixedIn = `
 		SELECT vfif.version, f.id, f.Name

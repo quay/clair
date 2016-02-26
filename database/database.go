@@ -60,6 +60,10 @@ type Datastore interface {
 	DeleteLayer(name string) error
 
 	// # Vulnerability
+	// ListVulnerabilities returns the list of vulnerabilies of a certain Namespace.
+	// The Limit and page parameters are used to paginate the return list.
+	ListVulnerabilities(namespaceName string, limit int, page int) ([]Vulnerability, error)
+
 	// InsertVulnerabilities stores the given Vulnerabilities in the database, updating them if
 	// necessary. A vulnerability is uniquely identified by its Namespace and its Name.
 	// The FixedIn field may only contain a partial list of Features that are affected by the

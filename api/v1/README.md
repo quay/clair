@@ -8,6 +8,7 @@
 - [Namespaces](#namespaces)
   - [GET](#get-namespaces)
 - [Vulnerabilities](#vulnerabilities)
+  - [List](#get-namespacesnsnamevulnerabilities)
   - [POST](#post-namespacesnamevulnerabilities)
   - [GET](#get-namespacesnsnamevulnerabilitiesvulnname)
   - [PUT](#put-namespacesnsnamevulnerabilitiesvulnname)
@@ -195,6 +196,60 @@ Server: clair
 ```
 
 ## Vulnerabilities
+
+#### GET /namespaces/`:nsName`/vulnerabilities
+
+###### Description
+
+The GET route for the Vulnerabilities resource displays the vulnerabilities data for a given namespace.
+
+###### Query Parameters
+
+| Name    | Type | Required | Description                                                |
+|---------|------|----------|------------------------------------------------------------|
+| limit   | int  | required | Limits the amount of the vunlerabilities data for a given namespace. |
+| page    | int  | required | Displays the specific page of the vunlerabilities data for a given namespace. |
+
+###### Example Request
+
+```json
+GET http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities?page=0&limit=2 HTTP/1.1
+```
+
+###### Example Response
+
+```json
+HTTP/1.1 200 OK
+Content-Type: application/json;charset=utf-8
+Server: clair
+
+{
+    "Vulnerabilities": [
+        {
+            "Name": "CVE-1999-1332",
+            "Namespace": "debian:8",
+            "Description": "gzexe in the gzip package on Red Hat Linux 5.0 and earlier allows local users to overwrite files of other users via a symlink attack on a temporary file.",
+            "Link": "https://security-tracker.debian.org/tracker/CVE-1999-1332",
+            "Severity": "Low"
+        },
+        {
+            "Name": "CVE-1999-1572",
+            "Namespace": "debian:8",
+            "Description": "cpio on FreeBSD 2.1.0, Debian GNU/Linux 3.0, and possibly other operating systems, uses a 0 umask when creating files using the -O (archive) or -F options, which creates the files with mode 0666 and allows local users to read or overwrite those files.",
+            "Link": "https://security-tracker.debian.org/tracker/CVE-1999-1572",
+            "Severity": "Low",
+            "Metadata": {
+                "NVD": {
+                    "CVSSv2": {
+                        "Score": 2.1,
+                        "Vectors": "AV:L/AC:L/Au:N/C:P/I:N"
+                    }
+                }
+            }
+        }
+    ]
+}
+```
 
 #### POST /namespaces/`:name`/vulnerabilities
 

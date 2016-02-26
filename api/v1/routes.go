@@ -38,6 +38,7 @@ const (
 	getLayerRoute            = "v1/getLayer"
 	deleteLayerRoute         = "v1/deleteLayer"
 	getNamespacesRoute       = "v1/getNamespaces"
+	getVulnerabilitiesRoute  = "v1/getVulnerabilities"
 	postVulnerabilityRoute   = "v1/postVulnerability"
 	getVulnerabilityRoute    = "v1/getVulnerability"
 	putVulnerabilityRoute    = "v1/putVulnerability"
@@ -182,6 +183,53 @@ func getNamespaces(w http.ResponseWriter, r *http.Request, p httprouter.Params, 
 
 	writeResponse(w, r, http.StatusOK, NamespaceEnvelope{Namespaces: &namespaces})
 	return getNamespacesRoute, http.StatusOK
+}
+
+func getVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+	query := r.URL.Query()
+
+	limitStrs, limitExists := query["limit"]
+	if !limitExists {
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"must provide limit query parameter"}})
+		return getVulnerabilitiesRoute, http.StatusBadRequest
+	}
+	limit, err := strconv.Atoi(limitStrs[0])
+	if err != nil {
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"invalid limit format: " + err.Error()}})
+		return getVulnerabilitiesRoute, http.StatusBadRequest
+	} else if limit <= 0 {
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"limit value should not be less than zero"}})
+		return getVulnerabilitiesRoute, http.StatusBadRequest
+	}
+
+	pageStrs, pageExists := query["page"]
+	if !pageExists {
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"must provide page query parameter"}})
+		return getVulnerabilitiesRoute, http.StatusBadRequest
+	}
+	page, err := strconv.Atoi(pageStrs[0])
+	if err != nil {
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"invalid page format: " + err.Error()}})
+		return getVulnerabilitiesRoute, http.StatusBadRequest
+	} else if page < 0 {
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"page value should not be less than zero"}})
+		return getVulnerabilitiesRoute, http.StatusBadRequest
+	}
+
+	dbVulns, err := ctx.Store.ListVulnerabilities(p.ByName("namespaceName"), limit, page)
+	if err != nil {
+		writeResponse(w, r, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		return getVulnerabilitiesRoute, http.StatusInternalServerError
+	}
+
+	var vulns []Vulnerability
+	for _, dbVuln := range dbVulns {
+		vuln := VulnerabilityFromDatabaseModel(dbVuln, false)
+		vulns = append(vulns, vuln)
+	}
+
+	writeResponse(w, r, http.StatusOK, VulnerabilityEnvelope{Vulnerabilities: &vulns})
+	return getVulnerabilitiesRoute, http.StatusOK
 }
 
 func postVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
