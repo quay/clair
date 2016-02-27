@@ -10,14 +10,14 @@ Clair is an open source project for the static analysis of vulnerabilities in [a
 
 Vulnerability data is continuously imported from a known set of sources and correlated with the indexed contents of container images in order to produce lists of vulnerabilities that threaten a container.
 When vulnerability data changes upstream, the previous state and new state of the vulnerability along with the images they affect can be sent via webhook to a configured endpoint.
-New data sources can be [added programmatically] at compile-time or data can be injected via HTTP API at runtime.
+All major components can be [customized programmatically] at compile-time without forking the project.
 
 Our goal is to enable a more transparent view of the security of container-based infrastructure.
 Thus, the project was named `Clair` after the French term which translates to *clear*, *bright*, *transparent*.
 
 [appc]: https://github.com/appc/spec
 [docker]: https://github.com/docker/docker/blob/master/image/spec/v1.md
-[added programmatically]: #custom-data-sources
+[added programmatically]: #customization
 
 ## Common Use Cases
 
@@ -75,31 +75,36 @@ $ $EDITOR config.yaml # Add the URI for your postgres database
 $ ./$GOBIN/clair -config=config.yaml
 ```
 
-## Architecture
+## Documentation
 
-### At a glance
-
-![Simple Clair Diagram](img/simple_diagram.png)
-
-### Documentation
-
-Documentation can be found in a README.md file located in the directory of the component.
+Documentation can be found in a `README.md` file located in the directory of the component.
 
 - [Notifier](https://github.com/coreos/clair/blob/master/notifier/README.md)
 - [v1 API](https://github.com/coreos/clair/blob/master/api/v1/README.md)
+
+### Architecture at a Glance
+
+![Simple Clair Diagram](img/simple_diagram.png)
+
+### Terminology
+
+- *Detector* - a Go package that identifies *features* from an *layer*.
+- *Image* - a tarball of the contents of a container.
+- *Feature* - anything that when present could be an indication of a vulnerability (e.g. the presence of a file or an installed software package).
+- *Fetcher* - a Go package that tracks an upstream vulnerability database and imports them into Clair.
+- *Layer* - an appc or docker *image* that may or maybe not be dependent on another image.
 
 ### Vulnerability Analysis
 
 There are two major ways to perform analysis of programs: [Static Analysis] and [Dynamic Analysis].
 Clair has been designed to perform *static analysis*; containers never need to be executed.
 Rather, the filesystem of the container image is inspected and *features* are indexed into a database.
-Features are anything that when present could be an indication of a vulnerability (e.g. the presence of a file or an installed software package).
-By indexing the features of an image into the database, images only need to be rescanned when new features are added.
+By indexing the features of an image into the database, images only need to be rescanned when new *detectors* are added.
 
 [Static Analysis]: https://en.wikipedia.org/wiki/Static_program_analysis
 [Dynamic Analysis]: https://en.wikipedia.org/wiki/Dynamic_program_analysis
 
-### Data Sources
+### Default Data Sources
 
 | Data Source                   | Versions                                               | Format |
 |-------------------------------|--------------------------------------------------------|--------|
@@ -114,11 +119,27 @@ By indexing the features of an image into the database, images only need to be r
 [rpm]: http://www.rpm.org
 
 
-### Custom Data Sources
+### Customization
 
-In addition to the default data sources, Clair has been designed in a way that allows extension without forking the project.
-*Fetchers*, which are Go packages that implement the fetching of upstream vulnerability data, are registered in [init()] similar to drivers for Go's standard [database/sql] package.
-A fetcher can live in its own repository and custom versions of clair can contain a small patch that adds the import statements of the desired fetchers in `main.go`.
+The major components of Clair are all programmatically extensible in the same way Go's standard [database/sql] package is extensible.
+Custom behavior can be accomplished by creating a package that contains a type that implements an interface declared in Clair and registering that interface in [init()].
+To expose the new behavior, unqualified imports to the package must be added in `main.go`:
+
+```go
+import (
+    ...
+
+    _ "github.com/my/custom/behavior"
+)
+```
+
+The following interfaces can have custom implementations registered via [init()] at compile time:
+
+- `Datastore` - the backing storage
+- `Notifier` - the means by which endpoints are notified of vulnerability changes
+- `Fetcher` - the sources of vulnerability data that is automatically imported
+- `MetadataFetcher` - the sources of vulnerability metadata that is automatically imported
+- `DataDetector` - the means by which features are identified from a layer
 
 [init()]: https://golang.org/doc/effective_go.html#init
 [database/sql]: https://godoc.org/database/sql
