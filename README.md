@@ -88,11 +88,12 @@ Documentation can be found in a `README.md` file located in the directory of the
 
 ### Terminology
 
-- *Detector* - a Go package that identifies *features* from an *layer*.
-- *Image* - a tarball of the contents of a container.
-- *Feature* - anything that when present could be an indication of a vulnerability (e.g. the presence of a file or an installed software package).
-- *Fetcher* - a Go package that tracks an upstream vulnerability database and imports them into Clair.
-- *Layer* - an appc or docker *image* that may or maybe not be dependent on another image.
+- *Image* - a tarball of the contents of a container
+- *Layer* - an *appc* or *Docker* image that may or maybe not be dependent on another image
+- *Detector* - a Go package that identifies the content, *namespaces* and *features* from a *layer*
+- *Namespace* - a context around *features* and *vulnerabilities* (e.g. an operating system)
+- *Feature* - anything that when present could be an indication of a *vulnerability* (e.g. the presence of a file or an installed software package)
+- *Fetcher* - a Go package that tracks an upstream vulnerability database and imports them into Clair
 
 ### Vulnerability Analysis
 
@@ -122,27 +123,22 @@ By indexing the features of an image into the database, images only need to be r
 ### Customization
 
 The major components of Clair are all programmatically extensible in the same way Go's standard [database/sql] package is extensible.
-Custom behavior can be accomplished by creating a package that contains a type that implements an interface declared in Clair and registering that interface in [init()].
-To expose the new behavior, unqualified imports to the package must be added in `main.go`:
 
-```go
-import (
-    ...
-
-    _ "github.com/my/custom/behavior"
-)
-```
+Custom behavior can be accomplished by creating a package that contains a type that implements an interface declared in Clair and registering that interface in [init()]. To expose the new behavior, unqualified imports to the package must be added in your [main.go], which should then start Clair using `Boot(*config.Config)`.
 
 The following interfaces can have custom implementations registered via [init()] at compile time:
 
 - `Datastore` - the backing storage
 - `Notifier` - the means by which endpoints are notified of vulnerability changes
 - `Fetcher` - the sources of vulnerability data that is automatically imported
-- `MetadataFetcher` - the sources of vulnerability metadata that is automatically imported
-- `DataDetector` - the means by which features are identified from a layer
+- `MetadataFetcher` - the sources of vulnerability metadata that is automatically added to known vulnerabilities
+- `DataDetector` - the means by which contents of an image are detected
+- `FeatureDetector` - the means by which features are identified from a layer
+- `NamespaceDetector` - the means by which a namespace is identified from a layer
 
 [init()]: https://golang.org/doc/effective_go.html#init
 [database/sql]: https://godoc.org/database/sql
+[main.go]: https://github.com/coreos/clair/blob/master/cmd/clair/main.go
 
 ## Related Links
 
