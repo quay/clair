@@ -213,7 +213,7 @@ The GET route for the Vulnerabilities resource displays the vulnerabilities data
 ###### Example Request
 
 ```json
-GET http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities?page=0&limit=2 HTTP/1.1
+GET http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities?limit=2 HTTP/1.1
 ```
 
 ###### Example Response
@@ -247,7 +247,8 @@ Server: clair
                 }
             }
         }
-    ]
+    ],
+    "NextPage":"gAAAAABW1ABiOlm6KMDKYFE022bEy_IFJdm4ExxTNuJZMN0Eycn0Sut2tOH9bDB4EWGy5s6xwATUHiG-6JXXaU5U32sBs6_DmA=="
 }
 ```
 

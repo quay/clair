@@ -145,8 +145,9 @@ const (
 	searchVulnerabilityByNamespaceAndName = ` WHERE n.name = $1 AND v.name = $2 AND v.deleted_at IS NULL`
 	searchVulnerabilityByID               = ` WHERE v.id = $1`
 	searchVulnerabilityByNamespace        = ` WHERE n.name = $1 AND v.deleted_at IS NULL
-						  ORDER BY v.name
-						  LIMIT $2 offset $3`
+		  				  AND v.id >= $2
+						  ORDER BY v.id
+						  LIMIT $3`
 
 	searchVulnerabilityFixedIn = `
 		SELECT vfif.version, f.id, f.Name

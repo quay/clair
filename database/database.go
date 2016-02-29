@@ -62,7 +62,9 @@ type Datastore interface {
 	// # Vulnerability
 	// ListVulnerabilities returns the list of vulnerabilies of a certain Namespace.
 	// The Limit and page parameters are used to paginate the return list.
-	ListVulnerabilities(namespaceName string, limit int, page int) ([]Vulnerability, error)
+	// The first given page should be 0. The function will then return the next available page.
+	// If there is no more page, -1 has to be returned.
+	ListVulnerabilities(namespaceName string, limit int, page int) ([]Vulnerability, int, error)
 
 	// InsertVulnerabilities stores the given Vulnerabilities in the database, updating them if
 	// necessary. A vulnerability is uniquely identified by its Namespace and its Name.

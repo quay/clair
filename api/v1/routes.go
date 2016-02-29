@@ -202,21 +202,17 @@ func getVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Par
 		return getVulnerabilitiesRoute, http.StatusBadRequest
 	}
 
+	page := 0
 	pageStrs, pageExists := query["page"]
-	if !pageExists {
-		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"must provide page query parameter"}})
-		return getVulnerabilitiesRoute, http.StatusBadRequest
-	}
-	page, err := strconv.Atoi(pageStrs[0])
-	if err != nil {
-		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"invalid page format: " + err.Error()}})
-		return getVulnerabilitiesRoute, http.StatusBadRequest
-	} else if page < 0 {
-		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"page value should not be less than zero"}})
-		return getVulnerabilitiesRoute, http.StatusBadRequest
+	if pageExists {
+		page, err = tokenToNumber(pageStrs[0], ctx.Config.PaginationKey)
+		if err != nil {
+			writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"invalid page format: " + err.Error()}})
+			return getNotificationRoute, http.StatusBadRequest
+		}
 	}
 
-	dbVulns, err := ctx.Store.ListVulnerabilities(p.ByName("namespaceName"), limit, page)
+	dbVulns, nextPage, err := ctx.Store.ListVulnerabilities(p.ByName("namespaceName"), limit, page)
 	if err != nil {
 		writeResponse(w, r, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return getVulnerabilitiesRoute, http.StatusInternalServerError
@@ -228,7 +224,12 @@ func getVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Par
 		vulns = append(vulns, vuln)
 	}
 
-	writeResponse(w, r, http.StatusOK, VulnerabilityEnvelope{Vulnerabilities: &vulns})
+	var nextPageStr string
+	if nextPage != -1 {
+		nextPageStr = numberToToken(nextPage, ctx.Config.PaginationKey)
+	}
+
+	writeResponse(w, r, http.StatusOK, VulnerabilityEnvelope{Vulnerabilities: &vulns, NextPage: &nextPageStr})
 	return getVulnerabilitiesRoute, http.StatusOK
 }
 

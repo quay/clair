@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/coreos/clair/database"
@@ -276,6 +277,7 @@ type NamespaceEnvelope struct {
 type VulnerabilityEnvelope struct {
 	Vulnerability   *Vulnerability   `json:"Vulnerability,omitempty"`
 	Vulnerabilities *[]Vulnerability `json:"Vulnerabilities,omitempty"`
+	NextPage        *string          `json:"NextPage,omitempty"`
 	Error           *Error           `json:"Error,omitempty"`
 }
 
@@ -313,6 +315,27 @@ func pageNumberToToken(page database.VulnerabilityNotificationPageNumber, key st
 	tokenBytes, err := fernet.EncryptAndSign(buf.Bytes(), k)
 	if err != nil {
 		log.Fatal("failed to encrypt VulnerabilityNotificationpageNumber")
+	}
+
+	return string(tokenBytes)
+}
+
+func tokenToNumber(token, key string) (int, error) {
+	k, _ := fernet.DecodeKey(key)
+	msg := fernet.VerifyAndDecrypt([]byte(token), time.Hour, []*fernet.Key{k})
+	if msg == nil {
+		return -1, errors.New("invalid or expired pagination token")
+	}
+
+	page, err := strconv.Atoi(string(msg))
+	return page, err
+}
+
+func numberToToken(page int, key string) string {
+	k, _ := fernet.DecodeKey(key)
+	tokenBytes, err := fernet.EncryptAndSign([]byte(strconv.Itoa(page)), k)
+	if err != nil {
+		log.Fatal("failed to encrypt number")
 	}
 
 	return string(tokenBytes)
