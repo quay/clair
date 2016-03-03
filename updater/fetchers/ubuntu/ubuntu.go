@@ -42,6 +42,7 @@ const (
 )
 
 var (
+	bzrEnv            = []string{"BZR_LOG=/dev/null"}
 	ubuntuIgnoredReleases = map[string]struct{}{
 		"upstream": {},
 		"devel":    {},
@@ -227,7 +228,7 @@ func collectModifiedVulnerabilities(revision int, dbRevision, repositoryLocalPat
 	}
 
 	// Handle a database that needs upgrading.
-	out, err := utils.Exec(repositoryLocalPath, "bzr", "log", "--verbose", "-r"+strconv.Itoa(dbRevisionInt+1)+"..", "-n0")
+	out, err := utils.Exec(repositoryLocalPath, bzrEnv, "bzr", "log", "--verbose", "-r"+strconv.Itoa(dbRevisionInt+1)+"..", "-n0")
 	if err != nil {
 		log.Errorf("could not get Ubuntu vulnerabilities repository logs: %s. output: %s", err, out)
 		return nil, cerrors.ErrCouldNotDownload
@@ -249,7 +250,7 @@ func collectModifiedVulnerabilities(revision int, dbRevision, repositoryLocalPat
 
 func createRepository(pathToRepo string) error {
 	// Branch repository
-	out, err := utils.Exec("/tmp/", "bzr", "branch", trackerRepository, pathToRepo)
+	out, err := utils.Exec("/tmp/", bzrEnv, "bzr", "branch", trackerRepository, pathToRepo)
 	if err != nil {
 		log.Errorf("could not branch Ubuntu repository: %s. output: %s", err, out)
 		return cerrors.ErrCouldNotDownload
@@ -259,7 +260,7 @@ func createRepository(pathToRepo string) error {
 
 func updateRepository(pathToRepo string) error {
 	// Pull repository
-	out, err := utils.Exec(pathToRepo, "bzr", "pull", "--overwrite")
+	out, err := utils.Exec(pathToRepo, bzrEnv, "bzr", "pull", "--overwrite")
 	if err != nil {
 		log.Errorf("could not pull Ubuntu repository: %s. output: %s", err, out)
 		return cerrors.ErrCouldNotDownload
@@ -268,7 +269,7 @@ func updateRepository(pathToRepo string) error {
 }
 
 func getRevisionNumber(pathToRepo string) (int, error) {
-	out, err := utils.Exec(pathToRepo, "bzr", "revno")
+	out, err := utils.Exec(pathToRepo, bzrEnv, "bzr", "revno")
 	if err != nil {
 		log.Errorf("could not get Ubuntu repository's revision number: %s. output: %s", err, out)
 		return 0, cerrors.ErrCouldNotDownload
