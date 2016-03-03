@@ -17,7 +17,7 @@ Thus, the project was named `Clair` after the French term which translates to *c
 
 [appc]: https://github.com/appc/spec
 [docker]: https://github.com/docker/docker/blob/master/image/spec/v1.md
-[added programmatically]: #customization
+[customized programmatically]: #customization
 
 ## Common Use Cases
 
@@ -43,10 +43,12 @@ Clair detects some vulnerabilities and sends a webhook to your continuous deploy
 
 ### Requirements
 
-An instance of [PostgreSQL] 9.4+ is required.
-All instructions assume the user has already setup this instance.
+All instructions assume the user has already setup the following:
+
+- A running instance of [PostgreSQL] 9.4+
+
 During the first run, Clair will bootstrap its database with vulnerability data from its data sources.
-This can take several minutes.
+It can take several minutes before the database has been fully populated.
 
 [PostgreSQL]: http://postgresql.org
 
@@ -64,9 +66,14 @@ $ docker run -p 6060-6061:6060-6061 -v $HOME/clair_config:/config quay.io/coreos
 ### Source
 
 To build Clair, you need to latest stable version of [Go] and a working [Go environment].
+In addition, Clair requires that [bzr], [rpm], and [xz] be available on the system [$PATH].
 
 [Go]: https://github.com/golang/go/releases
 [Go environment]: https://golang.org/doc/code.html
+[bzr]: http://bazaar.canonical.com/en
+[rpm]: http://www.rpm.org
+[xz]: http://tukaani.org/xz
+[$PATH]: https://en.wikipedia.org/wiki/PATH_(variable)
 
 ```sh
 $ go get github.com/coreos/clair
