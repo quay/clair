@@ -21,7 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"runtime"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -123,8 +123,11 @@ func Open(config *config.DatabaseConfig) (database.Datastore, error) {
 func migrate(dataSource string) error {
 	log.Info("running database migrations")
 
-	_, filename, _, _ := runtime.Caller(1)
-	migrationDir := path.Join(path.Dir(filename), "/migrations/")
+	exeDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		return err
+	}
+	migrationDir := path.Join(exeDir, "/migrations/")
 	conf := &goose.DBConf{
 		MigrationsDir: migrationDir,
 		Driver: goose.DBDriver{
@@ -234,8 +237,13 @@ func OpenForTest(name string, withTestData bool) (*pgSQLTest, error) {
 
 	// Load test data if specified.
 	if withTestData {
-		_, filename, _, _ := runtime.Caller(0)
-		d, _ := ioutil.ReadFile(path.Join(path.Dir(filename)) + "/testdata/data.sql")
+		exeDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			dropDatabase(dataSourceDefaultDatabase, dbName)
+			log.Error(err)
+			return nil, err
+		}
+		d, _ := ioutil.ReadFile(path.Join(exeDir, "testdata/data.sql"))
 		_, err = db.(*pgSQL).Exec(string(d))
 		if err != nil {
 			dropDatabase(dataSourceDefaultDatabase, dbName)
