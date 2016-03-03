@@ -52,6 +52,9 @@ const (
 		UNION
 		SELECT id FROM new_feature`
 
+	searchFeatureVersion = `
+		SELECT id FROM FeatureVersion WHERE feature_id = $1 AND version = $2`
+
 	soiFeatureVersion = `
 		WITH new_featureversion AS (
 			INSERT INTO FeatureVersion(feature_id, version)

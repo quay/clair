@@ -91,6 +91,23 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 
 	featureVersion.Feature.ID = featureID
 
+	// Try to find the FeatureVersion.
+	//
+	// In a populated database, the likelihood of the FeatureVersion already being there is high.
+	// If we can find it here, we then avoid using a transaction and locking the database.
+	err = pgSQL.QueryRow(searchFeatureVersion, featureID, &featureVersion.Version).
+		Scan(&featureVersion.ID)
+	if err != nil && err != sql.ErrNoRows {
+		return 0, handleError("searchFeatureVersion", err)
+	}
+	if err == nil {
+		if pgSQL.cache != nil {
+			pgSQL.cache.Add(cacheIndex, featureVersion.ID)
+		}
+
+		return featureVersion.ID, nil
+	}
+
 	// Begin transaction.
 	tx, err := pgSQL.Begin()
 	if err != nil {
