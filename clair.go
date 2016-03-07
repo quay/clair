@@ -20,6 +20,7 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/coreos/clair/api"
@@ -62,7 +63,7 @@ func Boot(config *config.Config) {
 	go updater.Run(config.Updater, db, st)
 
 	// Wait for interruption and shutdown gracefully.
-	waitForSignals(os.Interrupt)
+	waitForSignals(syscall.SIGINT, syscall.SIGTERM)
 	log.Info("Received interruption, gracefully stopping ...")
 	st.Stop()
 }
