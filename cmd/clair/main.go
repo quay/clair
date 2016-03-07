@@ -67,25 +67,30 @@ func main() {
 
 	// Enable CPU Profiling if specified
 	if *flagCPUProfilePath != "" {
-		startCPUProfiling(*flagCPUProfilePath)
-		defer stopCPUProfiling()
+		defer stopCPUProfiling(startCPUProfiling(*flagCPUProfilePath))
 	}
 
 	clair.Boot(config)
 }
 
-func startCPUProfiling(path string) {
+func startCPUProfiling(path string) *os.File {
 	f, err := os.Create(path)
 	if err != nil {
 		log.Fatalf("failed to create profile file: %s", err)
 	}
-	defer f.Close()
 
-	pprof.StartCPUProfile(f)
+	err = pprof.StartCPUProfile(f)
+	if err != nil {
+		log.Fatalf("failed to start CPU profiling: %s", err)
+	}
+
 	log.Info("started CPU profiling")
+
+	return f
 }
 
-func stopCPUProfiling() {
+func stopCPUProfiling(f *os.File) {
 	pprof.StopCPUProfile()
+	f.Close()
 	log.Info("stopped CPU profiling")
 }
