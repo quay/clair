@@ -278,6 +278,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 
 			if isErrUniqueViolation(err) {
 				// Ignore this error, another process collided.
+				log.Debug("Attempted to insert duplicate layer.")
 				return nil
 			}
 			return handleError("insertLayer", err)
