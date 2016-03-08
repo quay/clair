@@ -38,7 +38,8 @@ const (
 		UNION
 		SELECT id FROM new_namespace`
 
-	listNamespace = `SELECT id, name FROM Namespace`
+	searchNamespace = `SELECT id FROM Namespace WHERE name = $1`
+	listNamespace   = `SELECT id, name FROM Namespace`
 
 	// feature.go
 	soiFeature = `
@@ -144,6 +145,10 @@ const (
 	searchVulnerabilityForUpdate          = ` FOR UPDATE OF v`
 	searchVulnerabilityByNamespaceAndName = ` WHERE n.name = $1 AND v.name = $2 AND v.deleted_at IS NULL`
 	searchVulnerabilityByID               = ` WHERE v.id = $1`
+	searchVulnerabilityByNamespace        = ` WHERE n.name = $1 AND v.deleted_at IS NULL
+		  				  AND v.id >= $2
+						  ORDER BY v.id
+						  LIMIT $3`
 
 	searchVulnerabilityFixedIn = `
 		SELECT vfif.version, f.id, f.Name

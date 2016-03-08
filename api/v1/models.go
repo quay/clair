@@ -215,7 +215,8 @@ func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotifica
 
 	var nextPageStr string
 	if nextPage != database.NoVulnerabilityNotificationPage {
-		nextPageStr = pageNumberToToken(nextPage, key)
+		nextPageBytes, _ := tokenMarshal(nextPage, key)
+		nextPageStr = string(nextPageBytes)
 	}
 
 	var created, notified, deleted string
@@ -274,8 +275,10 @@ type NamespaceEnvelope struct {
 }
 
 type VulnerabilityEnvelope struct {
-	Vulnerability *Vulnerability `json:"Vulnerability,omitempty"`
-	Error         *Error         `json:"Error,omitempty"`
+	Vulnerability   *Vulnerability   `json:"Vulnerability,omitempty"`
+	Vulnerabilities *[]Vulnerability `json:"Vulnerabilities,omitempty"`
+	NextPage        string           `json:"NextPage,omitempty"`
+	Error           *Error           `json:"Error,omitempty"`
 }
 
 type NotificationEnvelope struct {
@@ -289,30 +292,23 @@ type FeatureEnvelope struct {
 	Error    *Error     `json:"Error,omitempty"`
 }
 
-func tokenToPageNumber(token, key string) (database.VulnerabilityNotificationPageNumber, error) {
+func tokenUnmarshal(token string, key string, v interface{}) error {
 	k, _ := fernet.DecodeKey(key)
 	msg := fernet.VerifyAndDecrypt([]byte(token), time.Hour, []*fernet.Key{k})
 	if msg == nil {
-		return database.VulnerabilityNotificationPageNumber{}, errors.New("invalid or expired pagination token")
+		return errors.New("invalid or expired pagination token")
 	}
 
-	page := database.VulnerabilityNotificationPageNumber{}
-	err := json.NewDecoder(bytes.NewBuffer(msg)).Decode(&page)
-	return page, err
+	return json.NewDecoder(bytes.NewBuffer(msg)).Decode(&v)
 }
 
-func pageNumberToToken(page database.VulnerabilityNotificationPageNumber, key string) string {
+func tokenMarshal(v interface{}, key string) ([]byte, error) {
 	var buf bytes.Buffer
-	err := json.NewEncoder(&buf).Encode(page)
+	err := json.NewEncoder(&buf).Encode(v)
 	if err != nil {
-		log.Fatal("failed to encode VulnerabilityNotificationPageNumber")
+		return nil, err
 	}
 
 	k, _ := fernet.DecodeKey(key)
-	tokenBytes, err := fernet.EncryptAndSign(buf.Bytes(), k)
-	if err != nil {
-		log.Fatal("failed to encrypt VulnerabilityNotificationpageNumber")
-	}
-
-	return string(tokenBytes)
+	return fernet.EncryptAndSign(buf.Bytes(), k)
 }

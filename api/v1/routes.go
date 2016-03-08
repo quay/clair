@@ -38,6 +38,7 @@ const (
 	getLayerRoute            = "v1/getLayer"
 	deleteLayerRoute         = "v1/deleteLayer"
 	getNamespacesRoute       = "v1/getNamespaces"
+	getVulnerabilitiesRoute  = "v1/getVulnerabilities"
 	postVulnerabilityRoute   = "v1/postVulnerability"
 	getVulnerabilityRoute    = "v1/getVulnerability"
 	putVulnerabilityRoute    = "v1/putVulnerability"
@@ -182,6 +183,68 @@ func getNamespaces(w http.ResponseWriter, r *http.Request, p httprouter.Params, 
 
 	writeResponse(w, r, http.StatusOK, NamespaceEnvelope{Namespaces: &namespaces})
 	return getNamespacesRoute, http.StatusOK
+}
+
+func getVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+	query := r.URL.Query()
+
+	limitStrs, limitExists := query["limit"]
+	if !limitExists {
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"must provide limit query parameter"}})
+		return getVulnerabilitiesRoute, http.StatusBadRequest
+	}
+	limit, err := strconv.Atoi(limitStrs[0])
+	if err != nil {
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"invalid limit format: " + err.Error()}})
+		return getVulnerabilitiesRoute, http.StatusBadRequest
+	} else if limit < 0 {
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"limit value should not be less than zero"}})
+		return getVulnerabilitiesRoute, http.StatusBadRequest
+	}
+
+	page := 0
+	pageStrs, pageExists := query["page"]
+	if pageExists {
+		err = tokenUnmarshal(pageStrs[0], ctx.Config.PaginationKey, &page)
+		if err != nil {
+			writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"invalid page format: " + err.Error()}})
+			return getNotificationRoute, http.StatusBadRequest
+		}
+	}
+
+	namespace := p.ByName("namespaceName")
+	if namespace == "" {
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"namespace should not be empty"}})
+		return getNotificationRoute, http.StatusBadRequest
+	}
+
+	dbVulns, nextPage, err := ctx.Store.ListVulnerabilities(namespace, limit, page)
+	if err == cerrors.ErrNotFound {
+		writeResponse(w, r, http.StatusNotFound, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		return getVulnerabilityRoute, http.StatusNotFound
+	} else if err != nil {
+		writeResponse(w, r, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		return getVulnerabilitiesRoute, http.StatusInternalServerError
+	}
+
+	var vulns []Vulnerability
+	for _, dbVuln := range dbVulns {
+		vuln := VulnerabilityFromDatabaseModel(dbVuln, false)
+		vulns = append(vulns, vuln)
+	}
+
+	var nextPageStr string
+	if nextPage != -1 {
+		nextPageBytes, err := tokenMarshal(nextPage, ctx.Config.PaginationKey)
+		if err != nil {
+			writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"failed to marshal token: " + err.Error()}})
+			return getNotificationRoute, http.StatusBadRequest
+		}
+		nextPageStr = string(nextPageBytes)
+	}
+
+	writeResponse(w, r, http.StatusOK, VulnerabilityEnvelope{Vulnerabilities: &vulns, NextPage: nextPageStr})
+	return getVulnerabilitiesRoute, http.StatusOK
 }
 
 func postVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
@@ -385,14 +448,19 @@ func getNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	page := database.VulnerabilityNotificationFirstPage
 	pageStrs, pageExists := query["page"]
 	if pageExists {
-		page, err = tokenToPageNumber(pageStrs[0], ctx.Config.PaginationKey)
+		err := tokenUnmarshal(pageStrs[0], ctx.Config.PaginationKey, &page)
 		if err != nil {
 			writeResponse(w, r, http.StatusBadRequest, NotificationEnvelope{Error: &Error{"invalid page format: " + err.Error()}})
 			return getNotificationRoute, http.StatusBadRequest
 		}
 		pageToken = pageStrs[0]
 	} else {
-		pageToken = pageNumberToToken(page, ctx.Config.PaginationKey)
+		pageTokenBytes, err := tokenMarshal(page, ctx.Config.PaginationKey)
+		if err != nil {
+			writeResponse(w, r, http.StatusBadRequest, NotificationEnvelope{Error: &Error{"failed to marshal token: " + err.Error()}})
+			return getNotificationRoute, http.StatusBadRequest
+		}
+		pageToken = string(pageTokenBytes)
 	}
 
 	dbNotification, nextPage, err := ctx.Store.GetNotification(p.ByName("notificationName"), limit, page)
