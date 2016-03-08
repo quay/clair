@@ -212,8 +212,17 @@ func getVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Par
 		}
 	}
 
-	dbVulns, nextPage, err := ctx.Store.ListVulnerabilities(p.ByName("namespaceName"), limit, page)
-	if err != nil {
+	namespace := p.ByName("namespaceName")
+	if namespace == "" {
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"namespace should not be empty"}})
+		return getNotificationRoute, http.StatusBadRequest
+	}
+
+	dbVulns, nextPage, err := ctx.Store.ListVulnerabilities(namespace, limit, page)
+	if err == cerrors.ErrNotFound {
+		writeResponse(w, r, http.StatusNotFound, VulnerabilityEnvelope{Error: &Error{err.Error()}})
+		return getVulnerabilityRoute, http.StatusNotFound
+	} else if err != nil {
 		writeResponse(w, r, http.StatusInternalServerError, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return getVulnerabilitiesRoute, http.StatusInternalServerError
 	}
@@ -234,7 +243,7 @@ func getVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Par
 		nextPageStr = string(nextPageBytes)
 	}
 
-	writeResponse(w, r, http.StatusOK, VulnerabilityEnvelope{Vulnerabilities: &vulns, NextPage: &nextPageStr})
+	writeResponse(w, r, http.StatusOK, VulnerabilityEnvelope{Vulnerabilities: &vulns, NextPage: nextPageStr})
 	return getVulnerabilitiesRoute, http.StatusOK
 }
 

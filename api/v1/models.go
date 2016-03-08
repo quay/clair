@@ -277,7 +277,7 @@ type NamespaceEnvelope struct {
 type VulnerabilityEnvelope struct {
 	Vulnerability   *Vulnerability   `json:"Vulnerability,omitempty"`
 	Vulnerabilities *[]Vulnerability `json:"Vulnerabilities,omitempty"`
-	NextPage        *string          `json:"NextPage,omitempty"`
+	NextPage        string           `json:"NextPage,omitempty"`
 	Error           *Error           `json:"Error,omitempty"`
 }
 

@@ -38,7 +38,8 @@ const (
 		UNION
 		SELECT id FROM new_namespace`
 
-	listNamespace = `SELECT id, name FROM Namespace`
+	searchNamespace = `SELECT id FROM Namespace WHERE name = $1`
+	listNamespace   = `SELECT id, name FROM Namespace`
 
 	// feature.go
 	soiFeature = `
