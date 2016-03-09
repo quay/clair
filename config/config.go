@@ -23,6 +23,12 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// File represents a YAML configuration file that namespaces all Clair
+// configuration under the top-level "clair" key.
+type File struct {
+	Clair Config `yaml:"clair"`
+}
+
 // Config is the global configuration for an instance of Clair.
 type Config struct {
 	Database *DatabaseConfig
@@ -97,11 +103,14 @@ func Load(path string) (config *Config, err error) {
 		return
 	}
 
-	err = yaml.Unmarshal(d, config)
+	var cfgFile File
+	err = yaml.Unmarshal(d, &cfgFile)
 	if err != nil {
 		return
 	}
+	config = &cfgFile.Clair
 
+	// Generate a pagination key if none is provided.
 	if config.API.PaginationKey == "" {
 		var key fernet.Key
 		if err = key.Generate(); err != nil {
