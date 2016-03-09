@@ -4,7 +4,7 @@ services:
     container_name: clair_postgres
     image: postgres:latest
     environment:
-      POSTGRES_PASSWORD: <SET POSTGRES PASSWORD>
+      POSTGRES_PASSWORD: password
 
   clair:
     container_name: clair_clair
@@ -14,7 +14,7 @@ services:
     ports:
       - "6060-6061:6060-6061"
     links:
-      - postgres 
+      - postgres
     volumes:
       - /tmp:/tmp
       - ./clair_config:/config

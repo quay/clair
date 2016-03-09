@@ -41,48 +41,39 @@ Clair detects some vulnerabilities and sends a webhook to your continuous deploy
 
 ## Hello Heartbleed
 
-### Requirements
-
-All instructions assume the user has already setup the following:
-
-- A running instance of [PostgreSQL] 9.4+
-
 During the first run, Clair will bootstrap its database with vulnerability data from its data sources.
 It can take several minutes before the database has been fully populated.
 
-[PostgreSQL]: http://postgresql.org
+### Docker Compose
+
+The easiest way to get an instance of Clair running is to use Docker Compose to run everything locally.
+This runs a PostgreSQL database insecurely and locally in a container.
+This method should only be used for testing.
+
+```sh
+$ curl -L https://raw.githubusercontent.com/coreos/clair/master/docker-compose.yml -o $HOME/docker-compose.yml
+$ mkdir $HOME/clair_config
+$ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.example.yaml -o $HOME/clair_config/config.yaml
+$ $EDITOR $HOME/clair_config/config.yaml # Edit database source to be postgresql://postgres:password@postgres:5432?sslmode=disable
+$ docker-compose -f $HOME/docker-compose.yml up -d
+```
+
+Docker Compose may start Clair before Postgres which will raise an error.
+If this error is raised, manually execute `docker start clair_clair`.
+
 
 ### Docker
 
-The easiest way to get an instance of Clair running is to simply pull down the latest copy from Quay.
+This method assumes you already have a [PostgreSQL 9.4+] database running.
+This is the recommended method for production deployments.
+
+[PostgreSQL 9.4+]: http://postgresql.org
 
 ```sh
 $ mkdir $HOME/clair_config
 $ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.example.yaml -o $HOME/clair_config/config.yaml
 $ $EDITOR $HOME/clair_config/config.yaml # Add the URI for your postgres database
 $ docker run -p 6060-6061:6060-6061 -v $HOME/clair_config:/config quay.io/coreos/clair -config=/config/config.yaml
-```
-
-### Docker Compose
-
-Or, You can run an instance of Clair and PosrgreSQL using a docker-compose.
-
-```sh
-$ curl -L https://raw.githubusercontent.com/coreos/clair/master/docker-compose.yml -o $HOME/docker-compose.yml
-$ $EDITOR $HOME/docker-compose.yml # Edit POSTGRES_PASSWORD.
-$ mkdir $HOME/clair_config
-$ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.example.yaml -o $HOME/clair_config/config.yaml
-$ $EDITOR $HOME/clair_config/config.yaml # Add the URI for your postgres database. (see example below)
---
-database:
-  # PostgreSQL Connection string
-  # http://www.postgresql.org/docs/9.4/static/libpq-connect.html
-  source: postgresql://postgres:<YOUR POSTGRES PASSWORD>@postgres:5432?sslmode=disable
---
-$ docker-compose -f $HOME/docker-compose.yml up -d
-# if execution of Clair has failed, please try to re-start. 
-# it will fail when Clair is started before the PostgreSQL start a service.
-# $ docker start clair_clair
 ```
 
 ### Source
