@@ -4,7 +4,7 @@ services:
     container_name: clair_postgres
     image: postgres:latest
     environment:
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: <SET POSTGRES PASSWORD>
 
   clair:
     container_name: clair_clair
