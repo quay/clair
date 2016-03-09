@@ -22,6 +22,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -257,7 +258,8 @@ func listenHTTP(path, allowedHost string) {
 
 	restrictedFileServer := func(path, allowedHost string) http.Handler {
 		fc := func(w http.ResponseWriter, r *http.Request) {
-			if r.Host == allowedHost {
+			host, _, err := net.SplitHostPort(r.RemoteAddr)
+			if err == nil && strings.EqualFold(host, allowedHost) {
 				http.FileServer(http.Dir(path)).ServeHTTP(w, r)
 				return
 			}
