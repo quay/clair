@@ -58,9 +58,31 @@ The easiest way to get an instance of Clair running is to simply pull down the l
 
 ```sh
 $ mkdir $HOME/clair_config
-$ curl -L https://raw.githubusercontent.com/coreos/clair/config.example.yaml -o $HOME/clair_config/config.yaml
+$ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.example.yaml -o $HOME/clair_config/config.yaml
 $ $EDITOR $HOME/clair_config/config.yaml # Add the URI for your postgres database
 $ docker run -p 6060-6061:6060-6061 -v $HOME/clair_config:/config quay.io/coreos/clair -config=/config/config.yaml
+```
+
+### Docker Compose
+
+Or, You can run an instance of Clair and PosrgreSQL using a docker-compose.
+
+```sh
+$ curl -L https://raw.githubusercontent.com/coreos/clair/master/docker-compose.yml -o $HOME/docker-compose.yml
+$ $EDITOR $HOME/docker-compose.yml # Edit POSTGRES_PASSWORD.
+$ mkdir $HOME/clair_config
+$ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.example.yaml -o $HOME/clair_config/config.yaml
+$ $EDITOR $HOME/clair_config/config.yaml # Add the URI for your postgres database. (see example below)
+--
+database:
+  # PostgreSQL Connection string
+  # http://www.postgresql.org/docs/9.4/static/libpq-connect.html
+  source: postgresql://postgres:<YOUR POSTGRES PASSWORD>@postgres:5432?sslmode=disable
+--
+$ docker-compose -f $HOME/docker-compose.yml up -d
+# if execution of Clair has failed, please try to re-start. 
+# it will fail when Clair is started before the PostgreSQL start a service.
+# $ docker start clair_clair
 ```
 
 ### Source
