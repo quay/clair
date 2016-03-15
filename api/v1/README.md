@@ -3,7 +3,7 @@
 - [Error Handling](#error-handling)
 - [Layers](#layers)
   - [POST](#post-layers)
-  - [GET](get-layersname)
+  - [GET](#get-layersname)
   - [DELETE](#delete-layersname)
 - [Namespaces](#namespaces)
   - [GET](#get-namespaces)
