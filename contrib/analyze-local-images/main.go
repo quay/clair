@@ -127,7 +127,7 @@ func main() {
 
 	isSafe := true
 	for _, feature := range layer.Features {
-		fmt.Printf("## Feature: %s %s (%s)\n", feature.Name, feature.Version, feature.Namespace)
+		fmt.Printf("## Feature: %s %s (%s)\n", feature.Name, feature.Version, feature.NamespaceName)
 
 		if len(feature.Vulnerabilities) > 0 {
 			isSafe = false
