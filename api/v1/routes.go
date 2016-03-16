@@ -176,9 +176,9 @@ func getNamespaces(w http.ResponseWriter, r *http.Request, p httprouter.Params, 
 		writeResponse(w, r, http.StatusInternalServerError, NamespaceEnvelope{Error: &Error{err.Error()}})
 		return getNamespacesRoute, http.StatusInternalServerError
 	}
-	var namespaces []string
+	var namespaces []Namespace
 	for _, dbNamespace := range dbNamespaces {
-		namespaces = append(namespaces, dbNamespace.Name)
+		namespaces = append(namespaces, Namespace{Name: dbNamespace.Name})
 	}
 
 	writeResponse(w, r, http.StatusOK, NamespaceEnvelope{Namespaces: &namespaces})

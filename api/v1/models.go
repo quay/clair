@@ -35,7 +35,7 @@ type Error struct {
 
 type Layer struct {
 	Name             string    `json:"Name,omitempty"`
-	Namespace        string    `json:"Namespace,omitempty"`
+	NamespaceName    string    `json:"NamespaceName,omitempty"`
 	Path             string    `json:"Path,omitempty"`
 	ParentName       string    `json:"ParentName,omitempty"`
 	Format           string    `json:"Format,omitempty"`
@@ -54,26 +54,26 @@ func LayerFromDatabaseModel(dbLayer database.Layer, withFeatures, withVulnerabil
 	}
 
 	if dbLayer.Namespace != nil {
-		layer.Namespace = dbLayer.Namespace.Name
+		layer.NamespaceName = dbLayer.Namespace.Name
 	}
 
 	if withFeatures || withVulnerabilities && dbLayer.Features != nil {
 		for _, dbFeatureVersion := range dbLayer.Features {
 			feature := Feature{
-				Name:      dbFeatureVersion.Feature.Name,
-				Namespace: dbFeatureVersion.Feature.Namespace.Name,
-				Version:   dbFeatureVersion.Version.String(),
-				AddedBy:   dbFeatureVersion.AddedBy.Name,
+				Name:          dbFeatureVersion.Feature.Name,
+				NamespaceName: dbFeatureVersion.Feature.Namespace.Name,
+				Version:       dbFeatureVersion.Version.String(),
+				AddedBy:       dbFeatureVersion.AddedBy.Name,
 			}
 
 			for _, dbVuln := range dbFeatureVersion.AffectedBy {
 				vuln := Vulnerability{
-					Name:        dbVuln.Name,
-					Namespace:   dbVuln.Namespace.Name,
-					Description: dbVuln.Description,
-					Link:        dbVuln.Link,
-					Severity:    string(dbVuln.Severity),
-					Metadata:    dbVuln.Metadata,
+					Name:          dbVuln.Name,
+					NamespaceName: dbVuln.Namespace.Name,
+					Description:   dbVuln.Description,
+					Link:          dbVuln.Link,
+					Severity:      string(dbVuln.Severity),
+					Metadata:      dbVuln.Metadata,
 				}
 
 				if dbVuln.FixedBy != types.MaxVersion {
@@ -88,15 +88,19 @@ func LayerFromDatabaseModel(dbLayer database.Layer, withFeatures, withVulnerabil
 	return layer
 }
 
+type Namespace struct {
+	Name string `json:"Name,omitempty"`
+}
+
 type Vulnerability struct {
-	Name        string                 `json:"Name,omitempty"`
-	Namespace   string                 `json:"Namespace,omitempty"`
-	Description string                 `json:"Description,omitempty"`
-	Link        string                 `json:"Link,omitempty"`
-	Severity    string                 `json:"Severity,omitempty"`
-	Metadata    map[string]interface{} `json:"Metadata,omitempty"`
-	FixedBy     string                 `json:"FixedBy,omitempty"`
-	FixedIn     []Feature              `json:"FixedIn,omitempty"`
+	Name          string                 `json:"Name,omitempty"`
+	NamespaceName string                 `json:"NamespaceName,omitempty"`
+	Description   string                 `json:"Description,omitempty"`
+	Link          string                 `json:"Link,omitempty"`
+	Severity      string                 `json:"Severity,omitempty"`
+	Metadata      map[string]interface{} `json:"Metadata,omitempty"`
+	FixedBy       string                 `json:"FixedBy,omitempty"`
+	FixedIn       []Feature              `json:"FixedIn,omitempty"`
 }
 
 func (v Vulnerability) DatabaseModel() (database.Vulnerability, error) {
@@ -117,7 +121,7 @@ func (v Vulnerability) DatabaseModel() (database.Vulnerability, error) {
 
 	return database.Vulnerability{
 		Name:        v.Name,
-		Namespace:   database.Namespace{Name: v.Namespace},
+		Namespace:   database.Namespace{Name: v.NamespaceName},
 		Description: v.Description,
 		Link:        v.Link,
 		Severity:    severity,
@@ -128,12 +132,12 @@ func (v Vulnerability) DatabaseModel() (database.Vulnerability, error) {
 
 func VulnerabilityFromDatabaseModel(dbVuln database.Vulnerability, withFixedIn bool) Vulnerability {
 	vuln := Vulnerability{
-		Name:        dbVuln.Name,
-		Namespace:   dbVuln.Namespace.Name,
-		Description: dbVuln.Description,
-		Link:        dbVuln.Link,
-		Severity:    string(dbVuln.Severity),
-		Metadata:    dbVuln.Metadata,
+		Name:          dbVuln.Name,
+		NamespaceName: dbVuln.Namespace.Name,
+		Description:   dbVuln.Description,
+		Link:          dbVuln.Link,
+		Severity:      string(dbVuln.Severity),
+		Metadata:      dbVuln.Metadata,
 	}
 
 	if withFixedIn {
@@ -147,7 +151,7 @@ func VulnerabilityFromDatabaseModel(dbVuln database.Vulnerability, withFixedIn b
 
 type Feature struct {
 	Name            string          `json:"Name,omitempty"`
-	Namespace       string          `json:"Namespace,omitempty"`
+	NamespaceName   string          `json:"NamespaceName,omitempty"`
 	Version         string          `json:"Version,omitempty"`
 	Vulnerabilities []Vulnerability `json:"Vulnerabilities,omitempty"`
 	AddedBy         string          `json:"AddedBy,omitempty"`
@@ -160,10 +164,10 @@ func FeatureFromDatabaseModel(dbFeatureVersion database.FeatureVersion) Feature 
 	}
 
 	return Feature{
-		Name:      dbFeatureVersion.Feature.Name,
-		Namespace: dbFeatureVersion.Feature.Namespace.Name,
-		Version:   versionStr,
-		AddedBy:   dbFeatureVersion.AddedBy.Name,
+		Name:          dbFeatureVersion.Feature.Name,
+		NamespaceName: dbFeatureVersion.Feature.Namespace.Name,
+		Version:       versionStr,
+		AddedBy:       dbFeatureVersion.AddedBy.Name,
 	}
 }
 
@@ -182,7 +186,7 @@ func (f Feature) DatabaseModel() (database.FeatureVersion, error) {
 	return database.FeatureVersion{
 		Feature: database.Feature{
 			Name:      f.Name,
-			Namespace: database.Namespace{Name: f.Namespace},
+			Namespace: database.Namespace{Name: f.NamespaceName},
 		},
 		Version: version,
 	}, nil
@@ -270,8 +274,8 @@ type LayerEnvelope struct {
 }
 
 type NamespaceEnvelope struct {
-	Namespaces *[]string `json:"Namespaces,omitempty"`
-	Error      *Error    `json:"Error,omitempty"`
+	Namespaces *[]Namespace `json:"Namespaces,omitempty"`
+	Error      *Error       `json:"Error,omitempty"`
 }
 
 type VulnerabilityEnvelope struct {
