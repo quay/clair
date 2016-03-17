@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/coreos/clair/api/v1"
+	"github.com/coreos/clair/utils/types"
 )
 
 const (
@@ -43,6 +44,7 @@ func main() {
 	// Parse command-line arguments.
 	endpoint := flag.String("endpoint", "http://127.0.0.1:6060", "Address to Clair API")
 	myAddress := flag.String("my-address", "127.0.0.1", "Address from the point of view of Clair")
+	minimumSeverity := flag.String("minimum-severity", "Negligible", "Minimum severity of vulnerabilities to show (Unknown, Negligible, Low, Medium, High, Critical, Defcon1)")
 
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [options] image-id\n\nOptions:\n", os.Args[0])
@@ -56,6 +58,12 @@ func main() {
 		os.Exit(1)
 	}
 	imageName := flag.Args()[0]
+
+	minSeverity := types.Priority(*minimumSeverity)
+	if !minSeverity.IsValid() {
+		flag.Usage()
+		os.Exit(1)
+	}
 
 	// Save image.
 	fmt.Printf("Saving %s\n", imageName)
@@ -130,11 +138,19 @@ func main() {
 		fmt.Printf("## Feature: %s %s (%s)\n", feature.Name, feature.Version, feature.NamespaceName)
 
 		if len(feature.Vulnerabilities) > 0 {
-			isSafe = false
-
-			fmt.Printf("   - Added by: %s\n", feature.AddedBy)
+			isFirstVulnerability := true
 
 			for _, vulnerability := range feature.Vulnerabilities {
+				if minSeverity.Compare(types.Priority(vulnerability.Severity)) > 0 {
+					continue
+				}
+
+				if isFirstVulnerability {
+					isSafe = false
+					isFirstVulnerability = false
+					fmt.Printf("   - Added by layer: %s\n", feature.AddedBy)
+				}
+
 				fmt.Printf("### (%s) %s\n", vulnerability.Severity, vulnerability.Name)
 
 				if vulnerability.Description != "" {
