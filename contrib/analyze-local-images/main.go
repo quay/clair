@@ -32,6 +32,7 @@ import (
 
 	"github.com/coreos/clair/api/v1"
 	"github.com/coreos/clair/utils/types"
+	"github.com/fatih/color"
 )
 
 const (
@@ -40,17 +41,19 @@ const (
 	httpPort            = 9279
 )
 
+var (
+	endpoint        = flag.String("endpoint", "http://127.0.0.1:6060", "Address to Clair API")
+	myAddress       = flag.String("my-address", "127.0.0.1", "Address from the point of view of Clair")
+	minimumSeverity = flag.String("minimum-severity", "Negligible", "Minimum severity of vulnerabilities to show (Unknown, Negligible, Low, Medium, High, Critical, Defcon1)")
+	flagNoColor     = flag.Bool("no-color", false, "Disable color output")
+)
+
 func main() {
 	// Parse command-line arguments.
-	endpoint := flag.String("endpoint", "http://127.0.0.1:6060", "Address to Clair API")
-	myAddress := flag.String("my-address", "127.0.0.1", "Address from the point of view of Clair")
-	minimumSeverity := flag.String("minimum-severity", "Negligible", "Minimum severity of vulnerabilities to show (Unknown, Negligible, Low, Medium, High, Critical, Defcon1)")
-
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [options] image-id\n\nOptions:\n", os.Args[0])
 		flag.PrintDefaults()
 	}
-
 	flag.Parse()
 
 	if len(flag.Args()) != 1 {
@@ -63,6 +66,10 @@ func main() {
 	if !minSeverity.IsValid() {
 		flag.Usage()
 		os.Exit(1)
+	}
+
+	if *flagNoColor {
+		color.NoColor = true
 	}
 
 	// Save image.
@@ -139,7 +146,9 @@ func main() {
 			isFirstVulnerability := true
 
 			for _, vulnerability := range feature.Vulnerabilities {
-				if minSeverity.Compare(types.Priority(vulnerability.Severity)) > 0 {
+				severity := types.Priority(vulnerability.Severity)
+
+				if minSeverity.Compare(severity) > 0 {
 					continue
 				}
 
@@ -148,25 +157,25 @@ func main() {
 					isFirstVulnerability = false
 
 					fmt.Printf("## Feature: %s %s (%s)\n", feature.Name, feature.Version, feature.NamespaceName)
-					fmt.Printf("   - Added by layer: %s\n", feature.AddedBy)
+					fmt.Printf("- Added by layer: %s\n", feature.AddedBy)
 				}
 
-				fmt.Printf("### (%s) %s\n", vulnerability.Severity, vulnerability.Name)
+				fmt.Printf("### (%s) %s\n", coloredSeverity(severity), vulnerability.Name)
 
 				if vulnerability.Description != "" {
-					fmt.Printf("    - Link:          %s\n", vulnerability.Link)
+					fmt.Printf("- Link:          %s\n", vulnerability.Link)
 				}
 
 				if vulnerability.Link != "" {
-					fmt.Printf("    - Description:   %s\n", vulnerability.Description)
+					fmt.Printf("- Description:   %s\n", vulnerability.Description)
 				}
 
 				if vulnerability.FixedBy != "" {
-					fmt.Printf("    - Fixed version: %s\n", vulnerability.FixedBy)
+					fmt.Printf("- Fixed version: %s\n", vulnerability.FixedBy)
 				}
 
 				if len(vulnerability.Metadata) > 0 {
-					fmt.Printf("    - Metadata:      %+v\n", vulnerability.Metadata)
+					fmt.Printf("- Metadata:      %+v\n", vulnerability.Metadata)
 				}
 			}
 		}
@@ -348,4 +357,19 @@ func getLayer(endpoint, layerID string) (v1.Layer, error) {
 	}
 
 	return *apiResponse.Layer, nil
+}
+
+func coloredSeverity(severity types.Priority) string {
+	red := color.New(color.FgRed).SprintFunc()
+	yellow := color.New(color.FgYellow).SprintFunc()
+	white := color.New(color.FgWhite).SprintFunc()
+
+	switch severity {
+	case types.High, types.Critical:
+		return red(severity)
+	case types.Medium:
+		return yellow(severity)
+	default:
+		return white(severity)
+	}
 }
