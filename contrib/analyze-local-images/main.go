@@ -135,8 +135,6 @@ func main() {
 
 	isSafe := true
 	for _, feature := range layer.Features {
-		fmt.Printf("## Feature: %s %s (%s)\n", feature.Name, feature.Version, feature.NamespaceName)
-
 		if len(feature.Vulnerabilities) > 0 {
 			isFirstVulnerability := true
 
@@ -148,6 +146,8 @@ func main() {
 				if isFirstVulnerability {
 					isSafe = false
 					isFirstVulnerability = false
+
+					fmt.Printf("## Feature: %s %s (%s)\n", feature.Name, feature.Version, feature.NamespaceName)
 					fmt.Printf("   - Added by layer: %s\n", feature.AddedBy)
 				}
 
