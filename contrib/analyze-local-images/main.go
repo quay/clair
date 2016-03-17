@@ -48,7 +48,7 @@ var (
 	endpoint        = flag.String("endpoint", "http://127.0.0.1:6060", "Address to Clair API")
 	myAddress       = flag.String("my-address", "127.0.0.1", "Address from the point of view of Clair")
 	minimumSeverity = flag.String("minimum-severity", "Negligible", "Minimum severity of vulnerabilities to show (Unknown, Negligible, Low, Medium, High, Critical, Defcon1)")
-	flagNoColor     = flag.Bool("no-color", false, "Disable color output")
+	colorMode       = flag.String("color", "auto", "Colorize the output (always, auto, never)")
 )
 
 type vulnerabilityInfo struct {
@@ -104,8 +104,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *flagNoColor {
+	if *colorMode == "never" {
 		color.NoColor = true
+	} else if *colorMode == "always" {
+		color.NoColor = false
 	}
 
 	// Save image.
