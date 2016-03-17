@@ -22,10 +22,12 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -33,6 +35,7 @@ import (
 	"github.com/coreos/clair/api/v1"
 	"github.com/coreos/clair/utils/types"
 	"github.com/fatih/color"
+	"github.com/kr/text"
 )
 
 const (
@@ -47,6 +50,39 @@ var (
 	minimumSeverity = flag.String("minimum-severity", "Negligible", "Minimum severity of vulnerabilities to show (Unknown, Negligible, Low, Medium, High, Critical, Defcon1)")
 	flagNoColor     = flag.Bool("no-color", false, "Disable color output")
 )
+
+type vulnerabilityInfo struct {
+	vulnerability v1.Vulnerability
+	feature       v1.Feature
+	severity      types.Priority
+}
+
+type By func(v1, v2 vulnerabilityInfo) bool
+
+func (by By) Sort(vulnerabilities []vulnerabilityInfo) {
+	ps := &sorter{
+		vulnerabilities: vulnerabilities,
+		by:              by,
+	}
+	sort.Sort(ps)
+}
+
+type sorter struct {
+	vulnerabilities []vulnerabilityInfo
+	by              func(v1, v2 vulnerabilityInfo) bool
+}
+
+func (s *sorter) Len() int {
+	return len(s.vulnerabilities)
+}
+
+func (s *sorter) Swap(i, j int) {
+	s.vulnerabilities[i], s.vulnerabilities[j] = s.vulnerabilities[j], s.vulnerabilities[i]
+}
+
+func (s *sorter) Less(i, j int) bool {
+	return s.by(s.vulnerabilities[i], s.vulnerabilities[j])
+}
 
 func main() {
 	// Parse command-line arguments.
@@ -73,22 +109,22 @@ func main() {
 	}
 
 	// Save image.
-	fmt.Printf("Saving %s\n", imageName)
+	log.Printf("Saving %s to local disk (this may take some time)", imageName)
 	path, err := save(imageName)
 	defer os.RemoveAll(path)
 	if err != nil {
-		fmt.Printf("- Could not save image: %s\n", err)
+		fmt.Printf("Could not save image: %s\n", err)
 		os.Exit(1)
 	}
 
 	// Retrieve history.
-	fmt.Println("Getting image's history")
+	log.Println("Retrieving image history")
 	layerIDs, err := historyFromManifest(path)
 	if err != nil {
 		layerIDs, err = historyFromCommand(imageName)
 	}
 	if err != nil || len(layerIDs) == 0 {
-		fmt.Printf("- Could not get image's history: %s\n", err)
+		log.Printf("Could not get image's history: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -107,9 +143,9 @@ func main() {
 	}
 
 	// Analyze layers.
-	fmt.Printf("Analyzing %d layers\n", len(layerIDs))
+	log.Printf("Analyzing %d layers... \n", len(layerIDs))
 	for i := 0; i < len(layerIDs); i++ {
-		fmt.Printf("- Analyzing %s\n", layerIDs[i])
+		log.Printf("Analyzing %s\n", layerIDs[i])
 
 		var err error
 		if i > 0 {
@@ -118,71 +154,85 @@ func main() {
 			err = analyzeLayer(*endpoint, path+"/"+layerIDs[i]+"/layer.tar", layerIDs[i], "")
 		}
 		if err != nil {
-			fmt.Printf("- Could not analyze layer: %s\n", err)
+			log.Printf("Could not analyze layer: %s\n", err)
 			os.Exit(1)
 		}
 	}
 
 	// Get vulnerabilities.
-	fmt.Println("Getting image's vulnerabilities")
+	log.Println("Retrieving image's vulnerabilities")
 	layer, err := getLayer(*endpoint, layerIDs[len(layerIDs)-1])
 	if err != nil {
-		fmt.Printf("- Could not get layer information: %s\n", err)
+		log.Printf("Could not get layer information: %s\n", err)
 		os.Exit(1)
 	}
 
 	// Print report.
-	fmt.Printf("\n# Clair report for image %s (%s)\n", imageName, time.Now().UTC())
+	fmt.Printf("Clair report for image %s (%s)\n", imageName, time.Now().UTC())
 
 	if len(layer.Features) == 0 {
-		fmt.Println("No feature has been detected on the image.")
-		fmt.Println("This usually means that the image isn't supported by Clair.")
+		fmt.Printf("%s No features have been detected in the image. This usually means that the image isn't supported by Clair.\n", color.YellowString("NOTE:"))
 		os.Exit(0)
 	}
 
 	isSafe := true
+	hasVisibleVulnerabilities := false
+
+	var vulnerabilities = make([]vulnerabilityInfo, 0)
 	for _, feature := range layer.Features {
 		if len(feature.Vulnerabilities) > 0 {
-			isFirstVulnerability := true
-
 			for _, vulnerability := range feature.Vulnerabilities {
 				severity := types.Priority(vulnerability.Severity)
+				isSafe = false
 
 				if minSeverity.Compare(severity) > 0 {
 					continue
 				}
 
-				if isFirstVulnerability {
-					isSafe = false
-					isFirstVulnerability = false
-
-					fmt.Printf("## Feature: %s %s (%s)\n", feature.Name, feature.Version, feature.NamespaceName)
-					fmt.Printf("- Added by layer: %s\n", feature.AddedBy)
-				}
-
-				fmt.Printf("### (%s) %s\n", coloredSeverity(severity), vulnerability.Name)
-
-				if vulnerability.Description != "" {
-					fmt.Printf("- Link:          %s\n", vulnerability.Link)
-				}
-
-				if vulnerability.Link != "" {
-					fmt.Printf("- Description:   %s\n", vulnerability.Description)
-				}
-
-				if vulnerability.FixedBy != "" {
-					fmt.Printf("- Fixed version: %s\n", vulnerability.FixedBy)
-				}
-
-				if len(vulnerability.Metadata) > 0 {
-					fmt.Printf("- Metadata:      %+v\n", vulnerability.Metadata)
-				}
+				hasVisibleVulnerabilities = true
+				vulnerabilities = append(vulnerabilities, vulnerabilityInfo{vulnerability, feature, severity})
 			}
 		}
 	}
 
+	// Sort vulnerabilitiy by severity.
+	priority := func(v1, v2 vulnerabilityInfo) bool {
+		return v1.severity.Compare(v2.severity) >= 0
+	}
+
+	By(priority).Sort(vulnerabilities)
+
+	for _, vulnerabilityInfo := range vulnerabilities {
+		vulnerability := vulnerabilityInfo.vulnerability
+		feature := vulnerabilityInfo.feature
+		severity := vulnerabilityInfo.severity
+
+		fmt.Printf("%s (%s)\n", vulnerability.Name, coloredSeverity(severity))
+
+		if vulnerability.Description != "" {
+			fmt.Printf("%s\n\n", text.Indent(text.Wrap(vulnerability.Description, 80), "\t"))
+		}
+
+		fmt.Printf("\tPackage:       %s @ %s\n", feature.Name, feature.Version)
+
+		if vulnerability.FixedBy != "" {
+			fmt.Printf("\tFixed version: %s\n", vulnerability.FixedBy)
+		}
+
+		if vulnerability.Link != "" {
+			fmt.Printf("\tLink:          %s\n", vulnerability.Link)
+		}
+
+		fmt.Printf("\tLayer:         %s\n", feature.AddedBy)
+		fmt.Println("")
+	}
+
 	if isSafe {
-		fmt.Println("\nBravo, your image looks SAFE !")
+		fmt.Printf("%s No vulnerabilities were detected in your image\n", color.GreenString("Success!"))
+		os.Exit(0)
+	} else if !hasVisibleVulnerabilities {
+		fmt.Printf("%s No vulnerabilities matching the minimum severity level were detected in your image\n", color.YellowString("NOTE:"))
+		os.Exit(0)
 	}
 }
 
@@ -279,7 +329,7 @@ func historyFromCommand(imageName string) ([]string, error) {
 }
 
 func listenHTTP(path, allowedHost string) {
-	fmt.Printf("Setting up HTTP server (allowing: %s)\n", allowedHost)
+	log.Printf("Setting up HTTP server (allowing: %s)\n", allowedHost)
 
 	restrictedFileServer := func(path, allowedHost string) http.Handler {
 		fc := func(w http.ResponseWriter, r *http.Request) {
@@ -295,7 +345,7 @@ func listenHTTP(path, allowedHost string) {
 
 	err := http.ListenAndServe(":"+strconv.Itoa(httpPort), restrictedFileServer(path, allowedHost))
 	if err != nil {
-		fmt.Printf("- An error occurs with the HTTP server: %s\n", err)
+		log.Printf("An error occurs with the HTTP server: %s\n", err)
 		os.Exit(1)
 	}
 }
@@ -330,7 +380,7 @@ func analyzeLayer(endpoint, path, layerName, parentLayerName string) error {
 
 	if response.StatusCode != 201 {
 		body, _ := ioutil.ReadAll(response.Body)
-		return fmt.Errorf("- Got response %d with message %s", response.StatusCode, string(body))
+		return fmt.Errorf("Got response %d with message %s", response.StatusCode, string(body))
 	}
 
 	return nil
@@ -345,7 +395,7 @@ func getLayer(endpoint, layerID string) (v1.Layer, error) {
 
 	if response.StatusCode != 200 {
 		body, _ := ioutil.ReadAll(response.Body)
-		err := fmt.Errorf("- Got response %d with message %s", response.StatusCode, string(body))
+		err := fmt.Errorf("Got response %d with message %s", response.StatusCode, string(body))
 		return v1.Layer{}, err
 	}
 
