@@ -66,28 +66,31 @@ type APIConfig struct {
 }
 
 // DefaultConfig is a configuration that can be used as a fallback value.
-var DefaultConfig = Config{
-	Database: &DatabaseConfig{
-		CacheSize: 16384,
-	},
-	Updater: &UpdaterConfig{
-		Interval: 1 * time.Hour,
-	},
-	API: &APIConfig{
-		Port:       6060,
-		HealthPort: 6061,
-		Timeout:    900 * time.Second,
-	},
-	Notifier: &NotifierConfig{
-		Attempts:         5,
-		RenotifyInterval: 2 * time.Hour,
-	},
+func DefaultConfig() Config {
+	return Config{
+		Database: &DatabaseConfig{
+			CacheSize: 16384,
+		},
+		Updater: &UpdaterConfig{
+			Interval: 1 * time.Hour,
+		},
+		API: &APIConfig{
+			Port:       6060,
+			HealthPort: 6061,
+			Timeout:    900 * time.Second,
+		},
+		Notifier: &NotifierConfig{
+			Attempts:         5,
+			RenotifyInterval: 2 * time.Hour,
+		},
+	}
 }
 
 // Load is a shortcut to open a file, read it, and generate a Config.
 // It supports relative and absolute paths. Given "", it returns DefaultConfig.
 func Load(path string) (config *Config, err error) {
-	config = &DefaultConfig
+	var cfgFile File
+	cfgFile.Clair = DefaultConfig()
 	if path == "" {
 		return
 	}
@@ -103,7 +106,6 @@ func Load(path string) (config *Config, err error) {
 		return
 	}
 
-	var cfgFile File
 	err = yaml.Unmarshal(d, &cfgFile)
 	if err != nil {
 		return
