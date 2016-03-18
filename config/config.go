@@ -92,7 +92,7 @@ func Load(path string) (config *Config, err error) {
 	var cfgFile File
 	cfgFile.Clair = DefaultConfig()
 	if path == "" {
-		return
+		return &cfgFile.Clair, nil
 	}
 
 	f, err := os.Open(os.ExpandEnv(path))
