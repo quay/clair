@@ -46,9 +46,25 @@ Clair detects some vulnerabilities and sends a webhook to your continuous deploy
 During the first run, Clair will bootstrap its database with vulnerability data from its data sources.
 It can take several minutes before the database has been fully populated.
 
+**NOTE:** These setups are not meant for production workloads, but as a quick way to get started.
+
+### Kubernetes
+
+An easy way to run Clair is with Kubernetes.
+If you are using the [CoreOS Kubernetes single-node instructions][single-node] for vagrant you will be able to access Clair at http://172.17.4.99:30061/ after following these instructions.
+
+```
+git clone https://github.com/coreos/clair
+cd clair/contrib/k8s
+kubectl create -f clair-kubernetes.yaml
+kubectl create secret generic clairsecret --from-file=./config.yaml
+```
+
+[single-node]: https://coreos.com/kubernetes/docs/latest/kubernetes-on-vagrant-single.html
+
 ### Docker Compose
 
-The easiest way to get an instance of Clair running is to use Docker Compose to run everything locally.
+Another easy way to get an instance of Clair running is to use Docker Compose to run everything locally.
 This runs a PostgreSQL database insecurely and locally in a container.
 This method should only be used for testing.
 
