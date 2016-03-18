@@ -152,7 +152,7 @@ func (pgSQL *pgSQL) loadLayerIntroducingVulnerability(vulnerability *database.Vu
 	rows, err := pgSQL.Query(searchNotificationLayerIntroducingVulnerability,
 		vulnerability.ID, startID, limit+1)
 	if err != nil {
-		return 0, handleError("searchVulnerabilityFixedInFeature", err)
+		return 0, handleError("searchNotificationLayerIntroducingVulnerability", err)
 	}
 	defer rows.Close()
 
