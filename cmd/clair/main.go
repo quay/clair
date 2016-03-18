@@ -50,7 +50,7 @@ var log = capnslog.NewPackageLogger("github.com/coreos/clair/cmd/clair", "main")
 func main() {
 	// Parse command-line arguments
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	flagConfigPath := flag.String("config", "", "Load configuration from the specified file.")
+	flagConfigPath := flag.String("config", "/etc/clair/config.yaml", "Load configuration from the specified file.")
 	flagCPUProfilePath := flag.String("cpu-profile", "", "Write a CPU profile to the specified file before exiting.")
 	flagLogLevel := flag.String("log-level", "info", "Define the logging level.")
 	flag.Parse()
