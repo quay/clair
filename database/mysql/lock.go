@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pgsql
+package mysql
 
 import (
 	"time"
@@ -25,7 +25,7 @@ import (
 //
 // Lock does not block, instead, it returns true and its expiration time
 // is the lock has been successfully acquired or false otherwise
-func (pgSQL *pgSQL) Lock(name string, owner string, duration time.Duration, renew bool) (bool, time.Time) {
+func (mySQL *mySQL) Lock(name string, owner string, duration time.Duration, renew bool) (bool, time.Time) {
 	if name == "" || owner == "" || duration == 0 {
 		log.Warning("could not create an invalid lock")
 		return false, time.Time{}
@@ -38,7 +38,7 @@ func (pgSQL *pgSQL) Lock(name string, owner string, duration time.Duration, rene
 
 	if renew {
 		// Renew lock.
-		r, err := pgSQL.Exec(updateLock, name, owner, until)
+		r, err := mySQL.Exec(updateLock, until, name, owner)
 		if err != nil {
 			handleError("updateLock", err)
 			return false, until
@@ -49,11 +49,11 @@ func (pgSQL *pgSQL) Lock(name string, owner string, duration time.Duration, rene
 		}
 	} else {
 		// Prune locks.
-		pgSQL.pruneLocks()
+		mySQL.pruneLocks()
 	}
 
 	// Lock.
-	_, err := pgSQL.Exec(insertLock, name, owner, until)
+	_, err := mySQL.Exec(insertLock, name, owner, until)
 	if err != nil {
 		if !isErrUniqueViolation(err) {
 			handleError("insertLock", err)
@@ -65,7 +65,7 @@ func (pgSQL *pgSQL) Lock(name string, owner string, duration time.Duration, rene
 }
 
 // Unlock unlocks a lock specified by its name if I own it
-func (pgSQL *pgSQL) Unlock(name, owner string) {
+func (mySQL *mySQL) Unlock(name, owner string) {
 	if name == "" || owner == "" {
 		log.Warning("could not delete an invalid lock")
 		return
@@ -73,12 +73,12 @@ func (pgSQL *pgSQL) Unlock(name, owner string) {
 
 	defer database.ObserveQueryTime("Unlock", "all", time.Now())
 
-	pgSQL.Exec(removeLock, name, owner)
+	mySQL.Exec(removeLock, name, owner)
 }
 
 // FindLock returns the owner of a lock specified by its name and its
 // expiration time.
-func (pgSQL *pgSQL) FindLock(name string) (string, time.Time, error) {
+func (mySQL *mySQL) FindLock(name string) (string, time.Time, error) {
 	if name == "" {
 		log.Warning("could not find an invalid lock")
 		return "", time.Time{}, cerrors.NewBadRequestError("could not find an invalid lock")
@@ -88,7 +88,7 @@ func (pgSQL *pgSQL) FindLock(name string) (string, time.Time, error) {
 
 	var owner string
 	var until time.Time
-	err := pgSQL.QueryRow(searchLock, name).Scan(&owner, &until)
+	err := mySQL.QueryRow(searchLock, name).Scan(&owner, &until)
 	if err != nil {
 		return owner, until, handleError("searchLock", err)
 	}
@@ -97,10 +97,10 @@ func (pgSQL *pgSQL) FindLock(name string) (string, time.Time, error) {
 }
 
 // pruneLocks removes every expired locks from the database
-func (pgSQL *pgSQL) pruneLocks() {
+func (mySQL *mySQL) pruneLocks() {
 	defer database.ObserveQueryTime("pruneLocks", "all", time.Now())
 
-	if _, err := pgSQL.Exec(removeLockExpired); err != nil {
+	if _, err := mySQL.Exec(removeLockExpired); err != nil {
 		handleError("removeLockExpired", err)
 	}
 }

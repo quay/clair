@@ -15,9 +15,10 @@
 # The values specified here are the default values that Clair uses if no configuration file is specified or if the keys are not defined.
 clair:
   database:
-    # PostgreSQL Connection string
-    # http://www.postgresql.org/docs/9.4/static/libpq-connect.html
-    source:
+    # database Connection string
+    # see http://www.postgresql.org/docs/9.4/static/libpq-connect.html for PostgreSQL
+    # see https://github.com/go-sql-driver/mysql#dsn-data-source-name for MySQL. e.g. "mysql://root@tcp(127.0.0.1:3306)/"
+    source: mysql://root@tcp(172.17.0.3:3306)/
 
     # Number of elements kept in the cache
     # Values unlikely to change (e.g. namespaces) are cached in order to save prevent needless roundtrips to the database.

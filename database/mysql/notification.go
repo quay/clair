@@ -1,4 +1,4 @@
-package pgsql
+package mysql
 
 import (
 	"database/sql"
@@ -29,27 +29,27 @@ func createNotification(tx *sql.Tx, oldVulnerabilityID, newVulnerabilityID int) 
 
 // Get one available notification name (!locked && !deleted && (!notified || notified_but_timed-out)).
 // Does not fill new/old vuln.
-func (pgSQL *pgSQL) GetAvailableNotification(renotifyInterval time.Duration) (database.VulnerabilityNotification, error) {
+func (mySQL *mySQL) GetAvailableNotification(renotifyInterval time.Duration) (database.VulnerabilityNotification, error) {
 	defer database.ObserveQueryTime("GetAvailableNotification", "all", time.Now())
 
 	before := time.Now().Add(-renotifyInterval)
-	row := pgSQL.QueryRow(searchNotificationAvailable, before)
-	notification, err := pgSQL.scanNotification(row, false)
+	row := mySQL.QueryRow(searchNotificationAvailable, before)
+	notification, err := mySQL.scanNotification(row, false)
 
 	return notification, handleError("searchNotificationAvailable", err)
 }
 
-func (pgSQL *pgSQL) GetNotification(name string, limit int, page database.VulnerabilityNotificationPageNumber) (database.VulnerabilityNotification, database.VulnerabilityNotificationPageNumber, error) {
+func (mySQL *mySQL) GetNotification(name string, limit int, page database.VulnerabilityNotificationPageNumber) (database.VulnerabilityNotification, database.VulnerabilityNotificationPageNumber, error) {
 	defer database.ObserveQueryTime("GetNotification", "all", time.Now())
 
 	// Get Notification.
-	notification, err := pgSQL.scanNotification(pgSQL.QueryRow(searchNotification, name), true)
+	notification, err := mySQL.scanNotification(mySQL.QueryRow(searchNotification, name), true)
 	if err != nil {
 		return notification, page, handleError("searchNotification", err)
 	}
 
 	// Load vulnerabilities' LayersIntroducingVulnerability.
-	page.OldVulnerability, err = pgSQL.loadLayerIntroducingVulnerability(
+	page.OldVulnerability, err = mySQL.loadLayerIntroducingVulnerability(
 		notification.OldVulnerability,
 		limit,
 		page.OldVulnerability,
@@ -59,7 +59,7 @@ func (pgSQL *pgSQL) GetNotification(name string, limit int, page database.Vulner
 		return notification, page, err
 	}
 
-	page.NewVulnerability, err = pgSQL.loadLayerIntroducingVulnerability(
+	page.NewVulnerability, err = mySQL.loadLayerIntroducingVulnerability(
 		notification.NewVulnerability,
 		limit,
 		page.NewVulnerability,
@@ -72,7 +72,7 @@ func (pgSQL *pgSQL) GetNotification(name string, limit int, page database.Vulner
 	return notification, page, nil
 }
 
-func (pgSQL *pgSQL) scanNotification(row *sql.Row, hasVulns bool) (database.VulnerabilityNotification, error) {
+func (mySQL *mySQL) scanNotification(row *sql.Row, hasVulns bool) (database.VulnerabilityNotification, error) {
 	var notification database.VulnerabilityNotification
 	var created zero.Time
 	var notified zero.Time
@@ -109,7 +109,7 @@ func (pgSQL *pgSQL) scanNotification(row *sql.Row, hasVulns bool) (database.Vuln
 
 	if hasVulns {
 		if oldVulnerabilityNullableID.Valid {
-			vulnerability, err := pgSQL.findVulnerabilityByIDWithDeleted(int(oldVulnerabilityNullableID.Int64))
+			vulnerability, err := mySQL.findVulnerabilityByIDWithDeleted(int(oldVulnerabilityNullableID.Int64))
 			if err != nil {
 				return notification, err
 			}
@@ -118,7 +118,7 @@ func (pgSQL *pgSQL) scanNotification(row *sql.Row, hasVulns bool) (database.Vuln
 		}
 
 		if newVulnerabilityNullableID.Valid {
-			vulnerability, err := pgSQL.findVulnerabilityByIDWithDeleted(int(newVulnerabilityNullableID.Int64))
+			vulnerability, err := mySQL.findVulnerabilityByIDWithDeleted(int(newVulnerabilityNullableID.Int64))
 			if err != nil {
 				return notification, err
 			}
@@ -133,7 +133,7 @@ func (pgSQL *pgSQL) scanNotification(row *sql.Row, hasVulns bool) (database.Vuln
 // Fills Vulnerability.LayersIntroducingVulnerability.
 // limit -1: won't do anything
 // limit 0: will just get the startID of the second page
-func (pgSQL *pgSQL) loadLayerIntroducingVulnerability(vulnerability *database.Vulnerability, limit, startID int) (int, error) {
+func (mySQL *mySQL) loadLayerIntroducingVulnerability(vulnerability *database.Vulnerability, limit, startID int) (int, error) {
 	tf := time.Now()
 
 	if vulnerability == nil {
@@ -149,7 +149,7 @@ func (pgSQL *pgSQL) loadLayerIntroducingVulnerability(vulnerability *database.Vu
 	defer database.ObserveQueryTime("loadLayerIntroducingVulnerability", "all", tf)
 
 	// Query with limit + 1, the last item will be used to know the next starting ID.
-	rows, err := pgSQL.Query(searchNotificationLayerIntroducingVulnerability,
+	rows, err := mySQL.Query(searchNotificationLayerIntroducingVulnerability,
 		vulnerability.ID, startID, limit+1)
 	if err != nil {
 		return 0, handleError("searchNotificationLayerIntroducingVulnerability", err)
@@ -184,19 +184,19 @@ func (pgSQL *pgSQL) loadLayerIntroducingVulnerability(vulnerability *database.Vu
 	return nextID, nil
 }
 
-func (pgSQL *pgSQL) SetNotificationNotified(name string) error {
+func (mySQL *mySQL) SetNotificationNotified(name string) error {
 	defer database.ObserveQueryTime("SetNotificationNotified", "all", time.Now())
 
-	if _, err := pgSQL.Exec(updatedNotificationNotified, name); err != nil {
+	if _, err := mySQL.Exec(updatedNotificationNotified, name); err != nil {
 		return handleError("updatedNotificationNotified", err)
 	}
 	return nil
 }
 
-func (pgSQL *pgSQL) DeleteNotification(name string) error {
+func (mySQL *mySQL) DeleteNotification(name string) error {
 	defer database.ObserveQueryTime("DeleteNotification", "all", time.Now())
 
-	result, err := pgSQL.Exec(removeNotification, name)
+	result, err := mySQL.Exec(removeNotification, name)
 	if err != nil {
 		return handleError("removeNotification", err)
 	}

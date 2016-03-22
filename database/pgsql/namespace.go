@@ -27,15 +27,15 @@ func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (int, error) {
 	}
 
 	if pgSQL.cache != nil {
-		promCacheQueriesTotal.WithLabelValues("namespace").Inc()
+		database.PromCacheQueriesTotal.WithLabelValues("namespace").Inc()
 		if id, found := pgSQL.cache.Get("namespace:" + namespace.Name); found {
-			promCacheHitsTotal.WithLabelValues("namespace").Inc()
+			database.PromCacheHitsTotal.WithLabelValues("namespace").Inc()
 			return id.(int), nil
 		}
 	}
 
 	// We do `defer observeQueryTime` here because we don't want to observe cached namespaces.
-	defer observeQueryTime("insertNamespace", "all", time.Now())
+	defer database.ObserveQueryTime("insertNamespace", "all", time.Now())
 
 	var id int
 	err := pgSQL.QueryRow(soiNamespace, namespace.Name).Scan(&id)
