@@ -20,8 +20,8 @@ import (
 	"os/exec"
 )
 
-// Exec runs the given binary with arguments
-func Exec(dir string, bin string, args ...string) ([]byte, error) {
+// Exec runs the given binary with environment & arguments
+func Exec(dir string, env []string, bin string, args ...string) ([]byte, error) {
 	_, err := exec.LookPath(bin)
 	if err != nil {
 		return nil, err
@@ -29,6 +29,7 @@ func Exec(dir string, bin string, args ...string) ([]byte, error) {
 
 	cmd := exec.Command(bin, args...)
 	cmd.Dir = dir
+	cmd.Env = env
 
 	var buf bytes.Buffer
 	cmd.Stdout = &buf

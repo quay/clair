@@ -65,7 +65,7 @@ func (detector *RpmFeaturesDetector) Detect(data map[string][]byte) ([]database.
 	// Query RPM
 	// We actually extract binary package names instead of source package names here because RHSA refers to package names
 	// In the dpkg system, we extract the source instead
-	out, err := utils.Exec(tmpDir, "rpm", "--dbpath", tmpDir, "-qa", "--qf", "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE}\n")
+	out, err := utils.Exec(tmpDir, make([]string, 0), "rpm", "--dbpath", tmpDir, "-qa", "--qf", "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE}\n")
 	if err != nil {
 		log.Errorf("could not query RPM: %s. output: %s", err, string(out))
 		// Do not bubble up because we probably won't be able to fix it,
