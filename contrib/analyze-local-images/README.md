@@ -6,16 +6,11 @@ There are absolutely no guarantees and it only uses a minimal subset of Clair's 
 
 ## Install
 
-You need to install this tool:
+To install the tool, simply run the following command, with a proper Go environment:
 
     go get -u github.com/coreos/clair/contrib/analyze-local-images
 
-You also need a working Clair instance, the bare minimal setup is to run Clair in a Docker instance without much configuration,
-To learn more about how to run Clair, take a look at the [doc](https://github.com/coreos/clair/blob/master/docs/Run.md):
-
-    docker run -it -v /tmp:/tmp -p 6060:6060 -p 6061:6061 -v <DIR_WITH_CONFIG>:/config:ro quay.io/coreos/clair:latest --config=/config/<CONFIG_FILENAME>.yaml
-
-You will need to let it do its initial vulnerability update, which may take some time.
+You also need a working Clair instance. To learn how to run Clair, take a look at the [README](https://github.com/coreos/clair/blob/master/README.md). You then should wait for its initial vulnerability update to complete, which may take some time.
 
 # Usage
 
