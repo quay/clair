@@ -22,7 +22,7 @@ var (
 	ErrFilesystem = errors.New("something went wrong when interacting with the fs")
 
 	// ErrCouldNotDownload occurs when a download fails.
-	ErrCouldNotDownload = errors.New("could not download requested ressource")
+	ErrCouldNotDownload = errors.New("could not download requested resource")
 
 	// ErrNotFound occurs when a resource could not be found.
 	ErrNotFound = errors.New("the resource cannot be found")
