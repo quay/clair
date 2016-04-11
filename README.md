@@ -50,14 +50,14 @@ It can take several minutes before the database has been fully populated.
 
 ### Kubernetes
 
-An easy way to run Clair is with Kubernetes.
-If you are using the [CoreOS Kubernetes single-node instructions][single-node] for vagrant you will be able to access Clair at http://172.17.4.99:30061/ after following these instructions.
+An easy way to run Clair is with Kubernetes 1.2+.
+If you are using the [CoreOS Kubernetes single-node instructions][single-node] for Vagrant you will be able to access the Clair's API at http://172.17.4.99:30060/ after following these instructions.
 
 ```
 git clone https://github.com/coreos/clair
 cd clair/contrib/k8s
-kubectl create -f clair-kubernetes.yaml
 kubectl create secret generic clairsecret --from-file=./config.yaml
+kubectl create -f clair-kubernetes.yaml
 ```
 
 [single-node]: https://coreos.com/kubernetes/docs/latest/kubernetes-on-vagrant-single.html
