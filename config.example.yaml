@@ -72,3 +72,6 @@ clair:
       cafile:
       keyfile:
       certfile:
+
+      # Optional HTTP Proxy: must be a valid URL (including the scheme).
+      proxy:

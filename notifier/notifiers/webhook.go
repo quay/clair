@@ -49,6 +49,7 @@ type WebhookNotifierConfiguration struct {
 	CertFile   string
 	KeyFile    string
 	CAFile     string
+	Proxy      string
 }
 
 func init() {
@@ -77,23 +78,33 @@ func (h *WebhookNotifier) Configure(config *config.NotifierConfig) (bool, error)
 	if httpConfig.Endpoint == "" {
 		return false, nil
 	}
-	if _, err := url.Parse(httpConfig.Endpoint); err != nil {
-		return false, errors.New("invalid endpoint URL")
+	if _, err := url.ParseRequestURI(httpConfig.Endpoint); err != nil {
+		return false, fmt.Errorf("could not parse endpoint URL: %s\n", err)
 	}
 	h.endpoint = httpConfig.Endpoint
 
+	// Setup HTTP client.
+	transport := &http.Transport{}
+	h.client = &http.Client{
+		Transport: transport,
+		Timeout:   timeout,
+	}
+
 	// Initialize TLS.
-	tlsConfig, err := loadTLSClientConfig(&httpConfig)
+	transport.TLSClientConfig, err = loadTLSClientConfig(&httpConfig)
 	if err != nil {
 		return false, fmt.Errorf("could not initialize client cert auth: %s\n", err)
 	}
 
-	h.client = &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: tlsConfig,
-		},
-		Timeout: timeout,
+	// Set proxy.
+	if httpConfig.Proxy != "" {
+		proxyURL, err := url.ParseRequestURI(httpConfig.Proxy)
+		if err != nil {
+			return false, fmt.Errorf("could not parse proxy URL: %s\n", err)
+		}
+		transport.Proxy = http.ProxyURL(proxyURL)
 	}
+
 	return true, nil
 }
 
