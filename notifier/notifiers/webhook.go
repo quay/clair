@@ -78,7 +78,7 @@ func (h *WebhookNotifier) Configure(config *config.NotifierConfig) (bool, error)
 	if httpConfig.Endpoint == "" {
 		return false, nil
 	}
-	if _, err := url.Parse(httpConfig.Endpoint); err != nil {
+	if _, err := url.ParseRequestURI(httpConfig.Endpoint); err != nil {
 		return false, fmt.Errorf("could not parse endpoint URL: %s\n", err)
 	}
 	h.endpoint = httpConfig.Endpoint
