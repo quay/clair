@@ -15,6 +15,7 @@
 package config
 
 import (
+	"errors"
 	"io/ioutil"
 	"os"
 	"time"
@@ -22,6 +23,9 @@ import (
 	"github.com/fernet/fernet-go"
 	"gopkg.in/yaml.v2"
 )
+
+// ErrDatasourceNotLoaded is returned when the datasource variable in the configuration file is not loaded properly
+var ErrDatasourceNotLoaded = errors.New("could not load configuration: no database source specified")
 
 // File represents a YAML configuration file that namespaces all Clair
 // configuration under the top-level "clair" key.
@@ -111,6 +115,11 @@ func Load(path string) (config *Config, err error) {
 		return
 	}
 	config = &cfgFile.Clair
+
+	if config.Database.Source == "" {
+		err = ErrDatasourceNotLoaded
+		return
+	}
 
 	// Generate a pagination key if none is provided.
 	if config.API.PaginationKey == "" {
