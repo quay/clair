@@ -6,7 +6,6 @@ import (
 	"os"
 	"testing"
 
-	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -59,7 +58,7 @@ func TestLoadWrongConfiguration(t *testing.T) {
 
 	_, err = Load(tmpfile.Name())
 
-	assert.EqualError(t, err, cerrors.ErrDatasourceNotLoaded.Error())
+	assert.EqualError(t, err, ErrDatasourceNotLoaded.Error())
 }
 
 func TestLoad(t *testing.T) {
