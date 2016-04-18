@@ -112,10 +112,12 @@ func Load(path string) (config *Config, err error) {
 		return
 	}
 	config = &cfgFile.Clair
-	if config.API == nil || config.Database == nil || config.Notifier == nil || config.Updater == nil {
-		err = cerrors.ErrConfigNotLoaded
+
+	if config.Database.Source == "" {
+		err = cerrors.ErrDatasourceNotLoaded
 		return
 	}
+
 	// Generate a pagination key if none is provided.
 	if config.API.PaginationKey == "" {
 		var key fernet.Key

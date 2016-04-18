@@ -15,6 +15,34 @@ dummyKey:
     wrong:true
 `
 
+const goodConfig = `
+clair:
+  database:
+    source: postgresql://postgres:root@postgres:5432?sslmode=disable
+    cacheSize: 16384
+  api:
+    port: 6060
+    healthport: 6061
+    timeout: 900s
+    paginationKey:
+    servername:
+    cafile:
+    keyfile:
+    certfile:
+  updater:
+    interval: 2h
+  notifier:
+    attempts: 3
+    renotifyInterval: 2h
+    http:
+      endpoint:
+      servername:
+      cafile:
+      keyfile:
+      certfile:
+      proxy:
+`
+
 func TestLoadWrongConfiguration(t *testing.T) {
 	tmpfile, err := ioutil.TempFile("", "clair-config")
 	if err != nil {
@@ -22,7 +50,6 @@ func TestLoadWrongConfiguration(t *testing.T) {
 	}
 
 	defer os.Remove(tmpfile.Name()) // clean up
-
 	if _, err := tmpfile.Write([]byte(wrongConfig)); err != nil {
 		log.Fatal(err)
 	}
@@ -32,10 +59,24 @@ func TestLoadWrongConfiguration(t *testing.T) {
 
 	_, err = Load(tmpfile.Name())
 
-	assert.EqualError(t, err, cerrors.ErrConfigNotLoaded.Error())
+	assert.EqualError(t, err, cerrors.ErrDatasourceNotLoaded.Error())
 }
 
 func TestLoad(t *testing.T) {
-	_, err := Load("../config.example.yaml")
+	tmpfile, err := ioutil.TempFile("", "clair-config")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer os.Remove(tmpfile.Name()) // clean up
+
+	if _, err := tmpfile.Write([]byte(goodConfig)); err != nil {
+		log.Fatal(err)
+	}
+	if err := tmpfile.Close(); err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = Load(tmpfile.Name())
 	assert.NoError(t, err)
 }

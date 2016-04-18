@@ -30,8 +30,8 @@ var (
 	// ErrCouldNotParse is returned when a fetcher fails to parse the update data.
 	ErrCouldNotParse = errors.New("updater/fetchers: could not parse")
 
-	//ErrConfigNotLoaded is returned when the configuration file is not loaded properly
-	ErrConfigNotLoaded = errors.New("could not load configuration properly")
+	// ErrDatasourceNotLoaded is returned when the datasource variable in the configuration file is not loaded properly
+	ErrDatasourceNotLoaded = errors.New("could not load datasource configuration properly")
 )
 
 // ErrBadRequest occurs when a method has been passed an inappropriate argument.
