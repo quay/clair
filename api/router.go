@@ -63,8 +63,14 @@ func newHealthHandler(ctx *context.RouteContext) http.Handler {
 }
 
 func getHealth(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+	header := w.Header()
+	header.Set("Server", "clair")
+
+	status := http.StatusInternalServerError
 	if ctx.Store.Ping() {
-		return "health", http.StatusOK
+		status = http.StatusOK
 	}
-	return "health", http.StatusInternalServerError
+
+	w.WriteHeader(status)
+	return "health", status
 }
