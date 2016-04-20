@@ -6,6 +6,9 @@
 [![GoDoc](https://godoc.org/github.com/coreos/clair?status.svg "GoDoc")](https://godoc.org/github.com/coreos/clair)
 [![IRC Channel](https://img.shields.io/badge/freenode-%23clair-blue.svg "IRC Channel")](http://webchat.freenode.net/?channels=clair)
 
+**Note**: The `master` branch may be in an *unstable or even broken state* during development.
+Please use [releases] instead of the `master` branch in order to get stable binaries.
+
 ![Clair Logo](img/Clair_horizontal_color.png)
 
 Clair is an open source project for the static analysis of vulnerabilities in [appc] and [docker] containers.
@@ -20,6 +23,7 @@ Thus, the project was named `Clair` after the French term which translates to *c
 [appc]: https://github.com/appc/spec
 [docker]: https://github.com/docker/docker/blob/master/image/spec/v1.md
 [customized programmatically]: #customization
+[releases]: https://github.com/coreos/clair/releases
 
 ## Common Use Cases
 
