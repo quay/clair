@@ -35,7 +35,7 @@ type Error struct {
 
 type Layer struct {
 	Name             string    `json:"Name,omitempty"`
-	NamespaceName    string    `json:"NamespaceName,omitempty"`
+	NamespacesName   []string  `json:"NamespacesName,omitempty"`
 	Path             string    `json:"Path,omitempty"`
 	ParentName       string    `json:"ParentName,omitempty"`
 	Format           string    `json:"Format,omitempty"`
@@ -53,8 +53,8 @@ func LayerFromDatabaseModel(dbLayer database.Layer, withFeatures, withVulnerabil
 		layer.ParentName = dbLayer.Parent.Name
 	}
 
-	if dbLayer.Namespace != nil {
-		layer.NamespaceName = dbLayer.Namespace.Name
+	for _, namespace := range dbLayer.Namespaces {
+		layer.NamespacesName = append(layer.NamespacesName, namespace.Name)
 	}
 
 	if withFeatures || withVulnerabilities && dbLayer.Features != nil {

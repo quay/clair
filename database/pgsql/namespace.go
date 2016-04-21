@@ -15,6 +15,7 @@
 package pgsql
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/coreos/clair/database"
@@ -45,6 +46,32 @@ func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (int, error) {
 
 	if pgSQL.cache != nil {
 		pgSQL.cache.Add("namespace:"+namespace.Name, id)
+	}
+
+	return id, nil
+}
+
+func (pgSQL *pgSQL) insertLayerNamespace(layerID int, namespaceID int) (int, error) {
+	if pgSQL.cache != nil {
+		promCacheQueriesTotal.WithLabelValues("layerNamespace").Inc()
+		if id, found := pgSQL.cache.Get("layer:" + strconv.Itoa(layerID) + "namespace:" + strconv.Itoa(namespaceID)); found {
+			promCacheHitsTotal.WithLabelValues("layerNamespace").Inc()
+			return id.(int), nil
+		}
+	}
+
+	// We do `defer observeQueryTime` here because we don't want to observe cached layerNamespaces.
+	defer observeQueryTime("soiLayerNamespace", "all", time.Now())
+
+	var id int
+	err := pgSQL.QueryRow(soiLayerNamespace, layerID, namespaceID).Scan(&id)
+	if err != nil {
+		return 0, nil
+		return 0, handleError("soiLayerNamespace", err)
+	}
+
+	if pgSQL.cache != nil {
+		pgSQL.cache.Add("layer:"+strconv.Itoa(layerID)+"namespace:"+strconv.Itoa(namespaceID), id)
 	}
 
 	return id, nil
