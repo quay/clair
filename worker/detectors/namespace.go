@@ -60,18 +60,18 @@ func RegisterNamespaceDetector(name string, f NamespaceDetector) {
 	namespaceDetectors[name] = f
 }
 
-// DetectNamespace finds the OS of the layer by using every registered NamespaceDetector.
-func DetectNamespace(data map[string][]byte) *database.Namespace {
+// DetectNamespaces finds the namespaces of the layer by using every registered NamespaceDetector.
+func DetectNamespaces(data map[string][]byte) (namespaces []database.Namespace) {
 	for _, detector := range namespaceDetectors {
 		if namespace := detector.Detect(data); namespace != nil {
-			return namespace
+			namespaces = append(namespaces, *namespace)
 		}
 	}
 
-	return nil
+	return
 }
 
-// GetRequiredFilesNamespace returns the list of files required for DetectNamespace for every
+// GetRequiredFilesNamespace returns the list of files required for DetectNamespaces for every
 // registered NamespaceDetector, without leading /.
 func GetRequiredFilesNamespace() (files []string) {
 	for _, detector := range namespaceDetectors {

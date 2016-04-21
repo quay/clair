@@ -33,7 +33,7 @@ type Layer struct {
 	Name          string
 	EngineVersion int
 	Parent        *Layer
-	Namespace     *Namespace
+	Namespaces    []Namespace
 	Features      []FeatureVersion
 }
 
