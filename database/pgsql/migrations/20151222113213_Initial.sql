@@ -30,11 +30,23 @@ CREATE TABLE IF NOT EXISTS Layer (
   name VARCHAR(128) NOT NULL UNIQUE,
   engineversion SMALLINT NOT NULL,
   parent_id INT NULL REFERENCES Layer ON DELETE CASCADE,
-  namespace_id INT NULL REFERENCES Namespace,
   created_at TIMESTAMP WITH TIME ZONE);
 
 CREATE INDEX ON Layer (parent_id);
-CREATE INDEX ON Layer (namespace_id);
+
+
+-- -----------------------------------------------------
+-- Table Layer_Namespace
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS LayerNamespace (
+  id SERIAL PRIMARY KEY,
+  layer_id INT NOT NULL REFERENCES Layer ON DELETE CASCADE,
+  namespace_id INT NOT NULL REFERENCES Namespace ON DELETE CASCADE,
+
+  UNIQUE (layer_id, namespace_id));
+
+CREATE INDEX ON LayerNamespace (layer_id);
+CREATE INDEX ON LayerNamespace (layer_id, namespace_id);
 
 
 -- -----------------------------------------------------

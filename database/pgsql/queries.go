@@ -77,10 +77,9 @@ const (
 
 	// layer.go
 	searchLayer = `
-		SELECT l.id, l.name, l.engineversion, p.id, p.name, n.id, n.name
+		SELECT l.id, l.name, l.engineversion, p.id, p.name
 		FROM Layer l
 			LEFT JOIN Layer p ON l.parent_id = p.id
-			LEFT JOIN Namespace n ON l.namespace_id = n.id
 		WHERE l.name = $1;`
 
 	searchLayerFeatureVersion = `
@@ -112,12 +111,17 @@ const (
 						AND v.namespace_id = vn.id
 						AND v.deleted_at IS NULL`
 
-	insertLayer = `
-		INSERT INTO Layer(name, engineversion, parent_id, namespace_id, created_at)
-    VALUES($1, $2, $3, $4, CURRENT_TIMESTAMP)
-    RETURNING id`
+	searchLayerNamespace = `
+		SELECT n.id, n.name
+		From LayerNamespace ln, Namespace n
+		WHERE ln.layer_id = $1 AND ln.namespace_id = n.id`
 
-	updateLayer = `UPDATE LAYER SET engineversion = $2, namespace_id = $3 WHERE id = $1`
+	insertLayer = `
+		INSERT INTO Layer(name, engineversion, parent_id, created_at)
+		VALUES($1, $2, $3, CURRENT_TIMESTAMP)
+		RETURNING id`
+
+	updateLayer = `UPDATE LAYER SET engineversion = $2 WHERE id = $1`
 
 	removeLayerDiffFeatureVersion = `
 		DELETE FROM Layer_diff_FeatureVersion
@@ -130,6 +134,17 @@ const (
 			WHERE fv.id = ANY($3::integer[])`
 
 	removeLayer = `DELETE FROM Layer WHERE name = $1`
+
+	soiLayerNamespace = `
+		WITH new_layernamespace AS (
+			INSERT INTO LayerNamespace(layer_id, namespace_id)
+			SELECT CAST($1 AS INTEGER), CAST($2 AS INTEGER)
+			WHERE NOT EXISTS (SELECT id FROM LayerNamespace WHERE layer_id = $1 AND namespace_id = $2)
+			RETURNING id
+		)
+		SELECT id FROM LayerNamespace WHERE layer_id = $1 AND namespace_id = $2
+		UNION
+		SELECT id FROM new_layernamespace`
 
 	// lock.go
 	insertLock        = `INSERT INTO Lock(name, owner, until) VALUES($1, $2, $3)`

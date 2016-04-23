@@ -53,12 +53,12 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 
 	wheezy, err := datastore.FindLayer("wheezy", true, false)
 	if assert.Nil(t, err) {
-		assert.Equal(t, "debian:7", wheezy.Namespace.Name)
+		assert.Equal(t, "debian:7", wheezy.Namespaces[0].Name)
 		assert.Len(t, wheezy.Features, 52)
 
 		jessie, err := datastore.FindLayer("jessie", true, false)
 		if assert.Nil(t, err) {
-			assert.Equal(t, "debian:8", jessie.Namespace.Name)
+			assert.Equal(t, "debian:8", jessie.Namespaces[0].Name)
 			assert.Len(t, jessie.Features, 74)
 
 			// These FeatureVersions haven't been upgraded.
