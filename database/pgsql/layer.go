@@ -53,6 +53,26 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 			Model: database.Model{ID: int(parentID.Int64)},
 			Name:  parentName.String,
 		}
+
+		// Find its parent's namespaces
+		rows, err := pgSQL.Query(searchLayerNamespace, parentID)
+		if err != nil {
+			return layer, handleError("searchLayerNamespace", err)
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var pn database.Namespace
+
+			err = rows.Scan(&pn.ID, &pn.Name)
+			if err != nil {
+				return layer, handleError("searchLayerNamespace.Scan()", err)
+			}
+			layer.Parent.Namespaces = append(layer.Parent.Namespaces, pn)
+		}
+		if err = rows.Err(); err != nil {
+			return layer, handleError("searchLayerNamespace.Rows()", err)
+		}
 	}
 
 	// Find its namespaces
@@ -248,9 +268,26 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	// We do `defer observeQueryTime` here because we don't want to observe existing layers.
 	defer observeQueryTime("InsertLayer", "all", tf)
 
+	// Insert Namespaces
+	mapNamespaceIDs := make(map[string]int)
+	for i, _ := range layer.Namespaces {
+		id, err := pgSQL.insertNamespace(layer.Namespaces[i])
+		if err != nil {
+			return err
+		}
+		if layer.Namespaces[i].ID == 0 {
+			layer.Namespaces[i].ID = id
+		}
+
+		// Layer's namespaces has high priority than its parent.
+		// Once a layer has a 'same' namespace (the content before ':' is the same)
+		// with its parent, it will only keep its namespace.
+		name := strings.Split(layer.Namespaces[i].Name, ":")
+		mapNamespaceIDs[name[0]] = id
+	}
+
 	// Get parent ID.
 	var parentID zero.Int
-	mapNamespaceIDs := make(map[string]int)
 	if layer.Parent != nil {
 		if layer.Parent.ID == 0 {
 			log.Warning("Parent is expected to be retrieved from database when inserting a layer.")
@@ -259,42 +296,14 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 
 		parentID = zero.IntFrom(int64(layer.Parent.ID))
 
-		// Find its parent's namespaces
-		rows, err := pgSQL.Query(searchLayerNamespace, parentID)
-		if err != nil {
-			return err
-		}
-		defer rows.Close()
-
-		for rows.Next() {
-			var pn database.Namespace
-
-			err = rows.Scan(&pn.ID, &pn.Name)
-			if err != nil {
-				return err
-			}
-
+		for _, pn := range layer.Parent.Namespaces {
 			name := strings.Split(pn.Name, ":")
-			// Layer will inherit its parent's namespace
-			mapNamespaceIDs[name[0]] = pn.ID
+			if _, ok := mapNamespaceIDs[name[0]]; !ok {
+				// Layer will inherit its parent's namespace
+				mapNamespaceIDs[name[0]] = pn.ID
+				layer.Namespaces = append(layer.Namespaces, pn)
+			}
 		}
-		if err = rows.Err(); err != nil {
-			return err
-		}
-	}
-
-	// Insert Namespaces
-	for _, n := range layer.Namespaces {
-		id, err := pgSQL.insertNamespace(n)
-		if err != nil {
-			return err
-		}
-
-		// Layer's namespaces has high priority than its parent.
-		// Once a layer has a 'same' namespace (the content before ':' is the same)
-		// with its parent, it will only keep its namespace.
-		name := strings.Split(n.Name, ":")
-		mapNamespaceIDs[name[0]] = id
 	}
 
 	// Begin transaction.
