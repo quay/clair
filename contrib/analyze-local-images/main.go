@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"os/signal"
 	"sort"
 	"strconv"
 	"strings"
@@ -85,6 +86,10 @@ func (s *sorter) Less(i, j int) bool {
 }
 
 func main() {
+	os.Exit(intMain())
+}
+
+func intMain() int {
 	// Parse command-line arguments.
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [options] image-id\n\nOptions:\n", os.Args[0])
@@ -94,14 +99,14 @@ func main() {
 
 	if len(flag.Args()) != 1 {
 		flag.Usage()
-		os.Exit(1)
+		return 1
 	}
 	imageName := flag.Args()[0]
 
 	minSeverity := types.Priority(*flagMinimumSeverity)
 	if !minSeverity.IsValid() {
 		flag.Usage()
-		os.Exit(1)
+		return 1
 	}
 
 	if *flagColorMode == "never" {
@@ -110,24 +115,46 @@ func main() {
 		color.NoColor = false
 	}
 
-	err := AnalyzeLocalImage(imageName, minSeverity, *flagEndpoint, *flagMyAddress)
+	// Create a temporary folder.
+	tmpPath, err := ioutil.TempDir("", "analyze-local-image-")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Could not create temporary folder: %s", err)
 	}
+	defer os.RemoveAll(tmpPath)
+
+	// Intercept SIGINT / SIGKILl signals.
+	interrupt := make(chan os.Signal)
+	signal.Notify(interrupt, os.Interrupt, os.Kill)
+
+	// Analyze the image.
+	analyzeCh := make(chan error, 1)
+	go func() {
+		analyzeCh <- AnalyzeLocalImage(imageName, minSeverity, *flagEndpoint, *flagMyAddress, tmpPath)
+	}()
+
+	select {
+	case <-interrupt:
+		return 130
+	case err := <-analyzeCh:
+		if err != nil {
+			log.Print(err)
+			return 1
+		}
+	}
+	return 0
 }
 
-func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, myAddress string) error {
+func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, myAddress, tmpPath string) error {
 	// Save image.
 	log.Printf("Saving %s to local disk (this may take some time)", imageName)
-	path, err := save(imageName)
-	defer os.RemoveAll(path)
+	err := save(imageName, tmpPath)
 	if err != nil {
 		return fmt.Errorf("Could not save image: %s", err)
 	}
 
 	// Retrieve history.
 	log.Println("Retrieving image history")
-	layerIDs, err := historyFromManifest(path)
+	layerIDs, err := historyFromManifest(tmpPath)
 	if err != nil {
 		layerIDs, err = historyFromCommand(imageName)
 	}
@@ -146,7 +173,7 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 		log.Printf("Setting up HTTP server (allowing: %s)\n", allowedHost)
 
 		ch := make(chan error)
-		go listenHTTP(path, allowedHost, ch)
+		go listenHTTP(tmpPath, allowedHost, ch)
 		select {
 		case err := <-ch:
 			return fmt.Errorf("An error occured when starting HTTP server: %s", err)
@@ -154,7 +181,7 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 			break
 		}
 
-		path = "http://" + myAddress + ":" + strconv.Itoa(httpPort)
+		tmpPath = "http://" + myAddress + ":" + strconv.Itoa(httpPort)
 	}
 
 	// Analyze layers.
@@ -162,11 +189,10 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 	for i := 0; i < len(layerIDs); i++ {
 		log.Printf("Analyzing %s\n", layerIDs[i])
 
-		var err error
 		if i > 0 {
-			err = analyzeLayer(endpoint, path+"/"+layerIDs[i]+"/layer.tar", layerIDs[i], layerIDs[i-1])
+			err = analyzeLayer(endpoint, tmpPath+"/"+layerIDs[i]+"/layer.tar", layerIDs[i], layerIDs[i-1])
 		} else {
-			err = analyzeLayer(endpoint, path+"/"+layerIDs[i]+"/layer.tar", layerIDs[i], "")
+			err = analyzeLayer(endpoint, tmpPath+"/"+layerIDs[i]+"/layer.tar", layerIDs[i], "")
 		}
 		if err != nil {
 			return fmt.Errorf("Could not analyze layer: %s", err)
@@ -249,12 +275,7 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 	return nil
 }
 
-func save(imageName string) (string, error) {
-	path, err := ioutil.TempDir("", "analyze-local-image-")
-	if err != nil {
-		return "", err
-	}
-
+func save(imageName, path string) error {
 	var stderr bytes.Buffer
 	save := exec.Command("docker", "save", imageName)
 	save.Stderr = &stderr
@@ -262,28 +283,28 @@ func save(imageName string) (string, error) {
 	extract.Stderr = &stderr
 	pipe, err := extract.StdinPipe()
 	if err != nil {
-		return "", err
+		return err
 	}
 	save.Stdout = pipe
 
 	err = extract.Start()
 	if err != nil {
-		return "", errors.New(stderr.String())
+		return errors.New(stderr.String())
 	}
 	err = save.Run()
 	if err != nil {
-		return "", errors.New(stderr.String())
+		return errors.New(stderr.String())
 	}
 	err = pipe.Close()
 	if err != nil {
-		return "", err
+		return err
 	}
 	err = extract.Wait()
 	if err != nil {
-		return "", errors.New(stderr.String())
+		return errors.New(stderr.String())
 	}
 
-	return path, nil
+	return nil
 }
 
 func historyFromManifest(path string) ([]string, error) {
