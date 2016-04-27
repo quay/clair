@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/clair/worker/detectors"
 )
 
@@ -75,7 +76,7 @@ func (detector *AptSourcesNamespaceDetector) Detect(data map[string][]byte) *dat
 	}
 
 	if OS != "" && version != "" {
-		return &database.Namespace{Name: OS + ":" + version}
+		return &database.Namespace{Name: OS, Version: types.NewVersionUnsafe(version)}
 	}
 	return nil
 }

@@ -29,17 +29,17 @@ const (
 	// namespace.go
 	soiNamespace = `
 		WITH new_namespace AS (
-			INSERT INTO Namespace(name)
-			SELECT CAST($1 AS VARCHAR)
-			WHERE NOT EXISTS (SELECT name FROM Namespace WHERE name = $1)
+			INSERT INTO Namespace(name, version)
+			SELECT CAST($1 AS VARCHAR), CAST($2 AS VARCHAR)
+			WHERE NOT EXISTS (SELECT name FROM Namespace WHERE name = $1 AND version = $2)
 			RETURNING id
 		)
-		SELECT id FROM Namespace WHERE name = $1
+		SELECT id FROM Namespace WHERE name = $1 AND version = $2
 		UNION
 		SELECT id FROM new_namespace`
 
-	searchNamespace = `SELECT id FROM Namespace WHERE name = $1`
-	listNamespace   = `SELECT id, name FROM Namespace`
+	searchNamespace = `SELECT id FROM Namespace WHERE name = $1 AND version = $2`
+	listNamespace   = `SELECT id, name, version FROM Namespace`
 
 	// feature.go
 	soiFeature = `
@@ -92,7 +92,7 @@ const (
 			FROM Layer l, layer_tree lt
 			WHERE l.id = lt.parent_id
 		)
-		SELECT ldf.featureversion_id, ldf.modification, fn.id, fn.name, f.id, f.name, fv.id, fv.version, ltree.id, ltree.name
+		SELECT ldf.featureversion_id, ldf.modification, fn.id, fn.name, fn.version, f.id, f.name, fv.id, fv.version, ltree.id, ltree.name
 		FROM Layer_diff_FeatureVersion ldf
 		JOIN (
 			SELECT row_number() over (ORDER BY depth DESC), id, name FROM layer_tree
@@ -102,7 +102,7 @@ const (
 
 	searchFeatureVersionVulnerability = `
 			SELECT vafv.featureversion_id, v.id, v.name, v.description, v.link, v.severity, v.metadata,
-				vn.name, vfif.version
+				vn.name, vn.version, vfif.version
 			FROM Vulnerability_Affects_FeatureVersion vafv, Vulnerability v,
 					 Namespace vn, Vulnerability_FixedIn_Feature vfif
 			WHERE vafv.featureversion_id = ANY($1::integer[])
@@ -112,7 +112,7 @@ const (
 						AND v.deleted_at IS NULL`
 
 	searchLayerNamespace = `
-		SELECT n.id, n.name
+		SELECT n.id, n.name, n.version
 		FROM LayerNamespace ln, Namespace n
 		WHERE ln.layer_id = $1 AND ln.namespace_id = n.id`
 
@@ -159,12 +159,12 @@ const (
 
 	// vulnerability.go
 	searchVulnerabilityBase = `
-	  SELECT v.id, v.name, n.id, n.name, v.description, v.link, v.severity, v.metadata
+	  SELECT v.id, v.name, n.id, n.name, n.version, v.description, v.link, v.severity, v.metadata
 	  FROM Vulnerability v JOIN Namespace n ON v.namespace_id = n.id`
 	searchVulnerabilityForUpdate          = ` FOR UPDATE OF v`
-	searchVulnerabilityByNamespaceAndName = ` WHERE n.name = $1 AND v.name = $2 AND v.deleted_at IS NULL`
+	searchVulnerabilityByNamespaceAndName = ` WHERE n.name = $1 AND n.version = $2 AND v.name = $3 AND v.deleted_at IS NULL`
 	searchVulnerabilityByID               = ` WHERE v.id = $1`
-	searchVulnerabilityByNamespace        = ` WHERE n.name = $1 AND v.deleted_at IS NULL
+	searchVulnerabilityByNamespaceID      = ` WHERE n.id = $1 AND v.deleted_at IS NULL
 		  				  AND v.id >= $2
 						  ORDER BY v.id
 						  LIMIT $3`
@@ -189,8 +189,8 @@ const (
 	removeVulnerability = `
 		UPDATE Vulnerability
     SET deleted_at = CURRENT_TIMESTAMP
-    WHERE namespace_id = (SELECT id FROM Namespace WHERE name = $1)
-          AND name = $2
+    WHERE namespace_id = (SELECT id FROM Namespace WHERE name = $1 AND version = $2)
+          AND name = $3
           AND deleted_at IS NULL
     RETURNING id`
 

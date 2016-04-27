@@ -44,8 +44,11 @@ func TestInsertFeature(t *testing.T) {
 
 	// Insert Feature and ensure we can find it.
 	feature := database.Feature{
-		Namespace: database.Namespace{Name: "TestInsertFeatureNamespace1"},
-		Name:      "TestInsertFeature1",
+		Namespace: database.Namespace{
+			Name:    "TestInsertFeatureNamespace",
+			Version: types.NewVersionUnsafe("1.0"),
+		},
+		Name: "TestInsertFeature1",
 	}
 	id1, err := datastore.insertFeature(feature)
 	assert.Nil(t, err)
@@ -68,15 +71,21 @@ func TestInsertFeature(t *testing.T) {
 		},
 		{
 			Feature: database.Feature{
-				Namespace: database.Namespace{Name: "TestInsertFeatureNamespace2"},
-				Name:      "TestInsertFeature2",
+				Namespace: database.Namespace{
+					Name:    "TestInsertFeatureNamespace",
+					Version: types.NewVersionUnsafe("2.0"),
+				},
+				Name: "TestInsertFeature2",
 			},
 			Version: types.NewVersionUnsafe(""),
 		},
 		{
 			Feature: database.Feature{
-				Namespace: database.Namespace{Name: "TestInsertFeatureNamespace2"},
-				Name:      "TestInsertFeature2",
+				Namespace: database.Namespace{
+					Name:    "TestInsertFeatureNamespace",
+					Version: types.NewVersionUnsafe("2.0"),
+				},
+				Name: "TestInsertFeature2",
 			},
 			Version: types.NewVersionUnsafe("bad version"),
 		},
@@ -89,8 +98,11 @@ func TestInsertFeature(t *testing.T) {
 	// Insert FeatureVersion and ensure we can find it.
 	featureVersion := database.FeatureVersion{
 		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "TestInsertFeatureNamespace1"},
-			Name:      "TestInsertFeature1",
+			Namespace: database.Namespace{
+				Name:    "TestInsertFeatureNamespace",
+				Version: types.NewVersionUnsafe("1.0"),
+			},
+			Name: "TestInsertFeature1",
 		},
 		Version: types.NewVersionUnsafe("2:3.0-imba"),
 	}

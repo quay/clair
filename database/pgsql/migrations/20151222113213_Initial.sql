@@ -19,7 +19,8 @@
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS Namespace (
   id SERIAL PRIMARY KEY,
-  name VARCHAR(128) NULL);
+  name VARCHAR(128) NULL,
+  version VARCHAR(128) NULL);
 
 
 -- -----------------------------------------------------

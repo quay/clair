@@ -16,7 +16,6 @@ package pgsql
 
 import (
 	"database/sql"
-	"strings"
 	"time"
 
 	"github.com/coreos/clair/database"
@@ -66,7 +65,7 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 		for rows.Next() {
 			var pn database.Namespace
 
-			err = rows.Scan(&pn.ID, &pn.Name)
+			err = rows.Scan(&pn.ID, &pn.Name, &pn.Version)
 			if err != nil {
 				return layer, handleError("searchLayerNamespace.Scan()", err)
 			}
@@ -89,7 +88,7 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 	for rows.Next() {
 		var namespace database.Namespace
 
-		err = rows.Scan(&namespace.ID, &namespace.Name)
+		err = rows.Scan(&namespace.ID, &namespace.Name, &namespace.Version)
 		if err != nil {
 			return layer, handleError("searchLayerNamespace.Scan()", err)
 		}
@@ -166,8 +165,9 @@ func getLayerFeatureVersions(tx *sql.Tx, layerID int) ([]database.FeatureVersion
 		var featureVersion database.FeatureVersion
 
 		err = rows.Scan(&featureVersion.ID, &modification, &featureVersion.Feature.Namespace.ID,
-			&featureVersion.Feature.Namespace.Name, &featureVersion.Feature.ID,
-			&featureVersion.Feature.Name, &featureVersion.ID, &featureVersion.Version,
+			&featureVersion.Feature.Namespace.Name, &featureVersion.Feature.Namespace.Version,
+			&featureVersion.Feature.ID, &featureVersion.Feature.Name,
+			&featureVersion.ID, &featureVersion.Version,
 			&featureVersion.AddedBy.ID, &featureVersion.AddedBy.Name)
 		if err != nil {
 			return featureVersions, handleError("searchLayerFeatureVersion.Scan()", err)
@@ -222,7 +222,8 @@ func loadAffectedBy(tx *sql.Tx, featureVersions []database.FeatureVersion) error
 		var vulnerability database.Vulnerability
 		err := rows.Scan(&featureversionID, &vulnerability.ID, &vulnerability.Name,
 			&vulnerability.Description, &vulnerability.Link, &vulnerability.Severity,
-			&vulnerability.Metadata, &vulnerability.Namespace.Name, &vulnerability.FixedBy)
+			&vulnerability.Metadata, &vulnerability.Namespace.Name, &vulnerability.Namespace.Version,
+			&vulnerability.FixedBy)
 		if err != nil {
 			return handleError("searchFeatureVersionVulnerability.Scan()", err)
 		}
@@ -286,9 +287,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 		// Layer's namespaces has high priority than its parent.
 		// Once a layer has a 'same' namespace with its parent,
 		// it will only keep its namespace.
-		//TODO: add 'Version' to Namespace and use 'Name' directly
-		name := strings.Split(layer.Namespaces[i].Name, ":")
-		mapNamespaceIDs[name[0]] = id
+		mapNamespaceIDs[layer.Namespaces[i].Name] = id
 	}
 
 	// Get parent ID.
@@ -302,11 +301,9 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 		parentID = zero.IntFrom(int64(layer.Parent.ID))
 
 		for _, pn := range layer.Parent.Namespaces {
-			//TODO: add 'Version' to Namespace and use 'Name' directly
-			name := strings.Split(pn.Name, ":")
-			if _, ok := mapNamespaceIDs[name[0]]; !ok {
+			if _, ok := mapNamespaceIDs[pn.Name]; !ok {
 				// Layer will inherit its parent's namespace
-				mapNamespaceIDs[name[0]] = pn.ID
+				mapNamespaceIDs[pn.Name] = pn.ID
 				layer.Namespaces = append(layer.Namespaces, pn)
 			}
 		}
