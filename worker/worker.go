@@ -161,6 +161,7 @@ func detectNamespaces(data map[string][]byte, parent *database.Layer) (namespace
 	if parent != nil {
 		mapNamespaces := make(map[string]database.Namespace)
 		for _, pn := range parent.Namespaces {
+			//TODO: add 'Version' to Namespace and use 'Name' directly
 			name := strings.Split(pn.Name, ":")
 			mapNamespaces[name[0]] = pn
 		}
@@ -168,6 +169,7 @@ func detectNamespaces(data map[string][]byte, parent *database.Layer) (namespace
 		// Once a layer has a 'same' namespace (the content before ':' is the same)
 		// with its parent, it will only keep its namespace.
 		for _, n := range namespaces {
+			//TODO: add 'Version' to Namespace and use 'Name' directly
 			name := strings.Split(n.Name, ":")
 			mapNamespaces[name[0]] = n
 		}
@@ -184,8 +186,7 @@ func detectNamespaces(data map[string][]byte, parent *database.Layer) (namespace
 func detectFeatures(name string, data map[string][]byte, namespaces []database.Namespace) (features []database.FeatureVersion, err error) {
 	// TODO(Quentin-M): We need to pass the parent image DetectFeatures because it's possible that
 	// some detectors would need it in order to produce the entire feature list (if they can only
-	// detect a diff). Also, we should probably pass the detected namespace so detectors could
-	// make their own decision.
+	// detect a diff).
 	features, err = detectors.DetectFeatures(data, namespaces)
 	if err != nil {
 		return

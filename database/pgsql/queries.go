@@ -113,7 +113,7 @@ const (
 
 	searchLayerNamespace = `
 		SELECT n.id, n.name
-		From LayerNamespace ln, Namespace n
+		FROM LayerNamespace ln, Namespace n
 		WHERE ln.layer_id = $1 AND ln.namespace_id = n.id`
 
 	insertLayer = `

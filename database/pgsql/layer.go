@@ -55,7 +55,9 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 		}
 
 		// Find its parent's namespaces
+		t = time.Now()
 		rows, err := pgSQL.Query(searchLayerNamespace, parentID)
+		observeQueryTime("FindLayer", "searchParentLayerNamespace", t)
 		if err != nil {
 			return layer, handleError("searchLayerNamespace", err)
 		}
@@ -76,7 +78,9 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 	}
 
 	// Find its namespaces
+	t = time.Now()
 	rows, err := pgSQL.Query(searchLayerNamespace, layer.ID)
+	observeQueryTime("FindLayer", "searchLayerNamespace", t)
 	if err != nil {
 		return layer, handleError("searchLayerNamespace", err)
 	}
@@ -280,8 +284,9 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 		}
 
 		// Layer's namespaces has high priority than its parent.
-		// Once a layer has a 'same' namespace (the content before ':' is the same)
-		// with its parent, it will only keep its namespace.
+		// Once a layer has a 'same' namespace with its parent,
+		// it will only keep its namespace.
+		//TODO: add 'Version' to Namespace and use 'Name' directly
 		name := strings.Split(layer.Namespaces[i].Name, ":")
 		mapNamespaceIDs[name[0]] = id
 	}
@@ -297,6 +302,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 		parentID = zero.IntFrom(int64(layer.Parent.ID))
 
 		for _, pn := range layer.Parent.Namespaces {
+			//TODO: add 'Version' to Namespace and use 'Name' directly
 			name := strings.Split(pn.Name, ":")
 			if _, ok := mapNamespaceIDs[name[0]]; !ok {
 				// Layer will inherit its parent's namespace

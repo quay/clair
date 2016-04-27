@@ -28,7 +28,7 @@ type FeaturesDetector interface {
 	// GetRequiredFiles returns the list of files required for Detect, without
 	// leading /.
 	GetRequiredFiles() []string
-	//Supported check if the input Namespace is supported by the underling detector
+	//Supported checks if the input Namespace is supported by the underling detector
 	Supported(namespace database.Namespace) bool
 }
 

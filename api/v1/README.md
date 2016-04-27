@@ -122,7 +122,7 @@ Server: clair
 {
   "Layer": {
     "Name": "17675ec01494d651e1ccf81dc9cf63959ebfeed4f978fddb1666b6ead008ed52",
-    "NamespaceName": "debian:8",
+    "NamespaceNames": ["debian:8"],
     "ParentName": "140f9bdfeb9784cf8730e9dab5dd12fbd704151cf555ac8cae650451794e5ac2",
     "IndexedByVersion": 1,
     "Features": [

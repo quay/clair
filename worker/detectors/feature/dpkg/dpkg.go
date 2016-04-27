@@ -114,7 +114,7 @@ func (detector *DpkgFeaturesDetector) GetRequiredFiles() []string {
 	return []string{"var/lib/dpkg/status"}
 }
 
-//Supported check if the input Namespace is supported by the underling detector
+//Supported checks if the input Namespace is supported by the underling detector
 func (detector *DpkgFeaturesDetector) Supported(namespace database.Namespace) bool {
 	supports := []string{"debian", "ubuntu"}
 
