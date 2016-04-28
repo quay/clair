@@ -1,0 +1,213 @@
+{
+	"ImportPath": "github.com/coreos/clair/cmd/clairctl",
+	"GoVersion": "go1.5",
+	"GodepVersion": "v62",
+	"Deps": [
+		{
+			"ImportPath": "github.com/BurntSushi/toml",
+			"Comment": "v0.2.0",
+			"Rev": "bbd5bb678321a0d6e58f1099321dfa73391c1b6f"
+		},
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Comment": "v0.10.0-4-g7e6f976",
+			"Rev": "7e6f9765803ea8356f45fd9b3c62305fb36cca51"
+		},
+		{
+			"ImportPath": "github.com/beorn7/perks/quantile",
+			"Rev": "3ac7bf7a47d159a033b107610db8a1b6575507a4"
+		},
+		{
+			"ImportPath": "github.com/coreos/clair/api/context",
+			"Comment": "v1.1.0-6-g1a5da58",
+			"Rev": "1a5da5875df3794dba7b0365c376f973afbfaa58"
+		},
+		{
+			"ImportPath": "github.com/coreos/clair/api/v1",
+			"Comment": "v1.1.0-6-g1a5da58",
+			"Rev": "1a5da5875df3794dba7b0365c376f973afbfaa58"
+		},
+		{
+			"ImportPath": "github.com/coreos/clair/config",
+			"Comment": "v1.1.0-6-g1a5da58",
+			"Rev": "1a5da5875df3794dba7b0365c376f973afbfaa58"
+		},
+		{
+			"ImportPath": "github.com/coreos/clair/database",
+			"Comment": "v1.1.0-6-g1a5da58",
+			"Rev": "1a5da5875df3794dba7b0365c376f973afbfaa58"
+		},
+		{
+			"ImportPath": "github.com/coreos/clair/utils",
+			"Comment": "v1.1.0-6-g1a5da58",
+			"Rev": "1a5da5875df3794dba7b0365c376f973afbfaa58"
+		},
+		{
+			"ImportPath": "github.com/coreos/clair/utils/errors",
+			"Comment": "v1.1.0-6-g1a5da58",
+			"Rev": "1a5da5875df3794dba7b0365c376f973afbfaa58"
+		},
+		{
+			"ImportPath": "github.com/coreos/clair/utils/types",
+			"Comment": "v1.1.0-6-g1a5da58",
+			"Rev": "1a5da5875df3794dba7b0365c376f973afbfaa58"
+		},
+		{
+			"ImportPath": "github.com/coreos/clair/worker",
+			"Comment": "v1.1.0-6-g1a5da58",
+			"Rev": "1a5da5875df3794dba7b0365c376f973afbfaa58"
+		},
+		{
+			"ImportPath": "github.com/coreos/clair/worker/detectors",
+			"Comment": "v1.1.0-6-g1a5da58",
+			"Rev": "1a5da5875df3794dba7b0365c376f973afbfaa58"
+		},
+		{
+			"ImportPath": "github.com/coreos/go-systemd/journal",
+			"Comment": "v5",
+			"Rev": "7b2428fec40033549c68f54e26e89e7ca9a9ce31"
+		},
+		{
+			"ImportPath": "github.com/coreos/pkg/capnslog",
+			"Rev": "1914e367e85eaf0c25d495b48e060dfe6190f8d0"
+		},
+		{
+			"ImportPath": "github.com/fernet/fernet-go",
+			"Rev": "1b2437bc582b3cfbb341ee5a29f8ef5b42912ff2"
+		},
+		{
+			"ImportPath": "github.com/golang/protobuf/proto",
+			"Rev": "f0a097ddac24fb00e07d2ac17f8671423f3ea47c"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/hcl",
+			"Rev": "27a57f2605e04995c111273c263d51cee60d9bc4"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/hcl/hcl/ast",
+			"Rev": "27a57f2605e04995c111273c263d51cee60d9bc4"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/hcl/hcl/parser",
+			"Rev": "27a57f2605e04995c111273c263d51cee60d9bc4"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/hcl/hcl/scanner",
+			"Rev": "27a57f2605e04995c111273c263d51cee60d9bc4"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/hcl/hcl/strconv",
+			"Rev": "27a57f2605e04995c111273c263d51cee60d9bc4"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/hcl/hcl/token",
+			"Rev": "27a57f2605e04995c111273c263d51cee60d9bc4"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/hcl/json/parser",
+			"Rev": "27a57f2605e04995c111273c263d51cee60d9bc4"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/hcl/json/scanner",
+			"Rev": "27a57f2605e04995c111273c263d51cee60d9bc4"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/hcl/json/token",
+			"Rev": "27a57f2605e04995c111273c263d51cee60d9bc4"
+		},
+		{
+			"ImportPath": "github.com/inconshreveable/mousetrap",
+			"Rev": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+		},
+		{
+			"ImportPath": "github.com/julienschmidt/httprouter",
+			"Comment": "v1.1-29-g77366a4",
+			"Rev": "77366a47451a56bb3ba682481eed85b64fea14e8"
+		},
+		{
+			"ImportPath": "github.com/kr/pretty",
+			"Comment": "go.weekly.2011-12-22-29-gadd1dbc",
+			"Rev": "add1dbc86daf0f983cd4a48ceb39deb95c729b67"
+		},
+		{
+			"ImportPath": "github.com/kr/text",
+			"Rev": "bb797dc4fb8320488f47bf11de07a733d7233e1f"
+		},
+		{
+			"ImportPath": "github.com/magiconair/properties",
+			"Comment": "v1.7.0",
+			"Rev": "c265cfa48dda6474e208715ca93e987829f572f8"
+		},
+		{
+			"ImportPath": "github.com/matttproud/golang_protobuf_extensions/pbutil",
+			"Rev": "d0c3fe89de86839aecf2e0579c40ba3bb336a453"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/mapstructure",
+			"Rev": "d2dd0262208475919e1a362f675cfc0e7c10e905"
+		},
+		{
+			"ImportPath": "github.com/prometheus/client_golang/prometheus",
+			"Comment": "0.7.0-74-g90c15b5",
+			"Rev": "90c15b5efa0dc32a7d259234e02ac9a99e6d3b82"
+		},
+		{
+			"ImportPath": "github.com/prometheus/client_model/go",
+			"Comment": "model-0.0.2-12-gfa8ad6f",
+			"Rev": "fa8ad6fec33561be4280a8f0514318c79d7f6cb6"
+		},
+		{
+			"ImportPath": "github.com/prometheus/common/expfmt",
+			"Rev": "40456948a47496dc22168e6af39297a2f8fbf38c"
+		},
+		{
+			"ImportPath": "github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg",
+			"Rev": "40456948a47496dc22168e6af39297a2f8fbf38c"
+		},
+		{
+			"ImportPath": "github.com/prometheus/common/model",
+			"Rev": "40456948a47496dc22168e6af39297a2f8fbf38c"
+		},
+		{
+			"ImportPath": "github.com/prometheus/procfs",
+			"Rev": "abf152e5f3e97f2fafac028d2cc06c1feb87ffa5"
+		},
+		{
+			"ImportPath": "github.com/spf13/cast",
+			"Rev": "27b586b42e29bec072fe7379259cc719e1289da6"
+		},
+		{
+			"ImportPath": "github.com/spf13/cobra",
+			"Rev": "4c05eb1145f16d0e6bb4a3e1b6d769f4713cb41f"
+		},
+		{
+			"ImportPath": "github.com/spf13/jwalterweatherman",
+			"Rev": "33c24e77fb80341fe7130ee7c594256ff08ccc46"
+		},
+		{
+			"ImportPath": "github.com/spf13/pflag",
+			"Rev": "8f6a28b0916586e7f22fe931ae2fcfc380b1c0e6"
+		},
+		{
+			"ImportPath": "github.com/spf13/viper",
+			"Rev": "c975dc1b4eacf4ec7fdbf0873638de5d090ba323"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ssh/terminal",
+			"Rev": "1777f3ba8c1fed80fcaec3317e3aaa4f627764d2"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "324e1375807370c3934e14f3a97e7d160832f6b4"
+		},
+		{
+			"ImportPath": "gopkg.in/fsnotify.v1",
+			"Comment": "v1.2.10",
+			"Rev": "875cf421b32f8f1b31bd43776297876d01542279"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "a83829b6f1293c91addabc89d0571c246397bbf4"
+		}
+	]
+}
