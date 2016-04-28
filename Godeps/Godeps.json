@@ -1,9 +1,7 @@
 {
 	"ImportPath": "github.com/coreos/clair",
 	"GoVersion": "go1.5",
-	"Packages": [
-		"./..."
-	],
+	"GodepVersion": "v62",
 	"Deps": [
 		{
 			"ImportPath": "bitbucket.org/liamstask/goose/lib/goose",
@@ -12,11 +10,6 @@
 		{
 			"ImportPath": "github.com/beorn7/perks/quantile",
 			"Rev": "b965b613227fddccbfffe13eae360ed3fa822f8d"
-		},
-		{
-			"ImportPath": "github.com/codegangsta/negroni",
-			"Comment": "v0.1-70-gc7477ad",
-			"Rev": "c7477ad8e330bef55bf1ebe300cf8aa67c492d1b"
 		},
 		{
 			"ImportPath": "github.com/coreos/go-systemd/journal",
@@ -30,10 +23,6 @@
 		{
 			"ImportPath": "github.com/coreos/pkg/timeutil",
 			"Rev": "2c77715c4df99b5420ffcae14ead08f52104065d"
-		},
-		{
-			"ImportPath": "github.com/davecgh/go-spew/spew",
-			"Rev": "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d"
 		},
 		{
 			"ImportPath": "github.com/fernet/fernet-go",
@@ -55,7 +44,11 @@
 		},
 		{
 			"ImportPath": "github.com/hashicorp/golang-lru",
-			"Rev": "5c7531c003d8bf158b0fe5063649a2f41a822146"
+			"Rev": "a0d98a5f288019575c6d1f4bb1573fef2d1fcdc4"
+		},
+		{
+			"ImportPath": "github.com/hashicorp/golang-lru/simplelru",
+			"Rev": "a0d98a5f288019575c6d1f4bb1573fef2d1fcdc4"
 		},
 		{
 			"ImportPath": "github.com/julienschmidt/httprouter",
@@ -69,8 +62,13 @@
 		},
 		{
 			"ImportPath": "github.com/lib/pq",
-			"Comment": "go1.0-cutoff-63-g11fc39a",
-			"Rev": "11fc39a580a008f1f39bb3d11d984fb34ed778d9"
+			"Comment": "go1.0-cutoff-86-gdd3290b",
+			"Rev": "dd3290b2f71a8b30bee8e4e75a337a825263d26f"
+		},
+		{
+			"ImportPath": "github.com/lib/pq/oid",
+			"Comment": "go1.0-cutoff-86-gdd3290b",
+			"Rev": "dd3290b2f71a8b30bee8e4e75a337a825263d26f"
 		},
 		{
 			"ImportPath": "github.com/mattn/go-sqlite3",
@@ -84,10 +82,6 @@
 		{
 			"ImportPath": "github.com/pborman/uuid",
 			"Rev": "dee7705ef7b324f27ceb85a121c61f2c2e8ce988"
-		},
-		{
-			"ImportPath": "github.com/pmezard/go-difflib/difflib",
-			"Rev": "e8554b8641db39598be7f6342874b958f12ae1d4"
 		},
 		{
 			"ImportPath": "github.com/prometheus/client_golang/prometheus",
@@ -114,11 +108,6 @@
 		{
 			"ImportPath": "github.com/prometheus/procfs",
 			"Rev": "406e5b7bfd8201a36e2bb5f7bdae0b03380c2ce8"
-		},
-		{
-			"ImportPath": "github.com/stretchr/testify/assert",
-			"Comment": "v1.0-91-g5b9da39",
-			"Rev": "5b9da39b66e8e994455c2525c4421c8cc00a7f93"
 		},
 		{
 			"ImportPath": "github.com/tylerb/graceful",
