@@ -25,11 +25,6 @@
 			"Rev": "b965b613227fddccbfffe13eae360ed3fa822f8d"
 		},
 		{
-			"ImportPath": "github.com/codegangsta/negroni",
-			"Comment": "v0.1-70-gc7477ad",
-			"Rev": "c7477ad8e330bef55bf1ebe300cf8aa67c492d1b"
-		},
-		{
 			"ImportPath": "github.com/coreos/go-systemd/journal",
 			"Comment": "v4-34-g4f14f6d",
 			"Rev": "4f14f6deef2da87e4aa59e6c1c1f3e02ba44c5e1"
@@ -171,16 +166,6 @@
 			"Rev": "dd3290b2f71a8b30bee8e4e75a337a825263d26f"
 		},
 		{
-			"ImportPath": "github.com/lib/pq/hstore",
-			"Comment": "go1.0-cutoff-86-gdd3290b",
-			"Rev": "dd3290b2f71a8b30bee8e4e75a337a825263d26f"
-		},
-		{
-			"ImportPath": "github.com/lib/pq/listen_example",
-			"Comment": "go1.0-cutoff-86-gdd3290b",
-			"Rev": "dd3290b2f71a8b30bee8e4e75a337a825263d26f"
-		},
-		{
 			"ImportPath": "github.com/lib/pq/oid",
 			"Comment": "go1.0-cutoff-86-gdd3290b",
 			"Rev": "dd3290b2f71a8b30bee8e4e75a337a825263d26f"
@@ -201,11 +186,6 @@
 		},
 		{
 			"ImportPath": "github.com/mattn/go-sqlite3",
-			"Comment": "v1.1.0-30-g5510da3",
-			"Rev": "5510da399572b4962c020184bb291120c0a412e2"
-		},
-		{
-			"ImportPath": "github.com/mattn/go-sqlite3/sqlite3_test",
 			"Comment": "v1.1.0-30-g5510da3",
 			"Rev": "5510da399572b4962c020184bb291120c0a412e2"
 		},
@@ -278,11 +258,6 @@
 		},
 		{
 			"ImportPath": "github.com/tylerb/graceful",
-			"Comment": "v1.2.3",
-			"Rev": "48afeb21e2fcbcff0f30bd5ad6b97747b0fae38e"
-		},
-		{
-			"ImportPath": "github.com/tylerb/graceful/tests",
 			"Comment": "v1.2.3",
 			"Rev": "48afeb21e2fcbcff0f30bd5ad6b97747b0fae38e"
 		},
