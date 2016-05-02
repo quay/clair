@@ -7,6 +7,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/coreos/clair/cmd/clairctl/clair"
+	"github.com/coreos/clair/cmd/clairctl/config"
 	"github.com/coreos/clair/cmd/clairctl/docker"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -49,7 +50,7 @@ func analyse(imageName string) clair.ImageAnalysis {
 		image, err = docker.Pull(imageName)
 
 		if err != nil {
-			if err == docker.ErrLoginNotFound {
+			if err == config.ErrLoginNotFound {
 				fmt.Println(err)
 			} else {
 				fmt.Println(errInternalError)

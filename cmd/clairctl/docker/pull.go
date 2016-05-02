@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/coreos/clair/cmd/clairctl/config"
 	"github.com/coreos/clair/cmd/clairctl/docker/httpclient"
 )
 
@@ -49,7 +50,7 @@ func Pull(imageName string) (Image, error) {
 		case http.StatusUnauthorized:
 			return Image{}, ErrUnauthorized
 		case http.StatusNotFound:
-			return Image{}, docker.ErrLoginNotFound
+			return Image{}, config.ErrLoginNotFound
 		default:
 			return Image{}, fmt.Errorf("%d - %s", response.StatusCode, string(body))
 		}

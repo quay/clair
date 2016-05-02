@@ -8,9 +8,10 @@ import (
 	"github.com/coreos/clair/api/v1"
 	"github.com/coreos/clair/cmd/clairctl/clair"
 	"github.com/coreos/clair/cmd/clairctl/config"
-	"github.com/coreos/clair/cmd/clairctl/database"
 	"github.com/coreos/clair/cmd/clairctl/xstrings"
 )
+
+var registryMapping map[string]string
 
 //Push image to Clair for analysis
 func Push(image Image) error {
@@ -35,7 +36,7 @@ func Push(image Image) error {
 		lUID := xstrings.Substr(layer.BlobSum, 0, 12)
 		logrus.Infof("Pushing Layer %d/%d [%v]", index+1, layerCount, lUID)
 
-		database.InsertRegistryMapping(layer.BlobSum, image.Registry)
+		insertRegistryMapping(layer.BlobSum, image.Registry)
 		payload := v1.LayerEnvelope{Layer: &v1.Layer{
 			Name:       layer.BlobSum,
 			Path:       image.BlobsURI(layer.BlobSum),
@@ -65,4 +66,22 @@ func Push(image Image) error {
 		}
 	}
 	return nil
+}
+
+func insertRegistryMapping(layerDigest string, registryURI string) {
+	logrus.Debugf("Saving %s[%s]", layerDigest, registryURI)
+	registryMapping[layerDigest] = registryURI
+}
+
+//GetRegistryMapping return the registryURI corresponding to the layerID passed as parameter
+func GetRegistryMapping(layerDigest string) (string, error) {
+	registryURI, present := registryMapping[layerDigest]
+	if !present {
+		return "", fmt.Errorf("%v mapping not found", layerDigest)
+	}
+	return registryURI, nil
+}
+
+func init() {
+	registryMapping = map[string]string{}
 }

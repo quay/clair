@@ -2,6 +2,7 @@ package docker
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -9,7 +10,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-errDisallowed = errors.New("analysing official images is not allowed")
+var errDisallowed = errors.New("analysing official images is not allowed")
 
 //Image represent Image Manifest from Docker image, including the registry URL
 type Image struct {

@@ -3,12 +3,16 @@ package clair
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 
 	"github.com/coreos/clair/api/v1"
 )
+
+//ErrOSNotSupported is returned when Clair received a layer which on os not supported
+var ErrOSNotSupported = errors.New("worker: OS and/or package manager are not supported")
 
 //Push send a layer to Clair for analysis
 func Push(layer v1.LayerEnvelope) error {

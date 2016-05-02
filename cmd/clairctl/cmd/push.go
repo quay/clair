@@ -31,7 +31,7 @@ var pushCmd = &cobra.Command{
 			var err error
 			image, err = docker.Pull(imageName)
 			if err != nil {
-				if err == docker.ErrLoginNotFound {
+				if err == config.ErrLoginNotFound {
 					fmt.Println(err)
 				} else {
 					fmt.Println(errInternalError)
