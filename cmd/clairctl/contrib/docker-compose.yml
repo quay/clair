@@ -1,0 +1,89 @@
+version: '2'
+
+services:
+  auth:
+    image: cesanta/docker_auth:stable
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./auth_server/config:/config:ro
+      - ./auth_server/ssl:/ssl
+    command: --v=2 --alsologtostderr /config/auth_config.yml
+    container_name: "auth"
+
+  registry:
+    image: registry:2.2.1
+    ports:
+      - 5000:5000
+    volumes:
+      - ./auth_server/ssl:/ssl
+      - registry-data:/var/lib/registry
+    container_name: "registry"
+    environment:
+      - REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY=/var/lib/registry
+      - REGISTRY_AUTH=token
+      - REGISTRY_AUTH_TOKEN_REALM=https://auth:5001/auth
+      - REGISTRY_AUTH_TOKEN_SERVICE="registry"
+      - REGISTRY_AUTH_TOKEN_ISSUER="auth_service"
+      - REGISTRY_AUTH_TOKEN_ROOTCERTBUNDLE=/ssl/server.pem
+
+  # Uncomment to deploy an insecure registry
+  # registry_insecure:
+  #   image: registry:2.2.1
+  #   ports:
+  #     - 5002:5000
+  #   container_name: "registry_insecure"
+
+
+  clair:
+    image: quay.io/coreos/clair:v1.0.0-rc1
+    volumes:
+      - /tmp:/tmp
+      - ./config:/config
+      - clair-data:/var/local
+    ports:
+      - 6060:6060
+      - 6061:6061
+    container_name: "clair"
+    command: --log-level=debug --config=/config/clair.yml
+
+  postgres:
+    image: postgres
+    container_name: "postgres"
+    environment:
+      - POSTGRES_PASSWORD=root
+
+  hyperclair:
+    build: .
+    volumes:
+      - $GOPATH:/go
+      - hyperclair-data:/data
+    ports:
+      - 9999:9999
+    tty: true
+    container_name: "hyperclair"
+    entrypoint: ["go","run","main.go","--log-level","debug","serve"]
+
+  ui:
+    image: jgsqware/registry-ui
+    ports:
+      - 5080:8080
+    environment:
+      - REGISTRYUI_HUB_URI=registry:5000
+      - REGISTRYUI_ACCOUNT_MGMT_ENABLED=true
+      - REGISTRYUI_ACCOUNT_MGMT_CONFIG=./config/auth_config.yml
+      - REGISTRYUI_HYPERCLAIR_REPORT_ENABLED=true
+  # hyperclair_dev:
+  #   build: .
+  #   volumes:
+  #     - $GOPATH:/go
+  #   tty: true
+  #   container_name: "hyperclair_dev"
+
+volumes:
+  clair-data:
+    driver: local
+  hyperclair-data:
+    driver: local
+  registry-data:
+    driver: local

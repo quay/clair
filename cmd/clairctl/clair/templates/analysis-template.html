@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Hyperclair report : {{.ImageName}}</title>
+    
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,600italic,400italic,300italic,300' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+    
+    <style>
+      body {
+        font-family: 'Open Sans', sans-serif;
+        margin: 0;
+        padding: 0;
+        background: ghostwhite;
+        padding-bottom: 2em;
+      }
+      
+      /* Typography */
+      
+      .lead {
+        font-size: 1.4em;
+      }
+      
+      /* global layout */
+      .container {
+        padding: 0 0;  
+      }
+      
+      .clearfix:after {
+        content:"";
+        display:block;
+        clear:both;
+      }
+      
+      .row {
+        margin: 0 -20px;
+      }
+      
+      .row:after {
+        display: block;
+        clear: both;
+      }
+      
+      [class*="col-"] {
+        padding: 0 20px;
+        float: left;
+        box-sizing: border-box;
+      }
+      
+      .col-6 {
+        width: 50%;
+      }
+      
+      .panel {
+        /* padding: 1em; */
+        border-radius: 4px;
+        background: white;
+        box-shadow: 0px 1px 2px #e2e2e2;
+      }
+      
+      .panel h2 {
+        margin-top: 0;
+        padding-bottom: .2em;
+        border-bottom: solid 1px gainsboro;
+      }
+      
+      .panel :last-child {
+        margin-bottom: 0;
+      }
+      
+      /* Header */
+      
+      .app-header {
+        background: #2196F3;
+        color: white;
+        margin: 0 0px 0px 0px;
+        padding: 16px 20px;
+        box-shadow: 0 -2px 16px #263238;
+        position: relative;
+      }
+      
+      .app-header h1 {
+        margin: 0;
+        font-weight: lighter;
+        text-transform: uppercase;
+      }
+      
+      .app-intro {
+        padding: 20px;
+        text-align: center;
+        color: #263238;
+        background: rgba(255, 255, 255, .8);
+        border-bottom: solid 1px #ECEFF1;
+      }
+      
+      .app-intro h2 {
+        font-size: 2em;
+        font-weight: lighter;
+      }
+      
+      .summary {
+        line-height: .6em;
+      }
+      
+      /* report */
+      
+      .report {
+        margin-top: 20px;
+      }
+      
+      .graph {
+        margin: 0 auto;
+        max-width: 960px;
+        margin-top: 30px;
+      }
+      
+      /* Style of the graph */
+      .graph .node {
+        position: relative;
+        display: inline-block;
+        height: 24px;
+        width: 24px;
+        margin: 2px;
+      }
+      .graph .node .dot {
+        position: relative;
+        
+        height: 24px;
+        width: 24px;
+        border-radius: 24px;
+        
+        float: left;
+        
+        background: gray;
+        
+        /* box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+        border: solid 1px rgba(255, 255, 255, .2); */
+      }
+      
+      .graph .node.High .dot {
+        background: #E91E63;
+      }
+      
+      .graph .node.Medium .dot {
+        background: #FFA726;
+      }
+      
+      .graph .node.Low .dot {
+        background: #8BC34A;
+      }
+      
+      .graph .node .popup {
+        display: none;
+        
+        width: 300px;
+        
+        position: absolute;
+        bottom: 100%;
+        margin-bottom: 20px;
+        margin-left: -150px;
+        left: 2px;
+        
+        background: white;
+        box-shadow: 0px 1px 2px rgba(0, 0, 0, .2);
+        
+        padding: 10px;
+        border-radius: 4px;
+        /* border: solid 1px #e2e2e2; */
+        text-shadow: 0 0 0 transparent;
+      }
+      
+      .graph .node .popup:after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -10px;
+        display: block;
+        width: 0;
+        height: 0;
+        border-width: 10px 10px 0 10px;
+        border-color: white transparent transparent transparent;
+        border-style: solid;
+      }
+      
+      .graph .node .popup:before {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -10px;
+        display: block;
+        width: 0;
+        height: 0;
+        border-width: 11px 11px 0 10px;
+        border-color: rgba(0, 0, 0, .2) transparent transparent transparent;
+        border-style: solid;
+      }
+      
+      .graph .node .popup > div {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      .graph .node:hover .dot {
+        opacity: .8;
+      }
+      
+      .graph .node:hover .popup {
+        display: block;
+        max-height: 180px;
+        color: dimgray;
+      }
+      
+      /* bars */
+      .bar-bg {
+        display: inline-block;
+        width: 240px;
+        height: 6px;
+        position: relative;
+      }
+      
+      .bar-bar {
+        display: block;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        background: #E91E63;
+        border-radius: 2px;
+      }
+      
+      .bar-bar.High {
+        background: #E91E63;
+      }
+      
+      .bar-bar.Medium {
+        background: #FFA726;
+      }
+      
+      .bar-bar.Low {
+        background: #8BC34A;
+      }
+      
+      /* vulnerabilities */
+      .report {
+        margin: 18px auto;
+        max-width: 960px;  
+      }
+      
+      .report .vulnerabilities,
+      .report .features > ul {
+        margin: 0;
+        padding: 0;
+      }
+      
+      .report .features > ul {
+        list-style: none;
+      }
+      
+      .feature {
+        border-bottom: solid 1px #ECEFF1;
+      }
+      
+      .feature:last-child {
+        border-color: #CFD8DC;
+      }
+      
+      .feature__title {
+        padding: 1em;
+      }
+      
+      .vulnerabilities {
+        padding-left: 2.6em !important;
+      }
+      
+      .vulnerability {
+        padding-bottom: .8em;
+        padding-right: 2.2em;
+      }
+      
+      .vulnerabilities .High .name {
+        color: #E91E63;
+      }
+      
+      .vulnerabilities .Medium .name {
+        color: #FFA726;
+      }
+      
+      .vulnerabilities .Low .name {
+        color: #8BC34A;
+      }
+      
+      /* layers */
+      
+      .layer .layer__title {
+        cursor: pointer;
+        padding: 1em;
+        border-bottom: solid 1px #CFD8DC;
+        color: #37474F;
+        margin: 0;
+      }
+      
+      .layer .layer__title:hover {
+        background: #ECEFF1;
+      }
+      
+      .layer.closed .features {
+        display: none;
+      }
+      
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="app-header">
+        <h1>Hyperclair report</h1>
+      </header>
+      
+      <div class="app-intro clearfix">
+        <h2>Image: {{.ImageName}}</h2>
+        
+        <section class="summary">
+            <div>
+              {{with $vulnerabilitiesCount := .CountAllVulnerabilities}}
+                <p><span class="lead"><strong>Total : {{$vulnerabilitiesCount.Total}}</strong></span></p>
+                <p>
+                  <span style="display: inline-block; width: 120px;">Critical : <strong>{{$vulnerabilitiesCount.High}}</strong></span>
+                  <!--<span class="bar-bg">
+                    <span class="bar-bar High" style="width: {{$vulnerabilitiesCount.RelativeCount "High"}}%"></span>
+                  </span>-->
+                </p>
+                <p>
+                  <span style="display: inline-block; width: 120px;">Medium : <strong>{{$vulnerabilitiesCount.Medium}}</strong></span>
+                  <!--<span class="bar-bg">
+                    <span class="bar-bar Medium" style="width: {{$vulnerabilitiesCount.RelativeCount "Medium"}}%"></span>
+                  </span>-->
+                </p>
+                <p>
+                  <span style="display: inline-block; width: 120px;">Low : <strong>{{$vulnerabilitiesCount.Low}}</strong></span>
+                  <!--<span class="bar-bg">
+                    <span class="bar-bar Low" style="width: {{$vulnerabilitiesCount.RelativeCount "Low"}}%"></span>
+                  </span>-->
+                </p>
+                  <span style="display: inline-block; width: 120px;">Negligible : <strong>{{$vulnerabilitiesCount.Negligible}}</strong></span>
+                <p>
+                </p>
+              {{end}}
+            </div>
+          </section>
+          
+          <div class="graph">
+            {{range .SortVulnerabilities}}
+              <a class="node {{.Severity}}" href="#{{ .Name }}">
+                <div class="dot"></div>
+                <div class="popup">
+                  <div><strong>{{.Name}}</strong></div>
+                  <div>{{.Severity}}</div>
+                  <!--<div>{{.IntroduceBy}}</div>-->
+                  <!--<div>{{.Description}}</div>-->
+                  <div>{{.Layer}}</div>
+                </div>
+              </a>
+            {{end}}
+          </div>
+      </div>
+      
+      <section class="report">
+          <div>
+            <div class="panel">
+              <div class="layers">
+                {{range .SortLayers}}
+                  <div id="{{.Name}}" class="layer">
+                    <h3 class="layer__title" data-toggle-layer="{{.Name}}">{{.Name}}</h3>
+                    <div>{{.Path}}</div>
+                    <div class="features">
+                      <ul>
+                        {{range .Features}}
+                          <li class="feature">
+                            <div class="feature__title">
+                              <strong>{{ .Name }}</strong> <span>{{ .Version }}</span> - <span class="fa fa-{{if .Status}}check-circle{{else}}exclamation-triangle{{end}}" aria-hidden="true"></span>
+                            </div>
+                            <ul class="vulnerabilities">
+                              {{range .Vulnerabilities}}
+                                <li class="vulnerability {{ .Severity }}">
+                                  <a class="vulnerability__title" name="{{ .Name }}"></a>
+                                  <strong class="name">{{ .Name }}</strong>
+                                  <div>{{ .Description }}</div>
+                                  <a href="{{ .Link }}" target="blank">Link</a>
+                                </li>
+                              {{end}}
+                            </ul>
+                          </li>
+                        {{end}}
+                      </ul>
+                    </div>
+                  </div>
+                {{end}}
+              </div>
+            </div>
+            <br />
+          </div>
+        </div>
+      </section>
+    </div>
+    
+    <script>
+      (function () {
+        const togglers = document.querySelectorAll('[data-toggle-layer]');
+        console.log(togglers);
+        
+        for (var i = togglers.length - 1; i >= 0; i--) {
+          togglers[i].onclick = function (e) {
+            e.target.parentNode.classList.toggle('closed');
+          };
+        }
+      })();
+    </script>
+  </body>
+</html>
