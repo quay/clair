@@ -7,8 +7,9 @@ import (
 	"strings"
 
 	"github.com/spf13/viper"
-	"github.com/coreos/clair/cmd/clairctl/xerrors"
 )
+
+errDisallowed = errors.New("analysing official images is not allowed")
 
 //Image represent Image Manifest from Docker image, including the registry URL
 type Image struct {
@@ -79,7 +80,7 @@ func Parse(image string) (Image, error) {
 	}
 
 	if strings.Contains(registry, "docker.io") && repository == "" {
-		return Image{}, xerrors.ErrDisallowed
+		return Image{}, errDisallowed
 	}
 
 	return Image{

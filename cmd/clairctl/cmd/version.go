@@ -7,7 +7,6 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/coreos/clair/cmd/clairctl/xerrors"
 )
 
 const versionTplt = `
@@ -26,7 +25,7 @@ var versionCmd = &cobra.Command{
 
 		err := templ.Execute(os.Stdout, version)
 		if err != nil {
-			fmt.Println(xerrors.InternalError)
+			fmt.Println(errInternalError)
 			logrus.Fatalf("rendering the version: %v", err)
 		}
 	},

@@ -6,11 +6,10 @@ import (
 	"text/template"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/coreos/clair/cmd/clairctl/clair"
 	"github.com/coreos/clair/cmd/clairctl/docker"
-	"github.com/coreos/clair/cmd/clairctl/xerrors"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const analyseTplt = `
@@ -36,7 +35,7 @@ var analyseCmd = &cobra.Command{
 
 		err := template.Must(template.New("analysis").Parse(analyseTplt)).Execute(os.Stdout, ia)
 		if err != nil {
-			fmt.Println(xerrors.InternalError)
+			fmt.Println(errInternalError)
 			logrus.Fatalf("rendering analysis: %v", err)
 		}
 	},
@@ -50,10 +49,10 @@ func analyse(imageName string) clair.ImageAnalysis {
 		image, err = docker.Pull(imageName)
 
 		if err != nil {
-			if err == xerrors.NotFound {
+			if err == docker.ErrLoginNotFound {
 				fmt.Println(err)
 			} else {
-				fmt.Println(xerrors.InternalError)
+				fmt.Println(errInternalError)
 			}
 			logrus.Fatalf("pulling image %q: %v", imageName, err)
 		}
@@ -61,12 +60,12 @@ func analyse(imageName string) clair.ImageAnalysis {
 	} else {
 		image, err = docker.Parse(imageName)
 		if err != nil {
-			fmt.Println(xerrors.InternalError)
+			fmt.Println(errInternalError)
 			logrus.Fatalf("parsing local image %q: %v", imageName, err)
 		}
 		docker.FromHistory(&image)
 		if err != nil {
-			fmt.Println(xerrors.InternalError)
+			fmt.Println(errInternalError)
 			logrus.Fatalf("getting local image %q from history: %v", imageName, err)
 		}
 	}

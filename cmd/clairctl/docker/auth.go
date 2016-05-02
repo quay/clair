@@ -2,14 +2,16 @@ package docker
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"github.com/coreos/clair/cmd/clairctl/docker/httpclient"
-	"github.com/coreos/clair/cmd/clairctl/xerrors"
 )
+
+var ErrUnauthorized = errors.New("unauthorized access")
 
 type Authentication struct {
 	Username, Password string
@@ -63,7 +65,7 @@ func AuthenticateResponse(dockerResponse *http.Response, request *http.Request) 
 	}
 
 	if response.StatusCode == http.StatusUnauthorized {
-		return xerrors.Unauthorized
+		return ErrUnauthorized
 	}
 
 	if response.StatusCode != http.StatusOK {

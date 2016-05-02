@@ -20,9 +20,8 @@ import (
 	"text/template"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/spf13/cobra"
 	"github.com/coreos/clair/cmd/clairctl/docker"
-	"github.com/coreos/clair/cmd/clairctl/xerrors"
+	"github.com/spf13/cobra"
 )
 
 const pullTplt = `
@@ -46,13 +45,13 @@ var pullCmd = &cobra.Command{
 		im := args[0]
 		image, err := docker.Pull(im)
 		if err != nil {
-			fmt.Println(xerrors.ServiceUnavailable)
+			fmt.Println(errInternalError)
 			logrus.Fatalf("pulling image %v: %v", args[0], err)
 		}
 
 		err = template.Must(template.New("pull").Parse(pullTplt)).Execute(os.Stdout, image)
 		if err != nil {
-			fmt.Println(xerrors.InternalError)
+			fmt.Println(errInternalError)
 			logrus.Fatalf("rendering image: %v", err)
 		}
 	},

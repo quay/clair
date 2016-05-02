@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/viper"
 	"github.com/coreos/clair/cmd/clairctl/clair"
 	"github.com/coreos/clair/cmd/clairctl/docker"
-	"github.com/coreos/clair/cmd/clairctl/xerrors"
 	"github.com/coreos/clair/cmd/clairctl/xstrings"
 )
 
@@ -30,12 +29,12 @@ var reportCmd = &cobra.Command{
 		case "html":
 			html, err := clair.ReportAsHTML(analyses)
 			if err != nil {
-				fmt.Println(xerrors.InternalError)
+				fmt.Println(errInternalError)
 				logrus.Fatalf("generating HTML report: %v", err)
 			}
 			err = saveReport(imageName, string(html))
 			if err != nil {
-				fmt.Println(xerrors.InternalError)
+				fmt.Println(errInternalError)
 				logrus.Fatalf("saving HTML report: %v", err)
 			}
 
@@ -43,12 +42,12 @@ var reportCmd = &cobra.Command{
 			json, err := xstrings.ToIndentJSON(analyses)
 
 			if err != nil {
-				fmt.Println(xerrors.InternalError)
+				fmt.Println(errInternalError)
 				logrus.Fatalf("indenting JSON: %v", err)
 			}
 			err = saveReport(imageName, string(json))
 			if err != nil {
-				fmt.Println(xerrors.InternalError)
+				fmt.Println(errInternalError)
 				logrus.Fatalf("saving JSON report: %v", err)
 			}
 

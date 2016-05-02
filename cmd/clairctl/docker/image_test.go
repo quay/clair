@@ -3,7 +3,6 @@ package docker
 import (
 	"testing"
 
-	"github.com/coreos/clair/cmd/clairctl/xerrors"
 )
 
 var imageNameTests = []struct {
@@ -46,8 +45,8 @@ func TestParse(t *testing.T) {
 func TestParseDisallowed(t *testing.T) {
 	for _, imageName := range invalidImageNameTests {
 		_, err := Parse(imageName.in)
-		if err != xerrors.ErrDisallowed {
-			t.Errorf("Parse(\"%s\") should failed with err \"%v\": %v", imageName.in, xerrors.ErrDisallowed, err)
+		if err != errDisallowed {
+			t.Errorf("Parse(\"%s\") should failed with err \"%v\": %v", imageName.in, errDisallowed, err)
 		}
 	}
 }

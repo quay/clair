@@ -8,7 +8,6 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/coreos/clair/cmd/clairctl/docker/httpclient"
-	"github.com/coreos/clair/cmd/clairctl/xerrors"
 )
 
 //Pull Image from Registry or Hub depending on image name
@@ -48,9 +47,9 @@ func Pull(imageName string) (Image, error) {
 	if response.StatusCode != 200 {
 		switch response.StatusCode {
 		case http.StatusUnauthorized:
-			return Image{}, xerrors.Unauthorized
+			return Image{}, ErrUnauthorized
 		case http.StatusNotFound:
-			return Image{}, xerrors.NotFound
+			return Image{}, docker.ErrLoginNotFound
 		default:
 			return Image{}, fmt.Errorf("%d - %s", response.StatusCode, string(body))
 		}

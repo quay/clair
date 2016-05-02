@@ -7,7 +7,6 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/coreos/clair/cmd/clairctl/docker/httpclient"
-	"github.com/coreos/clair/cmd/clairctl/xerrors"
 )
 
 //Pull Image from Registry or Hub depending on image name
@@ -34,7 +33,7 @@ func Login(registry string) (bool, error) {
 		err := AuthenticateResponse(response, request)
 
 		if err != nil {
-			if err == xerrors.Unauthorized {
+			if err == ErrUnauthorized {
 				authorized = false
 			}
 			return false, err

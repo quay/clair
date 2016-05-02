@@ -15,12 +15,15 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/coreos/clair/cmd/clairctl/config"
+	"github.com/spf13/cobra"
 )
+
+var errInternalError = errors.New("client quit unexpectedly")
 
 var cfgFile string
 var logLevel string

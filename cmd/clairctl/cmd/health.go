@@ -6,9 +6,8 @@ import (
 	"text/template"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/spf13/cobra"
 	"github.com/coreos/clair/cmd/clairctl/clair"
-	"github.com/coreos/clair/cmd/clairctl/xerrors"
+	"github.com/spf13/cobra"
 )
 
 const healthTplt = `
@@ -27,7 +26,7 @@ var healthCmd = &cobra.Command{
 		ok := clair.IsHealthy()
 		err := template.Must(template.New("health").Parse(healthTplt)).Execute(os.Stdout, ok)
 		if err != nil {
-			fmt.Println(xerrors.InternalError)
+			fmt.Println(errInternalError)
 			logrus.Fatalf("rendering the health: %v", err)
 		}
 

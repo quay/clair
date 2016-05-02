@@ -5,10 +5,9 @@ import (
 	"os"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/spf13/cobra"
 	"github.com/coreos/clair/cmd/clairctl/config"
 	"github.com/coreos/clair/cmd/clairctl/docker"
-	"github.com/coreos/clair/cmd/clairctl/xerrors"
+	"github.com/spf13/cobra"
 )
 
 var logoutCmd = &cobra.Command{
@@ -31,14 +30,14 @@ var logoutCmd = &cobra.Command{
 			var users userMapping
 
 			if err := readConfigFile(&users, config.HyperclairConfig()); err != nil {
-				fmt.Println(xerrors.InternalError)
+				fmt.Println(errInternalError)
 				logrus.Fatalf("reading hyperclair file: %v", err)
 			}
 			if _, present := users[reg]; present {
 				delete(users, reg)
 
 				if err := writeConfigFile(users, config.HyperclairConfig()); err != nil {
-					fmt.Println(xerrors.InternalError)
+					fmt.Println(errInternalError)
 					logrus.Fatalf("indenting login: %v", err)
 				}
 

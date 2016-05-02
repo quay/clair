@@ -8,7 +8,6 @@ import (
 	"github.com/coreos/clair/cmd/clairctl/config"
 	"github.com/coreos/clair/cmd/clairctl/docker"
 	"github.com/coreos/clair/cmd/clairctl/server"
-	"github.com/coreos/clair/cmd/clairctl/xerrors"
 	"github.com/spf13/cobra"
 )
 
@@ -32,10 +31,10 @@ var pushCmd = &cobra.Command{
 			var err error
 			image, err = docker.Pull(imageName)
 			if err != nil {
-				if err == xerrors.NotFound {
+				if err == docker.ErrLoginNotFound {
 					fmt.Println(err)
 				} else {
-					fmt.Println(xerrors.InternalError)
+					fmt.Println(errInternalError)
 				}
 				logrus.Fatalf("pulling image %q: %v", imageName, err)
 			}
@@ -43,13 +42,13 @@ var pushCmd = &cobra.Command{
 			var err error
 			image, err = docker.Parse(imageName)
 			if err != nil {
-				fmt.Println(xerrors.InternalError)
+				fmt.Println(errInternalError)
 				logrus.Fatalf("parsing local image %q: %v", imageName, err)
 			}
 			err = docker.Prepare(&image)
 			logrus.Debugf("prepared image layers: %d", len(image.FsLayers))
 			if err != nil {
-				fmt.Println(xerrors.InternalError)
+				fmt.Println(errInternalError)
 				logrus.Fatalf("preparing local image %q from history: %v", imageName, err)
 			}
 		}
@@ -57,7 +56,7 @@ var pushCmd = &cobra.Command{
 		logrus.Info("Pushing Image")
 		if err := docker.Push(image); err != nil {
 			if err != nil {
-				fmt.Println(xerrors.InternalError)
+				fmt.Println(errInternalError)
 				logrus.Fatalf("pushing image %q: %v", imageName, err)
 			}
 		}
@@ -76,12 +75,12 @@ func init() {
 func startLocalServer() {
 	sURL, err := config.LocalServerIP()
 	if err != nil {
-		fmt.Println(xerrors.InternalError)
+		fmt.Println(errInternalError)
 		logrus.Fatalf("retrieving internal server IP: %v", err)
 	}
 	err = server.Serve(sURL)
 	if err != nil {
-		fmt.Println(xerrors.InternalError)
+		fmt.Println(errInternalError)
 		logrus.Fatalf("starting local server: %v", err)
 	}
 }

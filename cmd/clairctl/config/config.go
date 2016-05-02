@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -12,10 +13,11 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/spf13/viper"
 	"github.com/coreos/clair/cmd/clairctl/clair"
-	"github.com/coreos/clair/cmd/clairctl/xerrors"
+	"github.com/spf13/viper"
 )
+
+var ErrLoginNotFound = errors.New("user is not log in")
 
 type r struct {
 	Path, Format string
@@ -136,7 +138,7 @@ func Print() {
 func HyperclairHome() string {
 	usr, err := user.Current()
 	if err != nil {
-		fmt.Println(xerrors.InternalError)
+		fmt.Println(errInternalError)
 		logrus.Fatalf("retrieving user: %v", err)
 	}
 	p := usr.HomeDir + "/.hyperclair"

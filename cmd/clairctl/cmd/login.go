@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/coreos/clair/cmd/clairctl/config"
 	"github.com/coreos/clair/cmd/clairctl/docker"
-	"github.com/coreos/clair/cmd/clairctl/xerrors"
 	"github.com/coreos/clair/cmd/clairctl/xstrings"
 )
 
@@ -38,7 +37,7 @@ var loginCmd = &cobra.Command{
 		var users userMapping
 
 		if err := readConfigFile(&users, config.HyperclairConfig()); err != nil {
-			fmt.Println(xerrors.InternalError)
+			fmt.Println(errInternalError)
 			logrus.Fatalf("reading hyperclair file: %v", err)
 		}
 
@@ -50,21 +49,21 @@ var loginCmd = &cobra.Command{
 
 		var usr user
 		if err := askForUser(&usr); err != nil {
-			fmt.Println(xerrors.InternalError)
+			fmt.Println(errInternalError)
 			logrus.Fatalf("encrypting password: %v", err)
 		}
 
 		users[reg] = usr
 
 		if err := writeConfigFile(users, config.HyperclairConfig()); err != nil {
-			fmt.Println(xerrors.InternalError)
+			fmt.Println(errInternalError)
 			logrus.Fatalf("indenting login: %v", err)
 		}
 
 		logged, err := docker.Login(reg)
 
 		if err != nil {
-			fmt.Println(xerrors.InternalError)
+			fmt.Println(errInternalError)
 			logrus.Fatalf("log in: %v", err)
 		}
 
