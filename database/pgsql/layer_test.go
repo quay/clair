@@ -18,14 +18,15 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/coreos/clair/database"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestFindLayer(t *testing.T) {
-	datastore, err := OpenForTest("FindLayer", true)
+	datastore, err := openDatabaseForTest("FindLayer", true)
 	if err != nil {
 		t.Error(err)
 		return
@@ -102,7 +103,7 @@ func TestFindLayer(t *testing.T) {
 }
 
 func TestInsertLayer(t *testing.T) {
-	datastore, err := OpenForTest("InsertLayer", false)
+	datastore, err := openDatabaseForTest("InsertLayer", false)
 	if err != nil {
 		t.Error(err)
 		return

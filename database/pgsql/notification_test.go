@@ -4,14 +4,15 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/coreos/clair/database"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestNotification(t *testing.T) {
-	datastore, err := OpenForTest("Notification", false)
+	datastore, err := openDatabaseForTest("Notification", false)
 	if err != nil {
 		t.Error(err)
 		return

@@ -41,9 +41,7 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 	var namespaceName sql.NullString
 
 	t := time.Now()
-	err := pgSQL.QueryRow(searchLayer, name).
-		Scan(&layer.ID, &layer.Name, &layer.EngineVersion, &parentID, &parentName, &namespaceID,
-			&namespaceName)
+	err := pgSQL.QueryRow(searchLayer, name).Scan(&layer.ID, &layer.Name, &layer.EngineVersion, &parentID, &parentName, &namespaceID, &namespaceName)
 	observeQueryTime("FindLayer", "searchLayer", t)
 
 	if err != nil {

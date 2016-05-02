@@ -22,7 +22,7 @@ import (
 )
 
 func TestLock(t *testing.T) {
-	datastore, err := OpenForTest("InsertNamespace", false)
+	datastore, err := openDatabaseForTest("InsertNamespace", false)
 	if err != nil {
 		t.Error(err)
 		return

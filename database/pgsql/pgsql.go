@@ -19,22 +19,23 @@ import (
 	"database/sql"
 	"fmt"
 	"io/ioutil"
-	"os"
+	"net/url"
 	"path"
 	"runtime"
 	"strings"
 	"time"
 
 	"bitbucket.org/liamstask/goose/lib/goose"
+	"github.com/coreos/pkg/capnslog"
+	"github.com/hashicorp/golang-lru"
+	"github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus"
+	"gopkg.in/yaml.v2"
+
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
-	"github.com/coreos/pkg/capnslog"
-	"github.com/hashicorp/golang-lru"
-	"github.com/lib/pq"
-	"github.com/pborman/uuid"
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
@@ -72,6 +73,8 @@ func init() {
 	prometheus.MustRegister(promCacheQueriesTotal)
 	prometheus.MustRegister(promQueryDurationMilliseconds)
 	prometheus.MustRegister(promConcurrentLockVAFV)
+
+	database.Register("pgsql", openDatabase)
 }
 
 type Queryer interface {
@@ -81,46 +84,137 @@ type Queryer interface {
 
 type pgSQL struct {
 	*sql.DB
-	cache *lru.ARCCache
+	cache  *lru.ARCCache
+	config Config
 }
 
+// Close closes the database and destroys if ManageDatabaseLifecycle has been specified in
+// the configuration.
 func (pgSQL *pgSQL) Close() {
-	pgSQL.DB.Close()
+	if pgSQL.DB != nil {
+		pgSQL.DB.Close()
+	}
+
+	if pgSQL.config.ManageDatabaseLifecycle {
+		dbName, pgSourceURL, _ := parseConnectionString(pgSQL.config.Source)
+		dropDatabase(pgSourceURL, dbName)
+	}
 }
 
+// Ping verifies that the database is accessible.
 func (pgSQL *pgSQL) Ping() bool {
 	return pgSQL.DB.Ping() == nil
 }
 
-// Open creates a Datastore backed by a PostgreSQL database.
-//
-// It will run immediately every necessary migration on the database.
-func Open(config *config.DatabaseConfig) (database.Datastore, error) {
-	// Run migrations.
-	if err := migrate(config.Source); err != nil {
-		log.Error(err)
-		return nil, database.ErrCantOpen
+// Config is the configuration that is used by openDatabase.
+type Config struct {
+	Source    string
+	CacheSize int
+
+	ManageDatabaseLifecycle bool
+	FixturePath             string
+}
+
+// openDatabase opens a PostgresSQL-backed Datastore using the given configuration.
+// It immediately every necessary migrations. If ManageDatabaseLifecycle is specified,
+// the database will be created first. If FixturePath is specified, every SQL queries that are
+// present insides will be executed.
+func openDatabase(registrableComponentConfig config.RegistrableComponentConfig) (database.Datastore, error) {
+	var pg pgSQL
+	var err error
+
+	// Parse configuration.
+	pg.config = Config{
+		CacheSize: 16384,
+	}
+	bytes, err := yaml.Marshal(registrableComponentConfig.Options)
+	if err != nil {
+		return nil, fmt.Errorf("pgsql: could not load configuration: %v", err)
+	}
+	err = yaml.Unmarshal(bytes, &pg.config)
+	if err != nil {
+		return nil, fmt.Errorf("pgsql: could not load configuration: %v", err)
+	}
+
+	dbName, pgSourceURL, err := parseConnectionString(pg.config.Source)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create database.
+	if pg.config.ManageDatabaseLifecycle {
+		log.Info("pgsql: creating database")
+		if err := createDatabase(pgSourceURL, dbName); err != nil {
+			return nil, err
+		}
 	}
 
 	// Open database.
-	db, err := sql.Open("postgres", config.Source)
+	pg.DB, err = sql.Open("postgres", pg.config.Source)
 	if err != nil {
-		log.Error(err)
-		return nil, database.ErrCantOpen
+		pg.Close()
+		return nil, fmt.Errorf("pgsql: could not open database: %v", err)
+	}
+
+	// Verify database state.
+	if err := pg.DB.Ping(); err != nil {
+		pg.Close()
+		return nil, fmt.Errorf("pgsql: could not open database: %v", err)
+	}
+
+	// Run migrations.
+	if err := migrate(pg.config.Source); err != nil {
+		pg.Close()
+		return nil, err
+	}
+
+	// Load fixture data.
+	if pg.config.FixturePath != "" {
+		log.Info("pgsql: loading fixtures")
+
+		d, err := ioutil.ReadFile(pg.config.FixturePath)
+		if err != nil {
+			pg.Close()
+			return nil, fmt.Errorf("pgsql: could not open fixture file: %v", err)
+		}
+
+		_, err = pg.DB.Exec(string(d))
+		if err != nil {
+			pg.Close()
+			return nil, fmt.Errorf("pgsql: an error occured while importing fixtures: %v", err)
+		}
 	}
 
 	// Initialize cache.
 	// TODO(Quentin-M): Benchmark with a simple LRU Cache.
-	var cache *lru.ARCCache
-	if config.CacheSize > 0 {
-		cache, _ = lru.NewARC(config.CacheSize)
+	if pg.config.CacheSize > 0 {
+		pg.cache, _ = lru.NewARC(pg.config.CacheSize)
 	}
 
-	return &pgSQL{DB: db, cache: cache}, nil
+	return &pg, nil
+}
+
+func parseConnectionString(source string) (dbName string, pgSourceURL string, err error) {
+	if source == "" {
+		return "", "", cerrors.NewBadRequestError("pgsql: no database connection string specified")
+	}
+
+	sourceURL, err := url.Parse(source)
+	if err != nil {
+		return "", "", cerrors.NewBadRequestError("pgsql: database connection string is not a valid URL")
+	}
+
+	dbName = strings.TrimPrefix(sourceURL.Path, "/")
+
+	pgSource := *sourceURL
+	pgSource.Path = "/postgres"
+	pgSourceURL = pgSource.String()
+
+	return
 }
 
 // migrate runs all available migrations on a pgSQL database.
-func migrate(dataSource string) error {
+func migrate(source string) error {
 	log.Info("running database migrations")
 
 	_, filename, _, _ := runtime.Caller(1)
@@ -129,7 +223,7 @@ func migrate(dataSource string) error {
 		MigrationsDir: migrationDir,
 		Driver: goose.DBDriver{
 			Name:    "postgres",
-			OpenStr: dataSource,
+			OpenStr: source,
 			Import:  "github.com/lib/pq",
 			Dialect: &goose.PostgresDialect{},
 		},
@@ -138,13 +232,13 @@ func migrate(dataSource string) error {
 	// Determine the most recent revision available from the migrations folder.
 	target, err := goose.GetMostRecentDBVersion(conf.MigrationsDir)
 	if err != nil {
-		return err
+		return fmt.Errorf("pgsql: could not get most recent migration: %v", err)
 	}
 
-	// Run migrations
+	// Run migrations.
 	err = goose.RunMigrations(conf, conf.MigrationsDir, target)
 	if err != nil {
-		return err
+		return fmt.Errorf("pgsql: an error occured while running migrations: %v", err)
 	}
 
 	log.Info("database migration ran successfully")
@@ -152,107 +246,49 @@ func migrate(dataSource string) error {
 }
 
 // createDatabase creates a new database.
-// The dataSource parameter should not contain a dbname.
-func createDatabase(dataSource, databaseName string) error {
+// The source parameter should not contain a dbname.
+func createDatabase(source, dbName string) error {
 	// Open database.
-	db, err := sql.Open("postgres", dataSource)
+	db, err := sql.Open("postgres", source)
 	if err != nil {
-		return fmt.Errorf("could not open database (CreateDatabase): %v", err)
+		return fmt.Errorf("pgsql: could not open 'postgres' database for creation: %v", err)
 	}
 	defer db.Close()
 
 	// Create database.
-	_, err = db.Exec("CREATE DATABASE " + databaseName)
+	_, err = db.Exec("CREATE DATABASE " + dbName)
 	if err != nil {
-		return fmt.Errorf("could not create database: %v", err)
+		return fmt.Errorf("pgsql: could not create database: %v", err)
 	}
 
 	return nil
 }
 
 // dropDatabase drops an existing database.
-// The dataSource parameter should not contain a dbname.
-func dropDatabase(dataSource, databaseName string) error {
+// The source parameter should not contain a dbname.
+func dropDatabase(source, dbName string) error {
 	// Open database.
-	db, err := sql.Open("postgres", dataSource)
+	db, err := sql.Open("postgres", source)
 	if err != nil {
 		return fmt.Errorf("could not open database (DropDatabase): %v", err)
 	}
 	defer db.Close()
 
 	// Kill any opened connection.
-	if _, err := db.Exec(`
+	if _, err = db.Exec(`
     SELECT pg_terminate_backend(pg_stat_activity.pid)
     FROM pg_stat_activity
     WHERE pg_stat_activity.datname = $1
-    AND pid <> pg_backend_pid()`, databaseName); err != nil {
+    AND pid <> pg_backend_pid()`, dbName); err != nil {
 		return fmt.Errorf("could not drop database: %v", err)
 	}
 
 	// Drop database.
-	if _, err = db.Exec("DROP DATABASE " + databaseName); err != nil {
+	if _, err = db.Exec("DROP DATABASE " + dbName); err != nil {
 		return fmt.Errorf("could not drop database: %v", err)
 	}
 
 	return nil
-}
-
-// pgSQLTest wraps pgSQL for testing purposes.
-// Its Close() method drops the database.
-type pgSQLTest struct {
-	*pgSQL
-	dataSourceDefaultDatabase string
-	dbName                    string
-}
-
-// OpenForTest creates a test Datastore backed by a new PostgreSQL database.
-// It creates a new unique and prefixed ("test_") database.
-// Using Close() will drop the database.
-func OpenForTest(name string, withTestData bool) (*pgSQLTest, error) {
-	// Define the PostgreSQL connection strings.
-	dataSource := "host=127.0.0.1 sslmode=disable user=postgres dbname="
-	if dataSourceEnv := os.Getenv("CLAIR_TEST_PGSQL"); dataSourceEnv != "" {
-		dataSource = dataSourceEnv + " dbname="
-	}
-	dbName := "test_" + strings.ToLower(name) + "_" + strings.Replace(uuid.New(), "-", "_", -1)
-	dataSourceDefaultDatabase := dataSource + "postgres"
-	dataSourceTestDatabase := dataSource + dbName
-
-	// Create database.
-	if err := createDatabase(dataSourceDefaultDatabase, dbName); err != nil {
-		log.Error(err)
-		return nil, database.ErrCantOpen
-	}
-
-	// Open database.
-	db, err := Open(&config.DatabaseConfig{Source: dataSourceTestDatabase, CacheSize: 0})
-	if err != nil {
-		dropDatabase(dataSourceDefaultDatabase, dbName)
-		log.Error(err)
-		return nil, database.ErrCantOpen
-	}
-
-	// Load test data if specified.
-	if withTestData {
-		_, filename, _, _ := runtime.Caller(0)
-		d, _ := ioutil.ReadFile(path.Join(path.Dir(filename)) + "/testdata/data.sql")
-		_, err = db.(*pgSQL).Exec(string(d))
-		if err != nil {
-			dropDatabase(dataSourceDefaultDatabase, dbName)
-			log.Error(err)
-			return nil, database.ErrCantOpen
-		}
-	}
-
-	return &pgSQLTest{
-		pgSQL: db.(*pgSQL),
-		dataSourceDefaultDatabase: dataSourceDefaultDatabase,
-		dbName: dbName}, nil
-}
-
-func (pgSQL *pgSQLTest) Close() {
-	pgSQL.DB.Close()
-	dropDatabase(pgSQL.dataSourceDefaultDatabase, pgSQL.dbName)
 }
 
 // handleError logs an error with an extra description and masks the error if it's an SQL one.

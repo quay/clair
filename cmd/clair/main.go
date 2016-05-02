@@ -20,10 +20,10 @@ import (
 	"runtime/pprof"
 	"strings"
 
+	"github.com/coreos/pkg/capnslog"
+
 	"github.com/coreos/clair"
 	"github.com/coreos/clair/config"
-
-	"github.com/coreos/pkg/capnslog"
 
 	// Register components
 	_ "github.com/coreos/clair/notifier/notifiers"
@@ -43,6 +43,8 @@ import (
 	_ "github.com/coreos/clair/worker/detectors/namespace/lsbrelease"
 	_ "github.com/coreos/clair/worker/detectors/namespace/osrelease"
 	_ "github.com/coreos/clair/worker/detectors/namespace/redhatrelease"
+
+	_ "github.com/coreos/clair/database/pgsql"
 )
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair/cmd/clair", "main")

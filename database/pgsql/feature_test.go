@@ -17,13 +17,14 @@ package pgsql
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils/types"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestInsertFeature(t *testing.T) {
-	datastore, err := OpenForTest("InsertFeature", false)
+	datastore, err := openDatabaseForTest("InsertFeature", false)
 	if err != nil {
 		t.Error(err)
 		return

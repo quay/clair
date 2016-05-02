@@ -26,7 +26,7 @@ import (
 	"github.com/coreos/clair/api"
 	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/config"
-	"github.com/coreos/clair/database/pgsql"
+	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/notifier"
 	"github.com/coreos/clair/updater"
 	"github.com/coreos/clair/utils"
@@ -42,7 +42,7 @@ func Boot(config *config.Config) {
 	st := utils.NewStopper()
 
 	// Open database
-	db, err := pgsql.Open(config.Database)
+	db, err := database.Open(config.Database)
 	if err != nil {
 		log.Fatal(err)
 	}

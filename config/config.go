@@ -27,6 +27,14 @@ import (
 // ErrDatasourceNotLoaded is returned when the datasource variable in the configuration file is not loaded properly
 var ErrDatasourceNotLoaded = errors.New("could not load configuration: no database source specified")
 
+// RegistrableComponentConfig is a configuration block that can be used to
+// determine which registrable component should be initialized and pass
+// custom configuration to it.
+type RegistrableComponentConfig struct {
+	Type    string
+	Options map[string]interface{}
+}
+
 // File represents a YAML configuration file that namespaces all Clair
 // configuration under the top-level "clair" key.
 type File struct {
@@ -35,17 +43,10 @@ type File struct {
 
 // Config is the global configuration for an instance of Clair.
 type Config struct {
-	Database *DatabaseConfig
+	Database RegistrableComponentConfig
 	Updater  *UpdaterConfig
 	Notifier *NotifierConfig
 	API      *APIConfig
-}
-
-// DatabaseConfig is the configuration used to specify how Clair connects
-// to a database.
-type DatabaseConfig struct {
-	Source    string
-	CacheSize int
 }
 
 // UpdaterConfig is the configuration for the Updater service.
@@ -72,8 +73,8 @@ type APIConfig struct {
 // DefaultConfig is a configuration that can be used as a fallback value.
 func DefaultConfig() Config {
 	return Config{
-		Database: &DatabaseConfig{
-			CacheSize: 16384,
+		Database: RegistrableComponentConfig{
+			Type: "pgsql",
 		},
 		Updater: &UpdaterConfig{
 			Interval: 1 * time.Hour,
@@ -116,12 +117,8 @@ func Load(path string) (config *Config, err error) {
 	}
 	config = &cfgFile.Clair
 
-	if config.Database.Source == "" {
-		err = ErrDatasourceNotLoaded
-		return
-	}
-
 	// Generate a pagination key if none is provided.
+	// TODO(Quentin-M): Move to the API code.
 	if config.API.PaginationKey == "" {
 		var key fernet.Key
 		if err = key.Generate(); err != nil {
