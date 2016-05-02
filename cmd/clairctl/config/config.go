@@ -2,9 +2,12 @@ package config
 
 import (
 	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"os/user"
@@ -14,6 +17,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/coreos/clair/cmd/clairctl/clair"
+	"github.com/coreos/clair/cmd/clairctl/xstrings"
 	"github.com/spf13/viper"
 )
 
@@ -138,8 +142,7 @@ func Print() {
 func HyperclairHome() string {
 	usr, err := user.Current()
 	if err != nil {
-		fmt.Println(errInternalError)
-		logrus.Fatalf("retrieving user: %v", err)
+		panic(err)
 	}
 	p := usr.HomeDir + "/.hyperclair"
 
@@ -149,8 +152,99 @@ func HyperclairHome() string {
 	return p
 }
 
+type Login struct {
+	Username string
+	Password string
+}
+
+type loginMapping map[string]Login
+
 func HyperclairConfig() string {
 	return HyperclairHome() + "/config.json"
+}
+
+func AddLogin(registry string, login Login) error {
+	var logins loginMapping
+
+	if err := readConfigFile(&logins, HyperclairConfig()); err != nil {
+		return fmt.Errorf("reading hyperclair file: %v", err)
+	}
+
+	logins[registry] = login
+
+	if err := writeConfigFile(logins, HyperclairConfig()); err != nil {
+		return fmt.Errorf("indenting login: %v", err)
+	}
+
+	return nil
+}
+func GetLogin(registry string) (Login, error) {
+	if _, err := os.Stat(HyperclairConfig()); err == nil {
+		var logins loginMapping
+
+		if err := readConfigFile(&logins, HyperclairConfig()); err != nil {
+			return Login{}, fmt.Errorf("reading hyperclair file: %v", err)
+		}
+
+		if login, present := logins[registry]; present {
+			d, err := base64.StdEncoding.DecodeString(login.Password)
+			if err != nil {
+				return Login{}, fmt.Errorf("decoding password: %v", err)
+			}
+			login.Password = string(d)
+			return login, nil
+		}
+	}
+	return Login{}, ErrLoginNotFound
+}
+
+func RemoveLogin(registry string) (bool, error) {
+	if _, err := os.Stat(HyperclairConfig()); err == nil {
+		var logins loginMapping
+
+		if err := readConfigFile(&logins, HyperclairConfig()); err != nil {
+			return false, fmt.Errorf("reading hyperclair file: %v", err)
+		}
+
+		if _, present := logins[registry]; present {
+			delete(logins, registry)
+
+			if err := writeConfigFile(logins, HyperclairConfig()); err != nil {
+				return false, fmt.Errorf("indenting login: %v", err)
+			}
+
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func readConfigFile(logins *loginMapping, file string) error {
+	if _, err := os.Stat(file); err == nil {
+		f, err := ioutil.ReadFile(file)
+		if err != nil {
+			return err
+		}
+
+		if err := json.Unmarshal(f, &logins); err != nil {
+			return err
+		}
+	} else {
+		*logins = loginMapping{}
+	}
+	return nil
+}
+
+func writeConfigFile(logins loginMapping, file string) error {
+	s, err := xstrings.ToIndentJSON(logins)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(file, s, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 //LocalServerIP return the local hyperclair server IP
