@@ -53,12 +53,20 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 
 	wheezy, err := datastore.FindLayer("wheezy", true, false)
 	if assert.Nil(t, err) {
-		assert.Equal(t, "debian:7", wheezy.Namespace.Name)
+		testDebian7 := database.Namespace{
+			Name:    "debian",
+			Version: types.NewVersionUnsafe("7"),
+		}
+		assert.True(t, testDebian7.Equal(wheezy.Namespaces[0]))
 		assert.Len(t, wheezy.Features, 52)
 
 		jessie, err := datastore.FindLayer("jessie", true, false)
 		if assert.Nil(t, err) {
-			assert.Equal(t, "debian:8", jessie.Namespace.Name)
+			testDebian8 := database.Namespace{
+				Name:    "debian",
+				Version: types.NewVersionUnsafe("8"),
+			}
+			assert.True(t, testDebian8.Equal(jessie.Namespaces[0]))
 			assert.Len(t, jessie.Features, 74)
 
 			// These FeatureVersions haven't been upgraded.
@@ -98,13 +106,13 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 			}
 
 			for _, nufv := range nonUpgradedFeatureVersions {
-				nufv.Feature.Namespace.Name = "debian:7"
+				nufv.Feature.Namespace.Name = "debian"
+				nufv.Feature.Namespace.Version = types.NewVersionUnsafe("7")
 
 				found := false
 				for _, fv := range jessie.Features {
 					if fv.Feature.Name == nufv.Feature.Name &&
-						fv.Feature.Namespace.Name == nufv.Feature.Namespace.Name &&
-						fv.Version == nufv.Version {
+						fv.Feature.Namespace.Equal(nufv.Feature.Namespace) {
 						found = true
 						break
 					}
@@ -113,13 +121,13 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 			}
 
 			for _, nufv := range nonUpgradedFeatureVersions {
-				nufv.Feature.Namespace.Name = "debian:8"
+				nufv.Feature.Namespace.Name = "debian"
+				nufv.Feature.Namespace.Version = types.NewVersionUnsafe("8")
 
 				found := false
 				for _, fv := range jessie.Features {
 					if fv.Feature.Name == nufv.Feature.Name &&
-						fv.Feature.Namespace.Name == nufv.Feature.Namespace.Name &&
-						fv.Version == nufv.Version {
+						fv.Feature.Namespace.Equal(nufv.Feature.Namespace) {
 						found = true
 						break
 					}

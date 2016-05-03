@@ -41,14 +41,14 @@ func TestDebianParser(t *testing.T) {
 				expectedFeatureVersions := []database.FeatureVersion{
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:8"},
+							Namespace: database.Namespace{Name: "debian", Version: types.NewVersionUnsafe("8")},
 							Name:      "aptdaemon",
 						},
 						Version: types.MaxVersion,
 					},
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:unstable"},
+							Namespace: database.Namespace{Name: "debian", Version: types.NewVersionUnsafe("unstable")},
 
 							Name: "aptdaemon",
 						},
@@ -67,21 +67,21 @@ func TestDebianParser(t *testing.T) {
 				expectedFeatureVersions := []database.FeatureVersion{
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:8"},
+							Namespace: database.Namespace{Name: "debian", Version: types.NewVersionUnsafe("8")},
 							Name:      "aptdaemon",
 						},
 						Version: types.NewVersionUnsafe("0.7.0"),
 					},
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:unstable"},
+							Namespace: database.Namespace{Name: "debian", Version: types.NewVersionUnsafe("unstable")},
 							Name:      "aptdaemon",
 						},
 						Version: types.NewVersionUnsafe("0.7.0"),
 					},
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:8"},
+							Namespace: database.Namespace{Name: "debian", Version: types.NewVersionUnsafe("8")},
 							Name:      "asterisk",
 						},
 						Version: types.NewVersionUnsafe("0.5.56"),
@@ -99,7 +99,7 @@ func TestDebianParser(t *testing.T) {
 				expectedFeatureVersions := []database.FeatureVersion{
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:8"},
+							Namespace: database.Namespace{Name: "debian", Version: types.NewVersionUnsafe("8")},
 							Name:      "asterisk",
 						},
 						Version: types.MinVersion,

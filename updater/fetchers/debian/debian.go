@@ -192,7 +192,8 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 					Feature: database.Feature{
 						Name: pkgName,
 						Namespace: database.Namespace{
-							Name: "debian:" + database.DebianReleasesMapping[releaseName],
+							Name:    "debian",
+							Version: types.NewVersionUnsafe(database.DebianReleasesMapping[releaseName]),
 						},
 					},
 					Version: version,

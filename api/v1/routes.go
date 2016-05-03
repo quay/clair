@@ -29,6 +29,7 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
+	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/clair/worker"
 )
 
@@ -178,7 +179,7 @@ func getNamespaces(w http.ResponseWriter, r *http.Request, p httprouter.Params, 
 	}
 	var namespaces []Namespace
 	for _, dbNamespace := range dbNamespaces {
-		namespaces = append(namespaces, Namespace{Name: dbNamespace.Name})
+		namespaces = append(namespaces, Namespace{Name: dbNamespace.Name, Version: dbNamespace.Version.String()})
 	}
 
 	writeResponse(w, r, http.StatusOK, NamespaceEnvelope{Namespaces: &namespaces})
@@ -212,8 +213,8 @@ func getVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Par
 		}
 	}
 
-	namespace := p.ByName("namespaceName")
-	if namespace == "" {
+	namespace := getNamespace(p.ByName("namespaceName"), p.ByName("namespaceVersion"))
+	if namespace.IsEmpty() {
 		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"namespace should not be empty"}})
 		return getNotificationRoute, http.StatusBadRequest
 	}
@@ -285,7 +286,7 @@ func postVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Para
 func getVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
 	_, withFixedIn := r.URL.Query()["fixedIn"]
 
-	dbVuln, err := ctx.Store.FindVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
+	dbVuln, err := ctx.Store.FindVulnerability(getNamespace(p.ByName("namespaceName"), p.ByName("namespaceVersion")), p.ByName("vulnerabilityName"))
 	if err == cerrors.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return getVulnerabilityRoute, http.StatusNotFound
@@ -324,7 +325,7 @@ func putVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 		return putVulnerabilityRoute, http.StatusBadRequest
 	}
 
-	vuln.Namespace.Name = p.ByName("namespaceName")
+	vuln.Namespace = getNamespace(p.ByName("namespaceName"), p.ByName("namespaceVersion"))
 	vuln.Name = p.ByName("vulnerabilityName")
 
 	err = ctx.Store.InsertVulnerabilities([]database.Vulnerability{vuln}, true)
@@ -344,7 +345,7 @@ func putVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 }
 
 func deleteVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
-	err := ctx.Store.DeleteVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
+	err := ctx.Store.DeleteVulnerability(getNamespace(p.ByName("namespaceName"), p.ByName("namespaceVersion")), p.ByName("vulnerabilityName"))
 	if err == cerrors.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return deleteVulnerabilityRoute, http.StatusNotFound
@@ -358,7 +359,7 @@ func deleteVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 }
 
 func getFixes(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
-	dbVuln, err := ctx.Store.FindVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
+	dbVuln, err := ctx.Store.FindVulnerability(getNamespace(p.ByName("namespaceName"), p.ByName("namespaceVersion")), p.ByName("vulnerabilityName"))
 	if err == cerrors.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, FeatureEnvelope{Error: &Error{err.Error()}})
 		return getFixesRoute, http.StatusNotFound
@@ -396,7 +397,7 @@ func putFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *co
 		return putFixRoute, http.StatusBadRequest
 	}
 
-	err = ctx.Store.InsertVulnerabilityFixes(p.ByName("vulnerabilityNamespace"), p.ByName("vulnerabilityName"), []database.FeatureVersion{dbFix})
+	err = ctx.Store.InsertVulnerabilityFixes(getNamespace(p.ByName("vulnerabilityNamespaceName"), p.ByName("vulnerabilityNamespaceVersion")), p.ByName("vulnerabilityName"), []database.FeatureVersion{dbFix})
 	if err != nil {
 		switch err.(type) {
 		case *cerrors.ErrBadRequest:
@@ -417,7 +418,7 @@ func putFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *co
 }
 
 func deleteFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
-	err := ctx.Store.DeleteVulnerabilityFix(p.ByName("vulnerabilityNamespace"), p.ByName("vulnerabilityName"), p.ByName("fixName"))
+	err := ctx.Store.DeleteVulnerabilityFix(getNamespace(p.ByName("vulnerabilityNamespaceName"), p.ByName("vulnerabilityNamespaceVersion")), p.ByName("vulnerabilityName"), p.ByName("fixName"))
 	if err == cerrors.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, FeatureEnvelope{Error: &Error{err.Error()}})
 		return deleteFixRoute, http.StatusNotFound
@@ -495,4 +496,8 @@ func deleteNotification(w http.ResponseWriter, r *http.Request, p httprouter.Par
 func getMetrics(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
 	prometheus.Handler().ServeHTTP(w, r)
 	return getMetricsRoute, 0
+}
+
+func getNamespace(name, version string) database.Namespace {
+	return database.Namespace{Name: name, Version: types.NewVersionUnsafe(version)}
 }
