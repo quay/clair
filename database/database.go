@@ -93,7 +93,7 @@ type Datastore interface {
 	// The Limit and page parameters are used to paginate the return list.
 	// The first given page should be 0. The function will then return the next available page.
 	// If there is no more page, -1 has to be returned.
-	ListVulnerabilities(namespaceName string, limit int, page int) ([]Vulnerability, int, error)
+	ListVulnerabilities(namespace Namespace, limit int, page int) ([]Vulnerability, int, error)
 
 	// InsertVulnerabilities stores the given Vulnerabilities in the database, updating them if
 	// necessary. A vulnerability is uniquely identified by its Namespace and its Name.
@@ -110,22 +110,22 @@ type Datastore interface {
 	InsertVulnerabilities(vulnerabilities []Vulnerability, createNotification bool) error
 
 	// FindVulnerability retrieves a Vulnerability from the database, including the FixedIn list.
-	FindVulnerability(namespaceName, name string) (Vulnerability, error)
+	FindVulnerability(namespace Namespace, name string) (Vulnerability, error)
 
 	// DeleteVulnerability removes a Vulnerability from the database.
 	// It has to create a Notification that will contain the old Vulnerability.
-	DeleteVulnerability(namespaceName, name string) error
+	DeleteVulnerability(namespace Namespace, name string) error
 
 	// InsertVulnerabilityFixes adds new FixedIn Feature or update the Versions of existing ones to
 	// the specified Vulnerability in the database.
 	// It has has to create a Notification that will contain the old and the updated Vulnerability.
-	InsertVulnerabilityFixes(vulnerabilityNamespace, vulnerabilityName string, fixes []FeatureVersion) error
+	InsertVulnerabilityFixes(vulnerabilityNamespace Namespace, vulnerabilityName string, fixes []FeatureVersion) error
 
 	// DeleteVulnerabilityFix removes a FixedIn Feature from the specified Vulnerability in the
 	// database. It can be used to store the fact that a Vulnerability no longer affects the given
 	// Feature in any Version.
 	// It has has to create a Notification that will contain the old and the updated Vulnerability.
-	DeleteVulnerabilityFix(vulnerabilityNamespace, vulnerabilityName, featureName string) error
+	DeleteVulnerabilityFix(vulnerabilityNamespace Namespace, vulnerabilityName, featureName string) error
 
 	// # Notification
 	// GetAvailableNotification returns the Name, Created, Notified and Deleted fields of a

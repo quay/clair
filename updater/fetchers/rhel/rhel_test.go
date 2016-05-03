@@ -41,21 +41,21 @@ func TestRHELParser(t *testing.T) {
 		expectedFeatureVersions := []database.FeatureVersion{
 			{
 				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "centos:7"},
+					Namespace: database.Namespace{Name: "centos", Version: types.NewVersionUnsafe("7")},
 					Name:      "xerces-c",
 				},
 				Version: types.NewVersionUnsafe("3.1.1-7.el7_1"),
 			},
 			{
 				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "centos:7"},
+					Namespace: database.Namespace{Name: "centos", Version: types.NewVersionUnsafe("7")},
 					Name:      "xerces-c-devel",
 				},
 				Version: types.NewVersionUnsafe("3.1.1-7.el7_1"),
 			},
 			{
 				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "centos:7"},
+					Namespace: database.Namespace{Name: "centos", Version: types.NewVersionUnsafe("7")},
 					Name:      "xerces-c-doc",
 				},
 				Version: types.NewVersionUnsafe("3.1.1-7.el7_1"),
@@ -79,14 +79,14 @@ func TestRHELParser(t *testing.T) {
 		expectedFeatureVersions := []database.FeatureVersion{
 			{
 				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "centos:6"},
+					Namespace: database.Namespace{Name: "centos", Version: types.NewVersionUnsafe("6")},
 					Name:      "firefox",
 				},
 				Version: types.NewVersionUnsafe("38.1.0-1.el6_6"),
 			},
 			{
 				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "centos:7"},
+					Namespace: database.Namespace{Name: "centos", Version: types.NewVersionUnsafe("7")},
 					Name:      "firefox",
 				},
 				Version: types.NewVersionUnsafe("38.1.0-1.el7_1"),

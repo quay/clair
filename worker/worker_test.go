@@ -61,7 +61,7 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 	}
 
 	// Create the list of FeatureVersions that should not been upgraded from one layer to another.
-	nonUpgradedFeatureVersions := []database.FeatureVersion{
+	upgradedFeatureVersions := []database.FeatureVersion{
 		{Feature: database.Feature{Name: "libtext-wrapi18n-perl"}, Version: types.NewVersionUnsafe("0.06-7")},
 		{Feature: database.Feature{Name: "libtext-charwidth-perl"}, Version: types.NewVersionUnsafe("0.04-7")},
 		{Feature: database.Feature{Name: "libtext-iconv-perl"}, Version: types.NewVersionUnsafe("1.7-5")},
@@ -82,31 +82,40 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 	assert.Nil(t, Process(datastore, "Docker", "wheezy", "blank", testDataPath+"wheezy.tar.gz", nil))
 	assert.Nil(t, Process(datastore, "Docker", "jessie", "wheezy", testDataPath+"jessie.tar.gz", nil))
 
+	testDebian7 := database.Namespace{
+		Name:    "debian",
+		Version: types.NewVersionUnsafe("7"),
+	}
 	// Ensure that the 'wheezy' layer has the expected namespace and features.
 	wheezy, ok := datastore.layers["wheezy"]
 	if assert.True(t, ok, "layer 'wheezy' not processed") {
-		assert.Equal(t, "debian:7", wheezy.Namespace.Name)
+		assert.True(t, testDebian7.Equal(wheezy.Namespaces[0]))
 		assert.Len(t, wheezy.Features, 52)
-
-		for _, nufv := range nonUpgradedFeatureVersions {
-			nufv.Feature.Namespace.Name = "debian:7"
+		for _, nufv := range upgradedFeatureVersions {
+			nufv.Feature.Namespace = testDebian7
 			assert.Contains(t, wheezy.Features, nufv)
 		}
 	}
 
+	testDebian8 := database.Namespace{
+		Name:    "debian",
+		Version: types.NewVersionUnsafe("8"),
+	}
 	// Ensure that the 'wheezy' layer has the expected namespace and non-upgraded features.
 	jessie, ok := datastore.layers["jessie"]
+
 	if assert.True(t, ok, "layer 'jessie' not processed") {
-		assert.Equal(t, "debian:8", jessie.Namespace.Name)
+		assert.True(t, testDebian8.Equal(jessie.Namespaces[0]))
 		assert.Len(t, jessie.Features, 74)
 
-		for _, nufv := range nonUpgradedFeatureVersions {
-			nufv.Feature.Namespace.Name = "debian:7"
-			assert.Contains(t, jessie.Features, nufv)
-		}
-		for _, nufv := range nonUpgradedFeatureVersions {
-			nufv.Feature.Namespace.Name = "debian:8"
+		for _, nufv := range upgradedFeatureVersions {
+			nufv.Feature.Namespace = testDebian7
 			assert.NotContains(t, jessie.Features, nufv)
+		}
+
+		for _, nufv := range upgradedFeatureVersions {
+			nufv.Feature.Namespace = testDebian8
+			assert.Contains(t, jessie.Features, nufv)
 		}
 	}
 }

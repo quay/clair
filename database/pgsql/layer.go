@@ -37,11 +37,10 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 	var layer database.Layer
 	var parentID zero.Int
 	var parentName zero.String
-	var namespaceID zero.Int
-	var namespaceName sql.NullString
 
 	t := time.Now()
-	err := pgSQL.QueryRow(searchLayer, name).Scan(&layer.ID, &layer.Name, &layer.EngineVersion, &parentID, &parentName, &namespaceID, &namespaceName)
+	err := pgSQL.QueryRow(searchLayer, name).
+		Scan(&layer.ID, &layer.Name, &layer.EngineVersion, &parentID, &parentName)
 	observeQueryTime("FindLayer", "searchLayer", t)
 
 	if err != nil {
@@ -53,12 +52,50 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 			Model: database.Model{ID: int(parentID.Int64)},
 			Name:  parentName.String,
 		}
-	}
-	if !namespaceID.IsZero() {
-		layer.Namespace = &database.Namespace{
-			Model: database.Model{ID: int(namespaceID.Int64)},
-			Name:  namespaceName.String,
+
+		// Find its parent's namespaces
+		t = time.Now()
+		rows, err := pgSQL.Query(searchLayerNamespace, parentID)
+		observeQueryTime("FindLayer", "searchParentLayerNamespace", t)
+		if err != nil {
+			return layer, handleError("searchLayerNamespace", err)
 		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var pn database.Namespace
+
+			err = rows.Scan(&pn.ID, &pn.Name, &pn.Version)
+			if err != nil {
+				return layer, handleError("searchLayerNamespace.Scan()", err)
+			}
+			layer.Parent.Namespaces = append(layer.Parent.Namespaces, pn)
+		}
+		if err = rows.Err(); err != nil {
+			return layer, handleError("searchLayerNamespace.Rows()", err)
+		}
+	}
+
+	// Find its namespaces
+	t = time.Now()
+	rows, err := pgSQL.Query(searchLayerNamespace, layer.ID)
+	observeQueryTime("FindLayer", "searchLayerNamespace", t)
+	if err != nil {
+		return layer, handleError("searchLayerNamespace", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var namespace database.Namespace
+
+		err = rows.Scan(&namespace.ID, &namespace.Name, &namespace.Version)
+		if err != nil {
+			return layer, handleError("searchLayerNamespace.Scan()", err)
+		}
+		layer.Namespaces = append(layer.Namespaces, namespace)
+	}
+	if err = rows.Err(); err != nil {
+		return layer, handleError("searchLayerNamespace.Rows()", err)
 	}
 
 	// Find its features
@@ -128,8 +165,9 @@ func getLayerFeatureVersions(tx *sql.Tx, layerID int) ([]database.FeatureVersion
 		var featureVersion database.FeatureVersion
 
 		err = rows.Scan(&featureVersion.ID, &modification, &featureVersion.Feature.Namespace.ID,
-			&featureVersion.Feature.Namespace.Name, &featureVersion.Feature.ID,
-			&featureVersion.Feature.Name, &featureVersion.ID, &featureVersion.Version,
+			&featureVersion.Feature.Namespace.Name, &featureVersion.Feature.Namespace.Version,
+			&featureVersion.Feature.ID, &featureVersion.Feature.Name,
+			&featureVersion.ID, &featureVersion.Version,
 			&featureVersion.AddedBy.ID, &featureVersion.AddedBy.Name)
 		if err != nil {
 			return featureVersions, handleError("searchLayerFeatureVersion.Scan()", err)
@@ -184,7 +222,8 @@ func loadAffectedBy(tx *sql.Tx, featureVersions []database.FeatureVersion) error
 		var vulnerability database.Vulnerability
 		err := rows.Scan(&featureversionID, &vulnerability.ID, &vulnerability.Name,
 			&vulnerability.Description, &vulnerability.Link, &vulnerability.Severity,
-			&vulnerability.Metadata, &vulnerability.Namespace.Name, &vulnerability.FixedBy)
+			&vulnerability.Metadata, &vulnerability.Namespace.Name, &vulnerability.Namespace.Version,
+			&vulnerability.FixedBy)
 		if err != nil {
 			return handleError("searchFeatureVersionVulnerability.Scan()", err)
 		}
@@ -234,6 +273,23 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	// We do `defer observeQueryTime` here because we don't want to observe existing layers.
 	defer observeQueryTime("InsertLayer", "all", tf)
 
+	// Insert Namespaces
+	mapNamespaceIDs := make(map[string]int)
+	for i, _ := range layer.Namespaces {
+		id, err := pgSQL.insertNamespace(layer.Namespaces[i])
+		if err != nil {
+			return err
+		}
+		if layer.Namespaces[i].ID == 0 {
+			layer.Namespaces[i].ID = id
+		}
+
+		// Layer's namespaces has high priority than its parent.
+		// Once a layer has a 'same' namespace with its parent,
+		// it will only keep its namespace.
+		mapNamespaceIDs[layer.Namespaces[i].Name] = id
+	}
+
 	// Get parent ID.
 	var parentID zero.Int
 	if layer.Parent != nil {
@@ -243,20 +299,13 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 		}
 
 		parentID = zero.IntFrom(int64(layer.Parent.ID))
-	}
 
-	// Find or insert namespace if provided.
-	var namespaceID zero.Int
-	if layer.Namespace != nil {
-		n, err := pgSQL.insertNamespace(*layer.Namespace)
-		if err != nil {
-			return err
-		}
-		namespaceID = zero.IntFrom(int64(n))
-	} else if layer.Namespace == nil && layer.Parent != nil {
-		// Import the Namespace from the parent if it has one and this layer doesn't specify one.
-		if layer.Parent.Namespace != nil {
-			namespaceID = zero.IntFrom(int64(layer.Parent.Namespace.ID))
+		for _, pn := range layer.Parent.Namespaces {
+			if _, ok := mapNamespaceIDs[pn.Name]; !ok {
+				// Layer will inherit its parent's namespace
+				mapNamespaceIDs[pn.Name] = pn.ID
+				layer.Namespaces = append(layer.Namespaces, pn)
+			}
 		}
 	}
 
@@ -269,7 +318,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 
 	if layer.ID == 0 {
 		// Insert a new layer.
-		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID).
+		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID).
 			Scan(&layer.ID)
 		if err != nil {
 			tx.Rollback()
@@ -283,10 +332,17 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 		}
 	} else {
 		// Update an existing layer.
-		_, err = tx.Exec(updateLayer, layer.ID, layer.EngineVersion, namespaceID)
+		_, err = tx.Exec(updateLayer, layer.ID, layer.EngineVersion)
 		if err != nil {
 			tx.Rollback()
 			return handleError("updateLayer", err)
+		}
+
+		// Remove all existing LayerNamespace.
+		_, err = tx.Exec(removeLayerNamespace, layer.ID)
+		if err != nil {
+			tx.Rollback()
+			return handleError("removeLayerNamespace", err)
 		}
 
 		// Remove all existing Layer_diff_FeatureVersion.
@@ -294,6 +350,15 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 		if err != nil {
 			tx.Rollback()
 			return handleError("removeLayerDiffFeatureVersion", err)
+		}
+	}
+
+	// Insert Layer_Namespace
+	for _, id := range mapNamespaceIDs {
+		_, err = tx.Exec(soiLayerNamespace, layer.ID, id)
+		if err != nil {
+			tx.Rollback()
+			return err
 		}
 	}
 

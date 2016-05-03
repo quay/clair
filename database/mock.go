@@ -23,12 +23,12 @@ type MockDatastore struct {
 	FctInsertLayer              func(Layer) error
 	FctFindLayer                func(name string, withFeatures, withVulnerabilities bool) (Layer, error)
 	FctDeleteLayer              func(name string) error
-	FctListVulnerabilities      func(namespaceName string, limit int, page int) ([]Vulnerability, int, error)
+	FctListVulnerabilities      func(namespace Namespace, limit int, page int) ([]Vulnerability, int, error)
 	FctInsertVulnerabilities    func(vulnerabilities []Vulnerability, createNotification bool) error
-	FctFindVulnerability        func(namespaceName, name string) (Vulnerability, error)
-	FctDeleteVulnerability      func(namespaceName, name string) error
-	FctInsertVulnerabilityFixes func(vulnerabilityNamespace, vulnerabilityName string, fixes []FeatureVersion) error
-	FctDeleteVulnerabilityFix   func(vulnerabilityNamespace, vulnerabilityName, featureName string) error
+	FctFindVulnerability        func(namespace Namespace, name string) (Vulnerability, error)
+	FctDeleteVulnerability      func(namespace Namespace, name string) error
+	FctInsertVulnerabilityFixes func(vulnerabilityNamespace Namespace, vulnerabilityName string, fixes []FeatureVersion) error
+	FctDeleteVulnerabilityFix   func(vulnerabilityNamespace Namespace, vulnerabilityName, featureName string) error
 	FctGetAvailableNotification func(renotifyInterval time.Duration) (VulnerabilityNotification, error)
 	FctGetNotification          func(name string, limit int, page VulnerabilityNotificationPageNumber) (VulnerabilityNotification, VulnerabilityNotificationPageNumber, error)
 	FctSetNotificationNotified  func(name string) error
@@ -70,9 +70,9 @@ func (mds *MockDatastore) DeleteLayer(name string) error {
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) ListVulnerabilities(namespaceName string, limit int, page int) ([]Vulnerability, int, error) {
+func (mds *MockDatastore) ListVulnerabilities(namespace Namespace, limit int, page int) ([]Vulnerability, int, error) {
 	if mds.FctListVulnerabilities != nil {
-		return mds.FctListVulnerabilities(namespaceName, limit, page)
+		return mds.FctListVulnerabilities(namespace, limit, page)
 	}
 	panic("required mock function not implemented")
 }
@@ -84,28 +84,28 @@ func (mds *MockDatastore) InsertVulnerabilities(vulnerabilities []Vulnerability,
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) FindVulnerability(namespaceName, name string) (Vulnerability, error) {
+func (mds *MockDatastore) FindVulnerability(namespace Namespace, name string) (Vulnerability, error) {
 	if mds.FctFindVulnerability != nil {
-		return mds.FctFindVulnerability(namespaceName, name)
+		return mds.FctFindVulnerability(namespace, name)
 	}
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) DeleteVulnerability(namespaceName, name string) error {
+func (mds *MockDatastore) DeleteVulnerability(namespace Namespace, name string) error {
 	if mds.FctDeleteVulnerability != nil {
-		return mds.FctDeleteVulnerability(namespaceName, name)
+		return mds.FctDeleteVulnerability(namespace, name)
 	}
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) InsertVulnerabilityFixes(vulnerabilityNamespace, vulnerabilityName string, fixes []FeatureVersion) error {
+func (mds *MockDatastore) InsertVulnerabilityFixes(vulnerabilityNamespace Namespace, vulnerabilityName string, fixes []FeatureVersion) error {
 	if mds.FctInsertVulnerabilityFixes != nil {
 		return mds.FctInsertVulnerabilityFixes(vulnerabilityNamespace, vulnerabilityName, fixes)
 	}
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) DeleteVulnerabilityFix(vulnerabilityNamespace, vulnerabilityName, featureName string) error {
+func (mds *MockDatastore) DeleteVulnerabilityFix(vulnerabilityNamespace Namespace, vulnerabilityName, featureName string) error {
 	if mds.FctDeleteVulnerabilityFix != nil {
 		return mds.FctDeleteVulnerabilityFix(vulnerabilityNamespace, vulnerabilityName, featureName)
 	}

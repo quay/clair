@@ -118,3 +118,16 @@ func (detector *RpmFeaturesDetector) Detect(data map[string][]byte) ([]database.
 func (detector *RpmFeaturesDetector) GetRequiredFiles() []string {
 	return []string{"var/lib/rpm/Packages"}
 }
+
+//Supported checks if the input Namespace is supported by the underling detector
+func (detector *RpmFeaturesDetector) Supported(namespace database.Namespace) bool {
+	supports := []string{"centos", "red hat", "fedora"}
+
+	for _, support := range supports {
+		if strings.HasPrefix(namespace.Name, support) {
+			return true
+		}
+	}
+
+	return false
+}

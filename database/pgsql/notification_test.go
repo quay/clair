@@ -39,13 +39,19 @@ func TestNotification(t *testing.T) {
 
 	// Create some data.
 	f1 := database.Feature{
-		Name:      "TestNotificationFeature1",
-		Namespace: database.Namespace{Name: "TestNotificationNamespace1"},
+		Name: "TestNotificationFeature1",
+		Namespace: database.Namespace{
+			Name:    "TestNotificationNamespace",
+			Version: types.NewVersionUnsafe("1.0"),
+		},
 	}
 
 	f2 := database.Feature{
-		Name:      "TestNotificationFeature2",
-		Namespace: database.Namespace{Name: "TestNotificationNamespace1"},
+		Name: "TestNotificationFeature2",
+		Namespace: database.Namespace{
+			Name:    "TestNotificationNamespace",
+			Version: types.NewVersionUnsafe("1.0"),
+		},
 	}
 
 	l1 := database.Layer{
@@ -201,7 +207,7 @@ func TestNotification(t *testing.T) {
 	}
 
 	// Delete a vulnerability and verify the notification.
-	if assert.Nil(t, datastore.DeleteVulnerability(v1b.Namespace.Name, v1b.Name)) {
+	if assert.Nil(t, datastore.DeleteVulnerability(v1b.Namespace, v1b.Name)) {
 		notification, err = datastore.GetAvailableNotification(time.Second)
 		assert.Nil(t, err)
 		assert.NotEmpty(t, notification.Name)

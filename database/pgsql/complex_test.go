@@ -46,8 +46,11 @@ func TestRaceAffects(t *testing.T) {
 
 	// Insert the Feature on which we'll work.
 	feature := database.Feature{
-		Namespace: database.Namespace{Name: "TestRaceAffectsFeatureNamespace1"},
-		Name:      "TestRaceAffecturesFeature1",
+		Namespace: database.Namespace{
+			Name:    "TestRaceAffectsFeatureNamespace",
+			Version: types.NewVersionUnsafe("1.0"),
+		},
+		Name: "TestRaceAffecturesFeature1",
 	}
 	_, err = datastore.insertFeature(feature)
 	if err != nil {

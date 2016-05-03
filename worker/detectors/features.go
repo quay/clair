@@ -28,6 +28,8 @@ type FeaturesDetector interface {
 	// GetRequiredFiles returns the list of files required for Detect, without
 	// leading /.
 	GetRequiredFiles() []string
+	//Supported checks if the input Namespace is supported by the underling detector
+	Supported(namespace database.Namespace) bool
 }
 
 var (
@@ -54,15 +56,25 @@ func RegisterFeaturesDetector(name string, f FeaturesDetector) {
 }
 
 // DetectFeatures detects a list of FeatureVersion using every registered FeaturesDetector.
-func DetectFeatures(data map[string][]byte) ([]database.FeatureVersion, error) {
+func DetectFeatures(data map[string][]byte, namespaces []database.Namespace) ([]database.FeatureVersion, error) {
 	var packages []database.FeatureVersion
 
 	for _, detector := range featuresDetectors {
-		pkgs, err := detector.Detect(data)
-		if err != nil {
-			return []database.FeatureVersion{}, err
+		for _, namespace := range namespaces {
+			if detector.Supported(namespace) {
+				pkgs, err := detector.Detect(data)
+				if err != nil {
+					return []database.FeatureVersion{}, err
+				}
+				// Ensure that every feature has a Namespace associated
+				for i := 0; i < len(pkgs); i++ {
+					pkgs[i].Feature.Namespace.Name = namespace.Name
+					pkgs[i].Feature.Namespace.Version = namespace.Version
+				}
+				packages = append(packages, pkgs...)
+				break
+			}
 		}
-		packages = append(packages, pkgs...)
 	}
 
 	return packages, nil

@@ -22,13 +22,13 @@ import (
 )
 
 func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (int, error) {
-	if namespace.Name == "" {
+	if namespace.IsEmpty() {
 		return 0, cerrors.NewBadRequestError("could not find/insert invalid Namespace")
 	}
 
 	if pgSQL.cache != nil {
 		promCacheQueriesTotal.WithLabelValues("namespace").Inc()
-		if id, found := pgSQL.cache.Get("namespace:" + namespace.Name); found {
+		if id, found := pgSQL.cache.Get("namespace:" + namespace.Name + ":" + namespace.Version.String()); found {
 			promCacheHitsTotal.WithLabelValues("namespace").Inc()
 			return id.(int), nil
 		}
@@ -38,13 +38,13 @@ func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (int, error) {
 	defer observeQueryTime("insertNamespace", "all", time.Now())
 
 	var id int
-	err := pgSQL.QueryRow(soiNamespace, namespace.Name).Scan(&id)
+	err := pgSQL.QueryRow(soiNamespace, namespace.Name, &namespace.Version).Scan(&id)
 	if err != nil {
 		return 0, handleError("soiNamespace", err)
 	}
 
 	if pgSQL.cache != nil {
-		pgSQL.cache.Add("namespace:"+namespace.Name, id)
+		pgSQL.cache.Add("namespace:"+namespace.Name+":"+namespace.Version.String(), id)
 	}
 
 	return id, nil
@@ -60,7 +60,7 @@ func (pgSQL *pgSQL) ListNamespaces() (namespaces []database.Namespace, err error
 	for rows.Next() {
 		var namespace database.Namespace
 
-		err = rows.Scan(&namespace.ID, &namespace.Name)
+		err = rows.Scan(&namespace.ID, &namespace.Name, &namespace.Version)
 		if err != nil {
 			return namespaces, handleError("listNamespace.Scan()", err)
 		}

@@ -29,6 +29,6 @@ type NamespaceTest struct {
 
 func TestNamespaceDetector(t *testing.T, detector detectors.NamespaceDetector, tests []NamespaceTest) {
 	for _, test := range tests {
-		assert.Equal(t, test.ExpectedNamespace, *detector.Detect(test.Data))
+		assert.True(t, test.ExpectedNamespace.Equal(*detector.Detect(test.Data)))
 	}
 }

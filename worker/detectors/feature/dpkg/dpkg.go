@@ -113,3 +113,16 @@ func (detector *DpkgFeaturesDetector) Detect(data map[string][]byte) ([]database
 func (detector *DpkgFeaturesDetector) GetRequiredFiles() []string {
 	return []string{"var/lib/dpkg/status"}
 }
+
+//Supported checks if the input Namespace is supported by the underling detector
+func (detector *DpkgFeaturesDetector) Supported(namespace database.Namespace) bool {
+	supports := []string{"debian", "ubuntu"}
+
+	for _, support := range supports {
+		if strings.HasPrefix(namespace.Name, support) {
+			return true
+		}
+	}
+
+	return false
+}
