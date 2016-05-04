@@ -70,10 +70,17 @@ func RegisterDataDetector(name string, f DataDetector) {
 }
 
 // DetectData finds the Data of the layer by using every registered DataDetector
-func DetectData(path string, format string, toExtract []string, maxFileSize int64) (data map[string][]byte, err error) {
+func DetectData(path, authorization, format string, toExtract []string, maxFileSize int64) (data map[string][]byte, err error) {
 	var layerReader io.ReadCloser
 	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
-		r, err := http.Get(path)
+		request, err := http.NewRequest("GET", path, nil)
+		if err != nil {
+			return nil, ErrCouldNotFindLayer
+		}
+		if authorization != "" {
+			request.Header.Set("Authorization", authorization)
+		}
+		r, err := http.DefaultClient.Do(request)
 		if err != nil {
 			log.Warningf("could not download layer: %s", err)
 			return nil, ErrCouldNotFindLayer
