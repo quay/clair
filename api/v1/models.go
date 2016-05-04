@@ -37,6 +37,7 @@ type Layer struct {
 	Name             string    `json:"Name,omitempty"`
 	NamespaceName    string    `json:"NamespaceName,omitempty"`
 	Path             string    `json:"Path,omitempty"`
+	Authorization    string    `json:"Authorization,omitempty"`
 	ParentName       string    `json:"ParentName,omitempty"`
 	Format           string    `json:"Format,omitempty"`
 	IndexedByVersion int       `json:"IndexedByVersion,omitempty"`

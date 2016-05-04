@@ -50,7 +50,7 @@ var (
 // then stores everything in the database.
 // TODO(Quentin-M): We could have a goroutine that looks for layers that have been analyzed with an
 // older engine version and that processes them.
-func Process(datastore database.Datastore, name, parentName, path, imageFormat string) error {
+func Process(datastore database.Datastore, name, parentName, path, authorization, imageFormat string) error {
 	// Verify parameters.
 	if name == "" {
 		return cerrors.NewBadRequestError("could not process a layer which does not have a name")
@@ -104,7 +104,7 @@ func Process(datastore database.Datastore, name, parentName, path, imageFormat s
 	}
 
 	// Analyze the content.
-	layer.Namespace, layer.Features, err = detectContent(name, path, imageFormat, layer.Parent)
+	layer.Namespace, layer.Features, err = detectContent(name, path, authorization, imageFormat, layer.Parent)
 	if err != nil {
 		return err
 	}
@@ -113,8 +113,8 @@ func Process(datastore database.Datastore, name, parentName, path, imageFormat s
 }
 
 // detectContent downloads a layer's archive and extracts its Namespace and Features.
-func detectContent(name, path, imageFormat string, parent *database.Layer) (namespace *database.Namespace, features []database.FeatureVersion, err error) {
-	data, err := detectors.DetectData(path, imageFormat, append(detectors.GetRequiredFilesFeatures(),
+func detectContent(name, path, authorization, imageFormat string, parent *database.Layer) (namespace *database.Namespace, features []database.FeatureVersion, err error) {
+	data, err := detectors.DetectData(path, authorization, imageFormat, append(detectors.GetRequiredFilesFeatures(),
 		detectors.GetRequiredFilesNamespace()...), maxFileSize)
 	if err != nil {
 		log.Errorf("layer %s: failed to extract data from %s: %s", name, utils.CleanURL(path), err)
