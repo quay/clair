@@ -47,9 +47,9 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 	// wheezy.tar: FROM debian:wheezy
 	// jessie.tar: RUN sed -i "s/precise/trusty/" /etc/apt/sources.list && apt-get update &&
 	//             apt-get -y dist-upgrade
-	assert.Nil(t, Process(datastore, "blank", "", path+"blank.tar.gz", "", "Docker"))
-	assert.Nil(t, Process(datastore, "wheezy", "blank", path+"wheezy.tar.gz", "", "Docker"))
-	assert.Nil(t, Process(datastore, "jessie", "wheezy", path+"jessie.tar.gz", "", "Docker"))
+	assert.Nil(t, Process(datastore, "Docker", "blank", "", path+"blank.tar.gz", nil))
+	assert.Nil(t, Process(datastore, "Docker", "wheezy", "blank", path+"wheezy.tar.gz", nil))
+	assert.Nil(t, Process(datastore, "Docker", "jessie", "wheezy", path+"jessie.tar.gz", nil))
 
 	wheezy, err := datastore.FindLayer("wheezy", true, false)
 	if assert.Nil(t, err) {
