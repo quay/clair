@@ -34,14 +34,14 @@ type Error struct {
 }
 
 type Layer struct {
-	Name             string    `json:"Name,omitempty"`
-	NamespaceName    string    `json:"NamespaceName,omitempty"`
-	Path             string    `json:"Path,omitempty"`
-	Authorization    string    `json:"Authorization,omitempty"`
-	ParentName       string    `json:"ParentName,omitempty"`
-	Format           string    `json:"Format,omitempty"`
-	IndexedByVersion int       `json:"IndexedByVersion,omitempty"`
-	Features         []Feature `json:"Features,omitempty"`
+	Name             string            `json:"Name,omitempty"`
+	NamespaceName    string            `json:"NamespaceName,omitempty"`
+	Path             string            `json:"Path,omitempty"`
+	Headers          map[string]string `json:"Headers,omitempty"`
+	ParentName       string            `json:"ParentName,omitempty"`
+	Format           string            `json:"Format,omitempty"`
+	IndexedByVersion int               `json:"IndexedByVersion,omitempty"`
+	Features         []Feature         `json:"Features,omitempty"`
 }
 
 func LayerFromDatabaseModel(dbLayer database.Layer, withFeatures, withVulnerabilities bool) Layer {
