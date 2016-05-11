@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pgsql
+package mysql
 
 import (
 	"database/sql"
+	"fmt"
 	"time"
 
 	"github.com/coreos/clair/database"
@@ -24,7 +25,7 @@ import (
 	"github.com/guregu/null/zero"
 )
 
-func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities bool) (database.Layer, error) {
+func (mySQL *mySQL) FindLayer(name string, withFeatures, withVulnerabilities bool) (database.Layer, error) {
 	subquery := "all"
 	if withFeatures {
 		subquery += "/features"
@@ -41,7 +42,7 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 	var namespaceName sql.NullString
 
 	t := time.Now()
-	err := pgSQL.QueryRow(searchLayer, name).
+	err := mySQL.QueryRow(searchLayer, name).
 		Scan(&layer.ID, &layer.Name, &layer.EngineVersion, &parentID, &parentName, &namespaceID,
 		&namespaceName)
 	database.ObserveQueryTime("FindLayer", "searchLayer", t)
@@ -72,20 +73,11 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 		// It would for instance do a merge join between affected feature versions (300 rows, estimated
 		// 3000 rows) and fixed in feature version (100k rows). In this case, it is much more
 		// preferred to use a nested loop.
-		tx, err := pgSQL.Begin()
+		tx, err := mySQL.Begin()
 		if err != nil {
 			return layer, handleError("FindLayer.Begin()", err)
 		}
 		defer tx.Commit()
-
-		_, err = tx.Exec(disableHashJoin)
-		if err != nil {
-			log.Warningf("FindLayer: could not disable hash join: %s", err)
-		}
-		_, err = tx.Exec(disableMergeJoin)
-		if err != nil {
-			log.Warningf("FindLayer: could not disable merge join: %s", err)
-		}
 
 		t = time.Now()
 		featureVersions, err := getLayerFeatureVersions(tx, layer.ID)
@@ -172,9 +164,8 @@ func loadAffectedBy(tx *sql.Tx, featureVersions []database.FeatureVersion) error
 	for i := 0; i < len(featureVersions); i++ {
 		featureVersionIDs = append(featureVersionIDs, featureVersions[i].ID)
 	}
-
-	rows, err := tx.Query(searchFeatureVersionVulnerability,
-		buildInputArray(featureVersionIDs))
+	searchFeatureVersionVulnerabilityQuery := fmt.Sprintf(searchFeatureVersionVulnerability, buildInputArray(featureVersionIDs))
+	rows, err := tx.Query(searchFeatureVersionVulnerabilityQuery)
 	if err != nil && err != sql.ErrNoRows {
 		return handleError("searchFeatureVersionVulnerability", err)
 	}
@@ -211,7 +202,7 @@ func loadAffectedBy(tx *sql.Tx, featureVersions []database.FeatureVersion) error
 // (happens when Feature detectors relies on the detected layer Namespace). However, if the listed
 // Feature has the same Name/Version as its parent, InsertLayer considers that the Feature hasn't
 // been modified.
-func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
+func (mySQL *mySQL) InsertLayer(layer database.Layer) error {
 	tf := time.Now()
 
 	// Verify parameters
@@ -221,7 +212,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	}
 
 	// Get a potentially existing layer.
-	existingLayer, err := pgSQL.FindLayer(layer.Name, true, false)
+	existingLayer, err := mySQL.FindLayer(layer.Name, true, false)
 	if err != nil && err != cerrors.ErrNotFound {
 		return err
 	} else if err == nil {
@@ -250,7 +241,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	// Find or insert namespace if provided.
 	var namespaceID zero.Int
 	if layer.Namespace != nil {
-		n, err := pgSQL.insertNamespace(*layer.Namespace)
+		n, err := mySQL.insertNamespace(*layer.Namespace)
 		if err != nil {
 			return err
 		}
@@ -263,16 +254,14 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	}
 
 	// Begin transaction.
-	tx, err := pgSQL.Begin()
+	tx, err := mySQL.Begin()
 	if err != nil {
 		tx.Rollback()
 		return handleError("InsertLayer.Begin()", err)
 	}
-
 	if layer.ID == 0 {
 		// Insert a new layer.
-		err = tx.QueryRow(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID).
-			Scan(&layer.ID)
+		res, err := tx.Exec(insertLayer, layer.Name, layer.EngineVersion, parentID, namespaceID)
 		if err != nil {
 			tx.Rollback()
 
@@ -283,9 +272,27 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 			}
 			return handleError("insertLayer", err)
 		}
+		tmpid, err := res.LastInsertId()
+		if err != nil {
+			tx.Rollback()
+			return handleError("inserLayer", err)
+		}
+		layer.ID = int(tmpid)
+		// if LastInsertId == 0, it means the layer already exists
+		if layer.ID == 0 {
+			err = tx.QueryRow(getLayerId, layer.Name).Scan(&layer.ID)
+			if err != nil {
+				tx.Rollback()
+				if isErrUniqueViolation(err) {
+					// Ignore this error, another process collided.
+					return nil
+				}
+				return handleError("getLayerId", err)
+			}
+		}
 	} else {
 		// Update an existing layer.
-		_, err = tx.Exec(updateLayer, layer.ID, layer.EngineVersion, namespaceID)
+		_, err = tx.Exec(updateLayer, layer.EngineVersion, namespaceID, layer.ID)
 		if err != nil {
 			tx.Rollback()
 			return handleError("updateLayer", err)
@@ -298,9 +305,8 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 			return handleError("removeLayerDiffFeatureVersion", err)
 		}
 	}
-
 	// Update Layer_diff_FeatureVersion now.
-	err = pgSQL.updateDiffFeatureVersions(tx, &layer, &existingLayer)
+	err = mySQL.updateDiffFeatureVersions(tx, &layer, &existingLayer)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -316,7 +322,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	return nil
 }
 
-func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *database.Layer) error {
+func (mySQL *mySQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *database.Layer) error {
 	// add and del are the FeatureVersion diff we should insert.
 	var add []database.FeatureVersion
 	var del []database.FeatureVersion
@@ -345,24 +351,26 @@ func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *
 	}
 
 	// Insert FeatureVersions in the database.
-	addIDs, err := pgSQL.insertFeatureVersions(add)
+	addIDs, err := mySQL.insertFeatureVersions(add)
 	if err != nil {
 		return err
 	}
-	delIDs, err := pgSQL.insertFeatureVersions(del)
+	delIDs, err := mySQL.insertFeatureVersions(del)
 	if err != nil {
 		return err
 	}
 
 	// Insert diff in the database.
 	if len(addIDs) > 0 {
-		_, err = tx.Exec(insertLayerDiffFeatureVersion, layer.ID, "add", buildInputArray(addIDs))
+		insertLayerDiffFeatureVersionStmt := fmt.Sprintf(insertLayerDiffFeatureVersion, buildInputArray(addIDs))
+		_, err = tx.Exec(insertLayerDiffFeatureVersionStmt, layer.ID, "add")
 		if err != nil {
 			return handleError("insertLayerDiffFeatureVersion.Add", err)
 		}
 	}
 	if len(delIDs) > 0 {
-		_, err = tx.Exec(insertLayerDiffFeatureVersion, layer.ID, "del", buildInputArray(delIDs))
+		insertLayerDiffFeatureVersionStmt := fmt.Sprintf(insertLayerDiffFeatureVersion, buildInputArray(delIDs))
+		_, err = tx.Exec(insertLayerDiffFeatureVersionStmt, layer.ID, "del")
 		if err != nil {
 			return handleError("insertLayerDiffFeatureVersion.Del", err)
 		}
@@ -385,10 +393,10 @@ func createNV(features []database.FeatureVersion) (map[string]*database.FeatureV
 	return mapNV, sliceNV
 }
 
-func (pgSQL *pgSQL) DeleteLayer(name string) error {
+func (mySQL *mySQL) DeleteLayer(name string) error {
 	defer database.ObserveQueryTime("DeleteLayer", "all", time.Now())
 
-	result, err := pgSQL.Exec(removeLayer, name)
+	result, err := mySQL.Exec(removeLayer, name)
 	if err != nil {
 		return handleError("removeLayer", err)
 	}

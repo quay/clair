@@ -20,12 +20,15 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/coreos/clair/api"
 	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/config"
+	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/database/mysql"
 	"github.com/coreos/clair/database/pgsql"
 	"github.com/coreos/clair/notifier"
 	"github.com/coreos/clair/updater"
@@ -40,14 +43,22 @@ var log = capnslog.NewPackageLogger("github.com/coreos/clair", "main")
 func Boot(config *config.Config) {
 	rand.Seed(time.Now().UnixNano())
 	st := utils.NewStopper()
-
+	var (
+		db  database.Datastore
+		err error
+	)
 	// Open database
-	db, err := pgsql.Open(config.Database)
+	if strings.HasPrefix(config.Database.Source, "postgres") {
+		db, err = pgsql.Open(config.Database)
+	} else if strings.HasPrefix(config.Database.Source, "mysql") {
+		db, err = mysql.Open(config.Database)
+	} else {
+		log.Fatal("database source '%s' does not support, support 'postgres' and 'mysql' for now", config.Database.Source)
+	}
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
-
 	// Start notifier
 	st.Begin()
 	go notifier.Run(config.Notifier, db, st)

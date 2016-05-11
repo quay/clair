@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pgsql
+package mysql
 
 import (
 	"database/sql"
@@ -23,15 +23,15 @@ import (
 	"github.com/coreos/clair/utils/types"
 )
 
-func (pgSQL *pgSQL) insertFeature(feature database.Feature) (int, error) {
+func (mySQL *mySQL) insertFeatureiWithTransaction(queryer Queryer, feature database.Feature) (int, error) {
 	if feature.Name == "" {
 		return 0, cerrors.NewBadRequestError("could not find/insert invalid Feature")
 	}
 
 	// Do cache lookup.
-	if pgSQL.cache != nil {
+	if mySQL.cache != nil {
 		database.PromCacheQueriesTotal.WithLabelValues("feature").Inc()
-		id, found := pgSQL.cache.Get("feature:" + feature.Namespace.Name + ":" + feature.Name)
+		id, found := mySQL.cache.Get("feature:" + feature.Namespace.Name + ":" + feature.Name)
 		if found {
 			database.PromCacheHitsTotal.WithLabelValues("feature").Inc()
 			return id.(int), nil
@@ -42,35 +42,93 @@ func (pgSQL *pgSQL) insertFeature(feature database.Feature) (int, error) {
 	defer database.ObserveQueryTime("insertFeature", "all", time.Now())
 
 	// Find or create Namespace.
-	namespaceID, err := pgSQL.insertNamespace(feature.Namespace)
+	namespaceID, err := mySQL.insertNamespaceWithTransaction(queryer, feature.Namespace)
 	if err != nil {
 		return 0, err
 	}
-
 	// Find or create Feature.
 	var id int
-	err = pgSQL.QueryRow(soiFeature, feature.Name, namespaceID).Scan(&id)
+	res, err := queryer.Exec(insertFeature, feature.Name, namespaceID, feature.Name, namespaceID)
 	if err != nil {
-		return 0, handleError("soiFeature", err)
+		return 0, handleError("insertFeatureVersion", err)
 	}
-
-	if pgSQL.cache != nil {
-		pgSQL.cache.Add("feature:"+feature.Namespace.Name+":"+feature.Name, id)
+	tmpid, err := res.LastInsertId()
+	if err != nil {
+		return 0, handleError("insertFeatureVersion", err)
+	}
+	id = int(tmpid)
+	// if id==0 means the feature already exists, use query to get id
+	if id == 0 {
+		err = queryer.QueryRow(soiFeature, feature.Name, namespaceID).Scan(&id)
+		if err != nil {
+			return 0, handleError("soiFeature", err)
+		}
+	}
+	if mySQL.cache != nil {
+		mySQL.cache.Add("feature:"+feature.Namespace.Name+":"+feature.Name, id)
 	}
 
 	return id, nil
 }
 
-func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion) (id int, err error) {
+func (mySQL *mySQL) insertFeature(feature database.Feature) (int, error) {
+	if feature.Name == "" {
+		return 0, cerrors.NewBadRequestError("could not find/insert invalid Feature")
+	}
+
+	// Do cache lookup.
+	if mySQL.cache != nil {
+		database.PromCacheQueriesTotal.WithLabelValues("feature").Inc()
+		id, found := mySQL.cache.Get("feature:" + feature.Namespace.Name + ":" + feature.Name)
+		if found {
+			database.PromCacheHitsTotal.WithLabelValues("feature").Inc()
+			return id.(int), nil
+		}
+	}
+
+	// We do `defer database.ObserveQueryTime` here because we don't want to observe cached features.
+	defer database.ObserveQueryTime("insertFeature", "all", time.Now())
+
+	// Find or create Namespace.
+	namespaceID, err := mySQL.insertNamespace(feature.Namespace)
+	if err != nil {
+		return 0, err
+	}
+	// Find or create Feature.
+	var id int
+	res, err := mySQL.Exec(insertFeature, feature.Name, namespaceID, feature.Name, namespaceID)
+	if err != nil {
+		return 0, handleError("insertFeatureVersion", err)
+	}
+	tmpid, err := res.LastInsertId()
+	if err != nil {
+		return 0, handleError("insertFeatureVersion", err)
+	}
+	id = int(tmpid)
+	// if id==0 means the feature already exists, use query to get id
+	if id == 0 {
+		err = mySQL.QueryRow(soiFeature, feature.Name, namespaceID).Scan(&id)
+		if err != nil {
+			return 0, handleError("soiFeature", err)
+		}
+	}
+	if mySQL.cache != nil {
+		mySQL.cache.Add("feature:"+feature.Namespace.Name+":"+feature.Name, id)
+	}
+
+	return id, nil
+}
+
+func (mySQL *mySQL) insertFeatureVersion(featureVersion database.FeatureVersion) (id int, err error) {
 	if featureVersion.Version.String() == "" {
 		return 0, cerrors.NewBadRequestError("could not find/insert invalid FeatureVersion")
 	}
 
 	// Do cache lookup.
 	cacheIndex := "featureversion:" + featureVersion.Feature.Namespace.Name + ":" + featureVersion.Feature.Name + ":" + featureVersion.Version.String()
-	if pgSQL.cache != nil {
+	if mySQL.cache != nil {
 		database.PromCacheQueriesTotal.WithLabelValues("featureversion").Inc()
-		id, found := pgSQL.cache.Get(cacheIndex)
+		id, found := mySQL.cache.Get(cacheIndex)
 		if found {
 			database.PromCacheHitsTotal.WithLabelValues("featureversion").Inc()
 			return id.(int), nil
@@ -82,7 +140,7 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 
 	// Find or create Feature first.
 	t := time.Now()
-	featureID, err := pgSQL.insertFeature(featureVersion.Feature)
+	featureID, err := mySQL.insertFeature(featureVersion.Feature)
 	database.ObserveQueryTime("insertFeatureVersion", "insertFeature", t)
 
 	if err != nil {
@@ -95,21 +153,21 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 	//
 	// In a populated database, the likelihood of the FeatureVersion already being there is high.
 	// If we can find it here, we then avoid using a transaction and locking the database.
-	err = pgSQL.QueryRow(searchFeatureVersion, featureID, &featureVersion.Version).
+	err = mySQL.QueryRow(searchFeatureVersion, featureID, &featureVersion.Version).
 		Scan(&featureVersion.ID)
 	if err != nil && err != sql.ErrNoRows {
 		return 0, handleError("searchFeatureVersion", err)
 	}
 	if err == nil {
-		if pgSQL.cache != nil {
-			pgSQL.cache.Add(cacheIndex, featureVersion.ID)
+		if mySQL.cache != nil {
+			mySQL.cache.Add(cacheIndex, featureVersion.ID)
 		}
 
 		return featureVersion.ID, nil
 	}
 
 	// Begin transaction.
-	tx, err := pgSQL.Begin()
+	tx, err := mySQL.Begin()
 	if err != nil {
 		tx.Rollback()
 		return 0, handleError("insertFeatureVersion.Begin()", err)
@@ -120,16 +178,23 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 	database.PromConcurrentLockVAFV.Inc()
 	defer database.PromConcurrentLockVAFV.Dec()
 	t = time.Now()
-	_, err = tx.Exec(lockVulnerabilityAffects)
+	var tmp int64
+	err = tx.QueryRow(lockVulnerabilityAffects).Scan(&tmp)
 	database.ObserveQueryTime("insertFeatureVersion", "lock", t)
 
 	if err != nil {
 		tx.Rollback()
 		return 0, handleError("insertFeatureVersion.lockVulnerabilityAffects", err)
 	}
-
 	// Find or create FeatureVersion.
 	var newOrExisting string
+	t = time.Now()
+	_, err = tx.Exec(insertFeatureVersion, featureID, &featureVersion.Version, featureID, &featureVersion.Version)
+	database.ObserveQueryTime("insertFeatureVersion", "soiFeatureVersion", t)
+	if err != nil {
+		tx.Rollback()
+		return 0, handleError("insertFeatureVersion", err)
+	}
 
 	t = time.Now()
 	err = tx.QueryRow(soiFeatureVersion, featureID, &featureVersion.Version).
@@ -145,8 +210,8 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 		// That featureVersion already exists, return its id.
 		tx.Commit()
 
-		if pgSQL.cache != nil {
-			pgSQL.cache.Add(cacheIndex, featureVersion.ID)
+		if mySQL.cache != nil {
+			mySQL.cache.Add(cacheIndex, featureVersion.ID)
 		}
 
 		return featureVersion.ID, nil
@@ -169,19 +234,19 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 		return 0, handleError("insertFeatureVersion.Commit()", err)
 	}
 
-	if pgSQL.cache != nil {
-		pgSQL.cache.Add(cacheIndex, featureVersion.ID)
+	if mySQL.cache != nil {
+		mySQL.cache.Add(cacheIndex, featureVersion.ID)
 	}
 
 	return featureVersion.ID, nil
 }
 
 // TODO(Quentin-M): Batch me
-func (pgSQL *pgSQL) insertFeatureVersions(featureVersions []database.FeatureVersion) ([]int, error) {
+func (mySQL *mySQL) insertFeatureVersions(featureVersions []database.FeatureVersion) ([]int, error) {
 	IDs := make([]int, 0, len(featureVersions))
 
 	for i := 0; i < len(featureVersions); i++ {
-		id, err := pgSQL.insertFeatureVersion(featureVersions[i])
+		id, err := mySQL.insertFeatureVersion(featureVersions[i])
 		if err != nil {
 			return IDs, err
 		}
@@ -230,7 +295,7 @@ func linkFeatureVersionToVulnerabilities(tx *sql.Tx, featureVersion database.Fea
 	for _, affect := range affects {
 		// TODO(Quentin-M): Batch me.
 		_, err := tx.Exec(insertVulnerabilityAffectsFeatureVersion, affect.vulnerabilityID,
-			featureVersion.ID, affect.fixedInID)
+			featureVersion.ID, affect.fixedInID, affect.vulnerabilityID, featureVersion.ID, affect.fixedInID)
 		if err != nil {
 			return handleError("insertVulnerabilityAffectsFeatureVersion", err)
 		}

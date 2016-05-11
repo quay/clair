@@ -12,18 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pgsql
+package mysql
 
 import (
 	"database/sql"
-	"time"
-
 	"github.com/coreos/clair/database"
 	cerrors "github.com/coreos/clair/utils/errors"
+	"time"
 )
 
 // InsertKeyValue stores (or updates) a single key / value tuple.
-func (pgSQL *pgSQL) InsertKeyValue(key, value string) (err error) {
+func (mySQL *mySQL) InsertKeyValue(key, value string) (err error) {
 	if key == "" || value == "" {
 		log.Warning("could not insert a flag which has an empty name or value")
 		return cerrors.NewBadRequestError("could not insert a flag which has an empty name or value")
@@ -42,7 +41,7 @@ func (pgSQL *pgSQL) InsertKeyValue(key, value string) (err error) {
 
 	for {
 		// First, try to update.
-		r, err := pgSQL.Exec(updateKeyValue, value, key)
+		r, err := mySQL.Exec(updateKeyValue, value, key)
 		if err != nil {
 			return handleError("updateKeyValue", err)
 		}
@@ -53,7 +52,7 @@ func (pgSQL *pgSQL) InsertKeyValue(key, value string) (err error) {
 
 		// Try to insert the key.
 		// If someone else inserts the same key concurrently, we could get a unique-key violation error.
-		_, err = pgSQL.Exec(insertKeyValue, key, value)
+		_, err = mySQL.Exec(insertKeyValue, key, value)
 		if err != nil {
 			if isErrUniqueViolation(err) {
 				// Got unique constraint violation, retry.
@@ -67,11 +66,11 @@ func (pgSQL *pgSQL) InsertKeyValue(key, value string) (err error) {
 }
 
 // GetValue reads a single key / value tuple and returns an empty string if the key doesn't exist.
-func (pgSQL *pgSQL) GetKeyValue(key string) (string, error) {
+func (mySQL *mySQL) GetKeyValue(key string) (string, error) {
 	defer database.ObserveQueryTime("GetKeyValue", "all", time.Now())
 
 	var value string
-	err := pgSQL.QueryRow(searchKeyValue, key).Scan(&value)
+	err := mySQL.QueryRow(searchKeyValue, key).Scan(&value)
 
 	if err == sql.ErrNoRows {
 		return "", nil
