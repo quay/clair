@@ -170,7 +170,7 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 			Namespace: database.Namespace{Name: "TestInsertLayerNamespace3"},
 			Name:      "TestInsertLayerFeature3",
 		},
-		Version: types.NewVersionUnsafe("0.57"),
+		Version: types.NewVersionUnsafe("0.56"),
 	}
 	f6 := database.FeatureVersion{
 		Feature: database.Feature{

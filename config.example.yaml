@@ -40,7 +40,7 @@ clair:
     # 32-bit URL-safe base64 key used to encrypt pagination tokens
     # If one is not provided, it will be generated.
     # Multiple clair instances in the same cluster need the same value.
-    paginationKey:
+    paginationkey:
 
     # Optional PKI configuration
     # If you want to easily generate client certificates and CAs, try the following projects:
@@ -61,7 +61,7 @@ clair:
     attempts: 3
 
     # Duration before a failed notification is retried
-    renotifyInterval: 2h
+    renotifyinterval: 2h
 
     http:
       # Optional endpoint that will receive notifications via POST requests

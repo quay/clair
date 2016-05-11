@@ -333,7 +333,7 @@ func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *
 		addNV := utils.CompareStringLists(layerFeaturesNV, parentLayerFeaturesNV)
 		delNV := utils.CompareStringLists(parentLayerFeaturesNV, layerFeaturesNV)
 
-		// Fill the structures containing the added and deleted FeatureVersions
+		// Fill the structures containing the added and deleted FeatureVersions.
 		for _, nv := range addNV {
 			add = append(add, *layerFeaturesMapNV[nv])
 		}
@@ -375,7 +375,7 @@ func createNV(features []database.FeatureVersion) (map[string]*database.FeatureV
 
 	for i := 0; i < len(features); i++ {
 		featureVersion := &features[i]
-		nv := featureVersion.Feature.Name + ":" + featureVersion.Version.String()
+		nv := featureVersion.Feature.Namespace.Name + ":" + featureVersion.Feature.Name + ":" + featureVersion.Version.String()
 		mapNV[nv] = featureVersion
 		sliceNV = append(sliceNV, nv)
 	}

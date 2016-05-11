@@ -118,7 +118,6 @@ func Load(path string) (config *Config, err error) {
 	config = &cfgFile.Clair
 
 	// Generate a pagination key if none is provided.
-	// TODO(Quentin-M): Move to the API code.
 	if config.API.PaginationKey == "" {
 		var key fernet.Key
 		if err = key.Generate(); err != nil {
