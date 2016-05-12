@@ -20,8 +20,8 @@ type health struct {
 
 var healthCmd = &cobra.Command{
 	Use:   "health",
-	Short: "Get Health of Hyperclair and underlying services",
-	Long:  `Get Health of Hyperclair and underlying services`,
+	Short: "Get Health of clairctl and underlying services",
+	Long:  `Get Health of clairctl and underlying services`,
 	Run: func(cmd *cobra.Command, args []string) {
 		ok := clair.IsHealthy()
 		err := template.Must(template.New("health").Parse(healthTplt)).Execute(os.Stdout, ok)

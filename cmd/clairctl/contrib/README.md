@@ -4,11 +4,8 @@ CONTRIBUTION
 # Running full dev environnement
 
 ```bash
-# Running Authentication server, Registry, Clair , Hyperclair-server and Hyperclair-DEV-BOX
+# Running Authentication server, Registry, Clair
 docker-compose up -d
-
-# Enter the hyperclair dev box
-docker exec -ti hyperclair_dev bash
 
 # Run Any command ex:
 go run main.go help

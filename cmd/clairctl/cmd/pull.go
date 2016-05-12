@@ -39,7 +39,7 @@ var pullCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		//TODO how to use args with viper
 		if len(args) != 1 {
-			fmt.Printf("hyperclair: \"pull\" requires a minimum of 1 argument\n")
+			fmt.Printf("clairctl: \"pull\" requires a minimum of 1 argument\n")
 			os.Exit(1)
 		}
 		im := args[0]

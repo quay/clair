@@ -2,11 +2,11 @@ package clair
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"testing"
-  "fmt"
 )
 
 func TestReportAsHtml(t *testing.T) {
@@ -21,10 +21,10 @@ func TestReportAsHtml(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-  
-  fmt.Println(os.TempDir()+"/hyperclair-html-report.html")
-  
-	err = ioutil.WriteFile(os.TempDir()+"/hyperclair-html-report.html", []byte(html), 0700)
+
+	fmt.Println(os.TempDir() + "/clairctl-html-report.html")
+
+	err = ioutil.WriteFile(os.TempDir()+"/clairctl-html-report.html", []byte(html), 0700)
 	if err != nil {
 		log.Fatal(err)
 	}

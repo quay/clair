@@ -30,8 +30,8 @@ var logLevel string
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "hyperclair",
-	Short: "Analyse your docker image with Clair, directly from your registry.",
+	Use:   "clairctl",
+	Short: "Analyse your docker image with Clair, directly from your registry or local images.",
 	Long:  ``,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:

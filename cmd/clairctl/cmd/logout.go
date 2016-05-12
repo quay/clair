@@ -31,7 +31,7 @@ var logoutCmd = &cobra.Command{
 
 			if err := readConfigFile(&users, config.HyperclairConfig()); err != nil {
 				fmt.Println(errInternalError)
-				logrus.Fatalf("reading hyperclair file: %v", err)
+				logrus.Fatalf("reading clairctl file: %v", err)
 			}
 			if _, present := users[reg]; present {
 				delete(users, reg)

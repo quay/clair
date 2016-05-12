@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/coreos/clair/cmd/clairctl/clair"
 	"github.com/coreos/clair/cmd/clairctl/docker"
 	"github.com/coreos/clair/cmd/clairctl/xstrings"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var reportCmd = &cobra.Command{
@@ -19,7 +19,7 @@ var reportCmd = &cobra.Command{
 	Long:  `Generate Docker Image vulnerabilities report as HTML or JSON`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
-			fmt.Printf("hyperclair: \"report\" requires a minimum of 1 argument")
+			fmt.Printf("clairctl: \"report\" requires a minimum of 1 argument")
 			os.Exit(1)
 		}
 

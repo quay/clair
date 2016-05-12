@@ -10,10 +10,10 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/spf13/cobra"
 	"github.com/coreos/clair/cmd/clairctl/config"
 	"github.com/coreos/clair/cmd/clairctl/docker"
 	"github.com/coreos/clair/cmd/clairctl/xstrings"
+	"github.com/spf13/cobra"
 )
 
 type user struct {
@@ -38,7 +38,7 @@ var loginCmd = &cobra.Command{
 
 		if err := readConfigFile(&users, config.HyperclairConfig()); err != nil {
 			fmt.Println(errInternalError)
-			logrus.Fatalf("reading hyperclair file: %v", err)
+			logrus.Fatalf("reading clairctl file: %v", err)
 		}
 
 		var reg string = docker.DockerHub

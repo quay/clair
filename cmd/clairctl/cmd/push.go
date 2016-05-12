@@ -18,7 +18,7 @@ var pushCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) != 1 {
-			fmt.Printf("hyperclair: \"push\" requires a minimum of 1 argument\n")
+			fmt.Printf("clairctl: \"push\" requires a minimum of 1 argument\n")
 			os.Exit(1)
 		}
 
@@ -71,7 +71,7 @@ func init() {
 	pushCmd.Flags().BoolVarP(&docker.IsLocal, "local", "l", false, "Use local images")
 }
 
-//StartLocalServer start the hyperclair local server needed for reverse proxy and file server
+//StartLocalServer start the clairctl local server needed for reverse proxy and file server
 func startLocalServer() {
 	sURL, err := config.LocalServerIP()
 	if err != nil {
