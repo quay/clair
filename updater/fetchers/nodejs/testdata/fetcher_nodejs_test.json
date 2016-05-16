@@ -1,0 +1,105 @@
+{
+	"Total": 4,
+	"Count": 4,
+	"Offset": 0,
+	"Results": [
+		{
+			"ID": 19,
+			"Created_at": "2015-10-17T19:41:46.382+00:00",
+			"Updated_at": "2016-04-25T15:31:07+00:00",
+			"Publish_date": "2015-09-18T19:30:10+00:00",
+			"Title": "LDAP Injection",
+			"Author": "David Black, Jerome Touffe-Blin",
+			"Module_name": "ldapauth",
+			"CVES": [
+				"CVE-2015-7294"
+			],
+			"Vulnerable_versions": "<=2.2.4",
+			"Patched_versions": "> 2.2.4",
+			"Slug": "ldapauth_ldap-injection",
+			"Overview": "ldapauth versions <= 2.2.4 are vulnerable to ldap injection through the username parameter.",
+			"Recommandation": "",
+			"References": "- http://www.openwall.com/lists/oss-security/2015/09/18/4",
+			"Legacy_slug": "ldapauth-ldap-injection",
+			"Allowed_scopes": [
+				"public",
+				"admin"
+			],
+			"CVEs_vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+			"Cvss_score": 5.3
+		},
+		{
+			"ID": 18,
+			"Created_at": "2015-10-17T19:41:46.382+00:00",
+			"Updated_at": "2016-04-28T16:50:25+00:00",
+			"Publish_date": "2015-09-18T19:29:10+00:00",
+			"Title": "LDAP Injection",
+			"Author": "Jerome Touffe-Blin",
+			"Module_name": "ldapauth-fork",
+			"CVES": [
+				"CVE-2015-7294"
+			],
+			"Vulnerable_versions": "< 2.3.3",
+			"Patched_versions": ">= 2.3.3",
+			"Slug": "ldapauth-fork_ldap-injection",
+			"Overview": "ldapauth-fork is a module forked from node-ldapauth and is used for ldap authentication  \nThe username parameter is not filtered as per [LDAP Escape Specifications](https://tools.ietf.org/search/rfc4515#section-3)  \nA malicious user is able to change their name to certain LDAP commands and run anything that they want.",
+			"Recommandation": "",
+			"References": "- https://github.com/vesse/node-ldapauth-fork/issues/21\n- https://github.com/vesse/node-ldapauth-fork/commit/3feea43e243698bcaeffa904a7324f4d96df60e4",
+			"Legacy_slug": "ldapauth-fork-ldap-injection",
+			"Allowed_scopes": [
+				"public",
+				"admin"
+			],
+			"CVEs_vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+			"Cvss_score": 6.5
+		},
+		{
+			"ID": 99,
+			"Created_at": "2016-04-04T19:46:25+00:00",
+			"Updated_at": "2016-05-13T20:39:38+00:00",
+			"Publish_date": "2016-04-26T16:24:32+00:00",
+			"Title": "Insecure Defaults Allow MITM Over TLS",
+			"Author": "David Johansson",
+			"Module_name": "engine.io-client",
+			"CVES": [],
+			"Vulnerable_versions": "<= 1.6.8",
+			"Patched_versions": ">= 1.6.9",
+			"Slug": "engineio-client_tls-connections-over-websockets-vulnerable-to-mitm",
+			"Overview": "engine.io-client is the client for [engine.io](https://github.com/socketio/engine.io), the implementation of a transport-based cross-browser/cross-device bi-directional communication layer for Socket.IO.\n\nThe vulnerability is related to the way that node.js handles the `rejectUnauthorized` setting. If the value is something that evaluates to false, certificate verification will be disabled.\n\nThis is problematic as engine.io-client passes in an object for settings that includes the rejectUnauthorized property, whether it has been set or not. If the value has not been explicitly changed, it will be passed in as `null`, resulting in certificate verification being turned off:\n\n``` \n // line that causes bug\nthis.rejectUnauthorized = opts.rejectUnauthorized === undefined ? null : opts.rejectUnauthorized;\n ```",
+			"Recommandation": "",
+			"References": "- https://github.com/socketio/engine.io-client/commit/2c55b278a491bf45313ecc0825cf800e2f7ff5c1\n- https://www.cigital.com/blog/node-js-socket-io/",
+			"Legacy_slug": "",
+			"Allowed_scopes": [
+				"admin",
+				"public"
+			],
+			"CVEs_vector": "CVSS:3.0/AV:A/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+			"Cvss_score": 6.8
+		},
+		{
+			"ID": 77,
+			"Created_at": "2016-01-19T21:50:30.175+00:00",
+			"Updated_at": "2016-04-21T00:16:58+00:00",
+			"Publish_date": "2016-01-19T21:51:35.396+00:00",
+			"Title": "Regular Expression Denial of Service",
+			"Author": "Adam Baldwin",
+			"Module_name": "hawk",
+			"CVES": [
+				"CVE-2016-2515"
+			],
+			"Vulnerable_versions": "< 3.1.3  || >= 4.0.0 < 4.1.1",
+			"Patched_versions": ">=3.1.3 < 4.0.0 || >=4.1.1",
+			"Slug": "hawk_regular-expression-denial-of-service",
+			"Overview": "Specifically crafted long headers or uris can cause a minor denial of service when using hawk versions less than 4.1.1.\n\n\"The Regular expression Denial of Service (ReDoS) is a Denial of Service attack, that exploits the fact that most Regular Expression implementations may reach extreme situations that cause them to work very slowly (exponentially related to input size). An attacker can then cause a program using a Regular Expression to enter these extreme situations and then hang for a very long time.\"\n\nUpdates:\n- Updated to include fix in 3.1.3 ",
+			"Recommandation": "",
+			"References": "- https://github.com/hueniverse/hawk/issues/168\n- https://www.owasp.org/index.php/Regular_expression_Denial_of_Service_-_ReDoS",
+			"Legacy_slug": "",
+			"Allowed_scopes": [
+				"admin",
+				"public"
+			],
+			"CVEs_vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:L",
+			"Cvss_score": 5.3
+		}
+	]
+}
