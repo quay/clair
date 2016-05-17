@@ -27,7 +27,7 @@ type reportConfig struct {
 	Path, Format string
 }
 type clairConfig struct {
-	URI, Priority    string
+	URI              string
 	Port, HealthPort int
 	Report           reportConfig
 }
@@ -81,9 +81,7 @@ func Init(cfgFile string, logLevel string) {
 	if viper.Get("clair.healthPort") == nil {
 		viper.Set("clair.healthPort", "6061")
 	}
-	if viper.Get("clair.priority") == nil {
-		viper.Set("clair.priority", "Low")
-	}
+
 	if viper.Get("clair.report.path") == nil {
 		viper.Set("clair.report.path", "reports")
 	}
@@ -111,7 +109,6 @@ func values() config {
 			URI:        viper.GetString("clair.uri"),
 			Port:       viper.GetInt("clair.port"),
 			HealthPort: viper.GetInt("clair.healthPort"),
-			Priority:   viper.GetString("clair.priority"),
 			Report: reportConfig{
 				Path:   viper.GetString("clair.report.path"),
 				Format: viper.GetString("clair.report.format"),

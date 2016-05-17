@@ -49,7 +49,6 @@ clair:
   port: 6060
   healthPort: 6061
   uri: http://clair
-  priority: Low
   report:
     path: ./reports
     format: html

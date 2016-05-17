@@ -10,7 +10,6 @@ import (
 	"github.com/coreos/clair/cmd/clairctl/config"
 	"github.com/coreos/clair/cmd/clairctl/docker"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 const analyzeTplt = `
@@ -77,6 +76,4 @@ func analyze(imageName string) clair.ImageAnalysis {
 func init() {
 	RootCmd.AddCommand(analyzeCmd)
 	analyzeCmd.Flags().BoolVarP(&docker.IsLocal, "local", "l", false, "Use local images")
-	analyzeCmd.Flags().StringP("priority", "p", "Low", "Vulnerabilities priority [Low, Medium, High, Critical]")
-	viper.BindPFlag("clair.priority", analyzeCmd.Flags().Lookup("priority"))
 }

@@ -14,7 +14,6 @@ import (
 const defaultValues = `
 clair:
   uri: http://localhost
-  priority: Low
   port: 6060
   healthport: 6061
   report:
@@ -31,7 +30,6 @@ clairctl:
 const customValues = `
 clair:
   uri: http://clair
-  priority: High
   port: 6061
   healthport: 6062
   report:

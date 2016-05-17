@@ -13,7 +13,6 @@ import (
 func Analyze(id string) (v1.LayerEnvelope, error) {
 
 	lURI := fmt.Sprintf("%v/layers/%v?vulnerabilities", uri, id)
-	// lURI := fmt.Sprintf("%v/layers/%v/vulnerabilities?minimumPriority=%v", uri, id, priority)
 	response, err := http.Get(lURI)
 	if err != nil {
 		return v1.LayerEnvelope{}, fmt.Errorf("analysing layer %v: %v", id, err)
