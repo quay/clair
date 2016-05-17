@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
-	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -218,7 +218,7 @@ func migrate(source string) error {
 	log.Info("running database migrations")
 
 	_, filename, _, _ := runtime.Caller(1)
-	migrationDir := path.Join(path.Dir(filename), "/migrations/")
+	migrationDir := filepath.Join(filepath.Dir(filename), "/migrations/")
 	conf := &goose.DBConf{
 		MigrationsDir: migrationDir,
 		Driver: goose.DBDriver{

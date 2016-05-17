@@ -16,7 +16,7 @@ package rhel
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 	"runtime"
 	"testing"
 
@@ -27,7 +27,7 @@ import (
 
 func TestRHELParser(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
-	path := path.Join(path.Dir(filename))
+	path := filepath.Join(filepath.Dir(filename))
 
 	// Test parsing testdata/fetcher_rhel_test.1.xml
 	testFile, _ := os.Open(path + "/testdata/fetcher_rhel_test.1.xml")

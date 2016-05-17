@@ -17,7 +17,7 @@ package pgsql
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -40,7 +40,7 @@ func generateTestConfig(testName string, loadFixture bool) config.RegistrableCom
 	var fixturePath string
 	if loadFixture {
 		_, filename, _, _ := runtime.Caller(0)
-		fixturePath = path.Join(path.Dir(filename)) + "/testdata/data.sql"
+		fixturePath = filepath.Join(filepath.Dir(filename)) + "/testdata/data.sql"
 	}
 
 	source := fmt.Sprintf("postgresql://postgres@127.0.0.1:5432/%s?sslmode=disable", dbName)

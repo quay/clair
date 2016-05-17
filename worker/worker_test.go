@@ -15,7 +15,7 @@
 package worker
 
 import (
-	"path"
+	"path/filepath"
 	"runtime"
 	"testing"
 
@@ -45,7 +45,7 @@ func newMockDatastore() *mockDatastore {
 
 func TestProcessWithDistUpgrade(t *testing.T) {
 	_, f, _, _ := runtime.Caller(0)
-	testDataPath := path.Join(path.Dir(f)) + "/testdata/DistUpgrade/"
+	testDataPath := filepath.Join(filepath.Dir(f)) + "/testdata/DistUpgrade/"
 
 	// Create a mock datastore.
 	datastore := newMockDatastore()

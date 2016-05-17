@@ -16,7 +16,7 @@ package debian
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 	"runtime"
 	"testing"
 
@@ -29,7 +29,7 @@ func TestDebianParser(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
 
 	// Test parsing testdata/fetcher_debian_test.json
-	testFile, _ := os.Open(path.Join(path.Dir(filename)) + "/testdata/fetcher_debian_test.json")
+	testFile, _ := os.Open(filepath.Join(filepath.Dir(filename)) + "/testdata/fetcher_debian_test.json")
 	response, err := buildResponse(testFile, "")
 	if assert.Nil(t, err) && assert.Len(t, response.Vulnerabilities, 3) {
 		for _, vulnerability := range response.Vulnerabilities {

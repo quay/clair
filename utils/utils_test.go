@@ -17,7 +17,7 @@ package utils
 import (
 	"bytes"
 	"os"
-	"path"
+	"path/filepath"
 	"runtime"
 	"testing"
 
@@ -65,10 +65,10 @@ func TestString(t *testing.T) {
 func TestTar(t *testing.T) {
 	var err error
 	var data map[string][]byte
-	_, filepath, _, _ := runtime.Caller(0)
+	_, path, _, _ := runtime.Caller(0)
 	testDataDir := "/testdata"
 	for _, filename := range []string{"utils_test.tar.gz", "utils_test.tar.bz2", "utils_test.tar.xz", "utils_test.tar"} {
-		testArchivePath := path.Join(path.Dir(filepath), testDataDir, filename)
+		testArchivePath := filepath.Join(filepath.Dir(path), testDataDir, filename)
 
 		// Extract non compressed data
 		data, err = SelectivelyExtractArchive(bytes.NewReader([]byte("that string does not represent a tar or tar-gzip file")), "", []string{}, 0)
