@@ -23,11 +23,11 @@ var reportCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		analyses := analyse(args[0])
-		imageName := strings.Replace(analyses.ImageName, "/", "-", -1) + "-" + analyses.Tag
+		analyzes := analyze(args[0])
+		imageName := strings.Replace(analyzes.ImageName, "/", "-", -1) + "-" + analyzes.Tag
 		switch clair.Report.Format {
 		case "html":
-			html, err := clair.ReportAsHTML(analyses)
+			html, err := clair.ReportAsHTML(analyzes)
 			if err != nil {
 				fmt.Println(errInternalError)
 				logrus.Fatalf("generating HTML report: %v", err)
@@ -39,7 +39,7 @@ var reportCmd = &cobra.Command{
 			}
 
 		case "json":
-			json, err := xstrings.ToIndentJSON(analyses)
+			json, err := xstrings.ToIndentJSON(analyzes)
 
 			if err != nil {
 				fmt.Println(errInternalError)

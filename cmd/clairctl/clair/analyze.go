@@ -9,8 +9,8 @@ import (
 	"github.com/coreos/clair/api/v1"
 )
 
-//Analyse get Analysis os specified layer
-func Analyse(id string) (v1.LayerEnvelope, error) {
+//Analyze get Analysis os specified layer
+func Analyze(id string) (v1.LayerEnvelope, error) {
 
 	lURI := fmt.Sprintf("%v/layers/%v?vulnerabilities", uri, id)
 	// lURI := fmt.Sprintf("%v/layers/%v/vulnerabilities?minimumPriority=%v", uri, id, priority)

@@ -7,8 +7,8 @@ import (
 	"github.com/coreos/clair/cmd/clairctl/xstrings"
 )
 
-//Analyse return Clair Image analysis
-func Analyse(image Image) clair.ImageAnalysis {
+//Analyze return Clair Image analysis
+func Analyze(image Image) clair.ImageAnalysis {
 	c := len(image.FsLayers)
 	res := []v1.LayerEnvelope{}
 
@@ -16,7 +16,7 @@ func Analyse(image Image) clair.ImageAnalysis {
 		l := image.FsLayers[c-i-1].BlobSum
 		lShort := xstrings.Substr(l, 0, 12)
 
-		if a, err := clair.Analyse(l); err != nil {
+		if a, err := clair.Analyze(l); err != nil {
 			logrus.Infof("analysing layer [%v] %d/%d: %v", lShort, i+1, c, err)
 		} else {
 			logrus.Infof("analysing layer [%v] %d/%d", lShort, i+1, c)

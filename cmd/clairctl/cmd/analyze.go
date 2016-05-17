@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-const analyseTplt = `
+const analyzeTplt = `
 Image: {{.String}}
  {{.Layers | len}} layers found
  {{$ia := .}}
@@ -21,20 +21,20 @@ Image: {{.String}}
  {{end}}
 `
 
-var analyseCmd = &cobra.Command{
-	Use:   "analyse IMAGE",
-	Short: "Analyse Docker image",
-	Long:  `Analyse a Docker image with Clair, against Ubuntu, Red hat and Debian vulnerabilities databases`,
+var analyzeCmd = &cobra.Command{
+	Use:   "analyze IMAGE",
+	Short: "Analyze Docker image",
+	Long:  `Analyze a Docker image with Clair, against Ubuntu, Red hat and Debian vulnerabilities databases`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) != 1 {
-			fmt.Printf("clairctl: \"analyse\" requires a minimum of 1 argument")
+			fmt.Printf("clairctl: \"analyze\" requires a minimum of 1 argument")
 			os.Exit(1)
 		}
 
-		ia := analyse(args[0])
+		ia := analyze(args[0])
 
-		err := template.Must(template.New("analysis").Parse(analyseTplt)).Execute(os.Stdout, ia)
+		err := template.Must(template.New("analysis").Parse(analyzeTplt)).Execute(os.Stdout, ia)
 		if err != nil {
 			fmt.Println(errInternalError)
 			logrus.Fatalf("rendering analysis: %v", err)
@@ -42,7 +42,7 @@ var analyseCmd = &cobra.Command{
 	},
 }
 
-func analyse(imageName string) clair.ImageAnalysis {
+func analyze(imageName string) clair.ImageAnalysis {
 	var err error
 	var image docker.Image
 
@@ -71,12 +71,12 @@ func analyse(imageName string) clair.ImageAnalysis {
 		}
 	}
 
-	return docker.Analyse(image)
+	return docker.Analyze(image)
 }
 
 func init() {
-	RootCmd.AddCommand(analyseCmd)
-	analyseCmd.Flags().BoolVarP(&docker.IsLocal, "local", "l", false, "Use local images")
-	analyseCmd.Flags().StringP("priority", "p", "Low", "Vulnerabilities priority [Low, Medium, High, Critical]")
-	viper.BindPFlag("clair.priority", analyseCmd.Flags().Lookup("priority"))
+	RootCmd.AddCommand(analyzeCmd)
+	analyzeCmd.Flags().BoolVarP(&docker.IsLocal, "local", "l", false, "Use local images")
+	analyzeCmd.Flags().StringP("priority", "p", "Low", "Vulnerabilities priority [Low, Medium, High, Critical]")
+	viper.BindPFlag("clair.priority", analyzeCmd.Flags().Lookup("priority"))
 }

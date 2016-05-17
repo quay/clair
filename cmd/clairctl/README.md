@@ -20,13 +20,13 @@ clairctl can be used for Docker Hub and self-hosted Registry
 # Command
 
 ```
-Analyse your docker image with Clair, directly from your registry.
+Analyze your docker image with Clair, directly from your registry.
 
 Usage:
   clairctl [command]
 
 Available Commands:
-  analyse     Analyse Docker image
+  analyze     Analyze Docker image
   health      Get Health of clairctl and underlying services
   login       Log in to a Docker registry
   logout      Log out from a Docker registry

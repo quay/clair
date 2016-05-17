@@ -15,16 +15,16 @@ type ReportConfig struct {
 }
 
 //ReportAsHTML report analysis as HTML
-func ReportAsHTML(analyses ImageAnalysis) (string, error) {
+func ReportAsHTML(analyzes ImageAnalysis) (string, error) {
 	asset, err := Asset("templates/analysis-template.html")
 	if err != nil {
 		return "", fmt.Errorf("accessing template: %v", err)
 	}
 
 	templte := template.Must(template.New("analysis-template").Parse(string(asset)))
-    
+
 	var doc bytes.Buffer
-	err = templte.Execute(&doc, analyses)
+	err = templte.Execute(&doc, analyzes)
 	if err != nil {
 		return "", fmt.Errorf("rendering HTML report: %v", err)
 	}
