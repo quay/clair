@@ -184,6 +184,14 @@ The following interfaces can have custom implementations registered via [init()]
 
 ## Related Links
 
-- [Talk](https://www.youtube.com/watch?v=PA3oBAgjnkU) and [Slides](https://docs.google.com/presentation/d/1toUKgqLyy1b-pZlDgxONLduiLmt2yaLR0GliBB7b3L0/pub?start=false&loop=false&slide=id.p) @ ContainerDays NYC 2015
+### Talks & Slides
+
+- _Clair: A Container Image Security Analyzer_ - [Event](https://www.meetup.com/Microservices-NYC/events/230023492/) [Video](https://www.youtube.com/watch?v=ynwKi2yhIX4) [Slides](https://docs.google.com/presentation/d/1ly9wQKQIlI7rlb0JNU1_P-rPDHU4xdRCCM3rxOdjcgc)
+- _Clair: A Container Image Security Analyzer_ - [Event](https://www.meetup.com/Container-Orchestration-NYC/events/229779466/) [Video](https://www.youtube.com/watch?v=wTfCOUDNV_M) [Slides](https://docs.google.com/presentation/d/1ly9wQKQIlI7rlb0JNU1_P-rPDHU4xdRCCM3rxOdjcgc)
+
+### Projects Integrating with Clair
+
 - [Quay](https://quay.io): the first container registry to integrate with Clair
 - [Dockyard](https://github.com/containerops/dockyard): an open source container registry with Clair integration
+- [Hyperclair](https://github.com/wemanity-belgium/hyperclair): a lightweight command-line tool for working locally with Clair
+- [Clair w/ SQS](https://github.com/zalando/clair-sqs): a container containing Clair and additional processes that integrate Clair with [Amazon SQS](https://aws.amazon.com/sqs)
