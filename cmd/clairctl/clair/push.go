@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/coreos/clair/api/v1"
@@ -38,18 +37,7 @@ func Push(layer v1.LayerEnvelope) error {
 		if response.StatusCode == 422 {
 			return OSNotSupported
 		}
-
-		body, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			return fmt.Errorf("reading 'add layer' response : %v", err)
-		}
-		var lErr LayerError
-		err = json.Unmarshal(body, &lErr)
-
-		if err != nil {
-			return fmt.Errorf("unmarshalling 'add layer' error message: %v", err)
-		}
-		return fmt.Errorf("%d - %s", response.StatusCode, string(body))
+		return fmt.Errorf("receiving http error: %d", response.StatusCode)
 	}
 
 	return nil

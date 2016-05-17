@@ -3,7 +3,6 @@ package clair
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/coreos/clair/api/v1"
@@ -17,22 +16,17 @@ func Analyze(id string) (v1.LayerEnvelope, error) {
 	if err != nil {
 		return v1.LayerEnvelope{}, fmt.Errorf("analysing layer %v: %v", id, err)
 	}
+
 	defer response.Body.Close()
-
-	body, err := ioutil.ReadAll(response.Body)
-
+	var analysis v1.LayerEnvelope
+	err = json.NewDecoder(response.Body).Decode(&analysis)
 	if err != nil {
 		return v1.LayerEnvelope{}, fmt.Errorf("reading layer analysis: %v", err)
 	}
 	if response.StatusCode != 200 {
-		return v1.LayerEnvelope{}, fmt.Errorf("%d - %s", response.StatusCode, string(body))
+		//TODO: should I show reponse body in case of error?
+		return v1.LayerEnvelope{}, fmt.Errorf("receiving http error: %d", response.StatusCode)
 	}
 
-	var analysis v1.LayerEnvelope
-
-	err = json.Unmarshal(body, &analysis)
-	if err != nil {
-		return v1.LayerEnvelope{}, fmt.Errorf("unmarshalling layer analysis: %v", err)
-	}
 	return analysis, nil
 }

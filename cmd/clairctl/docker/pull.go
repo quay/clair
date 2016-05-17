@@ -3,7 +3,6 @@ package docker
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/Sirupsen/logrus"
@@ -41,10 +40,6 @@ func Pull(imageName string) (Image, error) {
 		}
 	}
 
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return Image{}, fmt.Errorf("reading manifest body: %v", err)
-	}
 	if response.StatusCode != 200 {
 		switch response.StatusCode {
 		case http.StatusUnauthorized:
@@ -52,22 +47,22 @@ func Pull(imageName string) (Image, error) {
 		case http.StatusNotFound:
 			return Image{}, config.ErrLoginNotFound
 		default:
-			return Image{}, fmt.Errorf("%d - %s", response.StatusCode, string(body))
+			return Image{}, fmt.Errorf("receiving http error: %d", response.StatusCode)
 		}
 	}
-	if err := image.parseManifest(body); err != nil {
+	if err := image.parseManifest(response); err != nil {
 		return Image{}, fmt.Errorf("parsing manifest: %v", err)
 	}
 
 	return image, nil
 }
 
-func (image *Image) parseManifest(body []byte) error {
+func (image *Image) parseManifest(response *http.Response) error {
 
-	err := json.Unmarshal(body, &image)
+	err := json.NewDecoder(response.Body).Decode(&image)
 
 	if err != nil {
-		return fmt.Errorf("unmarshalling manifest body: %v", err)
+		return fmt.Errorf("reading manifest body: %v", err)
 	}
 
 	image.uniqueLayers()

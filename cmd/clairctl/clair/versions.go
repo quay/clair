@@ -3,7 +3,6 @@ package clair
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -15,18 +14,10 @@ func Versions() (interface{}, error) {
 		return nil, fmt.Errorf("requesting Clair version: %v", err)
 	}
 	defer response.Body.Close()
-
-	body, err := ioutil.ReadAll(response.Body)
+	var versionBody interface{}
+	err = json.NewDecoder(response.Body).Decode(&versionBody)
 	if err != nil {
 		return nil, fmt.Errorf("reading Clair version body: %v", err)
 	}
-
-	var versionBody interface{}
-	err = json.Unmarshal(body, &versionBody)
-
-	if err != nil {
-		return nil, fmt.Errorf("unmarshalling Clair version body: %v", err)
-	}
-
 	return versionBody, nil
 }

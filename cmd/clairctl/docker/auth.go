@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -73,18 +72,13 @@ func AuthenticateResponse(dockerResponse *http.Response, request *http.Request) 
 	}
 
 	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
-
-	if err != nil {
-		return err
-	}
-
 	var tok token
-	err = json.Unmarshal(body, &tok)
+	err = json.NewDecoder(response.Body).Decode(&tok)
 
 	if err != nil {
 		return err
 	}
+
 	request.Header.Set("Authorization", "Bearer "+tok.String())
 
 	return nil
