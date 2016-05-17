@@ -36,7 +36,7 @@ var loginCmd = &cobra.Command{
 
 		var users userMapping
 
-		if err := readConfigFile(&users, config.HyperclairConfig()); err != nil {
+		if err := readConfigFile(&users, config.ClairctlConfig()); err != nil {
 			fmt.Println(errInternalError)
 			logrus.Fatalf("reading clairctl file: %v", err)
 		}
@@ -55,7 +55,7 @@ var loginCmd = &cobra.Command{
 
 		users[reg] = usr
 
-		if err := writeConfigFile(users, config.HyperclairConfig()); err != nil {
+		if err := writeConfigFile(users, config.ClairctlConfig()); err != nil {
 			fmt.Println(errInternalError)
 			logrus.Fatalf("indenting login: %v", err)
 		}

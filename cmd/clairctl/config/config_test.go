@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/spf13/viper"
 	"github.com/coreos/clair/cmd/clairctl/test"
+	"github.com/spf13/viper"
 
 	"gopkg.in/yaml.v2"
 )
@@ -22,9 +22,9 @@ clair:
     format: html
 auth:
   insecureskipverify: true
-hyperclair:
+clairctl:
   ip: ""
-  tempfolder: /tmp/hyperclair
+  tempfolder: /tmp/clairctl
   port: 0
 `
 
@@ -39,9 +39,9 @@ clair:
     format: json
 auth:
   insecureskipverify: false
-hyperclair:
+clairctl:
   ip: "localhost"
-  tempfolder: /tmp/hyperclair/test
+  tempfolder: /tmp/clairctl/test
   port: 64157
 `
 
@@ -63,7 +63,7 @@ func TestInitDefault(t *testing.T) {
 }
 
 func TestInitCustomLocal(t *testing.T) {
-	tmpfile := test.CreateConfigFile(customValues, "hyperclair.yml", ".")
+	tmpfile := test.CreateConfigFile(customValues, "clairctl.yml", ".")
 	defer os.Remove(tmpfile) // clean up
 	fmt.Println(tmpfile)
 	Init("", "INFO")
@@ -83,7 +83,7 @@ func TestInitCustomLocal(t *testing.T) {
 }
 
 func TestInitCustomHome(t *testing.T) {
-	tmpfile := test.CreateConfigFile(customValues, "hyperclair.yml", HyperclairHome())
+	tmpfile := test.CreateConfigFile(customValues, "clairctl.yml", ClairctlHome())
 	defer os.Remove(tmpfile) // clean up
 	fmt.Println(tmpfile)
 	Init("", "INFO")
@@ -103,7 +103,7 @@ func TestInitCustomHome(t *testing.T) {
 }
 
 func TestInitCustom(t *testing.T) {
-	tmpfile := test.CreateConfigFile(customValues, "hyperclair.yml", "/tmp")
+	tmpfile := test.CreateConfigFile(customValues, "clairctl.yml", "/tmp")
 	defer os.Remove(tmpfile) // clean up
 	fmt.Println(tmpfile)
 	Init(tmpfile, "INFO")

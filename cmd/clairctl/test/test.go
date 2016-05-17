@@ -9,7 +9,7 @@ import (
 func CreateTmpConfigFile(content string) string {
 
 	c := []byte(content)
-	tmpfile, err := ioutil.TempFile("", "test-hyperclair")
+	tmpfile, err := ioutil.TempFile("", "test-clairctl")
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -23,25 +23,25 @@ import (
 
 var ErrLoginNotFound = errors.New("user is not log in")
 
-type r struct {
+type reportConfig struct {
 	Path, Format string
 }
-type c struct {
+type clairConfig struct {
 	URI, Priority    string
 	Port, HealthPort int
-	Report           r
+	Report           reportConfig
 }
-type a struct {
+type authConfig struct {
 	InsecureSkipVerify bool
 }
-type h struct {
+type clairctlConfig struct {
 	IP, TempFolder string
 	Port           int
 }
 type config struct {
-	Clair      c
-	Auth       a
-	Hyperclair h
+	Clair    clairConfig
+	Auth     authConfig
+	Clairctl clairctlConfig
 }
 
 // Init reads in config file and ENV variables if set.
@@ -57,11 +57,11 @@ func Init(cfgFile string, logLevel string) {
 	}
 	logrus.SetLevel(lvl)
 
-	viper.SetEnvPrefix("hyperclair")
-	viper.SetConfigName("hyperclair")        // name of config file (without extension)
-	viper.AddConfigPath("$HOME/.hyperclair") // adding home directory as first search path
-	viper.AddConfigPath(".")                 // adding home directory as first search path
-	viper.AutomaticEnv()                     // read in environment variables that match
+	viper.SetEnvPrefix("clairctl")
+	viper.SetConfigName("clairctl")        // name of config file (without extension)
+	viper.AddConfigPath("$HOME/.clairctl") // adding home directory as first search path
+	viper.AddConfigPath(".")               // adding home directory as first search path
+	viper.AutomaticEnv()                   // read in environment variables that match
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	}
@@ -93,37 +93,37 @@ func Init(cfgFile string, logLevel string) {
 	if viper.Get("auth.insecureSkipVerify") == nil {
 		viper.Set("auth.insecureSkipVerify", "true")
 	}
-	if viper.Get("hyperclair.ip") == nil {
-		viper.Set("hyperclair.ip", "")
+	if viper.Get("clairctl.ip") == nil {
+		viper.Set("clairctl.ip", "")
 	}
-	if viper.Get("hyperclair.port") == nil {
-		viper.Set("hyperclair.port", 0)
+	if viper.Get("clairctl.port") == nil {
+		viper.Set("clairctl.port", 0)
 	}
-	if viper.Get("hyperclair.tempFolder") == nil {
-		viper.Set("hyperclair.tempFolder", "/tmp/hyperclair")
+	if viper.Get("clairctl.tempFolder") == nil {
+		viper.Set("clairctl.tempFolder", "/tmp/clairctl")
 	}
 	clair.Config()
 }
 
 func values() config {
 	return config{
-		Clair: c{
+		Clair: clairConfig{
 			URI:        viper.GetString("clair.uri"),
 			Port:       viper.GetInt("clair.port"),
 			HealthPort: viper.GetInt("clair.healthPort"),
 			Priority:   viper.GetString("clair.priority"),
-			Report: r{
+			Report: reportConfig{
 				Path:   viper.GetString("clair.report.path"),
 				Format: viper.GetString("clair.report.format"),
 			},
 		},
-		Auth: a{
+		Auth: authConfig{
 			InsecureSkipVerify: viper.GetBool("auth.insecureSkipVerify"),
 		},
-		Hyperclair: h{
-			IP:         viper.GetString("hyperclair.ip"),
-			Port:       viper.GetInt("hyperclair.port"),
-			TempFolder: viper.GetString("hyperclair.tempFolder"),
+		Clairctl: clairctlConfig{
+			IP:         viper.GetString("clairctl.ip"),
+			Port:       viper.GetInt("clairctl.port"),
+			TempFolder: viper.GetString("clairctl.tempFolder"),
 		},
 	}
 }
@@ -139,12 +139,12 @@ func Print() {
 	fmt.Printf("%v", string(cfgBytes))
 }
 
-func HyperclairHome() string {
+func ClairctlHome() string {
 	usr, err := user.Current()
 	if err != nil {
 		panic(err)
 	}
-	p := usr.HomeDir + "/.hyperclair"
+	p := usr.HomeDir + "/.clairctl"
 
 	if _, err := os.Stat(p); os.IsNotExist(err) {
 		os.Mkdir(p, 0700)
@@ -159,31 +159,31 @@ type Login struct {
 
 type loginMapping map[string]Login
 
-func HyperclairConfig() string {
-	return HyperclairHome() + "/config.json"
+func ClairctlConfig() string {
+	return ClairctlHome() + "/config.json"
 }
 
 func AddLogin(registry string, login Login) error {
 	var logins loginMapping
 
-	if err := readConfigFile(&logins, HyperclairConfig()); err != nil {
-		return fmt.Errorf("reading hyperclair file: %v", err)
+	if err := readConfigFile(&logins, ClairctlConfig()); err != nil {
+		return fmt.Errorf("reading clairctl file: %v", err)
 	}
 
 	logins[registry] = login
 
-	if err := writeConfigFile(logins, HyperclairConfig()); err != nil {
+	if err := writeConfigFile(logins, ClairctlConfig()); err != nil {
 		return fmt.Errorf("indenting login: %v", err)
 	}
 
 	return nil
 }
 func GetLogin(registry string) (Login, error) {
-	if _, err := os.Stat(HyperclairConfig()); err == nil {
+	if _, err := os.Stat(ClairctlConfig()); err == nil {
 		var logins loginMapping
 
-		if err := readConfigFile(&logins, HyperclairConfig()); err != nil {
-			return Login{}, fmt.Errorf("reading hyperclair file: %v", err)
+		if err := readConfigFile(&logins, ClairctlConfig()); err != nil {
+			return Login{}, fmt.Errorf("reading clairctl file: %v", err)
 		}
 
 		if login, present := logins[registry]; present {
@@ -199,17 +199,17 @@ func GetLogin(registry string) (Login, error) {
 }
 
 func RemoveLogin(registry string) (bool, error) {
-	if _, err := os.Stat(HyperclairConfig()); err == nil {
+	if _, err := os.Stat(ClairctlConfig()); err == nil {
 		var logins loginMapping
 
-		if err := readConfigFile(&logins, HyperclairConfig()); err != nil {
-			return false, fmt.Errorf("reading hyperclair file: %v", err)
+		if err := readConfigFile(&logins, ClairctlConfig()); err != nil {
+			return false, fmt.Errorf("reading clairctl file: %v", err)
 		}
 
 		if _, present := logins[registry]; present {
 			delete(logins, registry)
 
-			if err := writeConfigFile(logins, HyperclairConfig()); err != nil {
+			if err := writeConfigFile(logins, ClairctlConfig()); err != nil {
 				return false, fmt.Errorf("indenting login: %v", err)
 			}
 
@@ -247,10 +247,10 @@ func writeConfigFile(logins loginMapping, file string) error {
 	return nil
 }
 
-//LocalServerIP return the local hyperclair server IP
+//LocalServerIP return the local clairctl server IP
 func LocalServerIP() (string, error) {
-	localPort := viper.GetString("hyperclair.port")
-	localIP := viper.GetString("hyperclair.ip")
+	localPort := viper.GetString("clairctl.port")
+	localIP := viper.GetString("clairctl.ip")
 	if localIP == "" {
 		logrus.Infoln("retrieving docker0 interface as local IP")
 		var err error

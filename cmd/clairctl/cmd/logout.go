@@ -26,17 +26,17 @@ var logoutCmd = &cobra.Command{
 			reg = args[0]
 		}
 
-		if _, err := os.Stat(config.HyperclairConfig()); err == nil {
+		if _, err := os.Stat(config.ClairctlConfig()); err == nil {
 			var users userMapping
 
-			if err := readConfigFile(&users, config.HyperclairConfig()); err != nil {
+			if err := readConfigFile(&users, config.ClairctlConfig()); err != nil {
 				fmt.Println(errInternalError)
 				logrus.Fatalf("reading clairctl file: %v", err)
 			}
 			if _, present := users[reg]; present {
 				delete(users, reg)
 
-				if err := writeConfigFile(users, config.HyperclairConfig()); err != nil {
+				if err := writeConfigFile(users, config.ClairctlConfig()); err != nil {
 					fmt.Println(errInternalError)
 					logrus.Fatalf("indenting login: %v", err)
 				}

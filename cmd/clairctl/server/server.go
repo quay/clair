@@ -41,10 +41,10 @@ func tcpListener(sURL string) (listener net.Listener) {
 		logrus.Fatalf("cannot instanciate listener: %v", err)
 	}
 
-	if viper.GetInt("hyperclair.port") == 0 {
+	if viper.GetInt("clairctl.port") == 0 {
 		port := strings.Split(listener.Addr().String(), ":")[1]
 		logrus.Debugf("Update local server port from %q to %q", "0", port)
-		viper.Set("hyperclair.port", port)
+		viper.Set("clairctl.port", port)
 	}
 
 	return

@@ -36,7 +36,7 @@ Available Commands:
   version     Get Versions of clairctl and underlying services
 
 Flags:
-      --config string      config file (default is ./.hyperclair.yml)
+      --config string      config file (default is ./.clairctl.yml)
       --log-level string   log level [Panic,Fatal,Error,Warn,Info,Debug]
 
 Use "clairctl [command] --help" for more information about a command.
