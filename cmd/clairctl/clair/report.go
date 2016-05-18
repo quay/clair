@@ -6,6 +6,7 @@ import (
 	"text/template"
 )
 
+//execute go generate ./clair
 //go:generate go-bindata -pkg clair -o templates.go templates/...
 
 //ReportConfig  Reporting configuration

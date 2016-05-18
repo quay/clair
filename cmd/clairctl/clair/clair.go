@@ -19,27 +19,34 @@ var Report ReportConfig
 
 //VulnerabiliesCounts Total count of vulnerabilities
 type VulnerabiliesCounts struct {
-	Total      int
-	High       int
-	Medium     int
-	Low        int
-	Negligible int
+	Total                                                     int
+	Unknown, Negligible, Low, Medium, High, Critical, Defcon1 int
 }
 
 //RelativeCount get the percentage of vulnerabilities of a severity
 func (vulnerabilityCount VulnerabiliesCounts) RelativeCount(severity string) float64 {
 	var count int
 
-	switch severity {
+	switch strings.TrimSpace(severity) {
+	case "Defcon1":
+		count = vulnerabilityCount.Defcon1
+	case "Critical":
+		count = vulnerabilityCount.Critical
 	case "High":
 		count = vulnerabilityCount.High
 	case "Medium":
 		count = vulnerabilityCount.Medium
 	case "Low":
 		count = vulnerabilityCount.Low
+	case "Negligible":
+		count = vulnerabilityCount.Negligible
+	case "Unknown":
+		count = vulnerabilityCount.Unknown
+
 	}
 
-	return math.Ceil(float64(count)/float64(vulnerabilityCount.Total)*100*100) / 100
+	result := float64(count) / float64(vulnerabilityCount.Total) * 100
+	return math.Ceil(result*100) / 100
 }
 
 //ImageAnalysis Full image analysis
@@ -71,25 +78,36 @@ func (imageAnalysis ImageAnalysis) CountVulnerabilities(l v1.Layer) int {
 func (imageAnalysis ImageAnalysis) CountAllVulnerabilities() VulnerabiliesCounts {
 	var result VulnerabiliesCounts
 	result.Total = 0
+	result.Defcon1 = 0
+	result.Critical = 0
 	result.High = 0
 	result.Medium = 0
 	result.Low = 0
 	result.Negligible = 0
+	result.Unknown = 0
 
-	for _, l := range imageAnalysis.Layers {
-		for _, f := range l.Layer.Features {
-			result.Total += len(f.Vulnerabilities)
-			for _, v := range f.Vulnerabilities {
-				switch v.Severity {
-				case "High":
-					result.High++
-				case "Medium":
-					result.Medium++
-				case "Low":
-					result.Low++
-				case "Negligible":
-					result.Negligible++
-				}
+	l := imageAnalysis.Layers[len(imageAnalysis.Layers)-1]
+
+	for _, f := range l.Layer.Features {
+
+		result.Total += len(f.Vulnerabilities)
+
+		for _, v := range f.Vulnerabilities {
+			switch v.Severity {
+			case "Defcon1":
+				result.Defcon1++
+			case "Critical":
+				result.Critical++
+			case "High":
+				result.High++
+			case "Medium":
+				result.Medium++
+			case "Low":
+				result.Low++
+			case "Negligible":
+				result.Negligible++
+			case "Unknown":
+				result.Unknown++
 			}
 		}
 	}
@@ -107,13 +125,19 @@ func (v Vulnerability) Weight() int {
 	weight := 0
 
 	switch v.Severity {
+	case "Defcon1":
+		weight = 7
+	case "Critical":
+		weight = 6
 	case "High":
-		weight = 4
+		weight = 5
 	case "Medium":
-		weight = 3
+		weight = 4
 	case "Low":
-		weight = 2
+		weight = 3
 	case "Negligible":
+		weight = 2
+	case "Unknown":
 		weight = 1
 	}
 
@@ -193,46 +217,47 @@ func (a FeatureByVulnerabilities) Less(i, j int) bool {
 // SortLayers give layers ordered by vulnerability algorithm
 func (imageAnalysis ImageAnalysis) SortLayers() []Layer {
 	layers := []Layer{}
+	l := imageAnalysis.Layers[len(imageAnalysis.Layers)-1]
 
-	for _, l := range imageAnalysis.Layers {
-		features := []Feature{}
+	// for _, l := range imageAnalysis.Layers {
+	features := []Feature{}
 
-		for _, f := range l.Layer.Features {
-			vulnerabilities := []Vulnerability{}
+	for _, f := range l.Layer.Features {
+		vulnerabilities := []Vulnerability{}
 
-			for _, v := range f.Vulnerabilities {
-				nv := Vulnerability{
-					Name:        v.Name,
-					Severity:    v.Severity,
-					IntroduceBy: f.Name + ":" + f.Version,
-					Description: v.Description,
-					Layer:       l.Layer.Name,
-					Link:        v.Link,
-				}
-
-				vulnerabilities = append(vulnerabilities, nv)
+		for _, v := range f.Vulnerabilities {
+			nv := Vulnerability{
+				Name:        v.Name,
+				Severity:    v.Severity,
+				IntroduceBy: f.Name + ":" + f.Version,
+				Description: v.Description,
+				Layer:       l.Layer.Name,
+				Link:        v.Link,
 			}
 
-			sort.Sort(VulnerabilitiesBySeverity(vulnerabilities))
-
-			nf := Feature{
-				Name:            f.Name,
-				Version:         f.Version,
-				Vulnerabilities: vulnerabilities,
-			}
-
-			features = append(features, nf)
+			vulnerabilities = append(vulnerabilities, nv)
 		}
 
-		sort.Sort(FeatureByVulnerabilities(features))
+		sort.Sort(VulnerabilitiesBySeverity(vulnerabilities))
 
-		nl := Layer{
-			Name:     l.Layer.Name,
-			Path:     l.Layer.Path,
-			Features: features,
+		nf := Feature{
+			Name:            f.Name,
+			Version:         f.Version,
+			Vulnerabilities: vulnerabilities,
 		}
-		layers = append(layers, nl)
+
+		features = append(features, nf)
 	}
+
+	sort.Sort(FeatureByVulnerabilities(features))
+
+	nl := Layer{
+		Name:     l.Layer.Name,
+		Path:     l.Layer.Path,
+		Features: features,
+	}
+	layers = append(layers, nl)
+	// }
 
 	sort.Sort(LayerByVulnerabilities(layers))
 
@@ -244,21 +269,23 @@ func (imageAnalysis ImageAnalysis) SortVulnerabilities() []Vulnerability {
 	vulnerabilities := []Vulnerability{}
 
 	// there should be a better method, but I don't know how to easlily concert []v1.Vulnerability to [Vulnerability]
-	for _, l := range imageAnalysis.Layers {
-		for _, f := range l.Layer.Features {
-			for _, v := range f.Vulnerabilities {
-				nv := Vulnerability{
-					Name:        v.Name,
-					Severity:    v.Severity,
-					IntroduceBy: f.Name + ":" + f.Version,
-					Description: v.Description,
-					Layer:       l.Layer.Name,
-				}
+	l := imageAnalysis.Layers[len(imageAnalysis.Layers)-1]
 
-				vulnerabilities = append(vulnerabilities, nv)
+	// for _, l := range imageAnalysis.Layers {
+	for _, f := range l.Layer.Features {
+		for _, v := range f.Vulnerabilities {
+			nv := Vulnerability{
+				Name:        v.Name,
+				Severity:    v.Severity,
+				IntroduceBy: f.Name + ":" + f.Version,
+				Description: v.Description,
+				Layer:       l.Layer.Name,
 			}
+
+			vulnerabilities = append(vulnerabilities, nv)
 		}
 	}
+	// }
 
 	sort.Sort(VulnerabilitiesBySeverity(vulnerabilities))
 
