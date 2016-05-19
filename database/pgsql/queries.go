@@ -206,14 +206,13 @@ const (
 
 	searchNotificationLayerIntroducingVulnerability = `
 		SELECT l.ID, l.name
-		FROM Vulnerability v, Vulnerability_Affects_FeatureVersion vafv, FeatureVersion fv, Layer_diff_FeatureVersion ldfv, Layer l
-		WHERE v.id = $1
-					AND v.id = vafv.vulnerability_id
+		FROM Vulnerability_Affects_FeatureVersion vafv, FeatureVersion fv, Layer_diff_FeatureVersion ldfv, Layer l
+		WHERE l.id >= $2
+					AND vafv.vulnerability_id = $1
 					AND vafv.featureversion_id = fv.id
-					AND fv.id = ldfv.featureversion_id
+					AND ldfv.featureversion_id = fv.id
 					AND ldfv.modification = 'add'
 					AND ldfv.layer_id = l.id
-					AND l.id >= $2
 		ORDER BY l.ID
 		LIMIT $3`
 
