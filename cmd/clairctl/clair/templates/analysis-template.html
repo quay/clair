@@ -459,47 +459,48 @@
                     <p><span class="lead"><strong>Total : {{$vulnerabilitiesCount.Total}} vulnerabilities</strong></span></p>
                     </p>
                     <div class="summary-text">
-                        {{if gt $vulnerabilitiesCount.Unknown 0}}
-                        <div class="node Unknown">Unknown : <strong>{{$vulnerabilitiesCount.Unknown}}</strong></div>
-                        {{end}} {{if gt $vulnerabilitiesCount.Negligible 0}}
-                        <div class="node Negligible">Negligible : <strong>{{$vulnerabilitiesCount.Negligible}}</strong></div>
-                        {{end}} {{if gt $vulnerabilitiesCount.Low 0}}
-                        <div class="node Low">Low : <strong>{{$vulnerabilitiesCount.Low}}</strong></div>
-                        {{end}} {{if gt $vulnerabilitiesCount.Medium 0}}
-                        <div class="node Medium">Medium : <strong>{{$vulnerabilitiesCount.Medium}}</strong></div>
-                        {{end}} {{if gt $vulnerabilitiesCount.High 0}}
-                        <div class="node High">High : <strong>{{$vulnerabilitiesCount.High}}</strong></div>
-                        {{end}} {{if gt $vulnerabilitiesCount.Critical 0}}
-                        <div class="node Critical">Critical : <strong>{{$vulnerabilitiesCount.Critical}}</strong></div>
-                        {{end}} {{if gt $vulnerabilitiesCount.Defcon1 0}}
-                        <div class="node Defcon1">Defcon1 : <strong>{{$vulnerabilitiesCount.Defcon1}}</strong></div>
+                        {{if gt ($vulnerabilitiesCount.Count "Unknown") 0}}
+                        <div class="node Unknown">Unknown : <strong>{{$vulnerabilitiesCount.Count "Unknown"}}</strong></div>
+                        {{end}} {{if gt ($vulnerabilitiesCount.Count "Negligible") 0}}
+                        <div class="node Negligible">Negligible : <strong>{{$vulnerabilitiesCount.Count "Negligible"}}</strong></div>
+                        {{end}} {{if gt ($vulnerabilitiesCount.Count "Low") 0}}
+                        <div class="node Low">Low : <strong>{{$vulnerabilitiesCount.Count "Low"}}</strong></div>
+                        {{end}} {{if gt ($vulnerabilitiesCount.Count "Medium") 0}}
+                        <div class="node Medium">Medium : <strong>{{$vulnerabilitiesCount.Count "Medium"}}</strong></div>
+                        {{end}} {{if gt ($vulnerabilitiesCount.Count "High") 0}}
+                        <div class="node High">High : <strong>{{$vulnerabilitiesCount.Count "High"}}</strong></div>
+                        {{end}} {{if gt ($vulnerabilitiesCount.Count "Critical") 0}}
+                        <div class="node Critical">Critical : <strong>{{$vulnerabilitiesCount.Count "Critical"}}</strong></div>
+                        {{end}} {{if gt ($vulnerabilitiesCount.Count "Defcon1") 0}}
+                        <div class="node Defcon1">Defcon1 : <strong>{{$vulnerabilitiesCount.Count "Defcon1"}}</strong></div>
                         {{end}}
                     </div>
                     <div class="relative-graph">
-                        <div class="node Defcon1" style="width: {{$vulnerabilitiesCount.RelativeCount " Defcon1 "}}%"></div>
-                        <div class="node Critical" style="width: {{$vulnerabilitiesCount.RelativeCount " Critical "}}%"></div>
-                        <div class="node High" style="width: {{$vulnerabilitiesCount.RelativeCount " High "}}%"></div>
-                        <div class="node Medium" style="width: {{$vulnerabilitiesCount.RelativeCount " Medium "}}%"></div>
-                        <div class="node Low" style="width: {{$vulnerabilitiesCount.RelativeCount " Low "}}%"></div>
-                        <div class="node Negligible" style="width: {{$vulnerabilitiesCount.RelativeCount " Negligible "}}%"></div>
-                        <div class="node Unknown" style="width: {{$vulnerabilitiesCount.RelativeCount " Unknown "}}%"></div>
+                        <div class="node Defcon1" style="width: {{$vulnerabilitiesCount.RelativeCount "Defcon1"}}%"></div>
+                        <div class="node Critical" style="width: {{$vulnerabilitiesCount.RelativeCount "Critical"}}%"></div>
+                        <div class="node High" style="width: {{$vulnerabilitiesCount.RelativeCount "High"}}%"></div>
+                        <div class="node Medium" style="width: {{$vulnerabilitiesCount.RelativeCount "Medium"}}%"></div>
+                        <div class="node Low" style="width: {{$vulnerabilitiesCount.RelativeCount "Low"}}%"></div>
+                        <div class="node Negligible" style="width: {{$vulnerabilitiesCount.RelativeCount "Negligible"}}%"></div>
+                        <div class="node Unknown" style="width: {{$vulnerabilitiesCount.RelativeCount "Unknown"}}%"></div>
                     </div>
                     {{end}}
                 </div>
             </section>
-
+            
             <div class="graph">
-                {{range .SortVulnerabilities}}
+                {{ $ia := .}}
+                {{range $k,$v := vulnerabilities $ia}}
+                {{range $v}}
                 <a class="node {{.Severity}}" href="#{{ .Name }}">
                     <div class="dot"></div>
                     <div class="popup">
                         <div><strong>{{.Name}}</strong></div>
                         <div>{{.Severity}}</div>
-                        <!--<div>{{.IntroduceBy}}</div>-->
-                        <!--<div>{{.Description}}</div>-->
-                        <div>{{.Layer}}</div>
+                        <div>{{.Feature}}</div>
                     </div>
                 </a>
+                {{end}}
                 {{end}}
             </div>
         </div>
@@ -508,33 +509,30 @@
             <div>
                 <div class="panel">
                     <div class="layers">
-                        {{range .SortLayers}}
-                        <div id="{{.Name}}" class="layer">
-                            <h3 class="layer__title" data-toggle-layer="{{.Name}}">{{.Name}}</h3>
-                            <div>{{.Path}}</div>
+                        <div id="{{.LastLayer.Name}}" class="layer">
+                            <h3 class="layer__title" data-toggle-layer="{{.LastLayer.Name}}">{{.LastLayer.Name}}</h3>
                             <div class="features">
                                 <ul>
-                                    {{range .Features}}
+                                    {{ range sortedVulnerabilities $ia}}
                                     <li class="feature">
                                         <div class="feature__title">
-                                            <strong>{{ .Name }}</strong> <span>{{ .Version }}</span> - <span class="fa fa-{{if .Status}}check-circle{{else}}exclamation-triangle{{end}}" aria-hidden="true"></span>
+                                           <strong>{{ .Name }}</strong> <span>{{ .Version }}</span> - <span class="fa fa-exclamation-triangle" aria-hidden="true"></span>
                                         </div>
+                                        {{ range .Vulnerabilities}}
                                         <ul class="vulnerabilities">
-                                            {{range .Vulnerabilities}}
                                             <li class="vulnerability {{ .Severity }}">
                                                 <a class="vulnerability__title" name="{{ .Name }}"></a>
                                                 <strong class="name">{{ .Name }}</strong>
                                                 <div>{{ .Description }}</div>
                                                 <a href="{{ .Link }}" target="blank">Link</a>
                                             </li>
-                                            {{end}}
                                         </ul>
                                     </li>
+                                    {{end}}
                                     {{end}}
                                 </ul>
                             </div>
                         </div>
-                        {{end}}
                     </div>
                 </div>
                 <br />

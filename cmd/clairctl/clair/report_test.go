@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"testing"
+
+	"github.com/coreos/clair/utils/types"
 )
 
 func TestReportAsHtml(t *testing.T) {
@@ -27,5 +29,16 @@ func TestReportAsHtml(t *testing.T) {
 	err = ioutil.WriteFile(os.TempDir()+"/clairctl-html-report.html", []byte(html), 0700)
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func TestInvertedPriorities(t *testing.T) {
+	expected := []types.Priority{types.Defcon1, types.Critical, types.High, types.Medium, types.Low, types.Negligible, types.Unknown}
+	ip := InvertedPriorities()
+	fmt.Printf("%v - %v", len(expected), len(ip))
+	for i, v := range ip {
+		if v != expected[i] {
+			t.Errorf("Expecting %v, got %v", expected, ip)
+		}
 	}
 }

@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"text/template"
+
+	"github.com/coreos/clair/api/v1"
+	"github.com/coreos/clair/utils/types"
 )
 
 //execute go generate ./clair
@@ -22,7 +25,13 @@ func ReportAsHTML(analyzes ImageAnalysis) (string, error) {
 		return "", fmt.Errorf("accessing template: %v", err)
 	}
 
-	templte := template.Must(template.New("analysis-template").Parse(string(asset)))
+	funcs := template.FuncMap{
+		"invertedPriorities":    InvertedPriorities,
+		"vulnerabilities":       Vulnerabilities,
+		"sortedVulnerabilities": SortedVulnerabilities,
+	}
+
+	templte := template.Must(template.New("analysis-template").Funcs(funcs).Parse(string(asset)))
 
 	var doc bytes.Buffer
 	err = templte.Execute(&doc, analyzes)
@@ -30,4 +39,54 @@ func ReportAsHTML(analyzes ImageAnalysis) (string, error) {
 		return "", fmt.Errorf("rendering HTML report: %v", err)
 	}
 	return doc.String(), nil
+}
+
+func InvertedPriorities() []types.Priority {
+	ip := make([]types.Priority, len(types.Priorities))
+	for i, j := 0, len(types.Priorities)-1; i <= j; i, j = i+1, j-1 {
+		ip[i], ip[j] = types.Priorities[j], types.Priorities[i]
+	}
+	return ip
+
+}
+
+//Vulnerabilities return a list a vulnerabilities
+func Vulnerabilities(imageAnalysis ImageAnalysis) map[types.Priority][]VulnerabilityWithFeature {
+
+	result := make(map[types.Priority][]VulnerabilityWithFeature)
+
+	l := imageAnalysis.Layers[len(imageAnalysis.Layers)-1]
+	for _, f := range l.Layer.Features {
+		for _, v := range f.Vulnerabilities {
+
+			result[types.Priority(v.Severity)] = append(result[types.Priority(v.Severity)], VulnerabilityWithFeature{Vulnerability: v, Feature: f.Name + ":" + f.Version})
+		}
+	}
+
+	return result
+}
+
+// SortedVulnerabilities get all vulnerabilities sorted by Severity
+func SortedVulnerabilities(imageAnalysis ImageAnalysis) []v1.Feature {
+	features := []v1.Feature{}
+
+	l := imageAnalysis.Layers[len(imageAnalysis.Layers)-1]
+
+	for _, f := range l.Layer.Features {
+		if len(f.Vulnerabilities) > 0 {
+			vulnerabilities := []v1.Vulnerability{}
+			for _, p := range InvertedPriorities() {
+				for _, v := range f.Vulnerabilities {
+					if types.Priority(v.Severity) == p {
+						vulnerabilities = append(vulnerabilities, v)
+					}
+				}
+			}
+			nf := f
+			nf.Vulnerabilities = vulnerabilities
+			features = append(features, nf)
+		}
+	}
+
+	return features
 }
