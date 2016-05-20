@@ -107,6 +107,7 @@ func (f *RHELFetcher) FetchUpdate(datastore database.Datastore) (resp updater.Fe
 		log.Errorf("could not download RHEL's update list: %s", err)
 		return resp, cerrors.ErrCouldNotDownload
 	}
+	defer r.Body.Close()
 
 	// Get the list of RHSAs that we have to process.
 	var rhsaList []int

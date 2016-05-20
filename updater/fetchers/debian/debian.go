@@ -69,6 +69,7 @@ func (fetcher *DebianFetcher) FetchUpdate(datastore database.Datastore) (resp up
 		log.Errorf("could not download Debian's update: %s", err)
 		return resp, cerrors.ErrCouldNotDownload
 	}
+	defer r.Body.Close()
 
 	// Get the SHA-1 of the latest update's JSON data
 	latestHash, err := datastore.GetKeyValue(updaterFlag)

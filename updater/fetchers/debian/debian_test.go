@@ -31,6 +31,7 @@ func TestDebianParser(t *testing.T) {
 	// Test parsing testdata/fetcher_debian_test.json
 	testFile, _ := os.Open(filepath.Join(filepath.Dir(filename)) + "/testdata/fetcher_debian_test.json")
 	response, err := buildResponse(testFile, "")
+	defer testFile.Close()
 	if assert.Nil(t, err) && assert.Len(t, response.Vulnerabilities, 3) {
 		for _, vulnerability := range response.Vulnerabilities {
 			if vulnerability.Name == "CVE-2015-1323" {
