@@ -10,8 +10,8 @@ import (
 	"github.com/coreos/clair/api/v1"
 )
 
-//ErrOSNotSupported is returned when Clair received a layer which on os not supported
-var ErrOSNotSupported = errors.New("worker: OS and/or package manager are not supported")
+// ErrUnanalizedLayer is returned when the layer was not correctly analyzed
+var ErrUnanalizedLayer = errors.New("layer cannot be analyzed")
 
 //Push send a layer to Clair for analysis
 func Push(layer v1.LayerEnvelope) error {
@@ -35,7 +35,7 @@ func Push(layer v1.LayerEnvelope) error {
 
 	if response.StatusCode != 201 {
 		if response.StatusCode == 422 {
-			return OSNotSupported
+			return ErrUnanalizedLayer
 		}
 		return fmt.Errorf("receiving http error: %d", response.StatusCode)
 	}

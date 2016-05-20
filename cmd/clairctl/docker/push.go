@@ -52,7 +52,7 @@ func Push(image Image) error {
 		payload.Layer.Path = strings.Replace(payload.Layer.Path, image.Registry, hURL, 1)
 		if err := clair.Push(payload); err != nil {
 			logrus.Infof("adding layer %d/%d [%v]: %v", index+1, layerCount, lUID, err)
-			if err != clair.OSNotSupported {
+			if err != clair.ErrUnanalizedLayer {
 				return err
 			}
 			parentID = ""
