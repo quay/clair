@@ -3,6 +3,7 @@ package clair
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"text/template"
 
 	"github.com/coreos/clair/api/v1"
@@ -11,6 +12,9 @@ import (
 
 //execute go generate ./clair
 //go:generate go-bindata -pkg clair -o templates.go templates/...
+
+//Report Reporting Config value
+var Report ReportConfig
 
 //ReportConfig  Reporting configuration
 type ReportConfig struct {
@@ -27,7 +31,8 @@ func ReportAsHTML(analyzes ImageAnalysis) (string, error) {
 
 	funcs := template.FuncMap{
 		"vulnerabilities":       vulnerabilities,
-		"sortedVulnerabilities": SortedVulnerabilities,
+		"allVulnerabilities":    allVulnerabilities,
+		"sortedVulnerabilities": sortedVulnerabilities,
 	}
 
 	templte := template.Must(template.New("analysis-template").Funcs(funcs).Parse(string(asset)))
@@ -49,6 +54,51 @@ func invertedPriorities() []types.Priority {
 
 }
 
+type vulnerabilityWithFeature struct {
+	v1.Vulnerability
+	Feature string
+}
+
+//VulnerabiliesCounts Total count of vulnerabilities by type
+type vulnerabiliesCounts map[types.Priority]int
+
+//Total return to total of Vulnerabilities
+func (v vulnerabiliesCounts) Total() int {
+	var c int
+	for _, count := range v {
+		c += count
+	}
+	return c
+}
+
+//Count return count of severities in Vulnerabilities
+func (v vulnerabiliesCounts) Count(severity string) int {
+	return v[types.Priority(severity)]
+}
+
+//RelativeCount get the percentage of vulnerabilities of a severity
+func (v vulnerabiliesCounts) RelativeCount(severity string) float64 {
+	count := v[types.Priority(severity)]
+	result := float64(count) / float64(v.Total()) * 100
+	return math.Ceil(result*100) / 100
+}
+
+// allVulnerabilities Total count of vulnerabilities
+func allVulnerabilities(imageAnalysis ImageAnalysis) vulnerabiliesCounts {
+	result := make(vulnerabiliesCounts)
+
+	l := imageAnalysis.Layers[len(imageAnalysis.Layers)-1]
+
+	for _, f := range l.Layer.Features {
+
+		for _, v := range f.Vulnerabilities {
+			result[types.Priority(v.Severity)]++
+		}
+	}
+
+	return result
+}
+
 //Vulnerabilities return a list a vulnerabilities
 func vulnerabilities(imageAnalysis ImageAnalysis) map[types.Priority][]vulnerabilityWithFeature {
 
@@ -66,7 +116,7 @@ func vulnerabilities(imageAnalysis ImageAnalysis) map[types.Priority][]vulnerabi
 }
 
 // SortedVulnerabilities get all vulnerabilities sorted by Severity
-func SortedVulnerabilities(imageAnalysis ImageAnalysis) []v1.Feature {
+func sortedVulnerabilities(imageAnalysis ImageAnalysis) []v1.Feature {
 	features := []v1.Feature{}
 
 	l := imageAnalysis.Layers[len(imageAnalysis.Layers)-1]

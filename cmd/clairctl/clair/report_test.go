@@ -34,7 +34,7 @@ func TestReportAsHtml(t *testing.T) {
 
 func TestInvertedPriorities(t *testing.T) {
 	expected := []types.Priority{types.Defcon1, types.Critical, types.High, types.Medium, types.Low, types.Negligible, types.Unknown}
-	ip := InvertedPriorities()
+	ip := invertedPriorities()
 	fmt.Printf("%v - %v", len(expected), len(ip))
 	for i, v := range ip {
 		if v != expected[i] {

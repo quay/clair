@@ -452,10 +452,11 @@
 
         <div class="app-intro clearfix">
             <h2>Image: {{.ImageName}}</h2>
+            {{ $ia := .}}
 
             <section class="summary">
                 <div>
-                    {{with $vulnerabilitiesCount := .CountAllVulnerabilities}}
+                    {{with $vulnerabilitiesCount := allVulnerabilities $ia}}
                     <p><span class="lead"><strong>Total : {{$vulnerabilitiesCount.Total}} vulnerabilities</strong></span></p>
                     </p>
                     <div class="summary-text">
@@ -489,7 +490,6 @@
             </section>
             
             <div class="graph">
-                {{ $ia := .}}
                 {{range $k,$v := vulnerabilities $ia}}
                 {{range $v}}
                 <a class="node {{.Severity}}" href="#{{ .Name }}">

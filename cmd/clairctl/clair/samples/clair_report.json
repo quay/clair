@@ -1553,28 +1553,6 @@
 					}
 				]
 			}
-		},
-		{
-			"Layer": {
-				"Name": "sha256:9e0bc8a71bde464f710bc2b593a1fc21521517671e918687892303151331fa56",
-				"Namespace": "ubuntu:14.04",
-				"ParentName": "sha256:27aa681c95e5165caf287dcfe896532df4ae8b10e099500f2f8f71acf4002a89",
-				"IndexedByVersion": 2
-			}
-		},
-		{
-			"Layer": {
-				"Name": "sha256:27aa681c95e5165caf287dcfe896532df4ae8b10e099500f2f8f71acf4002a89",
-				"Namespace": "ubuntu:14.04",
-				"ParentName": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4",
-				"IndexedByVersion": 2
-			}
-		},
-		{
-			"Layer": {
-				"Name": "sha256:a3ed95caeb02ffe68cdd9fd84406680ae93d633cb16422d00e8a7c22955b46d4",
-				"IndexedByVersion": 2
-			}
 		}
 	]
 }

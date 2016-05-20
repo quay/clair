@@ -7,13 +7,15 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/Sirupsen/logrus"
 )
 
 func getSampleAnalysis() []byte {
 	file, err := ioutil.ReadFile("./samples/clair_report.json")
 
 	if err != nil {
-		fmt.Printf("File error: %v\n", err)
+		logrus.Errorf("File error: %v\n", err)
 	}
 
 	return file
@@ -28,7 +30,7 @@ func newServer(httpStatus int) *httptest.Server {
 func TestIsHealthy(t *testing.T) {
 	server := newServer(http.StatusOK)
 	defer server.Close()
-	uri = server.URL
+	healthURI = server.URL
 	if h := IsHealthy(); !h {
 		t.Errorf("IsHealthy() => %v, want %v", h, true)
 	}
@@ -43,37 +45,6 @@ func TestIsNotHealthy(t *testing.T) {
 	}
 }
 
-// func TestCountAllVulnerabilities(t *testing.T) {
-
-// 	var analysis ImageAnalysis
-// 	err := json.Unmarshal([]byte(getSampleAnalysis()), &analysis)
-
-// 	if err != nil {
-// 		t.Errorf("Failing with error: %v", err)
-// 	}
-
-// 	vulnerabilitiesCount := analysis.CountAllVulnerabilities()
-
-// 	if vulnerabilitiesCount.Total != 77 {
-// 		t.Errorf("analysis.CountAllVulnerabilities().Total => %v, want 77", vulnerabilitiesCount.Total)
-// 	}
-
-// 	if vulnerabilitiesCount.High != 1 {
-// 		t.Errorf("analysis.CountAllVulnerabilities().High => %v, want 1", vulnerabilitiesCount.High)
-// 	}
-
-// 	if vulnerabilitiesCount.Medium != 18 {
-// 		t.Errorf("analysis.CountAllVulnerabilities().Medium => %v, want 18", vulnerabilitiesCount.Medium)
-// 	}
-
-// 	if vulnerabilitiesCount.Low != 57 {
-// 		t.Errorf("analysis.CountAllVulnerabilities().Low => %v, want 57", vulnerabilitiesCount.Low)
-// 	}
-// 	if vulnerabilitiesCount.Negligible != 1 {
-// 		t.Errorf("analysis.CountAllVulnerabilities().Negligible => %v, want 1", vulnerabilitiesCount.Negligible)
-// 	}
-// }
-
 func TestRelativeCount(t *testing.T) {
 	var analysis ImageAnalysis
 	err := json.Unmarshal([]byte(getSampleAnalysis()), &analysis)
@@ -82,8 +53,8 @@ func TestRelativeCount(t *testing.T) {
 		t.Errorf("Failing with error: %v", err)
 	}
 
-	vulnerabilitiesCount := analysis.CountAllVulnerabilities()
-
+	vulnerabilitiesCount := allVulnerabilities(analysis)
+	fmt.Printf("v: %v\n", vulnerabilitiesCount)
 	if vulnerabilitiesCount.RelativeCount("High") != 1.3 {
 		t.Errorf("analysis.CountAllVulnerabilities().RelativeCount(\"High\") => %v, want 1.3", vulnerabilitiesCount.RelativeCount("High"))
 	}
@@ -96,34 +67,3 @@ func TestRelativeCount(t *testing.T) {
 		t.Errorf("analysis.CountAllVulnerabilities().RelativeCount(\"Low\") => %v, want 74.03", vulnerabilitiesCount.RelativeCount("Low"))
 	}
 }
-
-// func TestFeatureWeight(t *testing.T) {
-// 	feature := Feature{
-// 		Vulnerabilities: []Vulnerability{},
-// 	}
-
-// 	v1 := Vulnerability{
-// 		Severity: "High",
-// 	}
-
-// 	v2 := Vulnerability{
-// 		Severity: "Medium",
-// 	}
-
-// 	v3 := Vulnerability{
-// 		Severity: "Low",
-// 	}
-
-// 	v4 := Vulnerability{
-// 		Severity: "Negligible",
-// 	}
-
-// 	feature.Vulnerabilities = append(feature.Vulnerabilities, v1)
-// 	feature.Vulnerabilities = append(feature.Vulnerabilities, v2)
-// 	feature.Vulnerabilities = append(feature.Vulnerabilities, v3)
-// 	feature.Vulnerabilities = append(feature.Vulnerabilities, v4)
-
-// 	if feature.Weight() != 10 {
-// 		t.Errorf("feature.Weigh => %v, want 6", feature.Weight())
-// 	}
-// }

@@ -1,19 +1,17 @@
 package clair
 
 import (
-	"fmt"
 	"net/http"
-	"os"
 
 	"github.com/Sirupsen/logrus"
 )
 
+//IsHealthy return Health clair result
 func IsHealthy() bool {
 	logrus.Debugln("requesting health on: " + healthURI)
 	response, err := http.Get(healthURI)
 	if err != nil {
-
-		fmt.Fprintf(os.Stderr, "requesting Clair health: %v", err)
+		logrus.Errorf("requesting Clair health: %v", err)
 		return false
 	}
 	defer response.Body.Close()
