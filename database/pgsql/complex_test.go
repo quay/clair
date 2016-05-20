@@ -23,11 +23,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pborman/uuid"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils"
 	"github.com/coreos/clair/utils/types"
-	"github.com/pborman/uuid"
-	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -36,7 +37,7 @@ const (
 )
 
 func TestRaceAffects(t *testing.T) {
-	datastore, err := OpenForTest("RaceAffects", false)
+	datastore, err := openDatabaseForTest("RaceAffects", false)
 	if err != nil {
 		t.Error(err)
 		return

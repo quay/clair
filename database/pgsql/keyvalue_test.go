@@ -21,7 +21,7 @@ import (
 )
 
 func TestKeyValue(t *testing.T) {
-	datastore, err := OpenForTest("KeyValue", false)
+	datastore, err := openDatabaseForTest("KeyValue", false)
 	if err != nil {
 		t.Error(err)
 		return

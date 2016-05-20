@@ -113,7 +113,7 @@ func Process(datastore database.Datastore, imageFormat, name, parentName, path s
 }
 
 // detectContent downloads a layer's archive and extracts its Namespace and Features.
-func detectContent(imageFormat, name, path string, headers map[string]string, parent *database.Layer) (namespace *database.Namespace, features []database.FeatureVersion, err error) {
+func detectContent(imageFormat, name, path string, headers map[string]string, parent *database.Layer) (namespace *database.Namespace, featureVersions []database.FeatureVersion, err error) {
 	data, err := detectors.DetectData(imageFormat, path, headers, append(detectors.GetRequiredFilesFeatures(), detectors.GetRequiredFilesNamespace()...), maxFileSize)
 	if err != nil {
 		log.Errorf("layer %s: failed to extract data from %s: %s", name, utils.CleanURL(path), err)
@@ -121,41 +121,33 @@ func detectContent(imageFormat, name, path string, headers map[string]string, pa
 	}
 
 	// Detect namespace.
-	namespace, err = detectNamespace(data, parent)
-	if err != nil {
-		return
-	}
-	if namespace != nil {
-		log.Debugf("layer %s: Namespace is %s.", name, namespace.Name)
-	} else {
-		log.Debugf("layer %s: OS is unknown.", name)
-	}
+	namespace = detectNamespace(name, data, parent)
 
 	// Detect features.
-	features, err = detectFeatures(name, data, namespace)
+	featureVersions, err = detectFeatureVersions(name, data, namespace, parent)
 	if err != nil {
 		return
 	}
-
-	// If there are no feature detected, use parent's features if possible.
-	// TODO(Quentin-M): We eventually want to give the choice to each detectors to use none/some
-	// parent's Features. It would be useful for detectors that can't find their entire result using
-	// one Layer.
-	if len(features) == 0 && parent != nil {
-		features = parent.Features
+	if len(featureVersions) > 0 {
+		log.Debugf("layer %s: detected %d features", name, len(featureVersions))
 	}
 
-	log.Debugf("layer %s: detected %d features", name, len(features))
 	return
 }
 
-func detectNamespace(data map[string][]byte, parent *database.Layer) (namespace *database.Namespace, err error) {
+func detectNamespace(name string, data map[string][]byte, parent *database.Layer) (namespace *database.Namespace) {
+	// Use registered detectors to get the Namespace.
 	namespace = detectors.DetectNamespace(data)
+	if namespace != nil {
+		log.Debugf("layer %s: detected namespace %q", name, namespace.Name)
+		return
+	}
 
-	// Attempt to detect the OS from the parent layer.
-	if namespace == nil && parent != nil {
+	// Use the parent's Namespace.
+	if parent != nil {
 		namespace = parent.Namespace
-		if err != nil {
+		if namespace != nil {
+			log.Debugf("layer %s: detected namespace %q (from parent)", name, namespace.Name)
 			return
 		}
 	}
@@ -163,8 +155,8 @@ func detectNamespace(data map[string][]byte, parent *database.Layer) (namespace 
 	return
 }
 
-func detectFeatures(name string, data map[string][]byte, namespace *database.Namespace) (features []database.FeatureVersion, err error) {
-	// TODO(Quentin-M): We need to pass the parent image DetectFeatures because it's possible that
+func detectFeatureVersions(name string, data map[string][]byte, namespace *database.Namespace, parent *database.Layer) (features []database.FeatureVersion, err error) {
+	// TODO(Quentin-M): We need to pass the parent image to DetectFeatures because it's possible that
 	// some detectors would need it in order to produce the entire feature list (if they can only
 	// detect a diff). Also, we should probably pass the detected namespace so detectors could
 	// make their own decision.
@@ -173,18 +165,45 @@ func detectFeatures(name string, data map[string][]byte, namespace *database.Nam
 		return
 	}
 
-	// Ensure that every feature has a Namespace associated, otherwise associate the detected
-	// namespace. If there is no detected namespace, we'll throw an error.
-	for i := 0; i < len(features); i++ {
-		if features[i].Feature.Namespace.Name == "" {
-			if namespace != nil {
-				features[i].Feature.Namespace = *namespace
-			} else {
-				log.Warningf("layer %s: Layer's namespace is unknown but non-namespaced features have been detected", name)
-				err = ErrUnsupported
-				return
-			}
+	// If there are no FeatureVersions, use parent's FeatureVersions if possible.
+	// TODO(Quentin-M): We eventually want to give the choice to each detectors to use none/some of
+	// their parent's FeatureVersions. It would be useful for detectors that can't find their entire
+	// result using one Layer.
+	if len(features) == 0 && parent != nil {
+		features = parent.Features
+		return
+	}
+
+	// Build a map of the namespaces for each FeatureVersion in our parent layer.
+	parentFeatureNamespaces := make(map[string]database.Namespace)
+	if parent != nil {
+		for _, parentFeature := range parent.Features {
+			parentFeatureNamespaces[parentFeature.Feature.Name+":"+parentFeature.Version.String()] = parentFeature.Feature.Namespace
 		}
+	}
+
+	// Ensure that each FeatureVersion has an associated Namespace.
+	for i, feature := range features {
+		if feature.Feature.Namespace.Name != "" {
+			// There is a Namespace associated.
+			continue
+		}
+
+		if parentFeatureNamespace, ok := parentFeatureNamespaces[feature.Feature.Name+":"+feature.Version.String()]; ok {
+			// The FeatureVersion is present in the parent layer; associate with their Namespace.
+			features[i].Feature.Namespace = parentFeatureNamespace
+			continue
+		}
+
+		if namespace != nil {
+			// The Namespace has been detected in this layer; associate it.
+			features[i].Feature.Namespace = *namespace
+			continue
+		}
+
+		log.Warningf("layer %s: Layer's namespace is unknown but non-namespaced features have been detected", name)
+		err = ErrUnsupported
+		return
 	}
 
 	return

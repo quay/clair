@@ -16,7 +16,7 @@ package feature
 
 import (
 	"io/ioutil"
-	"path"
+	"path/filepath"
 	"runtime"
 	"testing"
 
@@ -32,7 +32,7 @@ type FeatureVersionTest struct {
 
 func LoadFileForTest(name string) []byte {
 	_, filename, _, _ := runtime.Caller(0)
-	d, _ := ioutil.ReadFile(path.Join(path.Dir(filename)) + "/" + name)
+	d, _ := ioutil.ReadFile(filepath.Join(filepath.Dir(filename)) + "/" + name)
 	return d
 }
 

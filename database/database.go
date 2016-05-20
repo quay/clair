@@ -17,7 +17,10 @@ package database
 
 import (
 	"errors"
+	"fmt"
 	"time"
+
+	"github.com/coreos/clair/config"
 )
 
 var (
@@ -28,10 +31,36 @@ var (
 	// ErrInconsistent is an error that occurs when a database consistency check
 	// fails (ie. when an entity which is supposed to be unique is detected twice)
 	ErrInconsistent = errors.New("database: inconsistent database")
-
-	// ErrCantOpen is an error that occurs when the database could not be opened
-	ErrCantOpen = errors.New("database: could not open database")
 )
+
+var drivers = make(map[string]Driver)
+
+// Driver is a function that opens a Datastore specified by its database driver type and specific
+// configuration.
+type Driver func(config.RegistrableComponentConfig) (Datastore, error)
+
+// Register makes a Constructor available by the provided name.
+//
+// If this function is called twice with the same name or if the Constructor is
+// nil, it panics.
+func Register(name string, driver Driver) {
+	if driver == nil {
+		panic("database: could not register nil Driver")
+	}
+	if _, dup := drivers[name]; dup {
+		panic("database: could not register duplicate Driver: " + name)
+	}
+	drivers[name] = driver
+}
+
+// Open opens a Datastore specified by a configuration.
+func Open(cfg config.RegistrableComponentConfig) (Datastore, error) {
+	driver, ok := drivers[cfg.Type]
+	if !ok {
+		return nil, fmt.Errorf("database: unknown Driver %q (forgotten configuration or import?)", cfg.Type)
+	}
+	return driver(cfg)
+}
 
 // Datastore is the interface that describes a database backend implementation.
 type Datastore interface {

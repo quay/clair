@@ -18,12 +18,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/coreos/clair/database"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/coreos/clair/database"
 )
 
 func TestInsertNamespace(t *testing.T) {
-	datastore, err := OpenForTest("InsertNamespace", false)
+	datastore, err := openDatabaseForTest("InsertNamespace", false)
 	if err != nil {
 		t.Error(err)
 		return
@@ -44,7 +45,7 @@ func TestInsertNamespace(t *testing.T) {
 }
 
 func TestListNamespace(t *testing.T) {
-	datastore, err := OpenForTest("ListNamespaces", true)
+	datastore, err := openDatabaseForTest("ListNamespaces", true)
 	if err != nil {
 		t.Error(err)
 		return

@@ -16,7 +16,7 @@ package ubuntu
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 	"runtime"
 	"testing"
 
@@ -27,7 +27,7 @@ import (
 
 func TestUbuntuParser(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
-	path := path.Join(path.Dir(filename))
+	path := filepath.Join(filepath.Dir(filename))
 
 	// Test parsing testdata/fetcher_
 	testData, _ := os.Open(path + "/testdata/fetcher_ubuntu_test.txt")
