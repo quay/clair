@@ -2,7 +2,6 @@ package clair
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -54,7 +53,6 @@ func TestRelativeCount(t *testing.T) {
 	}
 
 	vulnerabilitiesCount := allVulnerabilities(analysis)
-	fmt.Printf("v: %v\n", vulnerabilitiesCount)
 	if vulnerabilitiesCount.RelativeCount("High") != 1.3 {
 		t.Errorf("analysis.CountAllVulnerabilities().RelativeCount(\"High\") => %v, want 1.3", vulnerabilitiesCount.RelativeCount("High"))
 	}
