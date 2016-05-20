@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
-	"strings"
+
+	"github.com/Sirupsen/logrus"
 )
 
 func IsHealthy() bool {
-	healthURI := strings.Replace(uri, "6060/v1", strconv.Itoa(healthPort), 1) + "/health"
+	logrus.Debugln("requesting health on: " + healthURI)
 	response, err := http.Get(healthURI)
 	if err != nil {
 

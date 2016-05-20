@@ -26,8 +26,7 @@ func ReportAsHTML(analyzes ImageAnalysis) (string, error) {
 	}
 
 	funcs := template.FuncMap{
-		"invertedPriorities":    InvertedPriorities,
-		"vulnerabilities":       Vulnerabilities,
+		"vulnerabilities":       vulnerabilities,
 		"sortedVulnerabilities": SortedVulnerabilities,
 	}
 
@@ -41,7 +40,7 @@ func ReportAsHTML(analyzes ImageAnalysis) (string, error) {
 	return doc.String(), nil
 }
 
-func InvertedPriorities() []types.Priority {
+func invertedPriorities() []types.Priority {
 	ip := make([]types.Priority, len(types.Priorities))
 	for i, j := 0, len(types.Priorities)-1; i <= j; i, j = i+1, j-1 {
 		ip[i], ip[j] = types.Priorities[j], types.Priorities[i]
@@ -51,15 +50,15 @@ func InvertedPriorities() []types.Priority {
 }
 
 //Vulnerabilities return a list a vulnerabilities
-func Vulnerabilities(imageAnalysis ImageAnalysis) map[types.Priority][]VulnerabilityWithFeature {
+func vulnerabilities(imageAnalysis ImageAnalysis) map[types.Priority][]vulnerabilityWithFeature {
 
-	result := make(map[types.Priority][]VulnerabilityWithFeature)
+	result := make(map[types.Priority][]vulnerabilityWithFeature)
 
 	l := imageAnalysis.Layers[len(imageAnalysis.Layers)-1]
 	for _, f := range l.Layer.Features {
 		for _, v := range f.Vulnerabilities {
 
-			result[types.Priority(v.Severity)] = append(result[types.Priority(v.Severity)], VulnerabilityWithFeature{Vulnerability: v, Feature: f.Name + ":" + f.Version})
+			result[types.Priority(v.Severity)] = append(result[types.Priority(v.Severity)], vulnerabilityWithFeature{Vulnerability: v, Feature: f.Name + ":" + f.Version})
 		}
 	}
 
@@ -75,7 +74,7 @@ func SortedVulnerabilities(imageAnalysis ImageAnalysis) []v1.Feature {
 	for _, f := range l.Layer.Features {
 		if len(f.Vulnerabilities) > 0 {
 			vulnerabilities := []v1.Vulnerability{}
-			for _, p := range InvertedPriorities() {
+			for _, p := range invertedPriorities() {
 				for _, v := range f.Vulnerabilities {
 					if types.Priority(v.Severity) == p {
 						vulnerabilities = append(vulnerabilities, v)

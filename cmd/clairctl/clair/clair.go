@@ -12,16 +12,16 @@ import (
 )
 
 var uri string
-var healthPort int
+var healthURI string
 
 //Report Reporting Config value
 var Report ReportConfig
 
 //VulnerabiliesCounts Total count of vulnerabilities by type
-type VulnerabiliesCounts map[types.Priority]int
+type vulnerabiliesCounts map[types.Priority]int
 
 //Total return to total of Vulnerabilities
-func (v VulnerabiliesCounts) Total() int {
+func (v vulnerabiliesCounts) Total() int {
 	var c int
 	for _, count := range v {
 		c += count
@@ -30,12 +30,12 @@ func (v VulnerabiliesCounts) Total() int {
 }
 
 //Count return count of severities in Vulnerabilities
-func (v VulnerabiliesCounts) Count(severity string) int {
+func (v vulnerabiliesCounts) Count(severity string) int {
 	return v[types.Priority(severity)]
 }
 
 //RelativeCount get the percentage of vulnerabilities of a severity
-func (v VulnerabiliesCounts) RelativeCount(severity string) float64 {
+func (v vulnerabiliesCounts) RelativeCount(severity string) float64 {
 	count := v[types.Priority(severity)]
 	result := float64(count) / float64(v.Total()) * 100
 	return math.Ceil(result*100) / 100
@@ -52,7 +52,7 @@ func (imageAnalysis ImageAnalysis) String() string {
 }
 
 // CountVulnerabilities counts all image vulnerability
-func (imageAnalysis ImageAnalysis) CountVulnerabilities(l v1.Layer) int {
+func (imageAnalysis ImageAnalysis) countVulnerabilities(l v1.Layer) int {
 	count := 0
 	for _, f := range l.Features {
 		count += len(f.Vulnerabilities)
@@ -61,8 +61,8 @@ func (imageAnalysis ImageAnalysis) CountVulnerabilities(l v1.Layer) int {
 }
 
 // CountAllVulnerabilities Total count of vulnerabilities
-func (imageAnalysis ImageAnalysis) CountAllVulnerabilities() VulnerabiliesCounts {
-	result := make(VulnerabiliesCounts)
+func (imageAnalysis ImageAnalysis) CountAllVulnerabilities() vulnerabiliesCounts {
+	result := make(vulnerabiliesCounts)
 
 	l := imageAnalysis.Layers[len(imageAnalysis.Layers)-1]
 
@@ -81,24 +81,21 @@ func (imageAnalysis ImageAnalysis) LastLayer() *v1.Layer {
 	return imageAnalysis.Layers[len(imageAnalysis.Layers)-1].Layer
 }
 
-type VulnerabilityWithFeature struct {
+type vulnerabilityWithFeature struct {
 	v1.Vulnerability
 	Feature string
 }
 
+func fmtURI(u string, port int) string {
 
-
-func fmtURI(u string, port int) {
-	uri = u
 	if port != 0 {
-		uri += ":" + strconv.Itoa(port)
+		u += ":" + strconv.Itoa(port)
 	}
-	if !strings.HasSuffix(uri, "/v1") {
-		uri += "/v1"
+	if !strings.HasPrefix(u, "http://") && !strings.HasPrefix(u, "https://") {
+		u = "http://" + u
 	}
-	if !strings.HasPrefix(uri, "http://") && !strings.HasPrefix(uri, "https://") {
-		uri = "http://" + uri
-	}
+
+	return u
 }
 
 func (imageAnalysis ImageAnalysis) ShortName(l v1.Layer) string {
@@ -107,8 +104,8 @@ func (imageAnalysis ImageAnalysis) ShortName(l v1.Layer) string {
 
 //Config configure Clair from configFile
 func Config() {
-	fmtURI(viper.GetString("clair.uri"), viper.GetInt("clair.port"))
-	healthPort = viper.GetInt("clair.healthPort")
+	uri = fmtURI(viper.GetString("clair.uri"), viper.GetInt("clair.port")) + "/v1"
+	healthURI = fmtURI(viper.GetString("clair.uri"), viper.GetInt("clair.healthPort")) + "/health"
 	Report.Path = viper.GetString("clair.report.path")
 	Report.Format = viper.GetString("clair.report.format")
 }
