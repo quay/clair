@@ -28,4 +28,16 @@ analyze-local-images -endpoint "http://<CLAIR-IP-ADDRESS>:6060" -my-address "<MY
 
 Clair needs access to the image files. If you run Clair locally, this tool will store the files in the system's temporary folder and Clair will find them there. It means if Clair is running in Docker, the host's temporary folder must be mounted in the Clair's container. If you run Clair remotely, this tool will run a small HTTP server to let Clair downloading them. It listens on the port 9279 and allows a single host: Clair's IP address, extracted from the `-endpoint` parameter. The `my-address` parameters defines the IP address of the HTTP server that Clair will use to download the images. With boot2docker, these parameters would be `-endpoint "http://192.168.99.100:6060" -my-address "192.168.99.1"`.
 
+By default the output is human readable text, you can toggle the `-json` flag to receive a json report which you can process further:
+
+```
+#!/bin/bash
+set -e
+set -u
+set -o pipefail
+
+OUTPUT=$(./analyze-local-images -endpoint "http://192.168.99.100:6060" -my-address "192.168.99.1" -json ${IMAGE})
+echo "$OUTPUT" | jq '.vulnerabilities | map(select(.severity == "High" or .severity == "Critical" or .severity == "Defcon1"))'
+```
+
 As it runs an HTTP server and not an HTTP**S** one, be sure to **not** expose sensitive data and container images.
