@@ -30,6 +30,7 @@ var (
 
 	dpkgSrcCaptureRegexp      = regexp.MustCompile(`Source: (?P<name>[^\s]*)( \((?P<version>.*)\))?`)
 	dpkgSrcCaptureRegexpNames = dpkgSrcCaptureRegexp.SubexpNames()
+	dpkgRegexp                = regexp.MustCompile("^var/lib/dpkg/status$")
 )
 
 // DpkgFeaturesDetector implements FeaturesDetector and detects dpkg packages
@@ -110,6 +111,6 @@ func (detector *DpkgFeaturesDetector) Detect(data map[string][]byte) ([]database
 
 // GetRequiredFiles returns the list of files required for Detect, without
 // leading /
-func (detector *DpkgFeaturesDetector) GetRequiredFiles() []string {
-	return []string{"var/lib/dpkg/status"}
+func (detector *DpkgFeaturesDetector) GetRequiredFiles() []*regexp.Regexp {
+	return []*regexp.Regexp{dpkgRegexp}
 }

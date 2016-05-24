@@ -18,6 +18,7 @@ import (
 	"bufio"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/coreos/clair/database"
@@ -28,7 +29,10 @@ import (
 	"github.com/coreos/pkg/capnslog"
 )
 
-var log = capnslog.NewPackageLogger("github.com/coreos/clair", "rpm")
+var (
+	log       = capnslog.NewPackageLogger("github.com/coreos/clair", "rpm")
+	rpmRegexp = regexp.MustCompile("^var/lib/rpm/Packages$")
+)
 
 // RpmFeaturesDetector implements FeaturesDetector and detects rpm packages
 // It requires the "rpm" binary to be in the PATH
@@ -115,6 +119,6 @@ func (detector *RpmFeaturesDetector) Detect(data map[string][]byte) ([]database.
 
 // GetRequiredFiles returns the list of files required for Detect, without
 // leading /
-func (detector *RpmFeaturesDetector) GetRequiredFiles() []string {
-	return []string{"var/lib/rpm/Packages"}
+func (detector *RpmFeaturesDetector) GetRequiredFiles() []*regexp.Regexp {
+	return []*regexp.Regexp{rpmRegexp}
 }

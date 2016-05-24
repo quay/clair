@@ -18,6 +18,7 @@ package detectors
 
 import (
 	"fmt"
+	"regexp"
 	"sync"
 
 	"github.com/coreos/clair/database"
@@ -30,7 +31,7 @@ type NamespaceDetector interface {
 	Detect(map[string][]byte) *database.Namespace
 	// GetRequiredFiles returns the list of files required for Detect, without
 	// leading /.
-	GetRequiredFiles() []string
+	GetRequiredFiles() []*regexp.Regexp
 }
 
 var (
@@ -73,7 +74,7 @@ func DetectNamespace(data map[string][]byte) *database.Namespace {
 
 // GetRequiredFilesNamespace returns the list of files required for DetectNamespace for every
 // registered NamespaceDetector, without leading /.
-func GetRequiredFilesNamespace() (files []string) {
+func GetRequiredFilesNamespace() (files []*regexp.Regexp) {
 	for _, detector := range namespaceDetectors {
 		files = append(files, detector.GetRequiredFiles()...)
 	}

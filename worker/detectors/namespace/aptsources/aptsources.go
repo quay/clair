@@ -16,10 +16,15 @@ package aptsources
 
 import (
 	"bufio"
+	"regexp"
 	"strings"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/worker/detectors"
+)
+
+var (
+	aptNSRegexp = regexp.MustCompile("^etc/apt/sources.list$")
 )
 
 // AptSourcesNamespaceDetector implements NamespaceDetector and detects the Namespace from the
@@ -80,6 +85,6 @@ func (detector *AptSourcesNamespaceDetector) Detect(data map[string][]byte) *dat
 	return nil
 }
 
-func (detector *AptSourcesNamespaceDetector) GetRequiredFiles() []string {
-	return []string{"etc/apt/sources.list"}
+func (detector *AptSourcesNamespaceDetector) GetRequiredFiles() []*regexp.Regexp {
+	return []*regexp.Regexp{aptNSRegexp}
 }

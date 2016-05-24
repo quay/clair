@@ -31,7 +31,7 @@ const (
 	cveURLPrefix         = "http://cve.mitre.org/cgi-bin/cvename.cgi?name="
 	updaterFlag          = "nodejsUpdater"
 	defaultNodejsVersion = "all"
-	//FIXME: Add a suffix when an advisory is fixed `after` a certain version.
+	//Add a suffix when an advisory is fixed `after` a certain version.
 	defaultVersionSuffix = "-1"
 )
 

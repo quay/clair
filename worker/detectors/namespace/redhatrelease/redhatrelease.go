@@ -22,7 +22,15 @@ import (
 	"github.com/coreos/clair/worker/detectors"
 )
 
-var redhatReleaseRegexp = regexp.MustCompile(`(?P<os>[^\s]*) (Linux release|release) (?P<version>[\d]+)`)
+var (
+	redhatReleaseRegexp = regexp.MustCompile(`(?P<os>[^\s]*) (Linux release|release) (?P<version>[\d]+)`)
+
+	redhatNSRegexps = []*regexp.Regexp{
+		regexp.MustCompile(`^etc/centos-release$`),
+		regexp.MustCompile(`^etc/redhat-release$`),
+		regexp.MustCompile(`^etc/system-release$`),
+	}
+)
 
 // RedhatReleaseNamespaceDetector implements NamespaceDetector and detects the OS from the
 // /etc/centos-release, /etc/redhat-release and /etc/system-release files.
@@ -38,7 +46,7 @@ func init() {
 }
 
 func (detector *RedhatReleaseNamespaceDetector) Detect(data map[string][]byte) *database.Namespace {
-	for _, filePath := range detector.GetRequiredFiles() {
+	for _, filePath := range []string{"etc/centos-release", "etc/redhat-release", "etc/system-release"} {
 		f, hasFile := data[filePath]
 		if !hasFile {
 			continue
@@ -54,6 +62,6 @@ func (detector *RedhatReleaseNamespaceDetector) Detect(data map[string][]byte) *
 }
 
 // GetRequiredFiles returns the list of files that are required for Detect()
-func (detector *RedhatReleaseNamespaceDetector) GetRequiredFiles() []string {
-	return []string{"etc/centos-release", "etc/redhat-release", "etc/system-release"}
+func (detector *RedhatReleaseNamespaceDetector) GetRequiredFiles() []*regexp.Regexp {
+	return redhatNSRegexps
 }

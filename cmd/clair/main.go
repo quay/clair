@@ -38,10 +38,12 @@ import (
 	_ "github.com/coreos/clair/worker/detectors/data/docker"
 
 	_ "github.com/coreos/clair/worker/detectors/feature/dpkg"
+	_ "github.com/coreos/clair/worker/detectors/feature/npm"
 	_ "github.com/coreos/clair/worker/detectors/feature/rpm"
 
 	_ "github.com/coreos/clair/worker/detectors/namespace/aptsources"
 	_ "github.com/coreos/clair/worker/detectors/namespace/lsbrelease"
+	_ "github.com/coreos/clair/worker/detectors/namespace/nodejs"
 	_ "github.com/coreos/clair/worker/detectors/namespace/osrelease"
 	_ "github.com/coreos/clair/worker/detectors/namespace/redhatrelease"
 
