@@ -36,7 +36,7 @@ import (
 
 const (
 	trackerURI        = "https://launchpad.net/ubuntu-cve-tracker"
-	trackerRepository = "lp:ubuntu-cve-tracker"
+	trackerRepository = "https://launchpad.net/ubuntu-cve-tracker"
 	updaterFlag       = "ubuntuUpdater"
 	cveURL            = "http://people.ubuntu.com/~ubuntu-security/cve/%s"
 )
