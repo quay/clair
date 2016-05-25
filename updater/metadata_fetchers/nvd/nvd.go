@@ -129,9 +129,7 @@ func (fetcher *NVDMetadataFetcher) Clean() {
 	fetcher.lock.Lock()
 	defer fetcher.lock.Unlock()
 
-	if fetcher.localPath != "" {
-		os.RemoveAll(fetcher.localPath)
-	}
+	os.RemoveAll(fetcher.localPath)
 }
 
 func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[string]NestedReadCloser, map[string]string, error) {

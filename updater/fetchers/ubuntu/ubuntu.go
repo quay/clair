@@ -92,28 +92,9 @@ func init() {
 func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp updater.FetcherResponse, err error) {
 	log.Info("fetching Ubuntu vulnerabilities")
 
-	// Check to see if the repository does not already exist.
-	if _, pathExists := os.Stat(fetcher.repositoryLocalPath); fetcher.repositoryLocalPath == "" || os.IsNotExist(pathExists) {
-		// Create a temporary folder and download the repository.
-		p, err := ioutil.TempDir(os.TempDir(), "ubuntu-cve-tracker")
-		if err != nil {
-			return resp, ErrFilesystem
-		}
-
-		// bzr wants an empty target directory.
-		fetcher.repositoryLocalPath = p + "/repository"
-
-		// Create the new repository.
-		err = createRepository(fetcher.repositoryLocalPath)
-		if err != nil {
-			return resp, err
-		}
-	} else {
-		// Update the repository that's already on disk.
-		err = updateRepository(fetcher.repositoryLocalPath)
-		if err != nil {
-			return resp, err
-		}
+	// Pull the bzr repository.
+	if err = fetcher.pullRepository(); err != nil {
+		return resp, err
 	}
 
 	// Get revision number.
@@ -182,6 +163,48 @@ func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp up
 	return
 }
 
+func (fetcher *UbuntuFetcher) pullRepository() (err error) {
+	// Determine whether we should branch or pull.
+	if _, pathExists := os.Stat(fetcher.repositoryLocalPath); fetcher.repositoryLocalPath == "" || os.IsNotExist(pathExists) {
+		// Create a temporary folder to store the repository.
+		if fetcher.repositoryLocalPath, err = ioutil.TempDir(os.TempDir(), "ubuntu-cve-tracker"); err != nil {
+			return ErrFilesystem
+		}
+
+		// Branch repository.
+		if out, err := utils.Exec(fetcher.repositoryLocalPath, "bzr", "branch", "--use-existing-dir", trackerRepository, "."); err != nil {
+			log.Errorf("could not branch Ubuntu repository: %s. output: %s", err, out)
+			return cerrors.ErrCouldNotDownload
+		}
+
+		return nil
+	}
+
+	// Pull repository.
+	if out, err := utils.Exec(fetcher.repositoryLocalPath, "bzr", "pull", "--overwrite"); err != nil {
+		os.RemoveAll(fetcher.repositoryLocalPath)
+
+		log.Errorf("could not pull Ubuntu repository: %s. output: %s", err, out)
+		return cerrors.ErrCouldNotDownload
+	}
+
+	return nil
+}
+
+func getRevisionNumber(pathToRepo string) (int, error) {
+	out, err := utils.Exec(pathToRepo, "bzr", "revno")
+	if err != nil {
+		log.Errorf("could not get Ubuntu repository's revision number: %s. output: %s", err, out)
+		return 0, cerrors.ErrCouldNotDownload
+	}
+	revno, err := strconv.Atoi(strings.TrimSpace(string(out)))
+	if err != nil {
+		log.Errorf("could not parse Ubuntu repository's revision number: %s. output: %s", err, out)
+		return 0, cerrors.ErrCouldNotDownload
+	}
+	return revno, nil
+}
+
 func collectModifiedVulnerabilities(revision int, dbRevision, repositoryLocalPath string) (map[string]struct{}, error) {
 	modifiedCVE := make(map[string]struct{})
 
@@ -245,40 +268,6 @@ func collectModifiedVulnerabilities(revision int, dbRevision, repositoryLocalPat
 	}
 
 	return modifiedCVE, nil
-}
-
-func createRepository(pathToRepo string) error {
-	// Branch repository
-	out, err := utils.Exec("/tmp/", "bzr", "branch", trackerRepository, pathToRepo)
-	if err != nil {
-		log.Errorf("could not branch Ubuntu repository: %s. output: %s", err, out)
-		return cerrors.ErrCouldNotDownload
-	}
-	return nil
-}
-
-func updateRepository(pathToRepo string) error {
-	// Pull repository
-	out, err := utils.Exec(pathToRepo, "bzr", "pull", "--overwrite")
-	if err != nil {
-		log.Errorf("could not pull Ubuntu repository: %s. output: %s", err, out)
-		return cerrors.ErrCouldNotDownload
-	}
-	return nil
-}
-
-func getRevisionNumber(pathToRepo string) (int, error) {
-	out, err := utils.Exec(pathToRepo, "bzr", "revno")
-	if err != nil {
-		log.Errorf("could not get Ubuntu repository's revision number: %s. output: %s", err, out)
-		return 0, cerrors.ErrCouldNotDownload
-	}
-	revno, err := strconv.Atoi(strings.TrimSpace(string(out)))
-	if err != nil {
-		log.Errorf("could not parse Ubuntu repository's revision number: %s. output: %s", err, out)
-		return 0, cerrors.ErrCouldNotDownload
-	}
-	return revno, nil
 }
 
 func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability, unknownReleases map[string]struct{}, err error) {
@@ -424,7 +413,5 @@ func ubuntuPriorityToSeverity(priority string) types.Priority {
 
 // Clean deletes any allocated resources.
 func (fetcher *UbuntuFetcher) Clean() {
-	if fetcher.repositoryLocalPath != "" {
-		os.RemoveAll(fetcher.repositoryLocalPath)
-	}
+	os.RemoveAll(fetcher.repositoryLocalPath)
 }
