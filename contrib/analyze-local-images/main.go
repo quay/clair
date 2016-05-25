@@ -281,7 +281,7 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 		fmt.Printf("Clair report for image %s (%s)\n", imageName, time.Now().UTC())
 	}
 
-	if len(layer.Features) == 0 {
+	if len(layer.Features) == 0 && !jsonOutput {
 		fmt.Printf("%s No features have been detected in the image. This usually means that the image isn't supported by Clair.\n", color.YellowString("NOTE:"))
 		return nil
 	}
