@@ -1,4 +1,4 @@
--- Copyright 2015 clair authors
+-- Copyright 2016 clair authors
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
 -- you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ CREATE INDEX ON LayerNamespace (layer_id, namespace_id);
 
 INSERT INTO LayerNamespace(layer_id, namespace_id) 
 	SELECT id, namespace_id
-	from Layer;
+	from Layer WHERE namespace_id IS NOT NULL;
 
 -- -----------------------------------------------------
 -- Layer table

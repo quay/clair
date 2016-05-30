@@ -24,7 +24,7 @@ import (
 
 var aptSourcesOSTests = []namespace.NamespaceTest{
 	{
-		ExpectedNamespace: database.Namespace{Name: "debian", Version: types.NewVersionUnsafe("unstable")},
+		ExpectedNamespace: database.Namespace{Name: "debian", Version: types.NewVersionUnsafe("10")},
 		Data: map[string][]byte{
 			"etc/os-release": []byte(
 				`PRETTY_NAME="Debian GNU/Linux stretch/sid"

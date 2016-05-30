@@ -169,6 +169,7 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 
 				// Determine the version of the package the vulnerability affects.
 				var version types.Version
+				var nsVersion types.Version
 				var err error
 				if releaseNode.FixedVersion == "0" {
 					// This means that the package is not affected by this vulnerability.
@@ -187,13 +188,19 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 					}
 				}
 
+				nsVersion, err = types.NewVersion(database.DebianReleasesMapping[releaseName])
+				if err != nil {
+					log.Warningf("could not parse namespace version '%s': %s. skipping", database.DebianReleasesMapping[releaseName], err.Error())
+					continue
+				}
+
 				// Create and add the feature version.
 				pkg := database.FeatureVersion{
 					Feature: database.Feature{
 						Name: pkgName,
 						Namespace: database.Namespace{
 							Name:    "debian",
-							Version: types.NewVersionUnsafe(database.DebianReleasesMapping[releaseName]),
+							Version: nsVersion,
 						},
 					},
 					Version: version,

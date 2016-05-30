@@ -208,23 +208,29 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 		},
 		// This layer changes the namespace and adds Features.
 		{
-			Name:       "TestInsertLayer3",
-			Parent:     &database.Layer{Name: "TestInsertLayer2"},
+			Name: "TestInsertLayer3",
+			Parent: &database.Layer{Name: "TestInsertLayer2",
+				Namespaces: []database.Namespace{testInsertLayerNamespace1},
+			},
 			Namespaces: []database.Namespace{testInsertLayerNamespace2},
 			Features:   []database.FeatureVersion{f1, f2, f3},
 		},
 		// This layer covers the case where the last layer doesn't provide any new Feature.
 		{
-			Name:     "TestInsertLayer4a",
-			Parent:   &database.Layer{Name: "TestInsertLayer3"},
+			Name: "TestInsertLayer4a",
+			Parent: &database.Layer{Name: "TestInsertLayer3",
+				Namespaces: []database.Namespace{testInsertLayerNamespace1, testInsertLayerNamespace2},
+			},
 			Features: []database.FeatureVersion{f1, f2, f3},
 		},
 		// This layer covers the case where the last layer provides Features.
 		// It also modifies the Namespace ("upgrade") but keeps some Features not upgraded, their
 		// Namespaces should then remain unchanged.
 		{
-			Name:       "TestInsertLayer4b",
-			Parent:     &database.Layer{Name: "TestInsertLayer3"},
+			Name: "TestInsertLayer4b",
+			Parent: &database.Layer{Name: "TestInsertLayer3",
+				Namespaces: []database.Namespace{testInsertLayerNamespace1, testInsertLayerNamespace2},
+			},
 			Namespaces: []database.Namespace{testInsertLayerNamespace3},
 			Features: []database.FeatureVersion{
 				// Deletes TestInsertLayerFeature1.
@@ -295,6 +301,8 @@ func testInsertLayerUpdate(t *testing.T, datastore database.Datastore) {
 	}
 
 	l3, _ := datastore.FindLayer("TestInsertLayer3", true, false)
+	l3Parent, _ := datastore.FindLayer(l3.Parent.Name, false, false)
+	l3.Parent = &l3Parent
 	l3u := database.Layer{
 		Name:       l3.Name,
 		Parent:     l3.Parent,
@@ -304,7 +312,7 @@ func testInsertLayerUpdate(t *testing.T, datastore database.Datastore) {
 
 	l4u := database.Layer{
 		Name:          "TestInsertLayer4",
-		Parent:        &database.Layer{Name: "TestInsertLayer3"},
+		Parent:        &database.Layer{Name: "TestInsertLayer3", Namespaces: l3.Namespaces},
 		Features:      []database.FeatureVersion{f7},
 		EngineVersion: 2,
 	}

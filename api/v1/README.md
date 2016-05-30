@@ -129,18 +129,18 @@ Server: clair
 {
   "Layer": {
     "Name": "17675ec01494d651e1ccf81dc9cf63959ebfeed4f978fddb1666b6ead008ed52",
-    "NamespaceName": "debian:8",
+    "Namespaces": [{"Name": "debian", "Version": "8"}],
     "ParentName": "140f9bdfeb9784cf8730e9dab5dd12fbd704151cf555ac8cae650451794e5ac2",
     "IndexedByVersion": 1,
     "Features": [
       {
         "Name": "coreutils",
-        "NamespaceName": "debian:8",
+        "Namespace": {"Name": "debian", "Version": "8"},
         "Version": "8.23-4",
         "Vulnerabilities": [
           {
             "Name": "CVE-2014-9471",
-            "NamespaceName": "debian:8",
+            "Namespace": {"Name": "debian", "Version": "8"},
             "Description": "The parse_datetime function in GNU coreutils allows remote attackers to cause a denial of service (crash) or possibly execute arbitrary code via a crafted date string, as demonstrated by the \"--date=TZ=\"123\"345\" @1\" string to the touch or date command.",
             "Link": "https://security-tracker.debian.org/tracker/CVE-2014-9471",
             "Severity": "Low",
@@ -196,15 +196,15 @@ Server: clair
 
 {
   "Namespaces": [
-    { "Name": "debian:8" },
-    { "Name": "debian:9" }
+    { "ID": "gAAAAABXTQKgma_TLKq0wr1D6wVB507N3fi9wsWMUypYOSXTDVxQ8OR5L5S6PqZ9Wh0IzWojnVmlspyTL4cyjytyra7U9vAHMA==", "Name": "debian", "Version": "8" },
+    { "ID": "gAAAAABXTQPZmOFlOR8zzuhv8Y2fD7HbUY8O6z_Py2vibB9uveWZoycSY1HDIkcf7lN_UDynom4kWubFS4h9KBCbWwjNIqacsw==", "Name": "debian", "Version": "9" }
   ]
 }
 ```
 
 ## Vulnerabilities
 
-#### GET /namespaces/`:nsName`/vulnerabilities
+#### GET /namespaces/`:nsID`/vulnerabilities
 
 ###### Description
 
@@ -220,7 +220,7 @@ The GET route for the Vulnerabilities resource displays the vulnerabilities data
 ###### Example Request
 
 ```json
-GET http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities?limit=2 HTTP/1.1
+GET http://localhost:6060/v1/namespaces/gAAAAABXTQKgma_TLKq0wr1D6wVB507N3fi9wsWMUypYOSXTDVxQ8OR5L5S6PqZ9Wh0IzWojnVmlspyTL4cyjytyra7U9vAHMA==/vulnerabilities?limit=2 HTTP/1.1
 ```
 
 ###### Example Response
@@ -234,14 +234,14 @@ Server: clair
     "Vulnerabilities": [
         {
             "Name": "CVE-1999-1332",
-            "NamespaceName": "debian:8",
+            "Namespace": {"Name": "debian", "Version": "8"},
             "Description": "gzexe in the gzip package on Red Hat Linux 5.0 and earlier allows local users to overwrite files of other users via a symlink attack on a temporary file.",
             "Link": "https://security-tracker.debian.org/tracker/CVE-1999-1332",
             "Severity": "Low"
         },
         {
             "Name": "CVE-1999-1572",
-            "NamespaceName": "debian:8",
+            "Namespace": {"Name": "debian", "Version": "8"},
             "Description": "cpio on FreeBSD 2.1.0, Debian GNU/Linux 3.0, and possibly other operating systems, uses a 0 umask when creating files using the -O (archive) or -F options, which creates the files with mode 0666 and allows local users to read or overwrite those files.",
             "Link": "https://security-tracker.debian.org/tracker/CVE-1999-1572",
             "Severity": "Low",
@@ -259,7 +259,7 @@ Server: clair
 }
 ```
 
-#### POST /namespaces/`:name`/vulnerabilities
+#### POST /namespaces/`:nsID`/vulnerabilities
 
 ###### Description
 
@@ -268,12 +268,12 @@ The POST route for the Vulnerabilities resource creates a new Vulnerability.
 ###### Example Request
 
 ```json
-POST http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities HTTP/1.1
+POST http://localhost:6060/v1/namespaces/gAAAAABXTQKgma_TLKq0wr1D6wVB507N3fi9wsWMUypYOSXTDVxQ8OR5L5S6PqZ9Wh0IzWojnVmlspyTL4cyjytyra7U9vAHMA==/vulnerabilities HTTP/1.1
 
 {
     "Vulnerability": {
         "Name": "CVE-2014-9471",
-        "NamespaceName": "debian:8",
+        "Namespace": {"Name": "debian", "Version": "8"},
         "Link": "https://security-tracker.debian.org/tracker/CVE-2014-9471",
         "Description": "The parse_datetime function in GNU coreutils allows remote attackers to cause a denial of service (crash) or possibly execute arbitrary code via a crafted date string, as demonstrated by the \"--date=TZ=\"123\"345\" @1\" string to the touch or date command.",
         "Severity": "Low",
@@ -288,7 +288,7 @@ POST http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities HTTP/1.1
         "FixedIn": [
             {
                 "Name": "coreutils",
-                "NamespaceName": "debian:8",
+                "Namespace": {"Name": "debian", "Version": "8"},
                 "Version": "8.23-1"
             }
         ]
@@ -306,7 +306,7 @@ Server: clair
 {
     "Vulnerability": {
         "Name": "CVE-2014-9471",
-        "NamespaceName": "debian:8",
+        "Namespace": {"Name": "debian", "Version": "8"},
         "Link": "https://security-tracker.debian.org/tracker/CVE-2014-9471",
         "Description": "The parse_datetime function in GNU coreutils allows remote attackers to cause a denial of service (crash) or possibly execute arbitrary code via a crafted date string, as demonstrated by the \"--date=TZ=\"123\"345\" @1\" string to the touch or date command.",
         "Severity": "Low",
@@ -321,7 +321,7 @@ Server: clair
         "FixedIn": [
             {
                 "Name": "coreutils",
-                "NamespaceName": "debian:8",
+                "Namespace": {"Name": "debian", "Version": "8"},
                 "Version": "8.23-1"
             }
         ]
@@ -329,7 +329,7 @@ Server: clair
 }
 ```
 
-#### GET /namespaces/`:nsName`/vulnerabilities/`:vulnName`
+#### GET /namespaces/`:nsID`/vulnerabilities/`:vulnName`
 
 ###### Description
 
@@ -344,7 +344,7 @@ The GET route for the Vulnerabilities resource displays the current data for a g
 ###### Example Request
 
 ```json
-GET http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471?fixedIn HTTP/1.1
+GET http://localhost:6060/v1/namespaces/gAAAAABXTQKgma_TLKq0wr1D6wVB507N3fi9wsWMUypYOSXTDVxQ8OR5L5S6PqZ9Wh0IzWojnVmlspyTL4cyjytyra7U9vAHMA==/vulnerabilities/CVE-2014-9471?fixedIn HTTP/1.1
 ```
 
 ###### Example Response
@@ -357,7 +357,7 @@ Server: clair
 {
     "Vulnerability": {
         "Name": "CVE-2014-9471",
-        "NamespaceName": "debian:8",
+        "Namespace": {"Name": "debian", "Version": "8"},
         "Link": "https://security-tracker.debian.org/tracker/CVE-2014-9471",
         "Description": "The parse_datetime function in GNU coreutils allows remote attackers to cause a denial of service (crash) or possibly execute arbitrary code via a crafted date string, as demonstrated by the \"--date=TZ=\"123\"345\" @1\" string to the touch or date command.",
         "Severity": "Low",
@@ -372,7 +372,7 @@ Server: clair
         "FixedIn": [
             {
                 "Name": "coreutils",
-                "NamespaceName": "debian:8",
+                "Namespace": {"Name": "debian", "Version": "8"},
                 "Version": "8.23-1"
             }
         ]
@@ -380,7 +380,7 @@ Server: clair
 }
 ```
 
-#### PUT /namespaces/`:nsName`/vulnerabilities/`:vulnName`
+#### PUT /namespaces/`:nsID`/vulnerabilities/`:vulnName`
 
 ###### Description
 
@@ -392,12 +392,12 @@ If this vulnerability was inserted by a Fetcher, changes may be lost when the Fe
 ###### Example Request
 
 ```json
-PUT http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471
+PUT http://localhost:6060/v1/namespaces/gAAAAABXTQKgma_TLKq0wr1D6wVB507N3fi9wsWMUypYOSXTDVxQ8OR5L5S6PqZ9Wh0IzWojnVmlspyTL4cyjytyra7U9vAHMA==/vulnerabilities/CVE-2014-9471
 
 {
     "Vulnerability": {
         "Name": "CVE-2014-9471",
-        "NamespaceName": "debian:8",
+        "Namespace": {"Name": "debian", "Version": "8"},
         "Link": "https://security-tracker.debian.org/tracker/CVE-2014-9471",
         "Description": "The parse_datetime function in GNU coreutils allows remote attackers to cause a denial of service (crash) or possibly execute arbitrary code via a crafted date string, as demonstrated by the \"--date=TZ=\"123\"345\" @1\" string to the touch or date command.",
         "Severity": "Low",
@@ -422,7 +422,7 @@ Server: clair
 {
     "Vulnerability": {
         "Name": "CVE-2014-9471",
-        "NamespaceName": "debian:8",
+        "Namespace": {"Name": "debian", "Version": "8"},
         "Link": "https://security-tracker.debian.org/tracker/CVE-2014-9471",
         "Description": "The parse_datetime function in GNU coreutils allows remote attackers to cause a denial of service (crash) or possibly execute arbitrary code via a crafted date string, as demonstrated by the \"--date=TZ=\"123\"345\" @1\" string to the touch or date command.",
         "Severity": "Low",
@@ -439,7 +439,7 @@ Server: clair
 ```
 
 
-#### DELETE /namespaces/`:nsName`/vulnerabilities/`:vulnName`
+#### DELETE /namespaces/`:nsID`/vulnerabilities/`:vulnName`
 
 ###### Description
 
@@ -449,7 +449,7 @@ If this vulnerability was inserted by a Fetcher, it may be re-inserted when the 
 ###### Example Request
 
 ```json
-GET http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471 HTTP/1.1
+GET http://localhost:6060/v1/namespaces/gAAAAABXTQKgma_TLKq0wr1D6wVB507N3fi9wsWMUypYOSXTDVxQ8OR5L5S6PqZ9Wh0IzWojnVmlspyTL4cyjytyra7U9vAHMA==/vulnerabilities/CVE-2014-9471 HTTP/1.1
 ```
 
 ###### Example Response
@@ -461,7 +461,7 @@ Server: clair
 
 ## Fixes
 
-#### GET /namespaces/`:nsName`/vulnerabilities/`:vulnName`/fixes
+#### GET /namespaces/`:nsID`/vulnerabilities/`:vulnName`/fixes
 
 ###### Description
 
@@ -470,7 +470,7 @@ The GET route for the Fixes resource displays the list of Features that fix the 
 ###### Example Request
 
 ```json
-GET http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471/fixes HTTP/1.1
+GET http://localhost:6060/v1/namespaces/gAAAAABXTQKgma_TLKq0wr1D6wVB507N3fi9wsWMUypYOSXTDVxQ8OR5L5S6PqZ9Wh0IzWojnVmlspyTL4cyjytyra7U9vAHMA==/vulnerabilities/CVE-2014-9471/fixes HTTP/1.1
 ```
 
 ###### Example Response
@@ -484,14 +484,14 @@ Server: clair
   "Features": [
     {
       "Name": "coreutils",
-      "NamespaceName": "debian:8",
+      "Namespace": {"Name": "debian", "Version": "8"},
       "Version": "8.23-1"
     }
   ]
 }
 ```
 
-#### PUT /namespaces/`:nsName`/vulnerabilities/`:vulnName`/fixes/`:featureName`
+#### PUT /namespaces/`:nsID`/vulnerabilities/`:vulnName`/fixes/`:featureName`
 
 ###### Description
 
@@ -500,12 +500,12 @@ The PUT route for the Fixes resource updates a Feature that is the fix for a giv
 ###### Example Request
 
 ```json
-PUT http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471/fixes/coreutils HTTP/1.1
+PUT http://localhost:6060/v1/namespaces/gAAAAABXTQKgma_TLKq0wr1D6wVB507N3fi9wsWMUypYOSXTDVxQ8OR5L5S6PqZ9Wh0IzWojnVmlspyTL4cyjytyra7U9vAHMA==/vulnerabilities/CVE-2014-9471/fixes/coreutils HTTP/1.1
 
 {
   "Feature": {
     "Name": "coreutils",
-    "NamespaceName": "debian:8",
+    "Namespace": {"Name": "debian", "Version": "8"},
     "Version": "4.24-9"
   }
 }
@@ -520,13 +520,13 @@ Server: clair
 {
   "Feature": {
     "Name": "coreutils",
-    "NamespaceName": "debian:8",
+    "Namespace": {"Name": "debian", "Version": "8"},
     "Version": "4.24-9"
   }
 }
 ```
 
-#### DELETE /namespaces/`:nsName`/vulnerabilities/`:vulnName`/fixes/`:featureName`
+#### DELETE /namespaces/`:nsID`/vulnerabilities/`:vulnName`/fixes/`:featureName`
 
 ###### Description
 
@@ -535,7 +535,7 @@ The DELETE route for the Fixes resource removes a Feature as fix for the given V
 ###### Example Request
 
 ```json
-DELETE http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471/fixes/coreutils
+DELETE http://localhost:6060/v1/namespaces/gAAAAABXTQKgma_TLKq0wr1D6wVB507N3fi9wsWMUypYOSXTDVxQ8OR5L5S6PqZ9Wh0IzWojnVmlspyTL4cyjytyra7U9vAHMA==/vulnerabilities/CVE-2014-9471/fixes/coreutils
 ```
 
 ###### Example Response
@@ -585,13 +585,13 @@ Server: clair
     "New": {
       "Vulnerability": {
         "Name": "CVE-TEST",
-        "NamespaceName": "debian:8",
+        "Namespace": {"Name": "debian", "Version": "8"},
         "Description": "New CVE",
         "Severity": "Low",
         "FixedIn": [
           {
             "Name": "grep",
-            "NamespaceName": "debian:8",
+            "Namespace": {"Name": "debian", "Version": "8"},
             "Version": "2.25"
           }
         ]
@@ -604,7 +604,7 @@ Server: clair
     "Old": {
       "Vulnerability": {
         "Name": "CVE-TEST",
-        "NamespaceName": "debian:8",
+        "Namespace": {"Name": "debian", "Version": "8"},
         "Description": "New CVE",
         "Severity": "Low",
         "FixedIn": []

@@ -37,9 +37,9 @@ const (
 		SELECT id FROM Namespace WHERE name = $1 AND version = $2
 		UNION
 		SELECT id FROM new_namespace`
-
-	searchNamespace = `SELECT id FROM Namespace WHERE name = $1 AND version = $2`
-	listNamespace   = `SELECT id, name, version FROM Namespace`
+	getNamespaceID   = `SELECT id FROM Namespace WHERE name = $1 AND version = $2`
+	listNamespace    = `SELECT id, name, version FROM Namespace where version IS NOT NULL`
+	getNamespaceByID = `SELECT name, version FROM Namespace WHERE id = $1`
 
 	// feature.go
 	soiFeature = `
@@ -161,10 +161,10 @@ const (
 	searchVulnerabilityBase = `
 	  SELECT v.id, v.name, n.id, n.name, n.version, v.description, v.link, v.severity, v.metadata
 	  FROM Vulnerability v JOIN Namespace n ON v.namespace_id = n.id`
-	searchVulnerabilityForUpdate          = ` FOR UPDATE OF v`
-	searchVulnerabilityByNamespaceAndName = ` WHERE n.name = $1 AND n.version = $2 AND v.name = $3 AND v.deleted_at IS NULL`
-	searchVulnerabilityByID               = ` WHERE v.id = $1`
-	searchVulnerabilityByNamespaceID      = ` WHERE n.id = $1 AND v.deleted_at IS NULL
+	searchVulnerabilityForUpdate            = ` FOR UPDATE OF v`
+	searchVulnerabilityByNamespaceIDAndName = ` WHERE n.id = $1 AND v.name = $2 AND v.deleted_at IS NULL`
+	searchVulnerabilityByID                 = ` WHERE v.id = $1`
+	searchVulnerabilityByNamespaceID        = ` WHERE n.id = $1 AND v.deleted_at IS NULL
 		  				  AND v.id >= $2
 						  ORDER BY v.id
 						  LIMIT $3`
@@ -189,8 +189,8 @@ const (
 	removeVulnerability = `
 		UPDATE Vulnerability
     SET deleted_at = CURRENT_TIMESTAMP
-    WHERE namespace_id = (SELECT id FROM Namespace WHERE name = $1 AND version = $2)
-          AND name = $3
+    WHERE namespace_id = $1
+          AND name = $2
           AND deleted_at IS NULL
     RETURNING id`
 

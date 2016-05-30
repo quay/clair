@@ -50,6 +50,30 @@ func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (int, error) {
 	return id, nil
 }
 
+func (pgSQL *pgSQL) GetNamespaceID(namespace database.Namespace) (int, error) {
+	if pgSQL.cache != nil {
+		promCacheQueriesTotal.WithLabelValues("namespace").Inc()
+		if id, found := pgSQL.cache.Get("namespace:" + namespace.Name + ":" + namespace.Version.String()); found {
+			promCacheHitsTotal.WithLabelValues("namespace").Inc()
+			return id.(int), nil
+		}
+	}
+
+	defer observeQueryTime("getNamespaceID", "all", time.Now())
+
+	var id int
+	err := pgSQL.QueryRow(getNamespaceID, namespace.Name, namespace.Version.String()).Scan(&id)
+	if err != nil {
+		return 0, handleError("getNamespaceID", err)
+	}
+
+	if pgSQL.cache != nil {
+		pgSQL.cache.Add("namespace:"+namespace.Name+":"+namespace.Version.String(), id)
+	}
+
+	return id, nil
+}
+
 func (pgSQL *pgSQL) ListNamespaces() (namespaces []database.Namespace, err error) {
 	rows, err := pgSQL.Query(listNamespace)
 	if err != nil {

@@ -179,7 +179,12 @@ func getNamespaces(w http.ResponseWriter, r *http.Request, p httprouter.Params, 
 	}
 	var namespaces []Namespace
 	for _, dbNamespace := range dbNamespaces {
-		namespaces = append(namespaces, Namespace{Name: dbNamespace.Name})
+		if namespaceIDBytes, err := tokenMarshal(dbNamespace.ID, ctx.Config.PaginationKey); err != nil {
+			writeResponse(w, r, http.StatusInternalServerError, NamespaceEnvelope{Error: &Error{err.Error()}})
+			return getNamespacesRoute, http.StatusInternalServerError
+		} else {
+			namespaces = append(namespaces, Namespace{ID: string(namespaceIDBytes), Name: dbNamespace.Name, Version: dbNamespace.Version.String()})
+		}
 	}
 
 	writeResponse(w, r, http.StatusOK, NamespaceEnvelope{Namespaces: &namespaces})
@@ -213,13 +218,13 @@ func getVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Par
 		}
 	}
 
-	namespace := p.ByName("namespaceName")
-	if namespace == "" {
-		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"namespace should not be empty"}})
+	namespaceID := 0
+	if err = tokenUnmarshal(p.ByName("namespaceID"), ctx.Config.PaginationKey, &namespaceID); err != nil {
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"invalid namespace id format: " + err.Error()}})
 		return getNotificationRoute, http.StatusBadRequest
 	}
 
-	dbVulns, nextPage, err := ctx.Store.ListVulnerabilities(namespace, limit, page)
+	dbVulns, nextPage, err := ctx.Store.ListVulnerabilities(namespaceID, limit, page)
 	if err == cerrors.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return getVulnerabilityRoute, http.StatusNotFound
@@ -286,7 +291,13 @@ func postVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Para
 func getVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
 	_, withFixedIn := r.URL.Query()["fixedIn"]
 
-	dbVuln, err := ctx.Store.FindVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
+	namespaceID := 0
+	if err := tokenUnmarshal(p.ByName("namespaceID"), ctx.Config.PaginationKey, &namespaceID); err != nil {
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"invalid namespace id format: " + err.Error()}})
+		return getVulnerabilityRoute, http.StatusBadRequest
+	}
+
+	dbVuln, err := ctx.Store.FindVulnerability(namespaceID, p.ByName("vulnerabilityName"))
 	if err == cerrors.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return getVulnerabilityRoute, http.StatusNotFound
@@ -302,6 +313,12 @@ func getVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 }
 
 func putVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+	namespaceID := 0
+	if err := tokenUnmarshal(p.ByName("namespaceID"), ctx.Config.PaginationKey, &namespaceID); err != nil {
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"invalid namespace id format: " + err.Error()}})
+		return putVulnerabilityRoute, http.StatusBadRequest
+	}
+
 	request := VulnerabilityEnvelope{}
 	err := decodeJSON(r, &request)
 	if err != nil {
@@ -325,7 +342,7 @@ func putVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 		return putVulnerabilityRoute, http.StatusBadRequest
 	}
 
-	vuln.Namespace.Name = p.ByName("namespaceName")
+	vuln.Namespace.ID = namespaceID
 	vuln.Name = p.ByName("vulnerabilityName")
 
 	err = ctx.Store.InsertVulnerabilities([]database.Vulnerability{vuln}, true)
@@ -345,7 +362,13 @@ func putVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 }
 
 func deleteVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
-	err := ctx.Store.DeleteVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
+	namespaceID := 0
+	if err := tokenUnmarshal(p.ByName("namespaceID"), ctx.Config.PaginationKey, &namespaceID); err != nil {
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"invalid namespace id format: " + err.Error()}})
+		return deleteVulnerabilityRoute, http.StatusBadRequest
+	}
+
+	err := ctx.Store.DeleteVulnerability(namespaceID, p.ByName("vulnerabilityName"))
 	if err == cerrors.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return deleteVulnerabilityRoute, http.StatusNotFound
@@ -359,7 +382,13 @@ func deleteVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 }
 
 func getFixes(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
-	dbVuln, err := ctx.Store.FindVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
+	namespaceID := 0
+	if err := tokenUnmarshal(p.ByName("namespaceID"), ctx.Config.PaginationKey, &namespaceID); err != nil {
+		writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"invalid namespace id format: " + err.Error()}})
+		return getFixesRoute, http.StatusBadRequest
+	}
+
+	dbVuln, err := ctx.Store.FindVulnerability(namespaceID, p.ByName("vulnerabilityName"))
 	if err == cerrors.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, FeatureEnvelope{Error: &Error{err.Error()}})
 		return getFixesRoute, http.StatusNotFound
@@ -374,6 +403,12 @@ func getFixes(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *
 }
 
 func putFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+	namespaceID := 0
+	if err := tokenUnmarshal(p.ByName("namespaceID"), ctx.Config.PaginationKey, &namespaceID); err != nil {
+		writeResponse(w, r, http.StatusBadRequest, FeatureEnvelope{Error: &Error{"invalid namespace id format: " + err.Error()}})
+		return putFixRoute, http.StatusBadRequest
+	}
+
 	request := FeatureEnvelope{}
 	err := decodeJSON(r, &request)
 	if err != nil {
@@ -397,7 +432,7 @@ func putFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *co
 		return putFixRoute, http.StatusBadRequest
 	}
 
-	err = ctx.Store.InsertVulnerabilityFixes(p.ByName("vulnerabilityNamespace"), p.ByName("vulnerabilityName"), []database.FeatureVersion{dbFix})
+	err = ctx.Store.InsertVulnerabilityFixes(namespaceID, p.ByName("vulnerabilityName"), []database.FeatureVersion{dbFix})
 	if err != nil {
 		switch err.(type) {
 		case *cerrors.ErrBadRequest:
@@ -418,7 +453,13 @@ func putFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *co
 }
 
 func deleteFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
-	err := ctx.Store.DeleteVulnerabilityFix(p.ByName("vulnerabilityNamespace"), p.ByName("vulnerabilityName"), p.ByName("fixName"))
+	namespaceID := 0
+	if err := tokenUnmarshal(p.ByName("namespaceID"), ctx.Config.PaginationKey, &namespaceID); err != nil {
+		writeResponse(w, r, http.StatusBadRequest, FeatureEnvelope{Error: &Error{"invalid namespace id format: " + err.Error()}})
+		return deleteFixRoute, http.StatusBadRequest
+	}
+
+	err := ctx.Store.DeleteVulnerabilityFix(namespaceID, p.ByName("vulnerabilityName"), p.ByName("fixName"))
 	if err == cerrors.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, FeatureEnvelope{Error: &Error{err.Error()}})
 		return deleteFixRoute, http.StatusNotFound

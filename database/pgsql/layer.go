@@ -52,28 +52,6 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 			Model: database.Model{ID: int(parentID.Int64)},
 			Name:  parentName.String,
 		}
-
-		// Find its parent's namespaces
-		t = time.Now()
-		rows, err := pgSQL.Query(searchLayerNamespace, parentID)
-		observeQueryTime("FindLayer", "searchParentLayerNamespace", t)
-		if err != nil {
-			return layer, handleError("searchLayerNamespace", err)
-		}
-		defer rows.Close()
-
-		for rows.Next() {
-			var pn database.Namespace
-
-			err = rows.Scan(&pn.ID, &pn.Name, &pn.Version)
-			if err != nil {
-				return layer, handleError("searchLayerNamespace.Scan()", err)
-			}
-			layer.Parent.Namespaces = append(layer.Parent.Namespaces, pn)
-		}
-		if err = rows.Err(); err != nil {
-			return layer, handleError("searchLayerNamespace.Rows()", err)
-		}
 	}
 
 	// Find its namespaces

@@ -48,7 +48,7 @@ func TestDebianParser(t *testing.T) {
 					},
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian", Version: types.NewVersionUnsafe("unstable")},
+							Namespace: database.Namespace{Name: "debian", Version: types.NewVersionUnsafe("10")},
 
 							Name: "aptdaemon",
 						},
@@ -74,7 +74,7 @@ func TestDebianParser(t *testing.T) {
 					},
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian", Version: types.NewVersionUnsafe("unstable")},
+							Namespace: database.Namespace{Name: "debian", Version: types.NewVersionUnsafe("10")},
 							Name:      "aptdaemon",
 						},
 						Version: types.NewVersionUnsafe("0.7.0"),

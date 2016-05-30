@@ -20,15 +20,16 @@ import "time"
 // The default behavior of each method is to simply panic.
 type MockDatastore struct {
 	FctListNamespaces           func() ([]Namespace, error)
+	FctGetNamespaceID           func(namespace Namespace) (int, error)
 	FctInsertLayer              func(Layer) error
 	FctFindLayer                func(name string, withFeatures, withVulnerabilities bool) (Layer, error)
 	FctDeleteLayer              func(name string) error
-	FctListVulnerabilities      func(namespace Namespace, limit int, page int) ([]Vulnerability, int, error)
+	FctListVulnerabilities      func(namespaceID int, limit int, page int) ([]Vulnerability, int, error)
 	FctInsertVulnerabilities    func(vulnerabilities []Vulnerability, createNotification bool) error
-	FctFindVulnerability        func(namespace Namespace, name string) (Vulnerability, error)
-	FctDeleteVulnerability      func(namespace Namespace, name string) error
-	FctInsertVulnerabilityFixes func(vulnerabilityNamespace Namespace, vulnerabilityName string, fixes []FeatureVersion) error
-	FctDeleteVulnerabilityFix   func(vulnerabilityNamespace Namespace, vulnerabilityName, featureName string) error
+	FctFindVulnerability        func(namespaceID int, name string) (Vulnerability, error)
+	FctDeleteVulnerability      func(namespaceID int, name string) error
+	FctInsertVulnerabilityFixes func(vulnerabilityNamespaceID int, vulnerabilityName string, fixes []FeatureVersion) error
+	FctDeleteVulnerabilityFix   func(vulnerabilityNamespaceID int, vulnerabilityName, featureName string) error
 	FctGetAvailableNotification func(renotifyInterval time.Duration) (VulnerabilityNotification, error)
 	FctGetNotification          func(name string, limit int, page VulnerabilityNotificationPageNumber) (VulnerabilityNotification, VulnerabilityNotificationPageNumber, error)
 	FctSetNotificationNotified  func(name string) error
@@ -45,6 +46,13 @@ type MockDatastore struct {
 func (mds *MockDatastore) ListNamespaces() ([]Namespace, error) {
 	if mds.FctListNamespaces != nil {
 		return mds.FctListNamespaces()
+	}
+	panic("required mock function not implemented")
+}
+
+func (mds *MockDatastore) GetNamespaceID(namespace Namespace) (int, error) {
+	if mds.FctGetNamespaceID != nil {
+		return mds.FctGetNamespaceID(namespace)
 	}
 	panic("required mock function not implemented")
 }
@@ -70,9 +78,9 @@ func (mds *MockDatastore) DeleteLayer(name string) error {
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) ListVulnerabilities(namespace Namespace, limit int, page int) ([]Vulnerability, int, error) {
+func (mds *MockDatastore) ListVulnerabilities(namespaceID int, limit int, page int) ([]Vulnerability, int, error) {
 	if mds.FctListVulnerabilities != nil {
-		return mds.FctListVulnerabilities(namespace, limit, page)
+		return mds.FctListVulnerabilities(namespaceID, limit, page)
 	}
 	panic("required mock function not implemented")
 }
@@ -84,30 +92,30 @@ func (mds *MockDatastore) InsertVulnerabilities(vulnerabilities []Vulnerability,
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) FindVulnerability(namespace Namespace, name string) (Vulnerability, error) {
+func (mds *MockDatastore) FindVulnerability(namespaceID int, name string) (Vulnerability, error) {
 	if mds.FctFindVulnerability != nil {
-		return mds.FctFindVulnerability(namespace, name)
+		return mds.FctFindVulnerability(namespaceID, name)
 	}
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) DeleteVulnerability(namespace Namespace, name string) error {
+func (mds *MockDatastore) DeleteVulnerability(namespaceID int, name string) error {
 	if mds.FctDeleteVulnerability != nil {
-		return mds.FctDeleteVulnerability(namespace, name)
+		return mds.FctDeleteVulnerability(namespaceID, name)
 	}
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) InsertVulnerabilityFixes(vulnerabilityNamespace Namespace, vulnerabilityName string, fixes []FeatureVersion) error {
+func (mds *MockDatastore) InsertVulnerabilityFixes(vulnerabilityNamespaceID int, vulnerabilityName string, fixes []FeatureVersion) error {
 	if mds.FctInsertVulnerabilityFixes != nil {
-		return mds.FctInsertVulnerabilityFixes(vulnerabilityNamespace, vulnerabilityName, fixes)
+		return mds.FctInsertVulnerabilityFixes(vulnerabilityNamespaceID, vulnerabilityName, fixes)
 	}
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) DeleteVulnerabilityFix(vulnerabilityNamespace Namespace, vulnerabilityName, featureName string) error {
+func (mds *MockDatastore) DeleteVulnerabilityFix(vulnerabilityNamespaceID int, vulnerabilityName, featureName string) error {
 	if mds.FctDeleteVulnerabilityFix != nil {
-		return mds.FctDeleteVulnerabilityFix(vulnerabilityNamespace, vulnerabilityName, featureName)
+		return mds.FctDeleteVulnerabilityFix(vulnerabilityNamespaceID, vulnerabilityName, featureName)
 	}
 	panic("required mock function not implemented")
 }

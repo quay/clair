@@ -66,7 +66,11 @@ func (detector *OsReleaseNamespaceDetector) Detect(data map[string][]byte) *data
 	}
 
 	if OS != "" && version != "" {
-		return &database.Namespace{Name: OS, Version: types.NewVersionUnsafe(version)}
+		if nsVersion, err := types.NewVersion(version); err != nil {
+			return nil
+		} else {
+			return &database.Namespace{Name: OS, Version: nsVersion}
+		}
 	}
 	return nil
 }

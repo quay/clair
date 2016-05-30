@@ -68,8 +68,7 @@ func DetectFeatures(data map[string][]byte, namespaces []database.Namespace) ([]
 				}
 				// Ensure that every feature has a Namespace associated
 				for i := 0; i < len(pkgs); i++ {
-					pkgs[i].Feature.Namespace.Name = namespace.Name
-					pkgs[i].Feature.Namespace.Version = namespace.Version
+					pkgs[i].Feature.Namespace = namespace
 				}
 				packages = append(packages, pkgs...)
 				break

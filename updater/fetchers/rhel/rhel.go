@@ -291,8 +291,13 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 		}
 
 		if osVersion > firstConsideredRHEL {
+			nsVersion, err := types.NewVersion(strconv.Itoa(osVersion))
+			if err != nil {
+				log.Warningf("could not parse namespace version '%s': %s. skipping", strconv.Itoa(osVersion), err.Error())
+				continue
+			}
 			featureVersion.Feature.Namespace.Name = "centos"
-			featureVersion.Feature.Namespace.Version = types.NewVersionUnsafe(strconv.Itoa(osVersion))
+			featureVersion.Feature.Namespace.Version = nsVersion
 		} else {
 			continue
 		}

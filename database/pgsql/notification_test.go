@@ -118,7 +118,8 @@ func TestNotification(t *testing.T) {
 	assert.Nil(t, datastore.insertVulnerability(v1, false, true))
 
 	// Get the notification associated to the previously inserted vulnerability.
-	notification, err := datastore.GetAvailableNotification(time.Second)
+	var notification database.VulnerabilityNotification
+	notification, err = datastore.GetAvailableNotification(time.Second)
 
 	if assert.Nil(t, err) && assert.NotEmpty(t, notification.Name) {
 		// Verify the renotify behaviour.
@@ -206,8 +207,12 @@ func TestNotification(t *testing.T) {
 		}
 	}
 
+	namespaceID, err := datastore.GetNamespaceID(database.Namespace{
+		Name:    "TestNotificationNamespace",
+		Version: types.NewVersionUnsafe("1.0"),
+	})
 	// Delete a vulnerability and verify the notification.
-	if assert.Nil(t, datastore.DeleteVulnerability(v1b.Namespace, v1b.Name)) {
+	if assert.Nil(t, err) && assert.Nil(t, datastore.DeleteVulnerability(namespaceID, v1b.Name)) {
 		notification, err = datastore.GetAvailableNotification(time.Second)
 		assert.Nil(t, err)
 		assert.NotEmpty(t, notification.Name)
