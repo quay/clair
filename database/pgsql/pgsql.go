@@ -27,13 +27,17 @@ import (
 
 	"bitbucket.org/liamstask/goose/lib/goose"
 	"github.com/coreos/pkg/capnslog"
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/coreos/clair/config"
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
+	"github.com/coreos/clair/services/keyvalue"
+	"github.com/coreos/clair/services/locks"
+	"github.com/coreos/clair/services/notifications"
+	"github.com/coreos/clair/services/vulnerabilities"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 )
@@ -74,7 +78,19 @@ func init() {
 	prometheus.MustRegister(promQueryDurationMilliseconds)
 	prometheus.MustRegister(promConcurrentLockVAFV)
 
-	database.Register("pgsql", openDatabase)
+	// The return types must match exactly because Go doesn't seem to allow covariance.
+	locks.Register("pgsql", func(cfg config.RegistrableComponentConfig) (locks.Service, error) {
+		return openDatabase(cfg)
+	})
+	keyvalue.Register("pgsql", func(cfg config.RegistrableComponentConfig) (keyvalue.Service, error) {
+		return openDatabase(cfg)
+	})
+	vulnerabilities.Register("pgsql", func(cfg config.RegistrableComponentConfig) (vulnerabilities.Service, error) {
+		return openDatabase(cfg)
+	})
+	notifications.Register("pgsql", func(cfg config.RegistrableComponentConfig) (notifications.Service, error) {
+		return openDatabase(cfg)
+	})
 }
 
 type Queryer interface {
@@ -119,7 +135,7 @@ type Config struct {
 // It immediately every necessary migrations. If ManageDatabaseLifecycle is specified,
 // the database will be created first. If FixturePath is specified, every SQL queries that are
 // present insides will be executed.
-func openDatabase(registrableComponentConfig config.RegistrableComponentConfig) (database.Datastore, error) {
+func openDatabase(registrableComponentConfig config.RegistrableComponentConfig) (*pgSQL, error) {
 	var pg pgSQL
 	var err error
 
@@ -306,7 +322,7 @@ func handleError(desc string, err error) error {
 	promErrorsTotal.WithLabelValues(desc).Inc()
 
 	if _, o := err.(*pq.Error); o || err == sql.ErrTxDone || strings.HasPrefix(err.Error(), "sql:") {
-		return database.ErrBackendException
+		return services.ErrBackendException
 	}
 
 	return err

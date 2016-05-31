@@ -23,7 +23,10 @@ import (
 	"time"
 
 	"github.com/coreos/clair/config"
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
+	"github.com/coreos/clair/services/keyvalue"
+	"github.com/coreos/clair/services/locks"
+	"github.com/coreos/clair/services/vulnerabilities"
 	"github.com/coreos/clair/utils"
 	"github.com/coreos/pkg/capnslog"
 	"github.com/pborman/uuid"
@@ -65,7 +68,7 @@ func init() {
 }
 
 // Run updates the vulnerability database at regular intervals.
-func Run(config *config.UpdaterConfig, datastore database.Datastore, st *utils.Stopper) {
+func Run(config *config.UpdaterConfig, locksvc locks.Service, kvstore keyvalue.Service, vulnstore vulnerabilities.Service, st *utils.Stopper) {
 	defer st.End()
 
 	// Do not run the updater if there is no config or if the interval is 0.
@@ -83,7 +86,7 @@ func Run(config *config.UpdaterConfig, datastore database.Datastore, st *utils.S
 		// Determine if this is the first update and define the next update time.
 		// The next update time is (last update time + interval) or now if this is the first update.
 		nextUpdate := time.Now().UTC()
-		lastUpdate, firstUpdate, err := getLastUpdate(datastore)
+		lastUpdate, firstUpdate, err := getLastUpdate(kvstore)
 		if err != nil {
 			log.Errorf("an error occured while getting the last update time")
 			nextUpdate = nextUpdate.Add(config.Interval)
@@ -95,12 +98,12 @@ func Run(config *config.UpdaterConfig, datastore database.Datastore, st *utils.S
 		if nextUpdate.Before(time.Now().UTC()) {
 			// Attempt to get a lock on the the update.
 			log.Debug("attempting to obtain update lock")
-			hasLock, hasLockUntil := datastore.Lock(lockName, whoAmI, lockDuration, false)
+			hasLock, hasLockUntil := locksvc.Lock(lockName, whoAmI, lockDuration, false)
 			if hasLock {
 				// Launch update in a new go routine.
 				doneC := make(chan bool, 1)
 				go func() {
-					Update(datastore, firstUpdate)
+					Update(kvstore, vulnstore, firstUpdate)
 					doneC <- true
 				}()
 
@@ -110,21 +113,21 @@ func Run(config *config.UpdaterConfig, datastore database.Datastore, st *utils.S
 						done = true
 					case <-time.After(refreshLockDuration):
 						// Refresh the lock until the update is done.
-						datastore.Lock(lockName, whoAmI, lockDuration, true)
+						locksvc.Lock(lockName, whoAmI, lockDuration, true)
 					case <-st.Chan():
 						stop = true
 					}
 				}
 
 				// Unlock the update.
-				datastore.Unlock(lockName, whoAmI)
+				locksvc.Unlock(lockName, whoAmI)
 
 				if stop {
 					break
 				}
 				continue
 			} else {
-				lockOwner, lockExpiration, err := datastore.FindLock(lockName)
+				lockOwner, lockExpiration, err := locksvc.FindLock(lockName)
 				if err != nil {
 					log.Debug("update lock is already taken")
 					nextUpdate = hasLockUntil
@@ -159,17 +162,17 @@ func Run(config *config.UpdaterConfig, datastore database.Datastore, st *utils.S
 
 // Update fetches all the vulnerabilities from the registered fetchers, upserts
 // them into the database and then sends notifications.
-func Update(datastore database.Datastore, firstUpdate bool) {
+func Update(kvstore keyvalue.Service, vulnstore vulnerabilities.Service, firstUpdate bool) {
 	defer setUpdaterDuration(time.Now())
 
 	log.Info("updating vulnerabilities")
 
 	// Fetch updates.
-	status, vulnerabilities, flags, notes := fetch(datastore)
+	status, vulnerabilities, flags, notes := fetch(kvstore, vulnstore)
 
 	// Insert vulnerabilities.
 	log.Tracef("inserting %d vulnerabilities for update", len(vulnerabilities))
-	err := datastore.InsertVulnerabilities(vulnerabilities, !firstUpdate)
+	err := vulnstore.InsertVulnerabilities(vulnerabilities, !firstUpdate)
 	if err != nil {
 		promUpdaterErrorsTotal.Inc()
 		log.Errorf("an error occured when inserting vulnerabilities for update: %s", err)
@@ -179,7 +182,7 @@ func Update(datastore database.Datastore, firstUpdate bool) {
 
 	// Update flags.
 	for flagName, flagValue := range flags {
-		datastore.InsertKeyValue(flagName, flagValue)
+		kvstore.InsertKeyValue(flagName, flagValue)
 	}
 
 	// Log notes.
@@ -190,7 +193,7 @@ func Update(datastore database.Datastore, firstUpdate bool) {
 
 	// Update last successful update if every fetchers worked properly.
 	if status {
-		datastore.InsertKeyValue(flagName, strconv.FormatInt(time.Now().UTC().Unix(), 10))
+		kvstore.InsertKeyValue(flagName, strconv.FormatInt(time.Now().UTC().Unix(), 10))
 	}
 
 	log.Info("update finished")
@@ -201,8 +204,8 @@ func setUpdaterDuration(start time.Time) {
 }
 
 // fetch get data from the registered fetchers, in parallel.
-func fetch(datastore database.Datastore) (bool, []database.Vulnerability, map[string]string, []string) {
-	var vulnerabilities []database.Vulnerability
+func fetch(kvstore keyvalue.Service, vulnstore vulnerabilities.Service) (bool, []services.Vulnerability, map[string]string, []string) {
+	var vulnerabilities []services.Vulnerability
 	var notes []string
 	status := true
 	flags := make(map[string]string)
@@ -212,7 +215,7 @@ func fetch(datastore database.Datastore) (bool, []database.Vulnerability, map[st
 	var responseC = make(chan *FetcherResponse, 0)
 	for n, f := range fetchers {
 		go func(name string, fetcher Fetcher) {
-			response, err := fetcher.FetchUpdate(datastore)
+			response, err := fetcher.FetchUpdate(kvstore)
 			if err != nil {
 				promUpdaterErrorsTotal.Inc()
 				log.Errorf("an error occured when fetching update '%s': %s.", name, err)
@@ -238,11 +241,11 @@ func fetch(datastore database.Datastore) (bool, []database.Vulnerability, map[st
 	}
 
 	close(responseC)
-	return status, addMetadata(datastore, vulnerabilities), flags, notes
+	return status, addMetadata(vulnstore, vulnerabilities), flags, notes
 }
 
 // Add metadata to the specified vulnerabilities using the registered MetadataFetchers, in parallel.
-func addMetadata(datastore database.Datastore, vulnerabilities []database.Vulnerability) []database.Vulnerability {
+func addMetadata(vulnstore vulnerabilities.Service, vulnerabilities []services.Vulnerability) []services.Vulnerability {
 	if len(metadataFetchers) == 0 {
 		return vulnerabilities
 	}
@@ -266,7 +269,7 @@ func addMetadata(datastore database.Datastore, vulnerabilities []database.Vulner
 			defer wg.Done()
 
 			// Load the metadata fetcher.
-			if err := metadataFetcher.Load(datastore); err != nil {
+			if err := metadataFetcher.Load(vulnstore); err != nil {
 				promUpdaterErrorsTotal.Inc()
 				log.Errorf("an error occured when loading metadata fetcher '%s': %s.", name, err)
 				return
@@ -286,8 +289,8 @@ func addMetadata(datastore database.Datastore, vulnerabilities []database.Vulner
 	return vulnerabilities
 }
 
-func getLastUpdate(datastore database.Datastore) (time.Time, bool, error) {
-	lastUpdateTSS, err := datastore.GetKeyValue(flagName)
+func getLastUpdate(kvstore keyvalue.Service) (time.Time, bool, error) {
+	lastUpdateTSS, err := kvstore.GetKeyValue(flagName)
 	if err != nil {
 		return time.Time{}, false, err
 	}
@@ -311,12 +314,12 @@ func getLastUpdate(datastore database.Datastore) (time.Time, bool, error) {
 //
 // It helps simplifying the fetchers that share the same metadata about a Vulnerability regardless
 // of their actual namespace (ie. same vulnerability information for every version of a distro).
-func doVulnerabilitiesNamespacing(vulnerabilities []database.Vulnerability) []database.Vulnerability {
-	vulnerabilitiesMap := make(map[string]*database.Vulnerability)
+func doVulnerabilitiesNamespacing(vulnerabilities []services.Vulnerability) []services.Vulnerability {
+	vulnerabilitiesMap := make(map[string]*services.Vulnerability)
 
 	for _, v := range vulnerabilities {
 		featureVersions := v.FixedIn
-		v.FixedIn = []database.FeatureVersion{}
+		v.FixedIn = []services.FeatureVersion{}
 
 		for _, fv := range featureVersions {
 			index := fv.Feature.Namespace.Name + ":" + v.Name
@@ -324,7 +327,7 @@ func doVulnerabilitiesNamespacing(vulnerabilities []database.Vulnerability) []da
 			if vulnerability, ok := vulnerabilitiesMap[index]; !ok {
 				newVulnerability := v
 				newVulnerability.Namespace.Name = fv.Feature.Namespace.Name
-				newVulnerability.FixedIn = []database.FeatureVersion{fv}
+				newVulnerability.FixedIn = []services.FeatureVersion{fv}
 
 				vulnerabilitiesMap[index] = &newVulnerability
 			} else {
@@ -334,7 +337,7 @@ func doVulnerabilitiesNamespacing(vulnerabilities []database.Vulnerability) []da
 	}
 
 	// Convert map into a slice.
-	var response []database.Vulnerability
+	var response []services.Vulnerability
 	for _, vulnerability := range vulnerabilitiesMap {
 		response = append(response, *vulnerability)
 	}

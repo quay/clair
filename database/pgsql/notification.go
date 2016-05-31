@@ -18,7 +18,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/guregu/null/zero"
 	"github.com/pborman/uuid"
@@ -43,7 +43,7 @@ func createNotification(tx *sql.Tx, oldVulnerabilityID, newVulnerabilityID int) 
 
 // Get one available notification name (!locked && !deleted && (!notified || notified_but_timed-out)).
 // Does not fill new/old vuln.
-func (pgSQL *pgSQL) GetAvailableNotification(renotifyInterval time.Duration) (database.VulnerabilityNotification, error) {
+func (pgSQL *pgSQL) GetAvailableNotification(renotifyInterval time.Duration) (services.VulnerabilityNotification, error) {
 	defer observeQueryTime("GetAvailableNotification", "all", time.Now())
 
 	before := time.Now().Add(-renotifyInterval)
@@ -53,7 +53,7 @@ func (pgSQL *pgSQL) GetAvailableNotification(renotifyInterval time.Duration) (da
 	return notification, handleError("searchNotificationAvailable", err)
 }
 
-func (pgSQL *pgSQL) GetNotification(name string, limit int, page database.VulnerabilityNotificationPageNumber) (database.VulnerabilityNotification, database.VulnerabilityNotificationPageNumber, error) {
+func (pgSQL *pgSQL) GetNotification(name string, limit int, page services.VulnerabilityNotificationPageNumber) (services.VulnerabilityNotification, services.VulnerabilityNotificationPageNumber, error) {
 	defer observeQueryTime("GetNotification", "all", time.Now())
 
 	// Get Notification.
@@ -86,8 +86,8 @@ func (pgSQL *pgSQL) GetNotification(name string, limit int, page database.Vulner
 	return notification, page, nil
 }
 
-func (pgSQL *pgSQL) scanNotification(row *sql.Row, hasVulns bool) (database.VulnerabilityNotification, error) {
-	var notification database.VulnerabilityNotification
+func (pgSQL *pgSQL) scanNotification(row *sql.Row, hasVulns bool) (services.VulnerabilityNotification, error) {
+	var notification services.VulnerabilityNotification
 	var created zero.Time
 	var notified zero.Time
 	var deleted zero.Time
@@ -147,7 +147,7 @@ func (pgSQL *pgSQL) scanNotification(row *sql.Row, hasVulns bool) (database.Vuln
 // Fills Vulnerability.LayersIntroducingVulnerability.
 // limit -1: won't do anything
 // limit 0: will just get the startID of the second page
-func (pgSQL *pgSQL) loadLayerIntroducingVulnerability(vulnerability *database.Vulnerability, limit, startID int) (int, error) {
+func (pgSQL *pgSQL) loadLayerIntroducingVulnerability(vulnerability *services.Vulnerability, limit, startID int) (int, error) {
 	tf := time.Now()
 
 	if vulnerability == nil {
@@ -170,9 +170,9 @@ func (pgSQL *pgSQL) loadLayerIntroducingVulnerability(vulnerability *database.Vu
 	}
 	defer rows.Close()
 
-	var layers []database.Layer
+	var layers []services.Layer
 	for rows.Next() {
-		var layer database.Layer
+		var layer services.Layer
 
 		if err := rows.Scan(&layer.ID, &layer.Name); err != nil {
 			return -1, handleError("searchNotificationLayerIntroducingVulnerability.Scan()", err)

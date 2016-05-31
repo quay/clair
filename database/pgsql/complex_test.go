@@ -26,7 +26,7 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	"github.com/coreos/clair/utils"
 	"github.com/coreos/clair/utils/types"
 )
@@ -45,8 +45,8 @@ func TestRaceAffects(t *testing.T) {
 	defer datastore.Close()
 
 	// Insert the Feature on which we'll work.
-	feature := database.Feature{
-		Namespace: database.Namespace{Name: "TestRaceAffectsFeatureNamespace1"},
+	feature := services.Feature{
+		Namespace: services.Namespace{Name: "TestRaceAffectsFeatureNamespace1"},
 		Name:      "TestRaceAffecturesFeature1",
 	}
 	_, err = datastore.insertFeature(feature)
@@ -60,11 +60,11 @@ func TestRaceAffects(t *testing.T) {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
 	// Generate FeatureVersions.
-	featureVersions := make([]database.FeatureVersion, numFeatureVersions)
+	featureVersions := make([]services.FeatureVersion, numFeatureVersions)
 	for i := 0; i < numFeatureVersions; i++ {
 		version := rand.Intn(numFeatureVersions)
 
-		featureVersions[i] = database.FeatureVersion{
+		featureVersions[i] = services.FeatureVersion{
 			Feature: feature,
 			Version: types.NewVersionUnsafe(strconv.Itoa(version)),
 		}
@@ -72,18 +72,18 @@ func TestRaceAffects(t *testing.T) {
 
 	// Generate vulnerabilities.
 	// They are mapped by fixed version, which will make verification really easy afterwards.
-	vulnerabilities := make(map[int][]database.Vulnerability)
+	vulnerabilities := make(map[int][]services.Vulnerability)
 	for i := 0; i < numVulnerabilities; i++ {
 		version := rand.Intn(numFeatureVersions) + 1
 
 		// if _, ok := vulnerabilities[version]; !ok {
-		//   vulnerabilities[version] = make([]database.Vulnerability)
+		//   vulnerabilities[version] = make([]services.Vulnerability)
 		// }
 
-		vulnerability := database.Vulnerability{
+		vulnerability := services.Vulnerability{
 			Name:      uuid.New(),
 			Namespace: feature.Namespace,
-			FixedIn: []database.FeatureVersion{
+			FixedIn: []services.FeatureVersion{
 				{
 					Feature: feature,
 					Version: types.NewVersionUnsafe(strconv.Itoa(version)),
@@ -103,7 +103,7 @@ func TestRaceAffects(t *testing.T) {
 		defer wg.Done()
 		for _, vulnerabilitiesM := range vulnerabilities {
 			for _, vulnerability := range vulnerabilitiesM {
-				err = datastore.InsertVulnerabilities([]database.Vulnerability{vulnerability}, true)
+				err = datastore.InsertVulnerabilities([]services.Vulnerability{vulnerability}, true)
 				assert.Nil(t, err)
 			}
 		}

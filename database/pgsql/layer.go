@@ -18,13 +18,13 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/guregu/null/zero"
 )
 
-func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities bool) (database.Layer, error) {
+func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities bool) (services.Layer, error) {
 	subquery := "all"
 	if withFeatures {
 		subquery += "/features"
@@ -34,7 +34,7 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 	defer observeQueryTime("FindLayer", subquery, time.Now())
 
 	// Find the layer
-	var layer database.Layer
+	var layer services.Layer
 	var parentID zero.Int
 	var parentName zero.String
 	var namespaceID zero.Int
@@ -49,14 +49,14 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 	}
 
 	if !parentID.IsZero() {
-		layer.Parent = &database.Layer{
-			Model: database.Model{ID: int(parentID.Int64)},
+		layer.Parent = &services.Layer{
+			Model: services.Model{ID: int(parentID.Int64)},
 			Name:  parentName.String,
 		}
 	}
 	if !namespaceID.IsZero() {
-		layer.Namespace = &database.Namespace{
-			Model: database.Model{ID: int(namespaceID.Int64)},
+		layer.Namespace = &services.Namespace{
+			Model: services.Model{ID: int(namespaceID.Int64)},
 			Name:  namespaceName.String,
 		}
 	}
@@ -110,9 +110,9 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 	return layer, nil
 }
 
-// getLayerFeatureVersions returns list of database.FeatureVersion that a database.Layer has.
-func getLayerFeatureVersions(tx *sql.Tx, layerID int) ([]database.FeatureVersion, error) {
-	var featureVersions []database.FeatureVersion
+// getLayerFeatureVersions returns list of services.FeatureVersion that a services.Layer has.
+func getLayerFeatureVersions(tx *sql.Tx, layerID int) ([]services.FeatureVersion, error) {
+	var featureVersions []services.FeatureVersion
 
 	// Query.
 	rows, err := tx.Query(searchLayerFeatureVersion, layerID)
@@ -123,9 +123,9 @@ func getLayerFeatureVersions(tx *sql.Tx, layerID int) ([]database.FeatureVersion
 
 	// Scan query.
 	var modification string
-	mapFeatureVersions := make(map[int]database.FeatureVersion)
+	mapFeatureVersions := make(map[int]services.FeatureVersion)
 	for rows.Next() {
-		var featureVersion database.FeatureVersion
+		var featureVersion services.FeatureVersion
 
 		err = rows.Scan(&featureVersion.ID, &modification, &featureVersion.Feature.Namespace.ID,
 			&featureVersion.Feature.Namespace.Name, &featureVersion.Feature.ID,
@@ -143,7 +143,7 @@ func getLayerFeatureVersions(tx *sql.Tx, layerID int) ([]database.FeatureVersion
 			delete(mapFeatureVersions, featureVersion.ID)
 		default:
 			log.Warningf("unknown Layer_diff_FeatureVersion's modification: %s", modification)
-			return featureVersions, database.ErrInconsistent
+			return featureVersions, services.ErrInconsistent
 		}
 	}
 	if err = rows.Err(); err != nil {
@@ -158,9 +158,9 @@ func getLayerFeatureVersions(tx *sql.Tx, layerID int) ([]database.FeatureVersion
 	return featureVersions, nil
 }
 
-// loadAffectedBy returns the list of database.Vulnerability that affect the given
+// loadAffectedBy returns the list of services.Vulnerability that affect the given
 // FeatureVersion.
-func loadAffectedBy(tx *sql.Tx, featureVersions []database.FeatureVersion) error {
+func loadAffectedBy(tx *sql.Tx, featureVersions []services.FeatureVersion) error {
 	if len(featureVersions) == 0 {
 		return nil
 	}
@@ -178,10 +178,10 @@ func loadAffectedBy(tx *sql.Tx, featureVersions []database.FeatureVersion) error
 	}
 	defer rows.Close()
 
-	vulnerabilities := make(map[int][]database.Vulnerability, len(featureVersions))
+	vulnerabilities := make(map[int][]services.Vulnerability, len(featureVersions))
 	var featureversionID int
 	for rows.Next() {
-		var vulnerability database.Vulnerability
+		var vulnerability services.Vulnerability
 		err := rows.Scan(&featureversionID, &vulnerability.ID, &vulnerability.Name,
 			&vulnerability.Description, &vulnerability.Link, &vulnerability.Severity,
 			&vulnerability.Metadata, &vulnerability.Namespace.Name, &vulnerability.FixedBy)
@@ -209,7 +209,7 @@ func loadAffectedBy(tx *sql.Tx, featureVersions []database.FeatureVersion) error
 // (happens when Feature detectors relies on the detected layer Namespace). However, if the listed
 // Feature has the same Name/Version as its parent, InsertLayer considers that the Feature hasn't
 // been modified.
-func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
+func (pgSQL *pgSQL) InsertLayer(layer services.Layer) error {
 	tf := time.Now()
 
 	// Verify parameters
@@ -314,10 +314,10 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	return nil
 }
 
-func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *database.Layer) error {
+func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *services.Layer) error {
 	// add and del are the FeatureVersion diff we should insert.
-	var add []database.FeatureVersion
-	var del []database.FeatureVersion
+	var add []services.FeatureVersion
+	var del []services.FeatureVersion
 
 	if layer.Parent == nil {
 		// There is no parent, every Features are added.
@@ -369,8 +369,8 @@ func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *
 	return nil
 }
 
-func createNV(features []database.FeatureVersion) (map[string]*database.FeatureVersion, []string) {
-	mapNV := make(map[string]*database.FeatureVersion, 0)
+func createNV(features []services.FeatureVersion) (map[string]*services.FeatureVersion, []string) {
+	mapNV := make(map[string]*services.FeatureVersion, 0)
 	sliceNV := make([]string, 0, len(features))
 
 	for i := 0; i < len(features); i++ {

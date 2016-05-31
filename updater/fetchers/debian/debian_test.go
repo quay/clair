@@ -20,7 +20,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -38,17 +38,17 @@ func TestDebianParser(t *testing.T) {
 				assert.Equal(t, types.Low, vulnerability.Severity)
 				assert.Equal(t, "This vulnerability is not very dangerous.", vulnerability.Description)
 
-				expectedFeatureVersions := []database.FeatureVersion{
+				expectedFeatureVersions := []services.FeatureVersion{
 					{
-						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:8"},
+						Feature: services.Feature{
+							Namespace: services.Namespace{Name: "debian:8"},
 							Name:      "aptdaemon",
 						},
 						Version: types.MaxVersion,
 					},
 					{
-						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:unstable"},
+						Feature: services.Feature{
+							Namespace: services.Namespace{Name: "debian:unstable"},
 
 							Name: "aptdaemon",
 						},
@@ -64,24 +64,24 @@ func TestDebianParser(t *testing.T) {
 				assert.Equal(t, types.High, vulnerability.Severity)
 				assert.Equal(t, "But this one is very dangerous.", vulnerability.Description)
 
-				expectedFeatureVersions := []database.FeatureVersion{
+				expectedFeatureVersions := []services.FeatureVersion{
 					{
-						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:8"},
+						Feature: services.Feature{
+							Namespace: services.Namespace{Name: "debian:8"},
 							Name:      "aptdaemon",
 						},
 						Version: types.NewVersionUnsafe("0.7.0"),
 					},
 					{
-						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:unstable"},
+						Feature: services.Feature{
+							Namespace: services.Namespace{Name: "debian:unstable"},
 							Name:      "aptdaemon",
 						},
 						Version: types.NewVersionUnsafe("0.7.0"),
 					},
 					{
-						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:8"},
+						Feature: services.Feature{
+							Namespace: services.Namespace{Name: "debian:8"},
 							Name:      "asterisk",
 						},
 						Version: types.NewVersionUnsafe("0.5.56"),
@@ -96,10 +96,10 @@ func TestDebianParser(t *testing.T) {
 				assert.Equal(t, types.Negligible, vulnerability.Severity)
 				assert.Equal(t, "Un-affected packages.", vulnerability.Description)
 
-				expectedFeatureVersions := []database.FeatureVersion{
+				expectedFeatureVersions := []services.FeatureVersion{
 					{
-						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:8"},
+						Feature: services.Feature{
+							Namespace: services.Namespace{Name: "debian:8"},
 							Name:      "asterisk",
 						},
 						Version: types.MinVersion,

@@ -20,7 +20,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
@@ -39,27 +39,27 @@ func init() {
 }
 
 // Detect detects packages using var/lib/rpm/Packages from the input data
-func (detector *RpmFeaturesDetector) Detect(data map[string][]byte) ([]database.FeatureVersion, error) {
+func (detector *RpmFeaturesDetector) Detect(data map[string][]byte) ([]services.FeatureVersion, error) {
 	f, hasFile := data["var/lib/rpm/Packages"]
 	if !hasFile {
-		return []database.FeatureVersion{}, nil
+		return []services.FeatureVersion{}, nil
 	}
 
 	// Create a map to store packages and ensure their uniqueness
-	packagesMap := make(map[string]database.FeatureVersion)
+	packagesMap := make(map[string]services.FeatureVersion)
 
 	// Write the required "Packages" file to disk
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "rpm")
 	defer os.RemoveAll(tmpDir)
 	if err != nil {
 		log.Errorf("could not create temporary folder for RPM detection: %s", err)
-		return []database.FeatureVersion{}, cerrors.ErrFilesystem
+		return []services.FeatureVersion{}, cerrors.ErrFilesystem
 	}
 
 	err = ioutil.WriteFile(tmpDir+"/Packages", f, 0700)
 	if err != nil {
 		log.Errorf("could not create temporary file for RPM detection: %s", err)
-		return []database.FeatureVersion{}, cerrors.ErrFilesystem
+		return []services.FeatureVersion{}, cerrors.ErrFilesystem
 	}
 
 	// Query RPM
@@ -70,7 +70,7 @@ func (detector *RpmFeaturesDetector) Detect(data map[string][]byte) ([]database.
 		log.Errorf("could not query RPM: %s. output: %s", err, string(out))
 		// Do not bubble up because we probably won't be able to fix it,
 		// the database must be corrupted
-		return []database.FeatureVersion{}, nil
+		return []services.FeatureVersion{}, nil
 	}
 
 	scanner := bufio.NewScanner(strings.NewReader(string(out)))
@@ -95,8 +95,8 @@ func (detector *RpmFeaturesDetector) Detect(data map[string][]byte) ([]database.
 		}
 
 		// Add package
-		pkg := database.FeatureVersion{
-			Feature: database.Feature{
+		pkg := services.FeatureVersion{
+			Feature: services.Feature{
 				Name: line[0],
 			},
 			Version: version,
@@ -105,7 +105,7 @@ func (detector *RpmFeaturesDetector) Detect(data map[string][]byte) ([]database.
 	}
 
 	// Convert the map to a slice
-	packages := make([]database.FeatureVersion, 0, len(packagesMap))
+	packages := make([]services.FeatureVersion, 0, len(packagesMap))
 	for _, pkg := range packagesMap {
 		packages = append(packages, pkg)
 	}
