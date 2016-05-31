@@ -20,7 +20,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
 )
@@ -38,19 +38,19 @@ func TestNotification(t *testing.T) {
 	assert.Equal(t, cerrors.ErrNotFound, err)
 
 	// Create some data.
-	f1 := database.Feature{
+	f1 := services.Feature{
 		Name:      "TestNotificationFeature1",
-		Namespace: database.Namespace{Name: "TestNotificationNamespace1"},
+		Namespace: services.Namespace{Name: "TestNotificationNamespace1"},
 	}
 
-	f2 := database.Feature{
+	f2 := services.Feature{
 		Name:      "TestNotificationFeature2",
-		Namespace: database.Namespace{Name: "TestNotificationNamespace1"},
+		Namespace: services.Namespace{Name: "TestNotificationNamespace1"},
 	}
 
-	l1 := database.Layer{
+	l1 := services.Layer{
 		Name: "TestNotificationLayer1",
-		Features: []database.FeatureVersion{
+		Features: []services.FeatureVersion{
 			{
 				Feature: f1,
 				Version: types.NewVersionUnsafe("0.1"),
@@ -58,9 +58,9 @@ func TestNotification(t *testing.T) {
 		},
 	}
 
-	l2 := database.Layer{
+	l2 := services.Layer{
 		Name: "TestNotificationLayer2",
-		Features: []database.FeatureVersion{
+		Features: []services.FeatureVersion{
 			{
 				Feature: f1,
 				Version: types.NewVersionUnsafe("0.2"),
@@ -68,9 +68,9 @@ func TestNotification(t *testing.T) {
 		},
 	}
 
-	l3 := database.Layer{
+	l3 := services.Layer{
 		Name: "TestNotificationLayer3",
-		Features: []database.FeatureVersion{
+		Features: []services.FeatureVersion{
 			{
 				Feature: f1,
 				Version: types.NewVersionUnsafe("0.3"),
@@ -78,9 +78,9 @@ func TestNotification(t *testing.T) {
 		},
 	}
 
-	l4 := database.Layer{
+	l4 := services.Layer{
 		Name: "TestNotificationLayer4",
-		Features: []database.FeatureVersion{
+		Features: []services.FeatureVersion{
 			{
 				Feature: f2,
 				Version: types.NewVersionUnsafe("0.1"),
@@ -96,13 +96,13 @@ func TestNotification(t *testing.T) {
 	}
 
 	// Insert a new vulnerability that is introduced by three layers.
-	v1 := database.Vulnerability{
+	v1 := services.Vulnerability{
 		Name:        "TestNotificationVulnerability1",
 		Namespace:   f1.Namespace,
 		Description: "TestNotificationDescription1",
 		Link:        "TestNotificationLink1",
 		Severity:    "Unknown",
-		FixedIn: []database.FeatureVersion{
+		FixedIn: []services.FeatureVersion{
 			{
 				Feature: f1,
 				Version: types.NewVersionUnsafe("1.0"),
@@ -129,9 +129,9 @@ func TestNotification(t *testing.T) {
 		}
 
 		// Get notification.
-		filledNotification, nextPage, err := datastore.GetNotification(notification.Name, 2, database.VulnerabilityNotificationFirstPage)
+		filledNotification, nextPage, err := datastore.GetNotification(notification.Name, 2, services.VulnerabilityNotificationFirstPage)
 		if assert.Nil(t, err) {
-			assert.NotEqual(t, database.NoVulnerabilityNotificationPage, nextPage)
+			assert.NotEqual(t, services.NoVulnerabilityNotificationPage, nextPage)
 			assert.Nil(t, filledNotification.OldVulnerability)
 
 			if assert.NotNil(t, filledNotification.NewVulnerability) {
@@ -143,7 +143,7 @@ func TestNotification(t *testing.T) {
 		// Get second page.
 		filledNotification, nextPage, err = datastore.GetNotification(notification.Name, 2, nextPage)
 		if assert.Nil(t, err) {
-			assert.Equal(t, database.NoVulnerabilityNotificationPage, nextPage)
+			assert.Equal(t, services.NoVulnerabilityNotificationPage, nextPage)
 			assert.Nil(t, filledNotification.OldVulnerability)
 
 			if assert.NotNil(t, filledNotification.NewVulnerability) {
@@ -162,7 +162,7 @@ func TestNotification(t *testing.T) {
 	// Update a vulnerability and ensure that the old/new vulnerabilities are correct.
 	v1b := v1
 	v1b.Severity = types.High
-	v1b.FixedIn = []database.FeatureVersion{
+	v1b.FixedIn = []services.FeatureVersion{
 		{
 			Feature: f1,
 			Version: types.MinVersion,
@@ -179,7 +179,7 @@ func TestNotification(t *testing.T) {
 		assert.NotEmpty(t, notification.Name)
 
 		if assert.Nil(t, err) && assert.NotEmpty(t, notification.Name) {
-			filledNotification, nextPage, err := datastore.GetNotification(notification.Name, 2, database.VulnerabilityNotificationFirstPage)
+			filledNotification, nextPage, err := datastore.GetNotification(notification.Name, 2, services.VulnerabilityNotificationFirstPage)
 			if assert.Nil(t, err) {
 				if assert.NotNil(t, filledNotification.OldVulnerability) {
 					assert.Equal(t, v1.Name, filledNotification.OldVulnerability.Name)
@@ -207,7 +207,7 @@ func TestNotification(t *testing.T) {
 		assert.NotEmpty(t, notification.Name)
 
 		if assert.Nil(t, err) && assert.NotEmpty(t, notification.Name) {
-			filledNotification, _, err := datastore.GetNotification(notification.Name, 2, database.VulnerabilityNotificationFirstPage)
+			filledNotification, _, err := datastore.GetNotification(notification.Name, 2, services.VulnerabilityNotificationFirstPage)
 			if assert.Nil(t, err) {
 				assert.Nil(t, filledNotification.NewVulnerability)
 

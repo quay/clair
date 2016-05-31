@@ -66,9 +66,21 @@ func getHealth(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 	header := w.Header()
 	header.Set("Server", "clair")
 
-	status := http.StatusInternalServerError
-	if ctx.Store.Ping() {
-		status = http.StatusOK
+	status := http.StatusOK
+	if !ctx.LockService.Ping() {
+		status = http.StatusInternalServerError
+	}
+	if !ctx.KeyValueStore.Ping() {
+		status = http.StatusInternalServerError
+	}
+	if !ctx.VulnerabilityStore.Ping() {
+		status = http.StatusInternalServerError
+	}
+	if !ctx.NotificationState.Ping() {
+		status = http.StatusInternalServerError
+	}
+	if !ctx.LayerService.Ping() {
+		status = http.StatusInternalServerError
 	}
 
 	w.WriteHeader(status)

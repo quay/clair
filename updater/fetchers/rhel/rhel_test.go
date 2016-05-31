@@ -20,7 +20,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -38,24 +38,24 @@ func TestRHELParser(t *testing.T) {
 		assert.Equal(t, types.Medium, vulnerabilities[0].Severity)
 		assert.Equal(t, `Xerces-C is a validating XML parser written in a portable subset of C++. A flaw was found in the way the Xerces-C XML parser processed certain XML documents. A remote attacker could provide specially crafted XML input that, when parsed by an application using Xerces-C, would cause that application to crash.`, vulnerabilities[0].Description)
 
-		expectedFeatureVersions := []database.FeatureVersion{
+		expectedFeatureVersions := []services.FeatureVersion{
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "centos:7"},
+				Feature: services.Feature{
+					Namespace: services.Namespace{Name: "centos:7"},
 					Name:      "xerces-c",
 				},
 				Version: types.NewVersionUnsafe("3.1.1-7.el7_1"),
 			},
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "centos:7"},
+				Feature: services.Feature{
+					Namespace: services.Namespace{Name: "centos:7"},
 					Name:      "xerces-c-devel",
 				},
 				Version: types.NewVersionUnsafe("3.1.1-7.el7_1"),
 			},
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "centos:7"},
+				Feature: services.Feature{
+					Namespace: services.Namespace{Name: "centos:7"},
 					Name:      "xerces-c-doc",
 				},
 				Version: types.NewVersionUnsafe("3.1.1-7.el7_1"),
@@ -76,17 +76,17 @@ func TestRHELParser(t *testing.T) {
 		assert.Equal(t, types.Critical, vulnerabilities[0].Severity)
 		assert.Equal(t, `Mozilla Firefox is an open source web browser. XULRunner provides the XUL Runtime environment for Mozilla Firefox. Several flaws were found in the processing of malformed web content. A web page containing malicious content could cause Firefox to crash or, potentially, execute arbitrary code with the privileges of the user running Firefox.`, vulnerabilities[0].Description)
 
-		expectedFeatureVersions := []database.FeatureVersion{
+		expectedFeatureVersions := []services.FeatureVersion{
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "centos:6"},
+				Feature: services.Feature{
+					Namespace: services.Namespace{Name: "centos:6"},
 					Name:      "firefox",
 				},
 				Version: types.NewVersionUnsafe("38.1.0-1.el6_6"),
 			},
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "centos:7"},
+				Feature: services.Feature{
+					Namespace: services.Namespace{Name: "centos:7"},
 					Name:      "firefox",
 				},
 				Version: types.NewVersionUnsafe("38.1.0-1.el7_1"),

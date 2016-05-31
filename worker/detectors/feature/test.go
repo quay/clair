@@ -20,13 +20,13 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	"github.com/coreos/clair/worker/detectors"
 	"github.com/stretchr/testify/assert"
 )
 
 type FeatureVersionTest struct {
-	FeatureVersions []database.FeatureVersion
+	FeatureVersions []services.FeatureVersion
 	Data            map[string][]byte
 }
 

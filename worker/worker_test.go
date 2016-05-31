@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
 
@@ -34,12 +35,12 @@ import (
 
 type mockDatastore struct {
 	database.MockDatastore
-	layers map[string]database.Layer
+	layers map[string]services.Layer
 }
 
 func newMockDatastore() *mockDatastore {
 	return &mockDatastore{
-		layers: make(map[string]database.Layer),
+		layers: make(map[string]services.Layer),
 	}
 }
 
@@ -49,27 +50,27 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 
 	// Create a mock datastore.
 	datastore := newMockDatastore()
-	datastore.FctInsertLayer = func(layer database.Layer) error {
+	datastore.FctInsertLayer = func(layer services.Layer) error {
 		datastore.layers[layer.Name] = layer
 		return nil
 	}
-	datastore.FctFindLayer = func(name string, withFeatures, withVulnerabilities bool) (database.Layer, error) {
+	datastore.FctFindLayer = func(name string, withFeatures, withVulnerabilities bool) (services.Layer, error) {
 		if layer, exists := datastore.layers[name]; exists {
 			return layer, nil
 		}
-		return database.Layer{}, cerrors.ErrNotFound
+		return services.Layer{}, cerrors.ErrNotFound
 	}
 
 	// Create the list of FeatureVersions that should not been upgraded from one layer to another.
-	nonUpgradedFeatureVersions := []database.FeatureVersion{
-		{Feature: database.Feature{Name: "libtext-wrapi18n-perl"}, Version: types.NewVersionUnsafe("0.06-7")},
-		{Feature: database.Feature{Name: "libtext-charwidth-perl"}, Version: types.NewVersionUnsafe("0.04-7")},
-		{Feature: database.Feature{Name: "libtext-iconv-perl"}, Version: types.NewVersionUnsafe("1.7-5")},
-		{Feature: database.Feature{Name: "mawk"}, Version: types.NewVersionUnsafe("1.3.3-17")},
-		{Feature: database.Feature{Name: "insserv"}, Version: types.NewVersionUnsafe("1.14.0-5")},
-		{Feature: database.Feature{Name: "db"}, Version: types.NewVersionUnsafe("5.1.29-5")},
-		{Feature: database.Feature{Name: "ustr"}, Version: types.NewVersionUnsafe("1.0.4-3")},
-		{Feature: database.Feature{Name: "xz-utils"}, Version: types.NewVersionUnsafe("5.1.1alpha+20120614-2")},
+	nonUpgradedFeatureVersions := []services.FeatureVersion{
+		{Feature: services.Feature{Name: "libtext-wrapi18n-perl"}, Version: types.NewVersionUnsafe("0.06-7")},
+		{Feature: services.Feature{Name: "libtext-charwidth-perl"}, Version: types.NewVersionUnsafe("0.04-7")},
+		{Feature: services.Feature{Name: "libtext-iconv-perl"}, Version: types.NewVersionUnsafe("1.7-5")},
+		{Feature: services.Feature{Name: "mawk"}, Version: types.NewVersionUnsafe("1.3.3-17")},
+		{Feature: services.Feature{Name: "insserv"}, Version: types.NewVersionUnsafe("1.14.0-5")},
+		{Feature: services.Feature{Name: "db"}, Version: types.NewVersionUnsafe("5.1.29-5")},
+		{Feature: services.Feature{Name: "ustr"}, Version: types.NewVersionUnsafe("1.0.4-3")},
+		{Feature: services.Feature{Name: "xz-utils"}, Version: types.NewVersionUnsafe("5.1.1alpha+20120614-2")},
 	}
 
 	// Process test layers.

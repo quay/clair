@@ -26,7 +26,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
+	"github.com/coreos/clair/services/keyvalue"
+	"github.com/coreos/clair/services/namespaces"
 	"github.com/coreos/clair/updater"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
@@ -89,7 +91,7 @@ func init() {
 }
 
 // FetchUpdate gets vulnerability updates from the Ubuntu CVE Tracker.
-func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp updater.FetcherResponse, err error) {
+func (fetcher *UbuntuFetcher) FetchUpdate(kvstore keyvalue.Service) (resp updater.FetcherResponse, err error) {
 	log.Info("fetching Ubuntu vulnerabilities")
 
 	// Check to see if the repository does not already exist.
@@ -123,7 +125,7 @@ func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp up
 	}
 
 	// Get the latest revision number we successfully applied in the database.
-	dbRevisionNumber, err := datastore.GetKeyValue("ubuntuUpdater")
+	dbRevisionNumber, err := kvstore.GetKeyValue("ubuntuUpdater")
 	if err != nil {
 		return resp, err
 	}
@@ -281,7 +283,7 @@ func getRevisionNumber(pathToRepo string) (int, error) {
 	return revno, nil
 }
 
-func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability, unknownReleases map[string]struct{}, err error) {
+func parseUbuntuCVE(fileContent io.Reader) (vulnerability services.Vulnerability, unknownReleases map[string]struct{}, err error) {
 	unknownReleases = make(map[string]struct{})
 	readingDescription := false
 	scanner := bufio.NewScanner(fileContent)
@@ -350,7 +352,7 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 				if _, isReleaseIgnored := ubuntuIgnoredReleases[md["release"]]; isReleaseIgnored {
 					continue
 				}
-				if _, isReleaseKnown := database.UbuntuReleasesMapping[md["release"]]; !isReleaseKnown {
+				if _, isReleaseKnown := namespaces.UbuntuReleasesMapping[md["release"]]; !isReleaseKnown {
 					unknownReleases[md["release"]] = struct{}{}
 					continue
 				}
@@ -374,9 +376,9 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 				}
 
 				// Create and add the new package.
-				featureVersion := database.FeatureVersion{
-					Feature: database.Feature{
-						Namespace: database.Namespace{Name: "ubuntu:" + database.UbuntuReleasesMapping[md["release"]]},
+				featureVersion := services.FeatureVersion{
+					Feature: services.Feature{
+						Namespace: services.Namespace{Name: "ubuntu:" + namespaces.UbuntuReleasesMapping[md["release"]]},
 						Name:      md["package"],
 					},
 					Version: version,

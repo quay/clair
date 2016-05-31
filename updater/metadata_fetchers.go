@@ -17,22 +17,23 @@ package updater
 import (
 	"sync"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
+	"github.com/coreos/clair/services/vulnerabilities"
 )
 
 var metadataFetchers = make(map[string]MetadataFetcher)
 
 type VulnerabilityWithLock struct {
-	*database.Vulnerability
+	*services.Vulnerability
 	Lock sync.Mutex
 }
 
 // MetadataFetcher
 type MetadataFetcher interface {
 	// Load runs right before the Updater calls AddMetadata for each vulnerabilities.
-	Load(database.Datastore) error
+	Load(vulnerabilities.Service) error
 
-	// AddMetadata adds metadata to the given database.Vulnerability.
+	// AddMetadata adds metadata to the given services.Vulnerability.
 	// It is expected that the fetcher uses .Lock.Lock() when manipulating the Metadata map.
 	AddMetadata(*VulnerabilityWithLock) error
 

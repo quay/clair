@@ -17,13 +17,13 @@ package aptsources
 import (
 	"testing"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	"github.com/coreos/clair/worker/detectors/namespace"
 )
 
 var aptSourcesOSTests = []namespace.NamespaceTest{
 	{
-		ExpectedNamespace: database.Namespace{Name: "debian:unstable"},
+		ExpectedNamespace: services.Namespace{Name: "debian:unstable"},
 		Data: map[string][]byte{
 			"etc/os-release": []byte(
 				`PRETTY_NAME="Debian GNU/Linux stretch/sid"

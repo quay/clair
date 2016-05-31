@@ -26,12 +26,7 @@ import (
 )
 
 func openDatabaseForTest(testName string, loadFixture bool) (*pgSQL, error) {
-	ds, err := openDatabase(generateTestConfig(testName, loadFixture))
-	if err != nil {
-		return nil, err
-	}
-	datastore := ds.(*pgSQL)
-	return datastore, nil
+	return openDatabase(generateTestConfig(testName, loadFixture))
 }
 
 func generateTestConfig(testName string, loadFixture bool) config.RegistrableComponentConfig {

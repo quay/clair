@@ -19,7 +19,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/clair/worker/detectors"
 	"github.com/coreos/pkg/capnslog"
@@ -40,16 +40,16 @@ func init() {
 }
 
 // Detect detects packages using var/lib/dpkg/status from the input data
-func (detector *DpkgFeaturesDetector) Detect(data map[string][]byte) ([]database.FeatureVersion, error) {
+func (detector *DpkgFeaturesDetector) Detect(data map[string][]byte) ([]services.FeatureVersion, error) {
 	f, hasFile := data["var/lib/dpkg/status"]
 	if !hasFile {
-		return []database.FeatureVersion{}, nil
+		return []services.FeatureVersion{}, nil
 	}
 
 	// Create a map to store packages and ensure their uniqueness
-	packagesMap := make(map[string]database.FeatureVersion)
+	packagesMap := make(map[string]services.FeatureVersion)
 
-	var pkg database.FeatureVersion
+	var pkg services.FeatureVersion
 	var err error
 	scanner := bufio.NewScanner(strings.NewReader(string(f)))
 	for scanner.Scan() {
@@ -100,7 +100,7 @@ func (detector *DpkgFeaturesDetector) Detect(data map[string][]byte) ([]database
 	}
 
 	// Convert the map to a slice
-	packages := make([]database.FeatureVersion, 0, len(packagesMap))
+	packages := make([]services.FeatureVersion, 0, len(packagesMap))
 	for _, pkg := range packagesMap {
 		packages = append(packages, pkg)
 	}

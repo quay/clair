@@ -14,14 +14,17 @@
 
 package updater
 
-import "github.com/coreos/clair/database"
+import (
+	"github.com/coreos/clair/services"
+	"github.com/coreos/clair/services/keyvalue"
+)
 
 var fetchers = make(map[string]Fetcher)
 
 // Fetcher represents anything that can fetch vulnerabilities.
 type Fetcher interface {
 	// FetchUpdate gets vulnerability updates.
-	FetchUpdate(database.Datastore) (FetcherResponse, error)
+	FetchUpdate(keyvalue.Service) (FetcherResponse, error)
 
 	// Clean deletes any allocated resources.
 	// It is invoked when Clair stops.
@@ -33,7 +36,7 @@ type FetcherResponse struct {
 	FlagName        string
 	FlagValue       string
 	Notes           []string
-	Vulnerabilities []database.Vulnerability
+	Vulnerabilities []services.Vulnerability
 }
 
 // RegisterFetcher makes a Fetcher available by the provided name.

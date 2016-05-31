@@ -17,11 +17,11 @@ package pgsql
 import (
 	"time"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	cerrors "github.com/coreos/clair/utils/errors"
 )
 
-func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (int, error) {
+func (pgSQL *pgSQL) insertNamespace(namespace services.Namespace) (int, error) {
 	if namespace.Name == "" {
 		return 0, cerrors.NewBadRequestError("could not find/insert invalid Namespace")
 	}
@@ -50,7 +50,7 @@ func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (int, error) {
 	return id, nil
 }
 
-func (pgSQL *pgSQL) ListNamespaces() (namespaces []database.Namespace, err error) {
+func (pgSQL *pgSQL) ListNamespaces() (namespaces []services.Namespace, err error) {
 	rows, err := pgSQL.Query(listNamespace)
 	if err != nil {
 		return namespaces, handleError("listNamespace", err)
@@ -58,7 +58,7 @@ func (pgSQL *pgSQL) ListNamespaces() (namespaces []database.Namespace, err error
 	defer rows.Close()
 
 	for rows.Next() {
-		var namespace database.Namespace
+		var namespace services.Namespace
 
 		err = rows.Scan(&namespace.ID, &namespace.Name)
 		if err != nil {
