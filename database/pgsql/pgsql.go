@@ -26,12 +26,12 @@ import (
 	"time"
 
 	"bitbucket.org/liamstask/goose/lib/goose"
+	"github.com/cloudflare/clair/vendor/github.com/hashicorp/golang-lru"
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/pkg/capnslog"
-	"github.com/hashicorp/golang-lru"
 	"github.com/lib/pq"
 	"github.com/pborman/uuid"
 	"github.com/prometheus/client_golang/prometheus"
@@ -96,11 +96,12 @@ func (pgSQL *pgSQL) Ping() bool {
 //
 // It will run immediately every necessary migration on the database.
 func Open(config *config.DatabaseConfig) (database.Datastore, error) {
-	// Run migrations.
-	if err := migrate(config.Source); err != nil {
-		log.Error(err)
-		return nil, database.ErrCantOpen
-	}
+	// jkroll 2016-06-02: Cut out migrations to build a package, so we can avoid this runtime
+	// // Run migrations.
+	// if err := migrate(config.Source); err != nil {
+	// 	log.Error(err)
+	// 	return nil, database.ErrCantOpen
+	// }
 
 	// Open database.
 	db, err := sql.Open("postgres", config.Source)
