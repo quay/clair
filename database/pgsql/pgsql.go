@@ -26,12 +26,12 @@ import (
 	"time"
 
 	"bitbucket.org/liamstask/goose/lib/goose"
-	"github.com/cloudflare/clair/vendor/github.com/hashicorp/golang-lru"
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/pkg/capnslog"
+	"github.com/hashicorp/golang-lru"
 	"github.com/lib/pq"
 	"github.com/pborman/uuid"
 	"github.com/prometheus/client_golang/prometheus"
