@@ -19,7 +19,7 @@ clair:
     type: pgsql
     options:
       # PostgreSQL Connection string
-      # http://www.postgresql.org/docs/9.4/static/libpq-connect.html
+      # https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-CONNSTRING
       source:
 
       # Number of elements kept in the cache
