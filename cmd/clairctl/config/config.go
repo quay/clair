@@ -103,6 +103,10 @@ func Init(cfgFile string, logLevel string) {
 	clair.Config()
 }
 
+func TmpLocal() string {
+	return viper.GetString("clairctl.tempFolder")
+}
+
 func values() config {
 	return config{
 		Clair: clairConfig{

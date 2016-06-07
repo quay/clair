@@ -101,3 +101,5 @@ import:
   version: ^1.11.2
   subpackages:
   - api/server/httputils
+- package: github.com/mholt/archiver
+  version: ^1.0.0

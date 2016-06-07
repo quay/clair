@@ -8,11 +8,12 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/coreos/clair/cmd/clairctl/docker"
 	"github.com/coreos/clair/cmd/clairctl/dockerdist"
+	"github.com/docker/distribution/digest"
 	"github.com/docker/distribution/manifest/schema1"
 	"github.com/docker/docker/reference"
-	"github.com/docker/engine-api/client"
-	"github.com/docker/engine-api/types"
 	"github.com/spf13/cobra"
+
+	dockercli "github.com/fsouza/go-dockerclient"
 )
 
 const pullDockerTplt = `
@@ -34,60 +35,75 @@ var pullDockerCmd = &cobra.Command{
 		}
 
 		imageName := args[0]
+		var manifest schema1.SignedManifest
+		var named reference.Named
 
 		if !docker.IsLocal {
-			n, manifest, err := dockerdist.DownloadManifest(imageName, true)
+			n, m, err := dockerdist.DownloadManifest(imageName, true)
 
 			if err != nil {
 				fmt.Println(errInternalError)
 				logrus.Fatalf("parsing image %q: %v", imageName, err)
 			}
 			// Ensure that the manifest type is supported.
-			switch manifest.(type) {
+			switch m.(type) {
 			case *schema1.SignedManifest:
+				manifest = m.(schema1.SignedManifest)
+				named = n
 				break
 
 			default:
 				fmt.Println(errInternalError)
 				logrus.Fatalf("only v1 manifests are currently supported")
 			}
-			data := struct {
-				V1Manifest *schema1.SignedManifest
-				Named      reference.Named
-			}{
-				V1Manifest: manifest.(*schema1.SignedManifest),
-				Named:      n,
-			}
 
-			err = template.Must(template.New("pull").Parse(pullDockerTplt)).Execute(os.Stdout, data)
+		} else {
+			var err error
+			named, manifest, err = LocalManifest(imageName)
 			if err != nil {
 				fmt.Println(errInternalError)
-				logrus.Fatalf("rendering image: %v", err)
+				logrus.Fatalf("parsing image %q: %v", imageName, err)
 			}
-		} else {
-			localManifest(imageName)
+		}
+
+		data := struct {
+			V1Manifest schema1.SignedManifest
+			Named      reference.Named
+		}{
+			V1Manifest: manifest,
+			Named:      named,
+		}
+
+		err := template.Must(template.New("pull").Parse(pullDockerTplt)).Execute(os.Stdout, data)
+		if err != nil {
+			fmt.Println(errInternalError)
+			logrus.Fatalf("rendering image: %v", err)
 		}
 	},
 }
 
-func localManifest(imageName string) {
-	defaultHeaders := map[string]string{"User-Agent": "engine-api-cli-1.0"}
-	cli, err := client.NewClient("unix:///var/run/docker.sock", "v1.22", nil, defaultHeaders)
+func LocalManifest(imageName string) (reference.Named, schema1.SignedManifest, error) {
+	manifest := schema1.SignedManifest{}
+	// Parse the image name as a docker image reference.
+	named, err := reference.ParseNamed(imageName)
 	if err != nil {
-		panic(err)
-	}
-	t := types.ImageListOptions{MatchName: imageName}
-	cli.ImageList(t)
-	// histories, err := cli.ImageHistory(context.Background(), imageName)
-
-	if err != nil {
-		panic(err)
+		return nil, manifest, err
 	}
 
-	// for _, history := range histories {
-	// 	fmt.Println(history)
-	// }
+	endpoint := "unix:///var/run/docker.sock"
+	client, _ := dockercli.NewClient(endpoint)
+	histories, _ := client.ImageHistory(imageName)
+	for _, history := range histories {
+		var d digest.Digest
+		d, err := digest.ParseDigest(history.ID)
+		if err != nil {
+			return nil, manifest, err
+		}
+		manifest.FSLayers = append(manifest.FSLayers, schema1.FSLayer{BlobSum: d})
+	}
+	return named, manifest, nil
 }
+
 func init() {
 	RootCmd.AddCommand(pullDockerCmd)
 	pullDockerCmd.Flags().BoolVarP(&docker.IsLocal, "local", "l", false, "Use local images")
