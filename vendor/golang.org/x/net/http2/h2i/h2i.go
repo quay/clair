@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+// +build !plan9,!solaris
+
 /*
 The h2i command is an interactive HTTP/2 console.
 
@@ -54,8 +56,8 @@ type command struct {
 }
 
 var commands = map[string]command{
-	"ping": command{run: (*h2i).cmdPing},
-	"settings": command{
+	"ping": {run: (*h2i).cmdPing},
+	"settings": {
 		run: (*h2i).cmdSettings,
 		complete: func() []string {
 			return []string{
@@ -69,14 +71,13 @@ var commands = map[string]command{
 			}
 		},
 	},
-	"quit":    command{run: (*h2i).cmdQuit},
-	"headers": command{run: (*h2i).cmdHeaders},
+	"quit":    {run: (*h2i).cmdQuit},
+	"headers": {run: (*h2i).cmdHeaders},
 }
 
 func usage() {
 	fmt.Fprintf(os.Stderr, "Usage: h2i <hostname>\n\n")
 	flag.PrintDefaults()
-	os.Exit(1)
 }
 
 // withPort adds ":443" if another port isn't already present.
@@ -109,6 +110,7 @@ func main() {
 	flag.Parse()
 	if flag.NArg() != 1 {
 		usage()
+		os.Exit(2)
 	}
 	log.SetFlags(0)
 

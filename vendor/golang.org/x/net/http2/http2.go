@@ -17,16 +17,37 @@ package http2
 
 import (
 	"bufio"
+	"crypto/tls"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
+
+	"golang.org/x/net/lex/httplex"
 )
 
-var VerboseLogs = strings.Contains(os.Getenv("GODEBUG"), "h2debug=1")
+var (
+	VerboseLogs    bool
+	logFrameWrites bool
+	logFrameReads  bool
+)
+
+func init() {
+	e := os.Getenv("GODEBUG")
+	if strings.Contains(e, "http2debug=1") {
+		VerboseLogs = true
+	}
+	if strings.Contains(e, "http2debug=2") {
+		VerboseLogs = true
+		logFrameWrites = true
+		logFrameReads = true
+	}
+}
 
 const (
 	// ClientPreface is the string that must be sent by new
@@ -142,17 +163,28 @@ func (s SettingID) String() string {
 	return fmt.Sprintf("UNKNOWN_SETTING_%d", uint16(s))
 }
 
-func validHeader(v string) bool {
+var (
+	errInvalidHeaderFieldName  = errors.New("http2: invalid header field name")
+	errInvalidHeaderFieldValue = errors.New("http2: invalid header field value")
+)
+
+// validWireHeaderFieldName reports whether v is a valid header field
+// name (key). See httplex.ValidHeaderName for the base rules.
+//
+// Further, http2 says:
+//   "Just as in HTTP/1.x, header field names are strings of ASCII
+//   characters that are compared in a case-insensitive
+//   fashion. However, header field names MUST be converted to
+//   lowercase prior to their encoding in HTTP/2. "
+func validWireHeaderFieldName(v string) bool {
 	if len(v) == 0 {
 		return false
 	}
 	for _, r := range v {
-		// "Just as in HTTP/1.x, header field names are
-		// strings of ASCII characters that are compared in a
-		// case-insensitive fashion. However, header field
-		// names MUST be converted to lowercase prior to their
-		// encoding in HTTP/2. "
-		if r >= 127 || ('A' <= r && r <= 'Z') {
+		if !httplex.IsTokenRune(r) {
+			return false
+		}
+		if 'A' <= r && r <= 'Z' {
 			return false
 		}
 	}
@@ -257,7 +289,7 @@ func mustUint31(v int32) uint32 {
 }
 
 // bodyAllowedForStatus reports whether a given response status code
-// permits a body. See RFC2616, section 4.4.
+// permits a body. See RFC 2616, section 4.4.
 func bodyAllowedForStatus(status int) bool {
 	switch {
 	case status >= 100 && status <= 199:
@@ -268,4 +300,52 @@ func bodyAllowedForStatus(status int) bool {
 		return false
 	}
 	return true
+}
+
+type httpError struct {
+	msg     string
+	timeout bool
+}
+
+func (e *httpError) Error() string   { return e.msg }
+func (e *httpError) Timeout() bool   { return e.timeout }
+func (e *httpError) Temporary() bool { return true }
+
+var errTimeout error = &httpError{msg: "http2: timeout awaiting response headers", timeout: true}
+
+type connectionStater interface {
+	ConnectionState() tls.ConnectionState
+}
+
+var sorterPool = sync.Pool{New: func() interface{} { return new(sorter) }}
+
+type sorter struct {
+	v []string // owned by sorter
+}
+
+func (s *sorter) Len() int           { return len(s.v) }
+func (s *sorter) Swap(i, j int)      { s.v[i], s.v[j] = s.v[j], s.v[i] }
+func (s *sorter) Less(i, j int) bool { return s.v[i] < s.v[j] }
+
+// Keys returns the sorted keys of h.
+//
+// The returned slice is only valid until s used again or returned to
+// its pool.
+func (s *sorter) Keys(h http.Header) []string {
+	keys := s.v[:0]
+	for k := range h {
+		keys = append(keys, k)
+	}
+	s.v = keys
+	sort.Sort(s)
+	return keys
+}
+
+func (s *sorter) SortStrings(ss []string) {
+	// Our sorter works on s.v, which sorter owners, so
+	// stash it away while we sort the user's buffer.
+	save := s.v
+	s.v = ss
+	sort.Sort(s)
+	s.v = save
 }

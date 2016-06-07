@@ -37,10 +37,17 @@ message Simple3 {
   double dub = 1;
 }
 
+enum Numeral {
+  UNKNOWN = 0;
+  ARABIC = 1;
+  ROMAN = 2;
+}
+
 message Mappy {
   map<int64, int32> nummy = 1;
   map<string, string> strry = 2;
   map<int32, Simple3> objjy = 3;
   map<int64, string> buggy = 4;
   map<bool, bool> booly = 5;
+  map<string, Numeral> enumy = 6;
 }

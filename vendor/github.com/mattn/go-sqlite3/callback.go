@@ -24,27 +24,73 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"sync"
 	"unsafe"
 )
 
 //export callbackTrampoline
 func callbackTrampoline(ctx *C.sqlite3_context, argc int, argv **C.sqlite3_value) {
 	args := (*[(math.MaxInt32 - 1) / unsafe.Sizeof((*C.sqlite3_value)(nil))]*C.sqlite3_value)(unsafe.Pointer(argv))[:argc:argc]
-	fi := (*functionInfo)(unsafe.Pointer(C.sqlite3_user_data(ctx)))
+	fi := lookupHandle(uintptr(C.sqlite3_user_data(ctx))).(*functionInfo)
 	fi.Call(ctx, args)
 }
 
 //export stepTrampoline
 func stepTrampoline(ctx *C.sqlite3_context, argc int, argv **C.sqlite3_value) {
 	args := (*[(math.MaxInt32 - 1) / unsafe.Sizeof((*C.sqlite3_value)(nil))]*C.sqlite3_value)(unsafe.Pointer(argv))[:argc:argc]
-	ai := (*aggInfo)(unsafe.Pointer(C.sqlite3_user_data(ctx)))
+	ai := lookupHandle(uintptr(C.sqlite3_user_data(ctx))).(*aggInfo)
 	ai.Step(ctx, args)
 }
 
 //export doneTrampoline
 func doneTrampoline(ctx *C.sqlite3_context) {
-	ai := (*aggInfo)(unsafe.Pointer(C.sqlite3_user_data(ctx)))
+	handle := uintptr(C.sqlite3_user_data(ctx))
+	ai := lookupHandle(handle).(*aggInfo)
 	ai.Done(ctx)
+}
+
+// Use handles to avoid passing Go pointers to C.
+
+type handleVal struct {
+	db  *SQLiteConn
+	val interface{}
+}
+
+var handleLock sync.Mutex
+var handleVals = make(map[uintptr]handleVal)
+var handleIndex uintptr = 100
+
+func newHandle(db *SQLiteConn, v interface{}) uintptr {
+	handleLock.Lock()
+	defer handleLock.Unlock()
+	i := handleIndex
+	handleIndex++
+	handleVals[i] = handleVal{db, v}
+	return i
+}
+
+func lookupHandle(handle uintptr) interface{} {
+	handleLock.Lock()
+	defer handleLock.Unlock()
+	r, ok := handleVals[handle]
+	if !ok {
+		if handle >= 100 && handle < handleIndex {
+			panic("deleted handle")
+		} else {
+			panic("invalid handle")
+		}
+	}
+	return r.val
+}
+
+func deleteHandles(db *SQLiteConn) {
+	handleLock.Lock()
+	defer handleLock.Unlock()
+	for handle, val := range handleVals {
+		if val.db == db {
+			delete(handleVals, handle)
+		}
+	}
 }
 
 // This is only here so that tests can refer to it.

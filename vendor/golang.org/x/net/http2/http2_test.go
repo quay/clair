@@ -65,7 +65,7 @@ func (w twriter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
-// like encodeHeader, but don't add implicit psuedo headers.
+// like encodeHeader, but don't add implicit pseudo headers.
 func encodeHeaderNoImplicit(t *testing.T, headers ...string) []byte {
 	var buf bytes.Buffer
 	enc := hpack.NewEncoder(&buf)
@@ -170,5 +170,29 @@ func kill(container string) {
 func cleanDate(res *http.Response) {
 	if d := res.Header["Date"]; len(d) == 1 {
 		d[0] = "XXX"
+	}
+}
+
+func TestSorterPoolAllocs(t *testing.T) {
+	ss := []string{"a", "b", "c"}
+	h := http.Header{
+		"a": nil,
+		"b": nil,
+		"c": nil,
+	}
+	sorter := new(sorter)
+
+	if allocs := testing.AllocsPerRun(100, func() {
+		sorter.SortStrings(ss)
+	}); allocs >= 1 {
+		t.Logf("SortStrings allocs = %v; want <1", allocs)
+	}
+
+	if allocs := testing.AllocsPerRun(5, func() {
+		if len(sorter.Keys(h)) != 3 {
+			t.Fatal("wrong result")
+		}
+	}); allocs > 0 {
+		t.Logf("Keys allocs = %v; want <1", allocs)
 	}
 }

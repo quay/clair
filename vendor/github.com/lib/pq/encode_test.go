@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"database/sql"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -71,31 +72,38 @@ var timeTests = []struct {
 	{"123456-02-03 04:05:06.1", time.Date(123456, time.February, 3, 4, 5, 6, 100000000, time.FixedZone("", 0))},
 }
 
-// Helper function for the two tests below
-func tryParse(str string) (t time.Time, err error) {
-	defer func() {
-		if p := recover(); p != nil {
-			err = fmt.Errorf("%v", p)
-			return
-		}
-	}()
-	i := parseTs(nil, str)
-	t, ok := i.(time.Time)
-	if !ok {
-		err = fmt.Errorf("Not a time.Time type, got %#v", i)
-	}
-	return
-}
-
 // Test that parsing the string results in the expected value.
 func TestParseTs(t *testing.T) {
 	for i, tt := range timeTests {
-		val, err := tryParse(tt.str)
+		val, err := ParseTimestamp(nil, tt.str)
 		if err != nil {
 			t.Errorf("%d: got error: %v", i, err)
 		} else if val.String() != tt.timeval.String() {
 			t.Errorf("%d: expected to parse %q into %q; got %q",
 				i, tt.str, tt.timeval, val)
+		}
+	}
+}
+
+var timeErrorTests = []string{
+	"2001",
+	"2001-2-03",
+	"2001-02-3",
+	"2001-02-03 ",
+	"2001-02-03 04",
+	"2001-02-03 04:",
+	"2001-02-03 04:05",
+	"2001-02-03 04:05:",
+	"2001-02-03 04:05:6",
+	"2001-02-03 04:05:06.123 B",
+}
+
+// Test that parsing the string results in an error.
+func TestParseTsErrors(t *testing.T) {
+	for i, tt := range timeErrorTests {
+		_, err := ParseTimestamp(nil, tt)
+		if err == nil {
+			t.Errorf("%d: expected an error from parsing: %v", i, tt)
 		}
 	}
 }
@@ -117,7 +125,7 @@ func TestEncodeAndParseTs(t *testing.T) {
 			continue
 		}
 
-		val, err := tryParse(dbstr)
+		val, err := ParseTimestamp(nil, dbstr)
 		if err != nil {
 			t.Errorf("%d: could not parse value %q: %s", i, dbstr, err)
 			continue
@@ -270,24 +278,24 @@ func TestInfinityTimestamp(t *testing.T) {
 	var err error
 	var resultT time.Time
 
-	expectedError := fmt.Errorf(`sql: Scan error on column index 0: unsupported driver -> Scan pair: []uint8 -> *time.Time`)
+	expectedErrorStrPrefix := `sql: Scan error on column index 0: unsupported`
 	type testCases []struct {
-		Query       string
-		Param       string
-		ExpectedErr error
-		ExpectedVal interface{}
+		Query                string
+		Param                string
+		ExpectedErrStrPrefix string
+		ExpectedVal          interface{}
 	}
 	tc := testCases{
-		{"SELECT $1::timestamp", "-infinity", expectedError, "-infinity"},
-		{"SELECT $1::timestamptz", "-infinity", expectedError, "-infinity"},
-		{"SELECT $1::timestamp", "infinity", expectedError, "infinity"},
-		{"SELECT $1::timestamptz", "infinity", expectedError, "infinity"},
+		{"SELECT $1::timestamp", "-infinity", expectedErrorStrPrefix, "-infinity"},
+		{"SELECT $1::timestamptz", "-infinity", expectedErrorStrPrefix, "-infinity"},
+		{"SELECT $1::timestamp", "infinity", expectedErrorStrPrefix, "infinity"},
+		{"SELECT $1::timestamptz", "infinity", expectedErrorStrPrefix, "infinity"},
 	}
 	// try to assert []byte to time.Time
 	for _, q := range tc {
 		err = db.QueryRow(q.Query, q.Param).Scan(&resultT)
-		if err.Error() != q.ExpectedErr.Error() {
-			t.Errorf("Scanning -/+infinity, expected error, %q, got %q", q.ExpectedErr, err)
+		if !strings.HasPrefix(err.Error(), q.ExpectedErrStrPrefix) {
+			t.Errorf("Scanning -/+infinity, expected error to have prefix %q, got %q", q.ExpectedErrStrPrefix, err)
 		}
 	}
 	// yield []byte
@@ -468,11 +476,11 @@ func TestBinaryByteSlicetoUUID(t *testing.T) {
 	db := openTestConn(t)
 	defer db.Close()
 
-	b := []byte{'\xa0','\xee','\xbc','\x99',
-				'\x9c', '\x0b',
-				'\x4e', '\xf8',
-				'\xbb', '\x00', '\x6b',
-				'\xb9', '\xbd', '\x38', '\x0a', '\x11'}
+	b := []byte{'\xa0', '\xee', '\xbc', '\x99',
+		'\x9c', '\x0b',
+		'\x4e', '\xf8',
+		'\xbb', '\x00', '\x6b',
+		'\xb9', '\xbd', '\x38', '\x0a', '\x11'}
 	row := db.QueryRow("SELECT $1::uuid", b)
 
 	var result string

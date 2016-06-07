@@ -5,6 +5,7 @@
 package ipv6
 
 import (
+	"encoding/binary"
 	"fmt"
 	"net"
 )
@@ -42,7 +43,7 @@ func ParseHeader(b []byte) (*Header, error) {
 		Version:      int(b[0]) >> 4,
 		TrafficClass: int(b[0]&0x0f)<<4 | int(b[1])>>4,
 		FlowLabel:    int(b[1]&0x0f)<<16 | int(b[2])<<8 | int(b[3]),
-		PayloadLen:   int(b[4])<<8 | int(b[5]),
+		PayloadLen:   int(binary.BigEndian.Uint16(b[4:6])),
 		NextHeader:   int(b[6]),
 		HopLimit:     int(b[7]),
 	}

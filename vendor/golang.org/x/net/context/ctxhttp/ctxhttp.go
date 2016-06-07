@@ -14,6 +14,14 @@ import (
 	"golang.org/x/net/context"
 )
 
+func nop() {}
+
+var (
+	testHookContextDoneBeforeHeaders = nop
+	testHookDoReturned               = nop
+	testHookDidBodyClose             = nop
+)
+
 // Do sends an HTTP request with the provided http.Client and returns an HTTP response.
 // If the client is nil, http.DefaultClient is used.
 // If the context is canceled or times out, ctx.Err() will be returned.
@@ -22,8 +30,9 @@ func Do(ctx context.Context, client *http.Client, req *http.Request) (*http.Resp
 		client = http.DefaultClient
 	}
 
-	// Request cancelation changed in Go 1.5, see cancelreq.go and cancelreq_go14.go.
-	cancel := canceler(client, req)
+	// TODO(djd): Respect any existing value of req.Cancel.
+	cancel := make(chan struct{})
+	req.Cancel = cancel
 
 	type responseAndError struct {
 		resp *http.Response
@@ -31,8 +40,14 @@ func Do(ctx context.Context, client *http.Client, req *http.Request) (*http.Resp
 	}
 	result := make(chan responseAndError, 1)
 
+	// Make local copies of test hooks closed over by goroutines below.
+	// Prevents data races in tests.
+	testHookDoReturned := testHookDoReturned
+	testHookDidBodyClose := testHookDidBodyClose
+
 	go func() {
 		resp, err := client.Do(req)
+		testHookDoReturned()
 		result <- responseAndError{resp, err}
 	}()
 
@@ -40,7 +55,15 @@ func Do(ctx context.Context, client *http.Client, req *http.Request) (*http.Resp
 
 	select {
 	case <-ctx.Done():
-		cancel()
+		testHookContextDoneBeforeHeaders()
+		close(cancel)
+		// Clean up after the goroutine calling client.Do:
+		go func() {
+			if r := <-result; r.resp != nil {
+				testHookDidBodyClose()
+				r.resp.Body.Close()
+			}
+		}()
 		return nil, ctx.Err()
 	case r := <-result:
 		var err error
@@ -54,7 +77,7 @@ func Do(ctx context.Context, client *http.Client, req *http.Request) (*http.Resp
 	go func() {
 		select {
 		case <-ctx.Done():
-			cancel()
+			close(cancel)
 		case <-c:
 			// The response's Body is closed.
 		}

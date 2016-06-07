@@ -84,6 +84,9 @@ const (
 // Handler returns the HTTP handler for the global Prometheus registry. It is
 // already instrumented with InstrumentHandler (using "prometheus" as handler
 // name). Usually the handler is used to handle the "/metrics" endpoint.
+//
+// Please note the issues described in the doc comment of InstrumentHandler. You
+// might want to consider using UninstrumentedHandler instead.
 func Handler() http.Handler {
 	return InstrumentHandler("prometheus", defRegistry)
 }

@@ -93,7 +93,10 @@ func TestFTS4(t *testing.T) {
 
 	_, err = db.Exec("DROP TABLE foo")
 	_, err = db.Exec("CREATE VIRTUAL TABLE foo USING fts4(tokenize=unicode61, id INTEGER PRIMARY KEY, value TEXT)")
-	if err != nil {
+	switch {
+	case err != nil && err.Error() == "unknown tokenizer: unicode61":
+		t.Skip("FTS4 not supported")
+	case err != nil:
 		t.Fatal("Failed to create table:", err)
 	}
 

@@ -135,6 +135,81 @@ func TestOpenURL(t *testing.T) {
 	testURL("postgresql://")
 }
 
+const pgpass_file = "/tmp/pqgotest_pgpass"
+
+func TestPgpass(t *testing.T) {
+	testAssert := func(conninfo string, expected string, reason string) {
+		conn, err := openTestConnConninfo(conninfo)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer conn.Close()
+
+		txn, err := conn.Begin()
+		if err != nil {
+			if expected != "fail" {
+				t.Fatalf(reason, err)
+			}
+			return
+		}
+		rows, err := txn.Query("SELECT USER")
+		if err != nil {
+			txn.Rollback()
+			rows.Close()
+			if expected != "fail" {
+				t.Fatalf(reason, err)
+			}
+		} else {
+			if expected != "ok" {
+				t.Fatalf(reason, err)
+			}
+		}
+		txn.Rollback()
+	}
+	testAssert("", "ok", "missing .pgpass, unexpected error %#v")
+	os.Setenv("PGPASSFILE", pgpass_file)
+	testAssert("host=/tmp", "fail", ", unexpected error %#v")
+	os.Remove(pgpass_file)
+	pgpass, err := os.OpenFile(pgpass_file, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		t.Fatalf("Unexpected error writing pgpass file %#v", err)
+	}
+	_, err = pgpass.WriteString(`# comment
+server:5432:some_db:some_user:pass_A
+*:5432:some_db:some_user:pass_B
+localhost:*:*:*:pass_C
+*:*:*:*:pass_fallback
+`)
+	if err != nil {
+		t.Fatalf("Unexpected error writing pgpass file %#v", err)
+	}
+	pgpass.Close()
+
+	assertPassword := func(extra values, expected string) {
+		o := &values{"host": "localhost", "sslmode": "disable", "connect_timeout": "20", "user": "majid", "port": "5432", "extra_float_digits": "2", "dbname": "pqgotest", "client_encoding": "UTF8", "datestyle": "ISO, MDY"}
+		for k, v := range extra {
+			(*o)[k] = v
+		}
+		(&conn{}).handlePgpass(*o)
+		if o.Get("password") != expected {
+			t.Fatalf("For %v expected %s got %s", extra, expected, o.Get("password"))
+		}
+	}
+	// wrong permissions for the pgpass file means it should be ignored
+	assertPassword(values{"host": "example.com", "user": "foo"}, "")
+	// fix the permissions and check if it has taken effect
+	os.Chmod(pgpass_file, 0600)
+	assertPassword(values{"host": "server", "dbname": "some_db", "user": "some_user"}, "pass_A")
+	assertPassword(values{"host": "example.com", "user": "foo"}, "pass_fallback")
+	assertPassword(values{"host": "example.com", "dbname": "some_db", "user": "some_user"}, "pass_B")
+	// localhost also matches the default "" and UNIX sockets
+	assertPassword(values{"host": "", "user": "some_user"}, "pass_C")
+	assertPassword(values{"host": "/tmp", "user": "some_user"}, "pass_C")
+	// cleanup
+	os.Remove(pgpass_file)
+	os.Setenv("PGPASSFILE", "")
+}
+
 func TestExec(t *testing.T) {
 	db := openTestConn(t)
 	defer db.Close()

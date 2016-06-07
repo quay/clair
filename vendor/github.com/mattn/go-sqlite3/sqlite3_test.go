@@ -168,7 +168,7 @@ func TestInsert(t *testing.T) {
 	var result int
 	rows.Scan(&result)
 	if result != 123 {
-		t.Errorf("Fetched %q; expected %q", 123, result)
+		t.Errorf("Expected %d for fetched result, but %d:", 123, result)
 	}
 }
 
@@ -233,7 +233,7 @@ func TestUpdate(t *testing.T) {
 	var result int
 	rows.Scan(&result)
 	if result != 234 {
-		t.Errorf("Fetched %q; expected %q", 234, result)
+		t.Errorf("Expected %d for fetched result, but %d:", 234, result)
 	}
 }
 
@@ -1276,6 +1276,41 @@ func TestAggregatorRegistration(t *testing.T) {
 		if ret != test.sum {
 			t.Fatalf("Custom sum returned wrong value, got %d, want %d", ret, test.sum)
 		}
+	}
+}
+
+func TestDeclTypes(t *testing.T) {
+
+	d := SQLiteDriver{}
+
+	conn, err := d.Open(":memory:")
+	if err != nil {
+		t.Fatal("Failed to begin transaction:", err)
+	}
+	defer conn.Close()
+
+	sqlite3conn := conn.(*SQLiteConn)
+
+	_, err = sqlite3conn.Exec("create table foo (id integer not null primary key, name text)", nil)
+	if err != nil {
+		t.Fatal("Failed to create table:", err)
+	}
+
+	_, err = sqlite3conn.Exec("insert into foo(name) values(\"bar\")", nil)
+	if err != nil {
+		t.Fatal("Failed to insert:", err)
+	}
+
+	rs, err := sqlite3conn.Query("select * from foo", nil)
+	if err != nil {
+		t.Fatal("Failed to select:", err)
+	}
+	defer rs.Close()
+
+	declTypes := rs.(*SQLiteRows).DeclTypes()
+
+	if !reflect.DeepEqual(declTypes, []string{"integer", "text"}) {
+		t.Fatal("Unexpected declTypes:", declTypes)
 	}
 }
 

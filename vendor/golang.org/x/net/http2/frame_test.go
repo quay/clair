@@ -12,6 +12,8 @@ import (
 	"strings"
 	"testing"
 	"unsafe"
+
+	"golang.org/x/net/http2/hpack"
 )
 
 func testFramer() (*Framer, *bytes.Buffer) {
@@ -200,6 +202,37 @@ func TestWriteHeaders(t *testing.T) {
 				headerFragBuf: []byte("abc"),
 			},
 		},
+		{
+			"with priority stream dep zero", // golang.org/issue/15444
+			HeadersFrameParam{
+				StreamID:      42,
+				BlockFragment: []byte("abc"),
+				EndStream:     true,
+				EndHeaders:    true,
+				PadLength:     2,
+				Priority: PriorityParam{
+					StreamDep: 0,
+					Exclusive: true,
+					Weight:    127,
+				},
+			},
+			"\x00\x00\v\x01-\x00\x00\x00*\x02\x80\x00\x00\x00\u007fabc\x00\x00",
+			&HeadersFrame{
+				FrameHeader: FrameHeader{
+					valid:    true,
+					StreamID: 42,
+					Type:     FrameHeaders,
+					Flags:    FlagHeadersEndStream | FlagHeadersEndHeaders | FlagHeadersPadded | FlagHeadersPriority,
+					Length:   uint32(1 + 5 + len("abc") + 2), // pad length + priority + contents + padding
+				},
+				Priority: PriorityParam{
+					StreamDep: 0,
+					Exclusive: true,
+					Weight:    127,
+				},
+				headerFragBuf: []byte("abc"),
+			},
+		},
 	}
 	for _, tt := range tests {
 		fr, buf := testFramer()
@@ -218,6 +251,24 @@ func TestWriteHeaders(t *testing.T) {
 		if !reflect.DeepEqual(f, tt.wantFrame) {
 			t.Errorf("test %q: mismatch.\n got: %#v\nwant: %#v\n", tt.name, f, tt.wantFrame)
 		}
+	}
+}
+
+func TestWriteInvalidStreamDep(t *testing.T) {
+	fr, _ := testFramer()
+	err := fr.WriteHeaders(HeadersFrameParam{
+		StreamID: 42,
+		Priority: PriorityParam{
+			StreamDep: 1 << 31,
+		},
+	})
+	if err != errDepStreamID {
+		t.Errorf("header error = %v; want %q", err, errDepStreamID)
+	}
+
+	err = fr.WritePriority(2, PriorityParam{StreamDep: 1 << 31})
+	if err != errDepStreamID {
+		t.Errorf("priority error = %v; want %q", err, errDepStreamID)
 	}
 }
 
@@ -725,11 +776,249 @@ func TestReadFrameOrder(t *testing.T) {
 			t.Errorf("%d. after %d good frames, ReadFrame = %v; want ConnectionError(ErrCodeProtocol)\n%s", i, n, err, log.Bytes())
 			continue
 		}
-		if f.errReason != tt.wantErr {
-			t.Errorf("%d. framer eror = %q; want %q\n%s", i, f.errReason, tt.wantErr, log.Bytes())
+		if !((f.errDetail == nil && tt.wantErr == "") || (fmt.Sprint(f.errDetail) == tt.wantErr)) {
+			t.Errorf("%d. framer eror = %q; want %q\n%s", i, f.errDetail, tt.wantErr, log.Bytes())
 		}
 		if n < tt.atLeast {
 			t.Errorf("%d. framer only read %d frames; want at least %d\n%s", i, n, tt.atLeast, log.Bytes())
 		}
 	}
+}
+
+func TestMetaFrameHeader(t *testing.T) {
+	write := func(f *Framer, frags ...[]byte) {
+		for i, frag := range frags {
+			end := (i == len(frags)-1)
+			if i == 0 {
+				f.WriteHeaders(HeadersFrameParam{
+					StreamID:      1,
+					BlockFragment: frag,
+					EndHeaders:    end,
+				})
+			} else {
+				f.WriteContinuation(1, end, frag)
+			}
+		}
+	}
+
+	want := func(flags Flags, length uint32, pairs ...string) *MetaHeadersFrame {
+		mh := &MetaHeadersFrame{
+			HeadersFrame: &HeadersFrame{
+				FrameHeader: FrameHeader{
+					Type:     FrameHeaders,
+					Flags:    flags,
+					Length:   length,
+					StreamID: 1,
+				},
+			},
+			Fields: []hpack.HeaderField(nil),
+		}
+		for len(pairs) > 0 {
+			mh.Fields = append(mh.Fields, hpack.HeaderField{
+				Name:  pairs[0],
+				Value: pairs[1],
+			})
+			pairs = pairs[2:]
+		}
+		return mh
+	}
+	truncated := func(mh *MetaHeadersFrame) *MetaHeadersFrame {
+		mh.Truncated = true
+		return mh
+	}
+
+	const noFlags Flags = 0
+
+	oneKBString := strings.Repeat("a", 1<<10)
+
+	tests := [...]struct {
+		name              string
+		w                 func(*Framer)
+		want              interface{} // *MetaHeaderFrame or error
+		wantErrReason     string
+		maxHeaderListSize uint32
+	}{
+		0: {
+			name: "single_headers",
+			w: func(f *Framer) {
+				var he hpackEncoder
+				all := he.encodeHeaderRaw(t, ":method", "GET", ":path", "/")
+				write(f, all)
+			},
+			want: want(FlagHeadersEndHeaders, 2, ":method", "GET", ":path", "/"),
+		},
+		1: {
+			name: "with_continuation",
+			w: func(f *Framer) {
+				var he hpackEncoder
+				all := he.encodeHeaderRaw(t, ":method", "GET", ":path", "/", "foo", "bar")
+				write(f, all[:1], all[1:])
+			},
+			want: want(noFlags, 1, ":method", "GET", ":path", "/", "foo", "bar"),
+		},
+		2: {
+			name: "with_two_continuation",
+			w: func(f *Framer) {
+				var he hpackEncoder
+				all := he.encodeHeaderRaw(t, ":method", "GET", ":path", "/", "foo", "bar")
+				write(f, all[:2], all[2:4], all[4:])
+			},
+			want: want(noFlags, 2, ":method", "GET", ":path", "/", "foo", "bar"),
+		},
+		3: {
+			name: "big_string_okay",
+			w: func(f *Framer) {
+				var he hpackEncoder
+				all := he.encodeHeaderRaw(t, ":method", "GET", ":path", "/", "foo", oneKBString)
+				write(f, all[:2], all[2:])
+			},
+			want: want(noFlags, 2, ":method", "GET", ":path", "/", "foo", oneKBString),
+		},
+		4: {
+			name: "big_string_error",
+			w: func(f *Framer) {
+				var he hpackEncoder
+				all := he.encodeHeaderRaw(t, ":method", "GET", ":path", "/", "foo", oneKBString)
+				write(f, all[:2], all[2:])
+			},
+			maxHeaderListSize: (1 << 10) / 2,
+			want:              ConnectionError(ErrCodeCompression),
+		},
+		5: {
+			name: "max_header_list_truncated",
+			w: func(f *Framer) {
+				var he hpackEncoder
+				var pairs = []string{":method", "GET", ":path", "/"}
+				for i := 0; i < 100; i++ {
+					pairs = append(pairs, "foo", "bar")
+				}
+				all := he.encodeHeaderRaw(t, pairs...)
+				write(f, all[:2], all[2:])
+			},
+			maxHeaderListSize: (1 << 10) / 2,
+			want: truncated(want(noFlags, 2,
+				":method", "GET",
+				":path", "/",
+				"foo", "bar",
+				"foo", "bar",
+				"foo", "bar",
+				"foo", "bar",
+				"foo", "bar",
+				"foo", "bar",
+				"foo", "bar",
+				"foo", "bar",
+				"foo", "bar",
+				"foo", "bar",
+				"foo", "bar", // 11
+			)),
+		},
+		6: {
+			name: "pseudo_order",
+			w: func(f *Framer) {
+				write(f, encodeHeaderRaw(t,
+					":method", "GET",
+					"foo", "bar",
+					":path", "/", // bogus
+				))
+			},
+			want:          StreamError{1, ErrCodeProtocol},
+			wantErrReason: "pseudo header field after regular",
+		},
+		7: {
+			name: "pseudo_unknown",
+			w: func(f *Framer) {
+				write(f, encodeHeaderRaw(t,
+					":unknown", "foo", // bogus
+					"foo", "bar",
+				))
+			},
+			want:          StreamError{1, ErrCodeProtocol},
+			wantErrReason: "invalid pseudo-header \":unknown\"",
+		},
+		8: {
+			name: "pseudo_mix_request_response",
+			w: func(f *Framer) {
+				write(f, encodeHeaderRaw(t,
+					":method", "GET",
+					":status", "100",
+				))
+			},
+			want:          StreamError{1, ErrCodeProtocol},
+			wantErrReason: "mix of request and response pseudo headers",
+		},
+		9: {
+			name: "pseudo_dup",
+			w: func(f *Framer) {
+				write(f, encodeHeaderRaw(t,
+					":method", "GET",
+					":method", "POST",
+				))
+			},
+			want:          StreamError{1, ErrCodeProtocol},
+			wantErrReason: "duplicate pseudo-header \":method\"",
+		},
+		10: {
+			name: "trailer_okay_no_pseudo",
+			w:    func(f *Framer) { write(f, encodeHeaderRaw(t, "foo", "bar")) },
+			want: want(FlagHeadersEndHeaders, 8, "foo", "bar"),
+		},
+		11: {
+			name:          "invalid_field_name",
+			w:             func(f *Framer) { write(f, encodeHeaderRaw(t, "CapitalBad", "x")) },
+			want:          StreamError{1, ErrCodeProtocol},
+			wantErrReason: "invalid header field name \"CapitalBad\"",
+		},
+		12: {
+			name:          "invalid_field_value",
+			w:             func(f *Framer) { write(f, encodeHeaderRaw(t, "key", "bad_null\x00")) },
+			want:          StreamError{1, ErrCodeProtocol},
+			wantErrReason: "invalid header field value \"bad_null\\x00\"",
+		},
+	}
+	for i, tt := range tests {
+		buf := new(bytes.Buffer)
+		f := NewFramer(buf, buf)
+		f.ReadMetaHeaders = hpack.NewDecoder(initialHeaderTableSize, nil)
+		f.MaxHeaderListSize = tt.maxHeaderListSize
+		tt.w(f)
+
+		name := tt.name
+		if name == "" {
+			name = fmt.Sprintf("test index %d", i)
+		}
+
+		var got interface{}
+		var err error
+		got, err = f.ReadFrame()
+		if err != nil {
+			got = err
+		}
+		if !reflect.DeepEqual(got, tt.want) {
+			if mhg, ok := got.(*MetaHeadersFrame); ok {
+				if mhw, ok := tt.want.(*MetaHeadersFrame); ok {
+					hg := mhg.HeadersFrame
+					hw := mhw.HeadersFrame
+					if hg != nil && hw != nil && !reflect.DeepEqual(*hg, *hw) {
+						t.Errorf("%s: headers differ:\n got: %+v\nwant: %+v\n", name, *hg, *hw)
+					}
+				}
+			}
+			str := func(v interface{}) string {
+				if _, ok := v.(error); ok {
+					return fmt.Sprintf("error %v", v)
+				} else {
+					return fmt.Sprintf("value %#v", v)
+				}
+			}
+			t.Errorf("%s:\n got: %v\nwant: %s", name, str(got), str(tt.want))
+		}
+		if tt.wantErrReason != "" && tt.wantErrReason != fmt.Sprint(f.errDetail) {
+			t.Errorf("%s: got error reason %q; want %q", name, f.errDetail, tt.wantErrReason)
+		}
+	}
+}
+
+func encodeHeaderRaw(t *testing.T, pairs ...string) []byte {
+	var he hpackEncoder
+	return he.encodeHeaderRaw(t, pairs...)
 }

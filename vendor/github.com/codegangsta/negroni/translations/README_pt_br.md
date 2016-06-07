@@ -1,4 +1,4 @@
-# Negroni [![GoDoc](https://godoc.org/github.com/codegangsta/negroni?status.svg)](http://godoc.org/github.com/codegangsta/negroni) [![wercker status](https://app.wercker.com/status/13688a4a94b82d84a0b8d038c4965b61/s "wercker status")](https://app.wercker.com/project/bykey/13688a4a94b82d84a0b8d038c4965b61)
+# Negroni [![GoDoc](https://godoc.org/github.com/urfave/negroni?status.svg)](http://godoc.org/github.com/urfave/negroni) [![wercker status](https://app.wercker.com/status/13688a4a94b82d84a0b8d038c4965b61/s "wercker status")](https://app.wercker.com/project/bykey/13688a4a94b82d84a0b8d038c4965b61)
 
 Negroni é uma abordagem idiomática para middleware web em Go. É pequeno, não intrusivo, e incentiva uso da biblioteca `net/http`.
 
@@ -12,7 +12,7 @@ Depois de instalar Go e definir seu [GOPATH](http://golang.org/doc/code.html#GOP
 package main
 
 import (
-  "github.com/codegangsta/negroni"
+  "github.com/urfave/negroni"
   "net/http"
   "fmt"
 )
@@ -31,7 +31,7 @@ func main() {
 
 Depois instale o pacote Negroni (**go 1.1** ou superior)
 ~~~
-go get github.com/codegangsta/negroni
+go get github.com/urfave/negroni
 ~~~
 
 Depois execute seu servidor:
@@ -159,7 +159,7 @@ Aqui está uma lista atual de Middleware Compatíveis com Negroni. Sinta se livr
 [Alexander Rødseth](https://github.com/xyproto) criou [mooseware](https://github.com/xyproto/mooseware), uma estrutura para escrever um handler middleware Negroni.
 
 ## Servidor com autoreload?
-[gin](https://github.com/codegangsta/gin) e [fresh](https://github.com/pilu/fresh) são aplicativos para autoreload do Negroni.
+[gin](https://github.com/urfave/gin) e [fresh](https://github.com/pilu/fresh) são aplicativos para autoreload do Negroni.
 
 ## Leitura Essencial para Iniciantes em Go & Negroni
 * [Usando um contexto para passar informação de um middleware para o manipulador final](http://elithrar.github.io/article/map-string-interface/)

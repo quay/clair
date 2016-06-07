@@ -1,7 +1,7 @@
 /*
 Package sqlite3 provides interface to SQLite3 databases.
 
-This works as driver for database/sql.
+This works as a driver for database/sql.
 
 Installation
 
@@ -9,7 +9,7 @@ Installation
 
 Supported Types
 
-Currently, go-sqlite3 support following data types.
+Currently, go-sqlite3 supports the following data types.
 
     +------------------------------+
     |go        | sqlite3           |
@@ -26,8 +26,8 @@ Currently, go-sqlite3 support following data types.
 
 SQLite3 Extension
 
-You can write your own extension module for sqlite3. For example, below is a
-extension for Regexp matcher operation.
+You can write your own extension module for sqlite3. For example, below is an
+extension for a Regexp matcher operation.
 
     #include <pcre.h>
     #include <string.h>
@@ -63,8 +63,8 @@ extension for Regexp matcher operation.
           (void*)db, regexp_func, NULL, NULL);
     }
 
-It need to build as so/dll shared library. And you need to register
-extension module like below.
+It needs to be built as a so/dll shared library. And you need to register
+the extension module like below.
 
 	sql.Register("sqlite3_with_extensions",
 		&sqlite3.SQLiteDriver{
@@ -79,9 +79,9 @@ Then, you can use this extension.
 
 Connection Hook
 
-You can hook and inject your codes when connection established. database/sql
-doesn't provide the way to get native go-sqlite3 interfaces. So if you want,
-you need to hook ConnectHook and get the SQLiteConn.
+You can hook and inject your code when the connection is established. database/sql
+doesn't provide a way to get native go-sqlite3 interfaces. So if you want,
+you need to set ConnectHook and get the SQLiteConn.
 
 	sql.Register("sqlite3_with_hook_example",
 			&sqlite3.SQLiteDriver{
@@ -102,7 +102,7 @@ call RegisterFunction from ConnectHook.
 	sql.Register("sqlite3_with_go_func",
 			&sqlite3.SQLiteDriver{
 					ConnectHook: func(conn *sqlite3.SQLiteConn) error {
-						return conn.RegisterFunc("regex", regex, true)
+						return conn.RegisterFunc("regexp", regex, true)
 					},
 			})
 

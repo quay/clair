@@ -5,6 +5,7 @@
 package trace
 
 import (
+	"net/http"
 	"reflect"
 	"testing"
 )
@@ -42,5 +43,29 @@ func TestResetLog(t *testing.T) {
 
 	if !reflect.DeepEqual(el, new(eventLog)) {
 		t.Errorf("reset didn't clear all fields: %+v", el)
+	}
+}
+
+func TestAuthRequest(t *testing.T) {
+	testCases := []struct {
+		host string
+		want bool
+	}{
+		{host: "192.168.23.1", want: false},
+		{host: "192.168.23.1:8080", want: false},
+		{host: "malformed remote addr", want: false},
+		{host: "localhost", want: true},
+		{host: "localhost:8080", want: true},
+		{host: "127.0.0.1", want: true},
+		{host: "127.0.0.1:8080", want: true},
+		{host: "::1", want: true},
+		{host: "[::1]:8080", want: true},
+	}
+	for _, tt := range testCases {
+		req := &http.Request{RemoteAddr: tt.host}
+		any, sensitive := AuthRequest(req)
+		if any != tt.want || sensitive != tt.want {
+			t.Errorf("AuthRequest(%q) = %t, %t; want %t, %t", tt.host, any, sensitive, tt.want, tt.want)
+		}
 	}
 }
