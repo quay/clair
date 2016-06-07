@@ -1,0 +1,105 @@
+hash: 6787deaa403181a20c0c0ba7e3135ba0f300281e7b3f98294593aa9f60563627
+updated: 2016-06-07T06:56:38.153128536+02:00
+imports:
+- name: bitbucket.org/liamstask/goose
+  version: 8488cc47d90c8a502b1c41a462a6d9cc8ee0a895
+  subpackages:
+  - lib/goose
+- name: github.com/beorn7/perks
+  version: b965b613227fddccbfffe13eae360ed3fa822f8d
+  subpackages:
+  - quantile
+- name: github.com/codegangsta/negroni
+  version: c7477ad8e330bef55bf1ebe300cf8aa67c492d1b
+- name: github.com/coreos/go-systemd
+  version: 4f14f6deef2da87e4aa59e6c1c1f3e02ba44c5e1
+  subpackages:
+  - journal
+- name: github.com/coreos/pkg
+  version: 2c77715c4df99b5420ffcae14ead08f52104065d
+  subpackages:
+  - capnslog
+  - timeutil
+- name: github.com/davecgh/go-spew
+  version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
+  subpackages:
+  - spew
+- name: github.com/fatih/color
+  version: 1b35f289c47d5c73c398cea8e006b7bcb6234a96
+- name: github.com/fernet/fernet-go
+  version: 1b2437bc582b3cfbb341ee5a29f8ef5b42912ff2
+- name: github.com/go-sql-driver/mysql
+  version: d512f204a577a4ab037a1816604c48c9c13210be
+- name: github.com/golang/protobuf
+  version: 5fc2294e655b78ed8a02082d37808d46c17d7e64
+  subpackages:
+  - proto
+- name: github.com/guregu/null
+  version: 79c5bd36b615db4c06132321189f579c8a5fca98
+  subpackages:
+  - zero
+- name: github.com/hashicorp/golang-lru
+  version: 5c7531c003d8bf158b0fe5063649a2f41a822146
+  subpackages:
+  - simplelru
+- name: github.com/julienschmidt/httprouter
+  version: 21439ef4d70ba4f3e2a5ed9249e7b03af4019b40
+- name: github.com/kr/text
+  version: 7cafcd837844e784b526369c9bce262804aebc60
+- name: github.com/kylelemons/go-gypsy
+  version: 42fc2c7ee9b8bd0ff636cd2d7a8c0a49491044c5
+  subpackages:
+  - yaml
+- name: github.com/lib/pq
+  version: 11fc39a580a008f1f39bb3d11d984fb34ed778d9
+  subpackages:
+  - oid
+- name: github.com/mattn/go-sqlite3
+  version: 5510da399572b4962c020184bb291120c0a412e2
+- name: github.com/matttproud/golang_protobuf_extensions
+  version: d0c3fe89de86839aecf2e0579c40ba3bb336a453
+  subpackages:
+  - pbutil
+- name: github.com/pborman/uuid
+  version: dee7705ef7b324f27ceb85a121c61f2c2e8ce988
+- name: github.com/pmezard/go-difflib
+  version: e8554b8641db39598be7f6342874b958f12ae1d4
+  subpackages:
+  - difflib
+- name: github.com/prometheus/client_golang
+  version: 67994f177195311c3ea3d4407ed0175e34a4256f
+  subpackages:
+  - prometheus
+- name: github.com/prometheus/client_model
+  version: fa8ad6fec33561be4280a8f0514318c79d7f6cb6
+  subpackages:
+  - go
+- name: github.com/prometheus/common
+  version: dba5e39d4516169e840def50e507ef5f21b985f9
+  subpackages:
+  - expfmt
+  - internal/bitbucket.org/ww/goautoneg
+  - model
+- name: github.com/prometheus/procfs
+  version: 406e5b7bfd8201a36e2bb5f7bdae0b03380c2ce8
+- name: github.com/shiena/ansicolor
+  version: a422bbe96644373c5753384a59d678f7d261ff10
+- name: github.com/stretchr/testify
+  version: 5b9da39b66e8e994455c2525c4421c8cc00a7f93
+  subpackages:
+  - assert
+- name: github.com/tylerb/graceful
+  version: 84177357ab104029f9237abcb52339a7b80760ef
+- name: github.com/ziutek/mymysql
+  version: 75ce5fbba34b1912a3641adbd58cf317d7315821
+  subpackages:
+  - godrv
+  - mysql
+  - native
+- name: golang.org/x/net
+  version: 1d7a0b2100da090d8b02afcfb42f97e2c77e71a4
+  subpackages:
+  - netutil
+- name: gopkg.in/yaml.v2
+  version: f7716cbe52baa25d2e9b0d0da546fcf909fc16b4
+devImports: []

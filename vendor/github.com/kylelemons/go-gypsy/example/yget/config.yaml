@@ -1,0 +1,16 @@
+mapping:
+  key1: value1
+  key2: value2
+list:
+  - item1
+  - item2
+config:
+  server:
+    - www.google.com
+    - www.cnn.com
+    - www.example.com
+  admin:
+    - username: god
+      password: z3u5
+    - username: lowly
+      password: f!r3m3
