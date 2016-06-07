@@ -20,7 +20,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 )
 
 func TestInsertNamespace(t *testing.T) {
@@ -32,14 +32,14 @@ func TestInsertNamespace(t *testing.T) {
 	defer datastore.Close()
 
 	// Invalid Namespace.
-	id0, err := datastore.insertNamespace(database.Namespace{})
+	id0, err := datastore.insertNamespace(services.Namespace{})
 	assert.NotNil(t, err)
 	assert.Zero(t, id0)
 
 	// Insert Namespace and ensure we can find it.
-	id1, err := datastore.insertNamespace(database.Namespace{Name: "TestInsertNamespace1"})
+	id1, err := datastore.insertNamespace(services.Namespace{Name: "TestInsertNamespace1"})
 	assert.Nil(t, err)
-	id2, err := datastore.insertNamespace(database.Namespace{Name: "TestInsertNamespace1"})
+	id2, err := datastore.insertNamespace(services.Namespace{Name: "TestInsertNamespace1"})
 	assert.Nil(t, err)
 	assert.Equal(t, id1, id2)
 }

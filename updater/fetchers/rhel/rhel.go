@@ -23,7 +23,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
+	"github.com/coreos/clair/services/keyvalue"
 	"github.com/coreos/clair/updater"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
@@ -88,11 +89,11 @@ func init() {
 }
 
 // FetchUpdate gets vulnerability updates from the Red Hat OVAL definitions.
-func (f *RHELFetcher) FetchUpdate(datastore database.Datastore) (resp updater.FetcherResponse, err error) {
+func (f *RHELFetcher) FetchUpdate(kvstore keyvalue.Service) (resp updater.FetcherResponse, err error) {
 	log.Info("fetching Red Hat vulnerabilities")
 
 	// Get the first RHSA we have to manage.
-	flagValue, err := datastore.GetKeyValue(updaterFlag)
+	flagValue, err := kvstore.GetKeyValue(updaterFlag)
 	if err != nil {
 		return resp, err
 	}
@@ -153,7 +154,7 @@ func (f *RHELFetcher) FetchUpdate(datastore database.Datastore) (resp updater.Fe
 	return resp, nil
 }
 
-func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.Vulnerability, err error) {
+func parseRHSA(ovalReader io.Reader) (vulnerabilities []services.Vulnerability, err error) {
 	// Decode the XML.
 	var ov oval
 	err = xml.NewDecoder(ovalReader).Decode(&ov)
@@ -168,7 +169,7 @@ func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.Vulnerability, 
 	for _, definition := range ov.Definitions {
 		pkgs := toFeatureVersions(definition.Criteria)
 		if len(pkgs) > 0 {
-			vulnerability := database.Vulnerability{
+			vulnerability := services.Vulnerability{
 				Name:        name(definition),
 				Link:        link(definition),
 				Severity:    priority(definition),
@@ -259,15 +260,15 @@ func getPossibilities(node criteria) [][]criterion {
 	return possibilities
 }
 
-func toFeatureVersions(criteria criteria) []database.FeatureVersion {
+func toFeatureVersions(criteria criteria) []services.FeatureVersion {
 	// There are duplicates in Red Hat .xml files.
 	// This map is for deduplication.
-	featureVersionParameters := make(map[string]database.FeatureVersion)
+	featureVersionParameters := make(map[string]services.FeatureVersion)
 
 	possibilities := getPossibilities(criteria)
 	for _, criterions := range possibilities {
 		var (
-			featureVersion database.FeatureVersion
+			featureVersion services.FeatureVersion
 			osVersion      int
 			err            error
 		)
@@ -304,7 +305,7 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 	}
 
 	// Convert the map to slice.
-	var featureVersionParametersArray []database.FeatureVersion
+	var featureVersionParametersArray []services.FeatureVersion
 	for _, fv := range featureVersionParameters {
 		featureVersionParametersArray = append(featureVersionParametersArray, fv)
 	}

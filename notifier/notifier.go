@@ -25,7 +25,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/coreos/clair/config"
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
+	"github.com/coreos/clair/services/locks"
+	"github.com/coreos/clair/services/notifications"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 )
@@ -59,7 +61,7 @@ type Notifier interface {
 	// It returns whether the notifier is enabled or not.
 	Configure(*config.NotifierConfig) (bool, error)
 	// Send informs the existence of the specified notification.
-	Send(notification database.VulnerabilityNotification) error
+	Send(notification services.VulnerabilityNotification) error
 }
 
 func init() {
@@ -87,7 +89,7 @@ func RegisterNotifier(name string, n Notifier) {
 }
 
 // Run starts the Notifier service.
-func Run(config *config.NotifierConfig, datastore database.Datastore, stopper *utils.Stopper) {
+func Run(config *config.NotifierConfig, ls locks.Service, ns notifications.Service, stopper *utils.Stopper) {
 	defer stopper.End()
 
 	// Configure registered notifiers.
@@ -113,7 +115,7 @@ func Run(config *config.NotifierConfig, datastore database.Datastore, stopper *u
 
 	for running := true; running; {
 		// Find task.
-		notification := findTask(datastore, config.RenotifyInterval, whoAmI, stopper)
+		notification := findTask(ls, ns, config.RenotifyInterval, whoAmI, stopper)
 		if notification == nil {
 			// Interrupted while finding a task, Clair is stopping.
 			break
@@ -125,12 +127,12 @@ func Run(config *config.NotifierConfig, datastore database.Datastore, stopper *u
 			success, interrupted := handleTask(*notification, stopper, config.Attempts)
 			if success {
 				utils.PrometheusObserveTimeMilliseconds(promNotifierLatencyMilliseconds, notification.Created)
-				datastore.SetNotificationNotified(notification.Name)
+				ns.SetNotificationNotified(notification.Name)
 			}
 			if interrupted {
 				running = false
 			}
-			datastore.Unlock(notification.Name, whoAmI)
+			ls.Unlock(notification.Name, whoAmI)
 			done <- true
 		}()
 
@@ -141,7 +143,7 @@ func Run(config *config.NotifierConfig, datastore database.Datastore, stopper *u
 			case <-done:
 				break outer
 			case <-time.After(refreshLockDuration):
-				datastore.Lock(notification.Name, whoAmI, lockDuration, true)
+				ls.Lock(notification.Name, whoAmI, lockDuration, true)
 			}
 		}
 	}
@@ -149,10 +151,10 @@ func Run(config *config.NotifierConfig, datastore database.Datastore, stopper *u
 	log.Info("notifier service stopped")
 }
 
-func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoAmI string, stopper *utils.Stopper) *database.VulnerabilityNotification {
+func findTask(ls locks.Service, ns notifications.Service, renotifyInterval time.Duration, whoAmI string, stopper *utils.Stopper) *services.VulnerabilityNotification {
 	for {
 		// Find a notification to send.
-		notification, err := datastore.GetAvailableNotification(renotifyInterval)
+		notification, err := ns.GetAvailableNotification(renotifyInterval)
 		if err != nil {
 			// There is no notification or an error occurred.
 			if err != cerrors.ErrNotFound {
@@ -168,14 +170,14 @@ func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoA
 		}
 
 		// Lock the notification.
-		if hasLock, _ := datastore.Lock(notification.Name, whoAmI, lockDuration, false); hasLock {
+		if hasLock, _ := ls.Lock(notification.Name, whoAmI, lockDuration, false); hasLock {
 			log.Infof("found and locked a notification: %s", notification.Name)
 			return &notification
 		}
 	}
 }
 
-func handleTask(notification database.VulnerabilityNotification, st *utils.Stopper, maxAttempts int) (bool, bool) {
+func handleTask(notification services.VulnerabilityNotification, st *utils.Stopper, maxAttempts int) (bool, bool) {
 	// Send notification.
 	for notifierName, notifier := range notifiers {
 		var attempts int

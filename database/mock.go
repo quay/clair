@@ -14,23 +14,26 @@
 
 package database
 
-import "time"
+import (
+	"github.com/coreos/clair/services"
+	"time"
+)
 
 // MockDatastore implements Datastore and enables overriding each available method.
 // The default behavior of each method is to simply panic.
 type MockDatastore struct {
-	FctListNamespaces           func() ([]Namespace, error)
-	FctInsertLayer              func(Layer) error
-	FctFindLayer                func(name string, withFeatures, withVulnerabilities bool) (Layer, error)
+	FctListNamespaces           func() ([]services.Namespace, error)
+	FctInsertLayer              func(services.Layer) error
+	FctFindLayer                func(name string, withFeatures, withVulnerabilities bool) (services.Layer, error)
 	FctDeleteLayer              func(name string) error
-	FctListVulnerabilities      func(namespaceName string, limit int, page int) ([]Vulnerability, int, error)
-	FctInsertVulnerabilities    func(vulnerabilities []Vulnerability, createNotification bool) error
-	FctFindVulnerability        func(namespaceName, name string) (Vulnerability, error)
+	FctListVulnerabilities      func(namespaceName string, limit int, page int) ([]services.Vulnerability, int, error)
+	FctInsertVulnerabilities    func(vulnerabilities []services.Vulnerability, createNotification bool) error
+	FctFindVulnerability        func(namespaceName, name string) (services.Vulnerability, error)
 	FctDeleteVulnerability      func(namespaceName, name string) error
-	FctInsertVulnerabilityFixes func(vulnerabilityNamespace, vulnerabilityName string, fixes []FeatureVersion) error
+	FctInsertVulnerabilityFixes func(vulnerabilityNamespace, vulnerabilityName string, fixes []services.FeatureVersion) error
 	FctDeleteVulnerabilityFix   func(vulnerabilityNamespace, vulnerabilityName, featureName string) error
-	FctGetAvailableNotification func(renotifyInterval time.Duration) (VulnerabilityNotification, error)
-	FctGetNotification          func(name string, limit int, page VulnerabilityNotificationPageNumber) (VulnerabilityNotification, VulnerabilityNotificationPageNumber, error)
+	FctGetAvailableNotification func(renotifyInterval time.Duration) (services.VulnerabilityNotification, error)
+	FctGetNotification          func(name string, limit int, page services.VulnerabilityNotificationPageNumber) (services.VulnerabilityNotification, services.VulnerabilityNotificationPageNumber, error)
 	FctSetNotificationNotified  func(name string) error
 	FctDeleteNotification       func(name string) error
 	FctInsertKeyValue           func(key, value string) error
@@ -42,21 +45,21 @@ type MockDatastore struct {
 	FctClose                    func()
 }
 
-func (mds *MockDatastore) ListNamespaces() ([]Namespace, error) {
+func (mds *MockDatastore) ListNamespaces() ([]services.Namespace, error) {
 	if mds.FctListNamespaces != nil {
 		return mds.FctListNamespaces()
 	}
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) InsertLayer(layer Layer) error {
+func (mds *MockDatastore) InsertLayer(layer services.Layer) error {
 	if mds.FctInsertLayer != nil {
 		return mds.FctInsertLayer(layer)
 	}
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) FindLayer(name string, withFeatures, withVulnerabilities bool) (Layer, error) {
+func (mds *MockDatastore) FindLayer(name string, withFeatures, withVulnerabilities bool) (services.Layer, error) {
 	if mds.FctFindLayer != nil {
 		return mds.FctFindLayer(name, withFeatures, withVulnerabilities)
 	}
@@ -70,21 +73,21 @@ func (mds *MockDatastore) DeleteLayer(name string) error {
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) ListVulnerabilities(namespaceName string, limit int, page int) ([]Vulnerability, int, error) {
+func (mds *MockDatastore) ListVulnerabilities(namespaceName string, limit int, page int) ([]services.Vulnerability, int, error) {
 	if mds.FctListVulnerabilities != nil {
 		return mds.FctListVulnerabilities(namespaceName, limit, page)
 	}
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) InsertVulnerabilities(vulnerabilities []Vulnerability, createNotification bool) error {
+func (mds *MockDatastore) InsertVulnerabilities(vulnerabilities []services.Vulnerability, createNotification bool) error {
 	if mds.FctInsertVulnerabilities != nil {
 		return mds.FctInsertVulnerabilities(vulnerabilities, createNotification)
 	}
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) FindVulnerability(namespaceName, name string) (Vulnerability, error) {
+func (mds *MockDatastore) FindVulnerability(namespaceName, name string) (services.Vulnerability, error) {
 	if mds.FctFindVulnerability != nil {
 		return mds.FctFindVulnerability(namespaceName, name)
 	}
@@ -98,7 +101,7 @@ func (mds *MockDatastore) DeleteVulnerability(namespaceName, name string) error 
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) InsertVulnerabilityFixes(vulnerabilityNamespace, vulnerabilityName string, fixes []FeatureVersion) error {
+func (mds *MockDatastore) InsertVulnerabilityFixes(vulnerabilityNamespace, vulnerabilityName string, fixes []services.FeatureVersion) error {
 	if mds.FctInsertVulnerabilityFixes != nil {
 		return mds.FctInsertVulnerabilityFixes(vulnerabilityNamespace, vulnerabilityName, fixes)
 	}
@@ -112,14 +115,14 @@ func (mds *MockDatastore) DeleteVulnerabilityFix(vulnerabilityNamespace, vulnera
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) GetAvailableNotification(renotifyInterval time.Duration) (VulnerabilityNotification, error) {
+func (mds *MockDatastore) GetAvailableNotification(renotifyInterval time.Duration) (services.VulnerabilityNotification, error) {
 	if mds.FctGetAvailableNotification != nil {
 		return mds.FctGetAvailableNotification(renotifyInterval)
 	}
 	panic("required mock function not implemented")
 }
 
-func (mds *MockDatastore) GetNotification(name string, limit int, page VulnerabilityNotificationPageNumber) (VulnerabilityNotification, VulnerabilityNotificationPageNumber, error) {
+func (mds *MockDatastore) GetNotification(name string, limit int, page services.VulnerabilityNotificationPageNumber) (services.VulnerabilityNotification, services.VulnerabilityNotificationPageNumber, error) {
 	if mds.FctGetNotification != nil {
 		return mds.FctGetNotification(name, limit, page)
 	}

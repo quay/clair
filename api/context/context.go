@@ -24,7 +24,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/coreos/clair/config"
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services/keyvalue"
+	"github.com/coreos/clair/services/layers"
+	"github.com/coreos/clair/services/locks"
+	"github.com/coreos/clair/services/namespaces"
+	"github.com/coreos/clair/services/notifications"
+	"github.com/coreos/clair/services/vulnerabilities"
 	"github.com/coreos/clair/utils"
 )
 
@@ -59,6 +64,11 @@ func HTTPHandler(handler Handler, ctx *RouteContext) httprouter.Handle {
 }
 
 type RouteContext struct {
-	Store  database.Datastore
-	Config *config.APIConfig
+	LockService        locks.Service
+	KeyValueStore      keyvalue.Service
+	VulnerabilityStore vulnerabilities.Service
+	LayerService       layers.Service
+	NamespaceStore     namespaces.Service
+	NotificationState  notifications.Service
+	Config             *config.APIConfig
 }

@@ -20,7 +20,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
+	"github.com/coreos/clair/services/layers"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
 )
@@ -123,93 +124,93 @@ func TestInsertLayer(t *testing.T) {
 	testInsertLayerDelete(t, datastore)
 }
 
-func testInsertLayerInvalid(t *testing.T, datastore database.Datastore) {
-	invalidLayers := []database.Layer{
+func testInsertLayerInvalid(t *testing.T, ls layers.Service) {
+	invalidLayers := []services.Layer{
 		{},
-		{Name: "layer0", Parent: &database.Layer{}},
-		{Name: "layer0", Parent: &database.Layer{Name: "UnknownLayer"}},
+		{Name: "layer0", Parent: &services.Layer{}},
+		{Name: "layer0", Parent: &services.Layer{Name: "UnknownLayer"}},
 	}
 
 	for _, invalidLayer := range invalidLayers {
-		err := datastore.InsertLayer(invalidLayer)
+		err := ls.InsertLayer(invalidLayer)
 		assert.Error(t, err)
 	}
 }
 
-func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
-	f1 := database.FeatureVersion{
-		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "TestInsertLayerNamespace2"},
+func testInsertLayerTree(t *testing.T, ls layers.Service) {
+	f1 := services.FeatureVersion{
+		Feature: services.Feature{
+			Namespace: services.Namespace{Name: "TestInsertLayerNamespace2"},
 			Name:      "TestInsertLayerFeature1",
 		},
 		Version: types.NewVersionUnsafe("1.0"),
 	}
-	f2 := database.FeatureVersion{
-		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "TestInsertLayerNamespace2"},
+	f2 := services.FeatureVersion{
+		Feature: services.Feature{
+			Namespace: services.Namespace{Name: "TestInsertLayerNamespace2"},
 			Name:      "TestInsertLayerFeature2",
 		},
 		Version: types.NewVersionUnsafe("0.34"),
 	}
-	f3 := database.FeatureVersion{
-		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "TestInsertLayerNamespace2"},
+	f3 := services.FeatureVersion{
+		Feature: services.Feature{
+			Namespace: services.Namespace{Name: "TestInsertLayerNamespace2"},
 			Name:      "TestInsertLayerFeature3",
 		},
 		Version: types.NewVersionUnsafe("0.56"),
 	}
-	f4 := database.FeatureVersion{
-		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "TestInsertLayerNamespace3"},
+	f4 := services.FeatureVersion{
+		Feature: services.Feature{
+			Namespace: services.Namespace{Name: "TestInsertLayerNamespace3"},
 			Name:      "TestInsertLayerFeature2",
 		},
 		Version: types.NewVersionUnsafe("0.34"),
 	}
-	f5 := database.FeatureVersion{
-		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "TestInsertLayerNamespace3"},
+	f5 := services.FeatureVersion{
+		Feature: services.Feature{
+			Namespace: services.Namespace{Name: "TestInsertLayerNamespace3"},
 			Name:      "TestInsertLayerFeature3",
 		},
 		Version: types.NewVersionUnsafe("0.56"),
 	}
-	f6 := database.FeatureVersion{
-		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "TestInsertLayerNamespace3"},
+	f6 := services.FeatureVersion{
+		Feature: services.Feature{
+			Namespace: services.Namespace{Name: "TestInsertLayerNamespace3"},
 			Name:      "TestInsertLayerFeature4",
 		},
 		Version: types.NewVersionUnsafe("0.666"),
 	}
 
-	layers := []database.Layer{
+	layers := []services.Layer{
 		{
 			Name: "TestInsertLayer1",
 		},
 		{
 			Name:      "TestInsertLayer2",
-			Parent:    &database.Layer{Name: "TestInsertLayer1"},
-			Namespace: &database.Namespace{Name: "TestInsertLayerNamespace1"},
+			Parent:    &services.Layer{Name: "TestInsertLayer1"},
+			Namespace: &services.Namespace{Name: "TestInsertLayerNamespace1"},
 		},
 		// This layer changes the namespace and adds Features.
 		{
 			Name:      "TestInsertLayer3",
-			Parent:    &database.Layer{Name: "TestInsertLayer2"},
-			Namespace: &database.Namespace{Name: "TestInsertLayerNamespace2"},
-			Features:  []database.FeatureVersion{f1, f2, f3},
+			Parent:    &services.Layer{Name: "TestInsertLayer2"},
+			Namespace: &services.Namespace{Name: "TestInsertLayerNamespace2"},
+			Features:  []services.FeatureVersion{f1, f2, f3},
 		},
 		// This layer covers the case where the last layer doesn't provide any new Feature.
 		{
 			Name:     "TestInsertLayer4a",
-			Parent:   &database.Layer{Name: "TestInsertLayer3"},
-			Features: []database.FeatureVersion{f1, f2, f3},
+			Parent:   &services.Layer{Name: "TestInsertLayer3"},
+			Features: []services.FeatureVersion{f1, f2, f3},
 		},
 		// This layer covers the case where the last layer provides Features.
 		// It also modifies the Namespace ("upgrade") but keeps some Features not upgraded, their
 		// Namespaces should then remain unchanged.
 		{
 			Name:      "TestInsertLayer4b",
-			Parent:    &database.Layer{Name: "TestInsertLayer3"},
-			Namespace: &database.Namespace{Name: "TestInsertLayerNamespace3"},
-			Features: []database.FeatureVersion{
+			Parent:    &services.Layer{Name: "TestInsertLayer3"},
+			Namespace: &services.Namespace{Name: "TestInsertLayerNamespace3"},
+			Features: []services.FeatureVersion{
 				// Deletes TestInsertLayerFeature1.
 				// Keep TestInsertLayerFeature2 (old Namespace should be kept):
 				f4,
@@ -222,7 +223,7 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 	}
 
 	var err error
-	retrievedLayers := make(map[string]database.Layer)
+	retrievedLayers := make(map[string]services.Layer)
 	for _, layer := range layers {
 		if layer.Parent != nil {
 			// Retrieve from database its parent and assign.
@@ -230,10 +231,10 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 			layer.Parent = &parent
 		}
 
-		err = datastore.InsertLayer(layer)
+		err = ls.InsertLayer(layer)
 		assert.Nil(t, err)
 
-		retrievedLayers[layer.Name], err = datastore.FindLayer(layer.Name, true, false)
+		retrievedLayers[layer.Name], err = ls.FindLayer(layer.Name, true, false)
 		assert.Nil(t, err)
 	}
 
@@ -260,35 +261,35 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 	}
 }
 
-func testInsertLayerUpdate(t *testing.T, datastore database.Datastore) {
-	f7 := database.FeatureVersion{
-		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "TestInsertLayerNamespace3"},
+func testInsertLayerUpdate(t *testing.T, ls layers.Service) {
+	f7 := services.FeatureVersion{
+		Feature: services.Feature{
+			Namespace: services.Namespace{Name: "TestInsertLayerNamespace3"},
 			Name:      "TestInsertLayerFeature7",
 		},
 		Version: types.NewVersionUnsafe("0.01"),
 	}
 
-	l3, _ := datastore.FindLayer("TestInsertLayer3", true, false)
-	l3u := database.Layer{
+	l3, _ := ls.FindLayer("TestInsertLayer3", true, false)
+	l3u := services.Layer{
 		Name:      l3.Name,
 		Parent:    l3.Parent,
-		Namespace: &database.Namespace{Name: "TestInsertLayerNamespaceUpdated1"},
-		Features:  []database.FeatureVersion{f7},
+		Namespace: &services.Namespace{Name: "TestInsertLayerNamespaceUpdated1"},
+		Features:  []services.FeatureVersion{f7},
 	}
 
-	l4u := database.Layer{
+	l4u := services.Layer{
 		Name:          "TestInsertLayer4",
-		Parent:        &database.Layer{Name: "TestInsertLayer3"},
-		Features:      []database.FeatureVersion{f7},
+		Parent:        &services.Layer{Name: "TestInsertLayer3"},
+		Features:      []services.FeatureVersion{f7},
 		EngineVersion: 2,
 	}
 
 	// Try to re-insert without increasing the EngineVersion.
-	err := datastore.InsertLayer(l3u)
+	err := ls.InsertLayer(l3u)
 	assert.Nil(t, err)
 
-	l3uf, err := datastore.FindLayer(l3u.Name, true, false)
+	l3uf, err := ls.FindLayer(l3u.Name, true, false)
 	if assert.Nil(t, err) {
 		assert.Equal(t, l3.Namespace.Name, l3uf.Namespace.Name)
 		assert.Equal(t, l3.EngineVersion, l3uf.EngineVersion)
@@ -298,10 +299,10 @@ func testInsertLayerUpdate(t *testing.T, datastore database.Datastore) {
 	// Update layer l3.
 	// Verify that the Namespace, EngineVersion and FeatureVersions got updated.
 	l3u.EngineVersion = 2
-	err = datastore.InsertLayer(l3u)
+	err = ls.InsertLayer(l3u)
 	assert.Nil(t, err)
 
-	l3uf, err = datastore.FindLayer(l3u.Name, true, false)
+	l3uf, err = ls.FindLayer(l3u.Name, true, false)
 	if assert.Nil(t, err) {
 		assert.Equal(t, l3u.Namespace.Name, l3uf.Namespace.Name)
 		assert.Equal(t, l3u.EngineVersion, l3uf.EngineVersion)
@@ -314,10 +315,10 @@ func testInsertLayerUpdate(t *testing.T, datastore database.Datastore) {
 	// Verify that the Namespace got updated from its new Parent's, and also verify the
 	// EnginVersion and FeatureVersions.
 	l4u.Parent = &l3uf
-	err = datastore.InsertLayer(l4u)
+	err = ls.InsertLayer(l4u)
 	assert.Nil(t, err)
 
-	l4uf, err := datastore.FindLayer(l3u.Name, true, false)
+	l4uf, err := ls.FindLayer(l3u.Name, true, false)
 	if assert.Nil(t, err) {
 		assert.Equal(t, l3u.Namespace.Name, l4uf.Namespace.Name)
 		assert.Equal(t, l4u.EngineVersion, l4uf.EngineVersion)
@@ -327,24 +328,24 @@ func testInsertLayerUpdate(t *testing.T, datastore database.Datastore) {
 	}
 }
 
-func testInsertLayerDelete(t *testing.T, datastore database.Datastore) {
-	err := datastore.DeleteLayer("TestInsertLayerX")
+func testInsertLayerDelete(t *testing.T, ls layers.Service) {
+	err := ls.DeleteLayer("TestInsertLayerX")
 	assert.Equal(t, cerrors.ErrNotFound, err)
 
-	err = datastore.DeleteLayer("TestInsertLayer3")
+	err = ls.DeleteLayer("TestInsertLayer3")
 	assert.Nil(t, err)
 
-	_, err = datastore.FindLayer("TestInsertLayer3", false, false)
+	_, err = ls.FindLayer("TestInsertLayer3", false, false)
 	assert.Equal(t, cerrors.ErrNotFound, err)
 
-	_, err = datastore.FindLayer("TestInsertLayer4a", false, false)
+	_, err = ls.FindLayer("TestInsertLayer4a", false, false)
 	assert.Equal(t, cerrors.ErrNotFound, err)
 
-	_, err = datastore.FindLayer("TestInsertLayer4b", true, false)
+	_, err = ls.FindLayer("TestInsertLayer4b", true, false)
 	assert.Equal(t, cerrors.ErrNotFound, err)
 }
 
-func cmpFV(a, b database.FeatureVersion) bool {
+func cmpFV(a, b services.FeatureVersion) bool {
 	return a.Feature.Name == b.Feature.Name &&
 		a.Feature.Namespace.Name == b.Feature.Namespace.Name &&
 		a.Version.String() == b.Version.String()

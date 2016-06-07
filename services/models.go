@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package database
+package services
 
 import (
 	"database/sql/driver"
@@ -21,6 +21,8 @@ import (
 
 	"github.com/coreos/clair/utils/types"
 )
+
+// TODO(mattmoor): Clean up the dependencies of these types so that they can be decomposed into their respective service layers.  This will require eliminating some of the overloading via optional fields that is done today (e.g. AddedBy "only makes sense when ..." should probably be a FeatureVersion wrapped in a new type used in the context of an image).
 
 // ID is only meant to be used by database implementations and should never be used for anything else.
 type Model struct {

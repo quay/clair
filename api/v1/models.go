@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/pkg/capnslog"
 	"github.com/fernet/fernet-go"
@@ -44,7 +44,7 @@ type Layer struct {
 	Features         []Feature         `json:"Features,omitempty"`
 }
 
-func LayerFromDatabaseModel(dbLayer database.Layer, withFeatures, withVulnerabilities bool) Layer {
+func LayerFromDatabaseModel(dbLayer services.Layer, withFeatures, withVulnerabilities bool) Layer {
 	layer := Layer{
 		Name:             dbLayer.Name,
 		IndexedByVersion: dbLayer.EngineVersion,
@@ -104,25 +104,25 @@ type Vulnerability struct {
 	FixedIn       []Feature              `json:"FixedIn,omitempty"`
 }
 
-func (v Vulnerability) DatabaseModel() (database.Vulnerability, error) {
+func (v Vulnerability) DatabaseModel() (services.Vulnerability, error) {
 	severity := types.Priority(v.Severity)
 	if !severity.IsValid() {
-		return database.Vulnerability{}, errors.New("Invalid severity")
+		return services.Vulnerability{}, errors.New("Invalid severity")
 	}
 
-	var dbFeatures []database.FeatureVersion
+	var dbFeatures []services.FeatureVersion
 	for _, feature := range v.FixedIn {
 		dbFeature, err := feature.DatabaseModel()
 		if err != nil {
-			return database.Vulnerability{}, err
+			return services.Vulnerability{}, err
 		}
 
 		dbFeatures = append(dbFeatures, dbFeature)
 	}
 
-	return database.Vulnerability{
+	return services.Vulnerability{
 		Name:        v.Name,
-		Namespace:   database.Namespace{Name: v.NamespaceName},
+		Namespace:   services.Namespace{Name: v.NamespaceName},
 		Description: v.Description,
 		Link:        v.Link,
 		Severity:    severity,
@@ -131,7 +131,7 @@ func (v Vulnerability) DatabaseModel() (database.Vulnerability, error) {
 	}, nil
 }
 
-func VulnerabilityFromDatabaseModel(dbVuln database.Vulnerability, withFixedIn bool) Vulnerability {
+func VulnerabilityFromDatabaseModel(dbVuln services.Vulnerability, withFixedIn bool) Vulnerability {
 	vuln := Vulnerability{
 		Name:          dbVuln.Name,
 		NamespaceName: dbVuln.Namespace.Name,
@@ -158,7 +158,7 @@ type Feature struct {
 	AddedBy         string          `json:"AddedBy,omitempty"`
 }
 
-func FeatureFromDatabaseModel(dbFeatureVersion database.FeatureVersion) Feature {
+func FeatureFromDatabaseModel(dbFeatureVersion services.FeatureVersion) Feature {
 	versionStr := dbFeatureVersion.Version.String()
 	if versionStr == types.MaxVersion.String() {
 		versionStr = "None"
@@ -172,7 +172,7 @@ func FeatureFromDatabaseModel(dbFeatureVersion database.FeatureVersion) Feature 
 	}
 }
 
-func (f Feature) DatabaseModel() (database.FeatureVersion, error) {
+func (f Feature) DatabaseModel() (services.FeatureVersion, error) {
 	var version types.Version
 	if f.Version == "None" {
 		version = types.MaxVersion
@@ -180,14 +180,14 @@ func (f Feature) DatabaseModel() (database.FeatureVersion, error) {
 		var err error
 		version, err = types.NewVersion(f.Version)
 		if err != nil {
-			return database.FeatureVersion{}, err
+			return services.FeatureVersion{}, err
 		}
 	}
 
-	return database.FeatureVersion{
-		Feature: database.Feature{
+	return services.FeatureVersion{
+		Feature: services.Feature{
 			Name:      f.Name,
-			Namespace: database.Namespace{Name: f.NamespaceName},
+			Namespace: services.Namespace{Name: f.NamespaceName},
 		},
 		Version: version,
 	}, nil
@@ -205,7 +205,7 @@ type Notification struct {
 	New      *VulnerabilityWithLayers `json:"New,omitempty"`
 }
 
-func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotification, limit int, pageToken string, nextPage database.VulnerabilityNotificationPageNumber, key string) Notification {
+func NotificationFromDatabaseModel(dbNotification services.VulnerabilityNotification, limit int, pageToken string, nextPage services.VulnerabilityNotificationPageNumber, key string) Notification {
 	var oldVuln *VulnerabilityWithLayers
 	if dbNotification.OldVulnerability != nil {
 		v := VulnerabilityWithLayersFromDatabaseModel(*dbNotification.OldVulnerability)
@@ -219,7 +219,7 @@ func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotifica
 	}
 
 	var nextPageStr string
-	if nextPage != database.NoVulnerabilityNotificationPage {
+	if nextPage != services.NoVulnerabilityNotificationPage {
 		nextPageBytes, _ := tokenMarshal(nextPage, key)
 		nextPageStr = string(nextPageBytes)
 	}
@@ -255,7 +255,7 @@ type VulnerabilityWithLayers struct {
 	LayersIntroducingVulnerability []string       `json:"LayersIntroducingVulnerability,omitempty"`
 }
 
-func VulnerabilityWithLayersFromDatabaseModel(dbVuln database.Vulnerability) VulnerabilityWithLayers {
+func VulnerabilityWithLayersFromDatabaseModel(dbVuln services.Vulnerability) VulnerabilityWithLayers {
 	vuln := VulnerabilityFromDatabaseModel(dbVuln, true)
 
 	var layers []string

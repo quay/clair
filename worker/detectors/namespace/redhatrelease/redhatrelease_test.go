@@ -17,19 +17,19 @@ package redhatrelease
 import (
 	"testing"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	"github.com/coreos/clair/worker/detectors/namespace"
 )
 
 var redhatReleaseTests = []namespace.NamespaceTest{
 	{
-		ExpectedNamespace: database.Namespace{Name: "centos:6"},
+		ExpectedNamespace: services.Namespace{Name: "centos:6"},
 		Data: map[string][]byte{
 			"etc/centos-release": []byte(`CentOS release 6.6 (Final)`),
 		},
 	},
 	{
-		ExpectedNamespace: database.Namespace{Name: "centos:7"},
+		ExpectedNamespace: services.Namespace{Name: "centos:7"},
 		Data: map[string][]byte{
 			"etc/system-release": []byte(`CentOS Linux release 7.1.1503 (Core)`),
 		},

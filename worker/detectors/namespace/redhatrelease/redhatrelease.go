@@ -18,7 +18,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	"github.com/coreos/clair/worker/detectors"
 )
 
@@ -37,7 +37,7 @@ func init() {
 	detectors.RegisterNamespaceDetector("redhat-release", &RedhatReleaseNamespaceDetector{})
 }
 
-func (detector *RedhatReleaseNamespaceDetector) Detect(data map[string][]byte) *database.Namespace {
+func (detector *RedhatReleaseNamespaceDetector) Detect(data map[string][]byte) *services.Namespace {
 	for _, filePath := range detector.GetRequiredFiles() {
 		f, hasFile := data[filePath]
 		if !hasFile {
@@ -46,7 +46,7 @@ func (detector *RedhatReleaseNamespaceDetector) Detect(data map[string][]byte) *
 
 		r := redhatReleaseRegexp.FindStringSubmatch(string(f))
 		if len(r) == 4 {
-			return &database.Namespace{Name: strings.ToLower(r[1]) + ":" + r[3]}
+			return &services.Namespace{Name: strings.ToLower(r[1]) + ":" + r[3]}
 		}
 	}
 

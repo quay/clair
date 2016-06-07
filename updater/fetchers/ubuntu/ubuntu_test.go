@@ -20,7 +20,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -42,24 +42,24 @@ func TestUbuntuParser(t *testing.T) {
 		_, hasUnkownRelease := unknownReleases["unknown"]
 		assert.True(t, hasUnkownRelease)
 
-		expectedFeatureVersions := []database.FeatureVersion{
+		expectedFeatureVersions := []services.FeatureVersion{
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "ubuntu:14.04"},
+				Feature: services.Feature{
+					Namespace: services.Namespace{Name: "ubuntu:14.04"},
 					Name:      "libmspack",
 				},
 				Version: types.MaxVersion,
 			},
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "ubuntu:15.04"},
+				Feature: services.Feature{
+					Namespace: services.Namespace{Name: "ubuntu:15.04"},
 					Name:      "libmspack",
 				},
 				Version: types.NewVersionUnsafe("0.4-3"),
 			},
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "ubuntu:15.10"},
+				Feature: services.Feature{
+					Namespace: services.Namespace{Name: "ubuntu:15.10"},
 					Name:      "libmspack-anotherpkg",
 				},
 				Version: types.NewVersionUnsafe("0.1"),
