@@ -4,7 +4,7 @@
 
 // Package netutil provides network utility functions, complementing the more
 // common ones in the net package.
-package netutil
+package netutil // import "golang.org/x/net/netutil"
 
 import (
 	"net"
