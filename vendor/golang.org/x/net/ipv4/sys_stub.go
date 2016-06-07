@@ -6,6 +6,8 @@
 
 package ipv4
 
+type sysSockoptLen int32
+
 var (
 	ctlOpts = [ctlMax]ctlOpt{}
 

@@ -18,7 +18,9 @@
 // than linking against them.
 package util
 
+// #cgo LDFLAGS: -ldl
 // #include <stdlib.h>
+// #include <dlfcn.h>
 // #include <sys/types.h>
 // #include <unistd.h>
 //
@@ -56,24 +58,56 @@ package util
 // }
 import "C"
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
 	"syscall"
 	"unsafe"
-
-	"github.com/coreos/pkg/dlopen"
 )
 
-var libsystemdNames = []string{
-	// systemd < 209
-	"libsystemd-login.so.0",
-	"libsystemd-login.so",
+var ErrSoNotFound = errors.New("unable to open a handle to libsystemd")
 
-	// systemd >= 209 merged libsystemd-login into libsystemd proper
-	"libsystemd.so.0",
-	"libsystemd.so",
+// libHandle represents an open handle to the systemd C library
+type libHandle struct {
+	handle  unsafe.Pointer
+	libname string
+}
+
+func (h *libHandle) Close() error {
+	if r := C.dlclose(h.handle); r != 0 {
+		return fmt.Errorf("error closing %v: %d", h.libname, r)
+	}
+	return nil
+}
+
+// getHandle tries to get a handle to a systemd library (.so), attempting to
+// access it by several different names and returning the first that is
+// successfully opened. Callers are responsible for closing the handler.
+// If no library can be successfully opened, an error is returned.
+func getHandle() (*libHandle, error) {
+	for _, name := range []string{
+		// systemd < 209
+		"libsystemd-login.so",
+		"libsystemd-login.so.0",
+
+		// systemd >= 209 merged libsystemd-login into libsystemd proper
+		"libsystemd.so",
+		"libsystemd.so.0",
+	} {
+		libname := C.CString(name)
+		defer C.free(unsafe.Pointer(libname))
+		handle := C.dlopen(libname, C.RTLD_LAZY)
+		if handle != nil {
+			h := &libHandle{
+				handle:  handle,
+				libname: name,
+			}
+			return h, nil
+		}
+	}
+	return nil, ErrSoNotFound
 }
 
 // GetRunningSlice attempts to retrieve the name of the systemd slice in which
@@ -81,8 +115,8 @@ var libsystemdNames = []string{
 // This function is a wrapper around the libsystemd C library; if it cannot be
 // opened, an error is returned.
 func GetRunningSlice() (slice string, err error) {
-	var h *dlopen.LibHandle
-	h, err = dlopen.GetHandle(libsystemdNames)
+	var h *libHandle
+	h, err = getHandle()
 	if err != nil {
 		return
 	}
@@ -92,8 +126,11 @@ func GetRunningSlice() (slice string, err error) {
 		}
 	}()
 
-	sd_pid_get_slice, err := h.GetSymbolPointer("sd_pid_get_slice")
-	if err != nil {
+	sym := C.CString("sd_pid_get_slice")
+	defer C.free(unsafe.Pointer(sym))
+	sd_pid_get_slice := C.dlsym(h.handle, sym)
+	if sd_pid_get_slice == nil {
+		err = fmt.Errorf("error resolving sd_pid_get_slice function")
 		return
 	}
 
@@ -127,8 +164,8 @@ func GetRunningSlice() (slice string, err error) {
 // unable to successfully open a handle to the library for any reason (e.g. it
 // cannot be found), an errr will be returned
 func RunningFromSystemService() (ret bool, err error) {
-	var h *dlopen.LibHandle
-	h, err = dlopen.GetHandle(libsystemdNames)
+	var h *libHandle
+	h, err = getHandle()
 	if err != nil {
 		return
 	}
@@ -138,8 +175,11 @@ func RunningFromSystemService() (ret bool, err error) {
 		}
 	}()
 
-	sd_pid_get_owner_uid, err := h.GetSymbolPointer("sd_pid_get_owner_uid")
-	if err != nil {
+	sym := C.CString("sd_pid_get_owner_uid")
+	defer C.free(unsafe.Pointer(sym))
+	sd_pid_get_owner_uid := C.dlsym(h.handle, sym)
+	if sd_pid_get_owner_uid == nil {
+		err = fmt.Errorf("error resolving sd_pid_get_owner_uid function")
 		return
 	}
 
@@ -172,8 +212,8 @@ func RunningFromSystemService() (ret bool, err error) {
 // `sd_pid_get_unit` call, with the same caveat: for processes not part of a
 // systemd system unit, this function will return an error.
 func CurrentUnitName() (unit string, err error) {
-	var h *dlopen.LibHandle
-	h, err = dlopen.GetHandle(libsystemdNames)
+	var h *libHandle
+	h, err = getHandle()
 	if err != nil {
 		return
 	}
@@ -183,8 +223,11 @@ func CurrentUnitName() (unit string, err error) {
 		}
 	}()
 
-	sd_pid_get_unit, err := h.GetSymbolPointer("sd_pid_get_unit")
-	if err != nil {
+	sym := C.CString("sd_pid_get_unit")
+	defer C.free(unsafe.Pointer(sym))
+	sd_pid_get_unit := C.dlsym(h.handle, sym)
+	if sd_pid_get_unit == nil {
+		err = fmt.Errorf("error resolving sd_pid_get_unit function")
 		return
 	}
 

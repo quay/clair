@@ -237,10 +237,6 @@ message OtherMessage {
   extensions 100 to max;
 }
 
-message RequiredInnerMessage {
-  required InnerMessage leo_finally_won_an_oscar = 1;
-}
-
 message MyMessage {
   required int32 count = 1;
   optional string name = 2;
@@ -248,7 +244,6 @@ message MyMessage {
   repeated string pet = 4;
   optional InnerMessage inner = 5;
   repeated OtherMessage others = 6;
-  optional RequiredInnerMessage we_must_go_deeper = 13;
   repeated InnerMessage rep_inner = 12;
 
   enum Color {

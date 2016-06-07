@@ -2,7 +2,6 @@ package pq
 
 import (
 	"fmt"
-	"net"
 	nurl "net/url"
 	"sort"
 	"strings"
@@ -55,11 +54,12 @@ func ParseURL(url string) (string, error) {
 		accrue("password", v)
 	}
 
-	if host, port, err := net.SplitHostPort(u.Host); err != nil {
+	i := strings.Index(u.Host, ":")
+	if i < 0 {
 		accrue("host", u.Host)
 	} else {
-		accrue("host", host)
-		accrue("port", port)
+		accrue("host", u.Host[:i])
+		accrue("port", u.Host[i+1:])
 	}
 
 	if u.Path != "" {

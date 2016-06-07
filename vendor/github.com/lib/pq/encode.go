@@ -5,7 +5,6 @@ import (
 	"database/sql/driver"
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"math"
 	"strconv"
@@ -23,6 +22,7 @@ func binaryEncode(parameterStatus *parameterStatus, x interface{}) []byte {
 	default:
 		return encode(parameterStatus, x, oid.T_unknown)
 	}
+	panic("not reached")
 }
 
 func encode(parameterStatus *parameterStatus, x interface{}, pgtypOid oid.Oid) []byte {
@@ -75,7 +75,7 @@ func binaryDecode(parameterStatus *parameterStatus, s []byte, typ oid.Oid) inter
 		return int64(int16(binary.BigEndian.Uint16(s)))
 
 	default:
-		errorf("don't know how to decode binary parameter of type %d", uint32(typ))
+		errorf("don't know how to decode binary parameter of type %u", uint32(typ))
 	}
 
 	panic("not reached")
@@ -195,39 +195,16 @@ func mustParse(f string, typ oid.Oid, s []byte) time.Time {
 	return t
 }
 
-var invalidTimestampErr = errors.New("invalid timestamp")
-
-type timestampParser struct {
-	err error
-}
-
-func (p *timestampParser) expect(str, char string, pos int) {
-	if p.err != nil {
-		return
-	}
-	if pos+1 > len(str) {
-		p.err = invalidTimestampErr
-		return
-	}
-	if c := str[pos : pos+1]; c != char && p.err == nil {
-		p.err = fmt.Errorf("expected '%v' at position %v; got '%v'", char, pos, c)
+func expect(str, char string, pos int) {
+	if c := str[pos : pos+1]; c != char {
+		errorf("expected '%v' at position %v; got '%v'", char, pos, c)
 	}
 }
 
-func (p *timestampParser) mustAtoi(str string, begin int, end int) int {
-	if p.err != nil {
-		return 0
-	}
-	if begin < 0 || end < 0 || begin > end || end > len(str) {
-		p.err = invalidTimestampErr
-		return 0
-	}
-	result, err := strconv.Atoi(str[begin:end])
+func mustAtoi(str string) int {
+	result, err := strconv.Atoi(str)
 	if err != nil {
-		if p.err == nil {
-			p.err = fmt.Errorf("expected number; got '%v'", str)
-		}
-		return 0
+		errorf("expected number; got '%v'", str)
 	}
 	return result
 }
@@ -282,7 +259,7 @@ const (
  * driver will decode Postgres' "-infinity" and "infinity" for "timestamp",
  * "timestamp with time zone" and "date" types to the predefined minimum and
  * maximum times, respectively.  When encoding time.Time values, any time which
- * equals or precedes the predefined minimum time will be encoded to
+ * equals or preceeds the predefined minimum time will be encoded to
  * "-infinity".  Any values at or past the maximum time will similarly be
  * encoded to "infinity".
  *
@@ -328,37 +305,28 @@ func parseTs(currentLocation *time.Location, str string) interface{} {
 		}
 		return []byte(str)
 	}
-	t, err := ParseTimestamp(currentLocation, str)
-	if err != nil {
-		panic(err)
-	}
-	return t
-}
-
-func ParseTimestamp(currentLocation *time.Location, str string) (time.Time, error) {
-	p := timestampParser{}
 
 	monSep := strings.IndexRune(str, '-')
 	// this is Gregorian year, not ISO Year
 	// In Gregorian system, the year 1 BC is followed by AD 1
-	year := p.mustAtoi(str, 0, monSep)
+	year := mustAtoi(str[:monSep])
 	daySep := monSep + 3
-	month := p.mustAtoi(str, monSep+1, daySep)
-	p.expect(str, "-", daySep)
+	month := mustAtoi(str[monSep+1 : daySep])
+	expect(str, "-", daySep)
 	timeSep := daySep + 3
-	day := p.mustAtoi(str, daySep+1, timeSep)
+	day := mustAtoi(str[daySep+1 : timeSep])
 
 	var hour, minute, second int
 	if len(str) > monSep+len("01-01")+1 {
-		p.expect(str, " ", timeSep)
+		expect(str, " ", timeSep)
 		minSep := timeSep + 3
-		p.expect(str, ":", minSep)
-		hour = p.mustAtoi(str, timeSep+1, minSep)
+		expect(str, ":", minSep)
+		hour = mustAtoi(str[timeSep+1 : minSep])
 		secSep := minSep + 3
-		p.expect(str, ":", secSep)
-		minute = p.mustAtoi(str, minSep+1, secSep)
+		expect(str, ":", secSep)
+		minute = mustAtoi(str[minSep+1 : secSep])
 		secEnd := secSep + 3
-		second = p.mustAtoi(str, secSep+1, secEnd)
+		second = mustAtoi(str[secSep+1 : secEnd])
 	}
 	remainderIdx := monSep + len("01-01 00:00:00") + 1
 	// Three optional (but ordered) sections follow: the
@@ -369,18 +337,18 @@ func ParseTimestamp(currentLocation *time.Location, str string) (time.Time, erro
 	nanoSec := 0
 	tzOff := 0
 
-	if remainderIdx+1 <= len(str) && str[remainderIdx:remainderIdx+1] == "." {
+	if remainderIdx < len(str) && str[remainderIdx:remainderIdx+1] == "." {
 		fracStart := remainderIdx + 1
 		fracOff := strings.IndexAny(str[fracStart:], "-+ ")
 		if fracOff < 0 {
 			fracOff = len(str) - fracStart
 		}
-		fracSec := p.mustAtoi(str, fracStart, fracStart+fracOff)
+		fracSec := mustAtoi(str[fracStart : fracStart+fracOff])
 		nanoSec = fracSec * (1000000000 / int(math.Pow(10, float64(fracOff))))
 
 		remainderIdx += fracOff + 1
 	}
-	if tzStart := remainderIdx; tzStart+1 <= len(str) && (str[tzStart:tzStart+1] == "-" || str[tzStart:tzStart+1] == "+") {
+	if tzStart := remainderIdx; tzStart < len(str) && (str[tzStart:tzStart+1] == "-" || str[tzStart:tzStart+1] == "+") {
 		// time zone separator is always '-' or '+' (UTC is +00)
 		var tzSign int
 		if c := str[tzStart : tzStart+1]; c == "-" {
@@ -388,30 +356,30 @@ func ParseTimestamp(currentLocation *time.Location, str string) (time.Time, erro
 		} else if c == "+" {
 			tzSign = +1
 		} else {
-			return time.Time{}, fmt.Errorf("expected '-' or '+' at position %v; got %v", tzStart, c)
+			errorf("expected '-' or '+' at position %v; got %v", tzStart, c)
 		}
-		tzHours := p.mustAtoi(str, tzStart+1, tzStart+3)
+		tzHours := mustAtoi(str[tzStart+1 : tzStart+3])
 		remainderIdx += 3
 		var tzMin, tzSec int
-		if tzStart+4 <= len(str) && str[tzStart+3:tzStart+4] == ":" {
-			tzMin = p.mustAtoi(str, tzStart+4, tzStart+6)
+		if tzStart+3 < len(str) && str[tzStart+3:tzStart+4] == ":" {
+			tzMin = mustAtoi(str[tzStart+4 : tzStart+6])
 			remainderIdx += 3
 		}
-		if tzStart+7 <= len(str) && str[tzStart+6:tzStart+7] == ":" {
-			tzSec = p.mustAtoi(str, tzStart+7, tzStart+9)
+		if tzStart+6 < len(str) && str[tzStart+6:tzStart+7] == ":" {
+			tzSec = mustAtoi(str[tzStart+7 : tzStart+9])
 			remainderIdx += 3
 		}
 		tzOff = tzSign * ((tzHours * 60 * 60) + (tzMin * 60) + tzSec)
 	}
 	var isoYear int
-	if remainderIdx+3 <= len(str) && str[remainderIdx:remainderIdx+3] == " BC" {
+	if remainderIdx < len(str) && str[remainderIdx:remainderIdx+3] == " BC" {
 		isoYear = 1 - year
 		remainderIdx += 3
 	} else {
 		isoYear = year
 	}
 	if remainderIdx < len(str) {
-		return time.Time{}, fmt.Errorf("expected end of input, got %v", str[remainderIdx:])
+		errorf("expected end of input, got %v", str[remainderIdx:])
 	}
 	t := time.Date(isoYear, time.Month(month), day,
 		hour, minute, second, nanoSec,
@@ -428,7 +396,7 @@ func ParseTimestamp(currentLocation *time.Location, str string) (time.Time, erro
 		}
 	}
 
-	return t, p.err
+	return t
 }
 
 // formatTs formats t into a format postgres understands.

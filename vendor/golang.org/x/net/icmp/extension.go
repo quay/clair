@@ -4,15 +4,13 @@
 
 package icmp
 
-import "encoding/binary"
-
 // An Extension represents an ICMP extension.
 type Extension interface {
 	// Len returns the length of ICMP extension.
 	// Proto must be either the ICMPv4 or ICMPv6 protocol number.
 	Len(proto int) int
 
-	// Marshal returns the binary encoding of ICMP extension.
+	// Marshal returns the binary enconding of ICMP extension.
 	// Proto must be either the ICMPv4 or ICMPv6 protocol number.
 	Marshal(proto int) ([]byte, error)
 }
@@ -21,7 +19,7 @@ const extensionVersion = 2
 
 func validExtensionHeader(b []byte) bool {
 	v := int(b[0]&0xf0) >> 4
-	s := binary.BigEndian.Uint16(b[2:4])
+	s := uint16(b[2])<<8 | uint16(b[3])
 	if s != 0 {
 		s = checksum(b)
 	}
@@ -65,7 +63,7 @@ func parseExtensions(b []byte, l int) ([]Extension, int, error) {
 	}
 	var exts []Extension
 	for b = b[l+4:]; len(b) >= 4; {
-		ol := int(binary.BigEndian.Uint16(b[:2]))
+		ol := int(b[0])<<8 | int(b[1])
 		if 4 > ol || ol > len(b) {
 			break
 		}

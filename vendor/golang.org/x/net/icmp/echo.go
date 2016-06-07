@@ -4,8 +4,6 @@
 
 package icmp
 
-import "encoding/binary"
-
 // An Echo represents an ICMP echo request or reply message body.
 type Echo struct {
 	ID   int    // identifier
@@ -24,8 +22,8 @@ func (p *Echo) Len(proto int) int {
 // Marshal implements the Marshal method of MessageBody interface.
 func (p *Echo) Marshal(proto int) ([]byte, error) {
 	b := make([]byte, 4+len(p.Data))
-	binary.BigEndian.PutUint16(b[:2], uint16(p.ID))
-	binary.BigEndian.PutUint16(b[2:4], uint16(p.Seq))
+	b[0], b[1] = byte(p.ID>>8), byte(p.ID)
+	b[2], b[3] = byte(p.Seq>>8), byte(p.Seq)
 	copy(b[4:], p.Data)
 	return b, nil
 }
@@ -36,7 +34,7 @@ func parseEcho(proto int, b []byte) (MessageBody, error) {
 	if bodyLen < 4 {
 		return nil, errMessageTooShort
 	}
-	p := &Echo{ID: int(binary.BigEndian.Uint16(b[:2])), Seq: int(binary.BigEndian.Uint16(b[2:4]))}
+	p := &Echo{ID: int(b[0])<<8 | int(b[1]), Seq: int(b[2])<<8 | int(b[3])}
 	if bodyLen > 4 {
 		p.Data = make([]byte, bodyLen-4)
 		copy(p.Data, b[4:])

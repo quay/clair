@@ -140,7 +140,6 @@ To create and play with a Test object from the example package,
 		test := &example.Test {
 			Label: proto.String("hello"),
 			Type:  proto.Int32(17),
-			Reps:  []int64{1, 2, 3},
 			Optionalgroup: &example.Test_OptionalGroup {
 				RequiredField: proto.String("good bye"),
 			},
@@ -191,9 +190,3 @@ the `plugins` parameter to protoc-gen-go; the usual way is to insert it into
 the --go_out argument to protoc:
 
 	protoc --go_out=plugins=grpc:. *.proto
-
-## Plugins ##
-
-The `protoc-gen-go/generator` package exposes a plugin interface,
-which is used by the gRPC code generation. This interface is not
-supported and is subject to incompatible changes without notice.

@@ -5,13 +5,14 @@
 package webdav
 
 import (
-	"encoding/xml"
 	"fmt"
 	"net/http"
 	"os"
 	"reflect"
 	"sort"
 	"testing"
+
+	"golang.org/x/net/webdav/internal/xml"
 )
 
 func TestMemPS(t *testing.T) {
@@ -74,22 +75,21 @@ func TestMemPS(t *testing.T) {
 			op:   "propname",
 			name: "/dir",
 			wantPnames: []xml.Name{
-				{Space: "DAV:", Local: "resourcetype"},
-				{Space: "DAV:", Local: "displayname"},
-				{Space: "DAV:", Local: "supportedlock"},
-				{Space: "DAV:", Local: "getlastmodified"},
+				xml.Name{Space: "DAV:", Local: "resourcetype"},
+				xml.Name{Space: "DAV:", Local: "displayname"},
+				xml.Name{Space: "DAV:", Local: "supportedlock"},
 			},
 		}, {
 			op:   "propname",
 			name: "/file",
 			wantPnames: []xml.Name{
-				{Space: "DAV:", Local: "resourcetype"},
-				{Space: "DAV:", Local: "displayname"},
-				{Space: "DAV:", Local: "getcontentlength"},
-				{Space: "DAV:", Local: "getlastmodified"},
-				{Space: "DAV:", Local: "getcontenttype"},
-				{Space: "DAV:", Local: "getetag"},
-				{Space: "DAV:", Local: "supportedlock"},
+				xml.Name{Space: "DAV:", Local: "resourcetype"},
+				xml.Name{Space: "DAV:", Local: "displayname"},
+				xml.Name{Space: "DAV:", Local: "getcontentlength"},
+				xml.Name{Space: "DAV:", Local: "getlastmodified"},
+				xml.Name{Space: "DAV:", Local: "getcontenttype"},
+				xml.Name{Space: "DAV:", Local: "getetag"},
+				xml.Name{Space: "DAV:", Local: "supportedlock"},
 			},
 		}},
 	}, {
@@ -106,9 +106,6 @@ func TestMemPS(t *testing.T) {
 				}, {
 					XMLName:  xml.Name{Space: "DAV:", Local: "displayname"},
 					InnerXML: []byte("dir"),
-				}, {
-					XMLName:  xml.Name{Space: "DAV:", Local: "getlastmodified"},
-					InnerXML: nil, // Calculated during test.
 				}, {
 					XMLName:  xml.Name{Space: "DAV:", Local: "supportedlock"},
 					InnerXML: []byte(lockEntry),
@@ -455,14 +452,14 @@ func TestMemPS(t *testing.T) {
 			op:   "propname",
 			name: "/file",
 			wantPnames: []xml.Name{
-				{Space: "DAV:", Local: "resourcetype"},
-				{Space: "DAV:", Local: "displayname"},
-				{Space: "DAV:", Local: "getcontentlength"},
-				{Space: "DAV:", Local: "getlastmodified"},
-				{Space: "DAV:", Local: "getcontenttype"},
-				{Space: "DAV:", Local: "getetag"},
-				{Space: "DAV:", Local: "supportedlock"},
-				{Space: "foo", Local: "bar"},
+				xml.Name{Space: "DAV:", Local: "resourcetype"},
+				xml.Name{Space: "DAV:", Local: "displayname"},
+				xml.Name{Space: "DAV:", Local: "getcontentlength"},
+				xml.Name{Space: "DAV:", Local: "getlastmodified"},
+				xml.Name{Space: "DAV:", Local: "getcontenttype"},
+				xml.Name{Space: "DAV:", Local: "getetag"},
+				xml.Name{Space: "DAV:", Local: "supportedlock"},
+				xml.Name{Space: "foo", Local: "bar"},
 			},
 		}},
 	}, {

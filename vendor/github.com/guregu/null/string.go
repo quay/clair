@@ -73,15 +73,6 @@ func (s String) MarshalJSON() ([]byte, error) {
 	return json.Marshal(s.String)
 }
 
-// MarshalText implements encoding.TextMarshaler.
-// It will encode a blank string when this String is null.
-func (s String) MarshalText() ([]byte, error) {
-	if !s.Valid {
-		return []byte{}, nil
-	}
-	return []byte(s.String), nil
-}
-
 // UnmarshalText implements encoding.TextUnmarshaler.
 // It will unmarshal to a null String if the input is a blank string.
 func (s *String) UnmarshalText(text []byte) error {
@@ -104,7 +95,8 @@ func (s String) Ptr() *string {
 	return &s.String
 }
 
-// IsZero returns true for null strings, for potential future omitempty support.
+// IsZero returns true for null or empty strings, for future omitempty support. (Go 1.4?)
+// Will return false s if blank but non-null.
 func (s String) IsZero() bool {
 	return !s.Valid
 }

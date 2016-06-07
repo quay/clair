@@ -62,18 +62,14 @@ type ListenerConn struct {
 
 // Creates a new ListenerConn.  Use NewListener instead.
 func NewListenerConn(name string, notificationChan chan<- *Notification) (*ListenerConn, error) {
-	return newDialListenerConn(defaultDialer{}, name, notificationChan)
-}
-
-func newDialListenerConn(d Dialer, name string, c chan<- *Notification) (*ListenerConn, error) {
-	cn, err := DialOpen(d, name)
+	cn, err := Open(name)
 	if err != nil {
 		return nil, err
 	}
 
 	l := &ListenerConn{
 		cn:               cn.(*conn),
-		notificationChan: c,
+		notificationChan: notificationChan,
 		connState:        connStateIdle,
 		replyChan:        make(chan message, 2),
 	}
@@ -395,7 +391,6 @@ type Listener struct {
 	name                 string
 	minReconnectInterval time.Duration
 	maxReconnectInterval time.Duration
-	dialer               Dialer
 	eventCallback        EventCallbackType
 
 	lock                 sync.Mutex
@@ -426,21 +421,10 @@ func NewListener(name string,
 	minReconnectInterval time.Duration,
 	maxReconnectInterval time.Duration,
 	eventCallback EventCallbackType) *Listener {
-	return NewDialListener(defaultDialer{}, name, minReconnectInterval, maxReconnectInterval, eventCallback)
-}
-
-// NewDialListener is like NewListener but it takes a Dialer.
-func NewDialListener(d Dialer,
-	name string,
-	minReconnectInterval time.Duration,
-	maxReconnectInterval time.Duration,
-	eventCallback EventCallbackType) *Listener {
-
 	l := &Listener{
 		name:                 name,
 		minReconnectInterval: minReconnectInterval,
 		maxReconnectInterval: maxReconnectInterval,
-		dialer:               d,
 		eventCallback:        eventCallback,
 
 		channels: make(map[string]struct{}),
@@ -676,7 +660,7 @@ func (l *Listener) closed() bool {
 
 func (l *Listener) connect() error {
 	notificationChan := make(chan *Notification, 32)
-	cn, err := newDialListenerConn(l.dialer, l.name, notificationChan)
+	cn, err := NewListenerConn(l.name, notificationChan)
 	if err != nil {
 		return err
 	}

@@ -390,7 +390,7 @@ func (d *Driver) Open(uri string) (driver.Conn, error) {
 // Register registers initialisation commands.
 // This is workaround, see http://codereview.appspot.com/5706047
 func (drv *Driver) Register(query string) {
-	drv.initCmds = append(drv.initCmds, query)
+	drv.initCmds = append(d.initCmds, query)
 }
 
 // Dialer can be used to dial connections to MySQL. If Dialer returns (nil, nil)
@@ -404,21 +404,21 @@ func (drv *Driver) SetDialer(dialer Dialer) {
 }
 
 // Driver automatically registered in database/sql
-var dfltdrv = Driver{proto: "tcp", raddr: "127.0.0.1:3306"}
+var d = Driver{proto: "tcp", raddr: "127.0.0.1:3306"}
 
 // Register calls Register method on driver registered in database/sql
 func Register(query string) {
-	dfltdrv.Register(query)
+	d.Register(query)
 }
 
 // SetDialer calls SetDialer method on driver registered in database/sql
 func SetDialer(dialer Dialer) {
-	dfltdrv.SetDialer(dialer)
+	d.SetDialer(dialer)
 }
 
 func init() {
 	Register("SET NAMES utf8")
-	sql.Register("mymysql", &dfltdrv)
+	sql.Register("mymysql", &d)
 }
 
 // Version returns mymysql version string
@@ -430,4 +430,4 @@ func Version() string {
 // server to time.Time.
 func SetLocation(loc *time.Location) {
 	location = loc
-}
+} 

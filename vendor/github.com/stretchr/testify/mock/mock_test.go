@@ -68,7 +68,7 @@ func (i *TestExampleImplementation) TheExampleMethodFuncType(fn ExampleFuncType)
 
 func Test_Mock_TestData(t *testing.T) {
 
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	if assert.NotNil(t, mockedService.TestData()) {
 
@@ -80,7 +80,7 @@ func Test_Mock_TestData(t *testing.T) {
 func Test_Mock_On(t *testing.T) {
 
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	c := mockedService.On("TheExampleMethod")
 	assert.Equal(t, []*Call{c}, mockedService.ExpectedCalls)
@@ -89,7 +89,7 @@ func Test_Mock_On(t *testing.T) {
 
 func Test_Mock_Chained_On(t *testing.T) {
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	mockedService.
 		On("TheExampleMethod", 1, 2, 3).
@@ -117,7 +117,7 @@ func Test_Mock_Chained_On(t *testing.T) {
 func Test_Mock_On_WithArgs(t *testing.T) {
 
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	c := mockedService.On("TheExampleMethod", 1, 2, 3, 4)
 
@@ -129,7 +129,7 @@ func Test_Mock_On_WithArgs(t *testing.T) {
 func Test_Mock_On_WithFuncArg(t *testing.T) {
 
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	c := mockedService.
 		On("TheExampleMethodFunc", AnythingOfType("func(string) error")).
@@ -179,10 +179,10 @@ func Test_Mock_On_WithPtrArgMatcher(t *testing.T) {
 
 	mockedService.On("TheExampleMethod3",
 		MatchedBy(func(a *ExampleType) bool { return a.ran == false }),
-	).Return(errors.New("error"))
+	).Return(errors.New("error!"))
 
 	assert.Equal(t, mockedService.TheExampleMethod3(&ExampleType{true}), nil)
-	assert.EqualError(t, mockedService.TheExampleMethod3(&ExampleType{false}), "error")
+	assert.EqualError(t, mockedService.TheExampleMethod3(&ExampleType{false}), "error!")
 }
 
 func Test_Mock_On_WithFuncArgMatcher(t *testing.T) {
@@ -207,7 +207,7 @@ func Test_Mock_On_WithFuncArgMatcher(t *testing.T) {
 func Test_Mock_On_WithVariadicFunc(t *testing.T) {
 
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	c := mockedService.
 		On("TheExampleMethodVariadic", []int{1, 2, 3}).
@@ -229,7 +229,7 @@ func Test_Mock_On_WithVariadicFunc(t *testing.T) {
 func Test_Mock_On_WithVariadicFuncWithInterface(t *testing.T) {
 
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	c := mockedService.On("TheExampleMethodVariadicInterface", []interface{}{1, 2, 3}).
 		Return(nil)
@@ -250,7 +250,7 @@ func Test_Mock_On_WithVariadicFuncWithInterface(t *testing.T) {
 func Test_Mock_On_WithVariadicFuncWithEmptyInterfaceArray(t *testing.T) {
 
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	var expected []interface{}
 	c := mockedService.
@@ -272,7 +272,7 @@ func Test_Mock_On_WithVariadicFuncWithEmptyInterfaceArray(t *testing.T) {
 
 func Test_Mock_On_WithFuncPanics(t *testing.T) {
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	assert.Panics(t, func() {
 		mockedService.On("TheExampleMethodFunc", func(string) error { return nil })
@@ -282,7 +282,7 @@ func Test_Mock_On_WithFuncPanics(t *testing.T) {
 func Test_Mock_On_WithFuncTypeArg(t *testing.T) {
 
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	c := mockedService.
 		On("TheExampleMethodFuncType", AnythingOfType("mock.ExampleFuncType")).
@@ -301,7 +301,7 @@ func Test_Mock_On_WithFuncTypeArg(t *testing.T) {
 func Test_Mock_Return(t *testing.T) {
 
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	c := mockedService.
 		On("TheExampleMethod", "A", "B", true).
@@ -325,7 +325,7 @@ func Test_Mock_Return(t *testing.T) {
 func Test_Mock_Return_WaitUntil(t *testing.T) {
 
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 	ch := time.After(time.Second)
 
 	c := mockedService.Mock.
@@ -352,7 +352,7 @@ func Test_Mock_Return_WaitUntil(t *testing.T) {
 func Test_Mock_Return_After(t *testing.T) {
 
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	c := mockedService.Mock.
 		On("TheExampleMethod", "A", "B", true).
@@ -378,7 +378,7 @@ func Test_Mock_Return_After(t *testing.T) {
 func Test_Mock_Return_Run(t *testing.T) {
 
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	fn := func(args Arguments) {
 		arg := args.Get(0).(*ExampleType)
@@ -409,7 +409,7 @@ func Test_Mock_Return_Run(t *testing.T) {
 
 func Test_Mock_Return_Run_Out_Of_Order(t *testing.T) {
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 	f := func(args Arguments) {
 		arg := args.Get(0).(*ExampleType)
 		arg.ran = true
@@ -435,7 +435,7 @@ func Test_Mock_Return_Run_Out_Of_Order(t *testing.T) {
 func Test_Mock_Return_Once(t *testing.T) {
 
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	c := mockedService.On("TheExampleMethod", "A", "B", true).
 		Return(1, "two", true).
@@ -459,7 +459,7 @@ func Test_Mock_Return_Once(t *testing.T) {
 func Test_Mock_Return_Twice(t *testing.T) {
 
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	c := mockedService.
 		On("TheExampleMethod", "A", "B", true).
@@ -484,7 +484,7 @@ func Test_Mock_Return_Twice(t *testing.T) {
 func Test_Mock_Return_Times(t *testing.T) {
 
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	c := mockedService.
 		On("TheExampleMethod", "A", "B", true).
@@ -509,7 +509,7 @@ func Test_Mock_Return_Times(t *testing.T) {
 func Test_Mock_Return_Nothing(t *testing.T) {
 
 	// make a test impl object
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	c := mockedService.
 		On("TheExampleMethod", "A", "B", true).
@@ -586,7 +586,7 @@ func Test_callString(t *testing.T) {
 
 func Test_Mock_Called(t *testing.T) {
 
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	mockedService.On("Test_Mock_Called", 1, 2, 3).Return(5, "6", true)
 
@@ -613,7 +613,7 @@ func asyncCall(m *Mock, ch chan Arguments) {
 
 func Test_Mock_Called_blocks(t *testing.T) {
 
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	mockedService.Mock.On("asyncCall", 1, 2, 3).Return(5, "6", true).After(2 * time.Millisecond)
 
@@ -646,7 +646,7 @@ func Test_Mock_Called_blocks(t *testing.T) {
 
 func Test_Mock_Called_For_Bounded_Repeatability(t *testing.T) {
 
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	mockedService.
 		On("Test_Mock_Called_For_Bounded_Repeatability", 1, 2, 3).
@@ -687,7 +687,7 @@ func Test_Mock_Called_For_Bounded_Repeatability(t *testing.T) {
 
 func Test_Mock_Called_For_SetTime_Expectation(t *testing.T) {
 
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	mockedService.On("TheExampleMethod", 1, 2, 3).Return(5, "6", true).Times(4)
 
@@ -703,7 +703,7 @@ func Test_Mock_Called_For_SetTime_Expectation(t *testing.T) {
 
 func Test_Mock_Called_Unexpected(t *testing.T) {
 
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	// make sure it panics if no expectation was made
 	assert.Panics(t, func() {
@@ -714,9 +714,9 @@ func Test_Mock_Called_Unexpected(t *testing.T) {
 
 func Test_AssertExpectationsForObjects_Helper(t *testing.T) {
 
-	var mockedService1 = new(TestExampleImplementation)
-	var mockedService2 = new(TestExampleImplementation)
-	var mockedService3 = new(TestExampleImplementation)
+	var mockedService1 *TestExampleImplementation = new(TestExampleImplementation)
+	var mockedService2 *TestExampleImplementation = new(TestExampleImplementation)
+	var mockedService3 *TestExampleImplementation = new(TestExampleImplementation)
 
 	mockedService1.On("Test_AssertExpectationsForObjects_Helper", 1).Return()
 	mockedService2.On("Test_AssertExpectationsForObjects_Helper", 2).Return()
@@ -732,9 +732,9 @@ func Test_AssertExpectationsForObjects_Helper(t *testing.T) {
 
 func Test_AssertExpectationsForObjects_Helper_Failed(t *testing.T) {
 
-	var mockedService1 = new(TestExampleImplementation)
-	var mockedService2 = new(TestExampleImplementation)
-	var mockedService3 = new(TestExampleImplementation)
+	var mockedService1 *TestExampleImplementation = new(TestExampleImplementation)
+	var mockedService2 *TestExampleImplementation = new(TestExampleImplementation)
+	var mockedService3 *TestExampleImplementation = new(TestExampleImplementation)
 
 	mockedService1.On("Test_AssertExpectationsForObjects_Helper_Failed", 1).Return()
 	mockedService2.On("Test_AssertExpectationsForObjects_Helper_Failed", 2).Return()
@@ -750,7 +750,7 @@ func Test_AssertExpectationsForObjects_Helper_Failed(t *testing.T) {
 
 func Test_Mock_AssertExpectations(t *testing.T) {
 
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	mockedService.On("Test_Mock_AssertExpectations", 1, 2, 3).Return(5, 6, 7)
 
@@ -765,71 +765,9 @@ func Test_Mock_AssertExpectations(t *testing.T) {
 
 }
 
-func Test_Mock_AssertExpectations_Placeholder_NoArgs(t *testing.T) {
-
-	var mockedService = new(TestExampleImplementation)
-
-	mockedService.On("Test_Mock_AssertExpectations_Placeholder_NoArgs").Return(5, 6, 7).Once()
-	mockedService.On("Test_Mock_AssertExpectations_Placeholder_NoArgs").Return(7, 6, 5)
-
-	tt := new(testing.T)
-	assert.False(t, mockedService.AssertExpectations(tt))
-
-	// make the call now
-	mockedService.Called()
-
-	// now assert expectations
-	assert.True(t, mockedService.AssertExpectations(tt))
-
-}
-
-func Test_Mock_AssertExpectations_Placeholder(t *testing.T) {
-
-	var mockedService = new(TestExampleImplementation)
-
-	mockedService.On("Test_Mock_AssertExpectations_Placeholder", 1, 2, 3).Return(5, 6, 7).Once()
-	mockedService.On("Test_Mock_AssertExpectations_Placeholder", 3, 2, 1).Return(7, 6, 5)
-
-	tt := new(testing.T)
-	assert.False(t, mockedService.AssertExpectations(tt))
-
-	// make the call now
-	mockedService.Called(1, 2, 3)
-
-	// now assert expectations
-	assert.False(t, mockedService.AssertExpectations(tt))
-
-	// make call to the second expectation
-	mockedService.Called(3, 2, 1)
-
-	// now assert expectations again
-	assert.True(t, mockedService.AssertExpectations(tt))
-}
-
-func Test_Mock_AssertExpectations_With_Pointers(t *testing.T) {
-
-	var mockedService = new(TestExampleImplementation)
-
-	mockedService.On("Test_Mock_AssertExpectations_With_Pointers", &struct{ Foo int }{1}).Return(1)
-	mockedService.On("Test_Mock_AssertExpectations_With_Pointers", &struct{ Foo int }{2}).Return(2)
-
-	tt := new(testing.T)
-	assert.False(t, mockedService.AssertExpectations(tt))
-
-	s := struct{ Foo int }{1}
-	// make the calls now
-	mockedService.Called(&s)
-	s.Foo = 2
-	mockedService.Called(&s)
-
-	// now assert expectations
-	assert.True(t, mockedService.AssertExpectations(tt))
-
-}
-
 func Test_Mock_AssertExpectationsCustomType(t *testing.T) {
 
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	mockedService.On("TheExampleMethod3", AnythingOfType("*mock.ExampleType")).Return(nil).Once()
 
@@ -846,7 +784,7 @@ func Test_Mock_AssertExpectationsCustomType(t *testing.T) {
 
 func Test_Mock_AssertExpectations_With_Repeatability(t *testing.T) {
 
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	mockedService.On("Test_Mock_AssertExpectations_With_Repeatability", 1, 2, 3).Return(5, 6, 7).Twice()
 
@@ -867,7 +805,7 @@ func Test_Mock_AssertExpectations_With_Repeatability(t *testing.T) {
 
 func Test_Mock_TwoCallsWithDifferentArguments(t *testing.T) {
 
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	mockedService.On("Test_Mock_TwoCallsWithDifferentArguments", 1, 2, 3).Return(5, 6, 7)
 	mockedService.On("Test_Mock_TwoCallsWithDifferentArguments", 4, 5, 6).Return(5, 6, 7)
@@ -886,7 +824,7 @@ func Test_Mock_TwoCallsWithDifferentArguments(t *testing.T) {
 
 func Test_Mock_AssertNumberOfCalls(t *testing.T) {
 
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	mockedService.On("Test_Mock_AssertNumberOfCalls", 1, 2, 3).Return(5, 6, 7)
 
@@ -900,7 +838,7 @@ func Test_Mock_AssertNumberOfCalls(t *testing.T) {
 
 func Test_Mock_AssertCalled(t *testing.T) {
 
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	mockedService.On("Test_Mock_AssertCalled", 1, 2, 3).Return(5, 6, 7)
 
@@ -912,7 +850,7 @@ func Test_Mock_AssertCalled(t *testing.T) {
 
 func Test_Mock_AssertCalled_WithAnythingOfTypeArgument(t *testing.T) {
 
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	mockedService.
 		On("Test_Mock_AssertCalled_WithAnythingOfTypeArgument", Anything, Anything, Anything).
@@ -926,7 +864,7 @@ func Test_Mock_AssertCalled_WithAnythingOfTypeArgument(t *testing.T) {
 
 func Test_Mock_AssertCalled_WithArguments(t *testing.T) {
 
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	mockedService.On("Test_Mock_AssertCalled_WithArguments", 1, 2, 3).Return(5, 6, 7)
 
@@ -940,7 +878,7 @@ func Test_Mock_AssertCalled_WithArguments(t *testing.T) {
 
 func Test_Mock_AssertCalled_WithArguments_With_Repeatability(t *testing.T) {
 
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	mockedService.On("Test_Mock_AssertCalled_WithArguments_With_Repeatability", 1, 2, 3).Return(5, 6, 7).Once()
 	mockedService.On("Test_Mock_AssertCalled_WithArguments_With_Repeatability", 2, 3, 4).Return(5, 6, 7).Once()
@@ -957,7 +895,7 @@ func Test_Mock_AssertCalled_WithArguments_With_Repeatability(t *testing.T) {
 
 func Test_Mock_AssertNotCalled(t *testing.T) {
 
-	var mockedService = new(TestExampleImplementation)
+	var mockedService *TestExampleImplementation = new(TestExampleImplementation)
 
 	mockedService.On("Test_Mock_AssertNotCalled", 1, 2, 3).Return(5, 6, 7)
 
@@ -972,7 +910,7 @@ func Test_Mock_AssertNotCalled(t *testing.T) {
 */
 func Test_Arguments_Get(t *testing.T) {
 
-	var args = Arguments([]interface{}{"string", 123, true})
+	var args Arguments = []interface{}{"string", 123, true}
 
 	assert.Equal(t, "string", args.Get(0).(string))
 	assert.Equal(t, 123, args.Get(1).(int))
@@ -982,7 +920,7 @@ func Test_Arguments_Get(t *testing.T) {
 
 func Test_Arguments_Is(t *testing.T) {
 
-	var args = Arguments([]interface{}{"string", 123, true})
+	var args Arguments = []interface{}{"string", 123, true}
 
 	assert.True(t, args.Is("string", 123, true))
 	assert.False(t, args.Is("wrong", 456, false))
@@ -991,7 +929,7 @@ func Test_Arguments_Is(t *testing.T) {
 
 func Test_Arguments_Diff(t *testing.T) {
 
-	var args = Arguments([]interface{}{"Hello World", 123, true})
+	var args Arguments = []interface{}{"Hello World", 123, true}
 	var diff string
 	var count int
 	diff, count = args.Diff([]interface{}{"Hello World", 456, "false"})
@@ -1004,7 +942,7 @@ func Test_Arguments_Diff(t *testing.T) {
 
 func Test_Arguments_Diff_DifferentNumberOfArgs(t *testing.T) {
 
-	var args = Arguments([]interface{}{"string", 123, true})
+	var args Arguments = []interface{}{"string", 123, true}
 	var diff string
 	var count int
 	diff, count = args.Diff([]interface{}{"string", 456, "false", "extra"})
@@ -1016,7 +954,7 @@ func Test_Arguments_Diff_DifferentNumberOfArgs(t *testing.T) {
 
 func Test_Arguments_Diff_WithAnythingArgument(t *testing.T) {
 
-	var args = Arguments([]interface{}{"string", 123, true})
+	var args Arguments = []interface{}{"string", 123, true}
 	var count int
 	_, count = args.Diff([]interface{}{"string", Anything, true})
 
@@ -1026,7 +964,7 @@ func Test_Arguments_Diff_WithAnythingArgument(t *testing.T) {
 
 func Test_Arguments_Diff_WithAnythingArgument_InActualToo(t *testing.T) {
 
-	var args = Arguments([]interface{}{"string", Anything, true})
+	var args Arguments = []interface{}{"string", Anything, true}
 	var count int
 	_, count = args.Diff([]interface{}{"string", 123, true})
 
@@ -1036,7 +974,7 @@ func Test_Arguments_Diff_WithAnythingArgument_InActualToo(t *testing.T) {
 
 func Test_Arguments_Diff_WithAnythingOfTypeArgument(t *testing.T) {
 
-	var args = Arguments([]interface{}{"string", AnythingOfType("int"), true})
+	var args Arguments = []interface{}{"string", AnythingOfType("int"), true}
 	var count int
 	_, count = args.Diff([]interface{}{"string", 123, true})
 
@@ -1046,7 +984,7 @@ func Test_Arguments_Diff_WithAnythingOfTypeArgument(t *testing.T) {
 
 func Test_Arguments_Diff_WithAnythingOfTypeArgument_Failing(t *testing.T) {
 
-	var args = Arguments([]interface{}{"string", AnythingOfType("string"), true})
+	var args Arguments = []interface{}{"string", AnythingOfType("string"), true}
 	var count int
 	var diff string
 	diff, count = args.Diff([]interface{}{"string", 123, true})
@@ -1060,7 +998,7 @@ func Test_Arguments_Diff_WithArgMatcher(t *testing.T) {
 	matchFn := func(a int) bool {
 		return a == 123
 	}
-	var args = Arguments([]interface{}{"string", MatchedBy(matchFn), true})
+	var args Arguments = []interface{}{"string", MatchedBy(matchFn), true}
 
 	diff, count := args.Diff([]interface{}{"string", 124, true})
 	assert.Equal(t, 1, count)
@@ -1080,7 +1018,7 @@ func Test_Arguments_Diff_WithArgMatcher(t *testing.T) {
 
 func Test_Arguments_Assert(t *testing.T) {
 
-	var args = Arguments([]interface{}{"string", 123, true})
+	var args Arguments = []interface{}{"string", 123, true}
 
 	assert.True(t, args.Assert(t, "string", 123, true))
 
@@ -1088,43 +1026,43 @@ func Test_Arguments_Assert(t *testing.T) {
 
 func Test_Arguments_String_Representation(t *testing.T) {
 
-	var args = Arguments([]interface{}{"string", 123, true})
+	var args Arguments = []interface{}{"string", 123, true}
 	assert.Equal(t, `string,int,bool`, args.String())
 
 }
 
 func Test_Arguments_String(t *testing.T) {
 
-	var args = Arguments([]interface{}{"string", 123, true})
+	var args Arguments = []interface{}{"string", 123, true}
 	assert.Equal(t, "string", args.String(0))
 
 }
 
 func Test_Arguments_Error(t *testing.T) {
 
-	var err = errors.New("An Error")
-	var args = Arguments([]interface{}{"string", 123, true, err})
+	var err error = errors.New("An Error")
+	var args Arguments = []interface{}{"string", 123, true, err}
 	assert.Equal(t, err, args.Error(3))
 
 }
 
 func Test_Arguments_Error_Nil(t *testing.T) {
 
-	var args = Arguments([]interface{}{"string", 123, true, nil})
+	var args Arguments = []interface{}{"string", 123, true, nil}
 	assert.Equal(t, nil, args.Error(3))
 
 }
 
 func Test_Arguments_Int(t *testing.T) {
 
-	var args = Arguments([]interface{}{"string", 123, true})
+	var args Arguments = []interface{}{"string", 123, true}
 	assert.Equal(t, 123, args.Int(1))
 
 }
 
 func Test_Arguments_Bool(t *testing.T) {
 
-	var args = Arguments([]interface{}{"string", 123, true})
+	var args Arguments = []interface{}{"string", 123, true}
 	assert.Equal(t, true, args.Bool(2))
 
 }

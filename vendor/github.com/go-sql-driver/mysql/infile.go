@@ -96,10 +96,6 @@ func deferredClose(err *error, closer io.Closer) {
 func (mc *mysqlConn) handleInFileRequest(name string) (err error) {
 	var rdr io.Reader
 	var data []byte
-	packetSize := 16 * 1024 // 16KB is small enough for disk readahead and large enough for TCP
-	if mc.maxWriteSize < packetSize {
-		packetSize = mc.maxWriteSize
-	}
 
 	if idx := strings.Index(name, "Reader::"); idx == 0 || (idx > 0 && name[idx-1] == '/') { // io.Reader
 		// The server might return an an absolute path. See issue #355.
@@ -112,6 +108,8 @@ func (mc *mysqlConn) handleInFileRequest(name string) (err error) {
 		if inMap {
 			rdr = handler()
 			if rdr != nil {
+				data = make([]byte, 4+mc.maxWriteSize)
+
 				if cl, ok := rdr.(io.Closer); ok {
 					defer deferredClose(&err, cl)
 				}
@@ -126,7 +124,7 @@ func (mc *mysqlConn) handleInFileRequest(name string) (err error) {
 		fileRegisterLock.RLock()
 		fr := fileRegister[name]
 		fileRegisterLock.RUnlock()
-		if mc.cfg.AllowAllFiles || fr {
+		if mc.cfg.allowAllFiles || fr {
 			var file *os.File
 			var fi os.FileInfo
 
@@ -136,19 +134,22 @@ func (mc *mysqlConn) handleInFileRequest(name string) (err error) {
 				// get file size
 				if fi, err = file.Stat(); err == nil {
 					rdr = file
-					if fileSize := int(fi.Size()); fileSize < packetSize {
-						packetSize = fileSize
+					if fileSize := int(fi.Size()); fileSize <= mc.maxWriteSize {
+						data = make([]byte, 4+fileSize)
+					} else if fileSize <= mc.maxPacketAllowed {
+						data = make([]byte, 4+mc.maxWriteSize)
+					} else {
+						err = fmt.Errorf("Local File '%s' too large: Size: %d, Max: %d", name, fileSize, mc.maxPacketAllowed)
 					}
 				}
 			}
 		} else {
-			err = fmt.Errorf("local file '%s' is not registered", name)
+			err = fmt.Errorf("Local File '%s' is not registered. Use the DSN parameter 'allowAllFiles=true' to allow all files", name)
 		}
 	}
 
 	// send content packets
 	if err == nil {
-		data := make([]byte, 4+packetSize)
 		var n int
 		for err == nil {
 			n, err = rdr.Read(data[4:])
@@ -174,8 +175,8 @@ func (mc *mysqlConn) handleInFileRequest(name string) (err error) {
 	// read OK packet
 	if err == nil {
 		return mc.readResultOK()
+	} else {
+		mc.readPacket()
 	}
-
-	mc.readPacket()
 	return err
 }

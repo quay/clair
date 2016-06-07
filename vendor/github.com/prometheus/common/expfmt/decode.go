@@ -132,7 +132,7 @@ func (d *protoDecoder) Decode(v *dto.MetricFamily) error {
 	return nil
 }
 
-// textDecoder implements the Decoder interface for the text protocol.
+// textDecoder implements the Decoder interface for the text protcol.
 type textDecoder struct {
 	r    io.Reader
 	p    TextParser

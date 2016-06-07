@@ -4,8 +4,6 @@
 
 package icmp
 
-import "encoding/binary"
-
 // A MPLSLabel represents a MPLS label stack entry.
 type MPLSLabel struct {
 	Label int  // label value
@@ -42,7 +40,7 @@ func (ls *MPLSLabelStack) Marshal(proto int) ([]byte, error) {
 
 func (ls *MPLSLabelStack) marshal(proto int, b []byte) error {
 	l := ls.Len(proto)
-	binary.BigEndian.PutUint16(b[:2], uint16(l))
+	b[0], b[1] = byte(l>>8), byte(l)
 	b[2], b[3] = classMPLSLabelStack, typeIncomingMPLSLabelStack
 	off := 4
 	for _, ll := range ls.Labels {

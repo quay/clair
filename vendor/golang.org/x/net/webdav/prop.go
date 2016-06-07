@@ -5,7 +5,6 @@
 package webdav
 
 import (
-	"encoding/xml"
 	"fmt"
 	"io"
 	"mime"
@@ -13,6 +12,8 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+
+	"golang.org/x/net/webdav/internal/xml"
 )
 
 // Proppatch describes a property update instruction as defined in RFC 4918.
@@ -118,14 +119,7 @@ var liveProps = map[xml.Name]struct {
 	},
 	xml.Name{Space: "DAV:", Local: "getlastmodified"}: {
 		findFn: findLastModified,
-		// http://webdav.org/specs/rfc4918.html#PROPERTY_getlastmodified
-		// suggests that getlastmodified should only apply to GETable
-		// resources, and this package does not support GET on directories.
-		//
-		// Nonetheless, some WebDAV clients expect child directories to be
-		// sortable by getlastmodified date, so this value is true, not false.
-		// See golang.org/issue/15334.
-		dir: true,
+		dir:    false,
 	},
 	xml.Name{Space: "DAV:", Local: "creationdate"}: {
 		findFn: nil,

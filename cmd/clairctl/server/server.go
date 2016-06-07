@@ -13,6 +13,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/coreos/clair/cmd/clairctl/docker"
 	"github.com/coreos/clair/cmd/clairctl/docker/httpclient"
+	"github.com/coreos/clair/cmd/clairctl/dockerdist"
 	"github.com/spf13/viper"
 )
 
@@ -70,8 +71,12 @@ func newSingleHostReverseProxy() *httputil.ReverseProxy {
 		if !validID.MatchString(u) {
 			logrus.Errorf("cannot parse url: %v", u)
 		}
-
-		host, _ := docker.GetRegistryMapping(validID.FindStringSubmatch(u)[1])
+		var host string
+		if docker.IsLocal {
+			host, _ = docker.GetRegistryMapping(validID.FindStringSubmatch(u)[1])
+		} else {
+			host, _ = dockerdist.GetRegistryMapping(validID.FindStringSubmatch(u)[1])
+		}
 		out, _ := url.Parse(host)
 		request.URL.Scheme = out.Scheme
 		request.URL.Host = out.Host

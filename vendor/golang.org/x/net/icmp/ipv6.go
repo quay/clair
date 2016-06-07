@@ -12,7 +12,7 @@ import (
 
 const ipv6PseudoHeaderLen = 2*net.IPv6len + 8
 
-// IPv6PseudoHeader returns an IPv6 pseudo header for checksum
+// IPv6PseudoHeader returns an IPv6 pseudo header for checkusm
 // calculation.
 func IPv6PseudoHeader(src, dst net.IP) []byte {
 	b := make([]byte, ipv6PseudoHeaderLen)

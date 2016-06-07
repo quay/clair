@@ -6,7 +6,6 @@ package webdav
 
 import (
 	"bytes"
-	"encoding/xml"
 	"fmt"
 	"io"
 	"net/http"
@@ -16,7 +15,7 @@ import (
 	"strings"
 	"testing"
 
-	ixml "golang.org/x/net/webdav/internal/xml"
+	"golang.org/x/net/webdav/internal/xml"
 )
 
 func TestReadLockInfo(t *testing.T) {
@@ -87,7 +86,7 @@ func TestReadLockInfo(t *testing.T) {
 			"  <D:owner>gopher</D:owner>\n" +
 			"</D:lockinfo>",
 		lockInfo{
-			XMLName:   ixml.Name{Space: "DAV:", Local: "lockinfo"},
+			XMLName:   xml.Name{Space: "DAV:", Local: "lockinfo"},
 			Exclusive: new(struct{}),
 			Write:     new(struct{}),
 			Owner: owner{
@@ -106,7 +105,7 @@ func TestReadLockInfo(t *testing.T) {
 			"  </D:owner>\n" +
 			"</D:lockinfo>",
 		lockInfo{
-			XMLName:   ixml.Name{Space: "DAV:", Local: "lockinfo"},
+			XMLName:   xml.Name{Space: "DAV:", Local: "lockinfo"},
 			Exclusive: new(struct{}),
 			Write:     new(struct{}),
 			Owner: owner{
@@ -148,7 +147,7 @@ func TestReadPropfind(t *testing.T) {
 			"  <A:propname/>\n" +
 			"</A:propfind>",
 		wantPF: propfind{
-			XMLName:  ixml.Name{Space: "DAV:", Local: "propfind"},
+			XMLName:  xml.Name{Space: "DAV:", Local: "propfind"},
 			Propname: new(struct{}),
 		},
 	}, {
@@ -164,7 +163,7 @@ func TestReadPropfind(t *testing.T) {
 			"   <A:allprop/>\n" +
 			"</A:propfind>",
 		wantPF: propfind{
-			XMLName: ixml.Name{Space: "DAV:", Local: "propfind"},
+			XMLName: xml.Name{Space: "DAV:", Local: "propfind"},
 			Allprop: new(struct{}),
 		},
 	}, {
@@ -175,7 +174,7 @@ func TestReadPropfind(t *testing.T) {
 			"  <A:include><A:displayname/></A:include>\n" +
 			"</A:propfind>",
 		wantPF: propfind{
-			XMLName: ixml.Name{Space: "DAV:", Local: "propfind"},
+			XMLName: xml.Name{Space: "DAV:", Local: "propfind"},
 			Allprop: new(struct{}),
 			Include: propfindProps{xml.Name{Space: "DAV:", Local: "displayname"}},
 		},
@@ -187,7 +186,7 @@ func TestReadPropfind(t *testing.T) {
 			"  <A:allprop/>\n" +
 			"</A:propfind>",
 		wantPF: propfind{
-			XMLName: ixml.Name{Space: "DAV:", Local: "propfind"},
+			XMLName: xml.Name{Space: "DAV:", Local: "propfind"},
 			Allprop: new(struct{}),
 			Include: propfindProps{xml.Name{Space: "DAV:", Local: "displayname"}},
 		},
@@ -198,7 +197,7 @@ func TestReadPropfind(t *testing.T) {
 			"  <A:prop><A:displayname/></A:prop>\n" +
 			"</A:propfind>",
 		wantPF: propfind{
-			XMLName: ixml.Name{Space: "DAV:", Local: "propfind"},
+			XMLName: xml.Name{Space: "DAV:", Local: "propfind"},
 			Prop:    propfindProps{xml.Name{Space: "DAV:", Local: "displayname"}},
 		},
 	}, {
@@ -211,7 +210,7 @@ func TestReadPropfind(t *testing.T) {
 			"  </A:prop>\n" +
 			"</A:propfind>",
 		wantPF: propfind{
-			XMLName: ixml.Name{Space: "DAV:", Local: "propfind"},
+			XMLName: xml.Name{Space: "DAV:", Local: "propfind"},
 			Prop:    propfindProps{xml.Name{Space: "DAV:", Local: "displayname"}},
 		},
 	}, {
@@ -221,7 +220,7 @@ func TestReadPropfind(t *testing.T) {
 			"  <A:prop>   <A:displayname/></A:prop>\n" +
 			"</A:propfind>",
 		wantPF: propfind{
-			XMLName: ixml.Name{Space: "DAV:", Local: "propfind"},
+			XMLName: xml.Name{Space: "DAV:", Local: "propfind"},
 			Prop:    propfindProps{xml.Name{Space: "DAV:", Local: "displayname"}},
 		},
 	}, {
@@ -231,7 +230,7 @@ func TestReadPropfind(t *testing.T) {
 			"  <A:prop>foo<A:displayname/>bar</A:prop>\n" +
 			"</A:propfind>",
 		wantPF: propfind{
-			XMLName: ixml.Name{Space: "DAV:", Local: "propfind"},
+			XMLName: xml.Name{Space: "DAV:", Local: "propfind"},
 			Prop:    propfindProps{xml.Name{Space: "DAV:", Local: "displayname"}},
 		},
 	}, {
@@ -242,7 +241,7 @@ func TestReadPropfind(t *testing.T) {
 			"  <E:leave-out xmlns:E='E:'>*boss*</E:leave-out>\n" +
 			"</A:propfind>",
 		wantPF: propfind{
-			XMLName:  ixml.Name{Space: "DAV:", Local: "propfind"},
+			XMLName:  xml.Name{Space: "DAV:", Local: "propfind"},
 			Propname: new(struct{}),
 		},
 	}, {
@@ -349,6 +348,10 @@ func TestReadPropfind(t *testing.T) {
 }
 
 func TestMultistatusWriter(t *testing.T) {
+	if go1Dot4 {
+		t.Skip("TestMultistatusWriter requires Go version 1.5 or greater")
+	}
+
 	///The "section x.y.z" test cases come from section x.y.z of the spec at
 	// http://www.webdav.org/specs/rfc4918.html
 	testCases := []struct {
@@ -799,7 +802,7 @@ func TestUnmarshalXMLValue(t *testing.T) {
 
 	var n xmlNormalizer
 	for _, tc := range testCases {
-		d := ixml.NewDecoder(strings.NewReader(tc.input))
+		d := xml.NewDecoder(strings.NewReader(tc.input))
 		var v xmlValue
 		if err := d.Decode(&v); err != nil {
 			t.Errorf("%s: got error %v, want nil", tc.desc, err)
@@ -837,8 +840,8 @@ type xmlNormalizer struct {
 //     * Remove comments, if instructed to do so.
 //
 func (n *xmlNormalizer) normalize(w io.Writer, r io.Reader) error {
-	d := ixml.NewDecoder(r)
-	e := ixml.NewEncoder(w)
+	d := xml.NewDecoder(r)
+	e := xml.NewEncoder(w)
 	for {
 		t, err := d.Token()
 		if err != nil {
@@ -848,18 +851,18 @@ func (n *xmlNormalizer) normalize(w io.Writer, r io.Reader) error {
 			return err
 		}
 		switch val := t.(type) {
-		case ixml.Directive, ixml.ProcInst:
+		case xml.Directive, xml.ProcInst:
 			continue
-		case ixml.Comment:
+		case xml.Comment:
 			if n.omitComments {
 				continue
 			}
-		case ixml.CharData:
+		case xml.CharData:
 			if n.omitWhitespace && len(bytes.TrimSpace(val)) == 0 {
 				continue
 			}
-		case ixml.StartElement:
-			start, _ := ixml.CopyToken(val).(ixml.StartElement)
+		case xml.StartElement:
+			start, _ := xml.CopyToken(val).(xml.StartElement)
 			attr := start.Attr[:0]
 			for _, a := range start.Attr {
 				if a.Name.Space == "xmlns" || a.Name.Local == "xmlns" {
@@ -894,7 +897,7 @@ func (n *xmlNormalizer) equalXML(a, b io.Reader) (bool, error) {
 	return normA == normB, nil
 }
 
-type byName []ixml.Attr
+type byName []xml.Attr
 
 func (a byName) Len() int      { return len(a) }
 func (a byName) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
