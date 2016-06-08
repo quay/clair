@@ -7,7 +7,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/coreos/clair/cmd/clairctl/clair"
-	"github.com/coreos/clair/cmd/clairctl/docker"
+	"github.com/coreos/clair/cmd/clairctl/config"
 	"github.com/coreos/clair/cmd/clairctl/xstrings"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -81,7 +81,7 @@ func saveReport(name string, content string) error {
 
 func init() {
 	RootCmd.AddCommand(reportCmd)
-	reportCmd.Flags().BoolVarP(&docker.IsLocal, "local", "l", false, "Use local images")
+	reportCmd.Flags().BoolVarP(&config.IsLocal, "local", "l", false, "Use local images")
 	reportCmd.Flags().StringP("format", "f", "html", "Format for Report [html,json]")
 	viper.BindPFlag("clair.report.format", reportCmd.Flags().Lookup("format"))
 }

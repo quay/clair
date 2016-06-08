@@ -30,14 +30,14 @@ func Push(image reference.Named, manifest schema1.SignedManifest) error {
 		return err
 	}
 	hURL := fmt.Sprintf("http://%v/v2", localIP)
-	if docker.IsLocal {
+	if config.IsLocal {
 		hURL = strings.Replace(hURL, "/v2", "/local", -1)
 		logrus.Infof("using %v as local url", hURL)
 	}
 
 	for index, layer := range manifest.FSLayers {
 		blobsum := layer.BlobSum.String()
-		if docker.IsLocal {
+		if config.IsLocal {
 			blobsum = strings.TrimPrefix(blobsum, "sha256:")
 		}
 
@@ -53,7 +53,7 @@ func Push(image reference.Named, manifest schema1.SignedManifest) error {
 		}}
 
 		//FIXME Update to TLS
-		if docker.IsLocal {
+		if config.IsLocal {
 
 			payload.Layer.Path += "/layer.tar"
 		}
@@ -68,7 +68,7 @@ func Push(image reference.Named, manifest schema1.SignedManifest) error {
 			parentID = payload.Layer.Name
 		}
 	}
-	if docker.IsLocal {
+	if config.IsLocal {
 		if err := docker.CleanLocal(); err != nil {
 			return err
 		}

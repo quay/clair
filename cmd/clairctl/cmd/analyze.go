@@ -45,17 +45,17 @@ func analyze(imageName string) clair.ImageAnalysis {
 	var err error
 	var image docker.Image
 
-	if !docker.IsLocal {
-		image, err = docker.Pull(imageName)
+	if !config.IsLocal {
+		// image, err = docker.Pull(imageName)
 
-		if err != nil {
-			if err == config.ErrLoginNotFound {
-				fmt.Println(err)
-			} else {
-				fmt.Println(errInternalError)
-			}
-			logrus.Fatalf("pulling image %q: %v", imageName, err)
-		}
+		// if err != nil {
+		// 	if err == config.ErrLoginNotFound {
+		// 		fmt.Println(err)
+		// 	} else {
+		// 		fmt.Println(errInternalError)
+		// 	}
+		// 	logrus.Fatalf("pulling image %q: %v", imageName, err)
+		// }
 
 	} else {
 		image, err = docker.Parse(imageName)
@@ -75,5 +75,5 @@ func analyze(imageName string) clair.ImageAnalysis {
 
 func init() {
 	RootCmd.AddCommand(analyzeCmd)
-	analyzeCmd.Flags().BoolVarP(&docker.IsLocal, "local", "l", false, "Use local images")
+	analyzeCmd.Flags().BoolVarP(&config.IsLocal, "local", "l", false, "Use local images")
 }

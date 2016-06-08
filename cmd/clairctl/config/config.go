@@ -23,6 +23,8 @@ import (
 
 var ErrLoginNotFound = errors.New("user is not log in")
 
+var IsLocal = false
+
 type reportConfig struct {
 	Path, Format string
 }

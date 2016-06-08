@@ -20,22 +20,39 @@ import (
 	dockerclient "github.com/fsouza/go-dockerclient"
 )
 
-//Save local images to tmp folder
-func Save(image reference.Named) (*schema1.SignedManifest, error) {
+//GetLocalManifest retrieve manifest for local image
+func GetLocalManifest(imageName string, withExport bool) (reference.Named, schema1.SignedManifest, error) {
 
-	imageName := image.Name()
+	image, err := reference.ParseNamed(imageName)
+	if err != nil {
+		return nil, schema1.SignedManifest{}, err
+	}
+	var manifest schema1.SignedManifest
+	if withExport {
+		manifest, err = save(image.Name())
+	} else {
+		manifest, err = historyFromCommand(image.Name())
+	}
+
+	if err != nil {
+		return nil, schema1.SignedManifest{}, err
+	}
+	return image, manifest, err
+}
+
+func save(imageName string) (schema1.SignedManifest, error) {
 	path := config.TmpLocal() + "/" + strings.Split(imageName, ":")[0] + "/blobs"
 
 	if _, err := os.Stat(path); os.IsExist(err) {
 		err := os.RemoveAll(path)
 		if err != nil {
-			return nil, err
+			return schema1.SignedManifest{}, err
 		}
 	}
 
 	err := os.MkdirAll(path, 0755)
 	if err != nil {
-		return nil, err
+		return schema1.SignedManifest{}, err
 	}
 
 	logrus.Debugln("docker image to save: ", imageName)
@@ -44,7 +61,7 @@ func Save(image reference.Named) (*schema1.SignedManifest, error) {
 	// open output file
 	fo, err := os.Create(path + "/output.tar")
 	if err != nil {
-		return nil, err
+		return schema1.SignedManifest{}, err
 	}
 	// close fo on exit and check for its returned error
 	defer func() {
@@ -55,28 +72,30 @@ func Save(image reference.Named) (*schema1.SignedManifest, error) {
 	// make a write buffer
 	w := bufio.NewWriter(fo)
 
-	endpoint := "unix:///var/run/docker.sock"
-	client, _ := dockerclient.NewClient(endpoint)
+	client, err := dockerclient.NewClientFromEnv()
+	if err != nil {
+		return schema1.SignedManifest{}, err
+	}
 	err = client.ExportImage(dockerclient.ExportImageOptions{Name: imageName, OutputStream: w})
 	if err != nil {
-		return nil, err
+		return schema1.SignedManifest{}, err
 	}
 	err = openAndUntar(path+"/output.tar", path)
 	if err != nil {
-		return nil, err
+		return schema1.SignedManifest{}, err
 	}
 
 	err = os.Remove(path + "/output.tar")
 	if err != nil {
-		return nil, err
+		return schema1.SignedManifest{}, err
 	}
 	return historyFromManifest(path)
 }
 
-func historyFromManifest(path string) (*schema1.SignedManifest, error) {
+func historyFromManifest(path string) (schema1.SignedManifest, error) {
 	mf, err := os.Open(path + "/manifest.json")
 	if err != nil {
-		return nil, err
+		return schema1.SignedManifest{}, err
 	}
 	defer mf.Close()
 
@@ -89,9 +108,9 @@ func historyFromManifest(path string) (*schema1.SignedManifest, error) {
 
 	var manifest []manifestItem
 	if err = json.NewDecoder(mf).Decode(&manifest); err != nil {
-		return nil, err
+		return schema1.SignedManifest{}, err
 	} else if len(manifest) != 1 {
-		return nil, err
+		return schema1.SignedManifest{}, err
 	}
 	var layers []string
 	for _, layer := range manifest[0].Layers {
@@ -103,12 +122,34 @@ func historyFromManifest(path string) (*schema1.SignedManifest, error) {
 		var d digest.Digest
 		d, err := digest.ParseDigest("sha256:" + strings.TrimSuffix(layer, "/layer.tar"))
 		if err != nil {
-			return nil, err
+			return schema1.SignedManifest{}, err
 		}
 		m.FSLayers = append(m.FSLayers, schema1.FSLayer{BlobSum: d})
 	}
 
-	return &m, nil
+	return m, nil
+}
+
+func historyFromCommand(imageName string) (schema1.SignedManifest, error) {
+	client, err := dockerclient.NewClientFromEnv()
+	if err != nil {
+		return schema1.SignedManifest{}, err
+	}
+	histories, err := client.ImageHistory(imageName)
+	if err != nil {
+		return schema1.SignedManifest{}, err
+	}
+
+	manifest := schema1.SignedManifest{}
+	for _, history := range histories {
+		var d digest.Digest
+		d, err := digest.ParseDigest(history.ID)
+		if err != nil {
+			return schema1.SignedManifest{}, err
+		}
+		manifest.FSLayers = append(manifest.FSLayers, schema1.FSLayer{BlobSum: d})
+	}
+	return manifest, nil
 }
 
 func openAndUntar(name, dst string) error {

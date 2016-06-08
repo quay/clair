@@ -30,7 +30,7 @@ const dockerImageRegex = "^(?:([^/]+)/)?(?:([^/]+)/)?([^@:/]+)(?:[@:](.+))?"
 const DockerHub = "registry-1.docker.io"
 const hubURI = "https://" + DockerHub + "/v2"
 
-var IsLocal = false
+var isLocal = false
 
 func TmpLocal() string {
 	return viper.GetString("clairctl.tempFolder")

@@ -183,3 +183,19 @@ func DownloadManifest(image string, insecure bool) (reference.Named, distlib.Man
 
 	return named, manifest, nil
 }
+
+// DownloadV1Manifest the manifest for the given image in v1 schema format, using the given credentials.
+func DownloadV1Manifest(imageName string, insecure bool) (reference.Named, schema1.SignedManifest, error) {
+	image, manifest, err := DownloadManifest(imageName, insecure)
+
+	if err != nil {
+		return nil, schema1.SignedManifest{}, err
+	}
+	// Ensure that the manifest type is supported.
+	switch manifest.(type) {
+	case *schema1.SignedManifest:
+		return image, *manifest.(*schema1.SignedManifest), nil
+	default:
+		return nil, schema1.SignedManifest{}, errors.New("only v1 manifests are currently supported")
+	}
+}
