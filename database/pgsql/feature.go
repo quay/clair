@@ -18,12 +18,12 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
 )
 
-func (pgSQL *pgSQL) insertFeature(feature database.Feature) (int, error) {
+func (pgSQL *pgSQL) insertFeature(feature services.Feature) (int, error) {
 	if feature.Name == "" {
 		return 0, cerrors.NewBadRequestError("could not find/insert invalid Feature")
 	}
@@ -61,7 +61,7 @@ func (pgSQL *pgSQL) insertFeature(feature database.Feature) (int, error) {
 	return id, nil
 }
 
-func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion) (id int, err error) {
+func (pgSQL *pgSQL) insertFeatureVersion(featureVersion services.FeatureVersion) (id int, err error) {
 	if featureVersion.Version.String() == "" {
 		return 0, cerrors.NewBadRequestError("could not find/insert invalid FeatureVersion")
 	}
@@ -177,7 +177,7 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 }
 
 // TODO(Quentin-M): Batch me
-func (pgSQL *pgSQL) insertFeatureVersions(featureVersions []database.FeatureVersion) ([]int, error) {
+func (pgSQL *pgSQL) insertFeatureVersions(featureVersions []services.FeatureVersion) ([]int, error) {
 	IDs := make([]int, 0, len(featureVersions))
 
 	for i := 0; i < len(featureVersions); i++ {
@@ -197,7 +197,7 @@ type vulnerabilityAffectsFeatureVersion struct {
 	fixedInVersion  types.Version
 }
 
-func linkFeatureVersionToVulnerabilities(tx *sql.Tx, featureVersion database.FeatureVersion) error {
+func linkFeatureVersionToVulnerabilities(tx *sql.Tx, featureVersion services.FeatureVersion) error {
 	// Select every vulnerability and the fixed version that affect this Feature.
 	// TODO(Quentin-M): LIMIT
 	rows, err := tx.Query(searchVulnerabilityFixedInFeature, featureVersion.Feature.ID)

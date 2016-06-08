@@ -17,6 +17,9 @@ install:
   - echo 'nop'
 
 script:
+  - mkdir -p  $HOME/gopath/src/github.com/coreos/clair/
+  - rsync -az ${TRAVIS_BUILD_DIR}/ $HOME/gopath/src/github.com/coreos/clair/
+  - cd $HOME/gopath/src/github.com/coreos/clair/
   - go test -v $(go list ./... | grep -v /vendor/)
 
 services:

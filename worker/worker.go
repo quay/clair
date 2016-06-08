@@ -19,7 +19,8 @@ package worker
 import (
 	"github.com/coreos/pkg/capnslog"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
+	"github.com/coreos/clair/services/vulnerabilities"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/worker/detectors"
@@ -50,7 +51,7 @@ var (
 // then stores everything in the database.
 // TODO(Quentin-M): We could have a goroutine that looks for layers that have been analyzed with an
 // older engine version and that processes them.
-func Process(datastore database.Datastore, imageFormat, name, parentName, path string, headers map[string]string) error {
+func Process(ls vulnerabilities.Service, imageFormat, name, parentName, path string, headers map[string]string) error {
 	// Verify parameters.
 	if name == "" {
 		return cerrors.NewBadRequestError("could not process a layer which does not have a name")
@@ -68,19 +69,19 @@ func Process(datastore database.Datastore, imageFormat, name, parentName, path s
 		name, utils.CleanURL(path), Version, parentName, imageFormat)
 
 	// Check to see if the layer is already in the database.
-	layer, err := datastore.FindLayer(name, false, false)
+	layer, err := ls.FindLayer(name, false, false)
 	if err != nil && err != cerrors.ErrNotFound {
 		return err
 	}
 
 	if err == cerrors.ErrNotFound {
 		// New layer case.
-		layer = database.Layer{Name: name, EngineVersion: Version}
+		layer = services.Layer{Name: name, EngineVersion: Version}
 
 		// Retrieve the parent if it has one.
 		// We need to get it with its Features in order to diff them.
 		if parentName != "" {
-			parent, err := datastore.FindLayer(parentName, true, false)
+			parent, err := ls.FindLayer(parentName, true, false)
 			if err != nil && err != cerrors.ErrNotFound {
 				return err
 			}
@@ -109,11 +110,11 @@ func Process(datastore database.Datastore, imageFormat, name, parentName, path s
 		return err
 	}
 
-	return datastore.InsertLayer(layer)
+	return ls.InsertLayer(layer)
 }
 
 // detectContent downloads a layer's archive and extracts its Namespace and Features.
-func detectContent(imageFormat, name, path string, headers map[string]string, parent *database.Layer) (namespace *database.Namespace, featureVersions []database.FeatureVersion, err error) {
+func detectContent(imageFormat, name, path string, headers map[string]string, parent *services.Layer) (namespace *services.Namespace, featureVersions []services.FeatureVersion, err error) {
 	data, err := detectors.DetectData(imageFormat, path, headers, append(detectors.GetRequiredFilesFeatures(), detectors.GetRequiredFilesNamespace()...), maxFileSize)
 	if err != nil {
 		log.Errorf("layer %s: failed to extract data from %s: %s", name, utils.CleanURL(path), err)
@@ -135,7 +136,7 @@ func detectContent(imageFormat, name, path string, headers map[string]string, pa
 	return
 }
 
-func detectNamespace(name string, data map[string][]byte, parent *database.Layer) (namespace *database.Namespace) {
+func detectNamespace(name string, data map[string][]byte, parent *services.Layer) (namespace *services.Namespace) {
 	// Use registered detectors to get the Namespace.
 	namespace = detectors.DetectNamespace(data)
 	if namespace != nil {
@@ -155,7 +156,7 @@ func detectNamespace(name string, data map[string][]byte, parent *database.Layer
 	return
 }
 
-func detectFeatureVersions(name string, data map[string][]byte, namespace *database.Namespace, parent *database.Layer) (features []database.FeatureVersion, err error) {
+func detectFeatureVersions(name string, data map[string][]byte, namespace *services.Namespace, parent *services.Layer) (features []services.FeatureVersion, err error) {
 	// TODO(Quentin-M): We need to pass the parent image to DetectFeatures because it's possible that
 	// some detectors would need it in order to produce the entire feature list (if they can only
 	// detect a diff). Also, we should probably pass the detected namespace so detectors could
@@ -175,7 +176,7 @@ func detectFeatureVersions(name string, data map[string][]byte, namespace *datab
 	}
 
 	// Build a map of the namespaces for each FeatureVersion in our parent layer.
-	parentFeatureNamespaces := make(map[string]database.Namespace)
+	parentFeatureNamespaces := make(map[string]services.Namespace)
 	if parent != nil {
 		for _, parentFeature := range parent.Features {
 			parentFeatureNamespaces[parentFeature.Feature.Name+":"+parentFeature.Version.String()] = parentFeature.Feature.Namespace

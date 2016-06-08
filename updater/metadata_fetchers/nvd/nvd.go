@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services/vulnerabilities"
 	"github.com/coreos/clair/updater"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/pkg/capnslog"
@@ -53,7 +53,7 @@ func init() {
 	updater.RegisterMetadataFetcher("NVD", &NVDMetadataFetcher{})
 }
 
-func (fetcher *NVDMetadataFetcher) Load(datastore database.Datastore) error {
+func (fetcher *NVDMetadataFetcher) Load(vulnstore vulnerabilities.Service) error {
 	fetcher.lock.Lock()
 	defer fetcher.lock.Unlock()
 

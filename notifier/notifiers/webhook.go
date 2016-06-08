@@ -30,8 +30,8 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/coreos/clair/config"
-	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/notifier"
+	"github.com/coreos/clair/services"
 )
 
 const timeout = 5 * time.Second
@@ -114,7 +114,7 @@ type notificationEnvelope struct {
 	}
 }
 
-func (h *WebhookNotifier) Send(notification database.VulnerabilityNotification) error {
+func (h *WebhookNotifier) Send(notification services.VulnerabilityNotification) error {
 	// Marshal notification.
 	jsonNotification, err := json.Marshal(notificationEnvelope{struct{ Name string }{notification.Name}})
 	if err != nil {

@@ -26,8 +26,11 @@ import (
 	"github.com/coreos/clair/api"
 	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/config"
-	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/notifier"
+	"github.com/coreos/clair/services/keyvalue"
+	"github.com/coreos/clair/services/locks"
+	"github.com/coreos/clair/services/notifications"
+	"github.com/coreos/clair/services/vulnerabilities"
 	"github.com/coreos/clair/updater"
 	"github.com/coreos/clair/utils"
 	"github.com/coreos/pkg/capnslog"
@@ -41,26 +44,45 @@ func Boot(config *config.Config) {
 	rand.Seed(time.Now().UnixNano())
 	st := utils.NewStopper()
 
-	// Open database
-	db, err := database.Open(config.Database)
+	// Open services
+	ls, err := locks.Open(config.Database)
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer db.Close()
+	defer ls.Close()
+
+	kvs, err := keyvalue.Open(config.Database)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer kvs.Close()
+
+	vuln, err := vulnerabilities.Open(config.Database)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer vuln.Close()
+
+	ns, err := notifications.Open(config.Database)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer ns.Close()
 
 	// Start notifier
 	st.Begin()
-	go notifier.Run(config.Notifier, db, st)
+	go notifier.Run(config.Notifier, ls, ns, st)
 
 	// Start API
 	st.Begin()
-	go api.Run(config.API, &context.RouteContext{db, config.API}, st)
+	ctx := &context.RouteContext{ls, kvs, vuln, ns, config.API}
+	go api.Run(config.API, ctx, st)
 	st.Begin()
-	go api.RunHealth(config.API, &context.RouteContext{db, config.API}, st)
+	go api.RunHealth(config.API, ctx, st)
 
 	// Start updater
 	st.Begin()
-	go updater.Run(config.Updater, db, st)
+	go updater.Run(config.Updater, ls, kvs, vuln, st)
 
 	// Wait for interruption and shutdown gracefully.
 	waitForSignals(syscall.SIGINT, syscall.SIGTERM)

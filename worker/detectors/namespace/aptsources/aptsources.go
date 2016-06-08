@@ -18,7 +18,8 @@ import (
 	"bufio"
 	"strings"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
+	"github.com/coreos/clair/services/vulnerabilities"
 	"github.com/coreos/clair/worker/detectors"
 )
 
@@ -33,7 +34,7 @@ func init() {
 	detectors.RegisterNamespaceDetector("apt-sources", &AptSourcesNamespaceDetector{})
 }
 
-func (detector *AptSourcesNamespaceDetector) Detect(data map[string][]byte) *database.Namespace {
+func (detector *AptSourcesNamespaceDetector) Detect(data map[string][]byte) *services.Namespace {
 	f, hasFile := data["etc/apt/sources.list"]
 	if !hasFile {
 		return nil
@@ -61,12 +62,12 @@ func (detector *AptSourcesNamespaceDetector) Detect(data map[string][]byte) *dat
 			}
 
 			var found bool
-			version, found = database.DebianReleasesMapping[line[2]]
+			version, found = vulnerabilities.DebianReleasesMapping[line[2]]
 			if found {
 				OS = "debian"
 				break
 			}
-			version, found = database.UbuntuReleasesMapping[line[2]]
+			version, found = vulnerabilities.UbuntuReleasesMapping[line[2]]
 			if found {
 				OS = "ubuntu"
 				break
@@ -75,7 +76,7 @@ func (detector *AptSourcesNamespaceDetector) Detect(data map[string][]byte) *dat
 	}
 
 	if OS != "" && version != "" {
-		return &database.Namespace{Name: OS + ":" + version}
+		return &services.Namespace{Name: OS + ":" + version}
 	}
 	return nil
 }

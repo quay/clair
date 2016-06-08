@@ -4,42 +4,42 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestDoVulnerabilitiesNamespacing(t *testing.T) {
-	fv1 := database.FeatureVersion{
-		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "Namespace1"},
+	fv1 := services.FeatureVersion{
+		Feature: services.Feature{
+			Namespace: services.Namespace{Name: "Namespace1"},
 			Name:      "Feature1",
 		},
 		Version: types.NewVersionUnsafe("0.1"),
 	}
 
-	fv2 := database.FeatureVersion{
-		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "Namespace2"},
+	fv2 := services.FeatureVersion{
+		Feature: services.Feature{
+			Namespace: services.Namespace{Name: "Namespace2"},
 			Name:      "Feature1",
 		},
 		Version: types.NewVersionUnsafe("0.2"),
 	}
 
-	fv3 := database.FeatureVersion{
-		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "Namespace2"},
+	fv3 := services.FeatureVersion{
+		Feature: services.Feature{
+			Namespace: services.Namespace{Name: "Namespace2"},
 			Name:      "Feature2",
 		},
 		Version: types.NewVersionUnsafe("0.3"),
 	}
 
-	vulnerability := database.Vulnerability{
+	vulnerability := services.Vulnerability{
 		Name:    "DoVulnerabilityNamespacing",
-		FixedIn: []database.FeatureVersion{fv1, fv2, fv3},
+		FixedIn: []services.FeatureVersion{fv1, fv2, fv3},
 	}
 
-	vulnerabilities := doVulnerabilitiesNamespacing([]database.Vulnerability{vulnerability})
+	vulnerabilities := doVulnerabilitiesNamespacing([]services.Vulnerability{vulnerability})
 	for _, vulnerability := range vulnerabilities {
 		switch vulnerability.Namespace.Name {
 		case fv1.Feature.Namespace.Name:

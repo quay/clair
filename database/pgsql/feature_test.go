@@ -19,7 +19,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 	"github.com/coreos/clair/utils/types"
 )
 
@@ -32,20 +32,20 @@ func TestInsertFeature(t *testing.T) {
 	defer datastore.Close()
 
 	// Invalid Feature.
-	id0, err := datastore.insertFeature(database.Feature{})
+	id0, err := datastore.insertFeature(services.Feature{})
 	assert.NotNil(t, err)
 	assert.Zero(t, id0)
 
-	id0, err = datastore.insertFeature(database.Feature{
-		Namespace: database.Namespace{},
+	id0, err = datastore.insertFeature(services.Feature{
+		Namespace: services.Namespace{},
 		Name:      "TestInsertFeature0",
 	})
 	assert.NotNil(t, err)
 	assert.Zero(t, id0)
 
 	// Insert Feature and ensure we can find it.
-	feature := database.Feature{
-		Namespace: database.Namespace{Name: "TestInsertFeatureNamespace1"},
+	feature := services.Feature{
+		Namespace: services.Namespace{Name: "TestInsertFeatureNamespace1"},
 		Name:      "TestInsertFeature1",
 	}
 	id1, err := datastore.insertFeature(feature)
@@ -55,28 +55,28 @@ func TestInsertFeature(t *testing.T) {
 	assert.Equal(t, id1, id2)
 
 	// Insert invalid FeatureVersion.
-	for _, invalidFeatureVersion := range []database.FeatureVersion{
+	for _, invalidFeatureVersion := range []services.FeatureVersion{
 		{
-			Feature: database.Feature{},
+			Feature: services.Feature{},
 			Version: types.NewVersionUnsafe("1.0"),
 		},
 		{
-			Feature: database.Feature{
-				Namespace: database.Namespace{},
+			Feature: services.Feature{
+				Namespace: services.Namespace{},
 				Name:      "TestInsertFeature2",
 			},
 			Version: types.NewVersionUnsafe("1.0"),
 		},
 		{
-			Feature: database.Feature{
-				Namespace: database.Namespace{Name: "TestInsertFeatureNamespace2"},
+			Feature: services.Feature{
+				Namespace: services.Namespace{Name: "TestInsertFeatureNamespace2"},
 				Name:      "TestInsertFeature2",
 			},
 			Version: types.NewVersionUnsafe(""),
 		},
 		{
-			Feature: database.Feature{
-				Namespace: database.Namespace{Name: "TestInsertFeatureNamespace2"},
+			Feature: services.Feature{
+				Namespace: services.Namespace{Name: "TestInsertFeatureNamespace2"},
 				Name:      "TestInsertFeature2",
 			},
 			Version: types.NewVersionUnsafe("bad version"),
@@ -88,9 +88,9 @@ func TestInsertFeature(t *testing.T) {
 	}
 
 	// Insert FeatureVersion and ensure we can find it.
-	featureVersion := database.FeatureVersion{
-		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "TestInsertFeatureNamespace1"},
+	featureVersion := services.FeatureVersion{
+		Feature: services.Feature{
+			Namespace: services.Namespace{Name: "TestInsertFeatureNamespace1"},
 			Name:      "TestInsertFeature1",
 		},
 		Version: types.NewVersionUnsafe("2:3.0-imba"),

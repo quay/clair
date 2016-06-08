@@ -18,13 +18,13 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
 )
 
 // The FeaturesDetector interface defines a way to detect packages from input data.
 type FeaturesDetector interface {
 	// Detect detects a list of FeatureVersion from the input data.
-	Detect(map[string][]byte) ([]database.FeatureVersion, error)
+	Detect(map[string][]byte) ([]services.FeatureVersion, error)
 	// GetRequiredFiles returns the list of files required for Detect, without
 	// leading /.
 	GetRequiredFiles() []string
@@ -54,13 +54,13 @@ func RegisterFeaturesDetector(name string, f FeaturesDetector) {
 }
 
 // DetectFeatures detects a list of FeatureVersion using every registered FeaturesDetector.
-func DetectFeatures(data map[string][]byte) ([]database.FeatureVersion, error) {
-	var packages []database.FeatureVersion
+func DetectFeatures(data map[string][]byte) ([]services.FeatureVersion, error) {
+	var packages []services.FeatureVersion
 
 	for _, detector := range featuresDetectors {
 		pkgs, err := detector.Detect(data)
 		if err != nil {
-			return []database.FeatureVersion{}, err
+			return []services.FeatureVersion{}, err
 		}
 		packages = append(packages, pkgs...)
 	}

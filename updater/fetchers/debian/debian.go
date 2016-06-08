@@ -23,7 +23,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/services"
+	"github.com/coreos/clair/services/keyvalue"
+	"github.com/coreos/clair/services/vulnerabilities"
 	"github.com/coreos/clair/updater"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
@@ -60,7 +62,7 @@ func init() {
 }
 
 // FetchUpdate fetches vulnerability updates from the Debian Security Tracker.
-func (fetcher *DebianFetcher) FetchUpdate(datastore database.Datastore) (resp updater.FetcherResponse, err error) {
+func (fetcher *DebianFetcher) FetchUpdate(kvstore keyvalue.Service) (resp updater.FetcherResponse, err error) {
 	log.Info("fetching Debian vulnerabilities")
 
 	// Download JSON.
@@ -71,7 +73,7 @@ func (fetcher *DebianFetcher) FetchUpdate(datastore database.Datastore) (resp up
 	}
 
 	// Get the SHA-1 of the latest update's JSON data
-	latestHash, err := datastore.GetKeyValue(updaterFlag)
+	latestHash, err := kvstore.GetKeyValue(updaterFlag)
 	if err != nil {
 		return resp, err
 	}
@@ -130,15 +132,15 @@ func buildResponse(jsonReader io.Reader, latestKnownHash string) (resp updater.F
 	return resp, nil
 }
 
-func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, unknownReleases map[string]struct{}) {
-	mvulnerabilities := make(map[string]*database.Vulnerability)
+func parseDebianJSON(data *jsonData) (vulnz []services.Vulnerability, unknownReleases map[string]struct{}) {
+	mvulnerabilities := make(map[string]*services.Vulnerability)
 	unknownReleases = make(map[string]struct{})
 
 	for pkgName, pkgNode := range *data {
 		for vulnName, vulnNode := range pkgNode {
 			for releaseName, releaseNode := range vulnNode.Releases {
 				// Attempt to detect the release number.
-				if _, isReleaseKnown := database.DebianReleasesMapping[releaseName]; !isReleaseKnown {
+				if _, isReleaseKnown := vulnerabilities.DebianReleasesMapping[releaseName]; !isReleaseKnown {
 					unknownReleases[releaseName] = struct{}{}
 					continue
 				}
@@ -151,7 +153,7 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 				// Get or create the vulnerability.
 				vulnerability, vulnerabilityAlreadyExists := mvulnerabilities[vulnName]
 				if !vulnerabilityAlreadyExists {
-					vulnerability = &database.Vulnerability{
+					vulnerability = &services.Vulnerability{
 						Name:        vulnName,
 						Link:        strings.Join([]string{cveURLPrefix, "/", vulnName}, ""),
 						Severity:    types.Unknown,
@@ -188,11 +190,11 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 				}
 
 				// Create and add the feature version.
-				pkg := database.FeatureVersion{
-					Feature: database.Feature{
+				pkg := services.FeatureVersion{
+					Feature: services.Feature{
 						Name: pkgName,
-						Namespace: database.Namespace{
-							Name: "debian:" + database.DebianReleasesMapping[releaseName],
+						Namespace: services.Namespace{
+							Name: "debian:" + vulnerabilities.DebianReleasesMapping[releaseName],
 						},
 					},
 					Version: version,
@@ -207,7 +209,7 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 
 	// Convert the vulnerabilities map to a slice
 	for _, v := range mvulnerabilities {
-		vulnerabilities = append(vulnerabilities, *v)
+		vulnz = append(vulnz, *v)
 	}
 
 	return
