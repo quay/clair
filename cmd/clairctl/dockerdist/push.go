@@ -31,28 +31,32 @@ func Push(image reference.Named, manifest schema1.SignedManifest) error {
 	}
 	hURL := fmt.Sprintf("http://%v/v2", localIP)
 	if docker.IsLocal {
-		hURL += "/local"
+		hURL = strings.Replace(hURL, "/v2", "/local", -1)
 		logrus.Infof("using %v as local url", hURL)
 	}
 
 	for index, layer := range manifest.FSLayers {
-		lUID := xstrings.Substr(layer.BlobSum.String(), 0, 12)
+		blobsum := layer.BlobSum.String()
+		if docker.IsLocal {
+			blobsum = strings.TrimPrefix(blobsum, "sha256:")
+		}
+
+		lUID := xstrings.Substr(blobsum, 0, 12)
 		logrus.Infof("Pushing Layer %d/%d [%v]", index+1, layerCount, lUID)
 
-		insertRegistryMapping(layer.BlobSum.String(), image.Hostname())
+		insertRegistryMapping(blobsum, image.Hostname())
 		payload := v1.LayerEnvelope{Layer: &v1.Layer{
-			Name:       layer.BlobSum.String(),
-			Path:       blobsURI(image.Hostname(), image.RemoteName(), layer.BlobSum.String()),
+			Name:       blobsum,
+			Path:       blobsURI(image.Hostname(), image.RemoteName(), blobsum),
 			ParentName: parentID,
 			Format:     "Docker",
 		}}
 
 		//FIXME Update to TLS
-		//FIXME use local with new push
-		// if IsLocal {
-		// 	payload.Layer.Name = layer.History
-		// 	payload.Layer.Path += "/layer.tar"
-		// }
+		if docker.IsLocal {
+
+			payload.Layer.Path += "/layer.tar"
+		}
 		payload.Layer.Path = strings.Replace(payload.Layer.Path, image.Hostname(), hURL, 1)
 		if err := clair.Push(payload); err != nil {
 			logrus.Infof("adding layer %d/%d [%v]: %v", index+1, layerCount, lUID, err)
@@ -64,11 +68,11 @@ func Push(image reference.Named, manifest schema1.SignedManifest) error {
 			parentID = payload.Layer.Name
 		}
 	}
-	// if IsLocal {
-	// 	if err := cleanLocal(); err != nil {
-	// 		return err
-	// 	}
-	// }
+	if docker.IsLocal {
+		if err := docker.CleanLocal(); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

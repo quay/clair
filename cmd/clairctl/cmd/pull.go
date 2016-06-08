@@ -1,55 +1,80 @@
-// Copyright © 2016 NAME HERE <EMAIL ADDRESS>
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package cmd
 
 import (
 	"fmt"
+	"html/template"
 	"os"
-	"text/template"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/coreos/clair/cmd/clairctl/docker"
+	"github.com/coreos/clair/cmd/clairctl/dockerdist"
+	"github.com/docker/distribution/digest"
+	"github.com/docker/distribution/manifest/schema1"
+	"github.com/docker/docker/reference"
 	"github.com/spf13/cobra"
+
+	dockercli "github.com/fsouza/go-dockerclient"
 )
 
 const pullTplt = `
-Image: {{.String}}
- {{.FsLayers | len}} layers found
- {{range .FsLayers}} ➜ {{.BlobSum}}
+Image: {{.Named.FullName}}
+ {{.V1Manifest.FSLayers | len}} layers found
+ {{range .V1Manifest.FSLayers}} ➜ {{.BlobSum}}
  {{end}}
 `
 
-// pingCmd represents the ping command
 var pullCmd = &cobra.Command{
 	Use:   "pull IMAGE",
-	Short: "Pull Docker image information",
-	Long:  `Pull image information from Docker Hub or Registry`,
+	Short: "Pull Docker image to Clair",
+	Long:  `Upload a Docker image to Clair for further analysis`,
 	Run: func(cmd *cobra.Command, args []string) {
-		//TODO how to use args with viper
+
 		if len(args) != 1 {
 			fmt.Printf("clairctl: \"pull\" requires a minimum of 1 argument\n")
 			os.Exit(1)
 		}
-		im := args[0]
-		image, err := docker.Pull(im)
-		if err != nil {
-			fmt.Println(errInternalError)
-			logrus.Fatalf("pulling image %v: %v", args[0], err)
+
+		imageName := args[0]
+		var manifest schema1.SignedManifest
+		var named reference.Named
+
+		if !docker.IsLocal {
+			n, m, err := dockerdist.DownloadManifest(imageName, true)
+
+			if err != nil {
+				fmt.Println(errInternalError)
+				logrus.Fatalf("parsing image %q: %v", imageName, err)
+			}
+			// Ensure that the manifest type is supported.
+			switch m.(type) {
+			case *schema1.SignedManifest:
+				manifest = m.(schema1.SignedManifest)
+				named = n
+				break
+
+			default:
+				fmt.Println(errInternalError)
+				logrus.Fatalf("only v1 manifests are currently supported")
+			}
+
+		} else {
+			var err error
+			named, manifest, err = localManifest(imageName)
+			if err != nil {
+				fmt.Println(errInternalError)
+				logrus.Fatalf("parsing image %q: %v", imageName, err)
+			}
 		}
 
-		err = template.Must(template.New("pull").Parse(pullTplt)).Execute(os.Stdout, image)
+		data := struct {
+			V1Manifest schema1.SignedManifest
+			Named      reference.Named
+		}{
+			V1Manifest: manifest,
+			Named:      named,
+		}
+
+		err := template.Must(template.New("pull").Parse(pullTplt)).Execute(os.Stdout, data)
 		if err != nil {
 			fmt.Println(errInternalError)
 			logrus.Fatalf("rendering image: %v", err)
@@ -57,6 +82,30 @@ var pullCmd = &cobra.Command{
 	},
 }
 
+func localManifest(imageName string) (reference.Named, schema1.SignedManifest, error) {
+	manifest := schema1.SignedManifest{}
+	// Parse the image name as a docker image reference.
+	named, err := reference.ParseNamed(imageName)
+	if err != nil {
+		return nil, manifest, err
+	}
+
+	//TODO: use socket by default, but check for DOCKER_HOST env variable
+	endpoint := "unix:///var/run/docker.sock"
+	client, _ := dockercli.NewClient(endpoint)
+	histories, _ := client.ImageHistory(imageName)
+	for _, history := range histories {
+		var d digest.Digest
+		d, err := digest.ParseDigest(history.ID)
+		if err != nil {
+			return nil, manifest, err
+		}
+		manifest.FSLayers = append(manifest.FSLayers, schema1.FSLayer{BlobSum: d})
+	}
+	return named, manifest, nil
+}
+
 func init() {
 	RootCmd.AddCommand(pullCmd)
+	pullCmd.Flags().BoolVarP(&docker.IsLocal, "local", "l", false, "Use local images")
 }

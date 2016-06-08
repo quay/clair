@@ -72,10 +72,10 @@ func newSingleHostReverseProxy() *httputil.ReverseProxy {
 			logrus.Errorf("cannot parse url: %v", u)
 		}
 		var host string
-		if docker.IsLocal {
-			host, _ = docker.GetRegistryMapping(validID.FindStringSubmatch(u)[1])
-		} else {
-			host, _ = dockerdist.GetRegistryMapping(validID.FindStringSubmatch(u)[1])
+		host, err := dockerdist.GetRegistryMapping(validID.FindStringSubmatch(u)[1])
+		if err != nil {
+			logrus.Errorf("response error: %v", err)
+			return
 		}
 		out, _ := url.Parse(host)
 		request.URL.Scheme = out.Scheme

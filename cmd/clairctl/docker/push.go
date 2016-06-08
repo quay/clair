@@ -61,7 +61,7 @@ func Push(image Image) error {
 		}
 	}
 	if IsLocal {
-		if err := cleanLocal(); err != nil {
+		if err := CleanLocal(); err != nil {
 			return err
 		}
 	}

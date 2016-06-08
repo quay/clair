@@ -57,7 +57,7 @@ func FromHistory(im *Image) error {
 	return nil
 }
 
-func cleanLocal() error {
+func CleanLocal() error {
 	logrus.Debugln("cleaning temporary local repository")
 	err := os.RemoveAll(TmpLocal())
 
