@@ -1,0 +1,2 @@
+"interface{} says nothing."
+	- Rob Pike

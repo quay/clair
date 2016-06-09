@@ -1,0 +1,2 @@
+"Go has generics; they're called interfaces."
+	- Matt Holt
