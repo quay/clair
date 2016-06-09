@@ -7,8 +7,8 @@ func TestInsertRegistryMapping(t *testing.T) {
 	registryURI := "registry:5000"
 	insertRegistryMapping(layerID, registryURI)
 
-	if r := registryMapping[layerID]; r != registryURI {
-		t.Errorf("insertRegistryMapping(%q,%q) => %q, want %q", layerID, registryURI, r, registryURI)
+	if r := registryMapping[layerID]; r != "http://registry:5000/v2" {
+		t.Errorf("insertRegistryMapping(%q,%q) => %q, want %q", layerID, registryURI, r, "http://registry:5000/v2")
 	}
 }
 
@@ -17,7 +17,7 @@ func TestGetRegistryMapping(t *testing.T) {
 	registryURI := "registry:5000"
 	insertRegistryMapping(layerID, registryURI)
 
-	if r, err := GetRegistryMapping(layerID); r != registryURI {
+	if r, err := GetRegistryMapping(layerID); r != "http://registry:5000/v2" {
 
 		if err != nil {
 			t.Errorf("GetRegistryMapping(%q) failed => %v", layerID, err)
