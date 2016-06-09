@@ -8,6 +8,7 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/coreos/clair/cmd/clairctl/clair"
 	"github.com/coreos/clair/cmd/clairctl/config"
+	"github.com/coreos/clair/cmd/clairctl/docker"
 	"github.com/coreos/clair/cmd/clairctl/xstrings"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -23,7 +24,14 @@ var reportCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		analyzes := analyze(args[0])
+		config.ImageName = args[0]
+		image, manifest, err := docker.RetrieveManifest(config.ImageName, true)
+		if err != nil {
+			fmt.Println(errInternalError)
+			logrus.Fatalf("retrieving manifest for %q: %v", config.ImageName, err)
+		}
+
+		analyzes := clair.Analyze(image, manifest)
 		imageName := strings.Replace(analyzes.ImageName, "/", "-", -1) + "-" + analyzes.Tag
 		switch clair.Report.Format {
 		case "html":

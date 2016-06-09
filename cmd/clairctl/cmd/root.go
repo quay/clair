@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/coreos/clair/cmd/clairctl/clair"
 	"github.com/coreos/clair/cmd/clairctl/config"
 	"github.com/spf13/cobra"
 )
@@ -56,4 +57,5 @@ func init() {
 
 func initConfig() {
 	config.Init(cfgFile, logLevel)
+	clair.Config()
 }

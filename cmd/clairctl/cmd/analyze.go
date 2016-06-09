@@ -31,46 +31,28 @@ var analyzeCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		ia := analyze(args[0])
+		config.ImageName = args[0]
+		image, manifest, err := docker.RetrieveManifest(config.ImageName, true)
+		if err != nil {
+			fmt.Println(errInternalError)
+			logrus.Fatalf("retrieving manifest for %q: %v", config.ImageName, err)
+		}
 
-		err := template.Must(template.New("analysis").Parse(analyzeTplt)).Execute(os.Stdout, ia)
+		startLocalServer()
+		if err := clair.Push(image, manifest); err != nil {
+			if err != nil {
+				fmt.Println(errInternalError)
+				logrus.Fatalf("pushing image %q: %v", image.String(), err)
+			}
+		}
+
+		analysis := clair.Analyze(image, manifest)
+		err = template.Must(template.New("analysis").Parse(analyzeTplt)).Execute(os.Stdout, analysis)
 		if err != nil {
 			fmt.Println(errInternalError)
 			logrus.Fatalf("rendering analysis: %v", err)
 		}
 	},
-}
-
-func analyze(imageName string) clair.ImageAnalysis {
-	var err error
-	var image docker.Image
-
-	if !config.IsLocal {
-		// image, err = docker.Pull(imageName)
-
-		// if err != nil {
-		// 	if err == config.ErrLoginNotFound {
-		// 		fmt.Println(err)
-		// 	} else {
-		// 		fmt.Println(errInternalError)
-		// 	}
-		// 	logrus.Fatalf("pulling image %q: %v", imageName, err)
-		// }
-
-	} else {
-		image, err = docker.Parse(imageName)
-		if err != nil {
-			fmt.Println(errInternalError)
-			logrus.Fatalf("parsing local image %q: %v", imageName, err)
-		}
-		docker.FromHistory(&image)
-		if err != nil {
-			fmt.Println(errInternalError)
-			logrus.Fatalf("getting local image %q from history: %v", imageName, err)
-		}
-	}
-
-	return docker.Analyze(image)
 }
 
 func init() {

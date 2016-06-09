@@ -5,12 +5,10 @@ import (
 	"os"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/coreos/clair/cmd/clairctl/clair"
 	"github.com/coreos/clair/cmd/clairctl/config"
-	"github.com/coreos/clair/cmd/clairctl/dockercli"
-	"github.com/coreos/clair/cmd/clairctl/dockerdist"
+	"github.com/coreos/clair/cmd/clairctl/docker"
 	"github.com/coreos/clair/cmd/clairctl/server"
-	"github.com/docker/distribution/manifest/schema1"
-	"github.com/docker/docker/reference"
 	"github.com/spf13/cobra"
 )
 
@@ -25,35 +23,20 @@ var pushCmd = &cobra.Command{
 		}
 
 		startLocalServer()
-
-		imageName := args[0]
-		var manifest schema1.SignedManifest
-		var image reference.Named
-		var err error
-
-		if !config.IsLocal {
-			image, manifest, err = dockerdist.DownloadV1Manifest(imageName, true)
-
-			if err != nil {
-				fmt.Println(errInternalError)
-				logrus.Fatalf("retrieving manifest for %q: %v", imageName, err)
-			}
-
-		} else {
-			image, manifest, err = dockercli.GetLocalManifest(imageName, true)
-			if err != nil {
-				fmt.Println(errInternalError)
-				logrus.Fatalf("retrieving local manifest for %q: %v", imageName, err)
-			}
+		config.ImageName = args[0]
+		image, manifest, err := docker.RetrieveManifest(config.ImageName, true)
+		if err != nil {
+			fmt.Println(errInternalError)
+			logrus.Fatalf("retrieving manifest for %q: %v", config.ImageName, err)
 		}
 
-		if err := dockerdist.Push(image, manifest); err != nil {
+		if err := clair.Push(image, manifest); err != nil {
 			if err != nil {
 				fmt.Println(errInternalError)
-				logrus.Fatalf("pushing image %q: %v", imageName, err)
+				logrus.Fatalf("pushing image %q: %v", image.String(), err)
 			}
 		}
-		fmt.Printf("%v has been pushed to Clair\n", imageName)
+		fmt.Printf("%v has been pushed to Clair\n", image.String())
 	},
 }
 

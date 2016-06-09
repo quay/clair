@@ -7,8 +7,7 @@ import (
 
 	"github.com/Sirupsen/logrus"
 	"github.com/coreos/clair/cmd/clairctl/config"
-	"github.com/coreos/clair/cmd/clairctl/dockercli"
-	"github.com/coreos/clair/cmd/clairctl/dockerdist"
+	"github.com/coreos/clair/cmd/clairctl/docker"
 	"github.com/docker/distribution/manifest/schema1"
 	"github.com/docker/docker/reference"
 	"github.com/spf13/cobra"
@@ -32,25 +31,11 @@ var pullCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		imageName := args[0]
-		var manifest schema1.SignedManifest
-		var image reference.Named
-		var err error
-
-		if !config.IsLocal {
-			image, manifest, err = dockerdist.DownloadV1Manifest(imageName, true)
-
-			if err != nil {
-				fmt.Println(errInternalError)
-				logrus.Fatalf("retrieving manifest for %q: %v", imageName, err)
-			}
-
-		} else {
-			image, manifest, err = dockercli.GetLocalManifest(imageName, false)
-			if err != nil {
-				fmt.Println(errInternalError)
-				logrus.Fatalf("retrieving local manifest for %q: %v", imageName, err)
-			}
+		config.ImageName = args[0]
+		image, manifest, err := docker.RetrieveManifest(config.ImageName, true)
+		if err != nil {
+			fmt.Println(errInternalError)
+			logrus.Fatalf("retrieving manifest for %q: %v", config.ImageName, err)
 		}
 
 		data := struct {

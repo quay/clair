@@ -16,7 +16,6 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/coreos/clair/cmd/clairctl/clair"
 	"github.com/coreos/clair/cmd/clairctl/xstrings"
 	"github.com/spf13/viper"
 )
@@ -24,6 +23,8 @@ import (
 var ErrLoginNotFound = errors.New("user is not log in")
 
 var IsLocal = false
+
+var ImageName string
 
 type reportConfig struct {
 	Path, Format string
@@ -102,7 +103,7 @@ func Init(cfgFile string, logLevel string) {
 	if viper.Get("clairctl.tempFolder") == nil {
 		viper.Set("clairctl.tempFolder", "/tmp/clairctl")
 	}
-	clair.Config()
+
 }
 
 func TmpLocal() string {

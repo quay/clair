@@ -1,6 +1,7 @@
 package server
 
 import (
+	"crypto/tls"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -11,9 +12,9 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/coreos/clair/cmd/clairctl/docker"
-	"github.com/coreos/clair/cmd/clairctl/docker/httpclient"
-	"github.com/coreos/clair/cmd/clairctl/dockerdist"
+	"github.com/coreos/clair/cmd/clairctl/clair"
+	"github.com/coreos/clair/cmd/clairctl/config"
+	"github.com/coreos/clair/cmd/clairctl/docker/dockerdist"
 	"github.com/spf13/viper"
 )
 
@@ -22,7 +23,7 @@ func Serve(sURL string) error {
 
 	go func() {
 		http.Handle("/v2/", newSingleHostReverseProxy())
-		http.Handle("/local/", http.StripPrefix("/local", restrictedFileServer(docker.TmpLocal())))
+		http.Handle("/local/", http.StripPrefix("/local", restrictedFileServer(config.TmpLocal())))
 
 		listener := tcpListener(sURL)
 		logrus.Info("Starting Server on ", listener.Addr())
@@ -68,11 +69,12 @@ func newSingleHostReverseProxy() *httputil.ReverseProxy {
 		var validID = regexp.MustCompile(`.*/blobs/(.*)$`)
 		u := request.URL.Path
 		logrus.Debugf("request url: %v", u)
+		logrus.Debugf("request for image: %v", config.ImageName)
 		if !validID.MatchString(u) {
 			logrus.Errorf("cannot parse url: %v", u)
 		}
 		var host string
-		host, err := dockerdist.GetRegistryMapping(validID.FindStringSubmatch(u)[1])
+		host, err := clair.GetRegistryMapping(validID.FindStringSubmatch(u)[1])
 		if err != nil {
 			logrus.Errorf("response error: %v", err)
 			return
@@ -80,7 +82,10 @@ func newSingleHostReverseProxy() *httputil.ReverseProxy {
 		out, _ := url.Parse(host)
 		request.URL.Scheme = out.Scheme
 		request.URL.Host = out.Host
-		client := httpclient.Get()
+		client := &http.Client{Transport: &http.Transport{
+			TLSClientConfig:    &tls.Config{InsecureSkipVerify: viper.GetBool("auth.insecureSkipVerify")},
+			DisableCompression: true,
+		}}
 		req, _ := http.NewRequest("HEAD", request.URL.String(), nil)
 		resp, err := client.Do(req)
 		if err != nil {
@@ -90,7 +95,7 @@ func newSingleHostReverseProxy() *httputil.ReverseProxy {
 
 		if resp.StatusCode == http.StatusUnauthorized {
 			logrus.Info("pull from clair is unauthorized")
-			docker.AuthenticateResponse(resp, request)
+			dockerdist.AuthenticateResponse(client, resp, request)
 		}
 
 		r, _ := http.NewRequest("GET", request.URL.String(), nil)
