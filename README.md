@@ -73,9 +73,9 @@ This runs a PostgreSQL database insecurely and locally in a container.
 This method should only be used for testing.
 
 ```sh
-$ curl -L https://raw.githubusercontent.com/coreos/clair/master/docker-compose.yml -o $HOME/docker-compose.yml
+$ curl -L https://raw.githubusercontent.com/coreos/clair/v1.2.2/docker-compose.yml -o $HOME/docker-compose.yml
 $ mkdir $HOME/clair_config
-$ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.example.yaml -o $HOME/clair_config/config.yaml
+$ curl -L https://raw.githubusercontent.com/coreos/clair/v1.2.2/config.example.yaml -o $HOME/clair_config/config.yaml
 $ $EDITOR $HOME/clair_config/config.yaml # Edit database source to be postgresql://postgres:password@postgres:5432?sslmode=disable
 $ docker-compose -f $HOME/docker-compose.yml up -d
 ```
@@ -93,9 +93,9 @@ This is the recommended method for production deployments.
 
 ```sh
 $ mkdir $HOME/clair_config
-$ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.example.yaml -o $HOME/clair_config/config.yaml
+$ curl -L https://raw.githubusercontent.com/coreos/clair/v1.2.2/config.example.yaml -o $HOME/clair_config/config.yaml
 $ $EDITOR $HOME/clair_config/config.yaml # Add the URI for your postgres database
-$ docker run -d -p 6060-6061:6060-6061 -v $HOME/clair_config:/config quay.io/coreos/clair -config=/config/config.yaml
+$ docker run -d -p 6060-6061:6060-6061 -v $HOME/clair_config:/config quay.io/coreos/clair:v1.2.2 -config=/config/config.yaml
 ```
 
 ### Source
@@ -116,6 +116,13 @@ $ go install github.com/coreos/clair/cmd/clair
 $ $EDITOR config.yaml # Add the URI for your postgres database
 $ ./$GOBIN/clair -config=config.yaml
 ```
+
+### Container images
+
+While container images for every releases are available at [quay.io/repository/coreos/clair], container images built on the latest available source code are available at [quay.io/repository/coreos/clair-git].
+
+[quay.io/repository/coreos/clair]: quay.io/repository/coreos/clair
+[quay.io/repository/coreos/clair-git]: quay.io/repository/coreos/clair-git
 
 ## Documentation
 

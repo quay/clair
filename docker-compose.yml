@@ -8,7 +8,7 @@ services:
 
   clair:
     container_name: clair_clair
-    image: quay.io/coreos/clair
+    image: quay.io/coreos/clair:v1.2.2
     depends_on:
       - postgres
     ports:
