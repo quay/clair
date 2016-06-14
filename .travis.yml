@@ -3,7 +3,7 @@ language: go
 go:
   - 1.6
   - 1.5
-  # - tip
+  - tip
 
 sudo: false
 
@@ -30,3 +30,7 @@ addons:
 
 notifications:
   email: false
+
+matrix:
+  allow_failures:
+    - go: tip
