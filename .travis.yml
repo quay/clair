@@ -30,3 +30,7 @@ addons:
 
 notifications:
   email: false
+
+matrix:
+  allow_failures:
+    - go: tip
