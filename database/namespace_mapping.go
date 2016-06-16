@@ -21,13 +21,13 @@ var DebianReleasesMapping = map[string]string{
 	"wheezy":  "7",
 	"jessie":  "8",
 	"stretch": "9",
-	"sid":     "unstable",
+	"sid":     "10",
 
 	// Class names
 	"oldstable": "7",
 	"stable":    "8",
 	"testing":   "9",
-	"unstable":  "unstable",
+	"unstable":  "10",
 }
 
 // UbuntuReleasesMapping translates Ubuntu code names to version numbers

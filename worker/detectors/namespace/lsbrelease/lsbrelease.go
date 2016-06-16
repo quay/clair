@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/clair/worker/detectors"
 )
 
@@ -70,7 +71,11 @@ func (detector *LsbReleaseNamespaceDetector) Detect(data map[string][]byte) *dat
 	}
 
 	if OS != "" && version != "" {
-		return &database.Namespace{Name: OS + ":" + version}
+		if nsVersion, err := types.NewVersion(version); err != nil {
+			return nil
+		} else {
+			return &database.Namespace{Name: OS, Version: nsVersion}
+		}
 	}
 	return nil
 }

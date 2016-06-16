@@ -46,7 +46,7 @@ var (
 	ErrParentUnknown = cerrors.NewBadRequestError("worker: parent layer is unknown, it must be processed first")
 )
 
-// Process detects the Namespace of a layer, the features it adds/removes, and
+// Process detects the Namespaces of a layer, the features it adds/removes, and
 // then stores everything in the database.
 // TODO(Quentin-M): We could have a goroutine that looks for layers that have been analyzed with an
 // older engine version and that processes them.
@@ -104,7 +104,7 @@ func Process(datastore database.Datastore, imageFormat, name, parentName, path s
 	}
 
 	// Analyze the content.
-	layer.Namespace, layer.Features, err = detectContent(imageFormat, name, path, headers, layer.Parent)
+	layer.Namespaces, layer.Features, err = detectContent(imageFormat, name, path, headers, layer.Parent)
 	if err != nil {
 		return err
 	}
@@ -112,98 +112,64 @@ func Process(datastore database.Datastore, imageFormat, name, parentName, path s
 	return datastore.InsertLayer(layer)
 }
 
-// detectContent downloads a layer's archive and extracts its Namespace and Features.
-func detectContent(imageFormat, name, path string, headers map[string]string, parent *database.Layer) (namespace *database.Namespace, featureVersions []database.FeatureVersion, err error) {
-	data, err := detectors.DetectData(imageFormat, path, headers, append(detectors.GetRequiredFilesFeatures(), detectors.GetRequiredFilesNamespace()...), maxFileSize)
+// detectContent downloads a layer's archive and extracts its Namespaces and Features.
+func detectContent(imageFormat, name, path string, headers map[string]string, parent *database.Layer) (namespaces []database.Namespace, features []database.FeatureVersion, err error) {
+	data, err := detectors.DetectData(imageFormat, path, headers, append(detectors.GetRequiredFilesFeatures(),
+		detectors.GetRequiredFilesNamespace()...), maxFileSize)
 	if err != nil {
 		log.Errorf("layer %s: failed to extract data from %s: %s", name, utils.CleanURL(path), err)
 		return
 	}
 
 	// Detect namespace.
-	namespace = detectNamespace(name, data, parent)
+	namespaces, err = detectNamespaces(name, data, parent)
+	if err != nil {
+		return
+	}
+	if len(namespaces) > 0 {
+		log.Debugf("layer %s: %d Namespaces detected: ", name, len(namespaces))
+		for _, namespace := range namespaces {
+			log.Debugf("\t%s", namespace.Name)
+		}
+	} else {
+		log.Debugf("layer %s: Package System is unknown.", name)
+	}
 
 	// Detect features.
-	featureVersions, err = detectFeatureVersions(name, data, namespace, parent)
+	features, err = detectors.DetectFeatures(data, namespaces)
 	if err != nil {
 		return
 	}
-	if len(featureVersions) > 0 {
-		log.Debugf("layer %s: detected %d features", name, len(featureVersions))
+	if len(features) > 0 {
+		log.Debugf("layer %s: detected %d features", name, len(features))
 	}
 
 	return
 }
 
-func detectNamespace(name string, data map[string][]byte, parent *database.Layer) (namespace *database.Namespace) {
-	// Use registered detectors to get the Namespace.
-	namespace = detectors.DetectNamespace(data)
-	if namespace != nil {
-		log.Debugf("layer %s: detected namespace %q", name, namespace.Name)
-		return
-	}
+func detectNamespaces(name string, data map[string][]byte, parent *database.Layer) (namespaces []database.Namespace, err error) {
+	namespaces = detectors.DetectNamespaces(data)
 
-	// Use the parent's Namespace.
+	// Inherit the non-detected namespace from its parent
 	if parent != nil {
-		namespace = parent.Namespace
-		if namespace != nil {
-			log.Debugf("layer %s: detected namespace %q (from parent)", name, namespace.Name)
-			return
-		}
-	}
+		mapNamespaces := make(map[string]database.Namespace)
 
-	return
-}
-
-func detectFeatureVersions(name string, data map[string][]byte, namespace *database.Namespace, parent *database.Layer) (features []database.FeatureVersion, err error) {
-	// TODO(Quentin-M): We need to pass the parent image to DetectFeatures because it's possible that
-	// some detectors would need it in order to produce the entire feature list (if they can only
-	// detect a diff). Also, we should probably pass the detected namespace so detectors could
-	// make their own decision.
-	features, err = detectors.DetectFeatures(data)
-	if err != nil {
-		return
-	}
-
-	// If there are no FeatureVersions, use parent's FeatureVersions if possible.
-	// TODO(Quentin-M): We eventually want to give the choice to each detectors to use none/some of
-	// their parent's FeatureVersions. It would be useful for detectors that can't find their entire
-	// result using one Layer.
-	if len(features) == 0 && parent != nil {
-		features = parent.Features
-		return
-	}
-
-	// Build a map of the namespaces for each FeatureVersion in our parent layer.
-	parentFeatureNamespaces := make(map[string]database.Namespace)
-	if parent != nil {
-		for _, parentFeature := range parent.Features {
-			parentFeatureNamespaces[parentFeature.Feature.Name+":"+parentFeature.Version.String()] = parentFeature.Feature.Namespace
-		}
-	}
-
-	// Ensure that each FeatureVersion has an associated Namespace.
-	for i, feature := range features {
-		if feature.Feature.Namespace.Name != "" {
-			// There is a Namespace associated.
-			continue
+		// Layer's namespaces has high priority than its parent.
+		for _, n := range namespaces {
+			mapNamespaces[n.Name] = n
 		}
 
-		if parentFeatureNamespace, ok := parentFeatureNamespaces[feature.Feature.Name+":"+feature.Version.String()]; ok {
-			// The FeatureVersion is present in the parent layer; associate with their Namespace.
-			features[i].Feature.Namespace = parentFeatureNamespace
-			continue
+		for _, pn := range parent.Namespaces {
+			if _, ok := mapNamespaces[pn.Name]; !ok {
+				mapNamespaces[pn.Name] = pn
+				log.Debugf("layer %s: detected namespace %q (from parent)", name, pn.Name)
+			}
 		}
 
-		if namespace != nil {
-			// The Namespace has been detected in this layer; associate it.
-			features[i].Feature.Namespace = *namespace
-			continue
+		namespaces = []database.Namespace{}
+		for _, namespace := range mapNamespaces {
+			namespaces = append(namespaces, namespace)
 		}
-
-		log.Warningf("layer %s: Layer's namespace is unknown but non-namespaced features have been detected", name)
-		err = ErrUnsupported
-		return
 	}
 
 	return

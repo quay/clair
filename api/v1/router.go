@@ -34,16 +34,16 @@ func NewRouter(ctx *context.RouteContext) *httprouter.Router {
 	router.GET("/namespaces", context.HTTPHandler(getNamespaces, ctx))
 
 	// Vulnerabilities
-	router.GET("/namespaces/:namespaceName/vulnerabilities", context.HTTPHandler(getVulnerabilities, ctx))
-	router.POST("/namespaces/:namespaceName/vulnerabilities", context.HTTPHandler(postVulnerability, ctx))
-	router.GET("/namespaces/:namespaceName/vulnerabilities/:vulnerabilityName", context.HTTPHandler(getVulnerability, ctx))
-	router.PUT("/namespaces/:namespaceName/vulnerabilities/:vulnerabilityName", context.HTTPHandler(putVulnerability, ctx))
-	router.DELETE("/namespaces/:namespaceName/vulnerabilities/:vulnerabilityName", context.HTTPHandler(deleteVulnerability, ctx))
+	router.GET("/namespaces/:namespaceID/vulnerabilities", context.HTTPHandler(getVulnerabilities, ctx))
+	router.POST("/namespaces/:namespaceID/vulnerabilities", context.HTTPHandler(postVulnerability, ctx))
+	router.GET("/namespaces/:namespaceID/vulnerabilities/:vulnerabilityName", context.HTTPHandler(getVulnerability, ctx))
+	router.PUT("/namespaces/:namespaceID/vulnerabilities/:vulnerabilityName", context.HTTPHandler(putVulnerability, ctx))
+	router.DELETE("/namespaces/:namespaceID/vulnerabilities/:vulnerabilityName", context.HTTPHandler(deleteVulnerability, ctx))
 
 	// Fixes
-	router.GET("/namespaces/:namespaceName/vulnerabilities/:vulnerabilityName/fixes", context.HTTPHandler(getFixes, ctx))
-	router.PUT("/namespaces/:namespaceName/vulnerabilities/:vulnerabilityName/fixes/:fixName", context.HTTPHandler(putFix, ctx))
-	router.DELETE("/namespaces/:namespaceName/vulnerabilities/:vulnerabilityName/fixes/:fixName", context.HTTPHandler(deleteFix, ctx))
+	router.GET("/namespaces/:namespaceID/vulnerabilities/:vulnerabilityName/fixes", context.HTTPHandler(getFixes, ctx))
+	router.PUT("/namespaces/:namespaceID/vulnerabilities/:vulnerabilityName/fixes/:fixName", context.HTTPHandler(putFix, ctx))
+	router.DELETE("/namespaces/:namespaceID/vulnerabilities/:vulnerabilityName/fixes/:fixName", context.HTTPHandler(deleteFix, ctx))
 
 	// Notifications
 	router.GET("/notifications/:notificationName", context.HTTPHandler(getNotification, ctx))

@@ -18,9 +18,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/utils/types"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestInsertNamespace(t *testing.T) {
@@ -37,9 +37,9 @@ func TestInsertNamespace(t *testing.T) {
 	assert.Zero(t, id0)
 
 	// Insert Namespace and ensure we can find it.
-	id1, err := datastore.insertNamespace(database.Namespace{Name: "TestInsertNamespace1"})
+	id1, err := datastore.insertNamespace(database.Namespace{Name: "TestInsertNamespace", Version: types.NewVersionUnsafe("1")})
 	assert.Nil(t, err)
-	id2, err := datastore.insertNamespace(database.Namespace{Name: "TestInsertNamespace1"})
+	id2, err := datastore.insertNamespace(database.Namespace{Name: "TestInsertNamespace", Version: types.NewVersionUnsafe("1")})
 	assert.Nil(t, err)
 	assert.Equal(t, id1, id2)
 }
@@ -55,12 +55,13 @@ func TestListNamespace(t *testing.T) {
 	namespaces, err := datastore.ListNamespaces()
 	assert.Nil(t, err)
 	if assert.Len(t, namespaces, 2) {
+		testDebian7 := database.Namespace{Name: "debian", Version: types.NewVersionUnsafe("7")}
+		testDebian8 := database.Namespace{Name: "debian", Version: types.NewVersionUnsafe("8")}
 		for _, namespace := range namespaces {
-			switch namespace.Name {
-			case "debian:7", "debian:8":
+			if namespace.Equal(testDebian7) || namespace.Equal(testDebian8) {
 				continue
-			default:
-				assert.Error(t, fmt.Errorf("ListNamespaces should not have returned '%s'", namespace.Name))
+			} else {
+				assert.Error(t, fmt.Errorf("ListNamespaces should not have returned '%s:%s'", namespace.Name, namespace.Version.String()))
 			}
 		}
 	}

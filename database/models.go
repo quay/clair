@@ -33,14 +33,31 @@ type Layer struct {
 	Name          string
 	EngineVersion int
 	Parent        *Layer
-	Namespace     *Namespace
+	Namespaces    []Namespace
 	Features      []FeatureVersion
 }
 
 type Namespace struct {
 	Model
 
-	Name string
+	Name    string
+	Version types.Version
+}
+
+func (ns *Namespace) IsEmpty() bool {
+	if ns.Name == "" && ns.Version.String() == "" {
+		return true
+	}
+
+	return false
+}
+
+func (ns *Namespace) Equal(namespace Namespace) bool {
+	if ns.Name == namespace.Name && ns.Version.Compare(namespace.Version) == 0 {
+		return true
+	}
+
+	return false
 }
 
 type Feature struct {

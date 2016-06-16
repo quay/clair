@@ -362,10 +362,15 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 					continue
 				}
 
+				nsVersion, err := types.NewVersion(database.UbuntuReleasesMapping[md["release"]])
+				if err != nil {
+					log.Warningf("could not parse namespace version '%s': %s. skipping", database.UbuntuReleasesMapping[md["release"]], err)
+				}
+
 				// Create and add the new package.
 				featureVersion := database.FeatureVersion{
 					Feature: database.Feature{
-						Namespace: database.Namespace{Name: "ubuntu:" + database.UbuntuReleasesMapping[md["release"]]},
+						Namespace: database.Namespace{Name: "ubuntu", Version: nsVersion},
 						Name:      md["package"],
 					},
 					Version: version,

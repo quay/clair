@@ -172,3 +172,8 @@ DROP TABLE IF EXISTS Namespace,
                      KeyValue,
                      Lock
             CASCADE;
+
+DROP TYPE IF EXISTS modification,
+                    severity
+            CASCADE;
+

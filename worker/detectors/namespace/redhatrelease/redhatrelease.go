@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/clair/worker/detectors"
 )
 
@@ -46,7 +47,11 @@ func (detector *RedhatReleaseNamespaceDetector) Detect(data map[string][]byte) *
 
 		r := redhatReleaseRegexp.FindStringSubmatch(string(f))
 		if len(r) == 4 {
-			return &database.Namespace{Name: strings.ToLower(r[1]) + ":" + r[3]}
+			if nsVersion, err := types.NewVersion(r[3]); err != nil {
+				return nil
+			} else {
+				return &database.Namespace{Name: strings.ToLower(r[1]), Version: nsVersion}
+			}
 		}
 	}
 

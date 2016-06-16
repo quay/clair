@@ -45,21 +45,21 @@ func TestUbuntuParser(t *testing.T) {
 		expectedFeatureVersions := []database.FeatureVersion{
 			{
 				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "ubuntu:14.04"},
+					Namespace: database.Namespace{Name: "ubuntu", Version: types.NewVersionUnsafe("14.04")},
 					Name:      "libmspack",
 				},
 				Version: types.MaxVersion,
 			},
 			{
 				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "ubuntu:15.04"},
+					Namespace: database.Namespace{Name: "ubuntu", Version: types.NewVersionUnsafe("15.04")},
 					Name:      "libmspack",
 				},
 				Version: types.NewVersionUnsafe("0.4-3"),
 			},
 			{
 				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "ubuntu:15.10"},
+					Namespace: database.Namespace{Name: "ubuntu", Version: types.NewVersionUnsafe("15.10")},
 					Name:      "libmspack-anotherpkg",
 				},
 				Version: types.NewVersionUnsafe("0.1"),

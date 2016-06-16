@@ -291,13 +291,19 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 		}
 
 		if osVersion > firstConsideredRHEL {
-			featureVersion.Feature.Namespace.Name = "centos" + ":" + strconv.Itoa(osVersion)
+			nsVersion, err := types.NewVersion(strconv.Itoa(osVersion))
+			if err != nil {
+				log.Warningf("could not parse namespace version '%s': %s. skipping", strconv.Itoa(osVersion), err.Error())
+				continue
+			}
+			featureVersion.Feature.Namespace.Name = "centos"
+			featureVersion.Feature.Namespace.Version = nsVersion
 		} else {
 			continue
 		}
 
-		if featureVersion.Feature.Namespace.Name != "" && featureVersion.Feature.Name != "" && featureVersion.Version.String() != "" {
-			featureVersionParameters[featureVersion.Feature.Namespace.Name+":"+featureVersion.Feature.Name] = featureVersion
+		if !featureVersion.Feature.Namespace.IsEmpty() && featureVersion.Feature.Name != "" && featureVersion.Version.String() != "" {
+			featureVersionParameters[featureVersion.Feature.Namespace.Name+":"+featureVersion.Feature.Namespace.Version.String()+":"+featureVersion.Feature.Name] = featureVersion
 		} else {
 			log.Warningf("could not determine a valid package from criterions: %v", criterions)
 		}
