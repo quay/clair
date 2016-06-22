@@ -51,7 +51,7 @@ clair:
   updater:
     # Frequency the database will be updated with vulnerabilities from the default data sources
     # The value 0 disables the updater entirely.
-    interval: 0
+    interval: 2h
 
   notifier:
     # Number of attempts before the notification is marked as failed to be sent

@@ -22,7 +22,7 @@ import (
 
 //GetLocalManifest retrieve manifest for local image
 func GetLocalManifest(imageName string, withExport bool) (reference.Named, schema1.SignedManifest, error) {
-    
+
 	image, err := reference.ParseNamed(imageName)
 	if err != nil {
 		return nil, schema1.SignedManifest{}, err
@@ -36,6 +36,11 @@ func GetLocalManifest(imageName string, withExport bool) (reference.Named, schem
 
 	if err != nil {
 		return nil, schema1.SignedManifest{}, err
+	}
+
+	manifest.Name = image.Name()
+	if strings.Contains(image.String(), ":") {
+		manifest.Tag = strings.SplitAfter(image.String(), ":")[1]
 	}
 	return image, manifest, err
 }

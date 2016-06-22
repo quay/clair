@@ -314,3 +314,16 @@ func Docker0InterfaceIP() (string, error) {
 	}
 	return localIP.String(), nil
 }
+
+func Clean() error {
+	if IsLocal {
+		logrus.Debugln("cleaning temporary local repository")
+		err := os.RemoveAll(TmpLocal())
+
+		if err != nil {
+			return fmt.Errorf("cleaning temporary local repository: %v", err)
+		}
+	}
+
+	return nil
+}

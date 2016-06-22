@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/Sirupsen/logrus"
@@ -74,11 +73,6 @@ func Push(image reference.Named, manifest schema1.SignedManifest) error {
 			parentID = payload.Layer.Name
 		}
 	}
-	if config.IsLocal {
-		if err := cleanLocal(); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
@@ -133,17 +127,6 @@ func GetRegistryMapping(layerDigest string) (string, error) {
 		return "", fmt.Errorf("%v mapping not found", layerDigest)
 	}
 	return registryURI, nil
-}
-
-func cleanLocal() error {
-	logrus.Debugln("cleaning temporary local repository")
-	err := os.RemoveAll(config.TmpLocal())
-
-	if err != nil {
-		return fmt.Errorf("cleaning temporary local repository: %v", err)
-	}
-
-	return nil
 }
 
 func init() {

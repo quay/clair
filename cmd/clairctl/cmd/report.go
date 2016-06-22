@@ -26,13 +26,18 @@ var reportCmd = &cobra.Command{
 
 		config.ImageName = args[0]
 		image, manifest, err := docker.RetrieveManifest(config.ImageName, true)
+
 		if err != nil {
 			fmt.Println(errInternalError)
 			logrus.Fatalf("retrieving manifest for %q: %v", config.ImageName, err)
 		}
 
 		analyzes := clair.Analyze(image, manifest)
-		imageName := strings.Replace(analyzes.ImageName, "/", "-", -1) + "-" + analyzes.Tag
+		imageName := strings.Replace(analyzes.ImageName, "/", "-", -1)
+		if analyzes.Tag != "" {
+			imageName += "-" + analyzes.Tag
+		}
+
 		switch clair.Report.Format {
 		case "html":
 			html, err := clair.ReportAsHTML(analyzes)
