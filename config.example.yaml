@@ -17,11 +17,10 @@ clair:
   database:
     # Database driver
     type: pgsql
+    # PostgreSQL Connection string
+    # https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-CONNSTRING
+    source:
     options:
-      # PostgreSQL Connection string
-      # https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-CONNSTRING
-      source:
-
       # Number of elements kept in the cache
       # Values unlikely to change (e.g. namespaces) are cached in order to save prevent needless roundtrips to the database.
       cachesize: 16384
