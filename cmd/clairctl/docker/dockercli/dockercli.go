@@ -65,15 +65,16 @@ func save(imageName string) (schema1.SignedManifest, error) {
 
 	// open output file
 	fo, err := os.Create(path + "/output.tar")
-	if err != nil {
-		return schema1.SignedManifest{}, err
-	}
 	// close fo on exit and check for its returned error
 	defer func() {
 		if err := fo.Close(); err != nil {
 			panic(err)
 		}
 	}()
+
+	if err != nil {
+		return schema1.SignedManifest{}, err
+	}
 	// make a write buffer
 	w := bufio.NewWriter(fo)
 
@@ -99,10 +100,11 @@ func save(imageName string) (schema1.SignedManifest, error) {
 
 func historyFromManifest(path string) (schema1.SignedManifest, error) {
 	mf, err := os.Open(path + "/manifest.json")
+	defer mf.Close()
+
 	if err != nil {
 		return schema1.SignedManifest{}, err
 	}
-	defer mf.Close()
 
 	// https://github.com/docker/docker/blob/master/image/tarexport/tarexport.go#L17
 	type manifestItem struct {
@@ -160,10 +162,11 @@ func historyFromCommand(imageName string) (schema1.SignedManifest, error) {
 func openAndUntar(name, dst string) error {
 	var rd io.Reader
 	f, err := os.Open(name)
+	defer f.Close()
+
 	if err != nil {
 		return err
 	}
-	defer f.Close()
 	rd = f
 	if strings.HasSuffix(name, ".gz") || strings.HasSuffix(name, ".tgz") {
 		gr, err := gzip.NewReader(f)

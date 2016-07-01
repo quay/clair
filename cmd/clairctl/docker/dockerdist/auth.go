@@ -52,6 +52,7 @@ func AuthenticateResponse(client *http.Client, dockerResponse *http.Response, re
 	req.SetBasicAuth(authConfig.Username, authConfig.Password)
 
 	response, err := client.Do(req)
+	defer response.Body.Close()
 
 	if err != nil {
 		return err
@@ -65,7 +66,6 @@ func AuthenticateResponse(client *http.Client, dockerResponse *http.Response, re
 		return fmt.Errorf("authentication server response: %v - %v", response.StatusCode, response.Status)
 	}
 
-	defer response.Body.Close()
 	type token struct {
 		Value string `json:"token"`
 	}

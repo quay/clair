@@ -47,11 +47,12 @@ func analyzeLayer(id string) (v1.LayerEnvelope, error) {
 
 	lURI := fmt.Sprintf("%v/layers/%v?vulnerabilities", uri, id)
 	response, err := http.Get(lURI)
+	defer response.Body.Close()
+
 	if err != nil {
 		return v1.LayerEnvelope{}, fmt.Errorf("analysing layer %v: %v", id, err)
 	}
 
-	defer response.Body.Close()
 	var analysis v1.LayerEnvelope
 	err = json.NewDecoder(response.Body).Decode(&analysis)
 	if err != nil {

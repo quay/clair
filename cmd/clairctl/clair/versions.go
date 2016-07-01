@@ -9,11 +9,11 @@ import (
 func Versions() (interface{}, error) {
 	Config()
 	response, err := http.Get(uri + "/versions")
+	defer response.Body.Close()
 
 	if err != nil {
 		return nil, fmt.Errorf("requesting Clair version: %v", err)
 	}
-	defer response.Body.Close()
 	var versionBody interface{}
 	err = json.NewDecoder(response.Body).Decode(&versionBody)
 	if err != nil {

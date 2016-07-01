@@ -90,10 +90,11 @@ func pushLayer(layer v1.LayerEnvelope) error {
 	request.Header.Set("Content-Type", "application/json")
 
 	response, err := (&http.Client{}).Do(request)
+	defer response.Body.Close()
+
 	if err != nil {
 		return fmt.Errorf("pushing layer to clair: %v", err)
 	}
-	defer response.Body.Close()
 
 	if response.StatusCode != 201 {
 		if response.StatusCode == 422 {

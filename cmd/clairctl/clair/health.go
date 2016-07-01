@@ -10,11 +10,12 @@ import (
 func IsHealthy() bool {
 	logrus.Debugln("requesting health on: " + healthURI)
 	response, err := http.Get(healthURI)
+	defer response.Body.Close()
+
 	if err != nil {
 		logrus.Errorf("requesting Clair health: %v", err)
 		return false
 	}
-	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		return false
