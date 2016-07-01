@@ -59,7 +59,7 @@ func analyzeLayer(id string) (v1.LayerEnvelope, error) {
 		return v1.LayerEnvelope{}, fmt.Errorf("reading layer analysis: %v", err)
 	}
 	if response.StatusCode != 200 {
-		//TODO: should I show reponse body in case of error?
+		//TODO(jgsqware): should I show reponse body in case of error?
 		return v1.LayerEnvelope{}, fmt.Errorf("receiving http error: %d", response.StatusCode)
 	}
 
