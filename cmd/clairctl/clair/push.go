@@ -19,7 +19,6 @@ import (
 // ErrUnanalizedLayer is returned when the layer was not correctly analyzed
 var ErrUnanalizedLayer = errors.New("layer cannot be analyzed")
 
-//Push send a layer to Clair for analysis
 var registryMapping map[string]string
 
 //Push image to Clair for analysis

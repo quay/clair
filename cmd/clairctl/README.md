@@ -1,5 +1,3 @@
-
-
 # clairctl
 
 > Tracking container vulnerabilities with Clair Control
@@ -53,10 +51,6 @@ clair:
     path: ./reports
     format: html
 ```
-
-# Remarks
-
-1. Analyzing Official Docker image is disallowed. You cannot pull layers from image you don't own.
 
 # Contribution and Test
 

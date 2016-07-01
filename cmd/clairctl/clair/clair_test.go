@@ -12,7 +12,6 @@ import (
 
 func getSampleAnalysis() []byte {
 	file, err := ioutil.ReadFile("./samples/clair_report.json")
-
 	if err != nil {
 		logrus.Errorf("File error: %v\n", err)
 	}
@@ -47,7 +46,6 @@ func TestIsNotHealthy(t *testing.T) {
 func TestRelativeCount(t *testing.T) {
 	var analysis ImageAnalysis
 	err := json.Unmarshal([]byte(getSampleAnalysis()), &analysis)
-
 	if err != nil {
 		t.Errorf("Failing with error: %v", err)
 	}
