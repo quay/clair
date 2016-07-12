@@ -368,7 +368,7 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 						Namespace: database.Namespace{Name: "ubuntu:" + database.UbuntuReleasesMapping[md["release"]]},
 						Name:      md["package"],
 					},
-					Version: version,
+					FixedInVersions: types.NewFixedInVersionsFromOV(types.OpGreaterEqual, version),
 				}
 				vulnerability.FixedIn = append(vulnerability.FixedIn, featureVersion)
 			}

@@ -104,8 +104,8 @@ func TestNotification(t *testing.T) {
 		Severity:    "Unknown",
 		FixedIn: []database.FeatureVersion{
 			{
-				Feature: f1,
-				Version: types.NewVersionUnsafe("1.0"),
+				Feature:         f1,
+				FixedInVersions: types.NewFixedInVersionsUnsafe(">= 1.0"),
 			},
 		},
 	}
@@ -164,12 +164,12 @@ func TestNotification(t *testing.T) {
 	v1b.Severity = types.High
 	v1b.FixedIn = []database.FeatureVersion{
 		{
-			Feature: f1,
-			Version: types.MinVersion,
+			Feature:         f1,
+			FixedInVersions: types.NewFixedInVersionsFromOV(types.OpGreaterEqual, types.MinVersion),
 		},
 		{
-			Feature: f2,
-			Version: types.MaxVersion,
+			Feature:         f2,
+			FixedInVersions: types.NewFixedInVersionsFromOV(types.OpGreaterEqual, types.MaxVersion),
 		},
 	}
 

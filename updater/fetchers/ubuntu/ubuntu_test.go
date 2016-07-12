@@ -48,21 +48,21 @@ func TestUbuntuParser(t *testing.T) {
 					Namespace: database.Namespace{Name: "ubuntu:14.04"},
 					Name:      "libmspack",
 				},
-				Version: types.MaxVersion,
+				FixedInVersions: types.NewFixedInVersionsFromOV(types.OpGreaterEqual, types.MaxVersion),
 			},
 			{
 				Feature: database.Feature{
 					Namespace: database.Namespace{Name: "ubuntu:15.04"},
 					Name:      "libmspack",
 				},
-				Version: types.NewVersionUnsafe("0.4-3"),
+				FixedInVersions: types.NewFixedInVersionsUnsafe(">= 0.4-3"),
 			},
 			{
 				Feature: database.Feature{
 					Namespace: database.Namespace{Name: "ubuntu:15.10"},
 					Name:      "libmspack-anotherpkg",
 				},
-				Version: types.NewVersionUnsafe("0.1"),
+				FixedInVersions: types.NewFixedInVersionsUnsafe(">= 0.1"),
 			},
 		}
 

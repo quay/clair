@@ -31,8 +31,6 @@ const (
 	cveURLPrefix         = "http://cve.mitre.org/cgi-bin/cvename.cgi?name="
 	updaterFlag          = "nodejsUpdater"
 	defaultNodejsVersion = "all"
-	//Add a suffix when an advisory is fixed `after` a certain version.
-	defaultVersionSuffix = "-1"
 )
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "updater/fetchers/nodejs")
@@ -131,8 +129,10 @@ func parseNodejsAdvisories(advisories []nodejsAdvisory, latestUpdate string) (vu
 					},
 				},
 			}
-			if version, err := getAdvisoryVersion(advisory.PatchedVersions); err == nil {
-				pkg.Version = version
+			if fivs, err := types.NewFixedInVersions(advisory.PatchedVersions); err == nil {
+				pkg.FixedInVersions = fivs
+			} else {
+				log.Warningf("could not parse nodejs patched version: '%s'.", err)
 			}
 			vulnerability.FixedIn = append(vulnerability.FixedIn, pkg)
 
@@ -147,35 +147,6 @@ func parseNodejsAdvisories(advisories []nodejsAdvisory, latestUpdate string) (vu
 	}
 
 	return
-}
-
-// getAdvisoryVersion parses a string containing one or multiple version ranges
-// and returns upper-bound. By nature, this simplification may lead to false-positives
-func getAdvisoryVersion(fullVersion string) (types.Version, error) {
-	fixedVersion := types.MinVersion
-
-	for _, version := range strings.Split(fullVersion, "||") {
-		ovs := getOperVersions(version)
-		for _, ov := range ovs {
-			if ov.Oper == ">" {
-				if curVersion, err := types.NewVersion(ov.Version + defaultVersionSuffix); err != nil {
-					log.Warningf("could not parse package version '%s': %s. skipping", curVersion, err.Error())
-				} else if curVersion.Compare(fixedVersion) > 0 {
-					fixedVersion = curVersion
-				}
-			} else if ov.Oper == ">=" {
-				if curVersion, err := types.NewVersion(ov.Version); err != nil {
-					log.Warningf("could not parse package version '%s': %s. skipping", curVersion, err.Error())
-				} else if curVersion.Compare(fixedVersion) > 0 {
-					fixedVersion = curVersion
-				}
-			}
-		}
-	}
-	if fixedVersion != types.MinVersion {
-		return fixedVersion, nil
-	}
-	return types.MaxVersion, cerrors.ErrNotFound
 }
 
 // Clean deletes any allocated resources.

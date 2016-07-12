@@ -50,14 +50,14 @@ func TestNodejsParser(t *testing.T) {
 						Namespace: database.Namespace{Name: "nodejs:" + defaultNodejsVersion},
 						Name:      "ldapauth",
 					},
-					Version: types.NewVersionUnsafe("2.2.4" + defaultVersionSuffix),
+					FixedInVersions: types.NewFixedInVersionsUnsafe("> 2.2.4"),
 				},
 				{
 					Feature: database.Feature{
 						Namespace: database.Namespace{Name: "nodejs:" + defaultNodejsVersion},
 						Name:      "ldapauth-fork",
 					},
-					Version: types.NewVersionUnsafe("2.3.3"),
+					FixedInVersions: types.NewFixedInVersionsUnsafe(">= 2.3.3"),
 				},
 			}
 			for _, expectedFeatureVersion := range expectedFeatureVersions {
@@ -73,7 +73,7 @@ func TestNodejsParser(t *testing.T) {
 						Namespace: database.Namespace{Name: "nodejs:" + defaultNodejsVersion},
 						Name:      "hawk",
 					},
-					Version: types.NewVersionUnsafe("4.1.1"),
+					FixedInVersions: types.NewFixedInVersionsUnsafe(">=3.1.3 < 4.0.0 || >=4.1.1"),
 				},
 			}
 			for _, expectedFeatureVersion := range expectedFeatureVersions {

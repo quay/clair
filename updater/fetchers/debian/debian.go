@@ -196,7 +196,7 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 							Name: "debian:" + database.DebianReleasesMapping[releaseName],
 						},
 					},
-					Version: version,
+					FixedInVersions: types.NewFixedInVersionsFromOV(types.OpGreaterEqual, version),
 				}
 				vulnerability.FixedIn = append(vulnerability.FixedIn, pkg)
 
