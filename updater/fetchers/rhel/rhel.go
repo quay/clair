@@ -122,5 +122,5 @@ func (f *RHELInfo) ValidOsVersion(osVersion string) bool {
 	if err != nil {
 		return false
 	}
-	return version > firstConsideredRHEL
+	return version >= firstConsideredRHEL
 }
