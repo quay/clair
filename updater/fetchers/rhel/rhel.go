@@ -290,7 +290,7 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 			}
 		}
 
-		if osVersion > firstConsideredRHEL {
+		if osVersion >= firstConsideredRHEL {
 			featureVersion.Feature.Namespace.Name = "centos" + ":" + strconv.Itoa(osVersion)
 		} else {
 			continue
