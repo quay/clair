@@ -204,3 +204,4 @@ The following interfaces can have custom implementations registered via [init()]
 - [Dockyard](https://github.com/containerops/dockyard): an open source container registry with Clair integration
 - [Hyperclair](https://github.com/wemanity-belgium/hyperclair): a lightweight command-line tool for working locally with Clair
 - [Clair w/ SQS](https://github.com/zalando/clair-sqs): a container containing Clair and additional processes that integrate Clair with [Amazon SQS](https://aws.amazon.com/sqs)
+- [Klar](https://github.com/optiopay/klar): a simple command-line integration of Clair and Docker registry, designed to be used in scripts and CI
