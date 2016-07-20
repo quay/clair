@@ -156,17 +156,23 @@ By indexing the features of an image into the database, images only need to be r
 
 ### Default Data Sources
 
-| Data Source                   | Versions                                               | Format |
-|-------------------------------|--------------------------------------------------------|--------|
-| [Debian Security Bug Tracker] | 6, 7, 8, unstable                                      | [dpkg] |
-| [Ubuntu CVE Tracker]          | 12.04, 12.10, 13.04, 14.04, 14.10, 15.04, 15.10, 16.04 | [dpkg] |
-| [Red Hat Security Data]       | 5, 6, 7                                                | [rpm]  |
+| Data Source                   | Data Collected                                                           | Format | License         |
+|-------------------------------|--------------------------------------------------------------------------|--------|-----------------|
+| [Debian Security Bug Tracker] | Debian 6, 7, 8, unstable namespaces                                      | [dpkg] | [Debian]        |
+| [Ubuntu CVE Tracker]          | Ubuntu 12.04, 12.10, 13.04, 14.04, 14.10, 15.04, 15.10, 16.04 namespaces | [dpkg] | [GPLv2]         |
+| [Red Hat Security Data]       | CentOS 5, 6, 7 namespaces                                                | [rpm]  | [CVRF]          |
+| [NVD]                         | Generic Vulnerability Metadata                                           | N/A    | [Public Domain] |
 
 [Debian Security Bug Tracker]: https://security-tracker.debian.org/tracker
 [Ubuntu CVE Tracker]: https://launchpad.net/ubuntu-cve-tracker
 [Red Hat Security Data]: https://www.redhat.com/security/data/metrics
+[NVD]: https://nvd.nist.gov
 [dpkg]: https://en.wikipedia.org/wiki/dpkg
 [rpm]: http://www.rpm.org
+[Debian]: https://www.debian.org/license
+[GPLv2]: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+[CVRF]: http://www.icasi.org/cvrf-licensing/
+[Public Domain]: https://nvd.nist.gov/faq
 
 
 ### Customization
