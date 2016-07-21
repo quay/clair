@@ -22,10 +22,10 @@ import (
 	"github.com/coreos/clair/worker/detectors"
 )
 
-var redhatReleaseRegexp = regexp.MustCompile(`(?P<os>[^\s]*) (Linux release|release) (?P<version>[\d]+)`)
+var redhatReleaseRegexp = regexp.MustCompile(`(?P<os>[^\s]*) (Linux Server release|Linux release|release) (?P<version>[\d]+)`)
 
 // RedhatReleaseNamespaceDetector implements NamespaceDetector and detects the OS from the
-// /etc/centos-release, /etc/redhat-release and /etc/system-release files.
+// /etc/oracle-release, /etc/centos-release, /etc/redhat-release and /etc/system-release files.
 //
 // Typically for CentOS and Red-Hat like systems
 // eg. CentOS release 5.11 (Final)
@@ -55,5 +55,5 @@ func (detector *RedhatReleaseNamespaceDetector) Detect(data map[string][]byte) *
 
 // GetRequiredFiles returns the list of files that are required for Detect()
 func (detector *RedhatReleaseNamespaceDetector) GetRequiredFiles() []string {
-	return []string{"etc/centos-release", "etc/redhat-release", "etc/system-release"}
+	return []string{"etc/oracle-release", "etc/centos-release", "etc/redhat-release", "etc/system-release"}
 }

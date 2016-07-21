@@ -64,6 +64,12 @@ func (detector *OsReleaseNamespaceDetector) Detect(data map[string][]byte) *data
 		}
 	}
 
+	// Oracle Linux has both /etc/os-release and /etc/oracle-release
+	// Need to map to the correct namespace
+	if OS == "ol" || OS == "ol " {
+		return &database.Namespace{Name: "oracle:" + string(version[0])}
+	}
+
 	if OS != "" && version != "" {
 		return &database.Namespace{Name: OS + ":" + version}
 	}
