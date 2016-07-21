@@ -40,9 +40,7 @@ const (
 var (
 	ignoredCriterions = []string{
 		" is signed with the Oracle Linux",
-		" Client is installed",
-		" Workstation is installed",
-		" ComputeNode is installed",
+		".ksplice1.",
 	}
 
 	elsaRegexp = regexp.MustCompile(`com.oracle.elsa-(\d+).xml`)
