@@ -20,9 +20,15 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/worker/detectors"
+	"github.com/coreos/pkg/capnslog"
 )
 
-var redhatReleaseRegexp = regexp.MustCompile(`(?P<os>[^\s]*) (Linux release|release) (?P<version>[\d]+)`)
+var (
+	log = capnslog.NewPackageLogger("github.com/coreos/clair", "worker/detectors/namespace/redhatrelease")
+
+	centosReleaseRegexp = regexp.MustCompile(`(?P<os>[^\s]*) (Linux release|release) (?P<version>[\d]+)`)
+	redhatReleaseRegexp = regexp.MustCompile(`(?P<os>Red Hat Enterprise Linux) (Client release|Server release|Workstation release) (?P<version>[\d]+)`)
+)
 
 // RedhatReleaseNamespaceDetector implements NamespaceDetector and detects the OS from the
 // /etc/centos-release, /etc/redhat-release and /etc/system-release files.
@@ -31,6 +37,7 @@ var redhatReleaseRegexp = regexp.MustCompile(`(?P<os>[^\s]*) (Linux release|rele
 // eg. CentOS release 5.11 (Final)
 // eg. CentOS release 6.6 (Final)
 // eg. CentOS Linux release 7.1.1503 (Core)
+// eg. Red Hat Enterprise Linux Server release 7.2 (Maipo)
 type RedhatReleaseNamespaceDetector struct{}
 
 func init() {
@@ -44,10 +51,21 @@ func (detector *RedhatReleaseNamespaceDetector) Detect(data map[string][]byte) *
 			continue
 		}
 
-		r := redhatReleaseRegexp.FindStringSubmatch(string(f))
+		var r []string
+
+		// try for RHEL
+		r = redhatReleaseRegexp.FindStringSubmatch(string(f))
+		if len(r) == 4 {
+			// TODO(vbatts) this is a hack until https://github.com/coreos/clair/pull/193
+			return &database.Namespace{Name: "centos" + ":" + r[3]}
+		}
+
+		// then try centos first
+		r = centosReleaseRegexp.FindStringSubmatch(string(f))
 		if len(r) == 4 {
 			return &database.Namespace{Name: strings.ToLower(r[1]) + ":" + r[3]}
 		}
+
 	}
 
 	return nil
