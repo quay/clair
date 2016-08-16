@@ -121,8 +121,8 @@ $ ./$GOBIN/clair -config=config.yaml
 
 While container images for every releases are available at [quay.io/repository/coreos/clair], container images built on the latest available source code are available at [quay.io/repository/coreos/clair-git].
 
-[quay.io/repository/coreos/clair]: quay.io/repository/coreos/clair
-[quay.io/repository/coreos/clair-git]: quay.io/repository/coreos/clair-git
+[quay.io/repository/coreos/clair]: https://quay.io/repository/coreos/clair
+[quay.io/repository/coreos/clair-git]: https://quay.io/repository/coreos/clair-git
 
 ## Documentation
 
