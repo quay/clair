@@ -16,6 +16,7 @@ package aci
 
 import (
 	"io"
+	"regexp"
 	"strings"
 
 	"github.com/coreos/clair/utils"
@@ -36,6 +37,6 @@ func (detector *ACIDataDetector) Supported(path string, format string) bool {
 	return false
 }
 
-func (detector *ACIDataDetector) Detect(layerReader io.ReadCloser, toExtract []string, maxFileSize int64) (map[string][]byte, error) {
+func (detector *ACIDataDetector) Detect(layerReader io.ReadCloser, toExtract []*regexp.Regexp, maxFileSize int64) (map[string][]byte, error) {
 	return utils.SelectivelyExtractArchive(layerReader, "rootfs/", toExtract, maxFileSize)
 }

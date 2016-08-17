@@ -32,6 +32,7 @@ func TestRHELParser(t *testing.T) {
 	// Test parsing testdata/fetcher_rhel_test.1.xml
 	testFile, _ := os.Open(path + "/testdata/fetcher_rhel_test.1.xml")
 	vulnerabilities, err := parseRHSA(testFile)
+	testFile.Close()
 	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, 1) {
 		assert.Equal(t, "RHSA-2015:1193", vulnerabilities[0].Name)
 		assert.Equal(t, "https://rhn.redhat.com/errata/RHSA-2015-1193.html", vulnerabilities[0].Link)
@@ -44,21 +45,21 @@ func TestRHELParser(t *testing.T) {
 					Namespace: database.Namespace{Name: "centos:7"},
 					Name:      "xerces-c",
 				},
-				Version: types.NewVersionUnsafe("3.1.1-7.el7_1"),
+				FixedInVersions: types.NewFixedInVersionsUnsafe(">= 3.1.1-7.el7_1"),
 			},
 			{
 				Feature: database.Feature{
 					Namespace: database.Namespace{Name: "centos:7"},
 					Name:      "xerces-c-devel",
 				},
-				Version: types.NewVersionUnsafe("3.1.1-7.el7_1"),
+				FixedInVersions: types.NewFixedInVersionsUnsafe(">= 3.1.1-7.el7_1"),
 			},
 			{
 				Feature: database.Feature{
 					Namespace: database.Namespace{Name: "centos:7"},
 					Name:      "xerces-c-doc",
 				},
-				Version: types.NewVersionUnsafe("3.1.1-7.el7_1"),
+				FixedInVersions: types.NewFixedInVersionsUnsafe(">= 3.1.1-7.el7_1"),
 			},
 		}
 
@@ -70,6 +71,7 @@ func TestRHELParser(t *testing.T) {
 	// Test parsing testdata/fetcher_rhel_test.2.xml
 	testFile, _ = os.Open(path + "/testdata/fetcher_rhel_test.2.xml")
 	vulnerabilities, err = parseRHSA(testFile)
+	testFile.Close()
 	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, 1) {
 		assert.Equal(t, "RHSA-2015:1207", vulnerabilities[0].Name)
 		assert.Equal(t, "https://rhn.redhat.com/errata/RHSA-2015-1207.html", vulnerabilities[0].Link)
@@ -82,14 +84,14 @@ func TestRHELParser(t *testing.T) {
 					Namespace: database.Namespace{Name: "centos:6"},
 					Name:      "firefox",
 				},
-				Version: types.NewVersionUnsafe("38.1.0-1.el6_6"),
+				FixedInVersions: types.NewFixedInVersionsUnsafe(">= 38.1.0-1.el6_6"),
 			},
 			{
 				Feature: database.Feature{
 					Namespace: database.Namespace{Name: "centos:7"},
 					Name:      "firefox",
 				},
-				Version: types.NewVersionUnsafe("38.1.0-1.el7_1"),
+				FixedInVersions: types.NewFixedInVersionsUnsafe(">= 38.1.0-1.el7_1"),
 			},
 		}
 

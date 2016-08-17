@@ -48,8 +48,8 @@ INSERT INTO vulnerability (id, namespace_id, name, description, link, severity) 
   (2, 1, 'CVE-NOPE', 'A vulnerability affecting nothing', '', 'Unknown');
 
 INSERT INTO vulnerability_fixedin_feature (id, vulnerability_id, feature_id, version) VALUES
-  (1, 1, 2, '2.0'),
-  (2, 1, 4, '1.9-abc');
+  (1, 1, 2, '>= 2.0'),
+  (2, 1, 4, '>= 1.9-abc');
 
 INSERT INTO vulnerability_affects_featureversion (id, vulnerability_id, featureversion_id, fixedin_id) VALUES
   (1, 1, 2, 1); -- CVE-OPENSSL-1-DEB7 affects Debian:7 OpenSSL 1.0

@@ -31,6 +31,7 @@ func TestDebianParser(t *testing.T) {
 	// Test parsing testdata/fetcher_debian_test.json
 	testFile, _ := os.Open(filepath.Join(filepath.Dir(filename)) + "/testdata/fetcher_debian_test.json")
 	response, err := buildResponse(testFile, "")
+	defer testFile.Close()
 	if assert.Nil(t, err) && assert.Len(t, response.Vulnerabilities, 3) {
 		for _, vulnerability := range response.Vulnerabilities {
 			if vulnerability.Name == "CVE-2015-1323" {
@@ -44,7 +45,7 @@ func TestDebianParser(t *testing.T) {
 							Namespace: database.Namespace{Name: "debian:8"},
 							Name:      "aptdaemon",
 						},
-						Version: types.MaxVersion,
+						FixedInVersions: types.NewFixedInVersionsFromOV(types.OpGreaterEqual, types.MaxVersion),
 					},
 					{
 						Feature: database.Feature{
@@ -52,7 +53,7 @@ func TestDebianParser(t *testing.T) {
 
 							Name: "aptdaemon",
 						},
-						Version: types.NewVersionUnsafe("1.1.1+bzr982-1"),
+						FixedInVersions: types.NewFixedInVersionsUnsafe(">= 1.1.1+bzr982-1"),
 					},
 				}
 
@@ -70,21 +71,21 @@ func TestDebianParser(t *testing.T) {
 							Namespace: database.Namespace{Name: "debian:8"},
 							Name:      "aptdaemon",
 						},
-						Version: types.NewVersionUnsafe("0.7.0"),
+						FixedInVersions: types.NewFixedInVersionsUnsafe(">= 0.7.0"),
 					},
 					{
 						Feature: database.Feature{
 							Namespace: database.Namespace{Name: "debian:unstable"},
 							Name:      "aptdaemon",
 						},
-						Version: types.NewVersionUnsafe("0.7.0"),
+						FixedInVersions: types.NewFixedInVersionsUnsafe(">= 0.7.0"),
 					},
 					{
 						Feature: database.Feature{
 							Namespace: database.Namespace{Name: "debian:8"},
 							Name:      "asterisk",
 						},
-						Version: types.NewVersionUnsafe("0.5.56"),
+						FixedInVersions: types.NewFixedInVersionsUnsafe(">= 0.5.56"),
 					},
 				}
 
@@ -102,7 +103,7 @@ func TestDebianParser(t *testing.T) {
 							Namespace: database.Namespace{Name: "debian:8"},
 							Name:      "asterisk",
 						},
-						Version: types.MinVersion,
+						FixedInVersions: types.NewFixedInVersionsFromOV(types.OpGreaterEqual, types.MinVersion),
 					},
 				}
 

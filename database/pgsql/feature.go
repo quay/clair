@@ -194,7 +194,7 @@ func (pgSQL *pgSQL) insertFeatureVersions(featureVersions []database.FeatureVers
 type vulnerabilityAffectsFeatureVersion struct {
 	vulnerabilityID int
 	fixedInID       int
-	fixedInVersion  types.Version
+	fixedInVersions types.FixedInVersions
 }
 
 func linkFeatureVersionToVulnerabilities(tx *sql.Tx, featureVersion database.FeatureVersion) error {
@@ -210,14 +210,12 @@ func linkFeatureVersionToVulnerabilities(tx *sql.Tx, featureVersion database.Fea
 	for rows.Next() {
 		var affect vulnerabilityAffectsFeatureVersion
 
-		err := rows.Scan(&affect.fixedInID, &affect.vulnerabilityID, &affect.fixedInVersion)
+		err := rows.Scan(&affect.fixedInID, &affect.vulnerabilityID, &affect.fixedInVersions)
 		if err != nil {
 			return handleError("searchVulnerabilityFixedInFeature.Scan()", err)
 		}
 
-		if featureVersion.Version.Compare(affect.fixedInVersion) < 0 {
-			// The version of the FeatureVersion we are inserting is lower than the fixed version on this
-			// Vulnerability, thus, this FeatureVersion is affected by it.
+		if affect.fixedInVersions.Affected(featureVersion.Version) {
 			affects = append(affects, affect)
 		}
 	}

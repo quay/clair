@@ -30,3 +30,13 @@ func TestIsValid(t *testing.T) {
 	assert.False(t, Priority("Test").IsValid())
 	assert.True(t, Unknown.IsValid())
 }
+
+func TestScoreToPriority(t *testing.T) {
+	assert.Equal(t, ScoreToPriority(-1.0), Unknown)
+	assert.Equal(t, ScoreToPriority(0.5), Negligible)
+	assert.Equal(t, ScoreToPriority(2.0), Low)
+	assert.Equal(t, ScoreToPriority(5.0), Medium)
+	assert.Equal(t, ScoreToPriority(7.0), High)
+	assert.Equal(t, ScoreToPriority(9.0), Critical)
+	assert.Equal(t, ScoreToPriority(12.0), Unknown)
+}

@@ -26,6 +26,11 @@ import (
 var (
 	osReleaseOSRegexp      = regexp.MustCompile(`^ID=(.*)`)
 	osReleaseVersionRegexp = regexp.MustCompile(`^VERSION_ID=(.*)`)
+
+	osNSRegexps = []*regexp.Regexp{
+		regexp.MustCompile("^etc/os-release$"),
+		regexp.MustCompile("^usr/lib/os-release$"),
+	}
 )
 
 // OsReleaseNamespaceDetector implements NamespaceDetector and detects the OS from the
@@ -42,7 +47,7 @@ func init() {
 func (detector *OsReleaseNamespaceDetector) Detect(data map[string][]byte) *database.Namespace {
 	var OS, version string
 
-	for _, filePath := range detector.GetRequiredFiles() {
+	for _, filePath := range []string{"etc/os-release", "usr/lib/os-release"} {
 		f, hasFile := data[filePath]
 		if !hasFile {
 			continue
@@ -71,6 +76,6 @@ func (detector *OsReleaseNamespaceDetector) Detect(data map[string][]byte) *data
 }
 
 // GetRequiredFiles returns the list of files that are required for Detect()
-func (detector *OsReleaseNamespaceDetector) GetRequiredFiles() []string {
-	return []string{"etc/os-release", "usr/lib/os-release"}
+func (detector *OsReleaseNamespaceDetector) GetRequiredFiles() []*regexp.Regexp {
+	return osNSRegexps
 }

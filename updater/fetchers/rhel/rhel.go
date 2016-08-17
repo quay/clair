@@ -107,6 +107,7 @@ func (f *RHELFetcher) FetchUpdate(datastore database.Datastore) (resp updater.Fe
 		log.Errorf("could not download RHEL's update list: %s", err)
 		return resp, cerrors.ErrCouldNotDownload
 	}
+	defer r.Body.Close()
 
 	// Get the list of RHSAs that we have to process.
 	var rhsaList []int
@@ -282,11 +283,13 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 				}
 			} else if strings.Contains(c.Comment, " is earlier than ") {
 				const prefixLen = len(" is earlier than ")
+				var version types.Version
 				featureVersion.Feature.Name = strings.TrimSpace(c.Comment[:strings.Index(c.Comment, " is earlier than ")])
-				featureVersion.Version, err = types.NewVersion(c.Comment[strings.Index(c.Comment, " is earlier than ")+prefixLen:])
+				version, err = types.NewVersion(c.Comment[strings.Index(c.Comment, " is earlier than ")+prefixLen:])
 				if err != nil {
 					log.Warningf("could not parse package version '%s': %s. skipping", c.Comment[strings.Index(c.Comment, " is earlier than ")+prefixLen:], err.Error())
 				}
+				featureVersion.FixedInVersions = types.NewFixedInVersionsFromOV(types.OpGreaterEqual, version)
 			}
 		}
 
@@ -296,7 +299,7 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 			continue
 		}
 
-		if featureVersion.Feature.Namespace.Name != "" && featureVersion.Feature.Name != "" && featureVersion.Version.String() != "" {
+		if featureVersion.Feature.Namespace.Name != "" && featureVersion.Feature.Name != "" && featureVersion.FixedInVersions.String() != "" {
 			featureVersionParameters[featureVersion.Feature.Namespace.Name+":"+featureVersion.Feature.Name] = featureVersion
 		} else {
 			log.Warningf("could not determine a valid package from criterions: %v", criterions)

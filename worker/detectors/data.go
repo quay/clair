@@ -22,6 +22,7 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 
@@ -34,7 +35,7 @@ type DataDetector interface {
 	//Support check if the input path and format are supported by the underling detector
 	Supported(path string, format string) bool
 	// Detect detects the required data from input path
-	Detect(layerReader io.ReadCloser, toExtract []string, maxFileSize int64) (data map[string][]byte, err error)
+	Detect(layerReader io.ReadCloser, toExtract []*regexp.Regexp, maxFileSize int64) (data map[string][]byte, err error)
 }
 
 var (
@@ -70,7 +71,7 @@ func RegisterDataDetector(name string, f DataDetector) {
 }
 
 // DetectData finds the Data of the layer by using every registered DataDetector
-func DetectData(format, path string, headers map[string]string, toExtract []string, maxFileSize int64) (data map[string][]byte, err error) {
+func DetectData(format, path string, headers map[string]string, toExtract []*regexp.Regexp, maxFileSize int64) (data map[string][]byte, err error) {
 	var layerReader io.ReadCloser
 	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
 		// Create a new HTTP request object.

@@ -24,6 +24,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -94,7 +95,7 @@ func (r *TarReadCloser) Close() error {
 
 // SelectivelyExtractArchive extracts the specified files and folders
 // from targz data read from the given reader and store them in a map indexed by file paths
-func SelectivelyExtractArchive(r io.Reader, prefix string, toExtract []string, maxFileSize int64) (map[string][]byte, error) {
+func SelectivelyExtractArchive(r io.Reader, prefix string, toExtract []*regexp.Regexp, maxFileSize int64) (map[string][]byte, error) {
 	data := make(map[string][]byte)
 
 	// Create a tar or tar/tar-gzip/tar-bzip2/tar-xz reader
@@ -123,8 +124,8 @@ func SelectivelyExtractArchive(r io.Reader, prefix string, toExtract []string, m
 
 		// Determine if we should extract the element
 		toBeExtracted := false
-		for _, s := range toExtract {
-			if strings.HasPrefix(filename, s) {
+		for _, re := range toExtract {
+			if re.MatchString(filename) {
 				toBeExtracted = true
 				break
 			}

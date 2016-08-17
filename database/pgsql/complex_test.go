@@ -85,8 +85,8 @@ func TestRaceAffects(t *testing.T) {
 			Namespace: feature.Namespace,
 			FixedIn: []database.FeatureVersion{
 				{
-					Feature: feature,
-					Version: types.NewVersionUnsafe(strconv.Itoa(version)),
+					Feature:         feature,
+					FixedInVersions: types.NewFixedInVersionsUnsafe(">=" + strconv.Itoa(version)),
 				},
 			},
 			Severity: types.Unknown,
@@ -149,7 +149,9 @@ func TestRaceAffects(t *testing.T) {
 		// Get expected affects.
 		for i := numVulnerabilities; i > featureVersionVersion; i-- {
 			for _, vulnerability := range vulnerabilities[i] {
-				expectedAffectedNames = append(expectedAffectedNames, vulnerability.Name)
+				if vulnerability.FixedIn[0].FixedInVersions.Affected(featureVersion.Version) {
+					expectedAffectedNames = append(expectedAffectedNames, vulnerability.Name)
+				}
 			}
 		}
 

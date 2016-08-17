@@ -1,0 +1,19 @@
+{
+  "version": "1.3.10",
+  "name": "npm",
+  "homepage": "https://npmjs.org/doc/",
+  "author": "Isaac Z. Schlueter <i@izs.me> (http://blog.izs.me)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/isaacs/npm"
+  },
+  "dependencies": {
+    "semver": "~2.1.0",
+    "github-url-from-git": "1.1.1"
+  },
+  "engines": {
+    "node": ">=0.6",
+    "npm": "1"
+  },
+  "license": "Artistic-2.0"
+}

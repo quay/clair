@@ -108,3 +108,22 @@ func (p *Priority) Scan(value interface{}) error {
 func (p *Priority) Value() (driver.Value, error) {
 	return string(*p), nil
 }
+
+// ScoreToPriority return a priority from a cvss score on the scale of 0 to 10.
+func ScoreToPriority(score float32) Priority {
+	if score < 0.0 {
+		return Unknown
+	} else if score < 1.0 {
+		return Negligible
+	} else if score <= 3.9 {
+		return Low
+	} else if score <= 6.9 {
+		return Medium
+	} else if score <= 8.9 {
+		return High
+	} else if score <= 10.0 {
+		return Critical
+	} else {
+		return Unknown
+	}
+}

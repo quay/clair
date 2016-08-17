@@ -1,0 +1,26 @@
+{
+  "name": "hawk",
+  "description": "HTTP Hawk Authentication Scheme",
+  "version": "4.0.1",
+  "author": {
+    "name": "Eran Hammer",
+    "email": "eran@hammer.io",
+    "url": "http://hueniverse.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/hueniverse/hawk"
+  },
+  "engines": {
+    "node": ">=4.0.0"
+  },
+  "dependencies": {
+    "hoek": "3.x.x",
+    "boom": "3.x.x",
+    "cryptiles": "3.x.x",
+    "sntp": "2.x.x"
+  },
+  "license": "BSD-3-Clause",
+  "_id": "hawk@4.1.2",
+  "_from": "hawk@"
+}

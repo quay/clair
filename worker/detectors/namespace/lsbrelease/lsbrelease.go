@@ -26,6 +26,8 @@ import (
 var (
 	lsbReleaseOSRegexp      = regexp.MustCompile(`^DISTRIB_ID=(.*)`)
 	lsbReleaseVersionRegexp = regexp.MustCompile(`^DISTRIB_RELEASE=(.*)`)
+
+	lsbNSRegexp = regexp.MustCompile("^etc/lsb-release$")
 )
 
 // AptSourcesNamespaceDetector implements NamespaceDetector and detects the Namespace from the
@@ -76,6 +78,6 @@ func (detector *LsbReleaseNamespaceDetector) Detect(data map[string][]byte) *dat
 }
 
 // GetRequiredFiles returns the list of files that are required for Detect()
-func (detector *LsbReleaseNamespaceDetector) GetRequiredFiles() []string {
-	return []string{"etc/lsb-release"}
+func (detector *LsbReleaseNamespaceDetector) GetRequiredFiles() []*regexp.Regexp {
+	return []*regexp.Regexp{lsbNSRegexp}
 }

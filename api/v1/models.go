@@ -77,7 +77,7 @@ func LayerFromDatabaseModel(dbLayer database.Layer, withFeatures, withVulnerabil
 					Metadata:      dbVuln.Metadata,
 				}
 
-				if dbVuln.FixedBy != types.MaxVersion {
+				if dbVuln.FixedBy.String() != types.NewFixedInVersionsFromOV(types.OpGreaterEqual, types.MaxVersion).String() {
 					vuln.FixedBy = dbVuln.FixedBy.String()
 				}
 				feature.Vulnerabilities = append(feature.Vulnerabilities, vuln)
@@ -154,31 +154,32 @@ type Feature struct {
 	Name            string          `json:"Name,omitempty"`
 	NamespaceName   string          `json:"NamespaceName,omitempty"`
 	Version         string          `json:"Version,omitempty"`
+	FixedInVersions string          `json:"FixedInVersions,omitempty"`
 	Vulnerabilities []Vulnerability `json:"Vulnerabilities,omitempty"`
 	AddedBy         string          `json:"AddedBy,omitempty"`
 }
 
 func FeatureFromDatabaseModel(dbFeatureVersion database.FeatureVersion) Feature {
-	versionStr := dbFeatureVersion.Version.String()
-	if versionStr == types.MaxVersion.String() {
-		versionStr = "None"
+	fixedInVersionsStr := dbFeatureVersion.FixedInVersions.String()
+	if fixedInVersionsStr == types.NewFixedInVersionsFromOV(types.OpGreaterEqual, types.MaxVersion).String() {
+		fixedInVersionsStr = "None"
 	}
 
 	return Feature{
-		Name:          dbFeatureVersion.Feature.Name,
-		NamespaceName: dbFeatureVersion.Feature.Namespace.Name,
-		Version:       versionStr,
-		AddedBy:       dbFeatureVersion.AddedBy.Name,
+		Name:            dbFeatureVersion.Feature.Name,
+		NamespaceName:   dbFeatureVersion.Feature.Namespace.Name,
+		FixedInVersions: fixedInVersionsStr,
+		AddedBy:         dbFeatureVersion.AddedBy.Name,
 	}
 }
 
 func (f Feature) DatabaseModel() (database.FeatureVersion, error) {
-	var version types.Version
-	if f.Version == "None" {
-		version = types.MaxVersion
+	var fivs types.FixedInVersions
+	if f.FixedInVersions == "None" {
+		fivs = types.NewFixedInVersionsFromOV(types.OpGreaterEqual, types.MaxVersion)
 	} else {
 		var err error
-		version, err = types.NewVersion(f.Version)
+		fivs, err = types.NewFixedInVersions(f.FixedInVersions)
 		if err != nil {
 			return database.FeatureVersion{}, err
 		}
@@ -189,7 +190,7 @@ func (f Feature) DatabaseModel() (database.FeatureVersion, error) {
 			Name:      f.Name,
 			Namespace: database.Namespace{Name: f.NamespaceName},
 		},
-		Version: version,
+		FixedInVersions: fivs,
 	}, nil
 }
 

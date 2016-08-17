@@ -144,7 +144,7 @@ Server: clair
             "Description": "The parse_datetime function in GNU coreutils allows remote attackers to cause a denial of service (crash) or possibly execute arbitrary code via a crafted date string, as demonstrated by the \"--date=TZ=\"123\"345\" @1\" string to the touch or date command.",
             "Link": "https://security-tracker.debian.org/tracker/CVE-2014-9471",
             "Severity": "Low",
-            "FixedBy": "9.23-5"
+            "FixedBy": ">= 9.23-5"
           }
         ]
       }
@@ -289,7 +289,7 @@ POST http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities HTTP/1.1
             {
                 "Name": "coreutils",
                 "NamespaceName": "debian:8",
-                "Version": "8.23-1"
+                "FixedInVersions": ">= 8.23-1"
             }
         ]
     }
@@ -322,7 +322,7 @@ Server: clair
             {
                 "Name": "coreutils",
                 "NamespaceName": "debian:8",
-                "Version": "8.23-1"
+                "FixedInVersions": ">= 8.23-1"
             }
         ]
     }
@@ -373,7 +373,7 @@ Server: clair
             {
                 "Name": "coreutils",
                 "NamespaceName": "debian:8",
-                "Version": "8.23-1"
+                "FixedInVersions": ">= 8.23-1"
             }
         ]
     }
@@ -592,7 +592,7 @@ Server: clair
           {
             "Name": "grep",
             "NamespaceName": "debian:8",
-            "Version": "2.25"
+            "FixedInVersions": ">= 2.25"
           }
         ]
       },

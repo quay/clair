@@ -16,6 +16,7 @@ package detectors
 
 import (
 	"fmt"
+	"regexp"
 	"sync"
 
 	"github.com/coreos/clair/database"
@@ -27,7 +28,7 @@ type FeaturesDetector interface {
 	Detect(map[string][]byte) ([]database.FeatureVersion, error)
 	// GetRequiredFiles returns the list of files required for Detect, without
 	// leading /.
-	GetRequiredFiles() []string
+	GetRequiredFiles() []*regexp.Regexp
 }
 
 var (
@@ -70,7 +71,7 @@ func DetectFeatures(data map[string][]byte) ([]database.FeatureVersion, error) {
 
 // GetRequiredFilesFeatures returns the list of files required for Detect for every
 // registered FeaturesDetector, without leading /.
-func GetRequiredFilesFeatures() (files []string) {
+func GetRequiredFilesFeatures() (files []*regexp.Regexp) {
 	for _, detector := range featuresDetectors {
 		files = append(files, detector.GetRequiredFiles()...)
 	}

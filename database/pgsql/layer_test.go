@@ -93,7 +93,7 @@ func TestFindLayer(t *testing.T) {
 					assert.Equal(t, types.High, featureVersion.AffectedBy[0].Severity)
 					assert.Equal(t, "A vulnerability affecting OpenSSL < 2.0 on Debian 7.0", featureVersion.AffectedBy[0].Description)
 					assert.Equal(t, "http://google.com/#q=CVE-OPENSSL-1-DEB7", featureVersion.AffectedBy[0].Link)
-					assert.Equal(t, types.NewVersionUnsafe("2.0"), featureVersion.AffectedBy[0].FixedBy)
+					assert.Equal(t, types.NewFixedInVersionsUnsafe(">= 2.0").String(), featureVersion.AffectedBy[0].FixedBy.String())
 				}
 			default:
 				t.Errorf("unexpected package %s for layer-1", featureVersion.Feature.Name)
