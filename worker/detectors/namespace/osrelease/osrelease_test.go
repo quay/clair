@@ -70,6 +70,49 @@ REDHAT_SUPPORT_PRODUCT="Fedora"
 REDHAT_SUPPORT_PRODUCT_VERSION=20`),
 		},
 	},
+	
+	{ // Doesn't have quotes around VERSION_ID
+                ExpectedNamespace: database.Namespace{Name: "oracle:7"},
+                Data: map[string][]byte{
+                        "etc/os-release": []byte(
+                                `NAME="Oracle Linux Server"
+VERSION="7.2"
+ID="ol"
+VERSION_ID="7.2"
+PRETTY_NAME="Oracle Linux Server 7.2"
+ANSI_COLOR="0;31"
+CPE_NAME="cpe:/o:oracle:linux:7:2:server"
+HOME_URL="https://linux.oracle.com/"
+BUG_REPORT_URL="https://bugzilla.oracle.com/"
+
+ORACLE_BUGZILLA_PRODUCT="Oracle Linux 7"
+ORACLE_BUGZILLA_PRODUCT_VERSION=7.2
+ORACLE_SUPPORT_PRODUCT="Oracle Linux"
+ORACLE_SUPPORT_PRODUCT_VERSION=7.2`),
+                },
+        },
+
+	{ // Testing the namespace replacement for Oracle Linux 
+                ExpectedNamespace: database.Namespace{Name: "oracle:6"},
+                Data: map[string][]byte{
+                        "etc/os-release": []byte(
+                                `NAME="Oracle Linux Server"
+VERSION="6.8"
+ID="ol"
+VERSION_ID="6.8"
+PRETTY_NAME="Oracle Linux Server 6.8"
+ANSI_COLOR="0;31"
+CPE_NAME="cpe:/o:oracle:linux:6:8:server"
+HOME_URL="https://linux.oracle.com/"
+BUG_REPORT_URL="https://bugzilla.oracle.com/"
+
+ORACLE_BUGZILLA_PRODUCT="Oracle Linux 6"
+ORACLE_BUGZILLA_PRODUCT_VERSION=6.8
+ORACLE_SUPPORT_PRODUCT="Oracle Linux"
+ORACLE_SUPPORT_PRODUCT_VERSION=6.8`),
+                },
+        },
+
 }
 
 func TestOsReleaseNamespaceDetector(t *testing.T) {
