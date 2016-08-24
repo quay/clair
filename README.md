@@ -119,7 +119,7 @@ $ ./$GOBIN/clair -config=config.yaml
 
 ## Documentation
 
-The latest stable documentation can be found [on the CoreOS website] or [inside the Documentation directory][docs-dir] at the root of the project's source code.
+The latest stable documentation can be found [on the CoreOS website]. Documentation for the current branch can be found [inside the Documentation directory][docs-dir] at the root of the project's source code.
 
 [on the CoreOS website]: https://coreos.com/clair/docs/latest/
 [docs-dir]: /Documentation
