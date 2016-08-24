@@ -126,10 +126,9 @@ While container images for every releases are available at [quay.io/repository/c
 
 ## Documentation
 
-Documentation can be found in a `README.md` file located in the directory of the component.
+The latest stable documentation can be found [on the CoreOS website] or inside the Documentation directory at the root of the project's source code.
 
-- [Notifier](https://github.com/coreos/clair/blob/master/notifier/README.md)
-- [v1 API](https://github.com/coreos/clair/blob/master/api/v1/README.md)
+[on the CoreOS website]: https://coreos.com/clair/docs/latest/
 
 ### Architecture at a Glance
 
