@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<oval_definitions
+  xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux linux-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#unix unix-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-common-5 oval-common-schema.xsd"
+  xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+  xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5">
+  <generator>
+    <oval:product_name>Marcus Updateinfo to OVAL Converter</oval:product_name>
+    <oval:schema_version>5.5</oval:schema_version>
+    <oval:timestamp>2016-06-27T04:04:46</oval:timestamp>
+  </generator>
+  <definitions>
+    <definition id="oval:org.opensuse.security:def:20122150" version="1" class="vulnerability">
+      <metadata>
+        <title>CVE-2012-2150</title>
+        <affected family="unix">
+          <platform>openSUSE Leap 42.1</platform>
+        </affected>
+        <reference ref_id="CVE-2012-2150" ref_url="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2012-2150" source="CVE"/>
+        <description>xfs_metadump in xfsprogs before 3.2.4 does not properly obfuscate file data, which allows remote attackers to obtain sensitive information by reading a generated image.</description>
+      </metadata>
+      <criteria operator="AND">
+        <criterion test_ref="oval:org.opensuse.security:tst:2009117743" comment="openSUSE Leap 42.1 is installed"/>
+        <criteria operator="OR">
+          <criterion test_ref="oval:org.opensuse.security:tst:2009120999" comment="xfsprogs-3.2.1-5.1 is installed"/>
+          <criterion test_ref="oval:org.opensuse.security:tst:2009121000" comment="xfsprogs-devel-3.2.1-5.1 is installed"/>
+        </criteria>
+      </criteria>
+    </definition>
+  </definitions>
+  <tests>
+    <rpminfo_test id="oval:org.opensuse.security:tst:2009117743" version="1" comment="openSUSE-release is ==42.1" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+      <object object_ref="oval:org.opensuse.security:obj:2009031246"/>
+      <state state_ref="oval:org.opensuse.security:ste:2009046321"/>
+    </rpminfo_test>
+    <rpminfo_test id="oval:org.opensuse.security:tst:2009120999" version="1" comment="xfsprogs is &lt;3.2.1-5.1" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+      <object object_ref="oval:org.opensuse.security:obj:2009032555"/>
+      <state state_ref="oval:org.opensuse.security:ste:2009046736"/>
+    </rpminfo_test>
+    <rpminfo_test id="oval:org.opensuse.security:tst:2009121000" version="1" comment="xfsprogs-devel is &lt;3.2.1-5.1" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+      <object object_ref="oval:org.opensuse.security:obj:2009032648"/>
+      <state state_ref="oval:org.opensuse.security:ste:2009046736"/>
+    </rpminfo_test>
+  </tests>
+  <objects>
+    <rpminfo_object id="oval:org.opensuse.security:obj:2009032648" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+      <name>xfsprogs-devel</name>
+    </rpminfo_object>
+    <rpminfo_object id="oval:org.opensuse.security:obj:2009031246" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+      <name>openSUSE-release</name>
+    </rpminfo_object>
+    <rpminfo_object id="oval:org.opensuse.security:obj:2009032555" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+      <name>xfsprogs</name>
+    </rpminfo_object>
+  </objects>
+  <states>
+    <rpminfo_state id="oval:org.opensuse.security:ste:2009046736" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+      <evr datatype="evr_string" operation="less than">0:3.2.1-5.1</evr>
+    </rpminfo_state>
+    <rpminfo_state id="oval:org.opensuse.security:ste:2009046321" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+      <version operation="equals">42.1</version>
+    </rpminfo_state>
+  </states>
+</oval_definitions>
