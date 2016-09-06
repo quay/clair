@@ -24,6 +24,8 @@ import (
 )
 
 var (
+	//log = capnslog.NewPackageLogger("github.com/coreos/clair", "worker/detectors/namespace/osrelease")
+
 	osReleaseOSRegexp      = regexp.MustCompile(`^ID=(.*)`)
 	osReleaseVersionRegexp = regexp.MustCompile(`^VERSION_ID=(.*)`)
 )
@@ -41,6 +43,12 @@ func init() {
 // /etc/debian_version can't be used, it does not make any difference between testing and unstable, it returns stretch/sid
 func (detector *OsReleaseNamespaceDetector) Detect(data map[string][]byte) *database.Namespace {
 	var OS, version string
+
+	for _, filePath := range detector.getExcludeFiles() {
+		if _, hasFile := data[filePath]; hasFile {
+			return nil
+		}
+	}
 
 	for _, filePath := range detector.GetRequiredFiles() {
 		f, hasFile := data[filePath]
@@ -73,4 +81,9 @@ func (detector *OsReleaseNamespaceDetector) Detect(data map[string][]byte) *data
 // GetRequiredFiles returns the list of files that are required for Detect()
 func (detector *OsReleaseNamespaceDetector) GetRequiredFiles() []string {
 	return []string{"etc/os-release", "usr/lib/os-release"}
+}
+
+// getExcludeFiles returns the list of files that are ought to exclude this detector from Detect()
+func (detector *OsReleaseNamespaceDetector) getExcludeFiles() []string {
+	return []string{"etc/redhat-release", "usr/lib/centos-release"}
 }

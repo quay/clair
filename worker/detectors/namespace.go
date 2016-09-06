@@ -21,6 +21,7 @@ import (
 	"sync"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/pkg/capnslog"
 )
 
 // The NamespaceDetector interface defines a way to detect a Namespace from input data.
@@ -34,6 +35,8 @@ type NamespaceDetector interface {
 }
 
 var (
+	nlog = capnslog.NewPackageLogger("github.com/coreos/clair", "worker/detectors")
+
 	namespaceDetectorsLock sync.Mutex
 	namespaceDetectors     = make(map[string]NamespaceDetector)
 )
@@ -62,8 +65,9 @@ func RegisterNamespaceDetector(name string, f NamespaceDetector) {
 
 // DetectNamespace finds the OS of the layer by using every registered NamespaceDetector.
 func DetectNamespace(data map[string][]byte) *database.Namespace {
-	for _, detector := range namespaceDetectors {
+	for name, detector := range namespaceDetectors {
 		if namespace := detector.Detect(data); namespace != nil {
+			nlog.Debugf("detector: %q; namespace: %q\n", name, namespace.Name)
 			return namespace
 		}
 	}

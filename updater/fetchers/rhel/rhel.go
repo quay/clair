@@ -291,6 +291,7 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 		}
 
 		if osVersion >= firstConsideredRHEL {
+			// TODO(vbatts) this is where features need multiple labels ('centos' and 'rhel')
 			featureVersion.Feature.Namespace.Name = "centos" + ":" + strconv.Itoa(osVersion)
 		} else {
 			continue
