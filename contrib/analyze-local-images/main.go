@@ -50,6 +50,7 @@ var (
 	flagMyAddress       = flag.String("my-address", "127.0.0.1", "Address from the point of view of Clair")
 	flagMinimumSeverity = flag.String("minimum-severity", "Negligible", "Minimum severity of vulnerabilities to show (Unknown, Negligible, Low, Medium, High, Critical, Defcon1)")
 	flagColorMode       = flag.String("color", "auto", "Colorize the output (always, auto, never)")
+	flagTempDir         = flag.String("tempdir", "/tmp", "Temporary folder")
 )
 
 type vulnerabilityInfo struct {
@@ -116,7 +117,7 @@ func intMain() int {
 	}
 
 	// Create a temporary folder.
-	tmpPath, err := ioutil.TempDir("", "analyze-local-image-")
+	tmpPath, err := ioutil.TempDir(*flagTempDir, "analyze-local-image-")
 	if err != nil {
 		log.Fatalf("Could not create temporary folder: %s", err)
 	}
