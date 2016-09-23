@@ -181,6 +181,20 @@ func migrate(dataSource string) error {
 func createDatabase(dataSource, databaseName string) error {
 	// Open database.
 	db, err := sql.Open("postgres", dataSource)
+
+	if err != nil {
+		try.Do(func(attempt int) (retry bool, err error) {
+		retry = attempt < 5 // try 5 times
+		defer func() {
+			if r := recover(); r != nil {
+				err = errors.New(fmt.Sprintf("panic: %v", r))
+			}
+		}()
+		value, err = SomeFunction()
+		return
+	})
+	}
+
 	if err != nil {
 		return fmt.Errorf("could not open database (CreateDatabase): %v", err)
 	}
@@ -200,6 +214,18 @@ func createDatabase(dataSource, databaseName string) error {
 func dropDatabase(dataSource, databaseName string) error {
 	// Open database.
 	db, err := sql.Open("postgres", dataSource)
+	if err != nil {
+		try.Do(func(attempt int) (retry bool, err error) {
+		retry = attempt < 5 // try 5 times
+		defer func() {
+			if r := recover(); r != nil {
+				err = errors.New(fmt.Sprintf("panic: %v", r))
+			}
+		}()
+		value, err = SomeFunction()
+		return
+	})
+	}
 	if err != nil {
 		return fmt.Errorf("could not open database (DropDatabase): %v", err)
 	}
