@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/utils/oval"
 	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -31,7 +32,9 @@ func TestRHELParser(t *testing.T) {
 
 	// Test parsing testdata/fetcher_rhel_test.1.xml
 	testFile, _ := os.Open(path + "/testdata/fetcher_rhel_test.1.xml")
-	vulnerabilities, err := parseRHSA(testFile)
+	rhInfo := &RHELInfo{}
+	ov := &oval.OvalFetcher{OsInfo: rhInfo}
+	vulnerabilities, err := ov.ParseOval(testFile)
 	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, 1) {
 		assert.Equal(t, "RHSA-2015:1193", vulnerabilities[0].Name)
 		assert.Equal(t, "https://rhn.redhat.com/errata/RHSA-2015-1193.html", vulnerabilities[0].Link)
@@ -69,7 +72,7 @@ func TestRHELParser(t *testing.T) {
 
 	// Test parsing testdata/fetcher_rhel_test.2.xml
 	testFile, _ = os.Open(path + "/testdata/fetcher_rhel_test.2.xml")
-	vulnerabilities, err = parseRHSA(testFile)
+	vulnerabilities, err = ov.ParseOval(testFile)
 	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, 1) {
 		assert.Equal(t, "RHSA-2015:1207", vulnerabilities[0].Name)
 		assert.Equal(t, "https://rhn.redhat.com/errata/RHSA-2015-1207.html", vulnerabilities[0].Link)
