@@ -52,11 +52,11 @@ func AuthenticateResponse(client *http.Client, dockerResponse *http.Response, re
 	req.SetBasicAuth(authConfig.Username, authConfig.Password)
 
 	response, err := client.Do(req)
-	defer response.Body.Close()
 
 	if err != nil {
 		return err
 	}
+	defer response.Body.Close()
 
 	if response.StatusCode == http.StatusUnauthorized {
 		return ErrUnauthorized
