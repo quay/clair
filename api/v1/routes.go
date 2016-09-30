@@ -25,6 +25,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/coreos/clair/updater"
 	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils"
@@ -138,6 +139,15 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 }
 
 func getLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+
+	log.Info(updater.DbFinishUpdate)
+
+	if updater.DbFinishUpdate {
+		writeResponse(w, r, http.StatusNotFound, LayerEnvelope{Error: & Error{"DB is being updated so no query to it can be done"}})
+		log.Errorf("DB is being updated so no query to it can be done")
+		return getLayerRoute, http.StatusNotFound
+	}
+
 	_, withFeatures := r.URL.Query()["features"]
 	_, withVulnerabilities := r.URL.Query()["vulnerabilities"]
 
