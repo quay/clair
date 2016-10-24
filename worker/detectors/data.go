@@ -17,6 +17,7 @@
 package detectors
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"math"
@@ -87,7 +88,11 @@ func DetectData(format, path string, headers map[string]string, toExtract []stri
 		}
 
 		// Send the request and handle the response.
-		r, err := http.DefaultClient.Do(request)
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		client := &http.Client{Transport: tr}
+		r, err := client.Do(request)
 		if err != nil {
 			log.Warningf("could not download layer: %s", err)
 			return nil, ErrCouldNotFindLayer
