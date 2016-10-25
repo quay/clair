@@ -94,3 +94,12 @@ import:
 - package: github.com/fatih/color
   version: ^0.1.0
 - package: github.com/kr/text
+- package: github.com/Azure/go-ansiterm
+  subpackages:
+  - winterm
+- package: github.com/docker/docker
+  version: ^1.11.2
+  subpackages:
+  - api/server/httputils
+- package: github.com/mholt/archiver
+  version: ^1.0.0

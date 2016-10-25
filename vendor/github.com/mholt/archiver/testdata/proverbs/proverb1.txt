@@ -1,0 +1,2 @@
+"Channels orchestrate; mutexes serialize."
+	- Rob Pike
