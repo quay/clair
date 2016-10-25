@@ -40,4 +40,5 @@ var UbuntuReleasesMapping = map[string]string{
 	"vivid":   "15.04",
 	"wily":    "15.10",
 	"xenial":  "16.04",
+	"yakkety": "16.10",
 }
