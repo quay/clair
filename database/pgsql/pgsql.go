@@ -20,20 +20,20 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/url"
-	"path/filepath"
-	"runtime"
 	"strings"
 	"time"
 
-	"bitbucket.org/liamstask/goose/lib/goose"
+	"gopkg.in/yaml.v2"
+
 	"github.com/coreos/pkg/capnslog"
 	"github.com/hashicorp/golang-lru"
 	"github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
-	"gopkg.in/yaml.v2"
+	"github.com/remind101/migrate"
 
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/database/pgsql/migrations"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 )
@@ -144,7 +144,7 @@ func openDatabase(registrableComponentConfig config.RegistrableComponentConfig) 
 	// Create database.
 	if pg.config.ManageDatabaseLifecycle {
 		log.Info("pgsql: creating database")
-		if err := createDatabase(pgSourceURL, dbName); err != nil {
+		if err = createDatabase(pgSourceURL, dbName); err != nil {
 			return nil, err
 		}
 	}
@@ -157,13 +157,13 @@ func openDatabase(registrableComponentConfig config.RegistrableComponentConfig) 
 	}
 
 	// Verify database state.
-	if err := pg.DB.Ping(); err != nil {
+	if err = pg.DB.Ping(); err != nil {
 		pg.Close()
 		return nil, fmt.Errorf("pgsql: could not open database: %v", err)
 	}
 
 	// Run migrations.
-	if err := migrate(pg.config.Source); err != nil {
+	if err = migrateDatabase(pg.DB); err != nil {
 		pg.Close()
 		return nil, err
 	}
@@ -214,29 +214,10 @@ func parseConnectionString(source string) (dbName string, pgSourceURL string, er
 }
 
 // migrate runs all available migrations on a pgSQL database.
-func migrate(source string) error {
+func migrateDatabase(db *sql.DB) error {
 	log.Info("running database migrations")
 
-	_, filename, _, _ := runtime.Caller(1)
-	migrationDir := filepath.Join(filepath.Dir(filename), "/migrations/")
-	conf := &goose.DBConf{
-		MigrationsDir: migrationDir,
-		Driver: goose.DBDriver{
-			Name:    "postgres",
-			OpenStr: source,
-			Import:  "github.com/lib/pq",
-			Dialect: &goose.PostgresDialect{},
-		},
-	}
-
-	// Determine the most recent revision available from the migrations folder.
-	target, err := goose.GetMostRecentDBVersion(conf.MigrationsDir)
-	if err != nil {
-		return fmt.Errorf("pgsql: could not get most recent migration: %v", err)
-	}
-
-	// Run migrations.
-	err = goose.RunMigrations(conf, conf.MigrationsDir, target)
+	err := migrate.NewPostgresMigrator(db).Exec(migrate.Up, migrations.Migrations...)
 	if err != nil {
 		return fmt.Errorf("pgsql: an error occured while running migrations: %v", err)
 	}

@@ -1,10 +1,6 @@
-hash: 6787deaa403181a20c0c0ba7e3135ba0f300281e7b3f98294593aa9f60563627
-updated: 2016-06-07T06:56:38.153128536+02:00
+hash: 90e72dd70a9102940fc6126afc2d7d73ee79faaf75cecb3710b15f5a121c67ce
+updated: 2016-11-11T15:36:41.356471726+01:00
 imports:
-- name: bitbucket.org/liamstask/goose
-  version: 8488cc47d90c8a502b1c41a462a6d9cc8ee0a895
-  subpackages:
-  - lib/goose
 - name: github.com/beorn7/perks
   version: b965b613227fddccbfffe13eae360ed3fa822f8d
   subpackages:
@@ -82,6 +78,8 @@ imports:
   - model
 - name: github.com/prometheus/procfs
   version: 406e5b7bfd8201a36e2bb5f7bdae0b03380c2ce8
+- name: github.com/remind101/migrate
+  version: d22d647232c20dbea6d2aa1dda7f2737cccce614
 - name: github.com/shiena/ansicolor
   version: a422bbe96644373c5753384a59d678f7d261ff10
 - name: github.com/stretchr/testify
