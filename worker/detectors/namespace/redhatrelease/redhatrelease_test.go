@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,21 +21,21 @@ import (
 	"github.com/coreos/clair/worker/detectors/namespace"
 )
 
-var redhatReleaseTests = []namespace.NamespaceTest{
-	{
-		ExpectedNamespace: database.Namespace{Name: "centos:6"},
-		Data: map[string][]byte{
-			"etc/centos-release": []byte(`CentOS release 6.6 (Final)`),
-		},
-	},
-	{
-		ExpectedNamespace: database.Namespace{Name: "centos:7"},
-		Data: map[string][]byte{
-			"etc/system-release": []byte(`CentOS Linux release 7.1.1503 (Core)`),
-		},
-	},
-}
-
 func TestRedhatReleaseNamespaceDetector(t *testing.T) {
-	namespace.TestNamespaceDetector(t, &RedhatReleaseNamespaceDetector{}, redhatReleaseTests)
+	testData := []namespace.TestData{
+		{
+			ExpectedNamespace: &database.Namespace{Name: "centos:6"},
+			Data: map[string][]byte{
+				"etc/centos-release": []byte(`CentOS release 6.6 (Final)`),
+			},
+		},
+		{
+			ExpectedNamespace: &database.Namespace{Name: "centos:7"},
+			Data: map[string][]byte{
+				"etc/system-release": []byte(`CentOS Linux release 7.1.1503 (Core)`),
+			},
+		},
+	}
+
+	namespace.TestDetector(t, &RedhatReleaseNamespaceDetector{}, testData)
 }

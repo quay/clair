@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,29 +21,29 @@ import (
 	"github.com/coreos/clair/worker/detectors/namespace"
 )
 
-var lsbReleaseOSTests = []namespace.NamespaceTest{
-	{
-		ExpectedNamespace: database.Namespace{Name: "ubuntu:12.04"},
-		Data: map[string][]byte{
-			"etc/lsb-release": []byte(
-				`DISTRIB_ID=Ubuntu
+func TestLsbReleaseNamespaceDetector(t *testing.T) {
+	testData := []namespace.TestData{
+		{
+			ExpectedNamespace: &database.Namespace{Name: "ubuntu:12.04"},
+			Data: map[string][]byte{
+				"etc/lsb-release": []byte(
+					`DISTRIB_ID=Ubuntu
 DISTRIB_RELEASE=12.04
 DISTRIB_CODENAME=precise
 DISTRIB_DESCRIPTION="Ubuntu 12.04 LTS"`),
+			},
 		},
-	},
-	{ // We don't care about the minor version of Debian
-		ExpectedNamespace: database.Namespace{Name: "debian:7"},
-		Data: map[string][]byte{
-			"etc/lsb-release": []byte(
-				`DISTRIB_ID=Debian
+		{ // We don't care about the minor version of Debian
+			ExpectedNamespace: &database.Namespace{Name: "debian:7"},
+			Data: map[string][]byte{
+				"etc/lsb-release": []byte(
+					`DISTRIB_ID=Debian
 DISTRIB_RELEASE=7.1
 DISTRIB_CODENAME=wheezy
 DISTRIB_DESCRIPTION="Debian 7.1"`),
+			},
 		},
-	},
-}
+	}
 
-func TestLsbReleaseNamespaceDetector(t *testing.T) {
-	namespace.TestNamespaceDetector(t, &LsbReleaseNamespaceDetector{}, lsbReleaseOSTests)
+	namespace.TestDetector(t, &LsbReleaseNamespaceDetector{}, testData)
 }

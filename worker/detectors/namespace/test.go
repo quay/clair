@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package namespace implements utilities common to implementations of
+// NamespaceDetector.
 package namespace
 
 import (
@@ -22,13 +24,22 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type NamespaceTest struct {
+// TestData represents the data used to test an implementation of
+// NameSpaceDetector.
+type TestData struct {
 	Data              map[string][]byte
-	ExpectedNamespace database.Namespace
+	ExpectedNamespace *database.Namespace
 }
 
-func TestNamespaceDetector(t *testing.T, detector detectors.NamespaceDetector, tests []NamespaceTest) {
-	for _, test := range tests {
-		assert.Equal(t, test.ExpectedNamespace, *detector.Detect(test.Data))
+// TestDetector runs a detector on each provided instance of TestData and
+// asserts the output to be equal to the expected output.
+func TestDetector(t *testing.T, detector detectors.NamespaceDetector, testData []TestData) {
+	for _, td := range testData {
+		detectedNamespace := detector.Detect(td.Data)
+		if detectedNamespace == nil {
+			assert.Equal(t, td.ExpectedNamespace, detectedNamespace)
+		} else {
+			assert.Equal(t, td.ExpectedNamespace.Name, detectedNamespace.Name)
+		}
 	}
 }
