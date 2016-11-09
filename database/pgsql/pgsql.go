@@ -156,10 +156,26 @@ func openDatabase(registrableComponentConfig config.RegistrableComponentConfig) 
 		return nil, fmt.Errorf("pgsql: could not open database: %v", err)
 	}
 
-	// Verify database state.
-	if err := pg.DB.Ping(); err != nil {
+	// Verify database state with retry.
+	ch := make(chan int, 1)
+	go func() {
+		for {
+			err := pg.DB.Ping()
+			if err == nil {
+				ch <- 1
+			} else {
+				log.Error("failed to verify database state, retry after 2 seconds")
+				time.Sleep(2 * time.Second)
+			}
+		}
+	}()
+
+	select {
+	case <-ch:
+		// verify database state ok, break
+	case <-time.After(60 * time.Second):
 		pg.Close()
-		return nil, fmt.Errorf("pgsql: could not open database: %v", err)
+		return nil, fmt.Errorf("pgsql: failed to verify database state after retry 30 times in 60 seconds: %v", err)
 	}
 
 	// Run migrations.
