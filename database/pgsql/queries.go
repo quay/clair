@@ -160,10 +160,16 @@ const (
 		VALUES($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
 		RETURNING id`
 
-	insertVulnerabilityFixedInFeature = `
-		INSERT INTO Vulnerability_FixedIn_Feature(vulnerability_id, feature_id, version)
-		VALUES($1, $2, $3)
-		RETURNING id`
+	soiVulnerabilityFixedInFeature = `
+		WITH new_fixedinfeature AS (
+			INSERT INTO Vulnerability_FixedIn_Feature(vulnerability_id, feature_id, version)
+			SELECT CAST($1 AS INTEGER), CAST($2 AS INTEGER), CAST($3 AS VARCHAR)
+			WHERE NOT EXISTS (SELECT id FROM Vulnerability_FixedIn_Feature WHERE vulnerability_id = $1 AND feature_id = $2)
+			RETURNING id
+		)
+		SELECT 'exi', id FROM Vulnerability_FixedIn_Feature WHERE vulnerability_id = $1 AND feature_id = $2
+		UNION
+		SELECT 'new', id FROM new_fixedinfeature`
 
 	searchFeatureVersionByFeature = `SELECT id, version FROM FeatureVersion WHERE feature_id = $1`
 
