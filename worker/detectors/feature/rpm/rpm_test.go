@@ -22,28 +22,28 @@ import (
 	"github.com/coreos/clair/worker/detectors/feature"
 )
 
-var rpmPackagesTests = []feature.FeatureVersionTest{
-	// Test a CentOS 7 RPM database
-	// Memo: Use the following command on a RPM-based system to shrink a database: rpm -qa --qf "%{NAME}\n" |tail -n +3| xargs rpm -e --justdb
-	{
-		FeatureVersions: []database.FeatureVersion{
-			// Two packages from this source are installed, it should only appear once
-			{
-				Feature: database.Feature{Name: "centos-release"},
-				Version: types.NewVersionUnsafe("7-1.1503.el7.centos.2.8"),
+func TestRpmFeatureDetection(t *testing.T) {
+	testData := []feature.TestData{
+		// Test a CentOS 7 RPM database
+		// Memo: Use the following command on a RPM-based system to shrink a database: rpm -qa --qf "%{NAME}\n" |tail -n +3| xargs rpm -e --justdb
+		{
+			FeatureVersions: []database.FeatureVersion{
+				// Two packages from this source are installed, it should only appear once
+				{
+					Feature: database.Feature{Name: "centos-release"},
+					Version: types.NewVersionUnsafe("7-1.1503.el7.centos.2.8"),
+				},
+				// Two packages from this source are installed, it should only appear once
+				{
+					Feature: database.Feature{Name: "filesystem"},
+					Version: types.NewVersionUnsafe("3.2-18.el7"),
+				},
 			},
-			// Two packages from this source are installed, it should only appear once
-			{
-				Feature: database.Feature{Name: "filesystem"},
-				Version: types.NewVersionUnsafe("3.2-18.el7"),
+			Data: map[string][]byte{
+				"var/lib/rpm/Packages": feature.LoadFileForTest("rpm/testdata/Packages"),
 			},
 		},
-		Data: map[string][]byte{
-			"var/lib/rpm/Packages": feature.LoadFileForTest("rpm/testdata/Packages"),
-		},
-	},
-}
+	}
 
-func TestRpmFeaturesDetector(t *testing.T) {
-	feature.TestFeaturesDetector(t, &RpmFeaturesDetector{}, rpmPackagesTests)
+	feature.TestDetector(t, &RpmFeaturesDetector{}, testData)
 }
