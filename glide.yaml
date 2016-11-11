@@ -1,9 +1,5 @@
 package: github.com/coreos/clair
 import:
-- package: bitbucket.org/liamstask/goose
-  version: 8488cc47d90c8a502b1c41a462a6d9cc8ee0a895
-  subpackages:
-  - lib/goose
 - package: github.com/beorn7/perks
   version: b965b613227fddccbfffe13eae360ed3fa822f8d
   subpackages:
@@ -94,3 +90,4 @@ import:
 - package: github.com/fatih/color
   version: ^0.1.0
 - package: github.com/kr/text
+- package: github.com/remind101/migrate
