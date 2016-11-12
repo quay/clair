@@ -63,9 +63,9 @@ const (
 			WHERE NOT EXISTS (SELECT id FROM FeatureVersion WHERE feature_id = $1 AND version = $2)
 			RETURNING id
 		)
-		SELECT 'exi', id FROM FeatureVersion WHERE feature_id = $1 AND version = $2
+		SELECT false, id FROM FeatureVersion WHERE feature_id = $1 AND version = $2
 		UNION
-		SELECT 'new', id FROM new_featureversion`
+		SELECT true, id FROM new_featureversion`
 
 	searchVulnerabilityFixedInFeature = `
 		SELECT id, vulnerability_id, version FROM Vulnerability_FixedIn_Feature
@@ -167,9 +167,9 @@ const (
 			WHERE NOT EXISTS (SELECT id FROM Vulnerability_FixedIn_Feature WHERE vulnerability_id = $1 AND feature_id = $2)
 			RETURNING id
 		)
-		SELECT 'exi', id FROM Vulnerability_FixedIn_Feature WHERE vulnerability_id = $1 AND feature_id = $2
+		SELECT false, id FROM Vulnerability_FixedIn_Feature WHERE vulnerability_id = $1 AND feature_id = $2
 		UNION
-		SELECT 'new', id FROM new_fixedinfeature`
+		SELECT true, id FROM new_fixedinfeature`
 
 	searchFeatureVersionByFeature = `SELECT id, version FROM FeatureVersion WHERE feature_id = $1`
 
