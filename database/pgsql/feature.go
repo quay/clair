@@ -129,11 +129,11 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 	}
 
 	// Find or create FeatureVersion.
-	var newOrExisting string
+	var created bool
 
 	t = time.Now()
 	err = tx.QueryRow(soiFeatureVersion, featureID, &featureVersion.Version).
-		Scan(&newOrExisting, &featureVersion.ID)
+		Scan(&created, &featureVersion.ID)
 	observeQueryTime("insertFeatureVersion", "soiFeatureVersion", t)
 
 	if err != nil {
@@ -141,8 +141,9 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 		return 0, handleError("soiFeatureVersion", err)
 	}
 
-	if newOrExisting == "exi" {
-		// That featureVersion already exists, return its id.
+	if !created {
+		// The featureVersion already existed, no need to link it to
+		// vulnerabilities.
 		tx.Commit()
 
 		if pgSQL.cache != nil {
