@@ -143,9 +143,9 @@ func getLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *
 	log.Info(updater.DbFinishUpdate)
 
 	if updater.DbFinishUpdate {
-		writeResponse(w, r, http.StatusNotFound, LayerEnvelope{Error: & Error{"DB is being updated so no query to it can be done"}})
-		log.Errorf("DB is being updated so no query to it can be done")
-		return getLayerRoute, http.StatusNotFound
+		writeResponse(w, r, http.StatusServiceUnavailable, LayerEnvelope{Error: & Error{"The vulnerability update has not finished yet, therefore this API call is currently unavailable. Please try again later."}})
+		log.Errorf("The vulnerability update has not finished yet, therefore this API call is currently unavailable.")
+		return getLayerRoute, http.StatusServiceUnavailable
 	}
 
 	_, withFeatures := r.URL.Query()["features"]
