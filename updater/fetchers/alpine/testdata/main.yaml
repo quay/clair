@@ -1,0 +1,69 @@
+---
+distroversion: v3.3
+reponame: main
+archs:
+  - x86_64
+  - x86
+  - armhf
+urlprefix: http://dl-cdn.alpinelinux.org/alpine
+apkurl: "{{urlprefix}}/{{distroversion}}/{{reponame}}/{{arch}}/{{pkg.name}}-${{pkg.ver}}.apk"
+packages:
+  - pkg:
+      name: busybox
+      ver: 1.24.2-r0
+      fixes:
+        - CVE-2016-2147
+        - CVE-2016-2148
+  - pkg:
+      name: expat
+      ver: 2.1.1-r1
+      fixes:
+        - CVE-2016-0718
+  - pkg:
+      name: gd
+      ver: 2.1.1-r1
+      fixes:
+        - CVE-2016-3074
+  - pkg:
+      name: giflib
+      ver: 5.1.1-r1
+      fixes:
+        - CVE-2016-3977
+  - pkg:
+      name: jq
+      ver: 1.5-r1
+      fixes:
+        - CVE-2015-8863
+  - pkg:
+      name: libarchive
+      ver: 3.1.2-r3
+      fixes:
+        - CVE-2016-1541
+  - pkg:
+      name: libssh2
+      ver:  1.6.0-r1
+      fixes:
+        - CVE-2016-0787
+  - pkg:
+      name: mercurial
+      ver: 3.7.3-r1
+      fixes:
+        - CVE-2016-3105
+  - pkg:
+      name: openssl
+      ver: 1.0.2h-r1
+      fixes:
+        - CVE-2016-2177
+        - CVE-2016-2178
+  - pkg:
+      name: pcre
+      ver: 8.38-r1
+      fixes:
+        - CVE-2016-1283
+        - CVE-2016-3191
+  - pkg:
+      name: wpa_supplicant
+      ver: 2.5-r2
+      fixes:
+        - CVE-2016-4476
+        - CVE-2016-4477
