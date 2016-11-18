@@ -57,8 +57,12 @@ Server: clair
 
 #### Description
 
-The POST route for the Layers resource performs the indexing of a Layer from the provided path and displays the provided Layer with an updated `IndexByVersion` property.
-This request blocks for the entire duration of the downloading and indexing of the layer.
+The POST route for the Layers resource performs the analysis of a Layer from the provided path.
+
+In order to analyze a container image, this route has to be called for each layer that [composes](https://docs.docker.com/engine/userguide/storagedriver/imagesandcontainers/) it, in the proper order and with the parent relationship specified. For instance, to analyze an image composed of three layers A->B->C, where A is the base layer (i.e. `FROM debian:jessie`), three API calls must be made to this route, from A to C. Also, when analyzing B, A must be set as the parent, then when analyzing C, B must be defined as the parent.
+
+This request blocks for the entire duration of the downloading and indexing of the layer and displays the provided Layer with an updated `IndexByVersion` property.
+The Name field must be unique globally. Consequently, using the Blob digest describing the Layer content is not sufficient as Clair won't be able to differentiate two empty filesystem diffs that belong to two different image trees.
 The Authorization field is an optional value whose contents will fill the Authorization HTTP Header when requesting the layer via HTTP.
 
 #### Example Request
@@ -104,7 +108,7 @@ Server: clair
 
 #### Description
 
-The GET route for the Layers resource displays a Layer and optionally all of its features and vulnerabilities.
+The GET route for the Layers resource displays a Layer and optionally all of its features and vulnerabilities. For an image composed of three layers A->B->C, calling this route on the third layer (C) will returns all the features and vulnerabilities for the entire image, including the analysis data gathered from the parent layers (A, B). For instance, a feature (and its potential vulnerabilities) detected in the first layer (A) will be shown when querying the third layer (C). On the other hand, a feature detected in the first layer (A) but then removed in either following layers (B, C) will not appear.  
 
 #### Query Parameters
 
