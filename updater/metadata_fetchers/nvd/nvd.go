@@ -105,7 +105,6 @@ func (fetcher *NVDMetadataFetcher) AddMetadata(vulnerability *updater.Vulnerabil
 
 	if nvdMetadata, ok := fetcher.metadata[vulnerability.Name]; ok {
 		vulnerability.Lock.Lock()
-		defer vulnerability.Lock.Unlock()
 
 		// Create Metadata map if necessary.
 		if vulnerability.Metadata == nil {
@@ -113,6 +112,8 @@ func (fetcher *NVDMetadataFetcher) AddMetadata(vulnerability *updater.Vulnerabil
 		}
 
 		vulnerability.Metadata[metadataKey] = nvdMetadata
+
+		vulnerability.Lock.Unlock()
 	}
 
 	return nil
