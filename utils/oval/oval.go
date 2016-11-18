@@ -166,7 +166,7 @@ var (
 
 // FetchUpdate gets vulnerability updates from the OVAL definitions.
 func (f *OvalFetcher) FetchUpdate(datastore database.Datastore) (resp updater.FetcherResponse, err error) {
-	log.Info("fetching %s vulnerabilities", f.OsInfo.DistName())
+	log.Infof("fetching %s vulnerabilities", f.OsInfo.DistName())
 
 	r, err := http.Get(f.OsInfo.OvalURI())
 	if err != nil {
@@ -247,8 +247,7 @@ func (f *OvalFetcher) ToFeatureVersions(possibilities [][]criterion) []database.
 		}
 
 		if osVersion == "" {
-			log.Warning("No OS version found for criterions")
-			log.Warning(criterions)
+			log.Warningf("No OS version found for criterions: %#v", criterions)
 			continue
 		}
 

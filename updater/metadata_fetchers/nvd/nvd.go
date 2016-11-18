@@ -18,6 +18,7 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/updater"
 	cerrors "github.com/coreos/clair/utils/errors"
+	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/pkg/capnslog"
 )
 
@@ -105,14 +106,19 @@ func (fetcher *NVDMetadataFetcher) AddMetadata(vulnerability *updater.Vulnerabil
 
 	if nvdMetadata, ok := fetcher.metadata[vulnerability.Name]; ok {
 		vulnerability.Lock.Lock()
-		defer vulnerability.Lock.Unlock()
 
-		// Create Metadata map if necessary.
+		// Create Metadata map if necessary and assign the NVD metadata.
 		if vulnerability.Metadata == nil {
 			vulnerability.Metadata = make(map[string]interface{})
 		}
-
 		vulnerability.Metadata[metadataKey] = nvdMetadata
+
+		// Set the Severity using the CVSSv2 Score if none is set yet.
+		if vulnerability.Severity == "" || vulnerability.Severity == types.Unknown {
+			vulnerability.Severity = scoreToPriority(nvdMetadata.CVSSv2.Score)
+		}
+
+		vulnerability.Lock.Unlock()
 	}
 
 	return nil
@@ -223,4 +229,25 @@ func getHashFromMetaURL(metaURL string) (string, error) {
 	}
 
 	return "", errors.New("invalid .meta file format")
+}
+
+// scoreToPriority converts the CVSS Score (0.0 - 10.0) into user-friendy
+// types.Priority following the qualitative rating scale available in the
+// CVSS v3.0 specification (https://www.first.org/cvss/specification-document),
+// Table 14. The Negligible level is set for CVSS scores between [0, 1),
+// replacing the specified None level, originally used for a score of 0.
+func scoreToPriority(score float64) types.Priority {
+	switch {
+	case score < 1.0:
+		return types.Negligible
+	case score < 3.9:
+		return types.Low
+	case score < 6.9:
+		return types.Medium
+	case score < 8.9:
+		return types.High
+	case score <= 10:
+		return types.Critical
+	}
+	return types.Unknown
 }
