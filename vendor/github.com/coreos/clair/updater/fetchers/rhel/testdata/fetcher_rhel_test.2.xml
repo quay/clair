@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<oval_definitions xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:unix-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" xmlns:red-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-common-5 oval-common-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#unix unix-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#linux linux-definitions-schema.xsd">
+  <generator>
+    <oval:product_name>Red Hat Errata System</oval:product_name>
+    <oval:schema_version>5.10.1</oval:schema_version>
+    <oval:timestamp>2015-07-03T01:12:29</oval:timestamp>
+  </generator>
+
+  <definitions>
+    <definition id="oval:com.redhat.rhsa:def:20151207" version="601" class="patch">
+      <metadata>
+        <title>RHSA-2015:1207: firefox security update (Critical)</title>
+    <affected family="unix">
+      <platform>Red Hat Enterprise Linux 7</platform>
+      <platform>Red Hat Enterprise Linux 6</platform>
+      <platform>Red Hat Enterprise Linux 5</platform>
+    </affected>
+    <reference source="RHSA" ref_id="RHSA-2015:1207-00" ref_url="https://rhn.redhat.com/errata/RHSA-2015-1207.html"/>
+      <reference source="CVE" ref_id="CVE-2015-2722" ref_url="https://access.redhat.com/security/cve/CVE-2015-2722"/>
+      <reference source="CVE" ref_id="CVE-2015-2724" ref_url="https://access.redhat.com/security/cve/CVE-2015-2724"/>
+      <reference source="CVE" ref_id="CVE-2015-2725" ref_url="https://access.redhat.com/security/cve/CVE-2015-2725"/>
+      <reference source="CVE" ref_id="CVE-2015-2727" ref_url="https://access.redhat.com/security/cve/CVE-2015-2727"/>
+      <reference source="CVE" ref_id="CVE-2015-2728" ref_url="https://access.redhat.com/security/cve/CVE-2015-2728"/>
+      <reference source="CVE" ref_id="CVE-2015-2729" ref_url="https://access.redhat.com/security/cve/CVE-2015-2729"/>
+      <reference source="CVE" ref_id="CVE-2015-2731" ref_url="https://access.redhat.com/security/cve/CVE-2015-2731"/>
+      <reference source="CVE" ref_id="CVE-2015-2733" ref_url="https://access.redhat.com/security/cve/CVE-2015-2733"/>
+      <reference source="CVE" ref_id="CVE-2015-2734" ref_url="https://access.redhat.com/security/cve/CVE-2015-2734"/>
+      <reference source="CVE" ref_id="CVE-2015-2735" ref_url="https://access.redhat.com/security/cve/CVE-2015-2735"/>
+      <reference source="CVE" ref_id="CVE-2015-2736" ref_url="https://access.redhat.com/security/cve/CVE-2015-2736"/>
+      <reference source="CVE" ref_id="CVE-2015-2737" ref_url="https://access.redhat.com/security/cve/CVE-2015-2737"/>
+      <reference source="CVE" ref_id="CVE-2015-2738" ref_url="https://access.redhat.com/security/cve/CVE-2015-2738"/>
+      <reference source="CVE" ref_id="CVE-2015-2739" ref_url="https://access.redhat.com/security/cve/CVE-2015-2739"/>
+      <reference source="CVE" ref_id="CVE-2015-2740" ref_url="https://access.redhat.com/security/cve/CVE-2015-2740"/>
+      <reference source="CVE" ref_id="CVE-2015-2741" ref_url="https://access.redhat.com/security/cve/CVE-2015-2741"/>
+      <reference source="CVE" ref_id="CVE-2015-2743" ref_url="https://access.redhat.com/security/cve/CVE-2015-2743"/>
+    <description>Mozilla Firefox is an open source web browser. XULRunner provides the XUL
+Runtime environment for Mozilla Firefox.
+
+
+Several flaws were found in the processing of malformed web content. A web
+page containing malicious content could cause Firefox to crash or,
+potentially, execute arbitrary code with the privileges of the user running
+Firefox.</description>
+
+<!-- ~~~~~~~~~~~~~~~~~~~~   advisory details   ~~~~~~~~~~~~~~~~~~~ -->
+
+<advisory from="secalert@redhat.com">
+        <severity>Critical</severity>
+        <rights>Copyright 2015 Red Hat, Inc.</rights>
+        <issued date="2015-07-02"/>
+        <updated date="2015-07-02"/>
+        <cve href="https://access.redhat.com/security/cve/CVE-2015-2722">CVE-2015-2722</cve>
+        <cve href="https://access.redhat.com/security/cve/CVE-2015-2724">CVE-2015-2724</cve>
+        <cve href="https://access.redhat.com/security/cve/CVE-2015-2725">CVE-2015-2725</cve>
+        <cve href="https://access.redhat.com/security/cve/CVE-2015-2727">CVE-2015-2727</cve>
+        <cve href="https://access.redhat.com/security/cve/CVE-2015-2728">CVE-2015-2728</cve>
+        <cve href="https://access.redhat.com/security/cve/CVE-2015-2729">CVE-2015-2729</cve>
+        <cve href="https://access.redhat.com/security/cve/CVE-2015-2731">CVE-2015-2731</cve>
+        <cve href="https://access.redhat.com/security/cve/CVE-2015-2733">CVE-2015-2733</cve>
+        <cve href="https://access.redhat.com/security/cve/CVE-2015-2734">CVE-2015-2734</cve>
+        <cve href="https://access.redhat.com/security/cve/CVE-2015-2735">CVE-2015-2735</cve>
+        <cve href="https://access.redhat.com/security/cve/CVE-2015-2736">CVE-2015-2736</cve>
+        <cve href="https://access.redhat.com/security/cve/CVE-2015-2737">CVE-2015-2737</cve>
+        <cve href="https://access.redhat.com/security/cve/CVE-2015-2738">CVE-2015-2738</cve>
+        <cve href="https://access.redhat.com/security/cve/CVE-2015-2739">CVE-2015-2739</cve>
+        <cve href="https://access.redhat.com/security/cve/CVE-2015-2740">CVE-2015-2740</cve>
+        <cve href="https://access.redhat.com/security/cve/CVE-2015-2741">CVE-2015-2741</cve>
+        <cve href="https://access.redhat.com/security/cve/CVE-2015-2743">CVE-2015-2743</cve>
+        <bugzilla href="https://bugzilla.redhat.com/1236947" id="1236947">CVE-2015-2724 CVE-2015-2725 Mozilla: Miscellaneous memory safety hazards (rv:31.8 / rv:38.1) (MFSA 2015-59)</bugzilla>
+        <bugzilla href="https://bugzilla.redhat.com/1236950" id="1236950">CVE-2015-2727 Mozilla: Local files or privileged URLs in pages can be opened into new tabs (MFSA 2015-60)</bugzilla>
+        <bugzilla href="https://bugzilla.redhat.com/1236951" id="1236951">CVE-2015-2728 Mozilla: Type confusion in Indexed Database Manager (MFSA 2015-61)</bugzilla>
+        <bugzilla href="https://bugzilla.redhat.com/1236952" id="1236952">CVE-2015-2729 Mozilla: Out-of-bound read while computing an oscillator rendering range in Web Audio (MFSA 2015-62)</bugzilla>
+        <bugzilla href="https://bugzilla.redhat.com/1236953" id="1236953">CVE-2015-2731 Mozilla: Use-after-free in Content Policy due to microtask execution error (MFSA 2015-63)</bugzilla>
+        <bugzilla href="https://bugzilla.redhat.com/1236955" id="1236955">CVE-2015-2722 CVE-2015-2733 Mozilla: Use-after-free in workers while using XMLHttpRequest (MFSA 2015-65)</bugzilla>
+        <bugzilla href="https://bugzilla.redhat.com/1236956" id="1236956">CVE-2015-2734 CVE-2015-2735 CVE-2015-2736 CVE-2015-2737 CVE-2015-2738 CVE-2015-2739 CVE-2015-2740 Mozilla: Vulnerabilities found through code inspection (MFSA 2015-66)</bugzilla>
+        <bugzilla href="https://bugzilla.redhat.com/1236963" id="1236963">CVE-2015-2741 Mozilla: Key pinning is ignored when overridable errors are encountered (MFSA 2015-67)</bugzilla>
+        <bugzilla href="https://bugzilla.redhat.com/1236964" id="1236964">CVE-2015-2743 Mozilla: Privilege escalation in PDF.js (MFSA 2015-69)</bugzilla>
+    <affected_cpe_list>
+        <cpe>cpe:/o:redhat:enterprise_linux:5</cpe>
+        <cpe>cpe:/o:redhat:enterprise_linux:6</cpe>
+        <cpe>cpe:/o:redhat:enterprise_linux:7</cpe>
+    </affected_cpe_list>
+</advisory>
+      </metadata>
+      <criteria operator="OR">
+
+ <criteria operator="AND">
+ <criterion test_ref="oval:com.redhat.rhsa:tst:20151207001" comment="Red Hat Enterprise Linux 5 is installed" /><criterion test_ref="oval:com.redhat.rhsa:tst:20151207002" comment="firefox is earlier than 0:38.1.0-1.el5_11" /><criterion test_ref="oval:com.redhat.rhsa:tst:20151207003" comment="firefox is signed with Red Hat redhatrelease key" />
+
+</criteria>
+<criteria operator="AND">
+ <criterion test_ref="oval:com.redhat.rhsa:tst:20151207008" comment="firefox is earlier than 0:38.1.0-1.el6_6" /><criterion test_ref="oval:com.redhat.rhsa:tst:20151207009" comment="firefox is signed with Red Hat redhatrelease2 key" />
+ <criteria operator="OR">
+ <criterion test_ref="oval:com.redhat.rhsa:tst:20151207004" comment="Red Hat Enterprise Linux 6 Client is installed" /><criterion test_ref="oval:com.redhat.rhsa:tst:20151207005" comment="Red Hat Enterprise Linux 6 Server is installed" /><criterion test_ref="oval:com.redhat.rhsa:tst:20151207006" comment="Red Hat Enterprise Linux 6 Workstation is installed" /><criterion test_ref="oval:com.redhat.rhsa:tst:20151207007" comment="Red Hat Enterprise Linux 6 ComputeNode is installed" />
+
+</criteria>
+
+</criteria>
+<criteria operator="AND">
+ <criterion test_ref="oval:com.redhat.rhsa:tst:20151207014" comment="firefox is earlier than 0:38.1.0-1.el7_1" /><criterion test_ref="oval:com.redhat.rhsa:tst:20151207009" comment="firefox is signed with Red Hat redhatrelease2 key" />
+ <criteria operator="OR">
+ <criterion test_ref="oval:com.redhat.rhsa:tst:20151207010" comment="Red Hat Enterprise Linux 7 Client is installed" /><criterion test_ref="oval:com.redhat.rhsa:tst:20151207011" comment="Red Hat Enterprise Linux 7 Server is installed" /><criterion test_ref="oval:com.redhat.rhsa:tst:20151207012" comment="Red Hat Enterprise Linux 7 Workstation is installed" /><criterion test_ref="oval:com.redhat.rhsa:tst:20151207013" comment="Red Hat Enterprise Linux 7 ComputeNode is installed" />
+
+</criteria>
+
+</criteria>
+
+</criteria>
+
+    </definition>
+  </definitions>
+  <tests>
+    <!-- ~~~~~~~~~~~~~~~~~~~~~   rpminfo tests   ~~~~~~~~~~~~~~~~~~~~~ -->
+    <rpminfo_test id="oval:com.redhat.rhsa:tst:20151207001"  version="601" comment="Red Hat Enterprise Linux 5 is installed" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <object object_ref="oval:com.redhat.rhsa:obj:20151207001" />
+  <state state_ref="oval:com.redhat.rhsa:ste:20151207003" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.redhat.rhsa:tst:20151207002"  version="601" comment="firefox is earlier than 0:38.1.0-1.el5_11" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <object object_ref="oval:com.redhat.rhsa:obj:20151207002" />
+  <state state_ref="oval:com.redhat.rhsa:ste:20151207004" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.redhat.rhsa:tst:20151207003"  version="601" comment="firefox is signed with Red Hat redhatrelease key" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <object object_ref="oval:com.redhat.rhsa:obj:20151207002" />
+  <state state_ref="oval:com.redhat.rhsa:ste:20151207002" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.redhat.rhsa:tst:20151207004"  version="601" comment="Red Hat Enterprise Linux 6 Client is installed" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <object object_ref="oval:com.redhat.rhsa:obj:20151207003" />
+  <state state_ref="oval:com.redhat.rhsa:ste:20151207005" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.redhat.rhsa:tst:20151207005"  version="601" comment="Red Hat Enterprise Linux 6 Server is installed" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <object object_ref="oval:com.redhat.rhsa:obj:20151207004" />
+  <state state_ref="oval:com.redhat.rhsa:ste:20151207005" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.redhat.rhsa:tst:20151207006"  version="601" comment="Red Hat Enterprise Linux 6 Workstation is installed" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <object object_ref="oval:com.redhat.rhsa:obj:20151207005" />
+  <state state_ref="oval:com.redhat.rhsa:ste:20151207005" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.redhat.rhsa:tst:20151207007"  version="601" comment="Red Hat Enterprise Linux 6 ComputeNode is installed" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <object object_ref="oval:com.redhat.rhsa:obj:20151207006" />
+  <state state_ref="oval:com.redhat.rhsa:ste:20151207005" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.redhat.rhsa:tst:20151207008"  version="601" comment="firefox is earlier than 0:38.1.0-1.el6_6" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <object object_ref="oval:com.redhat.rhsa:obj:20151207002" />
+  <state state_ref="oval:com.redhat.rhsa:ste:20151207006" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.redhat.rhsa:tst:20151207009"  version="601" comment="firefox is signed with Red Hat redhatrelease2 key" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <object object_ref="oval:com.redhat.rhsa:obj:20151207002" />
+  <state state_ref="oval:com.redhat.rhsa:ste:20151207001" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.redhat.rhsa:tst:20151207010"  version="601" comment="Red Hat Enterprise Linux 7 Client is installed" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <object object_ref="oval:com.redhat.rhsa:obj:20151207003" />
+  <state state_ref="oval:com.redhat.rhsa:ste:20151207007" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.redhat.rhsa:tst:20151207011"  version="601" comment="Red Hat Enterprise Linux 7 Server is installed" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <object object_ref="oval:com.redhat.rhsa:obj:20151207004" />
+  <state state_ref="oval:com.redhat.rhsa:ste:20151207007" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.redhat.rhsa:tst:20151207012"  version="601" comment="Red Hat Enterprise Linux 7 Workstation is installed" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <object object_ref="oval:com.redhat.rhsa:obj:20151207005" />
+  <state state_ref="oval:com.redhat.rhsa:ste:20151207007" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.redhat.rhsa:tst:20151207013"  version="601" comment="Red Hat Enterprise Linux 7 ComputeNode is installed" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <object object_ref="oval:com.redhat.rhsa:obj:20151207006" />
+  <state state_ref="oval:com.redhat.rhsa:ste:20151207007" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.redhat.rhsa:tst:20151207014"  version="601" comment="firefox is earlier than 0:38.1.0-1.el7_1" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <object object_ref="oval:com.redhat.rhsa:obj:20151207002" />
+  <state state_ref="oval:com.redhat.rhsa:ste:20151207008" />
+</rpminfo_test>
+
+  </tests>
+
+  <objects>
+    <!-- ~~~~~~~~~~~~~~~~~~~~   rpminfo objects   ~~~~~~~~~~~~~~~~~~~~ -->
+    <rpminfo_object id="oval:com.redhat.rhsa:obj:20151207002"  version="601" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <name>firefox</name>
+</rpminfo_object>
+<rpminfo_object id="oval:com.redhat.rhsa:obj:20151207001"  version="601" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <name>redhat-release</name>
+</rpminfo_object>
+<rpminfo_object id="oval:com.redhat.rhsa:obj:20151207003"  version="601" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <name>redhat-release-client</name>
+</rpminfo_object>
+<rpminfo_object id="oval:com.redhat.rhsa:obj:20151207006"  version="601" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <name>redhat-release-computenode</name>
+</rpminfo_object>
+<rpminfo_object id="oval:com.redhat.rhsa:obj:20151207004"  version="601" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <name>redhat-release-server</name>
+</rpminfo_object>
+<rpminfo_object id="oval:com.redhat.rhsa:obj:20151207005"  version="601" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <name>redhat-release-workstation</name>
+</rpminfo_object>
+
+  </objects>
+  <states>
+    <!-- ~~~~~~~~~~~~~~~~~~~~   rpminfo states   ~~~~~~~~~~~~~~~~~~~~~ -->
+    <rpminfo_state id="oval:com.redhat.rhsa:ste:20151207001"  version="601" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <signature_keyid  operation="equals">199e2f91fd431d51</signature_keyid>
+</rpminfo_state>
+<rpminfo_state id="oval:com.redhat.rhsa:ste:20151207002"  version="601" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <signature_keyid  operation="equals">5326810137017186</signature_keyid>
+</rpminfo_state>
+<rpminfo_state id="oval:com.redhat.rhsa:ste:20151207003"  version="601" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <version  operation="pattern match">^5[^\d]</version>
+</rpminfo_state>
+<rpminfo_state id="oval:com.redhat.rhsa:ste:20151207004"  version="601" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <evr datatype="evr_string" operation="less than">0:38.1.0-1.el5_11</evr>
+</rpminfo_state>
+<rpminfo_state id="oval:com.redhat.rhsa:ste:20151207005"  version="601" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <version  operation="pattern match">^6[^\d]</version>
+</rpminfo_state>
+<rpminfo_state id="oval:com.redhat.rhsa:ste:20151207006"  version="601" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <evr datatype="evr_string" operation="less than">0:38.1.0-1.el6_6</evr>
+</rpminfo_state>
+<rpminfo_state id="oval:com.redhat.rhsa:ste:20151207007"  version="601" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <version  operation="pattern match">^7[^\d]</version>
+</rpminfo_state>
+<rpminfo_state id="oval:com.redhat.rhsa:ste:20151207008"  version="601" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+  <evr datatype="evr_string" operation="less than">0:38.1.0-1.el7_1</evr>
+</rpminfo_state>
+
+  </states>
+</oval_definitions>

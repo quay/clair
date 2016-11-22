@@ -1,0 +1,29 @@
+language: go
+
+go:
+  - 1.6
+  - 1.5
+  - tip
+
+sudo: false
+
+before_install:
+  - export GO15VENDOREXPERIMENT=1
+
+install:
+  - echo 'nop'
+
+script:
+  - go test -v $(go list ./... | grep -v /vendor/)
+
+services:
+  - postgresql
+
+addons:
+  apt:
+    packages:
+      - rpm
+  postgresql: "9.4"
+
+notifications:
+  email: false

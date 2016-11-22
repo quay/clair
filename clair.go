@@ -23,10 +23,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/cloudflare/clair/database/pgsql"
 	"github.com/coreos/clair/api"
 	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/config"
-	"github.com/coreos/clair/database/pgsql"
 	"github.com/coreos/clair/notifier"
 	"github.com/coreos/clair/updater"
 	"github.com/coreos/clair/utils"

@@ -96,11 +96,12 @@ func (pgSQL *pgSQL) Ping() bool {
 //
 // It will run immediately every necessary migration on the database.
 func Open(config *config.DatabaseConfig) (database.Datastore, error) {
-	// Run migrations.
-	if err := migrate(config.Source); err != nil {
-		log.Error(err)
-		return nil, database.ErrCantOpen
-	}
+	// jkroll 2016-06-02: Cut out migrations to build a package, so we can avoid this runtime
+	// // Run migrations.
+	// if err := migrate(config.Source); err != nil {
+	// 	log.Error(err)
+	// 	return nil, database.ErrCantOpen
+	// }
 
 	// Open database.
 	db, err := sql.Open("postgres", config.Source)
