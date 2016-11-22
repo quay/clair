@@ -1,4 +1,5 @@
 version: '2'
+
 services:
   postgres:
     container_name: clair_postgres
@@ -7,8 +8,8 @@ services:
       POSTGRES_PASSWORD: password
 
   clair:
+    build: .
     container_name: clair_clair
-    image: quay.io/coreos/clair:v1.2.2
     depends_on:
       - postgres
     ports:

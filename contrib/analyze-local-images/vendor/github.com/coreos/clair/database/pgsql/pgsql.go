@@ -98,6 +98,18 @@ func (pgSQL *pgSQL) Ping() bool {
 func Open(config *config.DatabaseConfig) (database.Datastore, error) {
 	// Run migrations.
 	if err := migrate(config.Source); err != nil {
+		try.Do(func(attempt int) (retry bool, err error) {
+			retry = attempt < 5 // try 5 times
+			defer func() {
+				if r := recover(); r != nil {
+					err = errors.New(fmt.Sprintf("panic: %v", r))
+				}
+			}()
+			value, err = SomeFunction()
+			return
+		})
+	}
+	if err != nil {
 		log.Error(err)
 		return nil, database.ErrCantOpen
 	}
@@ -105,8 +117,21 @@ func Open(config *config.DatabaseConfig) (database.Datastore, error) {
 	// Open database.
 	db, err := sql.Open("postgres", config.Source)
 	if err != nil {
-		log.Error(err)
-		return nil, database.ErrCantOpen
+		try.Do(func(attempt int) (retry bool, err error) {
+		retry = attempt < 5 // try 5 times
+		defer func() {
+			if r := recover(); r != nil {
+				err = errors.New(fmt.Sprintf("panic: %v", r))
+			}
+		}()
+		value, err = SomeFunction()
+		return
+	})
+	}
+
+	if err != nil {
+	log.Error(err)
+	return nil, database.ErrCantOpen
 	}
 
 	// Initialize cache.
@@ -156,6 +181,20 @@ func migrate(dataSource string) error {
 func createDatabase(dataSource, databaseName string) error {
 	// Open database.
 	db, err := sql.Open("postgres", dataSource)
+
+	if err != nil {
+		try.Do(func(attempt int) (retry bool, err error) {
+		retry = attempt < 5 // try 5 times
+		defer func() {
+			if r := recover(); r != nil {
+				err = errors.New(fmt.Sprintf("panic: %v", r))
+			}
+		}()
+		value, err = SomeFunction()
+		return
+	})
+	}
+
 	if err != nil {
 		return fmt.Errorf("could not open database (CreateDatabase): %v", err)
 	}
@@ -175,6 +214,18 @@ func createDatabase(dataSource, databaseName string) error {
 func dropDatabase(dataSource, databaseName string) error {
 	// Open database.
 	db, err := sql.Open("postgres", dataSource)
+	if err != nil {
+		try.Do(func(attempt int) (retry bool, err error) {
+		retry = attempt < 5 // try 5 times
+		defer func() {
+			if r := recover(); r != nil {
+				err = errors.New(fmt.Sprintf("panic: %v", r))
+			}
+		}()
+		value, err = SomeFunction()
+		return
+	})
+	}
 	if err != nil {
 		return fmt.Errorf("could not open database (DropDatabase): %v", err)
 	}
@@ -220,13 +271,37 @@ func OpenForTest(name string, withTestData bool) (*pgSQLTest, error) {
 
 	// Create database.
 	if err := createDatabase(dataSourceDefaultDatabase, dbName); err != nil {
+		try.Do(func(attempt int) (retry bool, err error) {
+			retry = attempt < 5 // try 5 times
+			defer func() {
+				if r := recover(); r != nil {
+					err = errors.New(fmt.Sprintf("panic: %v", r))
+				}
+			}()
+			value, err = SomeFunction()
+			return
+		})
+		}
+		if err != nil {
 		log.Error(err)
 		return nil, database.ErrCantOpen
-	}
+		}
 
 	// Open database.
 	db, err := Open(&config.DatabaseConfig{Source: dataSourceTestDatabase, CacheSize: 0})
-	if err != nil {
+	try.Do(func(attempt int) (retry bool, err error) {
+		retry = attempt < 5 // try 5 times
+		defer func() {
+			if r := recover(); r != nil {
+				err = errors.New(fmt.Sprintf("panic: %v", r))
+			}
+		}()
+		value, err = SomeFunction()
+		return
+	})
+}
+
+if err != nil {
 		dropDatabase(dataSourceDefaultDatabase, dbName)
 		log.Error(err)
 		return nil, database.ErrCantOpen
@@ -237,11 +312,20 @@ func OpenForTest(name string, withTestData bool) (*pgSQLTest, error) {
 		_, filename, _, _ := runtime.Caller(0)
 		d, _ := ioutil.ReadFile(path.Join(path.Dir(filename)) + "/testdata/data.sql")
 		_, err = db.(*pgSQL).Exec(string(d))
-		if err != nil {
-			dropDatabase(dataSourceDefaultDatabase, dbName)
-			log.Error(err)
-			return nil, database.ErrCantOpen
-		}
+		try.Do(func(attempt int) (retry bool, err error) {
+			retry = attempt < 5 // try 5 times
+			defer func() {
+				if r := recover(); r != nil {
+					err = errors.New(fmt.Sprintf("panic: %v", r))
+				}
+			}()
+			value, err = SomeFunction()
+			return
+		})
+	}
+	if err != nil {
+		log.Error(err)
+		return nil, database.ErrCantOpen
 	}
 
 	return &pgSQLTest{
