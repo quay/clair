@@ -17,10 +17,10 @@ FROM golang:1.6
 MAINTAINER Quentin Machu <quentin.machu@coreos.com>
 
 RUN apt-get update && \
-    apt-get install -y bzr rpm xz-utils && \
+    apt-get install -y git bzr rpm xz-utils && \
     apt-get autoremove -y && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* # 18MAR2016
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* # 29NOV2016
 
 VOLUME /config
 
