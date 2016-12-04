@@ -1,29 +1,34 @@
 language: go
-
-go:
-  - 1.7
-  - tip
-
-sudo: false
+sudo: required
 
 install:
-- mkdir $GOPATH/bin && curl https://glide.sh/get | sh
+- curl https://glide.sh/get | sh
 
 script:
 - go test $(glide novendor | grep -v contrib)
 
-services:
-- postgresql
+dist: trusty
 
-addons:
-  apt:
-    packages:
-    - rpm
-  postgresql: "9.4"
+services:
+  - postgresql
 
 notifications:
   email: false
 
 matrix:
-  allow_failures:
-  - go: tip
+  include:
+  - addons:
+      apt:
+        packages:
+        - rpm
+      postgresql: 9.4
+  - addons:
+      apt:
+        packages:
+        - rpm
+      postgresql: 9.5
+  - addons:
+      apt:
+        packages:
+        - rpm
+      postgresql: 9.6
