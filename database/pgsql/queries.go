@@ -211,23 +211,21 @@ const (
 		WHERE name = $1`
 
 	searchNotificationLayerIntroducingVulnerability = `
-	WITH subquery AS (
-		SELECT l.ID, l.name
-		FROM Vulnerability_Affects_FeatureVersion vafv, FeatureVersion fv, Layer_diff_FeatureVersion ldfv, Layer l
-		WHERE l.id >= $2
-			AND vafv.vulnerability_id = $1
-			AND vafv.featureversion_id = fv.id
-			AND ldfv.featureversion_id = fv.id
-			AND ldfv.modification = 'add'
-			AND ldfv.layer_id = l.id
-		ORDER BY l.ID
-	)
-
-	SELECT *
-	FROM subquery
-	LIMIT $3;
-`
-
+		WITH LDFV AS (
+		  SELECT ldfv.layer_id
+		  FROM Vulnerability_Affects_FeatureVersion vafv, FeatureVersion fv, Layer_diff_FeatureVersion ldfv
+		  WHERE ldfv.layer_id >= $2
+		    AND vafv.vulnerability_id = $1
+		    AND vafv.featureversion_id = fv.id
+		    AND ldfv.featureversion_id = fv.id
+		    AND ldfv.modification = 'add'
+		  ORDER BY ldfv.ID
+		)
+		SELECT l.id, l.name
+		FROM LDFV, Layer l
+		WHERE LDFV.layer_id = l.id
+		LIMIT $3`
+	
 	// complex_test.go
 	searchComplexTestFeatureVersionAffects = `
 		SELECT v.name
