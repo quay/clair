@@ -108,7 +108,7 @@ Server: clair
 
 #### Description
 
-The GET route for the Layers resource displays a Layer and optionally all of its features and vulnerabilities. For an image composed of three layers A->B->C, calling this route on the third layer (C) will returns all the features and vulnerabilities for the entire image, including the analysis data gathered from the parent layers (A, B). For instance, a feature (and its potential vulnerabilities) detected in the first layer (A) will be shown when querying the third layer (C). On the other hand, a feature detected in the first layer (A) but then removed in either following layers (B, C) will not appear.  
+The GET route for the Layers resource displays a Layer and optionally all of its features and vulnerabilities. For an image composed of three layers A->B->C, calling this route on the third layer (C) will returns all the features and vulnerabilities for the entire image, including the analysis data gathered from the parent layers (A, B). For instance, a feature (and its potential vulnerabilities) detected in the first layer (A) will be shown when querying the third layer (C). On the other hand, a feature detected in the first layer (A) but then removed in either following layers (B, C) will not appear.
 
 #### Query Parameters
 
@@ -556,7 +556,8 @@ Server: clair
 #### Description
 
 The GET route for the Notifications resource displays a notification that a Vulnerability has been updated.
-This route supports simultaneous pagination for both the `Old` and `New` Vulnerabilities' `LayersIntroducingVulnerability` property which can be extremely long.
+This route supports simultaneous pagination for both the `Old` and `New` Vulnerabilities' `OrderedLayersIntroducingVulnerability` which can be extremely long.
+The `LayersIntroducingVulnerability` property is deprecated and will eventually be removed from the API.
 
 #### Query Parameters
 
@@ -573,11 +574,13 @@ GET http://localhost:6060/v1/notifications/ec45ec87-bfc8-4129-a1c3-d2b82622175a?
 
 #### Example Response
 
-```json
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json;charset=utf-8
 Server: clair
+```
 
+```json
 {
   "Notification": {
     "Name": "ec45ec87-bfc8-4129-a1c3-d2b82622175a",
@@ -600,9 +603,19 @@ Server: clair
           }
         ]
       },
+      "OrderedLayersIntroducingVulnerability": [
+        {
+          "Index": 1,
+          "LayerName": "523ef1d23f222195488575f52a39c729c76a8c5630c9a194139cb246fb212da6"
+        },
+        {
+          "Index": 2,
+          "LayerName": "3b59c795b34670618fbcace4dac7a27c5ecec156812c9e2c90d3f4be1916b12d"
+        }
+      ],
       "LayersIntroducingVulnerability": [
-        "3b59c795b34670618fbcace4dac7a27c5ecec156812c9e2c90d3f4be1916b12d.9673fdf7-b81a-4b3e-acf8-e551ef155449",
-        "523ef1d23f222195488575f52a39c729c76a8c5630c9a194139cb246fb212da6"
+        "523ef1d23f222195488575f52a39c729c76a8c5630c9a194139cb246fb212da6",
+        "3b59c795b34670618fbcace4dac7a27c5ecec156812c9e2c90d182371916b12d"
       ]
     },
     "Old": {
@@ -613,8 +626,18 @@ Server: clair
         "Severity": "Low",
         "FixedIn": []
       },
+      "OrderedLayersIntroducingVulnerability": [
+        {
+          "Index": 1,
+          "LayerName": "523ef1d23f222195488575f52a39c729c76a8c5630c9a194139cb246fb212da6"
+        },
+        {
+          "Index": 2,
+          "LayerName": "3b59c795b34670618fbcace4dac7a27c5ecec156812c9e2c90d3f4be1916b12d"
+        }
+      ],
       "LayersIntroducingVulnerability": [
-        "3b59c795b34670618fbcace4dac7a27c5ecec156812c9e2c90d3f4be1916b12d.9673fdf7-b81a-4b3e-acf8-e551ef155449",
+        "3b59c795b34670618fbcace4dac7a27c5ecec156812c9e2c90d3f4be1916b12d",
         "523ef1d23f222195488575f52a39c729c76a8c5630c9a194139cb246fb212da6"
       ]
     }

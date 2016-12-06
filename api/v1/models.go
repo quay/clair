@@ -251,21 +251,38 @@ func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotifica
 }
 
 type VulnerabilityWithLayers struct {
-	Vulnerability                  *Vulnerability `json:"Vulnerability,omitempty"`
-	LayersIntroducingVulnerability []string       `json:"LayersIntroducingVulnerability,omitempty"`
+	Vulnerability *Vulnerability `json:"Vulnerability,omitempty"`
+
+	// This field is guaranteed to be in order only for pagination.
+	// Indices from different notifications may not be comparable.
+	OrderedLayersIntroducingVulnerability []OrderedLayerName `json:"OrderedLayersIntroducingVulnerability,omitempty"`
+
+	// This field is deprecated.
+	LayersIntroducingVulnerability []string `json:"LayersIntroducingVulnerability,omitempty"`
+}
+
+type OrderedLayerName struct {
+	Index     int    `json:"Index"`
+	LayerName string `json:"LayerName"`
 }
 
 func VulnerabilityWithLayersFromDatabaseModel(dbVuln database.Vulnerability) VulnerabilityWithLayers {
 	vuln := VulnerabilityFromDatabaseModel(dbVuln, true)
 
 	var layers []string
+	var orderedLayers []OrderedLayerName
 	for _, layer := range dbVuln.LayersIntroducingVulnerability {
 		layers = append(layers, layer.Name)
+		orderedLayers = append(orderedLayers, OrderedLayerName{
+			Index:     layer.ID,
+			LayerName: layer.Name,
+		})
 	}
 
 	return VulnerabilityWithLayers{
-		Vulnerability:                  &vuln,
-		LayersIntroducingVulnerability: layers,
+		Vulnerability:                         &vuln,
+		OrderedLayersIntroducingVulnerability: orderedLayers,
+		LayersIntroducingVulnerability:        layers,
 	}
 }
 
