@@ -159,11 +159,32 @@ func (pgSQL *pgSQL) loadLayerIntroducingVulnerability(vulnerability *database.Vu
 		return -1, nil
 	}
 
+	// Create a transaction to disable hash joins as our experience shows that
+	// PostgreSQL plans in certain cases a sequential scan and a hash on
+	// Layer_diff_FeatureVersion for the condition `ldfv.layer_id >= $2 AND
+	// ldfv.modification = 'add'` before realizing a hash inner join with
+	// Vulnerability_Affects_FeatureVersion. By disabling explictly hash joins,
+	// we force PostgreSQL to perform a bitmap index scan with
+	// `ldfv.featureversion_id = fv.id` on Layer_diff_FeatureVersion, followed by
+	// a bitmap heap scan on `ldfv.layer_id >= $2 AND ldfv.modification = 'add'`,
+	// thus avoiding a sequential scan on the biggest database table and
+	// allowing a small nested loop join instead.
+	tx, err := pgSQL.Begin()
+	if err != nil {
+		return -1, handleError("searchNotificationLayerIntroducingVulnerability.Begin()", err)
+	}
+	defer tx.Commit()
+
+	_, err = tx.Exec(disableHashJoin)
+	if err != nil {
+		log.Warningf("searchNotificationLayerIntroducingVulnerability: could not disable hash join: %s", err)
+	}
+
 	// We do `defer observeQueryTime` here because we don't want to observe invalid calls.
 	defer observeQueryTime("loadLayerIntroducingVulnerability", "all", tf)
 
 	// Query with limit + 1, the last item will be used to know the next starting ID.
-	rows, err := pgSQL.Query(searchNotificationLayerIntroducingVulnerability,
+	rows, err := tx.Query(searchNotificationLayerIntroducingVulnerability,
 		vulnerability.ID, startID, limit+1)
 	if err != nil {
 		return 0, handleError("searchNotificationLayerIntroducingVulnerability", err)
