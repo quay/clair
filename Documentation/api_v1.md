@@ -39,11 +39,13 @@ The HTTP status code of the response should indicate what type of failure occurr
 
 #### Example Response
 
-```json
+```http
 HTTP/1.1 400 Bad Request
 Content-Type: application/json;charset=utf-8
 Server: clair
+```
 
+```json
 {
   "Error": {
     "Message": "example error message"
@@ -67,9 +69,11 @@ The Authorization field is an optional value whose contents will fill the Author
 
 #### Example Request
 
-```json
+```http
 POST http://localhost:6060/v1/layers HTTP/1.1
+```
 
+```json
 {
   "Layer": {
     "Name": "523ef1d23f222195488575f52a39c729c76a8c5630c9a194139cb246fb212da6",
@@ -85,11 +89,13 @@ POST http://localhost:6060/v1/layers HTTP/1.1
 
 #### Example Response
 
-```json
+```http
 HTTP/1.1 201 Created
 Content-Type: application/json;charset=utf-8
 Server: clair
+```
 
+```json
 {
   "Layer": {
     "Name": "523ef1d23f222195488575f52a39c729c76a8c5630c9a194139cb246fb212da6",
@@ -108,7 +114,7 @@ Server: clair
 
 #### Description
 
-The GET route for the Layers resource displays a Layer and optionally all of its features and vulnerabilities. For an image composed of three layers A->B->C, calling this route on the third layer (C) will returns all the features and vulnerabilities for the entire image, including the analysis data gathered from the parent layers (A, B). For instance, a feature (and its potential vulnerabilities) detected in the first layer (A) will be shown when querying the third layer (C). On the other hand, a feature detected in the first layer (A) but then removed in either following layers (B, C) will not appear.  
+The GET route for the Layers resource displays a Layer and optionally all of its features and vulnerabilities. For an image composed of three layers A->B->C, calling this route on the third layer (C) will returns all the features and vulnerabilities for the entire image, including the analysis data gathered from the parent layers (A, B). For instance, a feature (and its potential vulnerabilities) detected in the first layer (A) will be shown when querying the third layer (C). On the other hand, a feature detected in the first layer (A) but then removed in either following layers (B, C) will not appear.
 
 #### Query Parameters
 
@@ -119,17 +125,19 @@ The GET route for the Layers resource displays a Layer and optionally all of its
 
 #### Example Request
 
-```
+```http
 GET http://localhost:6060/v1/layers/17675ec01494d651e1ccf81dc9cf63959ebfeed4f978fddb1666b6ead008ed52?features&vulnerabilities HTTP/1.1
 ```
 
 #### Example Response
 
-```json
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json;charset=utf-8
 Server: clair
+```
 
+```json
 {
   "Layer": {
     "Name": "17675ec01494d651e1ccf81dc9cf63959ebfeed4f978fddb1666b6ead008ed52",
@@ -165,13 +173,13 @@ The DELETE route for the Layers resource removes a Layer and all of its children
 
 #### Example Request
 
-```json
+```http
 DELETE http://localhost:6060/v1/layers/17675ec01494d651e1ccf81dc9cf63959ebfeed4f978fddb1666b6ead008ed52 HTTP/1.1
 ```
 
 #### Example Response
 
-```json
+```http
 HTTP/1.1 200 OK
 Server: clair
 ```
@@ -187,17 +195,19 @@ The GET route for the Namespaces resource displays a list of namespaces currentl
 
 #### Example Request
 
-```json
+```http
 GET http://localhost:6060/v1/namespaces HTTP/1.1
 ```
 
 #### Example Response
 
-```json
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json;charset=utf-8
 Server: clair
+```
 
+```json
 {
   "Namespaces": [
     { "Name": "debian:8" },
@@ -223,17 +233,19 @@ The GET route for the Vulnerabilities resource displays the vulnerabilities data
 
 #### Example Request
 
-```json
+```http
 GET http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities?limit=2 HTTP/1.1
 ```
 
 #### Example Response
 
-```json
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json;charset=utf-8
 Server: clair
+```
 
+```json
 {
     "Vulnerabilities": [
         {
@@ -271,9 +283,11 @@ The POST route for the Vulnerabilities resource creates a new Vulnerability.
 
 #### Example Request
 
-```json
+```http
 POST http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities HTTP/1.1
+```
 
+```json
 {
     "Vulnerability": {
         "Name": "CVE-2014-9471",
@@ -302,11 +316,13 @@ POST http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities HTTP/1.1
 
 #### Example Response
 
-```json
+```http
 HTTP/1.1 201 Created
 Content-Type: application/json;charset=utf-8
 Server: clair
+```
 
+```json
 {
     "Vulnerability": {
         "Name": "CVE-2014-9471",
@@ -347,17 +363,19 @@ The GET route for the Vulnerabilities resource displays the current data for a g
 
 #### Example Request
 
-```json
+```http
 GET http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471?fixedIn HTTP/1.1
 ```
 
 #### Example Response
 
-```json
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json;charset=utf-8
 Server: clair
+```
 
+```json
 {
     "Vulnerability": {
         "Name": "CVE-2014-9471",
@@ -395,9 +413,11 @@ If this vulnerability was inserted by a Fetcher, changes may be lost when the Fe
 
 #### Example Request
 
-```json
+```http
 PUT http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471
+```
 
+```json
 {
     "Vulnerability": {
         "Name": "CVE-2014-9471",
@@ -419,10 +439,12 @@ PUT http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471
 
 #### Example Response
 
-```json
+```http
 HTTP/1.1 200 OK
 Server: clair
+```
 
+```json
 {
     "Vulnerability": {
         "Name": "CVE-2014-9471",
@@ -452,13 +474,13 @@ If this vulnerability was inserted by a Fetcher, it may be re-inserted when the 
 
 #### Example Request
 
-```json
+```http
 GET http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471 HTTP/1.1
 ```
 
 #### Example Response
 
-```json
+```http
 HTTP/1.1 200 OK
 Server: clair
 ```
@@ -473,17 +495,19 @@ The GET route for the Fixes resource displays the list of Features that fix the 
 
 #### Example Request
 
-```json
+```http
 GET http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471/fixes HTTP/1.1
 ```
 
 #### Example Response
 
-```json
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json;charset=utf-8
 Server: clair
+```
 
+```json
 {
   "Features": [
     {
@@ -503,9 +527,11 @@ The PUT route for the Fixes resource updates a Feature that is the fix for a giv
 
 #### Example Request
 
-```json
+```http
 PUT http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471/fixes/coreutils HTTP/1.1
+```
 
+```json
 {
   "Feature": {
     "Name": "coreutils",
@@ -517,10 +543,12 @@ PUT http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471
 
 #### Example Response
 
-```json
+```http
 HTTP/1.1 200 OK
 Server: clair
+```
 
+```json
 {
   "Feature": {
     "Name": "coreutils",
@@ -538,13 +566,13 @@ The DELETE route for the Fixes resource removes a Feature as fix for the given V
 
 #### Example Request
 
-```json
+```http
 DELETE http://localhost:6060/v1/namespaces/debian%3A8/vulnerabilities/CVE-2014-9471/fixes/coreutils
 ```
 
 #### Example Response
 
-```json
+```http
 HTTP/1.1 200 OK
 Server: clair
 ```
@@ -556,7 +584,8 @@ Server: clair
 #### Description
 
 The GET route for the Notifications resource displays a notification that a Vulnerability has been updated.
-This route supports simultaneous pagination for both the `Old` and `New` Vulnerabilities' `LayersIntroducingVulnerability` property which can be extremely long.
+This route supports simultaneous pagination for both the `Old` and `New` Vulnerabilities' `OrderedLayersIntroducingVulnerability` which can be extremely long.
+The `LayersIntroducingVulnerability` property is deprecated and will eventually be removed from the API.
 
 #### Query Parameters
 
@@ -567,17 +596,19 @@ This route supports simultaneous pagination for both the `Old` and `New` Vulnera
 
 #### Example Request
 
-```json
+```http
 GET http://localhost:6060/v1/notifications/ec45ec87-bfc8-4129-a1c3-d2b82622175a?limit=2 HTTP/1.1
 ```
 
 #### Example Response
 
-```json
+```http
 HTTP/1.1 200 OK
 Content-Type: application/json;charset=utf-8
 Server: clair
+```
 
+```json
 {
   "Notification": {
     "Name": "ec45ec87-bfc8-4129-a1c3-d2b82622175a",
@@ -600,9 +631,19 @@ Server: clair
           }
         ]
       },
+      "OrderedLayersIntroducingVulnerability": [
+        {
+          "Index": 1,
+          "LayerName": "523ef1d23f222195488575f52a39c729c76a8c5630c9a194139cb246fb212da6"
+        },
+        {
+          "Index": 2,
+          "LayerName": "3b59c795b34670618fbcace4dac7a27c5ecec156812c9e2c90d3f4be1916b12d"
+        }
+      ],
       "LayersIntroducingVulnerability": [
-        "3b59c795b34670618fbcace4dac7a27c5ecec156812c9e2c90d3f4be1916b12d.9673fdf7-b81a-4b3e-acf8-e551ef155449",
-        "523ef1d23f222195488575f52a39c729c76a8c5630c9a194139cb246fb212da6"
+        "523ef1d23f222195488575f52a39c729c76a8c5630c9a194139cb246fb212da6",
+        "3b59c795b34670618fbcace4dac7a27c5ecec156812c9e2c90d182371916b12d"
       ]
     },
     "Old": {
@@ -613,8 +654,18 @@ Server: clair
         "Severity": "Low",
         "FixedIn": []
       },
+      "OrderedLayersIntroducingVulnerability": [
+        {
+          "Index": 1,
+          "LayerName": "523ef1d23f222195488575f52a39c729c76a8c5630c9a194139cb246fb212da6"
+        },
+        {
+          "Index": 2,
+          "LayerName": "3b59c795b34670618fbcace4dac7a27c5ecec156812c9e2c90d3f4be1916b12d"
+        }
+      ],
       "LayersIntroducingVulnerability": [
-        "3b59c795b34670618fbcace4dac7a27c5ecec156812c9e2c90d3f4be1916b12d.9673fdf7-b81a-4b3e-acf8-e551ef155449",
+        "3b59c795b34670618fbcace4dac7a27c5ecec156812c9e2c90d3f4be1916b12d",
         "523ef1d23f222195488575f52a39c729c76a8c5630c9a194139cb246fb212da6"
       ]
     }
@@ -632,13 +683,13 @@ The time at which this Notification was marked as read can be seen in the `Notif
 
 #### Example Request
 
-```json
+```http
 DELETE http://localhost:6060/v1/notification/ec45ec87-bfc8-4129-a1c3-d2b82622175a HTTP/1.1
 ```
 
 #### Example Response
 
-```json
+```http
 HTTP/1.1 200 OK
 Server: clair
 ```

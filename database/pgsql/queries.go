@@ -225,7 +225,7 @@ const (
 		FROM LDFV, Layer l
 		WHERE LDFV.layer_id = l.id
 		LIMIT $3`
-	
+
 	// complex_test.go
 	searchComplexTestFeatureVersionAffects = `
 		SELECT v.name
