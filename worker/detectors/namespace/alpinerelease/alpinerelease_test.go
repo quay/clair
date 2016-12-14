@@ -24,12 +24,20 @@ import (
 func TestAlpineReleaseNamespaceDetection(t *testing.T) {
 	testData := []namespace.TestData{
 		{
-			ExpectedNamespace: &database.Namespace{Name: "alpine:0.3.4"},
-			Data:              map[string][]byte{"/etc/alpine-release": []byte(`0.3.4`)},
+			ExpectedNamespace: &database.Namespace{Name: "alpine:v3.3"},
+			Data:              map[string][]byte{"etc/alpine-release": []byte(`3.3.4`)},
 		},
 		{
-			ExpectedNamespace: &database.Namespace{Name: "alpine:0.3.4"},
-			Data: map[string][]byte{"/etc/alpine-release": []byte(`
+			ExpectedNamespace: &database.Namespace{Name: "alpine:v3.4"},
+			Data:              map[string][]byte{"etc/alpine-release": []byte(`3.4.0`)},
+		},
+		{
+			ExpectedNamespace: &database.Namespace{Name: "alpine:v0.3"},
+			Data:              map[string][]byte{"etc/alpine-release": []byte(`0.3.4`)},
+		},
+		{
+			ExpectedNamespace: &database.Namespace{Name: "alpine:v0.3"},
+			Data: map[string][]byte{"etc/alpine-release": []byte(`
 0.3.4
 `)},
 		},

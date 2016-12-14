@@ -18,6 +18,7 @@ import (
 	"bufio"
 	"bytes"
 	"regexp"
+	"strings"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/worker/detectors"
@@ -25,7 +26,7 @@ import (
 
 const (
 	osName            = "alpine"
-	alpineReleasePath = "/etc/alpine-release"
+	alpineReleasePath = "etc/alpine-release"
 )
 
 var versionRegexp = regexp.MustCompile(`^(\d)+\.(\d)+\.(\d)+$`)
@@ -46,8 +47,8 @@ func (d *detector) Detect(data map[string][]byte) *database.Namespace {
 			line := scanner.Text()
 			match := versionRegexp.FindStringSubmatch(line)
 			if len(match) > 0 {
-				version := match[0]
-				return &database.Namespace{Name: osName + ":" + version}
+				versionNumbers := strings.Split(match[0], ".")
+				return &database.Namespace{Name: osName + ":" + "v" + versionNumbers[0] + "." + versionNumbers[1]}
 			}
 		}
 	}
