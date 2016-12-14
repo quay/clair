@@ -23,20 +23,38 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAlpineYAMLParsing(t *testing.T) {
+func TestAlpine33YAMLParsing(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
 	path := filepath.Join(filepath.Dir(filename))
 
-	testData, _ := os.Open(path + "/testdata/main.yaml")
+	testData, _ := os.Open(path + "/testdata/v33_main.yaml")
 	defer testData.Close()
 
-	vulns, err := parseYAML(testData)
+	vulns, err := parse33YAML(testData)
 	if err != nil {
 		assert.Nil(t, err)
 	}
-	assert.Equal(t, len(vulns), 15)
-	assert.Equal(t, vulns[0].Name, "CVE-2016-2147")
-	assert.Equal(t, vulns[0].FixedIn[0].Feature.Namespace.Name, "alpine:v3.3")
-	assert.Equal(t, vulns[0].FixedIn[0].Feature.Name, "busybox")
-	assert.Equal(t, vulns[0].Link, "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-2147")
+	assert.Equal(t, 15, len(vulns))
+	assert.Equal(t, "CVE-2016-2147", vulns[0].Name)
+	assert.Equal(t, "alpine:v3.3", vulns[0].FixedIn[0].Feature.Namespace.Name)
+	assert.Equal(t, "busybox", vulns[0].FixedIn[0].Feature.Name)
+	assert.Equal(t, "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-2147", vulns[0].Link)
+}
+
+func TestAlpine34YAMLParsing(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	path := filepath.Join(filepath.Dir(filename))
+
+	testData, _ := os.Open(path + "/testdata/v34_main.yaml")
+	defer testData.Close()
+
+	vulns, err := parse34YAML(testData)
+	if err != nil {
+		assert.Nil(t, err)
+	}
+	assert.Equal(t, 105, len(vulns))
+	assert.Equal(t, "CVE-2016-5387", vulns[0].Name)
+	assert.Equal(t, "alpine:v3.4", vulns[0].FixedIn[0].Feature.Namespace.Name)
+	assert.Equal(t, "apache2", vulns[0].FixedIn[0].Feature.Name)
+	assert.Equal(t, "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2016-5387", vulns[0].Link)
 }

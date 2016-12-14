@@ -92,12 +92,19 @@ func (f *fetcher) FetchUpdate(db database.Datastore) (resp updater.FetcherRespon
 		if err != nil {
 			return
 		}
+		log.Debug(namespace)
 
 		var vulns []database.Vulnerability
-		vulns, err = parseYAML(file)
+		switch namespace {
+		case "v3.3":
+			vulns, err = parse33YAML(file)
+		case "v3.4":
+			vulns, err = parse34YAML(file)
+		}
 		if err != nil {
 			return
 		}
+
 		resp.Vulnerabilities = append(resp.Vulnerabilities, vulns...)
 		file.Close()
 	}
@@ -111,7 +118,7 @@ func (f *fetcher) pullRepository() (commit string, err error) {
 			return "", ErrFilesystem
 		}
 
-		if out, err := utils.Exec(f.repositoryLocalPath, "git", "pull"); err != nil {
+		if out, err := utils.Exec(f.repositoryLocalPath, "git", "clone", secdbGitURL, "."); err != nil {
 			f.Clean()
 			log.Errorf("could not pull alpine-secdb repository: %s. output: %s", err, out)
 			return "", cerrors.ErrCouldNotDownload
@@ -133,7 +140,7 @@ func (f *fetcher) Clean() {
 	}
 }
 
-type secdbFile struct {
+type secdb33File struct {
 	Distro   string `yaml:"distroversion"`
 	Packages []struct {
 		Pkg struct {
@@ -144,14 +151,14 @@ type secdbFile struct {
 	} `yaml:"packages"`
 }
 
-func parseYAML(r io.Reader) (vulns []database.Vulnerability, err error) {
+func parse33YAML(r io.Reader) (vulns []database.Vulnerability, err error) {
 	var rBytes []byte
 	rBytes, err = ioutil.ReadAll(r)
 	if err != nil {
 		return
 	}
 
-	var file secdbFile
+	var file secdb33File
 	err = yaml.Unmarshal(rBytes, &file)
 	if err != nil {
 		return
@@ -166,6 +173,7 @@ func parseYAML(r io.Reader) (vulns []database.Vulnerability, err error) {
 			}
 
 			var vuln database.Vulnerability
+			vuln.Severity = types.Unknown
 			vuln.Name = fix
 			vuln.Link = nvdURLPrefix + fix
 			vuln.FixedIn = []database.FeatureVersion{
@@ -177,8 +185,61 @@ func parseYAML(r io.Reader) (vulns []database.Vulnerability, err error) {
 					Version: version,
 				},
 			}
-
 			vulns = append(vulns, vuln)
+		}
+	}
+
+	return
+}
+
+type secdb34File struct {
+	Distro   string `yaml:"distroversion"`
+	Packages []struct {
+		Pkg struct {
+			Name  string              `yaml:"name"`
+			Fixes map[string][]string `yaml:"secfixes"`
+		} `yaml:"pkg"`
+	} `yaml:"packages"`
+}
+
+func parse34YAML(r io.Reader) (vulns []database.Vulnerability, err error) {
+	var rBytes []byte
+	rBytes, err = ioutil.ReadAll(r)
+	if err != nil {
+		return
+	}
+
+	var file secdb34File
+	err = yaml.Unmarshal(rBytes, &file)
+	if err != nil {
+		return
+	}
+
+	for _, pack := range file.Packages {
+		pkg := pack.Pkg
+		for versionStr, vulnStrs := range pkg.Fixes {
+			version, err := types.NewVersion(versionStr)
+			if err != nil {
+				log.Warningf("could not parse package version '%s': %s. skipping", versionStr, err.Error())
+				continue
+			}
+
+			for _, vulnStr := range vulnStrs {
+				var vuln database.Vulnerability
+				vuln.Severity = types.Unknown
+				vuln.Name = vulnStr
+				vuln.Link = nvdURLPrefix + vulnStr
+				vuln.FixedIn = []database.FeatureVersion{
+					{
+						Feature: database.Feature{
+							Namespace: database.Namespace{Name: "alpine:" + file.Distro},
+							Name:      pkg.Name,
+						},
+						Version: version,
+					},
+				}
+				vulns = append(vulns, vuln)
+			}
 		}
 	}
 
