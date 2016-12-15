@@ -35,6 +35,7 @@ import (
 )
 
 const (
+	// When available, this should be updated to use HTTPS.
 	secdbGitURL  = "http://git.alpinelinux.org/cgit/alpine-secdb"
 	updaterFlag  = "alpine-secdbUpdater"
 	nvdURLPrefix = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
@@ -87,32 +88,37 @@ func (f *fetcher) FetchUpdate(db database.Datastore) (resp updater.FetcherRespon
 
 	// Append any changed vulnerabilities to the response.
 	for _, namespace := range []string{"v3.3", "v3.4"} {
-		var file io.ReadCloser
-		file, err = os.Open(f.repositoryLocalPath + "/" + namespace + "/main.yaml")
-		if err != nil {
-			return
-		}
-		log.Debug(namespace)
-
 		var vulns []database.Vulnerability
-		switch namespace {
-		case "v3.3":
-			vulns, err = parse33YAML(file)
-		case "v3.4":
-			vulns, err = parse34YAML(file)
-		}
+		vulns, err = parseVulnsFromNamespace(f.repositoryLocalPath, namespace)
 		if err != nil {
 			return
 		}
-
 		resp.Vulnerabilities = append(resp.Vulnerabilities, vulns...)
-		file.Close()
+	}
+
+	return
+}
+
+func parseVulnsFromNamespace(repositoryPath, namespace string) (vulns []database.Vulnerability, err error) {
+	var file io.ReadCloser
+	file, err = os.Open(repositoryPath + "/" + namespace + "/main.yaml")
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	switch namespace {
+	case "v3.3":
+		vulns, err = parse33YAML(file)
+	case "v3.4":
+		vulns, err = parse34YAML(file)
 	}
 
 	return
 }
 
 func (f *fetcher) pullRepository() (commit string, err error) {
+	// If the repository doesn't exist, clone it.
 	if _, pathExists := os.Stat(f.repositoryLocalPath); f.repositoryLocalPath == "" || os.IsNotExist(pathExists) {
 		if f.repositoryLocalPath, err = ioutil.TempDir(os.TempDir(), "alpine-secdb"); err != nil {
 			return "", ErrFilesystem
@@ -122,6 +128,12 @@ func (f *fetcher) pullRepository() (commit string, err error) {
 			f.Clean()
 			log.Errorf("could not pull alpine-secdb repository: %s. output: %s", err, out)
 			return "", cerrors.ErrCouldNotDownload
+		}
+	} else {
+		// The repository exists and it needs to be refreshed via a pull.
+		_, err := utils.Exec(f.repositoryLocalPath, "git", "pull")
+		if err != nil {
+			return "", ErrGitFailure
 		}
 	}
 
@@ -172,23 +184,22 @@ func parse33YAML(r io.Reader) (vulns []database.Vulnerability, err error) {
 				continue
 			}
 
-			var vuln database.Vulnerability
-			vuln.Severity = types.Unknown
-			vuln.Name = fix
-			vuln.Link = nvdURLPrefix + fix
-			vuln.FixedIn = []database.FeatureVersion{
-				{
-					Feature: database.Feature{
-						Namespace: database.Namespace{Name: "alpine:" + file.Distro},
-						Name:      pkg.Name,
+			vulns = append(vulns, database.Vulnerability{
+				Name:     fix,
+				Severity: types.Unknown,
+				Link:     nvdURLPrefix + fix,
+				FixedIn: []database.FeatureVersion{
+					{
+						Feature: database.Feature{
+							Namespace: database.Namespace{Name: "alpine:" + file.Distro},
+							Name:      pkg.Name,
+						},
+						Version: version,
 					},
-					Version: version,
 				},
-			}
-			vulns = append(vulns, vuln)
+			})
 		}
 	}
-
 	return
 }
 
