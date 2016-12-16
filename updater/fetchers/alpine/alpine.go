@@ -86,8 +86,10 @@ func (f *fetcher) FetchUpdate(db database.Datastore) (resp updater.FetcherRespon
 		return
 	}
 
+	var namespaces []string
+	namespaces, err = detectNamespaces(f.repositoryLocalPath)
 	// Append any changed vulnerabilities to the response.
-	for _, namespace := range []string{"v3.3", "v3.4"} {
+	for _, namespace := range namespaces {
 		var vulns []database.Vulnerability
 		vulns, err = parseVulnsFromNamespace(f.repositoryLocalPath, namespace)
 		if err != nil {
@@ -99,6 +101,40 @@ func (f *fetcher) FetchUpdate(db database.Datastore) (resp updater.FetcherRespon
 	return
 }
 
+func detectNamespaces(path string) ([]string, error) {
+	// Open the root directory.
+	dir, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer dir.Close()
+
+	// Get a list of the namspaces from the directory names.
+	names, err := dir.Readdirnames(0)
+	if err != nil {
+		return nil, err
+	}
+
+	var namespaces []string
+	for _, name := range names {
+		// Filter out hidden directories like `.git`.
+		if strings.HasPrefix(name, ".") {
+			continue
+		}
+
+		namespaces = append(namespaces, name)
+	}
+
+	return namespaces, nil
+}
+
+type parserFunc func(io.Reader) ([]database.Vulnerability, error)
+
+var parsers = map[string]parserFunc{
+	"v3.3": parse33YAML,
+	"v3.4": parse34YAML,
+}
+
 func parseVulnsFromNamespace(repositoryPath, namespace string) (vulns []database.Vulnerability, err error) {
 	var file io.ReadCloser
 	file, err = os.Open(repositoryPath + "/" + namespace + "/main.yaml")
@@ -107,13 +143,12 @@ func parseVulnsFromNamespace(repositoryPath, namespace string) (vulns []database
 	}
 	defer file.Close()
 
-	switch namespace {
-	case "v3.3":
-		vulns, err = parse33YAML(file)
-	case "v3.4":
-		vulns, err = parse34YAML(file)
+	parseFunc, exists := parsers[namespace]
+	if !exists {
+		return
 	}
 
+	vulns, err = parseFunc(file)
 	return
 }
 
