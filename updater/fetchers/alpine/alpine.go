@@ -18,6 +18,7 @@ package alpine
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -91,9 +92,13 @@ func (f *fetcher) FetchUpdate(db database.Datastore) (resp updater.FetcherRespon
 	// Append any changed vulnerabilities to the response.
 	for _, namespace := range namespaces {
 		var vulns []database.Vulnerability
-		vulns, err = parseVulnsFromNamespace(f.repositoryLocalPath, namespace)
+		var note string
+		vulns, note, err = parseVulnsFromNamespace(f.repositoryLocalPath, namespace)
 		if err != nil {
 			return
+		}
+		if note != "" {
+			resp.Notes = append(resp.Notes, note)
 		}
 		resp.Vulnerabilities = append(resp.Vulnerabilities, vulns...)
 	}
@@ -135,7 +140,7 @@ var parsers = map[string]parserFunc{
 	"v3.4": parse34YAML,
 }
 
-func parseVulnsFromNamespace(repositoryPath, namespace string) (vulns []database.Vulnerability, err error) {
+func parseVulnsFromNamespace(repositoryPath, namespace string) (vulns []database.Vulnerability, note string, err error) {
 	var file io.ReadCloser
 	file, err = os.Open(repositoryPath + "/" + namespace + "/main.yaml")
 	if err != nil {
@@ -145,6 +150,7 @@ func parseVulnsFromNamespace(repositoryPath, namespace string) (vulns []database
 
 	parseFunc, exists := parsers[namespace]
 	if !exists {
+		note = fmt.Sprintf("The file %s is not mapped to any Alpine version number", namespace)
 		return
 	}
 
