@@ -28,7 +28,7 @@ import (
 const (
 	// Version (integer) represents the worker version.
 	// Increased each time the engine changes.
-	Version = 2
+	Version = 3
 
 	// maxFileSize is the maximum size of a single file we should extract.
 	maxFileSize = 200 * 1024 * 1024 // 200 MiB
