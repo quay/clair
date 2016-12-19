@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,22 +21,22 @@ import (
 	"github.com/coreos/clair/worker/detectors/namespace"
 )
 
-var aptSourcesOSTests = []namespace.NamespaceTest{
-	{
-		ExpectedNamespace: database.Namespace{Name: "debian:unstable"},
-		Data: map[string][]byte{
-			"etc/os-release": []byte(
-				`PRETTY_NAME="Debian GNU/Linux stretch/sid"
+func TestAptSourcesNamespaceDetector(t *testing.T) {
+	testData := []namespace.TestData{
+		{
+			ExpectedNamespace: &database.Namespace{Name: "debian:unstable"},
+			Data: map[string][]byte{
+				"etc/os-release": []byte(
+					`PRETTY_NAME="Debian GNU/Linux stretch/sid"
 NAME="Debian GNU/Linux"
 ID=debian
 HOME_URL="https://www.debian.org/"
 SUPPORT_URL="https://www.debian.org/support/"
 BUG_REPORT_URL="https://bugs.debian.org/"`),
-			"etc/apt/sources.list": []byte(`deb http://httpredir.debian.org/debian unstable main`),
+				"etc/apt/sources.list": []byte(`deb http://httpredir.debian.org/debian unstable main`),
+			},
 		},
-	},
-}
+	}
 
-func TestAptSourcesNamespaceDetector(t *testing.T) {
-	namespace.TestNamespaceDetector(t, &AptSourcesNamespaceDetector{}, aptSourcesOSTests)
+	namespace.TestDetector(t, &AptSourcesNamespaceDetector{}, testData)
 }

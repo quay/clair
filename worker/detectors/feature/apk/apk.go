@@ -1,0 +1,84 @@
+// Copyright 2016 clair authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package apk
+
+import (
+	"bufio"
+	"bytes"
+
+	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/utils/types"
+	"github.com/coreos/clair/worker/detectors"
+	"github.com/coreos/pkg/capnslog"
+)
+
+var log = capnslog.NewPackageLogger("github.com/coreos/clair", "worker/detectors/packages")
+
+func init() {
+	detectors.RegisterFeaturesDetector("apk", &detector{})
+}
+
+type detector struct{}
+
+func (d *detector) Detect(data map[string][]byte) ([]database.FeatureVersion, error) {
+	file, exists := data["lib/apk/db/installed"]
+	if !exists {
+		return []database.FeatureVersion{}, nil
+	}
+
+	// Iterate over each line in the "installed" file attempting to parse each
+	// package into a feature that will be stored in a set to guarantee
+	// uniqueness.
+	pkgSet := make(map[string]database.FeatureVersion)
+	ipkg := database.FeatureVersion{}
+	scanner := bufio.NewScanner(bytes.NewBuffer(file))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if len(line) < 2 {
+			continue
+		}
+
+		// Parse the package name or version.
+		switch {
+		case line[:2] == "P:":
+			ipkg.Feature.Name = line[2:]
+		case line[:2] == "V:":
+			var err error
+			ipkg.Version, err = types.NewVersion(line[2:])
+			if err != nil {
+				log.Warningf("could not parse package version '%s': %s. skipping", line[2:], err.Error())
+			}
+		}
+
+		// If we have a whole feature, store it in the set and try to parse a new
+		// one.
+		if ipkg.Feature.Name != "" && ipkg.Version.String() != "" {
+			pkgSet[ipkg.Feature.Name+"#"+ipkg.Version.String()] = ipkg
+			ipkg = database.FeatureVersion{}
+		}
+	}
+
+	// Convert the map into a slice.
+	pkgs := make([]database.FeatureVersion, 0, len(pkgSet))
+	for _, pkg := range pkgSet {
+		pkgs = append(pkgs, pkg)
+	}
+
+	return pkgs, nil
+}
+
+func (d *detector) GetRequiredFiles() []string {
+	return []string{"lib/apk/db/installed"}
+}

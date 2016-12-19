@@ -28,6 +28,7 @@ import (
 	// Register components
 	_ "github.com/coreos/clair/notifier/notifiers"
 
+	_ "github.com/coreos/clair/updater/fetchers/alpine"
 	_ "github.com/coreos/clair/updater/fetchers/debian"
 	_ "github.com/coreos/clair/updater/fetchers/opensuse"
 	_ "github.com/coreos/clair/updater/fetchers/rhel"
@@ -38,9 +39,11 @@ import (
 	_ "github.com/coreos/clair/worker/detectors/data/aci"
 	_ "github.com/coreos/clair/worker/detectors/data/docker"
 
+	_ "github.com/coreos/clair/worker/detectors/feature/apk"
 	_ "github.com/coreos/clair/worker/detectors/feature/dpkg"
 	_ "github.com/coreos/clair/worker/detectors/feature/rpm"
 
+	_ "github.com/coreos/clair/worker/detectors/namespace/alpinerelease"
 	_ "github.com/coreos/clair/worker/detectors/namespace/aptsources"
 	_ "github.com/coreos/clair/worker/detectors/namespace/lsbrelease"
 	_ "github.com/coreos/clair/worker/detectors/namespace/osrelease"
