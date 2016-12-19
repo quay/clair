@@ -85,5 +85,5 @@ func (detector *OsReleaseNamespaceDetector) GetRequiredFiles() []string {
 
 // getExcludeFiles returns the list of files that are ought to exclude this detector from Detect()
 func (detector *OsReleaseNamespaceDetector) getExcludeFiles() []string {
-	return []string{"etc/redhat-release", "usr/lib/centos-release"}
+	return []string{"etc/oracle-release", "etc/redhat-release", "usr/lib/centos-release"}
 }
