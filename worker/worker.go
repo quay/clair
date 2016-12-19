@@ -30,7 +30,9 @@ const (
 	// Increased each time the engine changes.
 	Version = 3
 
-	// maxFileSize is the maximum size of a single file we should extract.
+	// maxFileSize enforces a maximum size of a single file within a tarball that
+	// will be extracted. This protects against malicious layers that may contain
+	// extremely large package database files.
 	maxFileSize = 200 * 1024 * 1024 // 200 MiB
 )
 
