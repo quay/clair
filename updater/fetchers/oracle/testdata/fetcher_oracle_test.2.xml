@@ -1,0 +1,177 @@
+<oval_definitions xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:unix-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" xmlns:red-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-common-5 oval-common-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#unix unix-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#linux linux-definitions-schema.xsd">
+<generator>
+<oval:product_name>Oracle Errata System</oval:product_name>
+<oval:product_version>Oracle Linux</oval:product_version>
+<oval:schema_version>5.3</oval:schema_version>
+<oval:timestamp>2015-07-03T00:00:00</oval:timestamp>
+</generator>
+<definitions>
+<definition id="oval:com.oracle.elsa:def:20151207" version="501" class="patch">
+<metadata>
+<title>
+ELSA-2015-1207:  firefox security update (CRITICAL)
+</title>
+<affected family="unix">
+<platform>Oracle Linux 5</platform>
+<platform>Oracle Linux 6</platform>
+<platform>Oracle Linux 7</platform>
+
+</affected>
+<reference source="elsa" ref_id="ELSA-2015-1207" ref_url="http://linux.oracle.com/errata/ELSA-2015-1207.html"/>
+<reference source="CVE" ref_id="CVE-2015-2722" ref_url="http://linux.oracle.com/cve/CVE-2015-2722.html"/>
+<reference source="CVE" ref_id="CVE-2015-2724" ref_url="http://linux.oracle.com/cve/CVE-2015-2724.html"/>
+<reference source="CVE" ref_id="CVE-2015-2725" ref_url="http://linux.oracle.com/cve/CVE-2015-2725.html"/>
+<reference source="CVE" ref_id="CVE-2015-2727" ref_url="http://linux.oracle.com/cve/CVE-2015-2727.html"/>
+<reference source="CVE" ref_id="CVE-2015-2728" ref_url="http://linux.oracle.com/cve/CVE-2015-2728.html"/>
+<reference source="CVE" ref_id="CVE-2015-2729" ref_url="http://linux.oracle.com/cve/CVE-2015-2729.html"/>
+<reference source="CVE" ref_id="CVE-2015-2731" ref_url="http://linux.oracle.com/cve/CVE-2015-2731.html"/>
+<reference source="CVE" ref_id="CVE-2015-2733" ref_url="http://linux.oracle.com/cve/CVE-2015-2733.html"/>
+<reference source="CVE" ref_id="CVE-2015-2734" ref_url="http://linux.oracle.com/cve/CVE-2015-2734.html"/>
+<reference source="CVE" ref_id="CVE-2015-2735" ref_url="http://linux.oracle.com/cve/CVE-2015-2735.html"/>
+<reference source="CVE" ref_id="CVE-2015-2736" ref_url="http://linux.oracle.com/cve/CVE-2015-2736.html"/>
+<reference source="CVE" ref_id="CVE-2015-2737" ref_url="http://linux.oracle.com/cve/CVE-2015-2737.html"/>
+<reference source="CVE" ref_id="CVE-2015-2738" ref_url="http://linux.oracle.com/cve/CVE-2015-2738.html"/>
+<reference source="CVE" ref_id="CVE-2015-2739" ref_url="http://linux.oracle.com/cve/CVE-2015-2739.html"/>
+<reference source="CVE" ref_id="CVE-2015-2740" ref_url="http://linux.oracle.com/cve/CVE-2015-2740.html"/>
+<reference source="CVE" ref_id="CVE-2015-2741" ref_url="http://linux.oracle.com/cve/CVE-2015-2741.html"/>
+<reference source="CVE" ref_id="CVE-2015-2743" ref_url="http://linux.oracle.com/cve/CVE-2015-2743.html"/>
+
+<description>
+[38.1.0-1.0.1.el7_1]
+- Add firefox-oracle-default-prefs.js and remove the corresponding Red Hat file
+
+[38.1.0-1]
+- Update to 38.1.0 ESR
+
+[38.0.1-2]
+- Fixed rhbz#1222807 by removing preun section
+</description>
+<!--
+ ~~~~~~~~~~~~~~~~~~~~   advisory details   ~~~~~~~~~~~~~~~~~~~ 
+-->
+<advisory>
+<severity>CRITICAL</severity>
+<rights>Copyright 2015 Oracle, Inc.</rights>
+<issued date="2015-07-03"/>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2722.html">CVE-2015-2722</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2724.html">CVE-2015-2724</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2725.html">CVE-2015-2725</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2727.html">CVE-2015-2727</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2728.html">CVE-2015-2728</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2729.html">CVE-2015-2729</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2731.html">CVE-2015-2731</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2733.html">CVE-2015-2733</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2734.html">CVE-2015-2734</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2735.html">CVE-2015-2735</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2736.html">CVE-2015-2736</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2737.html">CVE-2015-2737</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2738.html">CVE-2015-2738</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2739.html">CVE-2015-2739</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2740.html">CVE-2015-2740</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2741.html">CVE-2015-2741</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2743.html">CVE-2015-2743</cve>
+
+</advisory>
+</metadata>
+<criteria operator="OR">
+<criteria operator="AND">
+<criterion test_ref="oval:com.oracle.elsa:tst:20151207001" comment="Oracle Linux 5 is installed"/>
+<criteria operator="AND">
+<criterion test_ref="oval:com.oracle.elsa:tst:20151207002" comment="firefox is earlier than 0:38.1.0-1.0.1.el5_11"/>
+<criterion test_ref="oval:com.oracle.elsa:tst:20151207003" comment="firefox is signed with the Oracle Linux 5 key"/>
+</criteria>
+</criteria>
+<criteria operator="AND">
+<criterion test_ref="oval:com.oracle.elsa:tst:20151207004" comment="Oracle Linux 6 is installed"/>
+<criteria operator="AND">
+<criterion test_ref="oval:com.oracle.elsa:tst:20151207005" comment="firefox is earlier than 0:38.1.0-1.0.1.el6_6"/>
+<criterion test_ref="oval:com.oracle.elsa:tst:20151207006" comment="firefox is signed with the Oracle Linux 6 key"/>
+</criteria>
+</criteria>
+<criteria operator="AND">
+<criterion test_ref="oval:com.oracle.elsa:tst:20151207007" comment="Oracle Linux 7 is installed"/>
+<criteria operator="AND">
+<criterion test_ref="oval:com.oracle.elsa:tst:20151207008" comment="firefox is earlier than 0:38.1.0-1.0.1.el7_1"/>
+<criterion test_ref="oval:com.oracle.elsa:tst:20151207009" comment="firefox is signed with the Oracle Linux 7 key"/>
+</criteria>
+</criteria>
+</criteria>
+</definition>
+</definitions>
+<!--
+ ~~~~~~~~~~~~~~~~~~~~~   rpminfo tests   ~~~~~~~~~~~~~~~~~~~~~ 
+-->
+<tests>
+<rpminfo_test id="oval:com.oracle.elsa:tst:20151207001"  version="501" comment="Oracle Linux 5 is installed" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+<object object_ref="oval:com.oracle.elsa:obj:20151207001" />
+<state state_ref="oval:com.oracle.elsa:ste:20151207003" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.oracle.elsa:tst:20151207002"  version="501" comment="firefox is earlier than 0:38.1.0-1.0.1.el5_11" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+<object object_ref="oval:com.oracle.elsa:obj:20151207002" />
+<state state_ref="oval:com.oracle.elsa:ste:20151207004" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.oracle.elsa:tst:20151207003"  version="501" comment="firefox is signed with the Oracle Linux 5 key" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+<object object_ref="oval:com.oracle.elsa:obj:20151207002" />
+<state state_ref="oval:com.oracle.elsa:ste:20151207001" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.oracle.elsa:tst:20151207004"  version="501" comment="Oracle Linux 6 is installed" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+<object object_ref="oval:com.oracle.elsa:obj:20151207001" />
+<state state_ref="oval:com.oracle.elsa:ste:20151207005" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.oracle.elsa:tst:20151207005"  version="501" comment="firefox is earlier than 0:38.1.0-1.0.1.el6_6" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+<object object_ref="oval:com.oracle.elsa:obj:20151207002" />
+<state state_ref="oval:com.oracle.elsa:ste:20151207006" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.oracle.elsa:tst:20151207006"  version="501" comment="firefox is signed with the Oracle Linux 6 key" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+<object object_ref="oval:com.oracle.elsa:obj:20151207002" />
+<state state_ref="oval:com.oracle.elsa:ste:20151207002" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.oracle.elsa:tst:20151207007"  version="501" comment="Oracle Linux 7 is installed" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+<object object_ref="oval:com.oracle.elsa:obj:20151207001" />
+<state state_ref="oval:com.oracle.elsa:ste:20151207007" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.oracle.elsa:tst:20151207008"  version="501" comment="firefox is earlier than 0:38.1.0-1.0.1.el7_1" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+<object object_ref="oval:com.oracle.elsa:obj:20151207002" />
+<state state_ref="oval:com.oracle.elsa:ste:20151207008" />
+</rpminfo_test>
+<rpminfo_test id="oval:com.oracle.elsa:tst:20151207009"  version="501" comment="firefox is signed with the Oracle Linux 7 key" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+<object object_ref="oval:com.oracle.elsa:obj:20151207002" />
+<state state_ref="oval:com.oracle.elsa:ste:20151207002" />
+</rpminfo_test>
+
+</tests>
+<!--
+ ~~~~~~~~~~~~~~~~~~~~   rpminfo objects   ~~~~~~~~~~~~~~~~~~~~ 
+-->
+<objects>
+<rpminfo_object xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:com.oracle.elsa:obj:20151207002" version="501">
+<name>firefox</name>
+</rpminfo_object>
+<rpminfo_object xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:com.oracle.elsa:obj:20151207001" version="501">
+<name>oraclelinux-release</name>
+</rpminfo_object>
+
+</objects>
+<states>
+<!--
+ ~~~~~~~~~~~~~~~~~~~~   rpminfo states   ~~~~~~~~~~~~~~~~~~~~~ 
+-->
+<rpminfo_state xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:com.oracle.elsa:ste:20151207001" version="501"><signature_keyid operation="equals">66ced3de1e5e0159</signature_keyid>
+</rpminfo_state>
+<rpminfo_state xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:com.oracle.elsa:ste:20151207002" version="501"><signature_keyid operation="equals">72f97b74ec551f03</signature_keyid>
+</rpminfo_state>
+<rpminfo_state xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:com.oracle.elsa:ste:20151207003" version="501"><version operation="pattern match">^5</version>
+</rpminfo_state>
+<rpminfo_state xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:com.oracle.elsa:ste:20151207004" version="501"><evr datatype="evr_string" operation="less than">0:38.1.0-1.0.1.el5_11</evr>
+</rpminfo_state>
+<rpminfo_state xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:com.oracle.elsa:ste:20151207005" version="501"><version operation="pattern match">^6</version>
+</rpminfo_state>
+<rpminfo_state xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:com.oracle.elsa:ste:20151207006" version="501"><evr datatype="evr_string" operation="less than">0:38.1.0-1.0.1.el6_6</evr>
+</rpminfo_state>
+<rpminfo_state xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:com.oracle.elsa:ste:20151207007" version="501"><version operation="pattern match">^7</version>
+</rpminfo_state>
+<rpminfo_state xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:com.oracle.elsa:ste:20151207008" version="501"><evr datatype="evr_string" operation="less than">0:38.1.0-1.0.1.el7_1</evr>
+</rpminfo_state>
+
+</states>
+</oval_definitions>

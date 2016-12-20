@@ -24,6 +24,18 @@ import (
 func TestRedhatReleaseNamespaceDetector(t *testing.T) {
 	testData := []namespace.TestData{
 		{
+			ExpectedNamespace: &database.Namespace{Name: "oracle:6"},
+			Data: map[string][]byte{
+				"etc/oracle-release": []byte(`Oracle Linux Server release 6.8`),
+			},
+		},
+		{
+			ExpectedNamespace: &database.Namespace{Name: "oracle:7"},
+			Data: map[string][]byte{
+				"etc/oracle-release": []byte(`Oracle Linux Server release 7.2`),
+			},
+		},
+		{
 			ExpectedNamespace: &database.Namespace{Name: "centos:6"},
 			Data: map[string][]byte{
 				"etc/centos-release": []byte(`CentOS release 6.6 (Final)`),
