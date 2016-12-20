@@ -31,6 +31,8 @@ func TestOracleParser(t *testing.T) {
 
 	// Test parsing testdata/fetcher_oracle_test.1.xml
 	testFile, _ := os.Open(path + "/testdata/fetcher_oracle_test.1.xml")
+	defer testFile.Close()
+
 	vulnerabilities, err := parseELSA(testFile)
 	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, 1) {
 		assert.Equal(t, "ELSA-2015-1193", vulnerabilities[0].Name)
@@ -67,8 +69,10 @@ func TestOracleParser(t *testing.T) {
 		}
 	}
 
-	testFile, _ = os.Open(path + "/testdata/fetcher_oracle_test.2.xml")
-	vulnerabilities, err = parseELSA(testFile)
+	testFile2, _ := os.Open(path + "/testdata/fetcher_oracle_test.2.xml")
+	defer testFile2.Close()
+
+	vulnerabilities, err = parseELSA(testFile2)
 	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, 1) {
 		assert.Equal(t, "ELSA-2015-1207", vulnerabilities[0].Name)
 		assert.Equal(t, "http://linux.oracle.com/errata/ELSA-2015-1207.html", vulnerabilities[0].Link)

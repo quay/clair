@@ -105,6 +105,7 @@ func (f *OracleFetcher) FetchUpdate(datastore database.Datastore) (resp updater.
 		log.Errorf("could not download Oracle's update list: %s", err)
 		return resp, cerrors.ErrCouldNotDownload
 	}
+	defer r.Body.Close()
 
 	// Get the list of ELSAs that we have to process.
 	var elsaList []int
