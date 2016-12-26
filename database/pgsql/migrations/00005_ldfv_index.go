@@ -18,7 +18,7 @@ import "github.com/remind101/migrate"
 
 func init() {
 	RegisterMigration(migrate.Migration{
-		ID: 4,
+		ID: 5,
 		Up: migrate.Queries([]string{
 			`CREATE INDEX layer_diff_featureversion_layer_id_modification_idx ON Layer_diff_FeatureVersion (layer_id, modification);`,
 		}),
