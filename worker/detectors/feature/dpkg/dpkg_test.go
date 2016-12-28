@@ -18,7 +18,6 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/clair/worker/detectors/feature"
 )
 
@@ -30,15 +29,15 @@ func TestDpkgFeatureDetection(t *testing.T) {
 				// Two packages from this source are installed, it should only appear one time
 				{
 					Feature: database.Feature{Name: "pam"},
-					Version: types.NewVersionUnsafe("1.1.8-3.1ubuntu3"),
+					Version: "1.1.8-3.1ubuntu3",
 				},
 				{
-					Feature: database.Feature{Name: "makedev"},         // The source name and the package name are equals
-					Version: types.NewVersionUnsafe("2.3.1-93ubuntu1"), // The version comes from the "Version:" line
+					Feature: database.Feature{Name: "makedev"}, // The source name and the package name are equals
+					Version: "2.3.1-93ubuntu1",                 // The version comes from the "Version:" line
 				},
 				{
 					Feature: database.Feature{Name: "gcc-5"},
-					Version: types.NewVersionUnsafe("5.1.1-12ubuntu1"), // The version comes from the "Source:" line
+					Version: "5.1.1-12ubuntu1", // The version comes from the "Source:" line
 				},
 			},
 			Data: map[string][]byte{

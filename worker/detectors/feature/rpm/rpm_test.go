@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/clair/worker/detectors/feature"
 )
 
@@ -31,12 +30,12 @@ func TestRpmFeatureDetection(t *testing.T) {
 				// Two packages from this source are installed, it should only appear once
 				{
 					Feature: database.Feature{Name: "centos-release"},
-					Version: types.NewVersionUnsafe("7-1.1503.el7.centos.2.8"),
+					Version: "7-1.1503.el7.centos.2.8",
 				},
 				// Two packages from this source are installed, it should only appear once
 				{
 					Feature: database.Feature{Name: "filesystem"},
-					Version: types.NewVersionUnsafe("3.2-18.el7"),
+					Version: "3.2-18.el7",
 				},
 			},
 			Data: map[string][]byte{

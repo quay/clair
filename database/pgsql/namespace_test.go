@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
+
+	// dpkg versioning is used to parse test packages.
+	_ "github.com/coreos/clair/ext/versionfmt/dpkg"
 )
 
 func TestInsertNamespace(t *testing.T) {
@@ -37,9 +40,15 @@ func TestInsertNamespace(t *testing.T) {
 	assert.Zero(t, id0)
 
 	// Insert Namespace and ensure we can find it.
-	id1, err := datastore.insertNamespace(database.Namespace{Name: "TestInsertNamespace1"})
+	id1, err := datastore.insertNamespace(database.Namespace{
+		Name:          "TestInsertNamespace1",
+		VersionFormat: "dpkg",
+	})
 	assert.Nil(t, err)
-	id2, err := datastore.insertNamespace(database.Namespace{Name: "TestInsertNamespace1"})
+	id2, err := datastore.insertNamespace(database.Namespace{
+		Name:          "TestInsertNamespace1",
+		VersionFormat: "dpkg",
+	})
 	assert.Nil(t, err)
 	assert.Equal(t, id1, id2)
 }

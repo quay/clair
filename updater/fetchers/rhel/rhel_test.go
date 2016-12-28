@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,9 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
+
+	// rpm versioning is used to parse RHEL packages.
+	_ "github.com/coreos/clair/ext/versionfmt/rpm"
 )
 
 func TestRHELParser(t *testing.T) {
@@ -41,24 +44,33 @@ func TestRHELParser(t *testing.T) {
 		expectedFeatureVersions := []database.FeatureVersion{
 			{
 				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "centos:7"},
-					Name:      "xerces-c",
+					Namespace: database.Namespace{
+						Name:          "centos:7",
+						VersionFormat: "rpm",
+					},
+					Name: "xerces-c",
 				},
-				Version: types.NewVersionUnsafe("3.1.1-7.el7_1"),
+				Version: "0:3.1.1-7.el7_1",
 			},
 			{
 				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "centos:7"},
-					Name:      "xerces-c-devel",
+					Namespace: database.Namespace{
+						Name:          "centos:7",
+						VersionFormat: "rpm",
+					},
+					Name: "xerces-c-devel",
 				},
-				Version: types.NewVersionUnsafe("3.1.1-7.el7_1"),
+				Version: "0:3.1.1-7.el7_1",
 			},
 			{
 				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "centos:7"},
-					Name:      "xerces-c-doc",
+					Namespace: database.Namespace{
+						Name:          "centos:7",
+						VersionFormat: "rpm",
+					},
+					Name: "xerces-c-doc",
 				},
-				Version: types.NewVersionUnsafe("3.1.1-7.el7_1"),
+				Version: "0:3.1.1-7.el7_1",
 			},
 		}
 
@@ -79,17 +91,23 @@ func TestRHELParser(t *testing.T) {
 		expectedFeatureVersions := []database.FeatureVersion{
 			{
 				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "centos:6"},
-					Name:      "firefox",
+					Namespace: database.Namespace{
+						Name:          "centos:6",
+						VersionFormat: "rpm",
+					},
+					Name: "firefox",
 				},
-				Version: types.NewVersionUnsafe("38.1.0-1.el6_6"),
+				Version: "0:38.1.0-1.el6_6",
 			},
 			{
 				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "centos:7"},
-					Name:      "firefox",
+					Namespace: database.Namespace{
+						Name:          "centos:7",
+						VersionFormat: "rpm",
+					},
+					Name: "firefox",
 				},
-				Version: types.NewVersionUnsafe("38.1.0-1.el7_1"),
+				Version: "0:38.1.0-1.el7_1",
 			},
 		}
 

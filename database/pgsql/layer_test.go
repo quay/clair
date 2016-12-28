@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,6 +23,9 @@ import (
 	"github.com/coreos/clair/database"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
+
+	// dpkg versioning is used to parse test packages.
+	_ "github.com/coreos/clair/ext/versionfmt/dpkg"
 )
 
 func TestFindLayer(t *testing.T) {
@@ -67,9 +70,9 @@ func TestFindLayer(t *testing.T) {
 
 			switch featureVersion.Feature.Name {
 			case "wechat":
-				assert.Equal(t, types.NewVersionUnsafe("0.5"), featureVersion.Version)
+				assert.Equal(t, "0.5", featureVersion.Version)
 			case "openssl":
-				assert.Equal(t, types.NewVersionUnsafe("1.0"), featureVersion.Version)
+				assert.Equal(t, "1.0", featureVersion.Version)
 			default:
 				t.Errorf("unexpected package %s for layer-1", featureVersion.Feature.Name)
 			}
@@ -83,9 +86,9 @@ func TestFindLayer(t *testing.T) {
 
 			switch featureVersion.Feature.Name {
 			case "wechat":
-				assert.Equal(t, types.NewVersionUnsafe("0.5"), featureVersion.Version)
+				assert.Equal(t, "0.5", featureVersion.Version)
 			case "openssl":
-				assert.Equal(t, types.NewVersionUnsafe("1.0"), featureVersion.Version)
+				assert.Equal(t, "1.0", featureVersion.Version)
 
 				if assert.Len(t, featureVersion.AffectedBy, 1) {
 					assert.Equal(t, "debian:7", featureVersion.AffectedBy[0].Namespace.Name)
@@ -93,7 +96,7 @@ func TestFindLayer(t *testing.T) {
 					assert.Equal(t, types.High, featureVersion.AffectedBy[0].Severity)
 					assert.Equal(t, "A vulnerability affecting OpenSSL < 2.0 on Debian 7.0", featureVersion.AffectedBy[0].Description)
 					assert.Equal(t, "http://google.com/#q=CVE-OPENSSL-1-DEB7", featureVersion.AffectedBy[0].Link)
-					assert.Equal(t, types.NewVersionUnsafe("2.0"), featureVersion.AffectedBy[0].FixedBy)
+					assert.Equal(t, "2.0", featureVersion.AffectedBy[0].FixedBy)
 				}
 			default:
 				t.Errorf("unexpected package %s for layer-1", featureVersion.Feature.Name)
@@ -139,45 +142,63 @@ func testInsertLayerInvalid(t *testing.T, datastore database.Datastore) {
 func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 	f1 := database.FeatureVersion{
 		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "TestInsertLayerNamespace2"},
-			Name:      "TestInsertLayerFeature1",
+			Namespace: database.Namespace{
+				Name:          "TestInsertLayerNamespace2",
+				VersionFormat: "dpkg",
+			},
+			Name: "TestInsertLayerFeature1",
 		},
-		Version: types.NewVersionUnsafe("1.0"),
+		Version: "1.0",
 	}
 	f2 := database.FeatureVersion{
 		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "TestInsertLayerNamespace2"},
-			Name:      "TestInsertLayerFeature2",
+			Namespace: database.Namespace{
+				Name:          "TestInsertLayerNamespace2",
+				VersionFormat: "dpkg",
+			},
+			Name: "TestInsertLayerFeature2",
 		},
-		Version: types.NewVersionUnsafe("0.34"),
+		Version: "0.34",
 	}
 	f3 := database.FeatureVersion{
 		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "TestInsertLayerNamespace2"},
-			Name:      "TestInsertLayerFeature3",
+			Namespace: database.Namespace{
+				Name:          "TestInsertLayerNamespace2",
+				VersionFormat: "dpkg",
+			},
+			Name: "TestInsertLayerFeature3",
 		},
-		Version: types.NewVersionUnsafe("0.56"),
+		Version: "0.56",
 	}
 	f4 := database.FeatureVersion{
 		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "TestInsertLayerNamespace3"},
-			Name:      "TestInsertLayerFeature2",
+			Namespace: database.Namespace{
+				Name:          "TestInsertLayerNamespace3",
+				VersionFormat: "dpkg",
+			},
+			Name: "TestInsertLayerFeature2",
 		},
-		Version: types.NewVersionUnsafe("0.34"),
+		Version: "0.34",
 	}
 	f5 := database.FeatureVersion{
 		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "TestInsertLayerNamespace3"},
-			Name:      "TestInsertLayerFeature3",
+			Namespace: database.Namespace{
+				Name:          "TestInsertLayerNamespace3",
+				VersionFormat: "dpkg",
+			},
+			Name: "TestInsertLayerFeature3",
 		},
-		Version: types.NewVersionUnsafe("0.56"),
+		Version: "0.56",
 	}
 	f6 := database.FeatureVersion{
 		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "TestInsertLayerNamespace3"},
-			Name:      "TestInsertLayerFeature4",
+			Namespace: database.Namespace{
+				Name:          "TestInsertLayerNamespace3",
+				VersionFormat: "dpkg",
+			},
+			Name: "TestInsertLayerFeature4",
 		},
-		Version: types.NewVersionUnsafe("0.666"),
+		Version: "0.666",
 	}
 
 	layers := []database.Layer{
@@ -185,16 +206,22 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 			Name: "TestInsertLayer1",
 		},
 		{
-			Name:      "TestInsertLayer2",
-			Parent:    &database.Layer{Name: "TestInsertLayer1"},
-			Namespace: &database.Namespace{Name: "TestInsertLayerNamespace1"},
+			Name:   "TestInsertLayer2",
+			Parent: &database.Layer{Name: "TestInsertLayer1"},
+			Namespace: &database.Namespace{
+				Name:          "TestInsertLayerNamespace1",
+				VersionFormat: "dpkg",
+			},
 		},
 		// This layer changes the namespace and adds Features.
 		{
-			Name:      "TestInsertLayer3",
-			Parent:    &database.Layer{Name: "TestInsertLayer2"},
-			Namespace: &database.Namespace{Name: "TestInsertLayerNamespace2"},
-			Features:  []database.FeatureVersion{f1, f2, f3},
+			Name:   "TestInsertLayer3",
+			Parent: &database.Layer{Name: "TestInsertLayer2"},
+			Namespace: &database.Namespace{
+				Name:          "TestInsertLayerNamespace2",
+				VersionFormat: "dpkg",
+			},
+			Features: []database.FeatureVersion{f1, f2, f3},
 		},
 		// This layer covers the case where the last layer doesn't provide any new Feature.
 		{
@@ -206,9 +233,12 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 		// It also modifies the Namespace ("upgrade") but keeps some Features not upgraded, their
 		// Namespaces should then remain unchanged.
 		{
-			Name:      "TestInsertLayer4b",
-			Parent:    &database.Layer{Name: "TestInsertLayer3"},
-			Namespace: &database.Namespace{Name: "TestInsertLayerNamespace3"},
+			Name:   "TestInsertLayer4b",
+			Parent: &database.Layer{Name: "TestInsertLayer3"},
+			Namespace: &database.Namespace{
+				Name:          "TestInsertLayerNamespace3",
+				VersionFormat: "dpkg",
+			},
 			Features: []database.FeatureVersion{
 				// Deletes TestInsertLayerFeature1.
 				// Keep TestInsertLayerFeature2 (old Namespace should be kept):
@@ -263,18 +293,24 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 func testInsertLayerUpdate(t *testing.T, datastore database.Datastore) {
 	f7 := database.FeatureVersion{
 		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "TestInsertLayerNamespace3"},
-			Name:      "TestInsertLayerFeature7",
+			Namespace: database.Namespace{
+				Name:          "TestInsertLayerNamespace3",
+				VersionFormat: "dpkg",
+			},
+			Name: "TestInsertLayerFeature7",
 		},
-		Version: types.NewVersionUnsafe("0.01"),
+		Version: "0.01",
 	}
 
 	l3, _ := datastore.FindLayer("TestInsertLayer3", true, false)
 	l3u := database.Layer{
-		Name:      l3.Name,
-		Parent:    l3.Parent,
-		Namespace: &database.Namespace{Name: "TestInsertLayerNamespaceUpdated1"},
-		Features:  []database.FeatureVersion{f7},
+		Name:   l3.Name,
+		Parent: l3.Parent,
+		Namespace: &database.Namespace{
+			Name:          "TestInsertLayerNamespaceUpdated1",
+			VersionFormat: "dpkg",
+		},
+		Features: []database.FeatureVersion{f7},
 	}
 
 	l4u := database.Layer{
@@ -347,5 +383,5 @@ func testInsertLayerDelete(t *testing.T, datastore database.Datastore) {
 func cmpFV(a, b database.FeatureVersion) bool {
 	return a.Feature.Name == b.Feature.Name &&
 		a.Feature.Namespace.Name == b.Feature.Namespace.Name &&
-		a.Version.String() == b.Version.String()
+		a.Version == b.Version
 }

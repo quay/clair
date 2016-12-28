@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,11 +16,13 @@ package pgsql
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt"
 	cerrors "github.com/coreos/clair/utils/errors"
-	"github.com/coreos/clair/utils/types"
 )
 
 func (pgSQL *pgSQL) insertFeature(feature database.Feature) (int, error) {
@@ -61,13 +63,15 @@ func (pgSQL *pgSQL) insertFeature(feature database.Feature) (int, error) {
 	return id, nil
 }
 
-func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion) (id int, err error) {
-	if featureVersion.Version.String() == "" {
+func (pgSQL *pgSQL) insertFeatureVersion(fv database.FeatureVersion) (id int, err error) {
+	err = versionfmt.Valid(fv.Feature.Namespace.VersionFormat, fv.Version)
+	if err != nil {
+		fmt.Println(err)
 		return 0, cerrors.NewBadRequestError("could not find/insert invalid FeatureVersion")
 	}
 
 	// Do cache lookup.
-	cacheIndex := "featureversion:" + featureVersion.Feature.Namespace.Name + ":" + featureVersion.Feature.Name + ":" + featureVersion.Version.String()
+	cacheIndex := strings.Join([]string{"featureversion", fv.Feature.Namespace.Name, fv.Feature.Name, fv.Version}, ":")
 	if pgSQL.cache != nil {
 		promCacheQueriesTotal.WithLabelValues("featureversion").Inc()
 		id, found := pgSQL.cache.Get(cacheIndex)
@@ -82,30 +86,29 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 
 	// Find or create Feature first.
 	t := time.Now()
-	featureID, err := pgSQL.insertFeature(featureVersion.Feature)
+	featureID, err := pgSQL.insertFeature(fv.Feature)
 	observeQueryTime("insertFeatureVersion", "insertFeature", t)
 
 	if err != nil {
 		return 0, err
 	}
 
-	featureVersion.Feature.ID = featureID
+	fv.Feature.ID = featureID
 
 	// Try to find the FeatureVersion.
 	//
 	// In a populated database, the likelihood of the FeatureVersion already being there is high.
 	// If we can find it here, we then avoid using a transaction and locking the database.
-	err = pgSQL.QueryRow(searchFeatureVersion, featureID, &featureVersion.Version).
-		Scan(&featureVersion.ID)
+	err = pgSQL.QueryRow(searchFeatureVersion, featureID, fv.Version).Scan(&fv.ID)
 	if err != nil && err != sql.ErrNoRows {
 		return 0, handleError("searchFeatureVersion", err)
 	}
 	if err == nil {
 		if pgSQL.cache != nil {
-			pgSQL.cache.Add(cacheIndex, featureVersion.ID)
+			pgSQL.cache.Add(cacheIndex, fv.ID)
 		}
 
-		return featureVersion.ID, nil
+		return fv.ID, nil
 	}
 
 	// Begin transaction.
@@ -132,8 +135,7 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 	var created bool
 
 	t = time.Now()
-	err = tx.QueryRow(soiFeatureVersion, featureID, &featureVersion.Version).
-		Scan(&created, &featureVersion.ID)
+	err = tx.QueryRow(soiFeatureVersion, featureID, fv.Version).Scan(&created, &fv.ID)
 	observeQueryTime("insertFeatureVersion", "soiFeatureVersion", t)
 
 	if err != nil {
@@ -147,16 +149,16 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 		tx.Commit()
 
 		if pgSQL.cache != nil {
-			pgSQL.cache.Add(cacheIndex, featureVersion.ID)
+			pgSQL.cache.Add(cacheIndex, fv.ID)
 		}
 
-		return featureVersion.ID, nil
+		return fv.ID, nil
 	}
 
 	// Link the new FeatureVersion with every vulnerabilities that affect it, by inserting in
 	// Vulnerability_Affects_FeatureVersion.
 	t = time.Now()
-	err = linkFeatureVersionToVulnerabilities(tx, featureVersion)
+	err = linkFeatureVersionToVulnerabilities(tx, fv)
 	observeQueryTime("insertFeatureVersion", "linkFeatureVersionToVulnerabilities", t)
 
 	if err != nil {
@@ -171,10 +173,10 @@ func (pgSQL *pgSQL) insertFeatureVersion(featureVersion database.FeatureVersion)
 	}
 
 	if pgSQL.cache != nil {
-		pgSQL.cache.Add(cacheIndex, featureVersion.ID)
+		pgSQL.cache.Add(cacheIndex, fv.ID)
 	}
 
-	return featureVersion.ID, nil
+	return fv.ID, nil
 }
 
 // TODO(Quentin-M): Batch me
@@ -195,7 +197,7 @@ func (pgSQL *pgSQL) insertFeatureVersions(featureVersions []database.FeatureVers
 type vulnerabilityAffectsFeatureVersion struct {
 	vulnerabilityID int
 	fixedInID       int
-	fixedInVersion  types.Version
+	fixedInVersion  string
 }
 
 func linkFeatureVersionToVulnerabilities(tx *sql.Tx, featureVersion database.FeatureVersion) error {
@@ -216,7 +218,11 @@ func linkFeatureVersionToVulnerabilities(tx *sql.Tx, featureVersion database.Fea
 			return handleError("searchVulnerabilityFixedInFeature.Scan()", err)
 		}
 
-		if featureVersion.Version.Compare(affect.fixedInVersion) < 0 {
+		cmp, err := versionfmt.Compare(featureVersion.Feature.Namespace.VersionFormat, featureVersion.Version, affect.fixedInVersion)
+		if err != nil {
+			return handleError("searchVulnerabilityVersionComparison", err)
+		}
+		if cmp < 0 {
 			// The version of the FeatureVersion we are inserting is lower than the fixed version on this
 			// Vulnerability, thus, this FeatureVersion is affected by it.
 			affects = append(affects, affect)

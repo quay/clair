@@ -19,10 +19,14 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/utils/types"
-	"github.com/coreos/clair/worker/detectors"
 	"github.com/coreos/pkg/capnslog"
+
+	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/worker/detectors"
+
+	// dpkg versioning is used to parse dpkg packages.
+	_ "github.com/coreos/clair/ext/versionfmt/dpkg"
 )
 
 var (
@@ -60,7 +64,7 @@ func (detector *DpkgFeaturesDetector) Detect(data map[string][]byte) ([]database
 			// Defines the name of the package
 
 			pkg.Feature.Name = strings.TrimSpace(strings.TrimPrefix(line, "Package: "))
-			pkg.Version = types.Version{}
+			pkg.Version = ""
 		} else if strings.HasPrefix(line, "Source: ") {
 			// Source line (Optionnal)
 			// Gives the name of the source package
@@ -74,28 +78,34 @@ func (detector *DpkgFeaturesDetector) Detect(data map[string][]byte) ([]database
 
 			pkg.Feature.Name = md["name"]
 			if md["version"] != "" {
-				pkg.Version, err = types.NewVersion(md["version"])
+				version := md["version"]
+				err = versionfmt.Valid("dpkg", version)
 				if err != nil {
-					log.Warningf("could not parse package version '%s': %s. skipping", line[1], err.Error())
+					log.Warningf("could not parse package version '%s': %s. skipping", string(line[1]), err.Error())
+				} else {
+					pkg.Version = version
 				}
 			}
-		} else if strings.HasPrefix(line, "Version: ") && pkg.Version.String() == "" {
+		} else if strings.HasPrefix(line, "Version: ") && pkg.Version == "" {
 			// Version line
 			// Defines the version of the package
 			// This version is less important than a version retrieved from a Source line
 			// because the Debian vulnerabilities often skips the epoch from the Version field
 			// which is not present in the Source version, and because +bX revisions don't matter
-			pkg.Version, err = types.NewVersion(strings.TrimPrefix(line, "Version: "))
+			version := strings.TrimPrefix(line, "Version: ")
+			err = versionfmt.Valid("dpkg", version)
 			if err != nil {
-				log.Warningf("could not parse package version '%s': %s. skipping", line[1], err.Error())
+				log.Warningf("could not parse package version '%s': %s. skipping", string(line[1]), err.Error())
+			} else {
+				pkg.Version = version
 			}
 		}
 
 		// Add the package to the result array if we have all the informations
-		if pkg.Feature.Name != "" && pkg.Version.String() != "" {
-			packagesMap[pkg.Feature.Name+"#"+pkg.Version.String()] = pkg
+		if pkg.Feature.Name != "" && pkg.Version != "" {
+			packagesMap[pkg.Feature.Name+"#"+pkg.Version] = pkg
 			pkg.Feature.Name = ""
-			pkg.Version = types.Version{}
+			pkg.Version = ""
 		}
 	}
 

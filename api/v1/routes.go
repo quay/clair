@@ -179,7 +179,10 @@ func getNamespaces(w http.ResponseWriter, r *http.Request, p httprouter.Params, 
 	}
 	var namespaces []Namespace
 	for _, dbNamespace := range dbNamespaces {
-		namespaces = append(namespaces, Namespace{Name: dbNamespace.Name})
+		namespaces = append(namespaces, Namespace{
+			Name:          dbNamespace.Name,
+			VersionFormat: dbNamespace.VersionFormat,
+		})
 	}
 
 	writeResponse(w, r, http.StatusOK, NamespaceEnvelope{Namespaces: &namespaces})

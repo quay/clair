@@ -40,7 +40,8 @@ type Layer struct {
 type Namespace struct {
 	Model
 
-	Name string
+	Name          string
+	VersionFormat string
 }
 
 type Feature struct {
@@ -54,7 +55,7 @@ type FeatureVersion struct {
 	Model
 
 	Feature    Feature
-	Version    types.Version
+	Version    string
 	AffectedBy []Vulnerability
 
 	// For output purposes. Only make sense when the feature version is in the context of an image.
@@ -78,7 +79,7 @@ type Vulnerability struct {
 
 	// For output purposes. Only make sense when the vulnerability
 	// is already about a specific Feature/FeatureVersion.
-	FixedBy types.Version `json:",omitempty"`
+	FixedBy string `json:",omitempty"`
 }
 
 type MetadataMap map[string]interface{}

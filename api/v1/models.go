@@ -21,16 +21,18 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/pkg/capnslog"
 	"github.com/fernet/fernet-go"
+
+	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/utils/types"
 )
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "v1")
 
 type Error struct {
-	Message string `json:"Layer`
+	Message string `json:"Layer"`
 }
 
 type Layer struct {
@@ -63,7 +65,8 @@ func LayerFromDatabaseModel(dbLayer database.Layer, withFeatures, withVulnerabil
 			feature := Feature{
 				Name:          dbFeatureVersion.Feature.Name,
 				NamespaceName: dbFeatureVersion.Feature.Namespace.Name,
-				Version:       dbFeatureVersion.Version.String(),
+				VersionFormat: dbFeatureVersion.Feature.Namespace.VersionFormat,
+				Version:       dbFeatureVersion.Version,
 				AddedBy:       dbFeatureVersion.AddedBy.Name,
 			}
 
@@ -77,8 +80,8 @@ func LayerFromDatabaseModel(dbLayer database.Layer, withFeatures, withVulnerabil
 					Metadata:      dbVuln.Metadata,
 				}
 
-				if dbVuln.FixedBy != types.MaxVersion {
-					vuln.FixedBy = dbVuln.FixedBy.String()
+				if dbVuln.FixedBy != versionfmt.MaxVersion {
+					vuln.FixedBy = dbVuln.FixedBy
 				}
 				feature.Vulnerabilities = append(feature.Vulnerabilities, vuln)
 			}
@@ -90,7 +93,8 @@ func LayerFromDatabaseModel(dbLayer database.Layer, withFeatures, withVulnerabil
 }
 
 type Namespace struct {
-	Name string `json:"Name,omitempty"`
+	Name          string `json:"Name,omitempty"`
+	VersionFormat string `json:"VersionFormat,omitempty"`
 }
 
 type Vulnerability struct {
@@ -153,44 +157,51 @@ func VulnerabilityFromDatabaseModel(dbVuln database.Vulnerability, withFixedIn b
 type Feature struct {
 	Name            string          `json:"Name,omitempty"`
 	NamespaceName   string          `json:"NamespaceName,omitempty"`
+	VersionFormat   string          `json:"VersionFormat,omitempty"`
 	Version         string          `json:"Version,omitempty"`
 	Vulnerabilities []Vulnerability `json:"Vulnerabilities,omitempty"`
 	AddedBy         string          `json:"AddedBy,omitempty"`
 }
 
 func FeatureFromDatabaseModel(dbFeatureVersion database.FeatureVersion) Feature {
-	versionStr := dbFeatureVersion.Version.String()
-	if versionStr == types.MaxVersion.String() {
-		versionStr = "None"
+	version := dbFeatureVersion.Version
+	if version == versionfmt.MaxVersion {
+		version = "None"
 	}
 
 	return Feature{
 		Name:          dbFeatureVersion.Feature.Name,
 		NamespaceName: dbFeatureVersion.Feature.Namespace.Name,
-		Version:       versionStr,
+		VersionFormat: dbFeatureVersion.Feature.Namespace.VersionFormat,
+		Version:       version,
 		AddedBy:       dbFeatureVersion.AddedBy.Name,
 	}
 }
 
-func (f Feature) DatabaseModel() (database.FeatureVersion, error) {
-	var version types.Version
+func (f Feature) DatabaseModel() (fv database.FeatureVersion, err error) {
+	var version string
 	if f.Version == "None" {
-		version = types.MaxVersion
+		version = versionfmt.MaxVersion
 	} else {
-		var err error
-		version, err = types.NewVersion(f.Version)
+		err = versionfmt.Valid(f.VersionFormat, f.Version)
 		if err != nil {
-			return database.FeatureVersion{}, err
+			return
 		}
+		version = f.Version
 	}
 
-	return database.FeatureVersion{
+	fv = database.FeatureVersion{
 		Feature: database.Feature{
-			Name:      f.Name,
-			Namespace: database.Namespace{Name: f.NamespaceName},
+			Name: f.Name,
+			Namespace: database.Namespace{
+				Name:          f.NamespaceName,
+				VersionFormat: f.VersionFormat,
+			},
 		},
 		Version: version,
-	}, nil
+	}
+
+	return
 }
 
 type Notification struct {

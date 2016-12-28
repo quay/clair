@@ -23,7 +23,6 @@ import (
 
 	"github.com/coreos/clair/database"
 	cerrors "github.com/coreos/clair/utils/errors"
-	"github.com/coreos/clair/utils/types"
 
 	// Register the required detectors.
 	_ "github.com/coreos/clair/worker/detectors/data/docker"
@@ -62,14 +61,14 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 
 	// Create the list of FeatureVersions that should not been upgraded from one layer to another.
 	nonUpgradedFeatureVersions := []database.FeatureVersion{
-		{Feature: database.Feature{Name: "libtext-wrapi18n-perl"}, Version: types.NewVersionUnsafe("0.06-7")},
-		{Feature: database.Feature{Name: "libtext-charwidth-perl"}, Version: types.NewVersionUnsafe("0.04-7")},
-		{Feature: database.Feature{Name: "libtext-iconv-perl"}, Version: types.NewVersionUnsafe("1.7-5")},
-		{Feature: database.Feature{Name: "mawk"}, Version: types.NewVersionUnsafe("1.3.3-17")},
-		{Feature: database.Feature{Name: "insserv"}, Version: types.NewVersionUnsafe("1.14.0-5")},
-		{Feature: database.Feature{Name: "db"}, Version: types.NewVersionUnsafe("5.1.29-5")},
-		{Feature: database.Feature{Name: "ustr"}, Version: types.NewVersionUnsafe("1.0.4-3")},
-		{Feature: database.Feature{Name: "xz-utils"}, Version: types.NewVersionUnsafe("5.1.1alpha+20120614-2")},
+		{Feature: database.Feature{Name: "libtext-wrapi18n-perl"}, Version: "0.06-7"},
+		{Feature: database.Feature{Name: "libtext-charwidth-perl"}, Version: "0.04-7"},
+		{Feature: database.Feature{Name: "libtext-iconv-perl"}, Version: "1.7-5"},
+		{Feature: database.Feature{Name: "mawk"}, Version: "1.3.3-17"},
+		{Feature: database.Feature{Name: "insserv"}, Version: "1.14.0-5"},
+		{Feature: database.Feature{Name: "db"}, Version: "5.1.29-5"},
+		{Feature: database.Feature{Name: "ustr"}, Version: "1.0.4-3"},
+		{Feature: database.Feature{Name: "xz-utils"}, Version: "5.1.1alpha+20120614-2"},
 	}
 
 	// Process test layers.
