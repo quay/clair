@@ -16,6 +16,8 @@ package rpm
 
 import (
 	"errors"
+	"math"
+	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
@@ -23,26 +25,25 @@ import (
 	"github.com/coreos/clair/ext/versionfmt"
 )
 
+var (
+	// alphanumPattern is a regular expression to match all sequences of numeric
+	// characters or alphanumeric characters.
+	alphanumPattern = regexp.MustCompile("([a-zA-Z]+)|([0-9]+)|(~)")
+	allowedSymbols  = []rune{'.', '-', '+', '~', ':', '_'}
+)
+
 type version struct {
-	epoch    int
-	version  string
-	revision string
+	epoch   int
+	version string
+	release string
 }
 
 var (
 	minVersion = version{version: versionfmt.MinVersion}
 	maxVersion = version{version: versionfmt.MaxVersion}
-
-	versionAllowedSymbols  = []rune{'.', '-', '+', '~', ':', '_'}
-	revisionAllowedSymbols = []rune{'.', '+', '~', '_'}
 )
 
-// newVersion function parses a string into a Version struct which can be compared
-//
-// The implementation is based on http://man.he.net/man5/deb-version
-// on https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version
-//
-// It uses the dpkg-1.17.25's algorithm  (lib/parsehelp.c)
+// newVersion parses a string into a version type which can be compared.
 func newVersion(str string) (version, error) {
 	var v version
 
@@ -77,46 +78,35 @@ func newVersion(str string) (version, error) {
 		v.epoch = 0
 	}
 
-	// Find version / revision
-	seprevision := strings.LastIndex(str, "-")
+	// Find version / release
+	seprevision := strings.Index(str, "-")
 	if seprevision > -1 {
 		v.version = str[sepepoch+1 : seprevision]
-		v.revision = str[seprevision+1:]
+		v.release = str[seprevision+1:]
 	} else {
 		v.version = str[sepepoch+1:]
-		v.revision = ""
+		v.release = ""
 	}
 	// Verify format
 	if len(v.version) == 0 {
 		return version{}, errors.New("No version")
 	}
 
-	if !unicode.IsDigit(rune(v.version[0])) {
-		return version{}, errors.New("version does not start with digit")
-	}
-
 	for i := 0; i < len(v.version); i = i + 1 {
 		r := rune(v.version[i])
-		if !unicode.IsDigit(r) && !unicode.IsLetter(r) && !containsRune(versionAllowedSymbols, r) {
+		if !unicode.IsDigit(r) && !unicode.IsLetter(r) && !validSymbol(r) {
 			return version{}, errors.New("invalid character in version")
 		}
 	}
 
-	for i := 0; i < len(v.revision); i = i + 1 {
-		r := rune(v.revision[i])
-		if !unicode.IsDigit(r) && !unicode.IsLetter(r) && !containsRune(revisionAllowedSymbols, r) {
+	for i := 0; i < len(v.release); i = i + 1 {
+		r := rune(v.release[i])
+		if !unicode.IsDigit(r) && !unicode.IsLetter(r) && !validSymbol(r) {
 			return version{}, errors.New("invalid character in revision")
 		}
 	}
 
 	return v, nil
-}
-
-// newVersionUnsafe is just a wrapper around NewVersion that ignore potentiel
-// parsing error. Useful for test purposes
-func newVersionUnsafe(str string) version {
-	v, _ := newVersion(str)
-	return v
 }
 
 type parser struct{}
@@ -126,12 +116,6 @@ func (p parser) Valid(str string) bool {
 	return err == nil
 }
 
-// Compare function compares two Debian-like package version
-//
-// The implementation is based on http://man.he.net/man5/deb-version
-// on https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-Version
-//
-// It uses the dpkg-1.17.25's algorithm  (lib/version.c)
 func (p parser) Compare(a, b string) (int, error) {
 	v1, err := newVersion(a)
 	if err != nil {
@@ -165,13 +149,102 @@ func (p parser) Compare(a, b string) (int, error) {
 	}
 
 	// Compare version
-	rc := verrevcmp(v1.version, v2.version)
+	rc := rpmvercmp(v1.version, v2.version)
 	if rc != 0 {
-		return signum(rc), nil
+		return rc, nil
 	}
 
 	// Compare revision
-	return signum(verrevcmp(v1.revision, v2.revision)), nil
+	return rpmvercmp(v1.release, v2.release), nil
+}
+
+// rpmcmpver compares two version or release strings.
+//
+// Lifted from github.com/cavaliercoder/go-rpm.
+// For the original C implementation, see:
+// https://github.com/rpm-software-management/rpm/blob/master/lib/rpmvercmp.c#L16
+func rpmvercmp(strA, strB string) int {
+	// shortcut for equality
+	if strA == strB {
+		return 0
+	}
+
+	// get alpha/numeric segements
+	segsa := alphanumPattern.FindAllString(strA, -1)
+	segsb := alphanumPattern.FindAllString(strB, -1)
+	segs := int(math.Min(float64(len(segsa)), float64(len(segsb))))
+
+	// compare each segment
+	for i := 0; i < segs; i++ {
+		a := segsa[i]
+		b := segsb[i]
+
+		// compare tildes
+		if []rune(a)[0] == '~' && []rune(b)[0] == '~' {
+			continue
+		}
+		if []rune(a)[0] == '~' && []rune(b)[0] != '~' {
+			return -1
+		}
+		if []rune(a)[0] != '~' && []rune(b)[0] == '~' {
+			return 1
+		}
+
+		if unicode.IsNumber([]rune(a)[0]) {
+			// numbers are always greater than alphas
+			if !unicode.IsNumber([]rune(b)[0]) {
+				// a is numeric, b is alpha
+				return 1
+			}
+
+			// trim leading zeros
+			a = strings.TrimLeft(a, "0")
+			b = strings.TrimLeft(b, "0")
+
+			// longest string wins without further comparison
+			if len(a) > len(b) {
+				return 1
+			} else if len(b) > len(a) {
+				return -1
+			}
+
+		} else if unicode.IsNumber([]rune(b)[0]) {
+			// a is alpha, b is numeric
+			return -1
+		}
+
+		// This is the last iteration.
+		if i == segs-1 {
+			// If there is a tilde in a segment past the min number of segments, find
+			// it before we rely on string compare.
+			lia := strings.LastIndex(strA, "~")
+			lib := strings.LastIndex(strB, "~")
+			if lia > lib {
+				return -1
+			} else if lia < lib {
+				return 1
+			}
+		}
+
+		// string compare
+		if a < b {
+			return -1
+		} else if a > b {
+			return 1
+		}
+	}
+
+	// segments were all the same but separators must have been different
+	if len(segsa) == len(segsb) {
+		return 0
+	}
+
+	// whoever has the most segments wins
+	if len(segsa) > len(segsb) {
+		return 1
+	}
+
+	return -1
 }
 
 // String returns the string representation of a Version.
@@ -180,88 +253,14 @@ func (v version) String() (s string) {
 		s = strconv.Itoa(v.epoch) + ":"
 	}
 	s += v.version
-	if v.revision != "" {
-		s += "-" + v.revision
+	if v.release != "" {
+		s += "-" + v.release
 	}
 	return
 }
 
-func verrevcmp(t1, t2 string) int {
-	t1, rt1 := nextRune(t1)
-	t2, rt2 := nextRune(t2)
-
-	for rt1 != nil || rt2 != nil {
-		firstDiff := 0
-
-		for (rt1 != nil && !unicode.IsDigit(*rt1)) || (rt2 != nil && !unicode.IsDigit(*rt2)) {
-			ac := 0
-			bc := 0
-			if rt1 != nil {
-				ac = order(*rt1)
-			}
-			if rt2 != nil {
-				bc = order(*rt2)
-			}
-
-			if ac != bc {
-				return ac - bc
-			}
-
-			t1, rt1 = nextRune(t1)
-			t2, rt2 = nextRune(t2)
-		}
-		for rt1 != nil && *rt1 == '0' {
-			t1, rt1 = nextRune(t1)
-		}
-		for rt2 != nil && *rt2 == '0' {
-			t2, rt2 = nextRune(t2)
-		}
-		for rt1 != nil && unicode.IsDigit(*rt1) && rt2 != nil && unicode.IsDigit(*rt2) {
-			if firstDiff == 0 {
-				firstDiff = int(*rt1) - int(*rt2)
-			}
-			t1, rt1 = nextRune(t1)
-			t2, rt2 = nextRune(t2)
-		}
-		if rt1 != nil && unicode.IsDigit(*rt1) {
-			return 1
-		}
-		if rt2 != nil && unicode.IsDigit(*rt2) {
-			return -1
-		}
-		if firstDiff != 0 {
-			return firstDiff
-		}
-	}
-
-	return 0
-}
-
-// order compares runes using a modified ASCII table
-// so that letters are sorted earlier than non-letters
-// and so that tildes sorts before anything
-func order(r rune) int {
-	if unicode.IsDigit(r) {
-		return 0
-	}
-
-	if unicode.IsLetter(r) {
-		return int(r)
-	}
-
-	if r == '~' {
-		return -1
-	}
-
-	return int(r) + 256
-}
-
-func nextRune(str string) (string, *rune) {
-	if len(str) >= 1 {
-		r := rune(str[0])
-		return str[1:], &r
-	}
-	return str, nil
+func validSymbol(r rune) bool {
+	return containsRune(allowedSymbols, r)
 }
 
 func containsRune(s []rune, e rune) bool {
@@ -271,17 +270,6 @@ func containsRune(s []rune, e rune) bool {
 		}
 	}
 	return false
-}
-
-func signum(a int) int {
-	switch {
-	case a < 0:
-		return -1
-	case a > 0:
-		return +1
-	}
-
-	return 0
 }
 
 func init() {
