@@ -115,19 +115,22 @@ func detectNamespaces(path string) ([]string, error) {
 	defer dir.Close()
 
 	// Get a list of the namspaces from the directory names.
-	names, err := dir.Readdirnames(0)
+	finfos, err := dir.Readdir(0)
 	if err != nil {
 		return nil, err
 	}
 
 	var namespaces []string
-	for _, name := range names {
+	for _, info := range finfos {
+		if !info.IsDir() {
+			continue
+		}
 		// Filter out hidden directories like `.git`.
-		if strings.HasPrefix(name, ".") {
+		if strings.HasPrefix(info.Name(), ".") {
 			continue
 		}
 
-		namespaces = append(namespaces, name)
+		namespaces = append(namespaces, info.Name())
 	}
 
 	return namespaces, nil
