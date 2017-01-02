@@ -81,7 +81,7 @@ $ docker-compose -f $HOME/docker-compose.yml up -d
 ```
 
 Docker Compose may start Clair before Postgres which will raise an error.
-If this error is raised, manually execute `docker start clair_clair`.
+If this error is raised, manually execute `docker-compose start clair`.
 
 
 ### Docker
