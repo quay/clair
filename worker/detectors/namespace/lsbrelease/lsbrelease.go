@@ -69,8 +69,22 @@ func (detector *LsbReleaseNamespaceDetector) Detect(data map[string][]byte) *dat
 		}
 	}
 
+	// Determine the VersionFormat.
+	var versionFormat string
+	switch OS {
+	case "debian", "ubuntu":
+		versionFormat = "dpkg"
+	case "centos", "rhel", "fedora", "amzn", "ol", "oracle":
+		versionFormat = "rpm"
+	default:
+		return nil
+	}
+
 	if OS != "" && version != "" {
-		return &database.Namespace{Name: OS + ":" + version}
+		return &database.Namespace{
+			Name:          OS + ":" + version,
+			VersionFormat: versionFormat,
+		}
 	}
 	return nil
 }

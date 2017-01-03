@@ -75,7 +75,10 @@ func (detector *AptSourcesNamespaceDetector) Detect(data map[string][]byte) *dat
 	}
 
 	if OS != "" && version != "" {
-		return &database.Namespace{Name: OS + ":" + version}
+		return &database.Namespace{
+			Name:          OS + ":" + version,
+			VersionFormat: "dpkg",
+		}
 	}
 	return nil
 }

@@ -48,7 +48,10 @@ func (d *detector) Detect(data map[string][]byte) *database.Namespace {
 			match := versionRegexp.FindStringSubmatch(line)
 			if len(match) > 0 {
 				versionNumbers := strings.Split(match[0], ".")
-				return &database.Namespace{Name: osName + ":" + "v" + versionNumbers[0] + "." + versionNumbers[1]}
+				return &database.Namespace{
+					Name:          osName + ":" + "v" + versionNumbers[0] + "." + versionNumbers[1],
+					VersionFormat: "dpkg",
+				}
 			}
 		}
 	}

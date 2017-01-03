@@ -89,6 +89,7 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 
 		for _, nufv := range nonUpgradedFeatureVersions {
 			nufv.Feature.Namespace.Name = "debian:7"
+			nufv.Feature.Namespace.VersionFormat = "dpkg"
 			assert.Contains(t, wheezy.Features, nufv)
 		}
 	}
@@ -101,10 +102,12 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 
 		for _, nufv := range nonUpgradedFeatureVersions {
 			nufv.Feature.Namespace.Name = "debian:7"
+			nufv.Feature.Namespace.VersionFormat = "dpkg"
 			assert.Contains(t, jessie.Features, nufv)
 		}
 		for _, nufv := range nonUpgradedFeatureVersions {
 			nufv.Feature.Namespace.Name = "debian:8"
+			nufv.Feature.Namespace.VersionFormat = "dpkg"
 			assert.NotContains(t, jessie.Features, nufv)
 		}
 	}
