@@ -101,10 +101,11 @@ $ docker run -d -p 6060-6061:6060-6061 -v $HOME/clair_config:/config quay.io/cor
 ### Source
 
 To build Clair, you need to latest stable version of [Go] and a working [Go environment].
-In addition, Clair requires that [bzr], [rpm], and [xz] be available on the system [$PATH].
+In addition, Clair requires that [git], [bzr], [rpm], and [xz] be available on the system [$PATH].
 
 [Go]: https://github.com/golang/go/releases
 [Go environment]: https://golang.org/doc/code.html
+[git]: https://git-scm.com
 [bzr]: http://bazaar.canonical.com/en
 [rpm]: http://www.rpm.org
 [xz]: http://tukaani.org/xz
