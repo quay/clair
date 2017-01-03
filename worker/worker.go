@@ -180,7 +180,7 @@ func detectFeatureVersions(name string, data map[string][]byte, namespace *datab
 	parentFeatureNamespaces := make(map[string]database.Namespace)
 	if parent != nil {
 		for _, parentFeature := range parent.Features {
-			parentFeatureNamespaces[parentFeature.Feature.Name+":"+parentFeature.Version.String()] = parentFeature.Feature.Namespace
+			parentFeatureNamespaces[parentFeature.Feature.Name+":"+parentFeature.Version] = parentFeature.Feature.Namespace
 		}
 	}
 
@@ -191,7 +191,7 @@ func detectFeatureVersions(name string, data map[string][]byte, namespace *datab
 			continue
 		}
 
-		if parentFeatureNamespace, ok := parentFeatureNamespaces[feature.Feature.Name+":"+feature.Version.String()]; ok {
+		if parentFeatureNamespace, ok := parentFeatureNamespaces[feature.Feature.Name+":"+feature.Version]; ok {
 			// The FeatureVersion is present in the parent layer; associate with their Namespace.
 			features[i].Feature.Namespace = parentFeatureNamespace
 			continue

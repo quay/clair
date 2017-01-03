@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/utils"
 	"github.com/coreos/clair/utils/types"
 )
@@ -46,8 +47,11 @@ func TestRaceAffects(t *testing.T) {
 
 	// Insert the Feature on which we'll work.
 	feature := database.Feature{
-		Namespace: database.Namespace{Name: "TestRaceAffectsFeatureNamespace1"},
-		Name:      "TestRaceAffecturesFeature1",
+		Namespace: database.Namespace{
+			Name:          "TestRaceAffectsFeatureNamespace1",
+			VersionFormat: dpkg.ParserName,
+		},
+		Name: "TestRaceAffecturesFeature1",
 	}
 	_, err = datastore.insertFeature(feature)
 	if err != nil {
@@ -66,7 +70,7 @@ func TestRaceAffects(t *testing.T) {
 
 		featureVersions[i] = database.FeatureVersion{
 			Feature: feature,
-			Version: types.NewVersionUnsafe(strconv.Itoa(version)),
+			Version: strconv.Itoa(version),
 		}
 	}
 
@@ -86,7 +90,7 @@ func TestRaceAffects(t *testing.T) {
 			FixedIn: []database.FeatureVersion{
 				{
 					Feature: feature,
-					Version: types.NewVersionUnsafe(strconv.Itoa(version)),
+					Version: strconv.Itoa(version),
 				},
 			},
 			Severity: types.Unknown,
@@ -126,7 +130,7 @@ func TestRaceAffects(t *testing.T) {
 	var expectedAffectedNames []string
 
 	for _, featureVersion := range featureVersions {
-		featureVersionVersion, _ := strconv.Atoi(featureVersion.Version.String())
+		featureVersionVersion, _ := strconv.Atoi(featureVersion.Version)
 
 		// Get actual affects.
 		rows, err := datastore.Query(searchComplexTestFeatureVersionAffects,

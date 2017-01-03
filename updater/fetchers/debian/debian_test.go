@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -41,18 +43,23 @@ func TestDebianParser(t *testing.T) {
 				expectedFeatureVersions := []database.FeatureVersion{
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:8"},
-							Name:      "aptdaemon",
+							Namespace: database.Namespace{
+								Name:          "debian:8",
+								VersionFormat: dpkg.ParserName,
+							},
+							Name: "aptdaemon",
 						},
-						Version: types.MaxVersion,
+						Version: versionfmt.MaxVersion,
 					},
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:unstable"},
-
+							Namespace: database.Namespace{
+								Name:          "debian:unstable",
+								VersionFormat: dpkg.ParserName,
+							},
 							Name: "aptdaemon",
 						},
-						Version: types.NewVersionUnsafe("1.1.1+bzr982-1"),
+						Version: "1.1.1+bzr982-1",
 					},
 				}
 
@@ -67,24 +74,33 @@ func TestDebianParser(t *testing.T) {
 				expectedFeatureVersions := []database.FeatureVersion{
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:8"},
-							Name:      "aptdaemon",
+							Namespace: database.Namespace{
+								Name:          "debian:8",
+								VersionFormat: dpkg.ParserName,
+							},
+							Name: "aptdaemon",
 						},
-						Version: types.NewVersionUnsafe("0.7.0"),
+						Version: "0.7.0",
 					},
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:unstable"},
-							Name:      "aptdaemon",
+							Namespace: database.Namespace{
+								Name:          "debian:unstable",
+								VersionFormat: dpkg.ParserName,
+							},
+							Name: "aptdaemon",
 						},
-						Version: types.NewVersionUnsafe("0.7.0"),
+						Version: "0.7.0",
 					},
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:8"},
-							Name:      "asterisk",
+							Namespace: database.Namespace{
+								Name:          "debian:8",
+								VersionFormat: dpkg.ParserName,
+							},
+							Name: "asterisk",
 						},
-						Version: types.NewVersionUnsafe("0.5.56"),
+						Version: "0.5.56",
 					},
 				}
 
@@ -99,10 +115,13 @@ func TestDebianParser(t *testing.T) {
 				expectedFeatureVersions := []database.FeatureVersion{
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:8"},
-							Name:      "asterisk",
+							Namespace: database.Namespace{
+								Name:          "debian:8",
+								VersionFormat: dpkg.ParserName,
+							},
+							Name: "asterisk",
 						},
-						Version: types.MinVersion,
+						Version: versionfmt.MinVersion,
 					},
 				}
 

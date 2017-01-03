@@ -38,7 +38,7 @@ func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (int, error) {
 	defer observeQueryTime("insertNamespace", "all", time.Now())
 
 	var id int
-	err := pgSQL.QueryRow(soiNamespace, namespace.Name).Scan(&id)
+	err := pgSQL.QueryRow(soiNamespace, namespace.Name, namespace.VersionFormat).Scan(&id)
 	if err != nil {
 		return 0, handleError("soiNamespace", err)
 	}
@@ -58,14 +58,14 @@ func (pgSQL *pgSQL) ListNamespaces() (namespaces []database.Namespace, err error
 	defer rows.Close()
 
 	for rows.Next() {
-		var namespace database.Namespace
+		var ns database.Namespace
 
-		err = rows.Scan(&namespace.ID, &namespace.Name)
+		err = rows.Scan(&ns.ID, &ns.Name, &ns.VersionFormat)
 		if err != nil {
 			return namespaces, handleError("listNamespace.Scan()", err)
 		}
 
-		namespaces = append(namespaces, namespace)
+		namespaces = append(namespaces, ns)
 	}
 	if err = rows.Err(); err != nil {
 		return namespaces, handleError("listNamespace.Rows()", err)

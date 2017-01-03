@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,9 +20,11 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/utils/types"
 )
 
 func TestUbuntuParser(t *testing.T) {
@@ -48,21 +50,21 @@ func TestUbuntuParser(t *testing.T) {
 					Namespace: database.Namespace{Name: "ubuntu:14.04"},
 					Name:      "libmspack",
 				},
-				Version: types.MaxVersion,
+				Version: versionfmt.MaxVersion,
 			},
 			{
 				Feature: database.Feature{
 					Namespace: database.Namespace{Name: "ubuntu:15.04"},
 					Name:      "libmspack",
 				},
-				Version: types.NewVersionUnsafe("0.4-3"),
+				Version: "0.4-3",
 			},
 			{
 				Feature: database.Feature{
 					Namespace: database.Namespace{Name: "ubuntu:15.10"},
 					Name:      "libmspack-anotherpkg",
 				},
-				Version: types.NewVersionUnsafe("0.1"),
+				Version: "0.1",
 			},
 		}
 

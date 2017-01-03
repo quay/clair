@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,11 +23,14 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/coreos/pkg/capnslog"
+
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/updater"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
-	"github.com/coreos/pkg/capnslog"
 )
 
 const (
@@ -168,23 +171,24 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 				}
 
 				// Determine the version of the package the vulnerability affects.
-				var version types.Version
+				var version string
 				var err error
 				if releaseNode.FixedVersion == "0" {
 					// This means that the package is not affected by this vulnerability.
-					version = types.MinVersion
+					version = versionfmt.MinVersion
 				} else if releaseNode.Status == "open" {
 					// Open means that the package is currently vulnerable in the latest
 					// version of this Debian release.
-					version = types.MaxVersion
+					version = versionfmt.MaxVersion
 				} else if releaseNode.Status == "resolved" {
 					// Resolved means that the vulnerability has been fixed in
 					// "fixed_version" (if affected).
-					version, err = types.NewVersion(releaseNode.FixedVersion)
+					err = versionfmt.Valid(dpkg.ParserName, releaseNode.FixedVersion)
 					if err != nil {
 						log.Warningf("could not parse package version '%s': %s. skipping", releaseNode.FixedVersion, err.Error())
 						continue
 					}
+					version = releaseNode.FixedVersion
 				}
 
 				// Create and add the feature version.
@@ -192,7 +196,8 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 					Feature: database.Feature{
 						Name: pkgName,
 						Namespace: database.Namespace{
-							Name: "debian:" + database.DebianReleasesMapping[releaseName],
+							Name:          "debian:" + database.DebianReleasesMapping[releaseName],
+							VersionFormat: dpkg.ParserName,
 						},
 					},
 					Version: version,

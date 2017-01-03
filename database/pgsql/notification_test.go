@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
 )
@@ -39,13 +41,19 @@ func TestNotification(t *testing.T) {
 
 	// Create some data.
 	f1 := database.Feature{
-		Name:      "TestNotificationFeature1",
-		Namespace: database.Namespace{Name: "TestNotificationNamespace1"},
+		Name: "TestNotificationFeature1",
+		Namespace: database.Namespace{
+			Name:          "TestNotificationNamespace1",
+			VersionFormat: dpkg.ParserName,
+		},
 	}
 
 	f2 := database.Feature{
-		Name:      "TestNotificationFeature2",
-		Namespace: database.Namespace{Name: "TestNotificationNamespace1"},
+		Name: "TestNotificationFeature2",
+		Namespace: database.Namespace{
+			Name:          "TestNotificationNamespace1",
+			VersionFormat: dpkg.ParserName,
+		},
 	}
 
 	l1 := database.Layer{
@@ -53,7 +61,7 @@ func TestNotification(t *testing.T) {
 		Features: []database.FeatureVersion{
 			{
 				Feature: f1,
-				Version: types.NewVersionUnsafe("0.1"),
+				Version: "0.1",
 			},
 		},
 	}
@@ -63,7 +71,7 @@ func TestNotification(t *testing.T) {
 		Features: []database.FeatureVersion{
 			{
 				Feature: f1,
-				Version: types.NewVersionUnsafe("0.2"),
+				Version: "0.2",
 			},
 		},
 	}
@@ -73,7 +81,7 @@ func TestNotification(t *testing.T) {
 		Features: []database.FeatureVersion{
 			{
 				Feature: f1,
-				Version: types.NewVersionUnsafe("0.3"),
+				Version: "0.3",
 			},
 		},
 	}
@@ -83,7 +91,7 @@ func TestNotification(t *testing.T) {
 		Features: []database.FeatureVersion{
 			{
 				Feature: f2,
-				Version: types.NewVersionUnsafe("0.1"),
+				Version: "0.1",
 			},
 		},
 	}
@@ -105,7 +113,7 @@ func TestNotification(t *testing.T) {
 		FixedIn: []database.FeatureVersion{
 			{
 				Feature: f1,
-				Version: types.NewVersionUnsafe("1.0"),
+				Version: "1.0",
 			},
 		},
 	}
@@ -165,11 +173,11 @@ func TestNotification(t *testing.T) {
 	v1b.FixedIn = []database.FeatureVersion{
 		{
 			Feature: f1,
-			Version: types.MinVersion,
+			Version: versionfmt.MinVersion,
 		},
 		{
 			Feature: f2,
-			Version: types.MaxVersion,
+			Version: versionfmt.MaxVersion,
 		},
 	}
 

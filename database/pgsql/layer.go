@@ -16,12 +16,14 @@ package pgsql
 
 import (
 	"database/sql"
+	"strings"
 	"time"
+
+	"github.com/guregu/null/zero"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
-	"github.com/guregu/null/zero"
 )
 
 func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities bool) (database.Layer, error) {
@@ -34,14 +36,26 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 	defer observeQueryTime("FindLayer", subquery, time.Now())
 
 	// Find the layer
-	var layer database.Layer
-	var parentID zero.Int
-	var parentName zero.String
-	var namespaceID zero.Int
-	var namespaceName sql.NullString
+	var (
+		layer           database.Layer
+		parentID        zero.Int
+		parentName      zero.String
+		nsID            zero.Int
+		nsName          sql.NullString
+		nsVersionFormat sql.NullString
+	)
 
 	t := time.Now()
-	err := pgSQL.QueryRow(searchLayer, name).Scan(&layer.ID, &layer.Name, &layer.EngineVersion, &parentID, &parentName, &namespaceID, &namespaceName)
+	err := pgSQL.QueryRow(searchLayer, name).Scan(
+		&layer.ID,
+		&layer.Name,
+		&layer.EngineVersion,
+		&parentID,
+		&parentName,
+		&nsID,
+		&nsName,
+		&nsVersionFormat,
+	)
 	observeQueryTime("FindLayer", "searchLayer", t)
 
 	if err != nil {
@@ -54,10 +68,11 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 			Name:  parentName.String,
 		}
 	}
-	if !namespaceID.IsZero() {
+	if !nsID.IsZero() {
 		layer.Namespace = &database.Namespace{
-			Model: database.Model{ID: int(namespaceID.Int64)},
-			Name:  namespaceName.String,
+			Model:         database.Model{ID: int(nsID.Int64)},
+			Name:          nsName.String,
+			VersionFormat: nsVersionFormat.String,
 		}
 	}
 
@@ -125,12 +140,20 @@ func getLayerFeatureVersions(tx *sql.Tx, layerID int) ([]database.FeatureVersion
 	var modification string
 	mapFeatureVersions := make(map[int]database.FeatureVersion)
 	for rows.Next() {
-		var featureVersion database.FeatureVersion
-
-		err = rows.Scan(&featureVersion.ID, &modification, &featureVersion.Feature.Namespace.ID,
-			&featureVersion.Feature.Namespace.Name, &featureVersion.Feature.ID,
-			&featureVersion.Feature.Name, &featureVersion.ID, &featureVersion.Version,
-			&featureVersion.AddedBy.ID, &featureVersion.AddedBy.Name)
+		var fv database.FeatureVersion
+		err = rows.Scan(
+			&fv.ID,
+			&modification,
+			&fv.Feature.Namespace.ID,
+			&fv.Feature.Namespace.Name,
+			&fv.Feature.Namespace.VersionFormat,
+			&fv.Feature.ID,
+			&fv.Feature.Name,
+			&fv.ID,
+			&fv.Version,
+			&fv.AddedBy.ID,
+			&fv.AddedBy.Name,
+		)
 		if err != nil {
 			return featureVersions, handleError("searchLayerFeatureVersion.Scan()", err)
 		}
@@ -138,9 +161,9 @@ func getLayerFeatureVersions(tx *sql.Tx, layerID int) ([]database.FeatureVersion
 		// Do transitive closure.
 		switch modification {
 		case "add":
-			mapFeatureVersions[featureVersion.ID] = featureVersion
+			mapFeatureVersions[fv.ID] = fv
 		case "del":
-			delete(mapFeatureVersions, featureVersion.ID)
+			delete(mapFeatureVersions, fv.ID)
 		default:
 			log.Warningf("unknown Layer_diff_FeatureVersion's modification: %s", modification)
 			return featureVersions, database.ErrInconsistent
@@ -182,9 +205,18 @@ func loadAffectedBy(tx *sql.Tx, featureVersions []database.FeatureVersion) error
 	var featureversionID int
 	for rows.Next() {
 		var vulnerability database.Vulnerability
-		err := rows.Scan(&featureversionID, &vulnerability.ID, &vulnerability.Name,
-			&vulnerability.Description, &vulnerability.Link, &vulnerability.Severity,
-			&vulnerability.Metadata, &vulnerability.Namespace.Name, &vulnerability.FixedBy)
+		err := rows.Scan(
+			&featureversionID,
+			&vulnerability.ID,
+			&vulnerability.Name,
+			&vulnerability.Description,
+			&vulnerability.Link,
+			&vulnerability.Severity,
+			&vulnerability.Metadata,
+			&vulnerability.Namespace.Name,
+			&vulnerability.Namespace.VersionFormat,
+			&vulnerability.FixedBy,
+		)
 		if err != nil {
 			return handleError("searchFeatureVersionVulnerability.Scan()", err)
 		}
@@ -374,9 +406,9 @@ func createNV(features []database.FeatureVersion) (map[string]*database.FeatureV
 	sliceNV := make([]string, 0, len(features))
 
 	for i := 0; i < len(features); i++ {
-		featureVersion := &features[i]
-		nv := featureVersion.Feature.Namespace.Name + ":" + featureVersion.Feature.Name + ":" + featureVersion.Version.String()
-		mapNV[nv] = featureVersion
+		fv := &features[i]
+		nv := strings.Join([]string{fv.Feature.Namespace.Name, fv.Feature.Name, fv.Version}, ":")
+		mapNV[nv] = fv
 		sliceNV = append(sliceNV, nv)
 	}
 

@@ -18,10 +18,12 @@ import (
 	"bufio"
 	"bytes"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/utils/types"
-	"github.com/coreos/clair/worker/detectors"
 	"github.com/coreos/pkg/capnslog"
+
+	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
+	"github.com/coreos/clair/worker/detectors"
 )
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "worker/detectors/packages")
@@ -55,17 +57,19 @@ func (d *detector) Detect(data map[string][]byte) ([]database.FeatureVersion, er
 		case line[:2] == "P:":
 			ipkg.Feature.Name = line[2:]
 		case line[:2] == "V:":
-			var err error
-			ipkg.Version, err = types.NewVersion(line[2:])
+			version := string(line[2:])
+			err := versionfmt.Valid(dpkg.ParserName, version)
 			if err != nil {
-				log.Warningf("could not parse package version '%s': %s. skipping", line[2:], err.Error())
+				log.Warningf("could not parse package version '%s': %s. skipping", version, err.Error())
+			} else {
+				ipkg.Version = version
 			}
 		}
 
 		// If we have a whole feature, store it in the set and try to parse a new
 		// one.
-		if ipkg.Feature.Name != "" && ipkg.Version.String() != "" {
-			pkgSet[ipkg.Feature.Name+"#"+ipkg.Version.String()] = ipkg
+		if ipkg.Feature.Name != "" && ipkg.Version != "" {
+			pkgSet[ipkg.Feature.Name+"#"+ipkg.Version] = ipkg
 			ipkg = database.FeatureVersion{}
 		}
 	}

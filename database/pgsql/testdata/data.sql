@@ -12,9 +12,9 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-INSERT INTO namespace (id, name) VALUES
-  (1, 'debian:7'),
-  (2, 'debian:8');
+INSERT INTO namespace (id, name, version_format) VALUES
+  (1, 'debian:7', 'dpkg'),
+  (2, 'debian:8', 'dpkg');
 
 INSERT INTO feature (id, namespace_id, name) VALUES
   (1, 1, 'wechat'),

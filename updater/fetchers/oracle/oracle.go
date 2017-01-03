@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,8 @@ import (
 	"strings"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/ext/versionfmt/rpm"
 	"github.com/coreos/clair/updater"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
@@ -97,7 +99,6 @@ func (f *OracleFetcher) FetchUpdate(datastore database.Datastore) (resp updater.
 	if firstELSA == 0 || err != nil {
 		firstELSA = firstOracle5ELSA
 	}
-
 
 	// Fetch the update list.
 	r, err := http.Get(ovalURI)
@@ -282,16 +283,20 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 			} else if strings.Contains(c.Comment, " is earlier than ") {
 				const prefixLen = len(" is earlier than ")
 				featureVersion.Feature.Name = strings.TrimSpace(c.Comment[:strings.Index(c.Comment, " is earlier than ")])
-				featureVersion.Version, err = types.NewVersion(c.Comment[strings.Index(c.Comment, " is earlier than ")+prefixLen:])
+				version := c.Comment[strings.Index(c.Comment, " is earlier than ")+prefixLen:]
+				err := versionfmt.Valid(rpm.ParserName, version)
 				if err != nil {
-					log.Warningf("could not parse package version '%s': %s. skipping", c.Comment[strings.Index(c.Comment, " is earlier than ")+prefixLen:], err.Error())
+					log.Warningf("could not parse package version '%s': %s. skipping", version, err.Error())
+				} else {
+					featureVersion.Version = version
 				}
 			}
 		}
 
 		featureVersion.Feature.Namespace.Name = "oracle" + ":" + strconv.Itoa(osVersion)
+		featureVersion.Feature.Namespace.VersionFormat = rpm.ParserName
 
-		if featureVersion.Feature.Namespace.Name != "" && featureVersion.Feature.Name != "" && featureVersion.Version.String() != "" {
+		if featureVersion.Feature.Namespace.Name != "" && featureVersion.Feature.Name != "" && featureVersion.Version != "" {
 			featureVersionParameters[featureVersion.Feature.Namespace.Name+":"+featureVersion.Feature.Name] = featureVersion
 		} else {
 			log.Warningf("could not determine a valid package from criterions: %v", criterions)

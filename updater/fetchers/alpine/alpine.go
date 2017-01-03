@@ -29,6 +29,8 @@ import (
 	"github.com/coreos/pkg/capnslog"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/updater"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
@@ -222,7 +224,7 @@ func parse33YAML(r io.Reader) (vulns []database.Vulnerability, err error) {
 	for _, pack := range file.Packages {
 		pkg := pack.Pkg
 		for _, fix := range pkg.Fixes {
-			version, err := types.NewVersion(pkg.Version)
+			err = versionfmt.Valid(dpkg.ParserName, pkg.Version)
 			if err != nil {
 				log.Warningf("could not parse package version '%s': %s. skipping", pkg.Version, err.Error())
 				continue
@@ -235,10 +237,13 @@ func parse33YAML(r io.Reader) (vulns []database.Vulnerability, err error) {
 				FixedIn: []database.FeatureVersion{
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "alpine:" + file.Distro},
-							Name:      pkg.Name,
+							Namespace: database.Namespace{
+								Name:          "alpine:" + file.Distro,
+								VersionFormat: dpkg.ParserName,
+							},
+							Name: pkg.Name,
 						},
-						Version: version,
+						Version: pkg.Version,
 					},
 				},
 			})
@@ -272,10 +277,10 @@ func parse34YAML(r io.Reader) (vulns []database.Vulnerability, err error) {
 
 	for _, pack := range file.Packages {
 		pkg := pack.Pkg
-		for versionStr, vulnStrs := range pkg.Fixes {
-			version, err := types.NewVersion(versionStr)
+		for version, vulnStrs := range pkg.Fixes {
+			err := versionfmt.Valid(dpkg.ParserName, version)
 			if err != nil {
-				log.Warningf("could not parse package version '%s': %s. skipping", versionStr, err.Error())
+				log.Warningf("could not parse package version '%s': %s. skipping", version, err.Error())
 				continue
 			}
 
@@ -287,8 +292,11 @@ func parse34YAML(r io.Reader) (vulns []database.Vulnerability, err error) {
 				vuln.FixedIn = []database.FeatureVersion{
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "alpine:" + file.Distro},
-							Name:      pkg.Name,
+							Namespace: database.Namespace{
+								Name:          "alpine:" + file.Distro,
+								VersionFormat: dpkg.ParserName,
+							},
+							Name: pkg.Name,
 						},
 						Version: version,
 					},

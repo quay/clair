@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2016 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/utils/types"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 )
 
 func TestInsertFeature(t *testing.T) {
@@ -45,8 +45,11 @@ func TestInsertFeature(t *testing.T) {
 
 	// Insert Feature and ensure we can find it.
 	feature := database.Feature{
-		Namespace: database.Namespace{Name: "TestInsertFeatureNamespace1"},
-		Name:      "TestInsertFeature1",
+		Namespace: database.Namespace{
+			Name:          "TestInsertFeatureNamespace1",
+			VersionFormat: dpkg.ParserName,
+		},
+		Name: "TestInsertFeature1",
 	}
 	id1, err := datastore.insertFeature(feature)
 	assert.Nil(t, err)
@@ -58,28 +61,34 @@ func TestInsertFeature(t *testing.T) {
 	for _, invalidFeatureVersion := range []database.FeatureVersion{
 		{
 			Feature: database.Feature{},
-			Version: types.NewVersionUnsafe("1.0"),
+			Version: "1.0",
 		},
 		{
 			Feature: database.Feature{
 				Namespace: database.Namespace{},
 				Name:      "TestInsertFeature2",
 			},
-			Version: types.NewVersionUnsafe("1.0"),
+			Version: "1.0",
 		},
 		{
 			Feature: database.Feature{
-				Namespace: database.Namespace{Name: "TestInsertFeatureNamespace2"},
-				Name:      "TestInsertFeature2",
+				Namespace: database.Namespace{
+					Name:          "TestInsertFeatureNamespace2",
+					VersionFormat: dpkg.ParserName,
+				},
+				Name: "TestInsertFeature2",
 			},
-			Version: types.NewVersionUnsafe(""),
+			Version: "",
 		},
 		{
 			Feature: database.Feature{
-				Namespace: database.Namespace{Name: "TestInsertFeatureNamespace2"},
-				Name:      "TestInsertFeature2",
+				Namespace: database.Namespace{
+					Name:          "TestInsertFeatureNamespace2",
+					VersionFormat: dpkg.ParserName,
+				},
+				Name: "TestInsertFeature2",
 			},
-			Version: types.NewVersionUnsafe("bad version"),
+			Version: "bad version",
 		},
 	} {
 		id3, err := datastore.insertFeatureVersion(invalidFeatureVersion)
@@ -90,10 +99,13 @@ func TestInsertFeature(t *testing.T) {
 	// Insert FeatureVersion and ensure we can find it.
 	featureVersion := database.FeatureVersion{
 		Feature: database.Feature{
-			Namespace: database.Namespace{Name: "TestInsertFeatureNamespace1"},
-			Name:      "TestInsertFeature1",
+			Namespace: database.Namespace{
+				Name:          "TestInsertFeatureNamespace1",
+				VersionFormat: dpkg.ParserName,
+			},
+			Name: "TestInsertFeature1",
 		},
-		Version: types.NewVersionUnsafe("2:3.0-imba"),
+		Version: "2:3.0-imba",
 	}
 	id4, err := datastore.insertFeatureVersion(featureVersion)
 	assert.Nil(t, err)
