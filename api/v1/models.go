@@ -32,7 +32,7 @@ import (
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "v1")
 
 type Error struct {
-	Message string `json:"Layer"`
+	Message string `json:"Message,omitempty"`
 }
 
 type Layer struct {
