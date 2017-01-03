@@ -21,11 +21,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
-
-	// dpkg versioning is used to parse test packages.
-	_ "github.com/coreos/clair/ext/versionfmt/dpkg"
 )
 
 func TestFindLayer(t *testing.T) {
@@ -144,7 +142,7 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 		Feature: database.Feature{
 			Namespace: database.Namespace{
 				Name:          "TestInsertLayerNamespace2",
-				VersionFormat: "dpkg",
+				VersionFormat: dpkg.ParserName,
 			},
 			Name: "TestInsertLayerFeature1",
 		},
@@ -154,7 +152,7 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 		Feature: database.Feature{
 			Namespace: database.Namespace{
 				Name:          "TestInsertLayerNamespace2",
-				VersionFormat: "dpkg",
+				VersionFormat: dpkg.ParserName,
 			},
 			Name: "TestInsertLayerFeature2",
 		},
@@ -164,7 +162,7 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 		Feature: database.Feature{
 			Namespace: database.Namespace{
 				Name:          "TestInsertLayerNamespace2",
-				VersionFormat: "dpkg",
+				VersionFormat: dpkg.ParserName,
 			},
 			Name: "TestInsertLayerFeature3",
 		},
@@ -174,7 +172,7 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 		Feature: database.Feature{
 			Namespace: database.Namespace{
 				Name:          "TestInsertLayerNamespace3",
-				VersionFormat: "dpkg",
+				VersionFormat: dpkg.ParserName,
 			},
 			Name: "TestInsertLayerFeature2",
 		},
@@ -184,7 +182,7 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 		Feature: database.Feature{
 			Namespace: database.Namespace{
 				Name:          "TestInsertLayerNamespace3",
-				VersionFormat: "dpkg",
+				VersionFormat: dpkg.ParserName,
 			},
 			Name: "TestInsertLayerFeature3",
 		},
@@ -194,7 +192,7 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 		Feature: database.Feature{
 			Namespace: database.Namespace{
 				Name:          "TestInsertLayerNamespace3",
-				VersionFormat: "dpkg",
+				VersionFormat: dpkg.ParserName,
 			},
 			Name: "TestInsertLayerFeature4",
 		},
@@ -210,7 +208,7 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 			Parent: &database.Layer{Name: "TestInsertLayer1"},
 			Namespace: &database.Namespace{
 				Name:          "TestInsertLayerNamespace1",
-				VersionFormat: "dpkg",
+				VersionFormat: dpkg.ParserName,
 			},
 		},
 		// This layer changes the namespace and adds Features.
@@ -219,7 +217,7 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 			Parent: &database.Layer{Name: "TestInsertLayer2"},
 			Namespace: &database.Namespace{
 				Name:          "TestInsertLayerNamespace2",
-				VersionFormat: "dpkg",
+				VersionFormat: dpkg.ParserName,
 			},
 			Features: []database.FeatureVersion{f1, f2, f3},
 		},
@@ -237,7 +235,7 @@ func testInsertLayerTree(t *testing.T, datastore database.Datastore) {
 			Parent: &database.Layer{Name: "TestInsertLayer3"},
 			Namespace: &database.Namespace{
 				Name:          "TestInsertLayerNamespace3",
-				VersionFormat: "dpkg",
+				VersionFormat: dpkg.ParserName,
 			},
 			Features: []database.FeatureVersion{
 				// Deletes TestInsertLayerFeature1.
@@ -295,7 +293,7 @@ func testInsertLayerUpdate(t *testing.T, datastore database.Datastore) {
 		Feature: database.Feature{
 			Namespace: database.Namespace{
 				Name:          "TestInsertLayerNamespace3",
-				VersionFormat: "dpkg",
+				VersionFormat: dpkg.ParserName,
 			},
 			Name: "TestInsertLayerFeature7",
 		},
@@ -308,7 +306,7 @@ func testInsertLayerUpdate(t *testing.T, datastore database.Datastore) {
 		Parent: l3.Parent,
 		Namespace: &database.Namespace{
 			Name:          "TestInsertLayerNamespaceUpdated1",
-			VersionFormat: "dpkg",
+			VersionFormat: dpkg.ParserName,
 		},
 		Features: []database.FeatureVersion{f7},
 	}

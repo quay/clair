@@ -23,10 +23,8 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/worker/detectors"
-
-	// dpkg versioning is used to parse dpkg packages.
-	_ "github.com/coreos/clair/ext/versionfmt/dpkg"
 )
 
 var (
@@ -79,7 +77,7 @@ func (detector *DpkgFeaturesDetector) Detect(data map[string][]byte) ([]database
 			pkg.Feature.Name = md["name"]
 			if md["version"] != "" {
 				version := md["version"]
-				err = versionfmt.Valid("dpkg", version)
+				err = versionfmt.Valid(dpkg.ParserName, version)
 				if err != nil {
 					log.Warningf("could not parse package version '%s': %s. skipping", string(line[1]), err.Error())
 				} else {
@@ -93,7 +91,7 @@ func (detector *DpkgFeaturesDetector) Detect(data map[string][]byte) ([]database
 			// because the Debian vulnerabilities often skips the epoch from the Version field
 			// which is not present in the Source version, and because +bX revisions don't matter
 			version := strings.TrimPrefix(line, "Version: ")
-			err = versionfmt.Valid("dpkg", version)
+			err = versionfmt.Valid(dpkg.ParserName, version)
 			if err != nil {
 				log.Warningf("could not parse package version '%s': %s. skipping", string(line[1]), err.Error())
 			} else {

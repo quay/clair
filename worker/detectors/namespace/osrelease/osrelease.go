@@ -20,6 +20,8 @@ import (
 	"strings"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
+	"github.com/coreos/clair/ext/versionfmt/rpm"
 	"github.com/coreos/clair/worker/detectors"
 )
 
@@ -76,9 +78,9 @@ func (detector *OsReleaseNamespaceDetector) Detect(data map[string][]byte) *data
 	var versionFormat string
 	switch OS {
 	case "debian", "ubuntu":
-		versionFormat = "dpkg"
+		versionFormat = dpkg.ParserName
 	case "centos", "rhel", "fedora", "amzn", "ol", "oracle":
-		versionFormat = "rpm"
+		versionFormat = rpm.ParserName
 	default:
 		return nil
 	}

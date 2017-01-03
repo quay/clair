@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/worker/detectors"
 )
 
@@ -77,7 +78,7 @@ func (detector *AptSourcesNamespaceDetector) Detect(data map[string][]byte) *dat
 	if OS != "" && version != "" {
 		return &database.Namespace{
 			Name:          OS + ":" + version,
-			VersionFormat: "dpkg",
+			VersionFormat: dpkg.ParserName,
 		}
 	}
 	return nil

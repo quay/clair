@@ -30,6 +30,7 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/updater"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
@@ -350,7 +351,7 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 				if md["status"] == "released" {
 					if md["note"] != "" {
 						var err error
-						err = versionfmt.Valid("dpkg", md["note"])
+						err = versionfmt.Valid(dpkg.ParserName, md["note"])
 						if err != nil {
 							log.Warningf("could not parse package version '%s': %s. skipping", md["note"], err)
 						}

@@ -24,12 +24,10 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/ext/versionfmt/rpm"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/worker/detectors"
-
-	// rpm versioning is used to parse rpm packages.
-	_ "github.com/coreos/clair/ext/versionfmt/rpm"
 )
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "rpm")
@@ -93,7 +91,7 @@ func (detector *RpmFeaturesDetector) Detect(data map[string][]byte) ([]database.
 
 		// Parse version
 		version := strings.Replace(line[1], "(none):", "", -1)
-		err := versionfmt.Valid("rpm", version)
+		err := versionfmt.Valid(rpm.ParserName, version)
 		if err != nil {
 			log.Warningf("could not parse package version '%s': %s. skipping", line[1], err.Error())
 			continue

@@ -22,6 +22,7 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
 )
@@ -42,15 +43,20 @@ func TestDebianParser(t *testing.T) {
 				expectedFeatureVersions := []database.FeatureVersion{
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:8"},
-							Name:      "aptdaemon",
+							Namespace: database.Namespace{
+								Name:          "debian:8",
+								VersionFormat: dpkg.ParserName,
+							},
+							Name: "aptdaemon",
 						},
 						Version: versionfmt.MaxVersion,
 					},
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:unstable"},
-
+							Namespace: database.Namespace{
+								Name:          "debian:unstable",
+								VersionFormat: dpkg.ParserName,
+							},
 							Name: "aptdaemon",
 						},
 						Version: "1.1.1+bzr982-1",
@@ -68,22 +74,31 @@ func TestDebianParser(t *testing.T) {
 				expectedFeatureVersions := []database.FeatureVersion{
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:8"},
-							Name:      "aptdaemon",
+							Namespace: database.Namespace{
+								Name:          "debian:8",
+								VersionFormat: dpkg.ParserName,
+							},
+							Name: "aptdaemon",
 						},
 						Version: "0.7.0",
 					},
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:unstable"},
-							Name:      "aptdaemon",
+							Namespace: database.Namespace{
+								Name:          "debian:unstable",
+								VersionFormat: dpkg.ParserName,
+							},
+							Name: "aptdaemon",
 						},
 						Version: "0.7.0",
 					},
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:8"},
-							Name:      "asterisk",
+							Namespace: database.Namespace{
+								Name:          "debian:8",
+								VersionFormat: dpkg.ParserName,
+							},
+							Name: "asterisk",
 						},
 						Version: "0.5.56",
 					},
@@ -100,8 +115,11 @@ func TestDebianParser(t *testing.T) {
 				expectedFeatureVersions := []database.FeatureVersion{
 					{
 						Feature: database.Feature{
-							Namespace: database.Namespace{Name: "debian:8"},
-							Name:      "asterisk",
+							Namespace: database.Namespace{
+								Name:          "debian:8",
+								VersionFormat: dpkg.ParserName,
+							},
+							Name: "asterisk",
 						},
 						Version: versionfmt.MinVersion,
 					},

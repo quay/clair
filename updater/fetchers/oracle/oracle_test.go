@@ -21,11 +21,9 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt/rpm"
 	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
-
-	// rpm versioning is used to parse Oracle Linux packages.
-	_ "github.com/coreos/clair/ext/versionfmt/rpm"
 )
 
 func TestOracleParser(t *testing.T) {
@@ -48,7 +46,7 @@ func TestOracleParser(t *testing.T) {
 				Feature: database.Feature{
 					Namespace: database.Namespace{
 						Name:          "oracle:7",
-						VersionFormat: "rpm",
+						VersionFormat: rpm.ParserName,
 					},
 					Name: "xerces-c",
 				},
@@ -58,7 +56,7 @@ func TestOracleParser(t *testing.T) {
 				Feature: database.Feature{
 					Namespace: database.Namespace{
 						Name:          "oracle:7",
-						VersionFormat: "rpm",
+						VersionFormat: rpm.ParserName,
 					},
 					Name: "xerces-c-devel",
 				},
@@ -68,7 +66,7 @@ func TestOracleParser(t *testing.T) {
 				Feature: database.Feature{
 					Namespace: database.Namespace{
 						Name:          "oracle:7",
-						VersionFormat: "rpm",
+						VersionFormat: rpm.ParserName,
 					},
 					Name: "xerces-c-doc",
 				},
@@ -95,7 +93,7 @@ func TestOracleParser(t *testing.T) {
 				Feature: database.Feature{
 					Namespace: database.Namespace{
 						Name:          "oracle:6",
-						VersionFormat: "rpm",
+						VersionFormat: rpm.ParserName,
 					},
 					Name: "firefox",
 				},
@@ -105,7 +103,7 @@ func TestOracleParser(t *testing.T) {
 				Feature: database.Feature{
 					Namespace: database.Namespace{
 						Name:          "oracle:7",
-						VersionFormat: "rpm",
+						VersionFormat: rpm.ParserName,
 					},
 					Name: "firefox",
 				},

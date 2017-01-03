@@ -16,7 +16,6 @@ package pgsql
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 	"time"
 
@@ -66,7 +65,6 @@ func (pgSQL *pgSQL) insertFeature(feature database.Feature) (int, error) {
 func (pgSQL *pgSQL) insertFeatureVersion(fv database.FeatureVersion) (id int, err error) {
 	err = versionfmt.Valid(fv.Feature.Namespace.VersionFormat, fv.Version)
 	if err != nil {
-		fmt.Println(err)
 		return 0, cerrors.NewBadRequestError("could not find/insert invalid FeatureVersion")
 	}
 
@@ -205,7 +203,7 @@ func linkFeatureVersionToVulnerabilities(tx *sql.Tx, featureVersion database.Fea
 	// TODO(Quentin-M): LIMIT
 	rows, err := tx.Query(searchVulnerabilityFixedInFeature, featureVersion.Feature.ID)
 	if err != nil {
-		return handleError("searchVulnerabilityFixedInFeature", err)
+		return err
 	}
 	defer rows.Close()
 

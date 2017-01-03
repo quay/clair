@@ -86,74 +86,62 @@ func TestParseAndCompare(t *testing.T) {
 		expected int
 		v2       string
 	}{
+		// Oracle Linux corner cases.
+		{"2.9.1-6.0.1.el7_2.3", GREATER, "2.9.1-6.el7_2.3"},
+		{"3.10.0-327.28.3.el7", GREATER, "3.10.0-327.el7"},
+		{"3.14.3-23.3.el6_8", GREATER, "3.14.3-23.el6_7"},
+		{"2.23.2-22.el7_1", LESS, "2.23.2-22.el7_1.1"},
+
 		// Tests imported from tests/rpmvercmp.at
 		{"1.0", EQUAL, "1.0"},
 		{"1.0", LESS, "2.0"},
 		{"2.0", GREATER, "1.0"},
-
 		{"2.0.1", EQUAL, "2.0.1"},
 		{"2.0", LESS, "2.0.1"},
 		{"2.0.1", GREATER, "2.0"},
-
 		{"2.0.1a", EQUAL, "2.0.1a"},
 		{"2.0.1a", GREATER, "2.0.1"},
 		{"2.0.1", LESS, "2.0.1a"},
-
 		{"5.5p1", EQUAL, "5.5p1"},
 		{"5.5p1", LESS, "5.5p2"},
 		{"5.5p2", GREATER, "5.5p1"},
-
 		{"5.5p10", EQUAL, "5.5p10"},
 		{"5.5p1", LESS, "5.5p10"},
 		{"5.5p10", GREATER, "5.5p1"},
-
 		{"10xyz", LESS, "10.1xyz"},
 		{"10.1xyz", GREATER, "10xyz"},
-
 		{"xyz10", EQUAL, "xyz10"},
 		{"xyz10", LESS, "xyz10.1"},
 		{"xyz10.1", GREATER, "xyz10"},
-
 		{"xyz.4", EQUAL, "xyz.4"},
 		{"xyz.4", LESS, "8"},
 		{"8", GREATER, "xyz.4"},
 		{"xyz.4", LESS, "2"},
 		{"2", GREATER, "xyz.4"},
-
 		{"5.5p2", LESS, "5.6p1"},
 		{"5.6p1", GREATER, "5.5p2"},
-
 		{"5.6p1", LESS, "6.5p1"},
 		{"6.5p1", GREATER, "5.6p1"},
-
 		{"6.0.rc1", GREATER, "6.0"},
 		{"6.0", LESS, "6.0.rc1"},
-
 		{"10b2", GREATER, "10a1"},
 		{"10a2", LESS, "10b2"},
-
 		{"1.0aa", EQUAL, "1.0aa"},
 		{"1.0a", LESS, "1.0aa"},
 		{"1.0aa", GREATER, "1.0a"},
-
 		{"10.0001", EQUAL, "10.0001"},
 		{"10.0001", EQUAL, "10.1"},
 		{"10.1", EQUAL, "10.0001"},
 		{"10.0001", LESS, "10.0039"},
 		{"10.0039", GREATER, "10.0001"},
-
 		{"4.999.9", LESS, "5.0"},
 		{"5.0", GREATER, "4.999.9"},
-
 		{"20101121", EQUAL, "20101121"},
 		{"20101121", LESS, "20101122"},
 		{"20101122", GREATER, "20101121"},
-
 		{"2_0", EQUAL, "2_0"},
 		{"2.0", EQUAL, "2_0"},
 		{"2_0", EQUAL, "2.0"},
-
-		// RhBug:178798 case
 		{"a", EQUAL, "a"},
 		{"a+", EQUAL, "a+"},
 		{"a+", EQUAL, "a_"},
@@ -166,8 +154,6 @@ func TestParseAndCompare(t *testing.T) {
 		{"_+", EQUAL, "_+"},
 		{"+", EQUAL, "_"},
 		{"_", EQUAL, "+"},
-
-		// Basic testcases for tilde sorting
 		{"1.0~rc1", EQUAL, "1.0~rc1"},
 		{"1.0~rc1", LESS, "1.0"},
 		{"1.0", GREATER, "1.0~rc1"},
@@ -176,27 +162,6 @@ func TestParseAndCompare(t *testing.T) {
 		{"1.0~rc1~git123", EQUAL, "1.0~rc1~git123"},
 		{"1.0~rc1~git123", LESS, "1.0~rc1"},
 		{"1.0~rc1", GREATER, "1.0~rc1~git123"},
-
-		// These are included here to document current, arguably buggy behaviors
-		// for reference purposes and for easy checking against  unintended
-		// behavior changes.
-		//
-		// AT_BANNER([RPM version comparison oddities])
-		// RhBug:811992 case
-		// {"1b.fc17", EQUAL, "1b.fc17"},
-		// {"1b.fc17", LESS, "1.fc17"},
-		// {"1.fc17", GREATER, "1b.fc17"},
-		// {"1g.fc17", EQUAL, "1g.fc17"},
-		// {"1g.fc17", GREATER, "1.fc17"},
-		// {"1.fc17", LESS, "1g.fc17"},
-
-		// Non-ascii characters are considered equal so these are all the same, eh...
-		// {"1.1.α", EQUAL, "1.1.α"},
-		// {"1.1.α", EQUAL, "1.1.β"},
-		// {"1.1.β", EQUAL, "1.1.α"},
-		// {"1.1.αα", EQUAL, "1.1.α"},
-		// {"1.1.α", EQUAL, "1.1.ββ"},
-		// {"1.1.ββ", EQUAL, "1.1.αα"},
 	}
 
 	var (

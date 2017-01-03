@@ -27,11 +27,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/utils"
 	"github.com/coreos/clair/utils/types"
-
-	// dpkg versioning is used to parse test packages.
-	_ "github.com/coreos/clair/ext/versionfmt/dpkg"
 )
 
 const (
@@ -51,7 +49,7 @@ func TestRaceAffects(t *testing.T) {
 	feature := database.Feature{
 		Namespace: database.Namespace{
 			Name:          "TestRaceAffectsFeatureNamespace1",
-			VersionFormat: "dpkg",
+			VersionFormat: dpkg.ParserName,
 		},
 		Name: "TestRaceAffecturesFeature1",
 	}

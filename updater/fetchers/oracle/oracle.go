@@ -25,13 +25,11 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/ext/versionfmt/rpm"
 	"github.com/coreos/clair/updater"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/pkg/capnslog"
-
-	// rpm versioning is used to parse Oracle Linux packages.
-	_ "github.com/coreos/clair/ext/versionfmt/rpm"
 )
 
 const (
@@ -286,7 +284,7 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 				const prefixLen = len(" is earlier than ")
 				featureVersion.Feature.Name = strings.TrimSpace(c.Comment[:strings.Index(c.Comment, " is earlier than ")])
 				version := c.Comment[strings.Index(c.Comment, " is earlier than ")+prefixLen:]
-				err := versionfmt.Valid("rpm", version)
+				err := versionfmt.Valid(rpm.ParserName, version)
 				if err != nil {
 					log.Warningf("could not parse package version '%s': %s. skipping", version, err.Error())
 				} else {
@@ -296,7 +294,7 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 		}
 
 		featureVersion.Feature.Namespace.Name = "oracle" + ":" + strconv.Itoa(osVersion)
-		featureVersion.Feature.Namespace.VersionFormat = "rpm"
+		featureVersion.Feature.Namespace.VersionFormat = rpm.ParserName
 
 		if featureVersion.Feature.Namespace.Name != "" && featureVersion.Feature.Name != "" && featureVersion.Version != "" {
 			featureVersionParameters[featureVersion.Feature.Namespace.Name+":"+featureVersion.Feature.Name] = featureVersion

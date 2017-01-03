@@ -27,7 +27,7 @@ const (
 	// MinVersion is a special package version which is always sorted first.
 	MinVersion = "#MINV#"
 
-	// MaxVersion is a special package version which is always sorted last
+	// MaxVersion is a special package version which is always sorted last.
 	MaxVersion = "#MAXV#"
 )
 

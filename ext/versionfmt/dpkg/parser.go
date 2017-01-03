@@ -23,6 +23,9 @@ import (
 	"github.com/coreos/clair/ext/versionfmt"
 )
 
+// ParserName is the name by which the dpkg parser is registered.
+const ParserName = "dpkg"
+
 type version struct {
 	epoch    int
 	version  string
@@ -278,5 +281,5 @@ func signum(a int) int {
 }
 
 func init() {
-	versionfmt.RegisterParser("dpkg", parser{})
+	versionfmt.RegisterParser(ParserName, parser{})
 }

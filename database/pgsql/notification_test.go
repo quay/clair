@@ -22,11 +22,9 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
-
-	// dpkg versioning is used to parse test packages.
-	_ "github.com/coreos/clair/ext/versionfmt/dpkg"
 )
 
 func TestNotification(t *testing.T) {
@@ -46,7 +44,7 @@ func TestNotification(t *testing.T) {
 		Name: "TestNotificationFeature1",
 		Namespace: database.Namespace{
 			Name:          "TestNotificationNamespace1",
-			VersionFormat: "dpkg",
+			VersionFormat: dpkg.ParserName,
 		},
 	}
 
@@ -54,7 +52,7 @@ func TestNotification(t *testing.T) {
 		Name: "TestNotificationFeature2",
 		Namespace: database.Namespace{
 			Name:          "TestNotificationNamespace1",
-			VersionFormat: "dpkg",
+			VersionFormat: dpkg.ParserName,
 		},
 	}
 

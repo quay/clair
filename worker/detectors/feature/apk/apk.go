@@ -22,10 +22,8 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/worker/detectors"
-
-	// dpkg versioning is used to parse apk packages.
-	_ "github.com/coreos/clair/ext/versionfmt/dpkg"
 )
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "worker/detectors/packages")
@@ -60,7 +58,7 @@ func (d *detector) Detect(data map[string][]byte) ([]database.FeatureVersion, er
 			ipkg.Feature.Name = line[2:]
 		case line[:2] == "V:":
 			version := string(line[2:])
-			err := versionfmt.Valid("dpkg", version)
+			err := versionfmt.Valid(dpkg.ParserName, version)
 			if err != nil {
 				log.Warningf("could not parse package version '%s': %s. skipping", version, err.Error())
 			} else {

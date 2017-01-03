@@ -27,12 +27,10 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/updater"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
-
-	// dpkg versioning is used to parse Debian packages.
-	_ "github.com/coreos/clair/ext/versionfmt/dpkg"
 )
 
 const (
@@ -185,7 +183,7 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 				} else if releaseNode.Status == "resolved" {
 					// Resolved means that the vulnerability has been fixed in
 					// "fixed_version" (if affected).
-					err = versionfmt.Valid("dpkg", releaseNode.FixedVersion)
+					err = versionfmt.Valid(dpkg.ParserName, releaseNode.FixedVersion)
 					if err != nil {
 						log.Warningf("could not parse package version '%s': %s. skipping", releaseNode.FixedVersion, err.Error())
 						continue
@@ -198,7 +196,8 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 					Feature: database.Feature{
 						Name: pkgName,
 						Namespace: database.Namespace{
-							Name: "debian:" + database.DebianReleasesMapping[releaseName],
+							Name:          "debian:" + database.DebianReleasesMapping[releaseName],
+							VersionFormat: dpkg.ParserName,
 						},
 					},
 					Version: version,

@@ -25,6 +25,9 @@ import (
 	"github.com/coreos/clair/ext/versionfmt"
 )
 
+// ParserName is the name by which the rpm parser is registered.
+const ParserName = "rpm"
+
 var (
 	// alphanumPattern is a regular expression to match all sequences of numeric
 	// characters or alphanumeric characters.
@@ -273,5 +276,5 @@ func containsRune(s []rune, e rune) bool {
 }
 
 func init() {
-	versionfmt.RegisterParser("rpm", parser{})
+	versionfmt.RegisterParser(ParserName, parser{})
 }

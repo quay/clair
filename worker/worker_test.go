@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	cerrors "github.com/coreos/clair/utils/errors"
 
 	// Register the required detectors.
@@ -89,7 +90,7 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 
 		for _, nufv := range nonUpgradedFeatureVersions {
 			nufv.Feature.Namespace.Name = "debian:7"
-			nufv.Feature.Namespace.VersionFormat = "dpkg"
+			nufv.Feature.Namespace.VersionFormat = dpkg.ParserName
 			assert.Contains(t, wheezy.Features, nufv)
 		}
 	}
@@ -102,12 +103,12 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 
 		for _, nufv := range nonUpgradedFeatureVersions {
 			nufv.Feature.Namespace.Name = "debian:7"
-			nufv.Feature.Namespace.VersionFormat = "dpkg"
+			nufv.Feature.Namespace.VersionFormat = dpkg.ParserName
 			assert.Contains(t, jessie.Features, nufv)
 		}
 		for _, nufv := range nonUpgradedFeatureVersions {
 			nufv.Feature.Namespace.Name = "debian:8"
-			nufv.Feature.Namespace.VersionFormat = "dpkg"
+			nufv.Feature.Namespace.VersionFormat = dpkg.ParserName
 			assert.NotContains(t, jessie.Features, nufv)
 		}
 	}

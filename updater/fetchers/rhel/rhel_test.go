@@ -21,11 +21,9 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt/rpm"
 	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
-
-	// rpm versioning is used to parse RHEL packages.
-	_ "github.com/coreos/clair/ext/versionfmt/rpm"
 )
 
 func TestRHELParser(t *testing.T) {
@@ -46,7 +44,7 @@ func TestRHELParser(t *testing.T) {
 				Feature: database.Feature{
 					Namespace: database.Namespace{
 						Name:          "centos:7",
-						VersionFormat: "rpm",
+						VersionFormat: rpm.ParserName,
 					},
 					Name: "xerces-c",
 				},
@@ -56,7 +54,7 @@ func TestRHELParser(t *testing.T) {
 				Feature: database.Feature{
 					Namespace: database.Namespace{
 						Name:          "centos:7",
-						VersionFormat: "rpm",
+						VersionFormat: rpm.ParserName,
 					},
 					Name: "xerces-c-devel",
 				},
@@ -66,7 +64,7 @@ func TestRHELParser(t *testing.T) {
 				Feature: database.Feature{
 					Namespace: database.Namespace{
 						Name:          "centos:7",
-						VersionFormat: "rpm",
+						VersionFormat: rpm.ParserName,
 					},
 					Name: "xerces-c-doc",
 				},
@@ -93,7 +91,7 @@ func TestRHELParser(t *testing.T) {
 				Feature: database.Feature{
 					Namespace: database.Namespace{
 						Name:          "centos:6",
-						VersionFormat: "rpm",
+						VersionFormat: rpm.ParserName,
 					},
 					Name: "firefox",
 				},
@@ -103,7 +101,7 @@ func TestRHELParser(t *testing.T) {
 				Feature: database.Feature{
 					Namespace: database.Namespace{
 						Name:          "centos:7",
-						VersionFormat: "rpm",
+						VersionFormat: rpm.ParserName,
 					},
 					Name: "firefox",
 				},

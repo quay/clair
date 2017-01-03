@@ -21,9 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
-
-	// dpkg versioning is used to parse test packages.
-	_ "github.com/coreos/clair/ext/versionfmt/dpkg"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 )
 
 func TestInsertNamespace(t *testing.T) {
@@ -42,12 +40,12 @@ func TestInsertNamespace(t *testing.T) {
 	// Insert Namespace and ensure we can find it.
 	id1, err := datastore.insertNamespace(database.Namespace{
 		Name:          "TestInsertNamespace1",
-		VersionFormat: "dpkg",
+		VersionFormat: dpkg.ParserName,
 	})
 	assert.Nil(t, err)
 	id2, err := datastore.insertNamespace(database.Namespace{
 		Name:          "TestInsertNamespace1",
-		VersionFormat: "dpkg",
+		VersionFormat: dpkg.ParserName,
 	})
 	assert.Nil(t, err)
 	assert.Equal(t, id1, id2)

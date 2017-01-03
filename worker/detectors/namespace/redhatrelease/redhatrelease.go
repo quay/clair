@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt/rpm"
 	"github.com/coreos/clair/worker/detectors"
 	"github.com/coreos/pkg/capnslog"
 )
@@ -60,7 +61,7 @@ func (detector *RedhatReleaseNamespaceDetector) Detect(data map[string][]byte) *
 		if len(r) == 4 {
 			return &database.Namespace{
 				Name:          strings.ToLower(r[1]) + ":" + r[3],
-				VersionFormat: "rpm",
+				VersionFormat: rpm.ParserName,
 			}
 		}
 
@@ -70,7 +71,7 @@ func (detector *RedhatReleaseNamespaceDetector) Detect(data map[string][]byte) *
 			// TODO(vbatts) this is a hack until https://github.com/coreos/clair/pull/193
 			return &database.Namespace{
 				Name:          "centos" + ":" + r[3],
-				VersionFormat: "rpm",
+				VersionFormat: rpm.ParserName,
 			}
 		}
 
@@ -79,7 +80,7 @@ func (detector *RedhatReleaseNamespaceDetector) Detect(data map[string][]byte) *
 		if len(r) == 4 {
 			return &database.Namespace{
 				Name:          strings.ToLower(r[1]) + ":" + r[3],
-				VersionFormat: "rpm",
+				VersionFormat: rpm.ParserName,
 			}
 		}
 

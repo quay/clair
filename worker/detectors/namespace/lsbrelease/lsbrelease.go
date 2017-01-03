@@ -20,6 +20,8 @@ import (
 	"strings"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
+	"github.com/coreos/clair/ext/versionfmt/rpm"
 	"github.com/coreos/clair/worker/detectors"
 )
 
@@ -28,8 +30,8 @@ var (
 	lsbReleaseVersionRegexp = regexp.MustCompile(`^DISTRIB_RELEASE=(.*)`)
 )
 
-// AptSourcesNamespaceDetector implements NamespaceDetector and detects the Namespace from the
-// /etc/lsb-release file.
+// LsbReleaseNamespaceDetector implements NamespaceDetector and detects the
+// Namespace from the /etc/lsb-release file.
 //
 // This detector is necessary for Ubuntu Precise.
 type LsbReleaseNamespaceDetector struct{}
@@ -73,9 +75,9 @@ func (detector *LsbReleaseNamespaceDetector) Detect(data map[string][]byte) *dat
 	var versionFormat string
 	switch OS {
 	case "debian", "ubuntu":
-		versionFormat = "dpkg"
+		versionFormat = dpkg.ParserName
 	case "centos", "rhel", "fedora", "amzn", "ol", "oracle":
-		versionFormat = "rpm"
+		versionFormat = rpm.ParserName
 	default:
 		return nil
 	}
