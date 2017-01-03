@@ -203,7 +203,7 @@ func linkFeatureVersionToVulnerabilities(tx *sql.Tx, featureVersion database.Fea
 	// TODO(Quentin-M): LIMIT
 	rows, err := tx.Query(searchVulnerabilityFixedInFeature, featureVersion.Feature.ID)
 	if err != nil {
-		return err
+		return handleError("searchVulnerabilityFixedInFeature", err)
 	}
 	defer rows.Close()
 
@@ -218,7 +218,7 @@ func linkFeatureVersionToVulnerabilities(tx *sql.Tx, featureVersion database.Fea
 
 		cmp, err := versionfmt.Compare(featureVersion.Feature.Namespace.VersionFormat, featureVersion.Version, affect.fixedInVersion)
 		if err != nil {
-			return handleError("searchVulnerabilityVersionComparison", err)
+			return err
 		}
 		if cmp < 0 {
 			// The version of the FeatureVersion we are inserting is lower than the fixed version on this
