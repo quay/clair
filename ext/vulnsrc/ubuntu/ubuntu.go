@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package ubuntu implements a vulnerability source updater using the
+// Ubuntu CVE Tracker.
 package ubuntu
 
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -31,7 +32,7 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
-	"github.com/coreos/clair/updater"
+	"github.com/coreos/clair/ext/vulnsrc"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
@@ -75,33 +76,27 @@ var (
 	affectsCaptureRegexp      = regexp.MustCompile(`(?P<release>.*)_(?P<package>.*): (?P<status>[^\s]*)( \(+(?P<note>[^()]*)\)+)?`)
 	affectsCaptureRegexpNames = affectsCaptureRegexp.SubexpNames()
 
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "updater/fetchers/ubuntu")
-
-	// ErrFilesystem is returned when a fetcher fails to interact with the local filesystem.
-	ErrFilesystem = errors.New("updater/fetchers: something went wrong when interacting with the fs")
+	log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/vulnsrc/ubuntu")
 )
 
-// UbuntuFetcher implements updater.Fetcher and gets vulnerability updates from
-// the Ubuntu CVE Tracker.
-type UbuntuFetcher struct {
+type updater struct {
 	repositoryLocalPath string
 }
 
 func init() {
-	updater.RegisterFetcher("Ubuntu", &UbuntuFetcher{})
+	vulnsrc.RegisterUpdater("ubuntu", &updater{})
 }
 
-// FetchUpdate gets vulnerability updates from the Ubuntu CVE Tracker.
-func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp updater.FetcherResponse, err error) {
+func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
 	log.Info("fetching Ubuntu vulnerabilities")
 
 	// Pull the bzr repository.
-	if err = fetcher.pullRepository(); err != nil {
+	if err = u.pullRepository(); err != nil {
 		return resp, err
 	}
 
 	// Get revision number.
-	revisionNumber, err := getRevisionNumber(fetcher.repositoryLocalPath)
+	revisionNumber, err := getRevisionNumber(u.repositoryLocalPath)
 	if err != nil {
 		return resp, err
 	}
@@ -113,7 +108,7 @@ func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp up
 	}
 
 	// Get the list of vulnerabilities that we have to update.
-	modifiedCVE, err := collectModifiedVulnerabilities(revisionNumber, dbRevisionNumber, fetcher.repositoryLocalPath)
+	modifiedCVE, err := collectModifiedVulnerabilities(revisionNumber, dbRevisionNumber, u.repositoryLocalPath)
 	if err != nil {
 		return resp, err
 	}
@@ -121,7 +116,7 @@ func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp up
 	notes := make(map[string]struct{})
 	for cvePath := range modifiedCVE {
 		// Open the CVE file.
-		file, err := os.Open(fetcher.repositoryLocalPath + "/" + cvePath)
+		file, err := os.Open(u.repositoryLocalPath + "/" + cvePath)
 		if err != nil {
 			// This can happen when a file is modified and then moved in another
 			// commit.
@@ -166,16 +161,20 @@ func (fetcher *UbuntuFetcher) FetchUpdate(datastore database.Datastore) (resp up
 	return
 }
 
-func (fetcher *UbuntuFetcher) pullRepository() (err error) {
+func (u *updater) Clean() {
+	os.RemoveAll(u.repositoryLocalPath)
+}
+
+func (u *updater) pullRepository() (err error) {
 	// Determine whether we should branch or pull.
-	if _, pathExists := os.Stat(fetcher.repositoryLocalPath); fetcher.repositoryLocalPath == "" || os.IsNotExist(pathExists) {
+	if _, pathExists := os.Stat(u.repositoryLocalPath); u.repositoryLocalPath == "" || os.IsNotExist(pathExists) {
 		// Create a temporary folder to store the repository.
-		if fetcher.repositoryLocalPath, err = ioutil.TempDir(os.TempDir(), "ubuntu-cve-tracker"); err != nil {
-			return ErrFilesystem
+		if u.repositoryLocalPath, err = ioutil.TempDir(os.TempDir(), "ubuntu-cve-tracker"); err != nil {
+			return vulnsrc.ErrFilesystem
 		}
 
 		// Branch repository.
-		if out, err := utils.Exec(fetcher.repositoryLocalPath, "bzr", "branch", "--use-existing-dir", trackerRepository, "."); err != nil {
+		if out, err := utils.Exec(u.repositoryLocalPath, "bzr", "branch", "--use-existing-dir", trackerRepository, "."); err != nil {
 			log.Errorf("could not branch Ubuntu repository: %s. output: %s", err, out)
 			return cerrors.ErrCouldNotDownload
 		}
@@ -184,8 +183,8 @@ func (fetcher *UbuntuFetcher) pullRepository() (err error) {
 	}
 
 	// Pull repository.
-	if out, err := utils.Exec(fetcher.repositoryLocalPath, "bzr", "pull", "--overwrite"); err != nil {
-		os.RemoveAll(fetcher.repositoryLocalPath)
+	if out, err := utils.Exec(u.repositoryLocalPath, "bzr", "pull", "--overwrite"); err != nil {
+		os.RemoveAll(u.repositoryLocalPath)
 
 		log.Errorf("could not pull Ubuntu repository: %s. output: %s", err, out)
 		return cerrors.ErrCouldNotDownload
@@ -217,14 +216,14 @@ func collectModifiedVulnerabilities(revision int, dbRevision, repositoryLocalPat
 			d, err := os.Open(repositoryLocalPath + "/" + folder)
 			if err != nil {
 				log.Errorf("could not open Ubuntu vulnerabilities repository's folder: %s", err)
-				return nil, ErrFilesystem
+				return nil, vulnsrc.ErrFilesystem
 			}
 
 			// Get the FileInfo of all the files in the directory.
 			names, err := d.Readdirnames(-1)
 			if err != nil {
 				log.Errorf("could not read Ubuntu vulnerabilities repository's folder:: %s.", err)
-				return nil, ErrFilesystem
+				return nil, vulnsrc.ErrFilesystem
 			}
 
 			// Add the vulnerabilities to the list.
@@ -413,9 +412,4 @@ func ubuntuPriorityToSeverity(priority string) types.Priority {
 
 	log.Warning("Could not determine a vulnerability priority from: %s", priority)
 	return types.Unknown
-}
-
-// Clean deletes any allocated resources.
-func (fetcher *UbuntuFetcher) Clean() {
-	os.RemoveAll(fetcher.repositoryLocalPath)
 }

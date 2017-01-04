@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package notifiers implements several kinds of notifier.Notifier
-package notifiers
+// Package webhook implements a notification sender for HTTP JSON webhooks.
+package webhook
 
 import (
 	"bytes"
@@ -31,19 +31,18 @@ import (
 
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/notifier"
+	"github.com/coreos/clair/ext/notification"
 )
 
 const timeout = 5 * time.Second
 
-// A WebhookNotifier dispatches notifications to a webhook endpoint.
-type WebhookNotifier struct {
+type sender struct {
 	endpoint string
 	client   *http.Client
 }
 
-// A WebhookNotifierConfiguration represents the configuration of a WebhookNotifier.
-type WebhookNotifierConfiguration struct {
+// Config represents the configuration of a Webhook Sender.
+type Config struct {
 	Endpoint   string
 	ServerName string
 	CertFile   string
@@ -53,12 +52,12 @@ type WebhookNotifierConfiguration struct {
 }
 
 func init() {
-	notifier.RegisterNotifier("webhook", &WebhookNotifier{})
+	notification.RegisterSender("webhook", &sender{})
 }
 
-func (h *WebhookNotifier) Configure(config *config.NotifierConfig) (bool, error) {
+func (s *sender) Configure(config *config.NotifierConfig) (bool, error) {
 	// Get configuration
-	var httpConfig WebhookNotifierConfiguration
+	var httpConfig Config
 	if config == nil {
 		return false, nil
 	}
@@ -81,11 +80,11 @@ func (h *WebhookNotifier) Configure(config *config.NotifierConfig) (bool, error)
 	if _, err := url.ParseRequestURI(httpConfig.Endpoint); err != nil {
 		return false, fmt.Errorf("could not parse endpoint URL: %s\n", err)
 	}
-	h.endpoint = httpConfig.Endpoint
+	s.endpoint = httpConfig.Endpoint
 
 	// Setup HTTP client.
 	transport := &http.Transport{}
-	h.client = &http.Client{
+	s.client = &http.Client{
 		Transport: transport,
 		Timeout:   timeout,
 	}
@@ -114,7 +113,7 @@ type notificationEnvelope struct {
 	}
 }
 
-func (h *WebhookNotifier) Send(notification database.VulnerabilityNotification) error {
+func (s *sender) Send(notification database.VulnerabilityNotification) error {
 	// Marshal notification.
 	jsonNotification, err := json.Marshal(notificationEnvelope{struct{ Name string }{notification.Name}})
 	if err != nil {
@@ -122,7 +121,7 @@ func (h *WebhookNotifier) Send(notification database.VulnerabilityNotification) 
 	}
 
 	// Send notification via HTTP POST.
-	resp, err := h.client.Post(h.endpoint, "application/json", bytes.NewBuffer(jsonNotification))
+	resp, err := s.client.Post(s.endpoint, "application/json", bytes.NewBuffer(jsonNotification))
 	if err != nil || resp == nil || (resp.StatusCode != 200 && resp.StatusCode != 201) {
 		if resp != nil {
 			return fmt.Errorf("got status %d, expected 200/201", resp.StatusCode)
@@ -134,11 +133,11 @@ func (h *WebhookNotifier) Send(notification database.VulnerabilityNotification) 
 	return nil
 }
 
-// loadTLSClientConfig initializes a *tls.Config using the given WebhookNotifierConfiguration.
+// loadTLSClientConfig initializes a *tls.Config using the given Config.
 //
 // If no certificates are given, (nil, nil) is returned.
 // The CA certificate is optional and falls back to the system default.
-func loadTLSClientConfig(cfg *WebhookNotifierConfiguration) (*tls.Config, error) {
+func loadTLSClientConfig(cfg *Config) (*tls.Config, error) {
 	if cfg.CertFile == "" || cfg.KeyFile == "" {
 		return nil, nil
 	}

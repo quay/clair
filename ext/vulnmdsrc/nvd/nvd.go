@@ -1,3 +1,19 @@
+// Copyright 2017 clair authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Package nvd implements a vulnerability metadata appender using the NIST NVD
+// database.
 package nvd
 
 import (
@@ -15,30 +31,28 @@ import (
 	"sync"
 	"time"
 
+	"github.com/coreos/pkg/capnslog"
+
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/updater"
+	"github.com/coreos/clair/ext/vulnmdsrc"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
-	"github.com/coreos/pkg/capnslog"
 )
 
 const (
 	dataFeedURL     string = "http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-%s.xml.gz"
 	dataFeedMetaURL string = "http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-%s.meta"
 
-	metadataKey string = "NVD"
+	appenderName string = "NVD"
 )
 
-var (
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "updater/fetchers/metadata_fetchers")
-)
+var log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/vulnmdsrc/nvd")
 
-type NVDMetadataFetcher struct {
+type appender struct {
 	localPath      string
 	dataFeedHashes map[string]string
-	lock           sync.Mutex
-
-	metadata map[string]NVDMetadata
+	metadata       map[string]NVDMetadata
+	sync.Mutex
 }
 
 type NVDMetadata struct {
@@ -51,32 +65,32 @@ type NVDmetadataCVSSv2 struct {
 }
 
 func init() {
-	updater.RegisterMetadataFetcher("NVD", &NVDMetadataFetcher{})
+	vulnmdsrc.RegisterAppender(appenderName, &appender{})
 }
 
-func (fetcher *NVDMetadataFetcher) Load(datastore database.Datastore) error {
-	fetcher.lock.Lock()
-	defer fetcher.lock.Unlock()
+func (a *appender) BuildCache(datastore database.Datastore) error {
+	a.Lock()
+	defer a.Unlock()
 
 	var err error
-	fetcher.metadata = make(map[string]NVDMetadata)
+	a.metadata = make(map[string]NVDMetadata)
 
 	// Init if necessary.
-	if fetcher.localPath == "" {
+	if a.localPath == "" {
 		// Create a temporary folder to store the NVD data and create hashes struct.
-		if fetcher.localPath, err = ioutil.TempDir(os.TempDir(), "nvd-data"); err != nil {
+		if a.localPath, err = ioutil.TempDir(os.TempDir(), "nvd-data"); err != nil {
 			return cerrors.ErrFilesystem
 		}
 
-		fetcher.dataFeedHashes = make(map[string]string)
+		a.dataFeedHashes = make(map[string]string)
 	}
 
 	// Get data feeds.
-	dataFeedReaders, dataFeedHashes, err := getDataFeeds(fetcher.dataFeedHashes, fetcher.localPath)
+	dataFeedReaders, dataFeedHashes, err := getDataFeeds(a.dataFeedHashes, a.localPath)
 	if err != nil {
 		return err
 	}
-	fetcher.dataFeedHashes = dataFeedHashes
+	a.dataFeedHashes = dataFeedHashes
 
 	// Parse data feeds.
 	for dataFeedName, dataFeedReader := range dataFeedReaders {
@@ -90,7 +104,7 @@ func (fetcher *NVDMetadataFetcher) Load(datastore database.Datastore) error {
 		for _, nvdEntry := range nvd.Entries {
 			// Create metadata entry.
 			if metadata := nvdEntry.Metadata(); metadata != nil {
-				fetcher.metadata[nvdEntry.Name] = *metadata
+				a.metadata[nvdEntry.Name] = *metadata
 			}
 		}
 
@@ -100,42 +114,29 @@ func (fetcher *NVDMetadataFetcher) Load(datastore database.Datastore) error {
 	return nil
 }
 
-func (fetcher *NVDMetadataFetcher) AddMetadata(vulnerability *updater.VulnerabilityWithLock) error {
-	fetcher.lock.Lock()
-	defer fetcher.lock.Unlock()
+func (a *appender) Append(vulnName string, appendFunc vulnmdsrc.AppendFunc) error {
+	a.Lock()
+	defer a.Unlock()
 
-	if nvdMetadata, ok := fetcher.metadata[vulnerability.Name]; ok {
-		vulnerability.Lock.Lock()
-
-		// Create Metadata map if necessary and assign the NVD metadata.
-		if vulnerability.Metadata == nil {
-			vulnerability.Metadata = make(map[string]interface{})
-		}
-		vulnerability.Metadata[metadataKey] = nvdMetadata
-
-		// Set the Severity using the CVSSv2 Score if none is set yet.
-		if vulnerability.Severity == "" || vulnerability.Severity == types.Unknown {
-			vulnerability.Severity = scoreToPriority(nvdMetadata.CVSSv2.Score)
-		}
-
-		vulnerability.Lock.Unlock()
+	if nvdMetadata, ok := a.metadata[vulnName]; ok {
+		appendFunc(appenderName, nvdMetadata, scoreToPriority(nvdMetadata.CVSSv2.Score))
 	}
 
 	return nil
 }
 
-func (fetcher *NVDMetadataFetcher) Unload() {
-	fetcher.lock.Lock()
-	defer fetcher.lock.Unlock()
+func (a *appender) PurgeCache() {
+	a.Lock()
+	defer a.Unlock()
 
-	fetcher.metadata = nil
+	a.metadata = nil
 }
 
-func (fetcher *NVDMetadataFetcher) Clean() {
-	fetcher.lock.Lock()
-	defer fetcher.lock.Unlock()
+func (a *appender) Clean() {
+	a.Lock()
+	defer a.Unlock()
 
-	os.RemoveAll(fetcher.localPath)
+	os.RemoveAll(a.localPath)
 }
 
 func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[string]NestedReadCloser, map[string]string, error) {

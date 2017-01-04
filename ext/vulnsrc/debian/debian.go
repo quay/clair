@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package debian implements a vulnerability source updater using the Debian
+// Security Tracker.
 package debian
 
 import (
@@ -28,7 +30,7 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
-	"github.com/coreos/clair/updater"
+	"github.com/coreos/clair/ext/vulnsrc"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
 )
@@ -39,7 +41,7 @@ const (
 	updaterFlag  = "debianUpdater"
 )
 
-var log = capnslog.NewPackageLogger("github.com/coreos/clair", "updater/fetchers/debian")
+var log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/vulnsrc/debian")
 
 type jsonData map[string]map[string]jsonVuln
 
@@ -54,16 +56,13 @@ type jsonRel struct {
 	Urgency      string `json:"urgency"`
 }
 
-// DebianFetcher implements updater.Fetcher for the Debian Security Tracker
-// (https://security-tracker.debian.org).
-type DebianFetcher struct{}
+type updater struct{}
 
 func init() {
-	updater.RegisterFetcher("debian", &DebianFetcher{})
+	vulnsrc.RegisterUpdater("debian", &updater{})
 }
 
-// FetchUpdate fetches vulnerability updates from the Debian Security Tracker.
-func (fetcher *DebianFetcher) FetchUpdate(datastore database.Datastore) (resp updater.FetcherResponse, err error) {
+func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
 	log.Info("fetching Debian vulnerabilities")
 
 	// Download JSON.
@@ -88,7 +87,9 @@ func (fetcher *DebianFetcher) FetchUpdate(datastore database.Datastore) (resp up
 	return resp, nil
 }
 
-func buildResponse(jsonReader io.Reader, latestKnownHash string) (resp updater.FetcherResponse, err error) {
+func (u *updater) Clean() {}
+
+func buildResponse(jsonReader io.Reader, latestKnownHash string) (resp vulnsrc.UpdateResponse, err error) {
 	hash := latestKnownHash
 
 	// Defer the addition of flag information to the response.
@@ -254,6 +255,3 @@ func urgencyToSeverity(urgency string) types.Priority {
 		return types.Unknown
 	}
 }
-
-// Clean deletes any allocated resources.
-func (fetcher *DebianFetcher) Clean() {}

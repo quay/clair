@@ -25,15 +25,14 @@ import (
 	"github.com/coreos/clair"
 	"github.com/coreos/clair/config"
 
-	// Register components
-	_ "github.com/coreos/clair/notifier/notifiers"
-
-	_ "github.com/coreos/clair/updater/fetchers/alpine"
-	_ "github.com/coreos/clair/updater/fetchers/debian"
-	_ "github.com/coreos/clair/updater/fetchers/oracle"
-	_ "github.com/coreos/clair/updater/fetchers/rhel"
-	_ "github.com/coreos/clair/updater/fetchers/ubuntu"
-	_ "github.com/coreos/clair/updater/metadata_fetchers/nvd"
+	// Register extensions.
+	_ "github.com/coreos/clair/ext/notification/webhook"
+	_ "github.com/coreos/clair/ext/vulnmdsrc/nvd"
+	_ "github.com/coreos/clair/ext/vulnsrc/alpine"
+	_ "github.com/coreos/clair/ext/vulnsrc/debian"
+	_ "github.com/coreos/clair/ext/vulnsrc/oracle"
+	_ "github.com/coreos/clair/ext/vulnsrc/rhel"
+	_ "github.com/coreos/clair/ext/vulnsrc/ubuntu"
 
 	_ "github.com/coreos/clair/worker/detectors/data/aci"
 	_ "github.com/coreos/clair/worker/detectors/data/docker"

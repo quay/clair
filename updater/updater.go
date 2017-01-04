@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package updater updates the vulnerability database periodically using
-// the registered vulnerability fetchers.
+// Package updater updates the vulnerability database periodically using the
+// registered vulnerability source updaters and vulnerability metadata
+// appenders.
 package updater
 
 import (
@@ -22,12 +23,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/coreos/clair/config"
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/utils"
 	"github.com/coreos/pkg/capnslog"
 	"github.com/pborman/uuid"
 	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/coreos/clair/config"
+	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/vulnmdsrc"
+	"github.com/coreos/clair/ext/vulnsrc"
+	"github.com/coreos/clair/utils"
+	"github.com/coreos/clair/utils/types"
 )
 
 const (
@@ -147,11 +152,11 @@ func Run(config *config.UpdaterConfig, datastore database.Datastore, st *utils.S
 	}
 
 	// Clean resources.
-	for _, metadataFetcher := range metadataFetchers {
-		metadataFetcher.Clean()
+	for _, appenders := range vulnmdsrc.Appenders {
+		appenders.Clean()
 	}
-	for _, fetcher := range fetchers {
-		fetcher.Clean()
+	for _, updaters := range vulnsrc.Updaters {
+		updaters.Clean()
 	}
 
 	log.Info("updater service stopped")
@@ -209,10 +214,10 @@ func fetch(datastore database.Datastore) (bool, []database.Vulnerability, map[st
 
 	// Fetch updates in parallel.
 	log.Info("fetching vulnerability updates")
-	var responseC = make(chan *FetcherResponse, 0)
-	for n, f := range fetchers {
-		go func(name string, fetcher Fetcher) {
-			response, err := fetcher.FetchUpdate(datastore)
+	var responseC = make(chan *vulnsrc.UpdateResponse, 0)
+	for n, u := range vulnsrc.Updaters {
+		go func(name string, u vulnsrc.Updater) {
+			response, err := u.Update(datastore)
 			if err != nil {
 				promUpdaterErrorsTotal.Inc()
 				log.Errorf("an error occured when fetching update '%s': %s.", name, err)
@@ -222,11 +227,11 @@ func fetch(datastore database.Datastore) (bool, []database.Vulnerability, map[st
 			}
 
 			responseC <- &response
-		}(n, f)
+		}(n, u)
 	}
 
 	// Collect results of updates.
-	for i := 0; i < len(fetchers); i++ {
+	for i := 0; i < len(vulnsrc.Updaters); i++ {
 		resp := <-responseC
 		if resp != nil {
 			vulnerabilities = append(vulnerabilities, doVulnerabilitiesNamespacing(resp.Vulnerabilities)...)
@@ -243,42 +248,43 @@ func fetch(datastore database.Datastore) (bool, []database.Vulnerability, map[st
 
 // Add metadata to the specified vulnerabilities using the registered MetadataFetchers, in parallel.
 func addMetadata(datastore database.Datastore, vulnerabilities []database.Vulnerability) []database.Vulnerability {
-	if len(metadataFetchers) == 0 {
+	if len(vulnmdsrc.Appenders) == 0 {
 		return vulnerabilities
 	}
 
 	log.Info("adding metadata to vulnerabilities")
 
-	// Wrap vulnerabilities in VulnerabilityWithLock.
-	// It ensures that only one metadata fetcher at a time can modify the Metadata map.
-	vulnerabilitiesWithLocks := make([]*VulnerabilityWithLock, 0, len(vulnerabilities))
+	// Add a mutex to each vulnerability to ensure that only one appender at a
+	// time can modify the vulnerability's Metadata map.
+	lockableVulnerabilities := make([]*lockableVulnerability, 0, len(vulnerabilities))
 	for i := 0; i < len(vulnerabilities); i++ {
-		vulnerabilitiesWithLocks = append(vulnerabilitiesWithLocks, &VulnerabilityWithLock{
+		lockableVulnerabilities = append(lockableVulnerabilities, &lockableVulnerability{
 			Vulnerability: &vulnerabilities[i],
 		})
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(len(metadataFetchers))
+	wg.Add(len(vulnmdsrc.Appenders))
 
-	for n, f := range metadataFetchers {
-		go func(name string, metadataFetcher MetadataFetcher) {
+	for n, a := range vulnmdsrc.Appenders {
+		go func(name string, appender vulnmdsrc.Appender) {
 			defer wg.Done()
 
-			// Load the metadata fetcher.
-			if err := metadataFetcher.Load(datastore); err != nil {
+			// Build up a metadata cache.
+			if err := appender.BuildCache(datastore); err != nil {
 				promUpdaterErrorsTotal.Inc()
 				log.Errorf("an error occured when loading metadata fetcher '%s': %s.", name, err)
 				return
 			}
 
-			// Add metadata to each vulnerability.
-			for _, vulnerability := range vulnerabilitiesWithLocks {
-				metadataFetcher.AddMetadata(vulnerability)
+			// Append vulnerability metadata  to each vulnerability.
+			for _, vulnerability := range lockableVulnerabilities {
+				appender.Append(vulnerability.Name, vulnerability.appendFunc)
 			}
 
-			metadataFetcher.Unload()
-		}(n, f)
+			// Purge the metadata cache.
+			appender.PurgeCache()
+		}(n, a)
 	}
 
 	wg.Wait()
@@ -303,6 +309,29 @@ func getLastUpdate(datastore database.Datastore) (time.Time, bool, error) {
 	}
 
 	return time.Unix(lastUpdateTS, 0).UTC(), false, nil
+}
+
+type lockableVulnerability struct {
+	*database.Vulnerability
+	sync.Mutex
+}
+
+func (lv *lockableVulnerability) appendFunc(metadataKey string, metadata interface{}, severity types.Priority) {
+	lv.Lock()
+	defer lv.Unlock()
+
+	// If necessary, initialize the metadata map for the vulnerability.
+	if lv.Metadata == nil {
+		lv.Metadata = make(map[string]interface{})
+	}
+
+	// Append the metadata.
+	lv.Metadata[metadataKey] = metadata
+
+	// If necessary, provide a severity for the vulnerability.
+	if lv.Severity == "" || lv.Severity == types.Unknown {
+		lv.Severity = severity
+	}
 }
 
 // doVulnerabilitiesNamespacing takes Vulnerabilities that don't have a Namespace and split them

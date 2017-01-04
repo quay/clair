@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package alpine implements a vulnerability Fetcher using the alpine-secdb
-// git repository.
+// Package alpine implements a vulnerability source updater using the
+// alpine-secdb git repository.
 package alpine
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -31,7 +30,7 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
-	"github.com/coreos/clair/updater"
+	"github.com/coreos/clair/ext/vulnsrc"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
@@ -45,29 +44,23 @@ const (
 )
 
 var (
-	// ErrFilesystem is returned when a fetcher fails to interact with the local filesystem.
-	ErrFilesystem = errors.New("updater/fetchers: something went wrong when interacting with the fs")
-
-	// ErrGitFailure is returned when a fetcher fails to interact with git.
-	ErrGitFailure = errors.New("updater/fetchers: something went wrong when interacting with git")
-
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "updater/fetchers/alpine")
+	log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/vulnsrc/alpine")
 )
 
 func init() {
-	updater.RegisterFetcher("alpine", &fetcher{})
+	vulnsrc.RegisterUpdater("alpine", &updater{})
 }
 
-type fetcher struct {
+type updater struct {
 	repositoryLocalPath string
 }
 
-func (f *fetcher) FetchUpdate(db database.Datastore) (resp updater.FetcherResponse, err error) {
+func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
 	log.Info("fetching Alpine vulnerabilities")
 
 	// Pull the master branch.
 	var commit string
-	commit, err = f.pullRepository()
+	commit, err = u.pullRepository()
 	if err != nil {
 		return
 	}
@@ -90,12 +83,12 @@ func (f *fetcher) FetchUpdate(db database.Datastore) (resp updater.FetcherRespon
 	}
 
 	var namespaces []string
-	namespaces, err = detectNamespaces(f.repositoryLocalPath)
+	namespaces, err = detectNamespaces(u.repositoryLocalPath)
 	// Append any changed vulnerabilities to the response.
 	for _, namespace := range namespaces {
 		var vulns []database.Vulnerability
 		var note string
-		vulns, note, err = parseVulnsFromNamespace(f.repositoryLocalPath, namespace)
+		vulns, note, err = parseVulnsFromNamespace(u.repositoryLocalPath, namespace)
 		if err != nil {
 			return
 		}
@@ -106,6 +99,12 @@ func (f *fetcher) FetchUpdate(db database.Datastore) (resp updater.FetcherRespon
 	}
 
 	return
+}
+
+func (u *updater) Clean() {
+	if u.repositoryLocalPath != "" {
+		os.RemoveAll(u.repositoryLocalPath)
+	}
 }
 
 func detectNamespaces(path string) ([]string, error) {
@@ -163,39 +162,33 @@ func parseVulnsFromNamespace(repositoryPath, namespace string) (vulns []database
 	return
 }
 
-func (f *fetcher) pullRepository() (commit string, err error) {
+func (u *updater) pullRepository() (commit string, err error) {
 	// If the repository doesn't exist, clone it.
-	if _, pathExists := os.Stat(f.repositoryLocalPath); f.repositoryLocalPath == "" || os.IsNotExist(pathExists) {
-		if f.repositoryLocalPath, err = ioutil.TempDir(os.TempDir(), "alpine-secdb"); err != nil {
-			return "", ErrFilesystem
+	if _, pathExists := os.Stat(u.repositoryLocalPath); u.repositoryLocalPath == "" || os.IsNotExist(pathExists) {
+		if u.repositoryLocalPath, err = ioutil.TempDir(os.TempDir(), "alpine-secdb"); err != nil {
+			return "", vulnsrc.ErrFilesystem
 		}
 
-		if out, err := utils.Exec(f.repositoryLocalPath, "git", "clone", secdbGitURL, "."); err != nil {
-			f.Clean()
+		if out, err := utils.Exec(u.repositoryLocalPath, "git", "clone", secdbGitURL, "."); err != nil {
+			u.Clean()
 			log.Errorf("could not pull alpine-secdb repository: %s. output: %s", err, out)
 			return "", cerrors.ErrCouldNotDownload
 		}
 	} else {
 		// The repository exists and it needs to be refreshed via a pull.
-		_, err := utils.Exec(f.repositoryLocalPath, "git", "pull")
+		_, err := utils.Exec(u.repositoryLocalPath, "git", "pull")
 		if err != nil {
-			return "", ErrGitFailure
+			return "", vulnsrc.ErrGitFailure
 		}
 	}
 
-	out, err := utils.Exec(f.repositoryLocalPath, "git", "rev-parse", "HEAD")
+	out, err := utils.Exec(u.repositoryLocalPath, "git", "rev-parse", "HEAD")
 	if err != nil {
-		return "", ErrGitFailure
+		return "", vulnsrc.ErrGitFailure
 	}
 
 	commit = strings.TrimSpace(string(out))
 	return
-}
-
-func (f *fetcher) Clean() {
-	if f.repositoryLocalPath != "" {
-		os.RemoveAll(f.repositoryLocalPath)
-	}
 }
 
 type secdb33File struct {

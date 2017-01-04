@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package notifier fetches notifications from the database and informs the specified remote handler
-// about their existences, inviting the third party to actively query the API about it.
+// Package notifier fetches notifications from the database and informs the
+// specified remote handler about their existences, inviting the third party to
+// actively query the API about it.
 package notifier
 
 import (
@@ -26,6 +27,7 @@ import (
 
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/notification"
 	"github.com/coreos/clair/utils"
 	cerrors "github.com/coreos/clair/utils/errors"
 )
@@ -40,8 +42,6 @@ const (
 var (
 	log = capnslog.NewPackageLogger("github.com/coreos/clair", "notifier")
 
-	notifiers = make(map[string]Notifier)
-
 	promNotifierLatencyMilliseconds = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name: "clair_notifier_latency_milliseconds",
 		Help: "Time it takes to send a notification after it's been created.",
@@ -53,37 +53,9 @@ var (
 	}, []string{"backend"})
 )
 
-// Notifier represents anything that can transmit notifications.
-type Notifier interface {
-	// Configure attempts to initialize the notifier with the provided configuration.
-	// It returns whether the notifier is enabled or not.
-	Configure(*config.NotifierConfig) (bool, error)
-	// Send informs the existence of the specified notification.
-	Send(notification database.VulnerabilityNotification) error
-}
-
 func init() {
 	prometheus.MustRegister(promNotifierLatencyMilliseconds)
 	prometheus.MustRegister(promNotifierBackendErrorsTotal)
-}
-
-// RegisterNotifier makes a Fetcher available by the provided name.
-// If Register is called twice with the same name or if driver is nil,
-// it panics.
-func RegisterNotifier(name string, n Notifier) {
-	if name == "" {
-		panic("notifier: could not register a Notifier with an empty name")
-	}
-
-	if n == nil {
-		panic("notifier: could not register a nil Notifier")
-	}
-
-	if _, dup := notifiers[name]; dup {
-		panic("notifier: RegisterNotifier called twice for " + name)
-	}
-
-	notifiers[name] = n
 }
 
 // Run starts the Notifier service.
@@ -91,19 +63,19 @@ func Run(config *config.NotifierConfig, datastore database.Datastore, stopper *u
 	defer stopper.End()
 
 	// Configure registered notifiers.
-	for notifierName, notifier := range notifiers {
-		if configured, err := notifier.Configure(config); configured {
-			log.Infof("notifier '%s' configured\n", notifierName)
+	for senderName, sender := range notification.Senders {
+		if configured, err := sender.Configure(config); configured {
+			log.Infof("sender '%s' configured\n", senderName)
 		} else {
-			delete(notifiers, notifierName)
+			delete(notification.Senders, senderName)
 			if err != nil {
-				log.Errorf("could not configure notifier '%s': %s", notifierName, err)
+				log.Errorf("could not configure notifier '%s': %s", senderName, err)
 			}
 		}
 	}
 
 	// Do not run the updater if there is no notifier enabled.
-	if len(notifiers) == 0 {
+	if len(notification.Senders) == 0 {
 		log.Infof("notifier service is disabled")
 		return
 	}
@@ -175,31 +147,31 @@ func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoA
 	}
 }
 
-func handleTask(notification database.VulnerabilityNotification, st *utils.Stopper, maxAttempts int) (bool, bool) {
+func handleTask(n database.VulnerabilityNotification, st *utils.Stopper, maxAttempts int) (bool, bool) {
 	// Send notification.
-	for notifierName, notifier := range notifiers {
+	for senderName, sender := range notification.Senders {
 		var attempts int
 		var backOff time.Duration
 		for {
 			// Max attempts exceeded.
 			if attempts >= maxAttempts {
-				log.Infof("giving up on sending notification '%s' via notifier '%s': max attempts exceeded (%d)\n", notification.Name, notifierName, maxAttempts)
+				log.Infof("giving up on sending notification '%s' via sender '%s': max attempts exceeded (%d)\n", n.Name, senderName, maxAttempts)
 				return false, false
 			}
 
 			// Backoff.
 			if backOff > 0 {
-				log.Infof("waiting %v before retrying to send notification '%s' via notifier '%s' (Attempt %d / %d)\n", backOff, notification.Name, notifierName, attempts+1, maxAttempts)
+				log.Infof("waiting %v before retrying to send notification '%s' via sender '%s' (Attempt %d / %d)\n", backOff, n.Name, senderName, attempts+1, maxAttempts)
 				if !st.Sleep(backOff) {
 					return false, true
 				}
 			}
 
 			// Send using the current notifier.
-			if err := notifier.Send(notification); err != nil {
+			if err := sender.Send(n); err != nil {
 				// Send failed; increase attempts/backoff and retry.
-				promNotifierBackendErrorsTotal.WithLabelValues(notifierName).Inc()
-				log.Errorf("could not send notification '%s' via notifier '%s': %v", notification.Name, notifierName, err)
+				promNotifierBackendErrorsTotal.WithLabelValues(senderName).Inc()
+				log.Errorf("could not send notification '%s' via notifier '%s': %v", n.Name, senderName, err)
 				backOff = timeutil.ExpBackoff(backOff, maxBackOff)
 				attempts++
 				continue
@@ -210,6 +182,6 @@ func handleTask(notification database.VulnerabilityNotification, st *utils.Stopp
 		}
 	}
 
-	log.Infof("successfully sent notification '%s'\n", notification.Name)
+	log.Infof("successfully sent notification '%s'\n", n.Name)
 	return true, false
 }

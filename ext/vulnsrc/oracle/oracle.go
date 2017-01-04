@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package rhel
+// Package oracle implements a vulnerability source updater using the
+// Oracle Linux OVAL Database.
+package oracle
 
 import (
 	"bufio"
@@ -23,37 +25,31 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/coreos/pkg/capnslog"
-
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/rpm"
-	"github.com/coreos/clair/updater"
+	"github.com/coreos/clair/ext/vulnsrc"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
+	"github.com/coreos/pkg/capnslog"
 )
 
 const (
-	// Before this RHSA, it deals only with RHEL <= 4.
-	firstRHEL5RHSA      = 20070044
-	firstConsideredRHEL = 5
-
-	ovalURI        = "https://www.redhat.com/security/data/oval/"
-	rhsaFilePrefix = "com.redhat.rhsa-"
-	updaterFlag    = "rhelUpdater"
+	firstOracle5ELSA = 20070057
+	ovalURI          = "https://linux.oracle.com/oval/"
+	elsaFilePrefix   = "com.oracle.elsa-"
+	updaterFlag      = "oracleUpdater"
 )
 
 var (
 	ignoredCriterions = []string{
-		" is signed with Red Hat ",
-		" Client is installed",
-		" Workstation is installed",
-		" ComputeNode is installed",
+		" is signed with the Oracle Linux",
+		".ksplice1.",
 	}
 
-	rhsaRegexp = regexp.MustCompile(`com.redhat.rhsa-(\d+).xml`)
+	elsaRegexp = regexp.MustCompile(`com.oracle.elsa-(\d+).xml`)
 
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "updater/fetchers/rhel")
+	log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/vulnsrc/oracle")
 )
 
 type oval struct {
@@ -65,6 +61,7 @@ type definition struct {
 	Description string      `xml:"metadata>description"`
 	References  []reference `xml:"metadata>reference"`
 	Criteria    criteria    `xml:"criteria"`
+	Severity    string      `xml:"metadata>advisory>severity"`
 }
 
 type reference struct {
@@ -82,59 +79,58 @@ type criterion struct {
 	Comment string `xml:"comment,attr"`
 }
 
-// RHELFetcher implements updater.Fetcher and gets vulnerability updates from
-// the Red Hat OVAL definitions.
-type RHELFetcher struct{}
+type updater struct{}
 
 func init() {
-	updater.RegisterFetcher("Red Hat", &RHELFetcher{})
+	vulnsrc.RegisterUpdater("oracle", &updater{})
 }
 
-// FetchUpdate gets vulnerability updates from the Red Hat OVAL definitions.
-func (f *RHELFetcher) FetchUpdate(datastore database.Datastore) (resp updater.FetcherResponse, err error) {
-	log.Info("fetching Red Hat vulnerabilities")
+func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
+	log.Info("fetching Oracle Linux vulnerabilities")
 
-	// Get the first RHSA we have to manage.
+	// Get the first ELSA we have to manage.
 	flagValue, err := datastore.GetKeyValue(updaterFlag)
 	if err != nil {
 		return resp, err
 	}
-	firstRHSA, err := strconv.Atoi(flagValue)
-	if firstRHSA == 0 || err != nil {
-		firstRHSA = firstRHEL5RHSA
+
+	firstELSA, err := strconv.Atoi(flagValue)
+	if firstELSA == 0 || err != nil {
+		firstELSA = firstOracle5ELSA
 	}
 
 	// Fetch the update list.
 	r, err := http.Get(ovalURI)
 	if err != nil {
-		log.Errorf("could not download RHEL's update list: %s", err)
+		log.Errorf("could not download Oracle's update list: %s", err)
 		return resp, cerrors.ErrCouldNotDownload
 	}
+	defer r.Body.Close()
 
-	// Get the list of RHSAs that we have to process.
-	var rhsaList []int
+	// Get the list of ELSAs that we have to process.
+	var elsaList []int
 	scanner := bufio.NewScanner(r.Body)
 	for scanner.Scan() {
 		line := scanner.Text()
-		r := rhsaRegexp.FindStringSubmatch(line)
+		r := elsaRegexp.FindStringSubmatch(line)
 		if len(r) == 2 {
-			rhsaNo, _ := strconv.Atoi(r[1])
-			if rhsaNo > firstRHSA {
-				rhsaList = append(rhsaList, rhsaNo)
+			elsaNo, _ := strconv.Atoi(r[1])
+			if elsaNo > firstELSA {
+				elsaList = append(elsaList, elsaNo)
 			}
 		}
 	}
 
-	for _, rhsa := range rhsaList {
-		// Download the RHSA's XML file.
-		r, err := http.Get(ovalURI + rhsaFilePrefix + strconv.Itoa(rhsa) + ".xml")
+	for _, elsa := range elsaList {
+		// Download the ELSA's XML file.
+		r, err := http.Get(ovalURI + elsaFilePrefix + strconv.Itoa(elsa) + ".xml")
 		if err != nil {
-			log.Errorf("could not download RHEL's update file: %s", err)
+			log.Errorf("could not download Oracle's update file: %s", err)
 			return resp, cerrors.ErrCouldNotDownload
 		}
 
 		// Parse the XML.
-		vs, err := parseRHSA(r.Body)
+		vs, err := parseELSA(r.Body)
 		if err != nil {
 			return resp, err
 		}
@@ -146,22 +142,24 @@ func (f *RHELFetcher) FetchUpdate(datastore database.Datastore) (resp updater.Fe
 	}
 
 	// Set the flag if we found anything.
-	if len(rhsaList) > 0 {
+	if len(elsaList) > 0 {
 		resp.FlagName = updaterFlag
-		resp.FlagValue = strconv.Itoa(rhsaList[len(rhsaList)-1])
+		resp.FlagValue = strconv.Itoa(elsaList[len(elsaList)-1])
 	} else {
-		log.Debug("no Red Hat update.")
+		log.Debug("no Oracle Linux update.")
 	}
 
 	return resp, nil
 }
 
-func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.Vulnerability, err error) {
+func (u *updater) Clean() {}
+
+func parseELSA(ovalReader io.Reader) (vulnerabilities []database.Vulnerability, err error) {
 	// Decode the XML.
 	var ov oval
 	err = xml.NewDecoder(ovalReader).Decode(&ov)
 	if err != nil {
-		log.Errorf("could not decode RHEL's XML: %s", err)
+		log.Errorf("could not decode Oracle's XML: %s", err)
 		err = cerrors.ErrCouldNotParse
 		return
 	}
@@ -263,7 +261,7 @@ func getPossibilities(node criteria) [][]criterion {
 }
 
 func toFeatureVersions(criteria criteria) []database.FeatureVersion {
-	// There are duplicates in Red Hat .xml files.
+	// There are duplicates in Oracle .xml files.
 	// This map is for deduplication.
 	featureVersionParameters := make(map[string]database.FeatureVersion)
 
@@ -278,10 +276,10 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 		// Attempt to parse package data from trees of criterions.
 		for _, c := range criterions {
 			if strings.Contains(c.Comment, " is installed") {
-				const prefixLen = len("Red Hat Enterprise Linux ")
+				const prefixLen = len("Oracle Linux ")
 				osVersion, err = strconv.Atoi(strings.TrimSpace(c.Comment[prefixLen : prefixLen+strings.Index(c.Comment[prefixLen:], " ")]))
 				if err != nil {
-					log.Warningf("could not parse Red Hat release version from: '%s'.", c.Comment)
+					log.Warningf("could not parse Oracle Linux release version from: '%s'.", c.Comment)
 				}
 			} else if strings.Contains(c.Comment, " is earlier than ") {
 				const prefixLen = len(" is earlier than ")
@@ -292,17 +290,12 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 					log.Warningf("could not parse package version '%s': %s. skipping", version, err.Error())
 				} else {
 					featureVersion.Version = version
-					featureVersion.Feature.Namespace.VersionFormat = rpm.ParserName
 				}
 			}
 		}
 
-		if osVersion >= firstConsideredRHEL {
-			// TODO(vbatts) this is where features need multiple labels ('centos' and 'rhel')
-			featureVersion.Feature.Namespace.Name = "centos" + ":" + strconv.Itoa(osVersion)
-		} else {
-			continue
-		}
+		featureVersion.Feature.Namespace.Name = "oracle" + ":" + strconv.Itoa(osVersion)
+		featureVersion.Feature.Namespace.VersionFormat = rpm.ParserName
 
 		if featureVersion.Feature.Namespace.Name != "" && featureVersion.Feature.Name != "" && featureVersion.Version != "" {
 			featureVersionParameters[featureVersion.Feature.Namespace.Name+":"+featureVersion.Feature.Name] = featureVersion
@@ -334,7 +327,7 @@ func name(def definition) string {
 
 func link(def definition) (link string) {
 	for _, reference := range def.References {
-		if reference.Source == "RHSA" {
+		if reference.Source == "elsa" {
 			link = reference.URI
 			break
 		}
@@ -345,23 +338,22 @@ func link(def definition) (link string) {
 
 func priority(def definition) types.Priority {
 	// Parse the priority.
-	priority := strings.TrimSpace(def.Title[strings.LastIndex(def.Title, "(")+1 : len(def.Title)-1])
+	priority := strings.ToLower(def.Severity)
 
 	// Normalize the priority.
 	switch priority {
-	case "Low":
+	case "n/a":
+		return types.Negligible
+	case "low":
 		return types.Low
-	case "Moderate":
+	case "moderate":
 		return types.Medium
-	case "Important":
+	case "important":
 		return types.High
-	case "Critical":
+	case "critical":
 		return types.Critical
 	default:
-		log.Warning("could not determine vulnerability priority from: %s.", priority)
+		log.Warningf("could not determine vulnerability priority from: %s.", priority)
 		return types.Unknown
 	}
 }
-
-// Clean deletes any allocated resources.
-func (f *RHELFetcher) Clean() {}
