@@ -14,15 +14,15 @@ Please use [releases] instead of the `master` branch in order to get stable bina
 Clair is an open source project for the static analysis of vulnerabilities in [appc] and [docker] containers.
 
 Vulnerability data is continuously imported from a known set of sources and correlated with the indexed contents of container images in order to produce lists of vulnerabilities that threaten a container.
-When vulnerability data changes upstream, the previous state and new state of the vulnerability along with the images they affect can be sent via webhook to a configured endpoint.
-All major components can be [customized programmatically] at compile-time without forking the project.
+When vulnerability data changes upstream, a notification can be delivered, and the API queried to provide the previous state and new state of the vulnerability along with the images affected by both.
+All major components can be [extended programmatically] at compile-time without forking the project.
 
 Our goal is to enable a more transparent view of the security of container-based infrastructure.
 Thus, the project was named `Clair` after the French term which translates to *clear*, *bright*, *transparent*.
 
 [appc]: https://github.com/appc/spec
 [docker]: https://github.com/docker/docker/blob/master/image/spec/v1.md
-[customized programmatically]: #customization
+[extended programmatically]: #customization
 [releases]: https://github.com/coreos/clair/releases
 
 ## Common Use Cases
@@ -127,7 +127,8 @@ While container images for every releases are available at [quay.io/repository/c
 
 ## Documentation
 
-The latest stable documentation can be found [on the CoreOS website]. Documentation for the current branch can be found [inside the Documentation directory][docs-dir] at the root of the project's source code.
+The latest stable documentation can be found [on the CoreOS website].
+Documentation for the current branch can be found [inside the Documentation directory][docs-dir] at the root of the project's source code.
 
 [on the CoreOS website]: https://coreos.com/clair/docs/latest/
 [docs-dir]: /Documentation
@@ -143,7 +144,8 @@ The latest stable documentation can be found [on the CoreOS website]. Documentat
 - *Detector* - a Go package that identifies the content, *namespaces* and *features* from a *layer*
 - *Namespace* - a context around *features* and *vulnerabilities* (e.g. an operating system)
 - *Feature* - anything that when present could be an indication of a *vulnerability* (e.g. the presence of a file or an installed software package)
-- *Fetcher* - a Go package that tracks an upstream vulnerability database and imports them into Clair
+- *Vulnerability Updater* - a Go package that tracks upstream vulnerability data and imports them into Clair
+- *Vulnerability Metadata Appender* - a Go package that tracks upstream vulnerability metadata and appends them into vulnerabilities managed by Clair
 
 ### Vulnerability Analysis
 
@@ -164,13 +166,13 @@ By indexing the features of an image into the database, images only need to be r
 | [Red Hat Security Data]       | CentOS 5, 6, 7 namespaces                                                | [rpm]  | [CVRF]          |
 | [Oracle Linux Security Data]  | Oracle Linux 5, 6, 7 namespaces                                          | [rpm]  | [CVRF]          |
 | [Alpine SecDB]                | Alpine 3.3, Alpine 3.4 namespaces                                        | [apk]  | [MIT]           |
-| [NVD]                         | Generic Vulnerability Metadata                                           | N/A    | [Public Domain] |
+| [NIST NVD]                    | Generic Vulnerability Metadata                                           | N/A    | [Public Domain] |
 
 [Debian Security Bug Tracker]: https://security-tracker.debian.org/tracker
 [Ubuntu CVE Tracker]: https://launchpad.net/ubuntu-cve-tracker
 [Red Hat Security Data]: https://www.redhat.com/security/data/metrics
 [Oracle Linux Security Data]: https://linux.oracle.com/security/
-[NVD]: https://nvd.nist.gov
+[NIST NVD]: https://nvd.nist.gov
 [dpkg]: https://en.wikipedia.org/wiki/dpkg
 [rpm]: http://www.rpm.org
 [Debian]: https://www.debian.org/license
@@ -185,21 +187,13 @@ By indexing the features of an image into the database, images only need to be r
 ### Customization
 
 The major components of Clair are all programmatically extensible in the same way Go's standard [database/sql] package is extensible.
+Everything extendable is located in the `ext` directory.
 
-Custom behavior can be accomplished by creating a package that contains a type that implements an interface declared in Clair and registering that interface in [init()]. To expose the new behavior, unqualified imports to the package must be added in your [main.go], which should then start Clair using `Boot(*config.Config)`.
+Custom behavior can be accomplished by creating a package that contains a type that implements an interface declared in Clair and registering that interface in [init()].
+To expose the new behavior, unqualified imports to the package must be added in your own custom [main.go], which should then start Clair using `Boot(*config.Config)`.
 
-The following interfaces can have custom implementations registered via [init()] at compile time:
-
-- `Datastore` - the backing storage
-- `Notifier` - the means by which endpoints are notified of vulnerability changes
-- `Fetcher` - the sources of vulnerability data that is automatically imported
-- `MetadataFetcher` - the sources of vulnerability metadata that is automatically added to known vulnerabilities
-- `DataDetector` - the means by which contents of an image are detected
-- `FeatureDetector` - the means by which features are identified from a layer
-- `NamespaceDetector` - the means by which a namespace is identified from a layer
-
-[init()]: https://golang.org/doc/effective_go.html#init
 [database/sql]: https://godoc.org/database/sql
+[init()]: https://golang.org/doc/effective_go.html#init
 [main.go]: https://github.com/coreos/clair/blob/master/cmd/clair/main.go
 
 ## Related Links
