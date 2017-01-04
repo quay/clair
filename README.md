@@ -9,7 +9,7 @@
 **Note**: The `master` branch may be in an *unstable or even broken state* during development.
 Please use [releases] instead of the `master` branch in order to get stable binaries.
 
-![Clair Logo](img/Clair_horizontal_color.png)
+![Clair Logo](https://cloud.githubusercontent.com/assets/343539/21630811/c5081e5c-d202-11e6-92eb-919d5999c77a.png)
 
 Clair is an open source project for the static analysis of vulnerabilities in [appc] and [docker] containers.
 
@@ -134,7 +134,7 @@ The latest stable documentation can be found [on the CoreOS website]. Documentat
 
 ### Architecture at a Glance
 
-![Simple Clair Diagram](img/simple_diagram.png)
+![Simple Clair Diagram](https://cloud.githubusercontent.com/assets/343539/21630809/c1adfbd2-d202-11e6-9dfe-9024139d0a28.png)
 
 ### Terminology
 
