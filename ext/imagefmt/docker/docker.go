@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package docker implements an imagefmt.Extractor for docker formatted
+// container image layers.
 package docker
 
 import (

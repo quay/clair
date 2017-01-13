@@ -51,7 +51,7 @@ type Extractor interface {
 	ExtractFiles(layer io.ReadCloser, filenames []string) (tarutil.FilesMap, error)
 }
 
-// RegisterExtractor makes a extractor available by the provided name.
+// RegisterExtractor makes an extractor available by the provided name.
 //
 // If called twice with the same name, the name is blank, or if the provided
 // Extractor is nil, this function panics.
@@ -60,11 +60,11 @@ func RegisterExtractor(name string, d Extractor) {
 	defer extractorsM.Unlock()
 
 	if name == "" {
-		panic("imagefmt: could not register a extractor with an empty name")
+		panic("imagefmt: could not register an Extractor with an empty name")
 	}
 
 	if d == nil {
-		panic("imagefmt: could not register a nil extractor")
+		panic("imagefmt: could not register a nil Extractor")
 	}
 
 	// Enforce lowercase names, so that they can be reliably be found in a map.

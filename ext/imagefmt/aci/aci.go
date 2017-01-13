@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package aci implements an imagefmt.Extractor for appc formatted container
+// image layers.
 package aci
 
 import (
