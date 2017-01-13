@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package rpm implements a featurefmt.Lister for rpm packages.
 package rpm
 
 import (
@@ -23,26 +24,24 @@ import (
 	"github.com/coreos/pkg/capnslog"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/featurefmt"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/rpm"
 	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/coreos/clair/pkg/tarutil"
 	"github.com/coreos/clair/utils"
-	"github.com/coreos/clair/worker/detectors"
 )
 
-var log = capnslog.NewPackageLogger("github.com/coreos/clair", "rpm")
+var log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/featurefmt/rpm")
 
-// RpmFeaturesDetector implements FeaturesDetector and detects rpm packages
-// It requires the "rpm" binary to be in the PATH
-type RpmFeaturesDetector struct{}
+type lister struct{}
 
 func init() {
-	detectors.RegisterFeaturesDetector("rpm", &RpmFeaturesDetector{})
+	featurefmt.RegisterLister("rpm", &lister{})
 }
 
-// Detect detects packages using var/lib/rpm/Packages from the input data
-func (detector *RpmFeaturesDetector) Detect(data map[string][]byte) ([]database.FeatureVersion, error) {
-	f, hasFile := data["var/lib/rpm/Packages"]
+func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion, error) {
+	f, hasFile := files["var/lib/rpm/Packages"]
 	if !hasFile {
 		return []database.FeatureVersion{}, nil
 	}
@@ -116,8 +115,6 @@ func (detector *RpmFeaturesDetector) Detect(data map[string][]byte) ([]database.
 	return packages, nil
 }
 
-// GetRequiredFiles returns the list of files required for Detect, without
-// leading /
-func (detector *RpmFeaturesDetector) GetRequiredFiles() []string {
+func (l lister) RequiredFilenames() []string {
 	return []string{"var/lib/rpm/Packages"}
 }

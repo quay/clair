@@ -26,10 +26,10 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 
 	// Register the required detectors.
-	_ "github.com/coreos/clair/worker/detectors/data/docker"
-	_ "github.com/coreos/clair/worker/detectors/feature/dpkg"
-	_ "github.com/coreos/clair/worker/detectors/namespace/aptsources"
-	_ "github.com/coreos/clair/worker/detectors/namespace/osrelease"
+	_ "github.com/coreos/clair/ext/featurefmt/dpkg"
+	_ "github.com/coreos/clair/ext/featurens/aptsources"
+	_ "github.com/coreos/clair/ext/featurens/osrelease"
+	_ "github.com/coreos/clair/ext/imagefmt/docker"
 )
 
 type mockDatastore struct {

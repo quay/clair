@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package apk implements a featurefmt.Lister for APK packages.
 package apk
 
 import (
@@ -21,21 +22,22 @@ import (
 	"github.com/coreos/pkg/capnslog"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/featurefmt"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
-	"github.com/coreos/clair/worker/detectors"
+	"github.com/coreos/clair/pkg/tarutil"
 )
 
-var log = capnslog.NewPackageLogger("github.com/coreos/clair", "worker/detectors/packages")
+var log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/featurefmt/apk")
 
 func init() {
-	detectors.RegisterFeaturesDetector("apk", &detector{})
+	featurefmt.RegisterLister("apk", &lister{})
 }
 
-type detector struct{}
+type lister struct{}
 
-func (d *detector) Detect(data map[string][]byte) ([]database.FeatureVersion, error) {
-	file, exists := data["lib/apk/db/installed"]
+func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion, error) {
+	file, exists := files["lib/apk/db/installed"]
 	if !exists {
 		return []database.FeatureVersion{}, nil
 	}
@@ -83,6 +85,6 @@ func (d *detector) Detect(data map[string][]byte) ([]database.FeatureVersion, er
 	return pkgs, nil
 }
 
-func (d *detector) GetRequiredFiles() []string {
+func (l lister) RequiredFilenames() []string {
 	return []string{"lib/apk/db/installed"}
 }

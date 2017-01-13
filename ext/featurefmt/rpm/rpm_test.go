@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,11 +18,12 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/worker/detectors/feature"
+	"github.com/coreos/clair/ext/featurefmt"
+	"github.com/coreos/clair/pkg/tarutil"
 )
 
 func TestRpmFeatureDetection(t *testing.T) {
-	testData := []feature.TestData{
+	testData := []featurefmt.TestData{
 		// Test a CentOS 7 RPM database
 		// Memo: Use the following command on a RPM-based system to shrink a database: rpm -qa --qf "%{NAME}\n" |tail -n +3| xargs rpm -e --justdb
 		{
@@ -38,11 +39,11 @@ func TestRpmFeatureDetection(t *testing.T) {
 					Version: "3.2-18.el7",
 				},
 			},
-			Data: map[string][]byte{
-				"var/lib/rpm/Packages": feature.LoadFileForTest("rpm/testdata/Packages"),
+			Files: tarutil.FilesMap{
+				"var/lib/rpm/Packages": featurefmt.LoadFileForTest("rpm/testdata/Packages"),
 			},
 		},
 	}
 
-	feature.TestDetector(t, &RpmFeaturesDetector{}, testData)
+	featurefmt.TestLister(t, &lister{}, testData)
 }

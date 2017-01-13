@@ -20,12 +20,12 @@ import (
 	"github.com/coreos/pkg/capnslog"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/featurefmt"
 	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/ext/imagefmt"
 	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/pkg/tarutil"
 	"github.com/coreos/clair/utils"
-	"github.com/coreos/clair/worker/detectors"
 )
 
 const (
@@ -115,7 +115,7 @@ func Process(datastore database.Datastore, imageFormat, name, parentName, path s
 // detectContent downloads a layer's archive and extracts its Namespace and
 // Features.
 func detectContent(imageFormat, name, path string, headers map[string]string, parent *database.Layer) (namespace *database.Namespace, featureVersions []database.FeatureVersion, err error) {
-	totalRequiredFiles := append(detectors.GetRequiredFilesFeatures(), featurens.RequiredFilenames()...)
+	totalRequiredFiles := append(featurefmt.RequiredFilenames(), featurens.RequiredFilenames()...)
 	files, err := imagefmt.Extract(imageFormat, path, headers, totalRequiredFiles)
 	if err != nil {
 		log.Errorf("layer %s: failed to extract data from %s: %s", name, utils.CleanURL(path), err)
@@ -128,8 +128,7 @@ func detectContent(imageFormat, name, path string, headers map[string]string, pa
 	}
 
 	// Detect features.
-	data := map[string][]byte(files)
-	featureVersions, err = detectFeatureVersions(name, data, namespace, parent)
+	featureVersions, err = detectFeatureVersions(name, files, namespace, parent)
 	if err != nil {
 		return
 	}
@@ -162,12 +161,12 @@ func detectNamespace(name string, files tarutil.FilesMap, parent *database.Layer
 	return
 }
 
-func detectFeatureVersions(name string, data map[string][]byte, namespace *database.Namespace, parent *database.Layer) (features []database.FeatureVersion, err error) {
+func detectFeatureVersions(name string, files tarutil.FilesMap, namespace *database.Namespace, parent *database.Layer) (features []database.FeatureVersion, err error) {
 	// TODO(Quentin-M): We need to pass the parent image to DetectFeatures because it's possible that
 	// some detectors would need it in order to produce the entire feature list (if they can only
 	// detect a diff). Also, we should probably pass the detected namespace so detectors could
 	// make their own decision.
-	features, err = detectors.DetectFeatures(data)
+	features, err = featurefmt.ListFeatures(files)
 	if err != nil {
 		return
 	}

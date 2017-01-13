@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,11 +18,12 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/worker/detectors/feature"
+	"github.com/coreos/clair/ext/featurefmt"
+	"github.com/coreos/clair/pkg/tarutil"
 )
 
 func TestAPKFeatureDetection(t *testing.T) {
-	testData := []feature.TestData{
+	testData := []featurefmt.TestData{
 		{
 			FeatureVersions: []database.FeatureVersion{
 				{
@@ -70,10 +71,10 @@ func TestAPKFeatureDetection(t *testing.T) {
 					Version: "0.7-r0",
 				},
 			},
-			Data: map[string][]byte{
-				"lib/apk/db/installed": feature.LoadFileForTest("apk/testdata/installed"),
+			Files: tarutil.FilesMap{
+				"lib/apk/db/installed": featurefmt.LoadFileForTest("apk/testdata/installed"),
 			},
 		},
 	}
-	feature.TestDetector(t, &detector{}, testData)
+	featurefmt.TestLister(t, &lister{}, testData)
 }

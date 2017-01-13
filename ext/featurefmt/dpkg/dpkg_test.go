@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,11 +18,12 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/worker/detectors/feature"
+	"github.com/coreos/clair/ext/featurefmt"
+	"github.com/coreos/clair/pkg/tarutil"
 )
 
 func TestDpkgFeatureDetection(t *testing.T) {
-	testData := []feature.TestData{
+	testData := []featurefmt.TestData{
 		// Test an Ubuntu dpkg status file
 		{
 			FeatureVersions: []database.FeatureVersion{
@@ -40,11 +41,11 @@ func TestDpkgFeatureDetection(t *testing.T) {
 					Version: "5.1.1-12ubuntu1", // The version comes from the "Source:" line
 				},
 			},
-			Data: map[string][]byte{
-				"var/lib/dpkg/status": feature.LoadFileForTest("dpkg/testdata/status"),
+			Files: tarutil.FilesMap{
+				"var/lib/dpkg/status": featurefmt.LoadFileForTest("dpkg/testdata/status"),
 			},
 		},
 	}
 
-	feature.TestDetector(t, &DpkgFeaturesDetector{}, testData)
+	featurefmt.TestLister(t, &lister{}, testData)
 }

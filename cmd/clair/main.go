@@ -25,7 +25,13 @@ import (
 	"github.com/coreos/clair"
 	"github.com/coreos/clair/config"
 
+	// Register database driver.
+	_ "github.com/coreos/clair/database/pgsql"
+
 	// Register extensions.
+	_ "github.com/coreos/clair/ext/featurefmt/apk"
+	_ "github.com/coreos/clair/ext/featurefmt/dpkg"
+	_ "github.com/coreos/clair/ext/featurefmt/rpm"
 	_ "github.com/coreos/clair/ext/featurens/alpinerelease"
 	_ "github.com/coreos/clair/ext/featurens/aptsources"
 	_ "github.com/coreos/clair/ext/featurens/lsbrelease"
@@ -40,12 +46,6 @@ import (
 	_ "github.com/coreos/clair/ext/vulnsrc/oracle"
 	_ "github.com/coreos/clair/ext/vulnsrc/rhel"
 	_ "github.com/coreos/clair/ext/vulnsrc/ubuntu"
-
-	_ "github.com/coreos/clair/worker/detectors/feature/apk"
-	_ "github.com/coreos/clair/worker/detectors/feature/dpkg"
-	_ "github.com/coreos/clair/worker/detectors/feature/rpm"
-
-	_ "github.com/coreos/clair/database/pgsql"
 )
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair/cmd/clair", "main")

@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package dpkg implements a featurefmt.Lister for dpkg packages.
 package dpkg
 
 import (
@@ -22,28 +23,27 @@ import (
 	"github.com/coreos/pkg/capnslog"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/featurefmt"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
-	"github.com/coreos/clair/worker/detectors"
+	"github.com/coreos/clair/pkg/tarutil"
 )
 
 var (
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "worker/detectors/packages")
+	log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/featurefmt/dpkg")
 
 	dpkgSrcCaptureRegexp      = regexp.MustCompile(`Source: (?P<name>[^\s]*)( \((?P<version>.*)\))?`)
 	dpkgSrcCaptureRegexpNames = dpkgSrcCaptureRegexp.SubexpNames()
 )
 
-// DpkgFeaturesDetector implements FeaturesDetector and detects dpkg packages
-type DpkgFeaturesDetector struct{}
+type lister struct{}
 
 func init() {
-	detectors.RegisterFeaturesDetector("dpkg", &DpkgFeaturesDetector{})
+	featurefmt.RegisterLister("dpkg", &lister{})
 }
 
-// Detect detects packages using var/lib/dpkg/status from the input data
-func (detector *DpkgFeaturesDetector) Detect(data map[string][]byte) ([]database.FeatureVersion, error) {
-	f, hasFile := data["var/lib/dpkg/status"]
+func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion, error) {
+	f, hasFile := files["var/lib/dpkg/status"]
 	if !hasFile {
 		return []database.FeatureVersion{}, nil
 	}
@@ -116,8 +116,6 @@ func (detector *DpkgFeaturesDetector) Detect(data map[string][]byte) ([]database
 	return packages, nil
 }
 
-// GetRequiredFiles returns the list of files required for Detect, without
-// leading /
-func (detector *DpkgFeaturesDetector) GetRequiredFiles() []string {
+func (l lister) RequiredFilenames() []string {
 	return []string{"var/lib/dpkg/status"}
 }
