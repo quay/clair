@@ -20,8 +20,10 @@ import (
 	"github.com/coreos/pkg/capnslog"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/ext/imagefmt"
 	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/coreos/clair/pkg/tarutil"
 	"github.com/coreos/clair/utils"
 	"github.com/coreos/clair/worker/detectors"
 )
@@ -110,20 +112,23 @@ func Process(datastore database.Datastore, imageFormat, name, parentName, path s
 	return datastore.InsertLayer(layer)
 }
 
-// detectContent downloads a layer's archive and extracts its Namespace and Features.
+// detectContent downloads a layer's archive and extracts its Namespace and
+// Features.
 func detectContent(imageFormat, name, path string, headers map[string]string, parent *database.Layer) (namespace *database.Namespace, featureVersions []database.FeatureVersion, err error) {
-	files, err := imagefmt.Extract(imageFormat, path, headers, append(detectors.GetRequiredFilesFeatures(), detectors.GetRequiredFilesNamespace()...))
+	totalRequiredFiles := append(detectors.GetRequiredFilesFeatures(), featurens.RequiredFilenames()...)
+	files, err := imagefmt.Extract(imageFormat, path, headers, totalRequiredFiles)
 	if err != nil {
 		log.Errorf("layer %s: failed to extract data from %s: %s", name, utils.CleanURL(path), err)
 		return
 	}
 
-	data := map[string][]byte(files)
-
-	// Detect namespace.
-	namespace = detectNamespace(name, data, parent)
+	namespace, err = detectNamespace(name, files, parent)
+	if err != nil {
+		return
+	}
 
 	// Detect features.
+	data := map[string][]byte(files)
 	featureVersions, err = detectFeatureVersions(name, data, namespace, parent)
 	if err != nil {
 		return
@@ -135,15 +140,17 @@ func detectContent(imageFormat, name, path string, headers map[string]string, pa
 	return
 }
 
-func detectNamespace(name string, data map[string][]byte, parent *database.Layer) (namespace *database.Namespace) {
-	// Use registered detectors to get the Namespace.
-	namespace = detectors.DetectNamespace(data)
+func detectNamespace(name string, files tarutil.FilesMap, parent *database.Layer) (namespace *database.Namespace, err error) {
+	namespace, err = featurens.Detect(files)
+	if err != nil {
+		return
+	}
 	if namespace != nil {
 		log.Debugf("layer %s: detected namespace %q", name, namespace.Name)
 		return
 	}
 
-	// Use the parent's Namespace.
+	// Fallback to the parent's namespace.
 	if parent != nil {
 		namespace = parent.Namespace
 		if namespace != nil {

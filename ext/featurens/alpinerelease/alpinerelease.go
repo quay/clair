@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package alpinerelease implements a featurens.Detector for Alpine Linux based
+// container image layers.
 package alpinerelease
 
 import (
@@ -21,8 +23,9 @@ import (
 	"strings"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
-	"github.com/coreos/clair/worker/detectors"
+	"github.com/coreos/clair/pkg/tarutil"
 )
 
 const (
@@ -33,15 +36,13 @@ const (
 var versionRegexp = regexp.MustCompile(`^(\d)+\.(\d)+\.(\d)+$`)
 
 func init() {
-	detectors.RegisterNamespaceDetector("alpine-release", &detector{})
+	featurens.RegisterDetector("alpine-release", &detector{})
 }
 
-// detector implements NamespaceDetector by reading the current version of
-// Alpine Linux from /etc/alpine-release.
 type detector struct{}
 
-func (d *detector) Detect(data map[string][]byte) *database.Namespace {
-	file, exists := data[alpineReleasePath]
+func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
+	file, exists := files[alpineReleasePath]
 	if exists {
 		scanner := bufio.NewScanner(bytes.NewBuffer(file))
 		for scanner.Scan() {
@@ -52,14 +53,14 @@ func (d *detector) Detect(data map[string][]byte) *database.Namespace {
 				return &database.Namespace{
 					Name:          osName + ":" + "v" + versionNumbers[0] + "." + versionNumbers[1],
 					VersionFormat: dpkg.ParserName,
-				}
+				}, nil
 			}
 		}
 	}
 
-	return nil
+	return nil, nil
 }
 
-func (d *detector) GetRequiredFiles() []string {
+func (d detector) RequiredFilenames() []string {
 	return []string{alpineReleasePath}
 }

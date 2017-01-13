@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,14 +18,15 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/worker/detectors/namespace"
+	"github.com/coreos/clair/ext/featurens"
+	"github.com/coreos/clair/pkg/tarutil"
 )
 
-func TestOsReleaseNamespaceDetector(t *testing.T) {
-	testData := []namespace.TestData{
+func TestDetector(t *testing.T) {
+	testData := []featurens.TestData{
 		{
 			ExpectedNamespace: &database.Namespace{Name: "debian:8"},
-			Data: map[string][]byte{
+			Files: tarutil.FilesMap{
 				"etc/os-release": []byte(
 					`PRETTY_NAME="Debian GNU/Linux 8 (jessie)"
 NAME="Debian GNU/Linux"
@@ -39,7 +40,7 @@ BUG_REPORT_URL="https://bugs.debian.org/"`),
 		},
 		{
 			ExpectedNamespace: &database.Namespace{Name: "ubuntu:15.10"},
-			Data: map[string][]byte{
+			Files: tarutil.FilesMap{
 				"etc/os-release": []byte(
 					`NAME="Ubuntu"
 VERSION="15.10 (Wily Werewolf)"
@@ -54,7 +55,7 @@ BUG_REPORT_URL="http://bugs.launchpad.net/ubuntu/"`),
 		},
 		{ // Doesn't have quotes around VERSION_ID
 			ExpectedNamespace: &database.Namespace{Name: "fedora:20"},
-			Data: map[string][]byte{
+			Files: tarutil.FilesMap{
 				"etc/os-release": []byte(
 					`NAME=Fedora
 VERSION="20 (Heisenbug)"
@@ -73,5 +74,5 @@ REDHAT_SUPPORT_PRODUCT_VERSION=20`),
 		},
 	}
 
-	namespace.TestDetector(t, &OsReleaseNamespaceDetector{}, testData)
+	featurens.TestDetector(t, &detector{}, testData)
 }

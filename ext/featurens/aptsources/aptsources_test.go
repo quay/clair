@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,14 +18,15 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/worker/detectors/namespace"
+	"github.com/coreos/clair/ext/featurens"
+	"github.com/coreos/clair/pkg/tarutil"
 )
 
-func TestAptSourcesNamespaceDetector(t *testing.T) {
-	testData := []namespace.TestData{
+func TestDetector(t *testing.T) {
+	testData := []featurens.TestData{
 		{
 			ExpectedNamespace: &database.Namespace{Name: "debian:unstable"},
-			Data: map[string][]byte{
+			Files: tarutil.FilesMap{
 				"etc/os-release": []byte(
 					`PRETTY_NAME="Debian GNU/Linux stretch/sid"
 NAME="Debian GNU/Linux"
@@ -38,5 +39,5 @@ BUG_REPORT_URL="https://bugs.debian.org/"`),
 		},
 	}
 
-	namespace.TestDetector(t, &AptSourcesNamespaceDetector{}, testData)
+	featurens.TestDetector(t, &detector{}, testData)
 }

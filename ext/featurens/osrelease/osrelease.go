@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package osrelease implements a featurens.Detector for container image
+// layers containing an os-release file.
+//
+// This detector is typically useful for detecting Debian or Ubuntu.
 package osrelease
 
 import (
@@ -20,40 +24,41 @@ import (
 	"strings"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/ext/versionfmt/rpm"
-	"github.com/coreos/clair/worker/detectors"
+	"github.com/coreos/clair/pkg/tarutil"
 )
 
 var (
-	//log = capnslog.NewPackageLogger("github.com/coreos/clair", "worker/detectors/namespace/osrelease")
-
 	osReleaseOSRegexp      = regexp.MustCompile(`^ID=(.*)`)
 	osReleaseVersionRegexp = regexp.MustCompile(`^VERSION_ID=(.*)`)
+
+	// blacklistFilenames are files that should exclude this detector.
+	blacklistFilenames = []string{
+		"etc/oracle-release",
+		"etc/redhat-release",
+		"usr/lib/centos-release",
+	}
 )
 
-// OsReleaseNamespaceDetector implements NamespaceDetector and detects the OS from the
-// /etc/os-release and usr/lib/os-release files.
-type OsReleaseNamespaceDetector struct{}
+type detector struct{}
 
 func init() {
-	detectors.RegisterNamespaceDetector("os-release", &OsReleaseNamespaceDetector{})
+	featurens.RegisterDetector("os-release", &detector{})
 }
 
-// Detect tries to detect OS/Version using "/etc/os-release" and "/usr/lib/os-release"
-// Typically for Debian / Ubuntu
-// /etc/debian_version can't be used, it does not make any difference between testing and unstable, it returns stretch/sid
-func (detector *OsReleaseNamespaceDetector) Detect(data map[string][]byte) *database.Namespace {
+func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 	var OS, version string
 
-	for _, filePath := range detector.getExcludeFiles() {
-		if _, hasFile := data[filePath]; hasFile {
-			return nil
+	for _, filePath := range blacklistFilenames {
+		if _, hasFile := files[filePath]; hasFile {
+			return nil, nil
 		}
 	}
 
-	for _, filePath := range detector.GetRequiredFiles() {
-		f, hasFile := data[filePath]
+	for _, filePath := range d.RequiredFilenames() {
+		f, hasFile := files[filePath]
 		if !hasFile {
 			continue
 		}
@@ -82,24 +87,18 @@ func (detector *OsReleaseNamespaceDetector) Detect(data map[string][]byte) *data
 	case "centos", "rhel", "fedora", "amzn", "ol", "oracle":
 		versionFormat = rpm.ParserName
 	default:
-		return nil
+		return nil, nil
 	}
 
 	if OS != "" && version != "" {
 		return &database.Namespace{
 			Name:          OS + ":" + version,
 			VersionFormat: versionFormat,
-		}
+		}, nil
 	}
-	return nil
+	return nil, nil
 }
 
-// GetRequiredFiles returns the list of files that are required for Detect()
-func (detector *OsReleaseNamespaceDetector) GetRequiredFiles() []string {
+func (d detector) RequiredFilenames() []string {
 	return []string{"etc/os-release", "usr/lib/os-release"}
-}
-
-// getExcludeFiles returns the list of files that are ought to exclude this detector from Detect()
-func (detector *OsReleaseNamespaceDetector) getExcludeFiles() []string {
-	return []string{"etc/oracle-release", "etc/redhat-release", "usr/lib/centos-release"}
 }

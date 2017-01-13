@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,14 +18,15 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/worker/detectors/namespace"
+	"github.com/coreos/clair/ext/featurens"
+	"github.com/coreos/clair/pkg/tarutil"
 )
 
-func TestLsbReleaseNamespaceDetector(t *testing.T) {
-	testData := []namespace.TestData{
+func TestDetector(t *testing.T) {
+	testData := []featurens.TestData{
 		{
 			ExpectedNamespace: &database.Namespace{Name: "ubuntu:12.04"},
-			Data: map[string][]byte{
+			Files: tarutil.FilesMap{
 				"etc/lsb-release": []byte(
 					`DISTRIB_ID=Ubuntu
 DISTRIB_RELEASE=12.04
@@ -35,7 +36,7 @@ DISTRIB_DESCRIPTION="Ubuntu 12.04 LTS"`),
 		},
 		{ // We don't care about the minor version of Debian
 			ExpectedNamespace: &database.Namespace{Name: "debian:7"},
-			Data: map[string][]byte{
+			Files: tarutil.FilesMap{
 				"etc/lsb-release": []byte(
 					`DISTRIB_ID=Debian
 DISTRIB_RELEASE=7.1
@@ -45,5 +46,5 @@ DISTRIB_DESCRIPTION="Debian 7.1"`),
 		},
 	}
 
-	namespace.TestDetector(t, &LsbReleaseNamespaceDetector{}, testData)
+	featurens.TestDetector(t, &detector{}, testData)
 }

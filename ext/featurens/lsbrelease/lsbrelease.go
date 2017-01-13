@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package lsbrelease implements a featurens.Detector for container image
+// layers containing an lsb-release file.
+//
+// This detector is necessary for detecting Ubuntu Precise.
 package lsbrelease
 
 import (
@@ -20,9 +24,10 @@ import (
 	"strings"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/ext/versionfmt/rpm"
-	"github.com/coreos/clair/worker/detectors"
+	"github.com/coreos/clair/pkg/tarutil"
 )
 
 var (
@@ -30,20 +35,16 @@ var (
 	lsbReleaseVersionRegexp = regexp.MustCompile(`^DISTRIB_RELEASE=(.*)`)
 )
 
-// LsbReleaseNamespaceDetector implements NamespaceDetector and detects the
-// Namespace from the /etc/lsb-release file.
-//
-// This detector is necessary for Ubuntu Precise.
-type LsbReleaseNamespaceDetector struct{}
+type detector struct{}
 
 func init() {
-	detectors.RegisterNamespaceDetector("lsb-release", &LsbReleaseNamespaceDetector{})
+	featurens.RegisterDetector("lsb-release", &detector{})
 }
 
-func (detector *LsbReleaseNamespaceDetector) Detect(data map[string][]byte) *database.Namespace {
-	f, hasFile := data["etc/lsb-release"]
+func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
+	f, hasFile := files["etc/lsb-release"]
 	if !hasFile {
-		return nil
+		return nil, nil
 	}
 
 	var OS, version string
@@ -79,19 +80,19 @@ func (detector *LsbReleaseNamespaceDetector) Detect(data map[string][]byte) *dat
 	case "centos", "rhel", "fedora", "amzn", "ol", "oracle":
 		versionFormat = rpm.ParserName
 	default:
-		return nil
+		return nil, nil
 	}
 
 	if OS != "" && version != "" {
 		return &database.Namespace{
 			Name:          OS + ":" + version,
 			VersionFormat: versionFormat,
-		}
+		}, nil
 	}
-	return nil
+
+	return nil, nil
 }
 
-// GetRequiredFiles returns the list of files that are required for Detect()
-func (detector *LsbReleaseNamespaceDetector) GetRequiredFiles() []string {
+func (d *detector) RequiredFilenames() []string {
 	return []string{"etc/lsb-release"}
 }

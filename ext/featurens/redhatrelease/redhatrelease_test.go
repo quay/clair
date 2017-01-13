@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,36 +18,37 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/worker/detectors/namespace"
+	"github.com/coreos/clair/ext/featurens"
+	"github.com/coreos/clair/pkg/tarutil"
 )
 
-func TestRedhatReleaseNamespaceDetector(t *testing.T) {
-	testData := []namespace.TestData{
+func TestDetector(t *testing.T) {
+	testData := []featurens.TestData{
 		{
 			ExpectedNamespace: &database.Namespace{Name: "oracle:6"},
-			Data: map[string][]byte{
+			Files: tarutil.FilesMap{
 				"etc/oracle-release": []byte(`Oracle Linux Server release 6.8`),
 			},
 		},
 		{
 			ExpectedNamespace: &database.Namespace{Name: "oracle:7"},
-			Data: map[string][]byte{
+			Files: tarutil.FilesMap{
 				"etc/oracle-release": []byte(`Oracle Linux Server release 7.2`),
 			},
 		},
 		{
 			ExpectedNamespace: &database.Namespace{Name: "centos:6"},
-			Data: map[string][]byte{
+			Files: tarutil.FilesMap{
 				"etc/centos-release": []byte(`CentOS release 6.6 (Final)`),
 			},
 		},
 		{
 			ExpectedNamespace: &database.Namespace{Name: "centos:7"},
-			Data: map[string][]byte{
+			Files: tarutil.FilesMap{
 				"etc/system-release": []byte(`CentOS Linux release 7.1.1503 (Core)`),
 			},
 		},
 	}
 
-	namespace.TestDetector(t, &RedhatReleaseNamespaceDetector{}, testData)
+	featurens.TestDetector(t, &detector{}, testData)
 }

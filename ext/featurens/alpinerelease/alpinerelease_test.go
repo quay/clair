@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,34 +18,35 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/worker/detectors/namespace"
+	"github.com/coreos/clair/ext/featurens"
+	"github.com/coreos/clair/pkg/tarutil"
 )
 
-func TestAlpineReleaseNamespaceDetection(t *testing.T) {
-	testData := []namespace.TestData{
+func TestDetector(t *testing.T) {
+	testData := []featurens.TestData{
 		{
 			ExpectedNamespace: &database.Namespace{Name: "alpine:v3.3"},
-			Data:              map[string][]byte{"etc/alpine-release": []byte(`3.3.4`)},
+			Files:             tarutil.FilesMap{"etc/alpine-release": []byte(`3.3.4`)},
 		},
 		{
 			ExpectedNamespace: &database.Namespace{Name: "alpine:v3.4"},
-			Data:              map[string][]byte{"etc/alpine-release": []byte(`3.4.0`)},
+			Files:             tarutil.FilesMap{"etc/alpine-release": []byte(`3.4.0`)},
 		},
 		{
 			ExpectedNamespace: &database.Namespace{Name: "alpine:v0.3"},
-			Data:              map[string][]byte{"etc/alpine-release": []byte(`0.3.4`)},
+			Files:             tarutil.FilesMap{"etc/alpine-release": []byte(`0.3.4`)},
 		},
 		{
 			ExpectedNamespace: &database.Namespace{Name: "alpine:v0.3"},
-			Data: map[string][]byte{"etc/alpine-release": []byte(`
+			Files: tarutil.FilesMap{"etc/alpine-release": []byte(`
 0.3.4
 `)},
 		},
 		{
 			ExpectedNamespace: nil,
-			Data:              map[string][]byte{},
+			Files:             tarutil.FilesMap{},
 		},
 	}
 
-	namespace.TestDetector(t, &detector{}, testData)
+	featurens.TestDetector(t, &detector{}, testData)
 }

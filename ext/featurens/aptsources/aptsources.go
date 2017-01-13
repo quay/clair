@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package aptsources implements a featurens.Detector for apt based container
+// image layers.
+//
+// This detector is necessary to determine the precise Debian version when it
+// is an unstable version for instance.
 package aptsources
 
 import (
@@ -19,25 +24,21 @@ import (
 	"strings"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
-	"github.com/coreos/clair/worker/detectors"
+	"github.com/coreos/clair/pkg/tarutil"
 )
 
-// AptSourcesNamespaceDetector implements NamespaceDetector and detects the Namespace from the
-// /etc/apt/sources.list file.
-//
-// This detector is necessary to determine precise Debian version when it is
-// an unstable version for instance.
-type AptSourcesNamespaceDetector struct{}
+type detector struct{}
 
 func init() {
-	detectors.RegisterNamespaceDetector("apt-sources", &AptSourcesNamespaceDetector{})
+	featurens.RegisterDetector("apt-sources", &detector{})
 }
 
-func (detector *AptSourcesNamespaceDetector) Detect(data map[string][]byte) *database.Namespace {
-	f, hasFile := data["etc/apt/sources.list"]
+func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
+	f, hasFile := files["etc/apt/sources.list"]
 	if !hasFile {
-		return nil
+		return nil, nil
 	}
 
 	var OS, version string
@@ -79,11 +80,11 @@ func (detector *AptSourcesNamespaceDetector) Detect(data map[string][]byte) *dat
 		return &database.Namespace{
 			Name:          OS + ":" + version,
 			VersionFormat: dpkg.ParserName,
-		}
+		}, nil
 	}
-	return nil
+	return nil, nil
 }
 
-func (detector *AptSourcesNamespaceDetector) GetRequiredFiles() []string {
+func (d detector) RequiredFilenames() []string {
 	return []string{"etc/apt/sources.list"}
 }
