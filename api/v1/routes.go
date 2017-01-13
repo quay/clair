@@ -27,7 +27,7 @@ import (
 
 	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/utils"
+	"github.com/coreos/clair/pkg/tarutil"
 	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/worker"
 )
@@ -111,8 +111,8 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 
 	err = worker.Process(ctx.Store, request.Layer.Format, request.Layer.Name, request.Layer.ParentName, request.Layer.Path, request.Layer.Headers)
 	if err != nil {
-		if err == utils.ErrCouldNotExtract ||
-			err == utils.ErrExtractedFileTooBig ||
+		if err == tarutil.ErrCouldNotExtract ||
+			err == tarutil.ErrExtractedFileTooBig ||
 			err == worker.ErrUnsupported {
 			writeResponse(w, r, statusUnprocessableEntity, LayerEnvelope{Error: &Error{err.Error()}})
 			return postLayerRoute, statusUnprocessableEntity

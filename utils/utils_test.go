@@ -15,10 +15,6 @@
 package utils
 
 import (
-	"bytes"
-	"os"
-	"path/filepath"
-	"runtime"
 	"testing"
 
 	"github.com/pborman/uuid"
@@ -59,42 +55,6 @@ func TestString(t *testing.T) {
 	assert.False(t, Contains("", []string{}))
 	assert.True(t, Contains("a", []string{"a", "b"}))
 	assert.False(t, Contains("c", []string{"a", "b"}))
-}
-
-// TestTar tests the tar.go file
-func TestTar(t *testing.T) {
-	var err error
-	var data map[string][]byte
-	_, path, _, _ := runtime.Caller(0)
-	testDataDir := "/testdata"
-	for _, filename := range []string{"utils_test.tar.gz", "utils_test.tar.bz2", "utils_test.tar.xz", "utils_test.tar"} {
-		testArchivePath := filepath.Join(filepath.Dir(path), testDataDir, filename)
-
-		// Extract non compressed data
-		data, err = SelectivelyExtractArchive(bytes.NewReader([]byte("that string does not represent a tar or tar-gzip file")), "", []string{}, 0)
-		assert.Error(t, err, "Extracting non compressed data should return an error")
-
-		// Extract an archive
-		f, _ := os.Open(testArchivePath)
-		defer f.Close()
-		data, err = SelectivelyExtractArchive(f, "", []string{"test/"}, 0)
-		assert.Nil(t, err)
-
-		if c, n := data["test/test.txt"]; !n {
-			assert.Fail(t, "test/test.txt should have been extracted")
-		} else {
-			assert.NotEqual(t, 0, len(c) > 0, "test/test.txt file is empty")
-		}
-		if _, n := data["test.txt"]; n {
-			assert.Fail(t, "test.txt should not be extracted")
-		}
-
-		// File size limit
-		f, _ = os.Open(testArchivePath)
-		defer f.Close()
-		data, err = SelectivelyExtractArchive(f, "", []string{"test"}, 50)
-		assert.Equal(t, ErrExtractedFileTooBig, err)
-	}
 }
 
 func TestCleanURL(t *testing.T) {
