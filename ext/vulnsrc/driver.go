@@ -18,20 +18,29 @@ package vulnsrc
 
 import (
 	"errors"
+	"sync"
 
 	"github.com/coreos/clair/database"
 )
 
 var (
-	// Updaters is the list of registered Updaters.
-	Updaters = make(map[string]Updater)
-
 	// ErrFilesystem is returned when a fetcher fails to interact with the local filesystem.
 	ErrFilesystem = errors.New("vulnsrc: something went wrong when interacting with the fs")
 
 	// ErrGitFailure is returned when a fetcher fails to interact with git.
 	ErrGitFailure = errors.New("vulnsrc: something went wrong when interacting with git")
+
+	updatersM sync.RWMutex
+	updaters  = make(map[string]Updater)
 )
+
+// UpdateResponse represents the sum of results of an update.
+type UpdateResponse struct {
+	FlagName        string
+	FlagValue       string
+	Notes           []string
+	Vulnerabilities []database.Vulnerability
+}
 
 // Updater represents anything that can fetch vulnerabilities and insert them
 // into a Clair datastore.
@@ -44,18 +53,10 @@ type Updater interface {
 	Clean()
 }
 
-// UpdateResponse represents the sum of results of an update.
-type UpdateResponse struct {
-	FlagName        string
-	FlagValue       string
-	Notes           []string
-	Vulnerabilities []database.Vulnerability
-}
-
 // RegisterUpdater makes an Updater available by the provided name.
 //
-// If RegisterUpdater is called twice with the same name, the name is blank, or
-// if the provided Updater is nil, this function panics.
+// If called twice with the same name, the name is blank, or if the provided
+// Updater is nil, this function panics.
 func RegisterUpdater(name string, u Updater) {
 	if name == "" {
 		panic("vulnsrc: could not register an Updater with an empty name")
@@ -65,9 +66,25 @@ func RegisterUpdater(name string, u Updater) {
 		panic("vulnsrc: could not register a nil Updater")
 	}
 
-	if _, dup := Updaters[name]; dup {
+	updatersM.Lock()
+	defer updatersM.Unlock()
+
+	if _, dup := updaters[name]; dup {
 		panic("vulnsrc: RegisterUpdater called twice for " + name)
 	}
 
-	Updaters[name] = u
+	updaters[name] = u
+}
+
+// Updaters returns the list of the registered Updaters.
+func Updaters() map[string]Updater {
+	updatersM.RLock()
+	defer updatersM.RUnlock()
+
+	ret := make(map[string]Updater)
+	for k, v := range updaters {
+		ret[k] = v
+	}
+
+	return ret
 }

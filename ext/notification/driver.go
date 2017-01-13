@@ -21,6 +21,8 @@
 package notification
 
 import (
+	"sync"
+
 	"github.com/coreos/pkg/capnslog"
 
 	"github.com/coreos/clair/config"
@@ -30,8 +32,8 @@ import (
 var (
 	log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/notification")
 
-	// Senders is the list of registered Senders.
-	Senders = make(map[string]Sender)
+	sendersM sync.RWMutex
+	senders  = make(map[string]Sender)
 )
 
 // Sender represents anything that can transmit notifications.
@@ -46,8 +48,8 @@ type Sender interface {
 
 // RegisterSender makes a Sender available by the provided name.
 //
-// If RegisterSender is called twice with the same name, the name is blank, or
-// if the provided Sender is nil, this function panics.
+// If called twice with the same name, the name is blank, or if the provided
+// Sender is nil, this function panics.
 func RegisterSender(name string, s Sender) {
 	if name == "" {
 		panic("notification: could not register a Sender with an empty name")
@@ -57,9 +59,33 @@ func RegisterSender(name string, s Sender) {
 		panic("notification: could not register a nil Sender")
 	}
 
-	if _, dup := Senders[name]; dup {
+	sendersM.Lock()
+	defer sendersM.Unlock()
+
+	if _, dup := senders[name]; dup {
 		panic("notification: RegisterSender called twice for " + name)
 	}
 
-	Senders[name] = s
+	senders[name] = s
+}
+
+// Senders returns the list of the registered Senders.
+func Senders() map[string]Sender {
+	sendersM.RLock()
+	defer sendersM.RUnlock()
+
+	ret := make(map[string]Sender)
+	for k, v := range senders {
+		ret[k] = v
+	}
+
+	return ret
+}
+
+// UnregisterSender removes a Sender with a particular name from the list.
+func UnregisterSender(name string) {
+	sendersM.Lock()
+	defer sendersM.Unlock()
+
+	delete(senders, name)
 }

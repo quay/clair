@@ -152,10 +152,10 @@ func Run(config *config.UpdaterConfig, datastore database.Datastore, st *utils.S
 	}
 
 	// Clean resources.
-	for _, appenders := range vulnmdsrc.Appenders {
+	for _, appenders := range vulnmdsrc.Appenders() {
 		appenders.Clean()
 	}
-	for _, updaters := range vulnsrc.Updaters {
+	for _, updaters := range vulnsrc.Updaters() {
 		updaters.Clean()
 	}
 
@@ -215,7 +215,7 @@ func fetch(datastore database.Datastore) (bool, []database.Vulnerability, map[st
 	// Fetch updates in parallel.
 	log.Info("fetching vulnerability updates")
 	var responseC = make(chan *vulnsrc.UpdateResponse, 0)
-	for n, u := range vulnsrc.Updaters {
+	for n, u := range vulnsrc.Updaters() {
 		go func(name string, u vulnsrc.Updater) {
 			response, err := u.Update(datastore)
 			if err != nil {
@@ -231,7 +231,7 @@ func fetch(datastore database.Datastore) (bool, []database.Vulnerability, map[st
 	}
 
 	// Collect results of updates.
-	for i := 0; i < len(vulnsrc.Updaters); i++ {
+	for i := 0; i < len(vulnsrc.Updaters()); i++ {
 		resp := <-responseC
 		if resp != nil {
 			vulnerabilities = append(vulnerabilities, doVulnerabilitiesNamespacing(resp.Vulnerabilities)...)
@@ -248,7 +248,7 @@ func fetch(datastore database.Datastore) (bool, []database.Vulnerability, map[st
 
 // Add metadata to the specified vulnerabilities using the registered MetadataFetchers, in parallel.
 func addMetadata(datastore database.Datastore, vulnerabilities []database.Vulnerability) []database.Vulnerability {
-	if len(vulnmdsrc.Appenders) == 0 {
+	if len(vulnmdsrc.Appenders()) == 0 {
 		return vulnerabilities
 	}
 
@@ -264,9 +264,9 @@ func addMetadata(datastore database.Datastore, vulnerabilities []database.Vulner
 	}
 
 	var wg sync.WaitGroup
-	wg.Add(len(vulnmdsrc.Appenders))
+	wg.Add(len(vulnmdsrc.Appenders()))
 
-	for n, a := range vulnmdsrc.Appenders {
+	for n, a := range vulnmdsrc.Appenders() {
 		go func(name string, appender vulnmdsrc.Appender) {
 			defer wg.Done()
 

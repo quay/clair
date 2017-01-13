@@ -17,12 +17,16 @@
 package vulnmdsrc
 
 import (
+	"sync"
+
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils/types"
 )
 
-// Appenders is the list of registered Appenders.
-var Appenders = make(map[string]Appender)
+var (
+	appendersM sync.RWMutex
+	appenders  = make(map[string]Appender)
+)
 
 // AppendFunc is the type of a callback provided to an Appender.
 type AppendFunc func(metadataKey string, metadata interface{}, severity types.Priority)
@@ -49,20 +53,37 @@ type Appender interface {
 }
 
 // RegisterAppender makes an Appender available by the provided name.
-// If Register is called twice with the same name or if driver is nil,
-// it panics.
+//
+// If called twice with the same name, the name is blank, or if the provided
+// Appender is nil, this function panics.
 func RegisterAppender(name string, a Appender) {
 	if name == "" {
-		panic("updater: could not register an Appender with an empty name")
+		panic("vulnmdsrc: could not register an Appender with an empty name")
 	}
 
 	if a == nil {
 		panic("vulnmdsrc: could not register a nil Appender")
 	}
 
-	if _, dup := Appenders[name]; dup {
+	appendersM.Lock()
+	defer appendersM.Unlock()
+
+	if _, dup := appenders[name]; dup {
 		panic("vulnmdsrc: RegisterAppender called twice for " + name)
 	}
 
-	Appenders[name] = a
+	appenders[name] = a
+}
+
+// Appenders returns the list of the registered Appenders.
+func Appenders() map[string]Appender {
+	appendersM.RLock()
+	defer appendersM.RUnlock()
+
+	ret := make(map[string]Appender)
+	for k, v := range appenders {
+		ret[k] = v
+	}
+
+	return ret
 }

@@ -63,11 +63,11 @@ func Run(config *config.NotifierConfig, datastore database.Datastore, stopper *u
 	defer stopper.End()
 
 	// Configure registered notifiers.
-	for senderName, sender := range notification.Senders {
+	for senderName, sender := range notification.Senders() {
 		if configured, err := sender.Configure(config); configured {
 			log.Infof("sender '%s' configured\n", senderName)
 		} else {
-			delete(notification.Senders, senderName)
+			notification.UnregisterSender(senderName)
 			if err != nil {
 				log.Errorf("could not configure notifier '%s': %s", senderName, err)
 			}
@@ -75,7 +75,7 @@ func Run(config *config.NotifierConfig, datastore database.Datastore, stopper *u
 	}
 
 	// Do not run the updater if there is no notifier enabled.
-	if len(notification.Senders) == 0 {
+	if len(notification.Senders()) == 0 {
 		log.Infof("notifier service is disabled")
 		return
 	}
@@ -149,7 +149,7 @@ func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoA
 
 func handleTask(n database.VulnerabilityNotification, st *utils.Stopper, maxAttempts int) (bool, bool) {
 	// Send notification.
-	for senderName, sender := range notification.Senders {
+	for senderName, sender := range notification.Senders() {
 		var attempts int
 		var backOff time.Duration
 		for {
