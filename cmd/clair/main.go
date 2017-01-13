@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ import (
 	"github.com/coreos/clair/config"
 
 	// Register extensions.
+	_ "github.com/coreos/clair/ext/imagefmt/aci"
+	_ "github.com/coreos/clair/ext/imagefmt/docker"
 	_ "github.com/coreos/clair/ext/notification/webhook"
 	_ "github.com/coreos/clair/ext/vulnmdsrc/nvd"
 	_ "github.com/coreos/clair/ext/vulnsrc/alpine"
@@ -33,9 +35,6 @@ import (
 	_ "github.com/coreos/clair/ext/vulnsrc/oracle"
 	_ "github.com/coreos/clair/ext/vulnsrc/rhel"
 	_ "github.com/coreos/clair/ext/vulnsrc/ubuntu"
-
-	_ "github.com/coreos/clair/worker/detectors/data/aci"
-	_ "github.com/coreos/clair/worker/detectors/data/docker"
 
 	_ "github.com/coreos/clair/worker/detectors/feature/apk"
 	_ "github.com/coreos/clair/worker/detectors/feature/dpkg"

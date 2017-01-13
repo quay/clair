@@ -20,6 +20,7 @@ import (
 	"github.com/coreos/pkg/capnslog"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/imagefmt"
 	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/utils"
 	"github.com/coreos/clair/worker/detectors"
@@ -29,11 +30,6 @@ const (
 	// Version (integer) represents the worker version.
 	// Increased each time the engine changes.
 	Version = 3
-
-	// maxFileSize enforces a maximum size of a single file within a tarball that
-	// will be extracted. This protects against malicious layers that may contain
-	// extremely large package database files.
-	maxFileSize = 200 * 1024 * 1024 // 200 MiB
 )
 
 var (
@@ -116,11 +112,13 @@ func Process(datastore database.Datastore, imageFormat, name, parentName, path s
 
 // detectContent downloads a layer's archive and extracts its Namespace and Features.
 func detectContent(imageFormat, name, path string, headers map[string]string, parent *database.Layer) (namespace *database.Namespace, featureVersions []database.FeatureVersion, err error) {
-	data, err := detectors.DetectData(imageFormat, path, headers, append(detectors.GetRequiredFilesFeatures(), detectors.GetRequiredFilesNamespace()...), maxFileSize)
+	files, err := imagefmt.Extract(imageFormat, path, headers, append(detectors.GetRequiredFilesFeatures(), detectors.GetRequiredFilesNamespace()...))
 	if err != nil {
 		log.Errorf("layer %s: failed to extract data from %s: %s", name, utils.CleanURL(path), err)
 		return
 	}
+
+	data := map[string][]byte(files)
 
 	// Detect namespace.
 	namespace = detectNamespace(name, data, parent)
