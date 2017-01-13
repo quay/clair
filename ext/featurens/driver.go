@@ -41,9 +41,10 @@ type Detector interface {
 	// layer.
 	Detect(tarutil.FilesMap) (*database.Namespace, error)
 
-	// RequireFilenames returns the list of files required to be in the FilesMap
+	// RequiredFilenames returns the list of files required to be in the FilesMap
 	// provided to the Detect method.
-	// TODO(jzelinskie): strip "/" prefix
+	//
+	// Filenames must not begin with "/".
 	RequiredFilenames() []string
 }
 
@@ -94,6 +95,9 @@ func Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 // RequiredFilenames returns the total list of files required for all
 // registered Detectors.
 func RequiredFilenames() (files []string) {
+	detectorsM.RLock()
+	defer detectorsM.RUnlock()
+
 	for _, detector := range detectors {
 		files = append(files, detector.RequiredFilenames()...)
 	}
@@ -101,8 +105,7 @@ func RequiredFilenames() (files []string) {
 	return
 }
 
-// TestData represents the data used to test an implementation of
-// NameSpaceDetector.
+// TestData represents the data used to test an implementation of Detector.
 type TestData struct {
 	Files             tarutil.FilesMap
 	ExpectedNamespace *database.Namespace
