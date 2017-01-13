@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@ import (
 	"time"
 
 	"github.com/coreos/clair/database"
-	cerrors "github.com/coreos/clair/utils/errors"
+	"github.com/coreos/clair/pkg/commonerr"
 )
 
 func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (int, error) {
 	if namespace.Name == "" {
-		return 0, cerrors.NewBadRequestError("could not find/insert invalid Namespace")
+		return 0, commonerr.NewBadRequestError("could not find/insert invalid Namespace")
 	}
 
 	if pgSQL.cache != nil {

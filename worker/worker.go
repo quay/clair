@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import (
 	"github.com/coreos/pkg/capnslog"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/utils"
-	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/worker/detectors"
 )
 
@@ -41,11 +41,11 @@ var (
 
 	// ErrUnsupported is the error that should be raised when an OS or package
 	// manager is not supported.
-	ErrUnsupported = cerrors.NewBadRequestError("worker: OS and/or package manager are not supported")
+	ErrUnsupported = commonerr.NewBadRequestError("worker: OS and/or package manager are not supported")
 
 	// ErrParentUnknown is the error that should be raised when a parent layer
 	// has yet to be processed for the current layer.
-	ErrParentUnknown = cerrors.NewBadRequestError("worker: parent layer is unknown, it must be processed first")
+	ErrParentUnknown = commonerr.NewBadRequestError("worker: parent layer is unknown, it must be processed first")
 )
 
 // Process detects the Namespace of a layer, the features it adds/removes, and
@@ -55,15 +55,15 @@ var (
 func Process(datastore database.Datastore, imageFormat, name, parentName, path string, headers map[string]string) error {
 	// Verify parameters.
 	if name == "" {
-		return cerrors.NewBadRequestError("could not process a layer which does not have a name")
+		return commonerr.NewBadRequestError("could not process a layer which does not have a name")
 	}
 
 	if path == "" {
-		return cerrors.NewBadRequestError("could not process a layer which does not have a path")
+		return commonerr.NewBadRequestError("could not process a layer which does not have a path")
 	}
 
 	if imageFormat == "" {
-		return cerrors.NewBadRequestError("could not process a layer which does not have a format")
+		return commonerr.NewBadRequestError("could not process a layer which does not have a format")
 	}
 
 	log.Debugf("layer %s: processing (Location: %s, Engine version: %d, Parent: %s, Format: %s)",
@@ -71,11 +71,11 @@ func Process(datastore database.Datastore, imageFormat, name, parentName, path s
 
 	// Check to see if the layer is already in the database.
 	layer, err := datastore.FindLayer(name, false, false)
-	if err != nil && err != cerrors.ErrNotFound {
+	if err != nil && err != commonerr.ErrNotFound {
 		return err
 	}
 
-	if err == cerrors.ErrNotFound {
+	if err == commonerr.ErrNotFound {
 		// New layer case.
 		layer = database.Layer{Name: name, EngineVersion: Version}
 
@@ -83,10 +83,10 @@ func Process(datastore database.Datastore, imageFormat, name, parentName, path s
 		// We need to get it with its Features in order to diff them.
 		if parentName != "" {
 			parent, err := datastore.FindLayer(parentName, true, false)
-			if err != nil && err != cerrors.ErrNotFound {
+			if err != nil && err != commonerr.ErrNotFound {
 				return err
 			}
-			if err == cerrors.ErrNotFound {
+			if err == commonerr.ErrNotFound {
 				log.Warningf("layer %s: the parent layer (%s) is unknown. it must be processed first", name,
 					parentName)
 				return ErrParentUnknown

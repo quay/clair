@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,12 +21,12 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
-	cerrors "github.com/coreos/clair/utils/errors"
+	"github.com/coreos/clair/pkg/commonerr"
 )
 
 func (pgSQL *pgSQL) insertFeature(feature database.Feature) (int, error) {
 	if feature.Name == "" {
-		return 0, cerrors.NewBadRequestError("could not find/insert invalid Feature")
+		return 0, commonerr.NewBadRequestError("could not find/insert invalid Feature")
 	}
 
 	// Do cache lookup.
@@ -65,7 +65,7 @@ func (pgSQL *pgSQL) insertFeature(feature database.Feature) (int, error) {
 func (pgSQL *pgSQL) insertFeatureVersion(fv database.FeatureVersion) (id int, err error) {
 	err = versionfmt.Valid(fv.Feature.Namespace.VersionFormat, fv.Version)
 	if err != nil {
-		return 0, cerrors.NewBadRequestError("could not find/insert invalid FeatureVersion")
+		return 0, commonerr.NewBadRequestError("could not find/insert invalid FeatureVersion")
 	}
 
 	// Do cache lookup.

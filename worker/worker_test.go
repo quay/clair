@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
-	cerrors "github.com/coreos/clair/utils/errors"
+	"github.com/coreos/clair/pkg/commonerr"
 
 	// Register the required detectors.
 	_ "github.com/coreos/clair/worker/detectors/data/docker"
@@ -57,7 +57,7 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 		if layer, exists := datastore.layers[name]; exists {
 			return layer, nil
 		}
-		return database.Layer{}, cerrors.ErrNotFound
+		return database.Layer{}, commonerr.ErrNotFound
 	}
 
 	// Create the list of FeatureVersions that should not been upgraded from one layer to another.

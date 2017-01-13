@@ -35,7 +35,7 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/vulnmdsrc"
-	cerrors "github.com/coreos/clair/utils/errors"
+	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/utils/types"
 )
 
@@ -79,7 +79,7 @@ func (a *appender) BuildCache(datastore database.Datastore) error {
 	if a.localPath == "" {
 		// Create a temporary folder to store the NVD data and create hashes struct.
 		if a.localPath, err = ioutil.TempDir(os.TempDir(), "nvd-data"); err != nil {
-			return cerrors.ErrFilesystem
+			return commonerr.ErrFilesystem
 		}
 
 		a.dataFeedHashes = make(map[string]string)
@@ -97,7 +97,7 @@ func (a *appender) BuildCache(datastore database.Datastore) error {
 		var nvd nvd
 		if err = xml.NewDecoder(dataFeedReader).Decode(&nvd); err != nil {
 			log.Errorf("could not decode NVD data feed '%s': %s", dataFeedName, err)
-			return cerrors.ErrCouldNotParse
+			return commonerr.ErrCouldNotParse
 		}
 
 		// For each entry of this data feed:
@@ -179,14 +179,14 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 			r, err := http.Get(fmt.Sprintf(dataFeedURL, dataFeedName))
 			if err != nil {
 				log.Errorf("could not download NVD data feed file '%s': %s", dataFeedName, err)
-				return dataFeedReaders, dataFeedHashes, cerrors.ErrCouldNotDownload
+				return dataFeedReaders, dataFeedHashes, commonerr.ErrCouldNotDownload
 			}
 
 			// Un-gzip it.
 			gr, err := gzip.NewReader(r.Body)
 			if err != nil {
 				log.Errorf("could not read NVD data feed file '%s': %s", dataFeedName, err)
-				return dataFeedReaders, dataFeedHashes, cerrors.ErrCouldNotDownload
+				return dataFeedReaders, dataFeedHashes, commonerr.ErrCouldNotDownload
 			}
 
 			// Store it to a file at the same time if possible.

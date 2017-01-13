@@ -31,7 +31,7 @@ import (
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/rpm"
 	"github.com/coreos/clair/ext/vulnsrc"
-	cerrors "github.com/coreos/clair/utils/errors"
+	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/utils/types"
 )
 
@@ -107,7 +107,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	r, err := http.Get(ovalURI)
 	if err != nil {
 		log.Errorf("could not download RHEL's update list: %s", err)
-		return resp, cerrors.ErrCouldNotDownload
+		return resp, commonerr.ErrCouldNotDownload
 	}
 
 	// Get the list of RHSAs that we have to process.
@@ -129,7 +129,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		r, err := http.Get(ovalURI + rhsaFilePrefix + strconv.Itoa(rhsa) + ".xml")
 		if err != nil {
 			log.Errorf("could not download RHEL's update file: %s", err)
-			return resp, cerrors.ErrCouldNotDownload
+			return resp, commonerr.ErrCouldNotDownload
 		}
 
 		// Parse the XML.
@@ -163,7 +163,7 @@ func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.Vulnerability, 
 	err = xml.NewDecoder(ovalReader).Decode(&ov)
 	if err != nil {
 		log.Errorf("could not decode RHEL's XML: %s", err)
-		err = cerrors.ErrCouldNotParse
+		err = commonerr.ErrCouldNotParse
 		return
 	}
 

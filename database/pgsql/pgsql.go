@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,8 +34,8 @@ import (
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/database/pgsql/migrations"
+	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/utils"
-	cerrors "github.com/coreos/clair/utils/errors"
 )
 
 var (
@@ -196,12 +196,12 @@ func openDatabase(registrableComponentConfig config.RegistrableComponentConfig) 
 
 func parseConnectionString(source string) (dbName string, pgSourceURL string, err error) {
 	if source == "" {
-		return "", "", cerrors.NewBadRequestError("pgsql: no database connection string specified")
+		return "", "", commonerr.NewBadRequestError("pgsql: no database connection string specified")
 	}
 
 	sourceURL, err := url.Parse(source)
 	if err != nil {
-		return "", "", cerrors.NewBadRequestError("pgsql: database connection string is not a valid URL")
+		return "", "", commonerr.NewBadRequestError("pgsql: database connection string is not a valid URL")
 	}
 
 	dbName = strings.TrimPrefix(sourceURL.Path, "/")
@@ -280,7 +280,7 @@ func handleError(desc string, err error) error {
 	}
 
 	if err == sql.ErrNoRows {
-		return cerrors.ErrNotFound
+		return commonerr.ErrNotFound
 	}
 
 	log.Errorf("%s: %v", desc, err)

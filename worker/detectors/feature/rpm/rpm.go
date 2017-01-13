@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,8 +25,8 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/rpm"
+	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/utils"
-	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/worker/detectors"
 )
 
@@ -55,13 +55,13 @@ func (detector *RpmFeaturesDetector) Detect(data map[string][]byte) ([]database.
 	defer os.RemoveAll(tmpDir)
 	if err != nil {
 		log.Errorf("could not create temporary folder for RPM detection: %s", err)
-		return []database.FeatureVersion{}, cerrors.ErrFilesystem
+		return []database.FeatureVersion{}, commonerr.ErrFilesystem
 	}
 
 	err = ioutil.WriteFile(tmpDir+"/Packages", f, 0700)
 	if err != nil {
 		log.Errorf("could not create temporary file for RPM detection: %s", err)
-		return []database.FeatureVersion{}, cerrors.ErrFilesystem
+		return []database.FeatureVersion{}, commonerr.ErrFilesystem
 	}
 
 	// Query RPM

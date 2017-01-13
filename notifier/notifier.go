@@ -28,8 +28,8 @@ import (
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/notification"
+	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/utils"
-	cerrors "github.com/coreos/clair/utils/errors"
 )
 
 const (
@@ -127,7 +127,7 @@ func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoA
 		notification, err := datastore.GetAvailableNotification(renotifyInterval)
 		if err != nil {
 			// There is no notification or an error occurred.
-			if err != cerrors.ErrNotFound {
+			if err != commonerr.ErrNotFound {
 				log.Warningf("could not get notification to send: %s", err)
 			}
 

@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@ import (
 	"github.com/guregu/null/zero"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/utils"
-	cerrors "github.com/coreos/clair/utils/errors"
 )
 
 func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities bool) (database.Layer, error) {
@@ -247,12 +247,12 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	// Verify parameters
 	if layer.Name == "" {
 		log.Warning("could not insert a layer which has an empty Name")
-		return cerrors.NewBadRequestError("could not insert a layer which has an empty Name")
+		return commonerr.NewBadRequestError("could not insert a layer which has an empty Name")
 	}
 
 	// Get a potentially existing layer.
 	existingLayer, err := pgSQL.FindLayer(layer.Name, true, false)
-	if err != nil && err != cerrors.ErrNotFound {
+	if err != nil && err != commonerr.ErrNotFound {
 		return err
 	} else if err == nil {
 		if existingLayer.EngineVersion >= layer.EngineVersion {
@@ -271,7 +271,7 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	if layer.Parent != nil {
 		if layer.Parent.ID == 0 {
 			log.Warning("Parent is expected to be retrieved from database when inserting a layer.")
-			return cerrors.NewBadRequestError("Parent is expected to be retrieved from database when inserting a layer.")
+			return commonerr.NewBadRequestError("Parent is expected to be retrieved from database when inserting a layer.")
 		}
 
 		parentID = zero.IntFrom(int64(layer.Parent.ID))
@@ -429,7 +429,7 @@ func (pgSQL *pgSQL) DeleteLayer(name string) error {
 	}
 
 	if affected <= 0 {
-		return cerrors.ErrNotFound
+		return commonerr.ErrNotFound
 	}
 
 	return nil

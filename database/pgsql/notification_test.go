@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
-	cerrors "github.com/coreos/clair/utils/errors"
+	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/utils/types"
 )
 
@@ -37,7 +37,7 @@ func TestNotification(t *testing.T) {
 
 	// Try to get a notification when there is none.
 	_, err = datastore.GetAvailableNotification(time.Second)
-	assert.Equal(t, cerrors.ErrNotFound, err)
+	assert.Equal(t, commonerr.ErrNotFound, err)
 
 	// Create some data.
 	f1 := database.Feature{
@@ -126,7 +126,7 @@ func TestNotification(t *testing.T) {
 		// Verify the renotify behaviour.
 		if assert.Nil(t, datastore.SetNotificationNotified(notification.Name)) {
 			_, err := datastore.GetAvailableNotification(time.Second)
-			assert.Equal(t, cerrors.ErrNotFound, err)
+			assert.Equal(t, commonerr.ErrNotFound, err)
 
 			time.Sleep(50 * time.Millisecond)
 			notificationB, err := datastore.GetAvailableNotification(20 * time.Millisecond)
@@ -164,7 +164,7 @@ func TestNotification(t *testing.T) {
 		assert.Nil(t, datastore.DeleteNotification(notification.Name))
 
 		_, err = datastore.GetAvailableNotification(time.Millisecond)
-		assert.Equal(t, cerrors.ErrNotFound, err)
+		assert.Equal(t, commonerr.ErrNotFound, err)
 	}
 
 	// Update a vulnerability and ensure that the old/new vulnerabilities are correct.

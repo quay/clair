@@ -29,7 +29,7 @@ import (
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/rpm"
 	"github.com/coreos/clair/ext/vulnsrc"
-	cerrors "github.com/coreos/clair/utils/errors"
+	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/utils/types"
 	"github.com/coreos/pkg/capnslog"
 )
@@ -103,7 +103,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	r, err := http.Get(ovalURI)
 	if err != nil {
 		log.Errorf("could not download Oracle's update list: %s", err)
-		return resp, cerrors.ErrCouldNotDownload
+		return resp, commonerr.ErrCouldNotDownload
 	}
 	defer r.Body.Close()
 
@@ -126,7 +126,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		r, err := http.Get(ovalURI + elsaFilePrefix + strconv.Itoa(elsa) + ".xml")
 		if err != nil {
 			log.Errorf("could not download Oracle's update file: %s", err)
-			return resp, cerrors.ErrCouldNotDownload
+			return resp, commonerr.ErrCouldNotDownload
 		}
 
 		// Parse the XML.
@@ -160,7 +160,7 @@ func parseELSA(ovalReader io.Reader) (vulnerabilities []database.Vulnerability, 
 	err = xml.NewDecoder(ovalReader).Decode(&ov)
 	if err != nil {
 		log.Errorf("could not decode Oracle's XML: %s", err)
-		err = cerrors.ErrCouldNotParse
+		err = commonerr.ErrCouldNotParse
 		return
 	}
 

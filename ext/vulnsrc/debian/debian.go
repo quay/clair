@@ -31,7 +31,7 @@ import (
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/ext/vulnsrc"
-	cerrors "github.com/coreos/clair/utils/errors"
+	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/utils/types"
 )
 
@@ -69,7 +69,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	r, err := http.Get(url)
 	if err != nil {
 		log.Errorf("could not download Debian's update: %s", err)
-		return resp, cerrors.ErrCouldNotDownload
+		return resp, commonerr.ErrCouldNotDownload
 	}
 
 	// Get the SHA-1 of the latest update's JSON data
@@ -110,7 +110,7 @@ func buildResponse(jsonReader io.Reader, latestKnownHash string) (resp vulnsrc.U
 	err = json.NewDecoder(teedJSONReader).Decode(&data)
 	if err != nil {
 		log.Errorf("could not unmarshal Debian's JSON: %s", err)
-		return resp, cerrors.ErrCouldNotParse
+		return resp, commonerr.ErrCouldNotParse
 	}
 
 	// Calculate the hash and skip updating if the hash has been seen before.

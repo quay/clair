@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package pgsql
 import (
 	"time"
 
-	cerrors "github.com/coreos/clair/utils/errors"
+	"github.com/coreos/clair/pkg/commonerr"
 )
 
 // Lock tries to set a temporary lock in the database.
@@ -80,7 +80,7 @@ func (pgSQL *pgSQL) Unlock(name, owner string) {
 func (pgSQL *pgSQL) FindLock(name string) (string, time.Time, error) {
 	if name == "" {
 		log.Warning("could not find an invalid lock")
-		return "", time.Time{}, cerrors.NewBadRequestError("could not find an invalid lock")
+		return "", time.Time{}, commonerr.NewBadRequestError("could not find an invalid lock")
 	}
 
 	defer observeQueryTime("FindLock", "all", time.Now())

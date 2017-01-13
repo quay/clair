@@ -27,8 +27,8 @@ import (
 
 	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/pkg/tarutil"
-	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/worker"
 )
 
@@ -118,7 +118,7 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 			return postLayerRoute, statusUnprocessableEntity
 		}
 
-		if _, badreq := err.(*cerrors.ErrBadRequest); badreq {
+		if _, badreq := err.(*commonerr.ErrBadRequest); badreq {
 			writeResponse(w, r, http.StatusBadRequest, LayerEnvelope{Error: &Error{err.Error()}})
 			return postLayerRoute, http.StatusBadRequest
 		}
@@ -143,7 +143,7 @@ func getLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *
 	_, withVulnerabilities := r.URL.Query()["vulnerabilities"]
 
 	dbLayer, err := ctx.Store.FindLayer(p.ByName("layerName"), withFeatures, withVulnerabilities)
-	if err == cerrors.ErrNotFound {
+	if err == commonerr.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, LayerEnvelope{Error: &Error{err.Error()}})
 		return getLayerRoute, http.StatusNotFound
 	} else if err != nil {
@@ -159,7 +159,7 @@ func getLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *
 
 func deleteLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
 	err := ctx.Store.DeleteLayer(p.ByName("layerName"))
-	if err == cerrors.ErrNotFound {
+	if err == commonerr.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, LayerEnvelope{Error: &Error{err.Error()}})
 		return deleteLayerRoute, http.StatusNotFound
 	} else if err != nil {
@@ -223,7 +223,7 @@ func getVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	}
 
 	dbVulns, nextPage, err := ctx.Store.ListVulnerabilities(namespace, limit, page)
-	if err == cerrors.ErrNotFound {
+	if err == commonerr.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return getVulnerabilityRoute, http.StatusNotFound
 	} else if err != nil {
@@ -273,7 +273,7 @@ func postVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	err = ctx.Store.InsertVulnerabilities([]database.Vulnerability{vuln}, true)
 	if err != nil {
 		switch err.(type) {
-		case *cerrors.ErrBadRequest:
+		case *commonerr.ErrBadRequest:
 			writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 			return postVulnerabilityRoute, http.StatusBadRequest
 		default:
@@ -290,7 +290,7 @@ func getVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 	_, withFixedIn := r.URL.Query()["fixedIn"]
 
 	dbVuln, err := ctx.Store.FindVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
-	if err == cerrors.ErrNotFound {
+	if err == commonerr.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return getVulnerabilityRoute, http.StatusNotFound
 	} else if err != nil {
@@ -334,7 +334,7 @@ func putVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 	err = ctx.Store.InsertVulnerabilities([]database.Vulnerability{vuln}, true)
 	if err != nil {
 		switch err.(type) {
-		case *cerrors.ErrBadRequest:
+		case *commonerr.ErrBadRequest:
 			writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 			return putVulnerabilityRoute, http.StatusBadRequest
 		default:
@@ -349,7 +349,7 @@ func putVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 
 func deleteVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
 	err := ctx.Store.DeleteVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
-	if err == cerrors.ErrNotFound {
+	if err == commonerr.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, VulnerabilityEnvelope{Error: &Error{err.Error()}})
 		return deleteVulnerabilityRoute, http.StatusNotFound
 	} else if err != nil {
@@ -363,7 +363,7 @@ func deleteVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 
 func getFixes(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
 	dbVuln, err := ctx.Store.FindVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
-	if err == cerrors.ErrNotFound {
+	if err == commonerr.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, FeatureEnvelope{Error: &Error{err.Error()}})
 		return getFixesRoute, http.StatusNotFound
 	} else if err != nil {
@@ -403,11 +403,11 @@ func putFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *co
 	err = ctx.Store.InsertVulnerabilityFixes(p.ByName("vulnerabilityNamespace"), p.ByName("vulnerabilityName"), []database.FeatureVersion{dbFix})
 	if err != nil {
 		switch err.(type) {
-		case *cerrors.ErrBadRequest:
+		case *commonerr.ErrBadRequest:
 			writeResponse(w, r, http.StatusBadRequest, FeatureEnvelope{Error: &Error{err.Error()}})
 			return putFixRoute, http.StatusBadRequest
 		default:
-			if err == cerrors.ErrNotFound {
+			if err == commonerr.ErrNotFound {
 				writeResponse(w, r, http.StatusNotFound, FeatureEnvelope{Error: &Error{err.Error()}})
 				return putFixRoute, http.StatusNotFound
 			}
@@ -422,7 +422,7 @@ func putFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *co
 
 func deleteFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
 	err := ctx.Store.DeleteVulnerabilityFix(p.ByName("vulnerabilityNamespace"), p.ByName("vulnerabilityName"), p.ByName("fixName"))
-	if err == cerrors.ErrNotFound {
+	if err == commonerr.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, FeatureEnvelope{Error: &Error{err.Error()}})
 		return deleteFixRoute, http.StatusNotFound
 	} else if err != nil {
@@ -468,7 +468,7 @@ func getNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	}
 
 	dbNotification, nextPage, err := ctx.Store.GetNotification(p.ByName("notificationName"), limit, page)
-	if err == cerrors.ErrNotFound {
+	if err == commonerr.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, NotificationEnvelope{Error: &Error{err.Error()}})
 		return deleteNotificationRoute, http.StatusNotFound
 	} else if err != nil {
@@ -484,7 +484,7 @@ func getNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params
 
 func deleteNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
 	err := ctx.Store.DeleteNotification(p.ByName("notificationName"))
-	if err == cerrors.ErrNotFound {
+	if err == commonerr.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, NotificationEnvelope{Error: &Error{err.Error()}})
 		return deleteNotificationRoute, http.StatusNotFound
 	} else if err != nil {

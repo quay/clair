@@ -31,8 +31,8 @@ import (
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/ext/vulnsrc"
+	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/utils"
-	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/utils/types"
 )
 
@@ -172,7 +172,7 @@ func (u *updater) pullRepository() (commit string, err error) {
 		if out, err := utils.Exec(u.repositoryLocalPath, "git", "clone", secdbGitURL, "."); err != nil {
 			u.Clean()
 			log.Errorf("could not pull alpine-secdb repository: %s. output: %s", err, out)
-			return "", cerrors.ErrCouldNotDownload
+			return "", commonerr.ErrCouldNotDownload
 		}
 	} else {
 		// The repository exists and it needs to be refreshed via a pull.

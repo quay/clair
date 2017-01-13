@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import (
 	"net/http"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/pkg/tarutil"
-	cerrors "github.com/coreos/clair/utils/errors"
 	"github.com/coreos/clair/worker"
 )
 
@@ -48,11 +48,11 @@ func WriteHTTPError(w http.ResponseWriter, httpStatus int, err error) {
 	if httpStatus == 0 {
 		httpStatus = http.StatusInternalServerError
 		// Try to guess the http status code from the error type
-		if _, isBadRequestError := err.(*cerrors.ErrBadRequest); isBadRequestError {
+		if _, isBadRequestError := err.(*commonerr.ErrBadRequest); isBadRequestError {
 			httpStatus = http.StatusBadRequest
 		} else {
 			switch err {
-			case cerrors.ErrNotFound:
+			case commonerr.ErrNotFound:
 				httpStatus = http.StatusNotFound
 			case database.ErrBackendException:
 				httpStatus = http.StatusServiceUnavailable
