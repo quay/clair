@@ -20,11 +20,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/utils/types"
 )
 
 func TestNotification(t *testing.T) {
@@ -169,7 +169,7 @@ func TestNotification(t *testing.T) {
 
 	// Update a vulnerability and ensure that the old/new vulnerabilities are correct.
 	v1b := v1
-	v1b.Severity = types.High
+	v1b.Severity = clair.High
 	v1b.FixedIn = []database.FeatureVersion{
 		{
 			Feature: f1,

@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt/rpm"
-	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -36,7 +36,7 @@ func TestRHELParser(t *testing.T) {
 	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, 1) {
 		assert.Equal(t, "RHSA-2015:1193", vulnerabilities[0].Name)
 		assert.Equal(t, "https://rhn.redhat.com/errata/RHSA-2015-1193.html", vulnerabilities[0].Link)
-		assert.Equal(t, types.Medium, vulnerabilities[0].Severity)
+		assert.Equal(t, clair.Medium, vulnerabilities[0].Severity)
 		assert.Equal(t, `Xerces-C is a validating XML parser written in a portable subset of C++. A flaw was found in the way the Xerces-C XML parser processed certain XML documents. A remote attacker could provide specially crafted XML input that, when parsed by an application using Xerces-C, would cause that application to crash.`, vulnerabilities[0].Description)
 
 		expectedFeatureVersions := []database.FeatureVersion{
@@ -83,7 +83,7 @@ func TestRHELParser(t *testing.T) {
 	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, 1) {
 		assert.Equal(t, "RHSA-2015:1207", vulnerabilities[0].Name)
 		assert.Equal(t, "https://rhn.redhat.com/errata/RHSA-2015-1207.html", vulnerabilities[0].Link)
-		assert.Equal(t, types.Critical, vulnerabilities[0].Severity)
+		assert.Equal(t, clair.Critical, vulnerabilities[0].Severity)
 		assert.Equal(t, `Mozilla Firefox is an open source web browser. XULRunner provides the XUL Runtime environment for Mozilla Firefox. Several flaws were found in the processing of malformed web content. A web page containing malicious content could cause Firefox to crash or, potentially, execute arbitrary code with the privileges of the user running Firefox.`, vulnerabilities[0].Description)
 
 		expectedFeatureVersions := []database.FeatureVersion{

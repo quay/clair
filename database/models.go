@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/coreos/clair/utils/types"
+	"github.com/coreos/clair"
 )
 
 // ID is only meant to be used by database implementations and should never be used for anything else.
@@ -70,7 +70,7 @@ type Vulnerability struct {
 
 	Description string
 	Link        string
-	Severity    types.Priority
+	Severity    clair.Severity
 
 	Metadata MetadataMap
 

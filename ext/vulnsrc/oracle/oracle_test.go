@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt/rpm"
-	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,7 +38,7 @@ func TestOracleParser(t *testing.T) {
 	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, 1) {
 		assert.Equal(t, "ELSA-2015-1193", vulnerabilities[0].Name)
 		assert.Equal(t, "http://linux.oracle.com/errata/ELSA-2015-1193.html", vulnerabilities[0].Link)
-		assert.Equal(t, types.Medium, vulnerabilities[0].Severity)
+		assert.Equal(t, clair.Medium, vulnerabilities[0].Severity)
 		assert.Equal(t, ` [3.1.1-7] Resolves: rhbz#1217104 CVE-2015-0252 `, vulnerabilities[0].Description)
 
 		expectedFeatureVersions := []database.FeatureVersion{
@@ -86,7 +86,7 @@ func TestOracleParser(t *testing.T) {
 	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, 1) {
 		assert.Equal(t, "ELSA-2015-1207", vulnerabilities[0].Name)
 		assert.Equal(t, "http://linux.oracle.com/errata/ELSA-2015-1207.html", vulnerabilities[0].Link)
-		assert.Equal(t, types.Critical, vulnerabilities[0].Severity)
+		assert.Equal(t, clair.Critical, vulnerabilities[0].Severity)
 		assert.Equal(t, ` [38.1.0-1.0.1.el7_1] - Add firefox-oracle-default-prefs.js and remove the corresponding Red Hat file [38.1.0-1] - Update to 38.1.0 ESR [38.0.1-2] - Fixed rhbz#1222807 by removing preun section `, vulnerabilities[0].Description)
 		expectedFeatureVersions := []database.FeatureVersion{
 			{

@@ -27,12 +27,12 @@ import (
 
 	"github.com/coreos/pkg/capnslog"
 
+	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/rpm"
 	"github.com/coreos/clair/ext/vulnsrc"
 	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/utils/types"
 )
 
 const (
@@ -175,7 +175,7 @@ func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.Vulnerability, 
 			vulnerability := database.Vulnerability{
 				Name:        name(definition),
 				Link:        link(definition),
-				Severity:    priority(definition),
+				Severity:    severity(definition),
 				Description: description(definition),
 			}
 			for _, p := range pkgs {
@@ -344,22 +344,18 @@ func link(def definition) (link string) {
 	return
 }
 
-func priority(def definition) types.Priority {
-	// Parse the priority.
-	priority := strings.TrimSpace(def.Title[strings.LastIndex(def.Title, "(")+1 : len(def.Title)-1])
-
-	// Normalize the priority.
-	switch priority {
+func severity(def definition) clair.Severity {
+	switch strings.TrimSpace(def.Title[strings.LastIndex(def.Title, "(")+1 : len(def.Title)-1]) {
 	case "Low":
-		return types.Low
+		return clair.Low
 	case "Moderate":
-		return types.Medium
+		return clair.Medium
 	case "Important":
-		return types.High
+		return clair.High
 	case "Critical":
-		return types.Critical
+		return clair.Critical
 	default:
-		log.Warning("could not determine vulnerability priority from: %s.", priority)
-		return types.Unknown
+		log.Warning("could not determine vulnerability severity from: %s.", def.Title)
+		return clair.Unknown
 	}
 }

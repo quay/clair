@@ -28,15 +28,14 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/coreos/pkg/capnslog"
 
+	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/vulnmdsrc"
 	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/utils/types"
 )
 
 const (
@@ -52,7 +51,6 @@ type appender struct {
 	localPath      string
 	dataFeedHashes map[string]string
 	metadata       map[string]NVDMetadata
-	sync.Mutex
 }
 
 type NVDMetadata struct {
@@ -69,9 +67,6 @@ func init() {
 }
 
 func (a *appender) BuildCache(datastore database.Datastore) error {
-	a.Lock()
-	defer a.Unlock()
-
 	var err error
 	a.metadata = make(map[string]NVDMetadata)
 
@@ -115,27 +110,18 @@ func (a *appender) BuildCache(datastore database.Datastore) error {
 }
 
 func (a *appender) Append(vulnName string, appendFunc vulnmdsrc.AppendFunc) error {
-	a.Lock()
-	defer a.Unlock()
-
 	if nvdMetadata, ok := a.metadata[vulnName]; ok {
-		appendFunc(appenderName, nvdMetadata, scoreToPriority(nvdMetadata.CVSSv2.Score))
+		appendFunc(appenderName, nvdMetadata, SeverityFromCVSS(nvdMetadata.CVSSv2.Score))
 	}
 
 	return nil
 }
 
 func (a *appender) PurgeCache() {
-	a.Lock()
-	defer a.Unlock()
-
 	a.metadata = nil
 }
 
 func (a *appender) Clean() {
-	a.Lock()
-	defer a.Unlock()
-
 	os.RemoveAll(a.localPath)
 }
 
@@ -232,23 +218,23 @@ func getHashFromMetaURL(metaURL string) (string, error) {
 	return "", errors.New("invalid .meta file format")
 }
 
-// scoreToPriority converts the CVSS Score (0.0 - 10.0) into user-friendy
-// types.Priority following the qualitative rating scale available in the
-// CVSS v3.0 specification (https://www.first.org/cvss/specification-document),
-// Table 14. The Negligible level is set for CVSS scores between [0, 1),
-// replacing the specified None level, originally used for a score of 0.
-func scoreToPriority(score float64) types.Priority {
+// SeverityFromCVSS converts the CVSS Score (0.0 - 10.0) into a clair.Severity
+// following the qualitative rating scale available in the CVSS v3.0
+// specification (https://www.first.org/cvss/specification-document), Table 14.
+// The Negligible level is set for CVSS scores between [0, 1), replacing the
+// specified None level, originally used for a score of 0.
+func SeverityFromCVSS(score float64) clair.Severity {
 	switch {
 	case score < 1.0:
-		return types.Negligible
+		return clair.Negligible
 	case score < 3.9:
-		return types.Low
+		return clair.Low
 	case score < 6.9:
-		return types.Medium
+		return clair.Medium
 	case score < 8.9:
-		return types.High
+		return clair.High
 	case score <= 10:
-		return types.Critical
+		return clair.Critical
 	}
-	return types.Unknown
+	return clair.Unknown
 }

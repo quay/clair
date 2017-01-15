@@ -29,13 +29,13 @@ import (
 
 	"github.com/coreos/pkg/capnslog"
 
+	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/ext/vulnsrc"
 	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/utils"
-	"github.com/coreos/clair/utils/types"
 )
 
 const (
@@ -301,7 +301,7 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 				priority = priority[:strings.Index(priority, " ")]
 			}
 
-			vulnerability.Severity = ubuntuPriorityToSeverity(priority)
+			vulnerability.Severity = SeverityFromPriority(priority)
 			continue
 		}
 
@@ -388,28 +388,30 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 
 	// If no priority has been provided (CVE-2007-0667 for instance), set the priority to Unknown
 	if vulnerability.Severity == "" {
-		vulnerability.Severity = types.Unknown
+		vulnerability.Severity = clair.Unknown
 	}
 
 	return
 }
 
-func ubuntuPriorityToSeverity(priority string) types.Priority {
+// SeverityFromPriority converts an priority from the Ubuntu CVE Tracker into
+// a clair.Severity.
+func SeverityFromPriority(priority string) clair.Severity {
 	switch priority {
 	case "untriaged":
-		return types.Unknown
+		return clair.Unknown
 	case "negligible":
-		return types.Negligible
+		return clair.Negligible
 	case "low":
-		return types.Low
+		return clair.Low
 	case "medium":
-		return types.Medium
+		return clair.Medium
 	case "high":
-		return types.High
+		return clair.High
 	case "critical":
-		return types.Critical
+		return clair.Critical
+	default:
+		log.Warning("could not determine a vulnerability severity from: %s", priority)
+		return clair.Unknown
 	}
-
-	log.Warning("Could not determine a vulnerability priority from: %s", priority)
-	return types.Unknown
 }

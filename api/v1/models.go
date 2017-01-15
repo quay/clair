@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,9 +24,9 @@ import (
 	"github.com/coreos/pkg/capnslog"
 	"github.com/fernet/fernet-go"
 
+	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
-	"github.com/coreos/clair/utils/types"
 )
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "v1")
@@ -109,9 +109,9 @@ type Vulnerability struct {
 }
 
 func (v Vulnerability) DatabaseModel() (database.Vulnerability, error) {
-	severity := types.Priority(v.Severity)
-	if !severity.IsValid() {
-		return database.Vulnerability{}, errors.New("Invalid severity")
+	severity, err := clair.NewSeverity(v.Severity)
+	if err != nil {
+		return database.Vulnerability{}, err
 	}
 
 	var dbFeatures []database.FeatureVersion

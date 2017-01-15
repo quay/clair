@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package types
+package clair
 
 import (
 	"testing"
@@ -20,13 +20,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestComparePriority(t *testing.T) {
-	assert.Equal(t, Medium.Compare(Medium), 0, "Priority comparison failed")
-	assert.True(t, Medium.Compare(High) < 0, "Priority comparison failed")
-	assert.True(t, Critical.Compare(Low) > 0, "Priority comparison failed")
+func TestCompareSeverity(t *testing.T) {
+	assert.Equal(t, Medium.Compare(Medium), 0, "Severity comparison failed")
+	assert.True(t, Medium.Compare(High) < 0, "Severity comparison failed")
+	assert.True(t, Critical.Compare(Low) > 0, "Severity comparison failed")
 }
 
-func TestIsValid(t *testing.T) {
-	assert.False(t, Priority("Test").IsValid())
-	assert.True(t, Unknown.IsValid())
+func TestParseSeverity(t *testing.T) {
+	_, err := NewSeverity("Test")
+	assert.Equal(t, ErrFailedToParseSeverity, err)
+
+	_, err = NewSeverity("Unknown")
+	assert.Nil(t, err)
 }

@@ -27,12 +27,12 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/coreos/clair"
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/vulnmdsrc"
 	"github.com/coreos/clair/ext/vulnsrc"
 	"github.com/coreos/clair/utils"
-	"github.com/coreos/clair/utils/types"
 )
 
 const (
@@ -316,7 +316,7 @@ type lockableVulnerability struct {
 	sync.Mutex
 }
 
-func (lv *lockableVulnerability) appendFunc(metadataKey string, metadata interface{}, severity types.Priority) {
+func (lv *lockableVulnerability) appendFunc(metadataKey string, metadata interface{}, severity clair.Severity) {
 	lv.Lock()
 	defer lv.Unlock()
 
@@ -329,7 +329,7 @@ func (lv *lockableVulnerability) appendFunc(metadataKey string, metadata interfa
 	lv.Metadata[metadataKey] = metadata
 
 	// If necessary, provide a severity for the vulnerability.
-	if lv.Severity == "" || lv.Severity == types.Unknown {
+	if lv.Severity == clair.Unknown {
 		lv.Severity = severity
 	}
 }

@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,10 +20,10 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
-	"github.com/coreos/clair/utils/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -37,7 +37,7 @@ func TestDebianParser(t *testing.T) {
 		for _, vulnerability := range response.Vulnerabilities {
 			if vulnerability.Name == "CVE-2015-1323" {
 				assert.Equal(t, "https://security-tracker.debian.org/tracker/CVE-2015-1323", vulnerability.Link)
-				assert.Equal(t, types.Low, vulnerability.Severity)
+				assert.Equal(t, clair.Low, vulnerability.Severity)
 				assert.Equal(t, "This vulnerability is not very dangerous.", vulnerability.Description)
 
 				expectedFeatureVersions := []database.FeatureVersion{
@@ -68,7 +68,7 @@ func TestDebianParser(t *testing.T) {
 				}
 			} else if vulnerability.Name == "CVE-2003-0779" {
 				assert.Equal(t, "https://security-tracker.debian.org/tracker/CVE-2003-0779", vulnerability.Link)
-				assert.Equal(t, types.High, vulnerability.Severity)
+				assert.Equal(t, clair.High, vulnerability.Severity)
 				assert.Equal(t, "But this one is very dangerous.", vulnerability.Description)
 
 				expectedFeatureVersions := []database.FeatureVersion{
@@ -109,7 +109,7 @@ func TestDebianParser(t *testing.T) {
 				}
 			} else if vulnerability.Name == "CVE-2013-2685" {
 				assert.Equal(t, "https://security-tracker.debian.org/tracker/CVE-2013-2685", vulnerability.Link)
-				assert.Equal(t, types.Negligible, vulnerability.Severity)
+				assert.Equal(t, clair.Negligible, vulnerability.Severity)
 				assert.Equal(t, "Un-affected packages.", vulnerability.Description)
 
 				expectedFeatureVersions := []database.FeatureVersion{

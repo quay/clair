@@ -27,12 +27,12 @@ import (
 
 	"github.com/coreos/pkg/capnslog"
 
+	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/ext/vulnsrc"
 	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/utils/types"
 )
 
 const (
@@ -158,17 +158,17 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 					vulnerability = &database.Vulnerability{
 						Name:        vulnName,
 						Link:        strings.Join([]string{cveURLPrefix, "/", vulnName}, ""),
-						Severity:    types.Unknown,
+						Severity:    clair.Unknown,
 						Description: vulnNode.Description,
 					}
 				}
 
 				// Set the priority of the vulnerability.
 				// In the JSON, a vulnerability has one urgency per package it affects.
-				// The highest urgency should be the one set.
-				urgency := urgencyToSeverity(releaseNode.Urgency)
-				if urgency.Compare(vulnerability.Severity) > 0 {
-					vulnerability.Severity = urgency
+				severity := SeverityFromUrgency(releaseNode.Urgency)
+				if severity.Compare(vulnerability.Severity) > 0 {
+					// The highest urgency should be the one set.
+					vulnerability.Severity = severity
 				}
 
 				// Determine the version of the package the vulnerability affects.
@@ -219,39 +219,41 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 	return
 }
 
-func urgencyToSeverity(urgency string) types.Priority {
+// SeverityFromUrgency converts the urgency scale used by the Debian Security
+// Bug Tracker into a clair.Severity.
+func SeverityFromUrgency(urgency string) clair.Severity {
 	switch urgency {
 	case "not yet assigned":
-		return types.Unknown
+		return clair.Unknown
 
 	case "end-of-life":
 		fallthrough
 	case "unimportant":
-		return types.Negligible
+		return clair.Negligible
 
 	case "low":
 		fallthrough
 	case "low*":
 		fallthrough
 	case "low**":
-		return types.Low
+		return clair.Low
 
 	case "medium":
 		fallthrough
 	case "medium*":
 		fallthrough
 	case "medium**":
-		return types.Medium
+		return clair.Medium
 
 	case "high":
 		fallthrough
 	case "high*":
 		fallthrough
 	case "high**":
-		return types.High
+		return clair.High
 
 	default:
-		log.Warningf("could not determine vulnerability priority from: %s", urgency)
-		return types.Unknown
+		log.Warningf("could not determine vulnerability severity from: %s", urgency)
+		return clair.Unknown
 	}
 }

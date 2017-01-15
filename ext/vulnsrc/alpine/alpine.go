@@ -27,13 +27,13 @@ import (
 
 	"github.com/coreos/pkg/capnslog"
 
+	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/ext/vulnsrc"
 	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/utils"
-	"github.com/coreos/clair/utils/types"
 )
 
 const (
@@ -225,7 +225,7 @@ func parse33YAML(r io.Reader) (vulns []database.Vulnerability, err error) {
 
 			vulns = append(vulns, database.Vulnerability{
 				Name:     fix,
-				Severity: types.Unknown,
+				Severity: clair.Unknown,
 				Link:     nvdURLPrefix + fix,
 				FixedIn: []database.FeatureVersion{
 					{
@@ -279,7 +279,7 @@ func parse34YAML(r io.Reader) (vulns []database.Vulnerability, err error) {
 
 			for _, vulnStr := range vulnStrs {
 				var vuln database.Vulnerability
-				vuln.Severity = types.Unknown
+				vuln.Severity = clair.Unknown
 				vuln.Name = vulnStr
 				vuln.Link = nvdURLPrefix + vulnStr
 				vuln.FixedIn = []database.FeatureVersion{

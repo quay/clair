@@ -25,13 +25,14 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/coreos/pkg/capnslog"
+
+	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/rpm"
 	"github.com/coreos/clair/ext/vulnsrc"
 	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/utils/types"
-	"github.com/coreos/pkg/capnslog"
 )
 
 const (
@@ -172,7 +173,7 @@ func parseELSA(ovalReader io.Reader) (vulnerabilities []database.Vulnerability, 
 			vulnerability := database.Vulnerability{
 				Name:        name(definition),
 				Link:        link(definition),
-				Severity:    priority(definition),
+				Severity:    severity(definition),
 				Description: description(definition),
 			}
 			for _, p := range pkgs {
@@ -336,24 +337,20 @@ func link(def definition) (link string) {
 	return
 }
 
-func priority(def definition) types.Priority {
-	// Parse the priority.
-	priority := strings.ToLower(def.Severity)
-
-	// Normalize the priority.
-	switch priority {
+func severity(def definition) clair.Severity {
+	switch strings.ToLower(def.Severity) {
 	case "n/a":
-		return types.Negligible
+		return clair.Negligible
 	case "low":
-		return types.Low
+		return clair.Low
 	case "moderate":
-		return types.Medium
+		return clair.Medium
 	case "important":
-		return types.High
+		return clair.High
 	case "critical":
-		return types.Critical
+		return clair.Critical
 	default:
-		log.Warningf("could not determine vulnerability priority from: %s.", priority)
-		return types.Unknown
+		log.Warningf("could not determine vulnerability severity from: %s.", def.Severity)
+		return clair.Unknown
 	}
 }

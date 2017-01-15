@@ -16,14 +16,23 @@ package main
 
 import (
 	"flag"
+	"math/rand"
 	"os"
+	"os/signal"
 	"runtime/pprof"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/coreos/pkg/capnslog"
 
-	"github.com/coreos/clair"
+	"github.com/coreos/clair/api"
+	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/config"
+	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/notifier"
+	"github.com/coreos/clair/updater"
+	"github.com/coreos/clair/utils"
 
 	// Register database driver.
 	_ "github.com/coreos/clair/database/pgsql"
@@ -50,30 +59,10 @@ import (
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair/cmd/clair", "main")
 
-func main() {
-	// Parse command-line arguments
-	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
-	flagConfigPath := flag.String("config", "/etc/clair/config.yaml", "Load configuration from the specified file.")
-	flagCPUProfilePath := flag.String("cpu-profile", "", "Write a CPU profile to the specified file before exiting.")
-	flagLogLevel := flag.String("log-level", "info", "Define the logging level.")
-	flag.Parse()
-	// Load configuration
-	config, err := config.Load(*flagConfigPath)
-	if err != nil {
-		log.Fatalf("failed to load configuration: %s", err)
-	}
-
-	// Initialize logging system
-	logLevel, err := capnslog.ParseLevel(strings.ToUpper(*flagLogLevel))
-	capnslog.SetGlobalLogLevel(logLevel)
-	capnslog.SetFormatter(capnslog.NewPrettyFormatter(os.Stdout, false))
-
-	// Enable CPU Profiling if specified
-	if *flagCPUProfilePath != "" {
-		defer stopCPUProfiling(startCPUProfiling(*flagCPUProfilePath))
-	}
-
-	clair.Boot(config)
+func waitForSignals(signals ...os.Signal) {
+	interrupts := make(chan os.Signal, 1)
+	signal.Notify(interrupts, signals...)
+	<-interrupts
 }
 
 func startCPUProfiling(path string) *os.File {
@@ -96,4 +85,63 @@ func stopCPUProfiling(f *os.File) {
 	pprof.StopCPUProfile()
 	f.Close()
 	log.Info("stopped CPU profiling")
+}
+
+// Boot starts Clair instance with the provided config.
+func Boot(config *config.Config) {
+	rand.Seed(time.Now().UnixNano())
+	st := utils.NewStopper()
+
+	// Open database
+	db, err := database.Open(config.Database)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
+	// Start notifier
+	st.Begin()
+	go notifier.Run(config.Notifier, db, st)
+
+	// Start API
+	st.Begin()
+	go api.Run(config.API, &context.RouteContext{db, config.API}, st)
+	st.Begin()
+	go api.RunHealth(config.API, &context.RouteContext{db, config.API}, st)
+
+	// Start updater
+	st.Begin()
+	go updater.Run(config.Updater, db, st)
+
+	// Wait for interruption and shutdown gracefully.
+	waitForSignals(syscall.SIGINT, syscall.SIGTERM)
+	log.Info("Received interruption, gracefully stopping ...")
+	st.Stop()
+}
+
+func main() {
+	// Parse command-line arguments
+	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	flagConfigPath := flag.String("config", "/etc/clair/config.yaml", "Load configuration from the specified file.")
+	flagCPUProfilePath := flag.String("cpu-profile", "", "Write a CPU profile to the specified file before exiting.")
+	flagLogLevel := flag.String("log-level", "info", "Define the logging level.")
+	flag.Parse()
+
+	// Load configuration
+	config, err := config.Load(*flagConfigPath)
+	if err != nil {
+		log.Fatalf("failed to load configuration: %s", err)
+	}
+
+	// Initialize logging system
+	logLevel, err := capnslog.ParseLevel(strings.ToUpper(*flagLogLevel))
+	capnslog.SetGlobalLogLevel(logLevel)
+	capnslog.SetFormatter(capnslog.NewPrettyFormatter(os.Stdout, false))
+
+	// Enable CPU Profiling if specified
+	if *flagCPUProfilePath != "" {
+		defer stopCPUProfiling(startCPUProfiling(*flagCPUProfilePath))
+	}
+
+	Boot(config)
 }
