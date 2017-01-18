@@ -96,8 +96,9 @@ func Run(config *config.NotifierConfig, datastore database.Datastore, stopper *u
 		go func() {
 			success, interrupted := handleTask(*notification, stopper, config.Attempts)
 			if success {
-				utils.PrometheusObserveTimeMilliseconds(promNotifierLatencyMilliseconds, notification.Created)
 				datastore.SetNotificationNotified(notification.Name)
+
+				promNotifierLatencyMilliseconds.Observe(float64(time.Since(notification.Created).Nanoseconds()) / float64(time.Millisecond))
 			}
 			if interrupted {
 				running = false

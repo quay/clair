@@ -35,7 +35,6 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/database/pgsql/migrations"
 	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/utils"
 )
 
 var (
@@ -300,5 +299,7 @@ func isErrUniqueViolation(err error) bool {
 }
 
 func observeQueryTime(query, subquery string, start time.Time) {
-	utils.PrometheusObserveTimeMilliseconds(promQueryDurationMilliseconds.WithLabelValues(query, subquery), start)
+	promQueryDurationMilliseconds.
+		WithLabelValues(query, subquery).
+		Observe(float64(time.Since(start).Nanoseconds()) / float64(time.Millisecond))
 }

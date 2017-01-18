@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ import (
 
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/utils"
 )
 
 var (
@@ -52,7 +51,10 @@ func HTTPHandler(handler Handler, ctx *RouteContext) httprouter.Handle {
 		if status == 0 {
 			statusStr = "???"
 		}
-		utils.PrometheusObserveTimeMilliseconds(promResponseDurationMilliseconds.WithLabelValues(route, statusStr), start)
+
+		promResponseDurationMilliseconds.
+			WithLabelValues(route, statusStr).
+			Observe(float64(time.Since(start).Nanoseconds()) / float64(time.Millisecond))
 
 		log.Infof("%s \"%s %s\" %s (%s)", r.RemoteAddr, r.Method, r.RequestURI, statusStr, time.Since(start))
 	}
