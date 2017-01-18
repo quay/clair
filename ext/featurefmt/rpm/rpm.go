@@ -19,6 +19,7 @@ import (
 	"bufio"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/coreos/pkg/capnslog"
@@ -29,7 +30,6 @@ import (
 	"github.com/coreos/clair/ext/versionfmt/rpm"
 	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/pkg/tarutil"
-	"github.com/coreos/clair/utils"
 )
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/featurefmt/rpm")
@@ -63,10 +63,8 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 		return []database.FeatureVersion{}, commonerr.ErrFilesystem
 	}
 
-	// Query RPM
-	// We actually extract binary package names instead of source package names here because RHSA refers to package names
-	// In the dpkg system, we extract the source instead
-	out, err := utils.Exec(tmpDir, "rpm", "--dbpath", tmpDir, "-qa", "--qf", "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE}\n")
+	// Extract binary package names because RHSA refers to binary package names.
+	out, err := exec.Command("rpm", "--dbpath", tmpDir, "-qa", "--qf", "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE}\n").CombinedOutput()
 	if err != nil {
 		log.Errorf("could not query RPM: %s. output: %s", err, string(out))
 		// Do not bubble up because we probably won't be able to fix it,

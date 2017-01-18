@@ -18,6 +18,7 @@ import (
 	"flag"
 	"math/rand"
 	"os"
+	"os/exec"
 	"os/signal"
 	"runtime/pprof"
 	"strings"
@@ -126,6 +127,14 @@ func main() {
 	flagCPUProfilePath := flag.String("cpu-profile", "", "Write a CPU profile to the specified file before exiting.")
 	flagLogLevel := flag.String("log-level", "info", "Define the logging level.")
 	flag.Parse()
+
+	// Check for dependencies.
+	for _, bin := range []string{"git", "bzr", "rpm", "xz"} {
+		_, err := exec.LookPath(bin)
+		if err != nil {
+			log.Fatalf("failed to find dependency: %s", bin)
+		}
+	}
 
 	// Load configuration
 	config, err := config.Load(*flagConfigPath)

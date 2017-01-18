@@ -23,6 +23,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
@@ -35,7 +36,6 @@ import (
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/ext/vulnsrc"
 	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/utils"
 )
 
 const (
@@ -174,7 +174,9 @@ func (u *updater) pullRepository() (err error) {
 		}
 
 		// Branch repository.
-		if out, err := utils.Exec(u.repositoryLocalPath, "bzr", "branch", "--use-existing-dir", trackerRepository, "."); err != nil {
+		cmd := exec.Command("bzr", "branch", "--use-existing-dir", trackerRepository, ".")
+		cmd.Dir = u.repositoryLocalPath
+		if out, err := cmd.CombinedOutput(); err != nil {
 			log.Errorf("could not branch Ubuntu repository: %s. output: %s", err, out)
 			return commonerr.ErrCouldNotDownload
 		}
@@ -183,7 +185,9 @@ func (u *updater) pullRepository() (err error) {
 	}
 
 	// Pull repository.
-	if out, err := utils.Exec(u.repositoryLocalPath, "bzr", "pull", "--overwrite"); err != nil {
+	cmd := exec.Command("bzr", "pull", "--overwrite")
+	cmd.Dir = u.repositoryLocalPath
+	if out, err := cmd.CombinedOutput(); err != nil {
 		os.RemoveAll(u.repositoryLocalPath)
 
 		log.Errorf("could not pull Ubuntu repository: %s. output: %s", err, out)
@@ -194,16 +198,20 @@ func (u *updater) pullRepository() (err error) {
 }
 
 func getRevisionNumber(pathToRepo string) (int, error) {
-	out, err := utils.Exec(pathToRepo, "bzr", "revno")
+	cmd := exec.Command("bzr", "revno")
+	cmd.Dir = pathToRepo
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Errorf("could not get Ubuntu repository's revision number: %s. output: %s", err, out)
 		return 0, commonerr.ErrCouldNotDownload
 	}
+
 	revno, err := strconv.Atoi(strings.TrimSpace(string(out)))
 	if err != nil {
 		log.Errorf("could not parse Ubuntu repository's revision number: %s. output: %s", err, out)
 		return 0, commonerr.ErrCouldNotDownload
 	}
+
 	return revno, nil
 }
 
@@ -252,7 +260,9 @@ func collectModifiedVulnerabilities(revision int, dbRevision, repositoryLocalPat
 	}
 
 	// Handle a database that needs upgrading.
-	out, err := utils.Exec(repositoryLocalPath, "bzr", "log", "--verbose", "-r"+strconv.Itoa(dbRevisionInt+1)+"..", "-n0")
+	cmd := exec.Command("bzr", "log", "--verbose", "-r"+strconv.Itoa(dbRevisionInt+1)+"..", "-n0")
+	cmd.Dir = repositoryLocalPath
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Errorf("could not get Ubuntu vulnerabilities repository logs: %s. output: %s", err, out)
 		return nil, commonerr.ErrCouldNotDownload

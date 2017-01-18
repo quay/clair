@@ -21,6 +21,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -33,7 +34,6 @@ import (
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/ext/vulnsrc"
 	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/utils"
 )
 
 const (
@@ -169,20 +169,25 @@ func (u *updater) pullRepository() (commit string, err error) {
 			return "", vulnsrc.ErrFilesystem
 		}
 
-		if out, err := utils.Exec(u.repositoryLocalPath, "git", "clone", secdbGitURL, "."); err != nil {
+		cmd := exec.Command("git", "clone", secdbGitURL, ".")
+		cmd.Dir = u.repositoryLocalPath
+		if out, err := cmd.CombinedOutput(); err != nil {
 			u.Clean()
 			log.Errorf("could not pull alpine-secdb repository: %s. output: %s", err, out)
 			return "", commonerr.ErrCouldNotDownload
 		}
 	} else {
-		// The repository exists and it needs to be refreshed via a pull.
-		_, err := utils.Exec(u.repositoryLocalPath, "git", "pull")
-		if err != nil {
+		// The repository already exists and it needs to be refreshed via a pull.
+		cmd := exec.Command("git", "pull")
+		cmd.Dir = u.repositoryLocalPath
+		if _, err := cmd.CombinedOutput(); err != nil {
 			return "", vulnsrc.ErrGitFailure
 		}
 	}
 
-	out, err := utils.Exec(u.repositoryLocalPath, "git", "rev-parse", "HEAD")
+	cmd := exec.Command("git", "rev-parse", "HEAD")
+	cmd.Dir = u.repositoryLocalPath
+	out, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", vulnsrc.ErrGitFailure
 	}
