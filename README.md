@@ -141,9 +141,8 @@ Documentation for the current branch can be found [inside the Documentation dire
 
 - *Image* - a tarball of the contents of a container
 - *Layer* - an *appc* or *Docker* image that may or maybe not be dependent on another image
-- *Detector* - a Go package that identifies the content, *namespaces* and *features* from a *layer*
-- *Namespace* - a context around *features* and *vulnerabilities* (e.g. an operating system)
 - *Feature* - anything that when present could be an indication of a *vulnerability* (e.g. the presence of a file or an installed software package)
+- *Feature Namespace* - a context around *features* and *vulnerabilities* (e.g. an operating system)
 - *Vulnerability Updater* - a Go package that tracks upstream vulnerability data and imports them into Clair
 - *Vulnerability Metadata Appender* - a Go package that tracks upstream vulnerability metadata and appends them into vulnerabilities managed by Clair
 
