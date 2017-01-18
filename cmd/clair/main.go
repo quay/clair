@@ -32,8 +32,8 @@ import (
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/notifier"
+	"github.com/coreos/clair/pkg/stopper"
 	"github.com/coreos/clair/updater"
-	"github.com/coreos/clair/utils"
 
 	// Register database driver.
 	_ "github.com/coreos/clair/database/pgsql"
@@ -91,7 +91,7 @@ func stopCPUProfiling(f *os.File) {
 // Boot starts Clair instance with the provided config.
 func Boot(config *config.Config) {
 	rand.Seed(time.Now().UnixNano())
-	st := utils.NewStopper()
+	st := stopper.NewStopper()
 
 	// Open database
 	db, err := database.Open(config.Database)

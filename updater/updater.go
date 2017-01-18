@@ -32,7 +32,7 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/vulnmdsrc"
 	"github.com/coreos/clair/ext/vulnsrc"
-	"github.com/coreos/clair/utils"
+	"github.com/coreos/clair/pkg/stopper"
 )
 
 const (
@@ -70,7 +70,7 @@ func init() {
 }
 
 // Run updates the vulnerability database at regular intervals.
-func Run(config *config.UpdaterConfig, datastore database.Datastore, st *utils.Stopper) {
+func Run(config *config.UpdaterConfig, datastore database.Datastore, st *stopper.Stopper) {
 	defer st.End()
 
 	// Do not run the updater if there is no config or if the interval is 0.

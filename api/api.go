@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import (
 
 	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/config"
-	"github.com/coreos/clair/utils"
+	"github.com/coreos/clair/pkg/stopper"
 	"github.com/coreos/pkg/capnslog"
 )
 
@@ -35,7 +35,7 @@ const timeoutResponse = `{"Error":{"Message":"Clair failed to respond within the
 
 var log = capnslog.NewPackageLogger("github.com/coreos/clair", "api")
 
-func Run(config *config.APIConfig, ctx *context.RouteContext, st *utils.Stopper) {
+func Run(config *config.APIConfig, ctx *context.RouteContext, st *stopper.Stopper) {
 	defer st.End()
 
 	// Do not run the API service if there is no config.
@@ -68,7 +68,7 @@ func Run(config *config.APIConfig, ctx *context.RouteContext, st *utils.Stopper)
 	log.Info("main API stopped")
 }
 
-func RunHealth(config *config.APIConfig, ctx *context.RouteContext, st *utils.Stopper) {
+func RunHealth(config *config.APIConfig, ctx *context.RouteContext, st *stopper.Stopper) {
 	defer st.End()
 
 	// Do not run the API service if there is no config.
@@ -94,8 +94,8 @@ func RunHealth(config *config.APIConfig, ctx *context.RouteContext, st *utils.St
 
 // listenAndServeWithStopper wraps graceful.Server's
 // ListenAndServe/ListenAndServeTLS and adds the ability to interrupt them with
-// the provided utils.Stopper
-func listenAndServeWithStopper(srv *graceful.Server, st *utils.Stopper, certFile, keyFile string) {
+// the provided stopper.Stopper.
+func listenAndServeWithStopper(srv *graceful.Server, st *stopper.Stopper, certFile, keyFile string) {
 	go func() {
 		<-st.Chan()
 		srv.Stop(0)

@@ -29,7 +29,7 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/notification"
 	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/utils"
+	"github.com/coreos/clair/pkg/stopper"
 )
 
 const (
@@ -59,7 +59,7 @@ func init() {
 }
 
 // Run starts the Notifier service.
-func Run(config *config.NotifierConfig, datastore database.Datastore, stopper *utils.Stopper) {
+func Run(config *config.NotifierConfig, datastore database.Datastore, stopper *stopper.Stopper) {
 	defer stopper.End()
 
 	// Configure registered notifiers.
@@ -122,7 +122,7 @@ func Run(config *config.NotifierConfig, datastore database.Datastore, stopper *u
 	log.Info("notifier service stopped")
 }
 
-func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoAmI string, stopper *utils.Stopper) *database.VulnerabilityNotification {
+func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoAmI string, stopper *stopper.Stopper) *database.VulnerabilityNotification {
 	for {
 		// Find a notification to send.
 		notification, err := datastore.GetAvailableNotification(renotifyInterval)
@@ -148,7 +148,7 @@ func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoA
 	}
 }
 
-func handleTask(n database.VulnerabilityNotification, st *utils.Stopper, maxAttempts int) (bool, bool) {
+func handleTask(n database.VulnerabilityNotification, st *stopper.Stopper, maxAttempts int) (bool, bool) {
 	// Send notification.
 	for senderName, sender := range notification.Senders() {
 		var attempts int
