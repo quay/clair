@@ -23,7 +23,6 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/utils"
 )
 
 func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities bool) (database.Layer, error) {
@@ -362,8 +361,8 @@ func (pgSQL *pgSQL) updateDiffFeatureVersions(tx *sql.Tx, layer, existingLayer *
 		parentLayerFeaturesMapNV, parentLayerFeaturesNV := createNV(layer.Parent.Features)
 
 		// Calculate the added and deleted FeatureVersions name:version.
-		addNV := utils.CompareStringLists(layerFeaturesNV, parentLayerFeaturesNV)
-		delNV := utils.CompareStringLists(parentLayerFeaturesNV, layerFeaturesNV)
+		addNV := compareStringLists(layerFeaturesNV, parentLayerFeaturesNV)
+		delNV := compareStringLists(parentLayerFeaturesNV, layerFeaturesNV)
 
 		// Fill the structures containing the added and deleted FeatureVersions.
 		for _, nv := range addNV {

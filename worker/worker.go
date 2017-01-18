@@ -17,6 +17,8 @@
 package worker
 
 import (
+	"regexp"
+
 	"github.com/coreos/pkg/capnslog"
 
 	"github.com/coreos/clair/database"
@@ -25,7 +27,6 @@ import (
 	"github.com/coreos/clair/ext/imagefmt"
 	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/pkg/tarutil"
-	"github.com/coreos/clair/utils"
 )
 
 const (
@@ -44,7 +45,14 @@ var (
 	// ErrParentUnknown is the error that should be raised when a parent layer
 	// has yet to be processed for the current layer.
 	ErrParentUnknown = commonerr.NewBadRequestError("worker: parent layer is unknown, it must be processed first")
+
+	urlParametersRegexp = regexp.MustCompile(`(\?|\&)([^=]+)\=([^ &]+)`)
 )
+
+// cleanURL removes all parameters from an URL.
+func cleanURL(str string) string {
+	return urlParametersRegexp.ReplaceAllString(str, "")
+}
 
 // Process detects the Namespace of a layer, the features it adds/removes, and
 // then stores everything in the database.
@@ -65,7 +73,7 @@ func Process(datastore database.Datastore, imageFormat, name, parentName, path s
 	}
 
 	log.Debugf("layer %s: processing (Location: %s, Engine version: %d, Parent: %s, Format: %s)",
-		name, utils.CleanURL(path), Version, parentName, imageFormat)
+		name, cleanURL(path), Version, parentName, imageFormat)
 
 	// Check to see if the layer is already in the database.
 	layer, err := datastore.FindLayer(name, false, false)
@@ -118,7 +126,7 @@ func detectContent(imageFormat, name, path string, headers map[string]string, pa
 	totalRequiredFiles := append(featurefmt.RequiredFilenames(), featurens.RequiredFilenames()...)
 	files, err := imagefmt.Extract(imageFormat, path, headers, totalRequiredFiles)
 	if err != nil {
-		log.Errorf("layer %s: failed to extract data from %s: %s", name, utils.CleanURL(path), err)
+		log.Errorf("layer %s: failed to extract data from %s: %s", name, cleanURL(path), err)
 		return
 	}
 

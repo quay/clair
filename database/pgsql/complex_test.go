@@ -29,7 +29,6 @@ import (
 	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
-	"github.com/coreos/clair/utils"
 )
 
 const (
@@ -157,7 +156,7 @@ func TestRaceAffects(t *testing.T) {
 			}
 		}
 
-		assert.Len(t, utils.CompareStringLists(expectedAffectedNames, actualAffectedNames), 0)
-		assert.Len(t, utils.CompareStringLists(actualAffectedNames, expectedAffectedNames), 0)
+		assert.Len(t, compareStringLists(expectedAffectedNames, actualAffectedNames), 0)
+		assert.Len(t, compareStringLists(actualAffectedNames, expectedAffectedNames), 0)
 	}
 }
