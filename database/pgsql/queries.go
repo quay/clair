@@ -219,7 +219,7 @@ const (
 		    AND vafv.featureversion_id = fv.id
 		    AND ldfv.featureversion_id = fv.id
 		    AND ldfv.modification = 'add'
-		  ORDER BY ldfv.ID
+		  ORDER BY ldfv.layer_id
 		)
 		SELECT l.id, l.name
 		FROM LDFV, Layer l
