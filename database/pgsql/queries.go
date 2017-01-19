@@ -212,7 +212,7 @@ const (
 
 	searchNotificationLayerIntroducingVulnerability = `
 		WITH LDFV AS (
-		  SELECT ldfv.layer_id
+		  SELECT DISTINCT ldfv.layer_id
 		  FROM Vulnerability_Affects_FeatureVersion vafv, FeatureVersion fv, Layer_diff_FeatureVersion ldfv
 		  WHERE ldfv.layer_id >= $2
 		    AND vafv.vulnerability_id = $1
