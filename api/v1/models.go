@@ -24,7 +24,6 @@ import (
 	"github.com/coreos/pkg/capnslog"
 	"github.com/fernet/fernet-go"
 
-	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 )
@@ -109,7 +108,7 @@ type Vulnerability struct {
 }
 
 func (v Vulnerability) DatabaseModel() (database.Vulnerability, error) {
-	severity, err := clair.NewSeverity(v.Severity)
+	severity, err := database.NewSeverity(v.Severity)
 	if err != nil {
 		return database.Vulnerability{}, err
 	}

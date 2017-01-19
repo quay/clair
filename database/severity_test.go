@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package clair
+package database
 
 import (
 	"testing"
@@ -21,9 +21,9 @@ import (
 )
 
 func TestCompareSeverity(t *testing.T) {
-	assert.Equal(t, Medium.Compare(Medium), 0, "Severity comparison failed")
-	assert.True(t, Medium.Compare(High) < 0, "Severity comparison failed")
-	assert.True(t, Critical.Compare(Low) > 0, "Severity comparison failed")
+	assert.Equal(t, MediumSeverity.Compare(MediumSeverity), 0, "Severity comparison failed")
+	assert.True(t, MediumSeverity.Compare(HighSeverity) < 0, "Severity comparison failed")
+	assert.True(t, CriticalSeverity.Compare(LowSeverity) > 0, "Severity comparison failed")
 }
 
 func TestParseSeverity(t *testing.T) {

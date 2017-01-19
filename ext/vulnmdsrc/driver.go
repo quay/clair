@@ -19,7 +19,6 @@ package vulnmdsrc
 import (
 	"sync"
 
-	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 )
 
@@ -29,7 +28,7 @@ var (
 )
 
 // AppendFunc is the type of a callback provided to an Appender.
-type AppendFunc func(metadataKey string, metadata interface{}, severity clair.Severity)
+type AppendFunc func(metadataKey string, metadata interface{}, severity database.Severity)
 
 // Appender represents anything that can fetch vulnerability metadata and
 // append it to a Vulnerability.

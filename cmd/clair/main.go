@@ -27,13 +27,13 @@ import (
 
 	"github.com/coreos/pkg/capnslog"
 
+	"github.com/coreos/clair"
 	"github.com/coreos/clair/api"
 	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/notifier"
 	"github.com/coreos/clair/pkg/stopper"
-	"github.com/coreos/clair/updater"
 
 	// Register database driver.
 	_ "github.com/coreos/clair/database/pgsql"
@@ -112,7 +112,7 @@ func Boot(config *config.Config) {
 
 	// Start updater
 	st.Begin()
-	go updater.Run(config.Updater, db, st)
+	go clair.RunUpdater(config.Updater, db, st)
 
 	// Wait for interruption and shutdown gracefully.
 	waitForSignals(syscall.SIGINT, syscall.SIGTERM)

@@ -20,7 +20,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/pkg/commonerr"
@@ -91,7 +90,7 @@ func TestFindLayer(t *testing.T) {
 				if assert.Len(t, featureVersion.AffectedBy, 1) {
 					assert.Equal(t, "debian:7", featureVersion.AffectedBy[0].Namespace.Name)
 					assert.Equal(t, "CVE-OPENSSL-1-DEB7", featureVersion.AffectedBy[0].Name)
-					assert.Equal(t, clair.High, featureVersion.AffectedBy[0].Severity)
+					assert.Equal(t, database.HighSeverity, featureVersion.AffectedBy[0].Severity)
 					assert.Equal(t, "A vulnerability affecting OpenSSL < 2.0 on Debian 7.0", featureVersion.AffectedBy[0].Description)
 					assert.Equal(t, "http://google.com/#q=CVE-OPENSSL-1-DEB7", featureVersion.AffectedBy[0].Link)
 					assert.Equal(t, "2.0", featureVersion.AffectedBy[0].FixedBy)

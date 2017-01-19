@@ -22,7 +22,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 )
@@ -37,7 +36,7 @@ func TestUbuntuParser(t *testing.T) {
 	vulnerability, unknownReleases, err := parseUbuntuCVE(testData)
 	if assert.Nil(t, err) {
 		assert.Equal(t, "CVE-2015-4471", vulnerability.Name)
-		assert.Equal(t, clair.Medium, vulnerability.Severity)
+		assert.Equal(t, database.MediumSeverity, vulnerability.Severity)
 		assert.Equal(t, "Off-by-one error in the lzxd_decompress function in lzxd.c in libmspack before 0.5 allows remote attackers to cause a denial of service (buffer under-read and application crash) via a crafted CAB archive.", vulnerability.Description)
 
 		// Unknown release (line 28)

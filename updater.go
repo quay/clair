@@ -12,10 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package updater updates the vulnerability database periodically using the
-// registered vulnerability source updaters and vulnerability metadata
-// appenders.
-package updater
+package clair
 
 import (
 	"math/rand"
@@ -27,7 +24,6 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/coreos/clair"
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/vulnmdsrc"
@@ -36,16 +32,14 @@ import (
 )
 
 const (
-	flagName      = "updater/last"
-	notesFlagName = "updater/notes"
-
-	lockName            = "updater"
-	lockDuration        = refreshLockDuration + time.Minute*2
-	refreshLockDuration = time.Minute * 8
+	updaterLastFlagName        = "updater/last"
+	updaterLockName            = "updater"
+	updaterLockDuration        = updaterLockRefreshDuration + time.Minute*2
+	updaterLockRefreshDuration = time.Minute * 8
 )
 
 var (
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "updater")
+	log = capnslog.NewPackageLogger("github.com/coreos/clair", "clair")
 
 	promUpdaterErrorsTotal = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "clair_updater_errors_total",
@@ -69,8 +63,9 @@ func init() {
 	prometheus.MustRegister(promUpdaterNotesTotal)
 }
 
-// Run updates the vulnerability database at regular intervals.
-func Run(config *config.UpdaterConfig, datastore database.Datastore, st *stopper.Stopper) {
+// RunUpdater begins a process that updates the vulnerability database at
+// regular intervals.
+func RunUpdater(config *config.UpdaterConfig, datastore database.Datastore, st *stopper.Stopper) {
 	defer st.End()
 
 	// Do not run the updater if there is no config or if the interval is 0.
@@ -100,12 +95,12 @@ func Run(config *config.UpdaterConfig, datastore database.Datastore, st *stopper
 		if nextUpdate.Before(time.Now().UTC()) {
 			// Attempt to get a lock on the the update.
 			log.Debug("attempting to obtain update lock")
-			hasLock, hasLockUntil := datastore.Lock(lockName, whoAmI, lockDuration, false)
+			hasLock, hasLockUntil := datastore.Lock(updaterLockName, whoAmI, updaterLockDuration, false)
 			if hasLock {
 				// Launch update in a new go routine.
 				doneC := make(chan bool, 1)
 				go func() {
-					Update(datastore, firstUpdate)
+					update(datastore, firstUpdate)
 					doneC <- true
 				}()
 
@@ -113,23 +108,23 @@ func Run(config *config.UpdaterConfig, datastore database.Datastore, st *stopper
 					select {
 					case <-doneC:
 						done = true
-					case <-time.After(refreshLockDuration):
+					case <-time.After(updaterLockRefreshDuration):
 						// Refresh the lock until the update is done.
-						datastore.Lock(lockName, whoAmI, lockDuration, true)
+						datastore.Lock(updaterLockName, whoAmI, updaterLockDuration, true)
 					case <-st.Chan():
 						stop = true
 					}
 				}
 
 				// Unlock the update.
-				datastore.Unlock(lockName, whoAmI)
+				datastore.Unlock(updaterLockName, whoAmI)
 
 				if stop {
 					break
 				}
 				continue
 			} else {
-				lockOwner, lockExpiration, err := datastore.FindLock(lockName)
+				lockOwner, lockExpiration, err := datastore.FindLock(updaterLockName)
 				if err != nil {
 					log.Debug("update lock is already taken")
 					nextUpdate = hasLockUntil
@@ -162,9 +157,9 @@ func Run(config *config.UpdaterConfig, datastore database.Datastore, st *stopper
 	log.Info("updater service stopped")
 }
 
-// Update fetches all the vulnerabilities from the registered fetchers, upserts
+// update fetches all the vulnerabilities from the registered fetchers, upserts
 // them into the database and then sends notifications.
-func Update(datastore database.Datastore, firstUpdate bool) {
+func update(datastore database.Datastore, firstUpdate bool) {
 	defer setUpdaterDuration(time.Now())
 
 	log.Info("updating vulnerabilities")
@@ -195,7 +190,7 @@ func Update(datastore database.Datastore, firstUpdate bool) {
 
 	// Update last successful update if every fetchers worked properly.
 	if status {
-		datastore.InsertKeyValue(flagName, strconv.FormatInt(time.Now().UTC().Unix(), 10))
+		datastore.InsertKeyValue(updaterLastFlagName, strconv.FormatInt(time.Now().UTC().Unix(), 10))
 	}
 
 	log.Info("update finished")
@@ -293,7 +288,7 @@ func addMetadata(datastore database.Datastore, vulnerabilities []database.Vulner
 }
 
 func getLastUpdate(datastore database.Datastore) (time.Time, bool, error) {
-	lastUpdateTSS, err := datastore.GetKeyValue(flagName)
+	lastUpdateTSS, err := datastore.GetKeyValue(updaterLastFlagName)
 	if err != nil {
 		return time.Time{}, false, err
 	}
@@ -316,7 +311,7 @@ type lockableVulnerability struct {
 	sync.Mutex
 }
 
-func (lv *lockableVulnerability) appendFunc(metadataKey string, metadata interface{}, severity clair.Severity) {
+func (lv *lockableVulnerability) appendFunc(metadataKey string, metadata interface{}, severity database.Severity) {
 	lv.Lock()
 	defer lv.Unlock()
 
@@ -329,7 +324,7 @@ func (lv *lockableVulnerability) appendFunc(metadataKey string, metadata interfa
 	lv.Metadata[metadataKey] = metadata
 
 	// If necessary, provide a severity for the vulnerability.
-	if lv.Severity == clair.Unknown {
+	if lv.Severity == database.UnknownSeverity {
 		lv.Severity = severity
 	}
 }

@@ -30,7 +30,6 @@ import (
 
 	"github.com/coreos/pkg/capnslog"
 
-	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
@@ -398,30 +397,30 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 
 	// If no priority has been provided (CVE-2007-0667 for instance), set the priority to Unknown
 	if vulnerability.Severity == "" {
-		vulnerability.Severity = clair.Unknown
+		vulnerability.Severity = database.UnknownSeverity
 	}
 
 	return
 }
 
 // SeverityFromPriority converts an priority from the Ubuntu CVE Tracker into
-// a clair.Severity.
-func SeverityFromPriority(priority string) clair.Severity {
+// a database.Severity.
+func SeverityFromPriority(priority string) database.Severity {
 	switch priority {
 	case "untriaged":
-		return clair.Unknown
+		return database.UnknownSeverity
 	case "negligible":
-		return clair.Negligible
+		return database.NegligibleSeverity
 	case "low":
-		return clair.Low
+		return database.LowSeverity
 	case "medium":
-		return clair.Medium
+		return database.MediumSeverity
 	case "high":
-		return clair.High
+		return database.HighSeverity
 	case "critical":
-		return clair.Critical
+		return database.CriticalSeverity
 	default:
 		log.Warning("could not determine a vulnerability severity from: %s", priority)
-		return clair.Unknown
+		return database.UnknownSeverity
 	}
 }

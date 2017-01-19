@@ -18,8 +18,6 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"time"
-
-	"github.com/coreos/clair"
 )
 
 // ID is only meant to be used by database implementations and should never be used for anything else.
@@ -70,7 +68,7 @@ type Vulnerability struct {
 
 	Description string
 	Link        string
-	Severity    clair.Severity
+	Severity    Severity
 
 	Metadata MetadataMap
 

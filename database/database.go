@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package database defines the Clair's models and a common interface for database implementations.
+// Package database defines the Clair's models and a common interface for
+// database implementations.
 package database
 
 import (
@@ -144,7 +145,8 @@ type Datastore interface {
 	// Vulnerability in the database. It can be used to store the fact that a
 	// Vulnerability no longer affects the given Feature in any Version.
 	//
-	// It has has to create a Notification that will contain the old and the updated Vulnerability.
+	// It has has to create a Notification that will contain the old and the
+	// updated Vulnerability.
 	DeleteVulnerabilityFix(vulnerabilityNamespace, vulnerabilityName, featureName string) error
 
 	// GetAvailableNotification returns the Name, Created, Notified and Deleted

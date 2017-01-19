@@ -27,7 +27,6 @@ import (
 
 	"github.com/coreos/pkg/capnslog"
 
-	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
@@ -158,7 +157,7 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 					vulnerability = &database.Vulnerability{
 						Name:        vulnName,
 						Link:        strings.Join([]string{cveURLPrefix, "/", vulnName}, ""),
-						Severity:    clair.Unknown,
+						Severity:    database.UnknownSeverity,
 						Description: vulnNode.Description,
 					}
 				}
@@ -220,40 +219,40 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 }
 
 // SeverityFromUrgency converts the urgency scale used by the Debian Security
-// Bug Tracker into a clair.Severity.
-func SeverityFromUrgency(urgency string) clair.Severity {
+// Bug Tracker into a database.Severity.
+func SeverityFromUrgency(urgency string) database.Severity {
 	switch urgency {
 	case "not yet assigned":
-		return clair.Unknown
+		return database.UnknownSeverity
 
 	case "end-of-life":
 		fallthrough
 	case "unimportant":
-		return clair.Negligible
+		return database.NegligibleSeverity
 
 	case "low":
 		fallthrough
 	case "low*":
 		fallthrough
 	case "low**":
-		return clair.Low
+		return database.LowSeverity
 
 	case "medium":
 		fallthrough
 	case "medium*":
 		fallthrough
 	case "medium**":
-		return clair.Medium
+		return database.MediumSeverity
 
 	case "high":
 		fallthrough
 	case "high*":
 		fallthrough
 	case "high**":
-		return clair.High
+		return database.HighSeverity
 
 	default:
 		log.Warningf("could not determine vulnerability severity from: %s", urgency)
-		return clair.Unknown
+		return database.UnknownSeverity
 	}
 }

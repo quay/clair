@@ -26,7 +26,6 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 )
@@ -92,7 +91,7 @@ func TestRaceAffects(t *testing.T) {
 					Version: strconv.Itoa(version),
 				},
 			},
-			Severity: clair.Unknown,
+			Severity: database.UnknownSeverity,
 		}
 
 		vulnerabilities[version] = append(vulnerabilities[version], vulnerability)

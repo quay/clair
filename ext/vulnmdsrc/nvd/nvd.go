@@ -32,7 +32,6 @@ import (
 
 	"github.com/coreos/pkg/capnslog"
 
-	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/vulnmdsrc"
 	"github.com/coreos/clair/pkg/commonerr"
@@ -218,23 +217,25 @@ func getHashFromMetaURL(metaURL string) (string, error) {
 	return "", errors.New("invalid .meta file format")
 }
 
-// SeverityFromCVSS converts the CVSS Score (0.0 - 10.0) into a clair.Severity
-// following the qualitative rating scale available in the CVSS v3.0
-// specification (https://www.first.org/cvss/specification-document), Table 14.
+// SeverityFromCVSS converts the CVSS Score (0.0 - 10.0) into a
+// database.Severity following the qualitative rating scale available in the
+// CVSS v3.0 specification (https://www.first.org/cvss/specification-document),
+// Table 14.
+//
 // The Negligible level is set for CVSS scores between [0, 1), replacing the
 // specified None level, originally used for a score of 0.
-func SeverityFromCVSS(score float64) clair.Severity {
+func SeverityFromCVSS(score float64) database.Severity {
 	switch {
 	case score < 1.0:
-		return clair.Negligible
+		return database.NegligibleSeverity
 	case score < 3.9:
-		return clair.Low
+		return database.LowSeverity
 	case score < 6.9:
-		return clair.Medium
+		return database.MediumSeverity
 	case score < 8.9:
-		return clair.High
+		return database.HighSeverity
 	case score <= 10:
-		return clair.Critical
+		return database.CriticalSeverity
 	}
-	return clair.Unknown
+	return database.UnknownSeverity
 }

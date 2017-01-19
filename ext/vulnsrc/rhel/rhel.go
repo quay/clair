@@ -27,7 +27,6 @@ import (
 
 	"github.com/coreos/pkg/capnslog"
 
-	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/rpm"
@@ -344,18 +343,18 @@ func link(def definition) (link string) {
 	return
 }
 
-func severity(def definition) clair.Severity {
+func severity(def definition) database.Severity {
 	switch strings.TrimSpace(def.Title[strings.LastIndex(def.Title, "(")+1 : len(def.Title)-1]) {
 	case "Low":
-		return clair.Low
+		return database.LowSeverity
 	case "Moderate":
-		return clair.Medium
+		return database.MediumSeverity
 	case "Important":
-		return clair.High
+		return database.HighSeverity
 	case "Critical":
-		return clair.Critical
+		return database.CriticalSeverity
 	default:
 		log.Warning("could not determine vulnerability severity from: %s.", def.Title)
-		return clair.Unknown
+		return database.UnknownSeverity
 	}
 }

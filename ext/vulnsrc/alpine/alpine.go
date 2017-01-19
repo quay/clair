@@ -28,7 +28,6 @@ import (
 
 	"github.com/coreos/pkg/capnslog"
 
-	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
@@ -43,9 +42,7 @@ const (
 	nvdURLPrefix = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
 )
 
-var (
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/vulnsrc/alpine")
-)
+var log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/vulnsrc/alpine")
 
 func init() {
 	vulnsrc.RegisterUpdater("alpine", &updater{})
@@ -230,7 +227,7 @@ func parse33YAML(r io.Reader) (vulns []database.Vulnerability, err error) {
 
 			vulns = append(vulns, database.Vulnerability{
 				Name:     fix,
-				Severity: clair.Unknown,
+				Severity: database.UnknownSeverity,
 				Link:     nvdURLPrefix + fix,
 				FixedIn: []database.FeatureVersion{
 					{
@@ -284,7 +281,7 @@ func parse34YAML(r io.Reader) (vulns []database.Vulnerability, err error) {
 
 			for _, vulnStr := range vulnStrs {
 				var vuln database.Vulnerability
-				vuln.Severity = clair.Unknown
+				vuln.Severity = database.UnknownSeverity
 				vuln.Name = vulnStr
 				vuln.Link = nvdURLPrefix + vulnStr
 				vuln.FixedIn = []database.FeatureVersion{

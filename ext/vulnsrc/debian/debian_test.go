@@ -20,7 +20,6 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
@@ -37,7 +36,7 @@ func TestDebianParser(t *testing.T) {
 		for _, vulnerability := range response.Vulnerabilities {
 			if vulnerability.Name == "CVE-2015-1323" {
 				assert.Equal(t, "https://security-tracker.debian.org/tracker/CVE-2015-1323", vulnerability.Link)
-				assert.Equal(t, clair.Low, vulnerability.Severity)
+				assert.Equal(t, database.LowSeverity, vulnerability.Severity)
 				assert.Equal(t, "This vulnerability is not very dangerous.", vulnerability.Description)
 
 				expectedFeatureVersions := []database.FeatureVersion{
@@ -68,7 +67,7 @@ func TestDebianParser(t *testing.T) {
 				}
 			} else if vulnerability.Name == "CVE-2003-0779" {
 				assert.Equal(t, "https://security-tracker.debian.org/tracker/CVE-2003-0779", vulnerability.Link)
-				assert.Equal(t, clair.High, vulnerability.Severity)
+				assert.Equal(t, database.HighSeverity, vulnerability.Severity)
 				assert.Equal(t, "But this one is very dangerous.", vulnerability.Description)
 
 				expectedFeatureVersions := []database.FeatureVersion{
@@ -109,7 +108,7 @@ func TestDebianParser(t *testing.T) {
 				}
 			} else if vulnerability.Name == "CVE-2013-2685" {
 				assert.Equal(t, "https://security-tracker.debian.org/tracker/CVE-2013-2685", vulnerability.Link)
-				assert.Equal(t, clair.Negligible, vulnerability.Severity)
+				assert.Equal(t, database.NegligibleSeverity, vulnerability.Severity)
 				assert.Equal(t, "Un-affected packages.", vulnerability.Description)
 
 				expectedFeatureVersions := []database.FeatureVersion{
