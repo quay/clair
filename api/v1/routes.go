@@ -25,6 +25,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/coreos/clair/updater"
 	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/utils"
@@ -139,6 +140,15 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 }
 
 func getLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+
+	log.Info(updater.DbFinishUpdate)
+
+	if updater.DbFinishUpdate {
+		writeResponse(w, r, http.StatusServiceUnavailable, LayerEnvelope{Error: & Error{"The vulnerability update has not finished yet, therefore this API call is currently unavailable. Please try again later."}})
+		log.Errorf("The vulnerability update has not finished yet, therefore this API call is currently unavailable.")
+		return getLayerRoute, http.StatusServiceUnavailable
+	}
+
 	_, withFeatures := r.URL.Query()["features"]
 	_, withVulnerabilities := r.URL.Query()["vulnerabilities"]
 

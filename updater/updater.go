@@ -58,6 +58,8 @@ var (
 	})
 )
 
+var DbFinishUpdate bool = true
+
 func init() {
 	prometheus.MustRegister(promUpdaterErrorsTotal)
 	prometheus.MustRegister(promUpdaterDurationSeconds)
@@ -133,6 +135,9 @@ func Run(config *config.UpdaterConfig, datastore database.Datastore, st *utils.S
 					nextUpdate = lockExpiration
 				}
 			}
+		} else {
+			DbFinishUpdate = false
+			log.Infof("DB is already complete")
 		}
 
 		// Sleep, but remain stoppable until approximately the next update time.
@@ -192,6 +197,8 @@ func Update(datastore database.Datastore, firstUpdate bool) {
 	if status {
 		datastore.InsertKeyValue(flagName, strconv.FormatInt(time.Now().UTC().Unix(), 10))
 	}
+
+	DbFinishUpdate = false
 
 	log.Info("update finished")
 }
