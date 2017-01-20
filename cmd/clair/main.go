@@ -24,6 +24,7 @@ import (
 
 	"github.com/coreos/clair"
 	"github.com/coreos/clair/config"
+	"github.com/coreos/clair/worker/detectors"
 
 	// Register components
 	_ "github.com/coreos/clair/notifier/notifiers"
@@ -59,6 +60,7 @@ func main() {
 	flagConfigPath := flag.String("config", "/etc/clair/config.yaml", "Load configuration from the specified file.")
 	flagCPUProfilePath := flag.String("cpu-profile", "", "Write a CPU profile to the specified file before exiting.")
 	flagLogLevel := flag.String("log-level", "info", "Define the logging level.")
+	flagInsecureTLS := flag.Bool("insecure-tls", false, "Disable TLS check when detect the data of layers.")
 	flag.Parse()
 	// Load configuration
 	config, err := config.Load(*flagConfigPath)
@@ -74,6 +76,11 @@ func main() {
 	// Enable CPU Profiling if specified
 	if *flagCPUProfilePath != "" {
 		defer stopCPUProfiling(startCPUProfiling(*flagCPUProfilePath))
+	}
+
+	// Disable TLS check when detect data if specified
+	if *flagInsecureTLS {
+		detectors.SetInsecureTLS(*flagInsecureTLS)
 	}
 
 	clair.Boot(config)

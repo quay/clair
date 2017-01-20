@@ -17,6 +17,7 @@
 package detectors
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"math"
@@ -45,6 +46,10 @@ var (
 
 	// ErrCouldNotFindLayer is returned when we could not download or open the layer file.
 	ErrCouldNotFindLayer = cerrors.NewBadRequestError("could not find layer")
+
+	insecureTLSLock sync.Mutex
+	// insecureTLS controls the TLS check when detect the data of layers, enabled in default.
+	insecureTLS = false
 )
 
 // RegisterDataDetector provides a way to dynamically register an implementation of a
@@ -87,7 +92,11 @@ func DetectData(format, path string, headers map[string]string, toExtract []stri
 		}
 
 		// Send the request and handle the response.
-		r, err := http.DefaultClient.Do(request)
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureTLS},
+		}
+		client := &http.Client{Transport: tr}
+		r, err := client.Do(request)
 		if err != nil {
 			log.Warningf("could not download layer: %s", err)
 			return nil, ErrCouldNotFindLayer
@@ -119,4 +128,11 @@ func DetectData(format, path string, headers map[string]string, toExtract []stri
 	}
 
 	return nil, cerrors.NewBadRequestError(fmt.Sprintf("unsupported image format '%s'", format))
+}
+
+// SetInsecureTLS sets the insecureTLS to control the TLS check when detect the data of layers.
+func SetInsecureTLS(insecure bool) {
+	insecureTLSLock.Lock()
+	defer insecureTLSLock.Unlock()
+	insecureTLS = insecure
 }
