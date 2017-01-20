@@ -22,7 +22,7 @@ func init() {
 		Up: migrate.Queries([]string{
 			`ALTER TABLE Namespace ADD COLUMN version_format varchar(128);`,
 			`UPDATE Namespace SET version_format = 'rpm' WHERE name LIKE 'rhel%' OR name LIKE 'centos%' OR name LIKE 'fedora%' OR name LIKE 'amzn%' OR name LIKE 'scientific%' OR name LIKE 'ol%' OR name LIKE 'oracle%';`,
-			`UPDATE Namespace SET version_format = 'dpkg' WHERE version_format != 'rpm';`,
+			`UPDATE Namespace SET version_format = 'dpkg' WHERE version_format is NULL;`,
 		}),
 		Down: migrate.Queries([]string{
 			`ALTER TABLE Namespace DROP COLUMN version_format;`,
