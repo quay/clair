@@ -25,11 +25,11 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/coreos/clair"
 	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/pkg/tarutil"
-	"github.com/coreos/clair/worker"
 )
 
 const (
@@ -109,11 +109,11 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 		return postLayerRoute, http.StatusBadRequest
 	}
 
-	err = worker.Process(ctx.Store, request.Layer.Format, request.Layer.Name, request.Layer.ParentName, request.Layer.Path, request.Layer.Headers)
+	err = clair.ProcessLayer(ctx.Store, request.Layer.Format, request.Layer.Name, request.Layer.ParentName, request.Layer.Path, request.Layer.Headers)
 	if err != nil {
 		if err == tarutil.ErrCouldNotExtract ||
 			err == tarutil.ErrExtractedFileTooBig ||
-			err == worker.ErrUnsupported {
+			err == clair.ErrUnsupported {
 			writeResponse(w, r, statusUnprocessableEntity, LayerEnvelope{Error: &Error{err.Error()}})
 			return postLayerRoute, statusUnprocessableEntity
 		}
@@ -133,7 +133,7 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 		Path:             request.Layer.Path,
 		Headers:          request.Layer.Headers,
 		Format:           request.Layer.Format,
-		IndexedByVersion: worker.Version,
+		IndexedByVersion: clair.Version,
 	}})
 	return postLayerRoute, http.StatusCreated
 }

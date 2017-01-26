@@ -12,14 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package worker implements the logic to extract useful informations from a
-// container layer and store it in the database.
-package worker
+package clair
 
 import (
 	"regexp"
-
-	"github.com/coreos/pkg/capnslog"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/featurefmt"
@@ -36,8 +32,6 @@ const (
 )
 
 var (
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "worker")
-
 	// ErrUnsupported is the error that should be raised when an OS or package
 	// manager is not supported.
 	ErrUnsupported = commonerr.NewBadRequestError("worker: OS and/or package manager are not supported")
@@ -54,11 +48,12 @@ func cleanURL(str string) string {
 	return urlParametersRegexp.ReplaceAllString(str, "")
 }
 
-// Process detects the Namespace of a layer, the features it adds/removes, and
-// then stores everything in the database.
-// TODO(Quentin-M): We could have a goroutine that looks for layers that have been analyzed with an
-// older engine version and that processes them.
-func Process(datastore database.Datastore, imageFormat, name, parentName, path string, headers map[string]string) error {
+// ProcessLayer detects the Namespace of a layer, the features it adds/removes,
+// and then stores everything in the database.
+//
+// TODO(Quentin-M): We could have a goroutine that looks for layers that have
+// been analyzed with an older engine version and that processes them.
+func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, path string, headers map[string]string) error {
 	// Verify parameters.
 	if name == "" {
 		return commonerr.NewBadRequestError("could not process a layer which does not have a name")
