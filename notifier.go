@@ -12,15 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package notifier fetches notifications from the database and informs the
-// specified remote handler about their existences, inviting the third party to
-// actively query the API about it.
-package notifier
+package clair
 
 import (
 	"time"
 
-	"github.com/coreos/pkg/capnslog"
 	"github.com/coreos/pkg/timeutil"
 	"github.com/pborman/uuid"
 	"github.com/prometheus/client_golang/prometheus"
@@ -33,15 +29,13 @@ import (
 )
 
 const (
-	checkInterval       = 5 * time.Minute
-	refreshLockDuration = time.Minute * 2
-	lockDuration        = time.Minute*8 + refreshLockDuration
-	maxBackOff          = 15 * time.Minute
+	notifierCheckInterval       = 5 * time.Minute
+	notifierMaxBackOff          = 15 * time.Minute
+	notifierLockRefreshDuration = time.Minute * 2
+	notifierLockDuration        = time.Minute*8 + notifierLockRefreshDuration
 )
 
 var (
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "notifier")
-
 	promNotifierLatencyMilliseconds = prometheus.NewHistogram(prometheus.HistogramOpts{
 		Name: "clair_notifier_latency_milliseconds",
 		Help: "Time it takes to send a notification after it's been created.",
@@ -58,8 +52,9 @@ func init() {
 	prometheus.MustRegister(promNotifierBackendErrorsTotal)
 }
 
-// Run starts the Notifier service.
-func Run(config *config.NotifierConfig, datastore database.Datastore, stopper *stopper.Stopper) {
+// RunNotifier begins a process that checks for new notifications that should
+// be sent out to third parties.
+func RunNotifier(config *config.NotifierConfig, datastore database.Datastore, stopper *stopper.Stopper) {
 	defer stopper.End()
 
 	// Configure registered notifiers.
@@ -113,8 +108,8 @@ func Run(config *config.NotifierConfig, datastore database.Datastore, stopper *s
 			select {
 			case <-done:
 				break outer
-			case <-time.After(refreshLockDuration):
-				datastore.Lock(notification.Name, whoAmI, lockDuration, true)
+			case <-time.After(notifierLockRefreshDuration):
+				datastore.Lock(notification.Name, whoAmI, notifierLockDuration, true)
 			}
 		}
 	}
@@ -133,7 +128,7 @@ func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoA
 			}
 
 			// Wait.
-			if !stopper.Sleep(checkInterval) {
+			if !stopper.Sleep(notifierCheckInterval) {
 				return nil
 			}
 
@@ -141,7 +136,7 @@ func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoA
 		}
 
 		// Lock the notification.
-		if hasLock, _ := datastore.Lock(notification.Name, whoAmI, lockDuration, false); hasLock {
+		if hasLock, _ := datastore.Lock(notification.Name, whoAmI, notifierLockDuration, false); hasLock {
 			log.Infof("found and locked a notification: %s", notification.Name)
 			return &notification
 		}
@@ -173,7 +168,7 @@ func handleTask(n database.VulnerabilityNotification, st *stopper.Stopper, maxAt
 				// Send failed; increase attempts/backoff and retry.
 				promNotifierBackendErrorsTotal.WithLabelValues(senderName).Inc()
 				log.Errorf("could not send notification '%s' via notifier '%s': %v", n.Name, senderName, err)
-				backOff = timeutil.ExpBackoff(backOff, maxBackOff)
+				backOff = timeutil.ExpBackoff(backOff, notifierMaxBackOff)
 				attempts++
 				continue
 			}

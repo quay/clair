@@ -32,7 +32,6 @@ import (
 	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/notifier"
 	"github.com/coreos/clair/pkg/stopper"
 
 	// Register database driver.
@@ -102,7 +101,7 @@ func Boot(config *config.Config) {
 
 	// Start notifier
 	st.Begin()
-	go notifier.Run(config.Notifier, db, st)
+	go clair.RunNotifier(config.Notifier, db, st)
 
 	// Start API
 	st.Begin()
