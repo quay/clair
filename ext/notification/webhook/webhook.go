@@ -29,7 +29,6 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/notification"
 )
@@ -55,7 +54,7 @@ func init() {
 	notification.RegisterSender("webhook", &sender{})
 }
 
-func (s *sender) Configure(config *config.NotifierConfig) (bool, error) {
+func (s *sender) Configure(config *notification.Config) (bool, error) {
 	// Get configuration
 	var httpConfig Config
 	if config == nil {

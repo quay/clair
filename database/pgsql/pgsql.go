@@ -31,7 +31,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/remind101/migrate"
 
-	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/database/pgsql/migrations"
 	"github.com/coreos/clair/pkg/commonerr"
@@ -114,11 +113,13 @@ type Config struct {
 	FixturePath             string
 }
 
-// openDatabase opens a PostgresSQL-backed Datastore using the given configuration.
-// It immediately every necessary migrations. If ManageDatabaseLifecycle is specified,
-// the database will be created first. If FixturePath is specified, every SQL queries that are
-// present insides will be executed.
-func openDatabase(registrableComponentConfig config.RegistrableComponentConfig) (database.Datastore, error) {
+// openDatabase opens a PostgresSQL-backed Datastore using the given
+// configuration.
+//
+// It immediately runs all necessary migrations. If ManageDatabaseLifecycle is
+// specified, the database will be created first. If FixturePath is specified,
+// every SQL queries that are present insides will be executed.
+func openDatabase(registrableComponentConfig database.RegistrableComponentConfig) (database.Datastore, error) {
 	var pg pgSQL
 	var err error
 

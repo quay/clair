@@ -22,10 +22,10 @@ package notification
 
 import (
 	"sync"
+	"time"
 
 	"github.com/coreos/pkg/capnslog"
 
-	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 )
 
@@ -36,11 +36,19 @@ var (
 	senders  = make(map[string]Sender)
 )
 
+// Config is the configuration for the Notifier service and its registered
+// notifiers.
+type Config struct {
+	Attempts         int
+	RenotifyInterval time.Duration
+	Params           map[string]interface{} `yaml:",inline"`
+}
+
 // Sender represents anything that can transmit notifications.
 type Sender interface {
 	// Configure attempts to initialize the notifier with the provided configuration.
 	// It returns whether the notifier is enabled or not.
-	Configure(*config.NotifierConfig) (bool, error)
+	Configure(*Config) (bool, error)
 
 	// Send informs the existence of the specified notification.
 	Send(notification database.VulnerabilityNotification) error

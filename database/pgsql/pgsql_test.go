@@ -21,8 +21,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/coreos/clair/config"
 	"github.com/pborman/uuid"
+
+	"github.com/coreos/clair/database"
 )
 
 func openDatabaseForTest(testName string, loadFixture bool) (*pgSQL, error) {
@@ -34,7 +35,7 @@ func openDatabaseForTest(testName string, loadFixture bool) (*pgSQL, error) {
 	return datastore, nil
 }
 
-func generateTestConfig(testName string, loadFixture bool) config.RegistrableComponentConfig {
+func generateTestConfig(testName string, loadFixture bool) database.RegistrableComponentConfig {
 	dbName := "test_" + strings.ToLower(testName) + "_" + strings.Replace(uuid.New(), "-", "_", -1)
 
 	var fixturePath string
@@ -48,7 +49,7 @@ func generateTestConfig(testName string, loadFixture bool) config.RegistrableCom
 		source = fmt.Sprintf(sourceEnv, dbName)
 	}
 
-	return config.RegistrableComponentConfig{
+	return database.RegistrableComponentConfig{
 		Options: map[string]interface{}{
 			"source":                  source,
 			"cachesize":               0,

@@ -21,7 +21,6 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/notification"
 	"github.com/coreos/clair/pkg/commonerr"
@@ -54,7 +53,7 @@ func init() {
 
 // RunNotifier begins a process that checks for new notifications that should
 // be sent out to third parties.
-func RunNotifier(config *config.NotifierConfig, datastore database.Datastore, stopper *stopper.Stopper) {
+func RunNotifier(config *notification.Config, datastore database.Datastore, stopper *stopper.Stopper) {
 	defer stopper.End()
 
 	// Configure registered notifiers.

@@ -20,8 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"time"
-
-	"github.com/coreos/clair/config"
 )
 
 var (
@@ -35,11 +33,19 @@ var (
 	ErrInconsistent = errors.New("database: inconsistent database")
 )
 
+// RegistrableComponentConfig is a configuration block that can be used to
+// determine which registrable component should be initialized and pass custom
+// configuration to it.
+type RegistrableComponentConfig struct {
+	Type    string
+	Options map[string]interface{}
+}
+
 var drivers = make(map[string]Driver)
 
 // Driver is a function that opens a Datastore specified by its database driver type and specific
 // configuration.
-type Driver func(config.RegistrableComponentConfig) (Datastore, error)
+type Driver func(RegistrableComponentConfig) (Datastore, error)
 
 // Register makes a Constructor available by the provided name.
 //
@@ -56,7 +62,7 @@ func Register(name string, driver Driver) {
 }
 
 // Open opens a Datastore specified by a configuration.
-func Open(cfg config.RegistrableComponentConfig) (Datastore, error) {
+func Open(cfg RegistrableComponentConfig) (Datastore, error) {
 	driver, ok := drivers[cfg.Type]
 	if !ok {
 		return nil, fmt.Errorf("database: unknown Driver %q (forgotten configuration or import?)", cfg.Type)

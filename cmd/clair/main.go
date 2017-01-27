@@ -29,8 +29,6 @@ import (
 
 	"github.com/coreos/clair"
 	"github.com/coreos/clair/api"
-	"github.com/coreos/clair/api/context"
-	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/stopper"
 
@@ -88,7 +86,7 @@ func stopCPUProfiling(f *os.File) {
 }
 
 // Boot starts Clair instance with the provided config.
-func Boot(config *config.Config) {
+func Boot(config *Config) {
 	rand.Seed(time.Now().UnixNano())
 	st := stopper.NewStopper()
 
@@ -105,9 +103,9 @@ func Boot(config *config.Config) {
 
 	// Start API
 	st.Begin()
-	go api.Run(config.API, &context.RouteContext{db, config.API}, st)
+	go api.Run(config.API, db, st)
 	st.Begin()
-	go api.RunHealth(config.API, &context.RouteContext{db, config.API}, st)
+	go api.RunHealth(config.API, db, st)
 
 	// Start updater
 	st.Begin()
@@ -136,7 +134,7 @@ func main() {
 	}
 
 	// Load configuration
-	config, err := config.Load(*flagConfigPath)
+	config, err := LoadConfig(*flagConfigPath)
 	if err != nil {
 		log.Fatalf("failed to load configuration: %s", err)
 	}

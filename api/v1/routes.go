@@ -26,7 +26,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/coreos/clair"
-	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/pkg/tarutil"
@@ -96,7 +95,7 @@ func writeResponse(w http.ResponseWriter, r *http.Request, status int, resp inte
 	}
 }
 
-func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context) (string, int) {
 	request := LayerEnvelope{}
 	err := decodeJSON(r, &request)
 	if err != nil {
@@ -138,7 +137,7 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 	return postLayerRoute, http.StatusCreated
 }
 
-func getLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+func getLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context) (string, int) {
 	_, withFeatures := r.URL.Query()["features"]
 	_, withVulnerabilities := r.URL.Query()["vulnerabilities"]
 
@@ -157,7 +156,7 @@ func getLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *
 	return getLayerRoute, http.StatusOK
 }
 
-func deleteLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+func deleteLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context) (string, int) {
 	err := ctx.Store.DeleteLayer(p.ByName("layerName"))
 	if err == commonerr.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, LayerEnvelope{Error: &Error{err.Error()}})
@@ -171,7 +170,7 @@ func deleteLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ct
 	return deleteLayerRoute, http.StatusOK
 }
 
-func getNamespaces(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+func getNamespaces(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context) (string, int) {
 	dbNamespaces, err := ctx.Store.ListNamespaces()
 	if err != nil {
 		writeResponse(w, r, http.StatusInternalServerError, NamespaceEnvelope{Error: &Error{err.Error()}})
@@ -189,7 +188,7 @@ func getNamespaces(w http.ResponseWriter, r *http.Request, p httprouter.Params, 
 	return getNamespacesRoute, http.StatusOK
 }
 
-func getVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+func getVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context) (string, int) {
 	query := r.URL.Query()
 
 	limitStrs, limitExists := query["limit"]
@@ -209,7 +208,7 @@ func getVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	page := 0
 	pageStrs, pageExists := query["page"]
 	if pageExists {
-		err = tokenUnmarshal(pageStrs[0], ctx.Config.PaginationKey, &page)
+		err = tokenUnmarshal(pageStrs[0], ctx.PaginationKey, &page)
 		if err != nil {
 			writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"invalid page format: " + err.Error()}})
 			return getNotificationRoute, http.StatusBadRequest
@@ -239,7 +238,7 @@ func getVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Par
 
 	var nextPageStr string
 	if nextPage != -1 {
-		nextPageBytes, err := tokenMarshal(nextPage, ctx.Config.PaginationKey)
+		nextPageBytes, err := tokenMarshal(nextPage, ctx.PaginationKey)
 		if err != nil {
 			writeResponse(w, r, http.StatusBadRequest, VulnerabilityEnvelope{Error: &Error{"failed to marshal token: " + err.Error()}})
 			return getNotificationRoute, http.StatusBadRequest
@@ -251,7 +250,7 @@ func getVulnerabilities(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	return getVulnerabilitiesRoute, http.StatusOK
 }
 
-func postVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+func postVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context) (string, int) {
 	request := VulnerabilityEnvelope{}
 	err := decodeJSON(r, &request)
 	if err != nil {
@@ -286,7 +285,7 @@ func postVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Para
 	return postVulnerabilityRoute, http.StatusCreated
 }
 
-func getVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+func getVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context) (string, int) {
 	_, withFixedIn := r.URL.Query()["fixedIn"]
 
 	dbVuln, err := ctx.Store.FindVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
@@ -304,7 +303,7 @@ func getVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 	return getVulnerabilityRoute, http.StatusOK
 }
 
-func putVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+func putVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context) (string, int) {
 	request := VulnerabilityEnvelope{}
 	err := decodeJSON(r, &request)
 	if err != nil {
@@ -347,7 +346,7 @@ func putVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Param
 	return putVulnerabilityRoute, http.StatusOK
 }
 
-func deleteVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+func deleteVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context) (string, int) {
 	err := ctx.Store.DeleteVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
 	if err == commonerr.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, VulnerabilityEnvelope{Error: &Error{err.Error()}})
@@ -361,7 +360,7 @@ func deleteVulnerability(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 	return deleteVulnerabilityRoute, http.StatusOK
 }
 
-func getFixes(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+func getFixes(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context) (string, int) {
 	dbVuln, err := ctx.Store.FindVulnerability(p.ByName("namespaceName"), p.ByName("vulnerabilityName"))
 	if err == commonerr.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, FeatureEnvelope{Error: &Error{err.Error()}})
@@ -376,7 +375,7 @@ func getFixes(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *
 	return getFixesRoute, http.StatusOK
 }
 
-func putFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+func putFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context) (string, int) {
 	request := FeatureEnvelope{}
 	err := decodeJSON(r, &request)
 	if err != nil {
@@ -420,7 +419,7 @@ func putFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *co
 	return putFixRoute, http.StatusOK
 }
 
-func deleteFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+func deleteFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context) (string, int) {
 	err := ctx.Store.DeleteVulnerabilityFix(p.ByName("vulnerabilityNamespace"), p.ByName("vulnerabilityName"), p.ByName("fixName"))
 	if err == commonerr.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, FeatureEnvelope{Error: &Error{err.Error()}})
@@ -434,7 +433,7 @@ func deleteFix(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 	return deleteFixRoute, http.StatusOK
 }
 
-func getNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+func getNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context) (string, int) {
 	query := r.URL.Query()
 
 	limitStrs, limitExists := query["limit"]
@@ -452,14 +451,14 @@ func getNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params
 	page := database.VulnerabilityNotificationFirstPage
 	pageStrs, pageExists := query["page"]
 	if pageExists {
-		err := tokenUnmarshal(pageStrs[0], ctx.Config.PaginationKey, &page)
+		err := tokenUnmarshal(pageStrs[0], ctx.PaginationKey, &page)
 		if err != nil {
 			writeResponse(w, r, http.StatusBadRequest, NotificationEnvelope{Error: &Error{"invalid page format: " + err.Error()}})
 			return getNotificationRoute, http.StatusBadRequest
 		}
 		pageToken = pageStrs[0]
 	} else {
-		pageTokenBytes, err := tokenMarshal(page, ctx.Config.PaginationKey)
+		pageTokenBytes, err := tokenMarshal(page, ctx.PaginationKey)
 		if err != nil {
 			writeResponse(w, r, http.StatusBadRequest, NotificationEnvelope{Error: &Error{"failed to marshal token: " + err.Error()}})
 			return getNotificationRoute, http.StatusBadRequest
@@ -476,13 +475,13 @@ func getNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params
 		return getNotificationRoute, http.StatusInternalServerError
 	}
 
-	notification := NotificationFromDatabaseModel(dbNotification, limit, pageToken, nextPage, ctx.Config.PaginationKey)
+	notification := NotificationFromDatabaseModel(dbNotification, limit, pageToken, nextPage, ctx.PaginationKey)
 
 	writeResponse(w, r, http.StatusOK, NotificationEnvelope{Notification: &notification})
 	return getNotificationRoute, http.StatusOK
 }
 
-func deleteNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+func deleteNotification(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context) (string, int) {
 	err := ctx.Store.DeleteNotification(p.ByName("notificationName"))
 	if err == commonerr.ErrNotFound {
 		writeResponse(w, r, http.StatusNotFound, NotificationEnvelope{Error: &Error{err.Error()}})
@@ -496,7 +495,7 @@ func deleteNotification(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	return deleteNotificationRoute, http.StatusOK
 }
 
-func getMetrics(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
+func getMetrics(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context) (string, int) {
 	prometheus.Handler().ServeHTTP(w, r)
 	return getMetricsRoute, 0
 }

@@ -24,7 +24,6 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/vulnmdsrc"
 	"github.com/coreos/clair/ext/vulnsrc"
@@ -63,9 +62,14 @@ func init() {
 	prometheus.MustRegister(promUpdaterNotesTotal)
 }
 
+// UpdaterConfig is the configuration for the Updater service.
+type UpdaterConfig struct {
+	Interval time.Duration
+}
+
 // RunUpdater begins a process that updates the vulnerability database at
 // regular intervals.
-func RunUpdater(config *config.UpdaterConfig, datastore database.Datastore, st *stopper.Stopper) {
+func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper.Stopper) {
 	defer st.End()
 
 	// Do not run the updater if there is no config or if the interval is 0.

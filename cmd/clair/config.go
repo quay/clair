@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package main
 
 import (
 	"errors"
@@ -20,20 +20,18 @@ import (
 	"os"
 	"time"
 
-	"github.com/fernet/fernet-go"
 	"gopkg.in/yaml.v2"
+
+	"github.com/coreos/clair"
+	"github.com/coreos/clair/api"
+	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/notification"
+	"github.com/fernet/fernet-go"
 )
 
-// ErrDatasourceNotLoaded is returned when the datasource variable in the configuration file is not loaded properly
+// ErrDatasourceNotLoaded is returned when the datasource variable in the
+// configuration file is not loaded properly
 var ErrDatasourceNotLoaded = errors.New("could not load configuration: no database source specified")
-
-// RegistrableComponentConfig is a configuration block that can be used to
-// determine which registrable component should be initialized and pass
-// custom configuration to it.
-type RegistrableComponentConfig struct {
-	Type    string
-	Options map[string]interface{}
-}
 
 // File represents a YAML configuration file that namespaces all Clair
 // configuration under the top-level "clair" key.
@@ -43,57 +41,37 @@ type File struct {
 
 // Config is the global configuration for an instance of Clair.
 type Config struct {
-	Database RegistrableComponentConfig
-	Updater  *UpdaterConfig
-	Notifier *NotifierConfig
-	API      *APIConfig
-}
-
-// UpdaterConfig is the configuration for the Updater service.
-type UpdaterConfig struct {
-	Interval time.Duration
-}
-
-// NotifierConfig is the configuration for the Notifier service and its registered notifiers.
-type NotifierConfig struct {
-	Attempts         int
-	RenotifyInterval time.Duration
-	Params           map[string]interface{} `yaml:",inline"`
-}
-
-// APIConfig is the configuration for the API service.
-type APIConfig struct {
-	Port                      int
-	HealthPort                int
-	Timeout                   time.Duration
-	PaginationKey             string
-	CertFile, KeyFile, CAFile string
+	Database database.RegistrableComponentConfig
+	Updater  *clair.UpdaterConfig
+	Notifier *notification.Config
+	API      *api.Config
 }
 
 // DefaultConfig is a configuration that can be used as a fallback value.
 func DefaultConfig() Config {
 	return Config{
-		Database: RegistrableComponentConfig{
+		Database: database.RegistrableComponentConfig{
 			Type: "pgsql",
 		},
-		Updater: &UpdaterConfig{
+		Updater: &clair.UpdaterConfig{
 			Interval: 1 * time.Hour,
 		},
-		API: &APIConfig{
+		API: &api.Config{
 			Port:       6060,
 			HealthPort: 6061,
 			Timeout:    900 * time.Second,
 		},
-		Notifier: &NotifierConfig{
+		Notifier: &notification.Config{
 			Attempts:         5,
 			RenotifyInterval: 2 * time.Hour,
 		},
 	}
 }
 
-// Load is a shortcut to open a file, read it, and generate a Config.
+// LoadConfig is a shortcut to open a file, read it, and generate a Config.
+//
 // It supports relative and absolute paths. Given "", it returns DefaultConfig.
-func Load(path string) (config *Config, err error) {
+func LoadConfig(path string) (config *Config, err error) {
 	var cfgFile File
 	cfgFile.Clair = DefaultConfig()
 	if path == "" {

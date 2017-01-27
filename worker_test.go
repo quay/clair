@@ -78,9 +78,9 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 	// wheezy.tar: FROM debian:wheezy
 	// jessie.tar: RUN sed -i "s/precise/trusty/" /etc/apt/sources.list && apt-get update &&
 	//             apt-get -y dist-upgrade
-	assert.Nil(t, Process(datastore, "Docker", "blank", "", testDataPath+"blank.tar.gz", nil))
-	assert.Nil(t, Process(datastore, "Docker", "wheezy", "blank", testDataPath+"wheezy.tar.gz", nil))
-	assert.Nil(t, Process(datastore, "Docker", "jessie", "wheezy", testDataPath+"jessie.tar.gz", nil))
+	assert.Nil(t, ProcessLayer(datastore, "Docker", "blank", "", testDataPath+"blank.tar.gz", nil))
+	assert.Nil(t, ProcessLayer(datastore, "Docker", "wheezy", "blank", testDataPath+"wheezy.tar.gz", nil))
+	assert.Nil(t, ProcessLayer(datastore, "Docker", "jessie", "wheezy", testDataPath+"jessie.tar.gz", nil))
 
 	// Ensure that the 'wheezy' layer has the expected namespace and features.
 	wheezy, ok := datastore.layers["wheezy"]
