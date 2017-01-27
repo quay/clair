@@ -101,8 +101,10 @@ func TestParse(t *testing.T) {
 		// Test invalid characters in epoch
 		{"a:0-0", Version{}, true},
 		{"A:0-0", Version{}, true},
-		// Test version not starting with a digit
-		{"0:abc3-0", Version{}, true},
+		// Test version not starting with a digit.
+		// While recommended by the specification, this is not strictly required and
+		// at least one vulnerable Alpine package deviates from this scheme.
+		{"0:abc3-0", Version{epoch: 0, version: "abc3", revision: "0"}, false},
 	}
 	for _, c := range cases {
 		v, err := NewVersion(c.str)
