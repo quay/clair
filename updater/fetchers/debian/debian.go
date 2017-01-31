@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -70,8 +71,11 @@ func (fetcher *DebianFetcher) FetchUpdate(datastore database.Datastore) (resp up
 	r, err := http.Get(url)
 	if err != nil {
 		log.Errorf("could not download Debian's update: %s", err)
+		io.Copy(ioutil.Discard, r.Body)
 		return resp, cerrors.ErrCouldNotDownload
 	}
+	defer r.Body.Close()
+	r.Close = true
 
 	// Get the SHA-1 of the latest update's JSON data
 	latestHash, err := datastore.GetKeyValue(updaterFlag)
