@@ -18,6 +18,8 @@ package utils
 import (
 	"bytes"
 	"os/exec"
+	"os"
+	"strings"
 )
 
 // Exec runs the given binary with arguments
@@ -29,6 +31,17 @@ func Exec(dir string, bin string, args ...string) ([]byte, error) {
 
 	cmd := exec.Command(bin, args...)
 	cmd.Dir = dir
+	
+	env := os.Environ()
+	for i, v := range env {
+		if strings.HasPrefix(v,"LANG=") {
+			env[i] = "LANG=C"
+		}
+		if strings.HasPrefix(v,"LANGUAGE=") {
+			env[i] = "LANGUAGE=C"
+		}
+	}
+	cmd.Env = env
 
 	var buf bytes.Buffer
 	cmd.Stdout = &buf
