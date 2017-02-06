@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,11 +31,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/remind101/migrate"
 
-	"github.com/coreos/clair/config"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/database/pgsql/migrations"
-	"github.com/coreos/clair/utils"
-	cerrors "github.com/coreos/clair/utils/errors"
+	"github.com/coreos/clair/pkg/commonerr"
 )
 
 var (
@@ -115,11 +113,13 @@ type Config struct {
 	FixturePath             string
 }
 
-// openDatabase opens a PostgresSQL-backed Datastore using the given configuration.
-// It immediately every necessary migrations. If ManageDatabaseLifecycle is specified,
-// the database will be created first. If FixturePath is specified, every SQL queries that are
-// present insides will be executed.
-func openDatabase(registrableComponentConfig config.RegistrableComponentConfig) (database.Datastore, error) {
+// openDatabase opens a PostgresSQL-backed Datastore using the given
+// configuration.
+//
+// It immediately runs all necessary migrations. If ManageDatabaseLifecycle is
+// specified, the database will be created first. If FixturePath is specified,
+// every SQL queries that are present insides will be executed.
+func openDatabase(registrableComponentConfig database.RegistrableComponentConfig) (database.Datastore, error) {
 	var pg pgSQL
 	var err error
 
@@ -196,12 +196,12 @@ func openDatabase(registrableComponentConfig config.RegistrableComponentConfig) 
 
 func parseConnectionString(source string) (dbName string, pgSourceURL string, err error) {
 	if source == "" {
-		return "", "", cerrors.NewBadRequestError("pgsql: no database connection string specified")
+		return "", "", commonerr.NewBadRequestError("pgsql: no database connection string specified")
 	}
 
 	sourceURL, err := url.Parse(source)
 	if err != nil {
-		return "", "", cerrors.NewBadRequestError("pgsql: database connection string is not a valid URL")
+		return "", "", commonerr.NewBadRequestError("pgsql: database connection string is not a valid URL")
 	}
 
 	dbName = strings.TrimPrefix(sourceURL.Path, "/")
@@ -280,7 +280,7 @@ func handleError(desc string, err error) error {
 	}
 
 	if err == sql.ErrNoRows {
-		return cerrors.ErrNotFound
+		return commonerr.ErrNotFound
 	}
 
 	log.Errorf("%s: %v", desc, err)
@@ -300,5 +300,7 @@ func isErrUniqueViolation(err error) bool {
 }
 
 func observeQueryTime(query, subquery string, start time.Time) {
-	utils.PrometheusObserveTimeMilliseconds(promQueryDurationMilliseconds.WithLabelValues(query, subquery), start)
+	promQueryDurationMilliseconds.
+		WithLabelValues(query, subquery).
+		Observe(float64(time.Since(start).Nanoseconds()) / float64(time.Millisecond))
 }

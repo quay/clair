@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,14 +18,14 @@ import (
 	"database/sql"
 	"time"
 
-	cerrors "github.com/coreos/clair/utils/errors"
+	"github.com/coreos/clair/pkg/commonerr"
 )
 
 // InsertKeyValue stores (or updates) a single key / value tuple.
 func (pgSQL *pgSQL) InsertKeyValue(key, value string) (err error) {
 	if key == "" || value == "" {
 		log.Warning("could not insert a flag which has an empty name or value")
-		return cerrors.NewBadRequestError("could not insert a flag which has an empty name or value")
+		return commonerr.NewBadRequestError("could not insert a flag which has an empty name or value")
 	}
 
 	defer observeQueryTime("InsertKeyValue", "all", time.Now())

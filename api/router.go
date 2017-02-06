@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/coreos/clair/api/context"
 	"github.com/coreos/clair/api/v1"
+	"github.com/coreos/clair/database"
 )
 
 // router is an HTTP router that forwards requests to the appropriate sub-router
@@ -31,9 +31,9 @@ type router map[string]*httprouter.Router
 // Let's hope we never have more than 99 API versions.
 const apiVersionLength = len("v99")
 
-func newAPIHandler(ctx *context.RouteContext) http.Handler {
+func newAPIHandler(cfg *Config, store database.Datastore) http.Handler {
 	router := make(router)
-	router["/v1"] = v1.NewRouter(ctx)
+	router["/v1"] = v1.NewRouter(store, cfg.PaginationKey)
 	return router
 }
 
@@ -56,21 +56,22 @@ func (rtr router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
 }
 
-func newHealthHandler(ctx *context.RouteContext) http.Handler {
+func newHealthHandler(store database.Datastore) http.Handler {
 	router := httprouter.New()
-	router.GET("/health", context.HTTPHandler(getHealth, ctx))
+	router.GET("/health", healthHandler(store))
 	return router
 }
 
-func getHealth(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context.RouteContext) (string, int) {
-	header := w.Header()
-	header.Set("Server", "clair")
+func healthHandler(store database.Datastore) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		header := w.Header()
+		header.Set("Server", "clair")
 
-	status := http.StatusInternalServerError
-	if ctx.Store.Ping() {
-		status = http.StatusOK
+		status := http.StatusInternalServerError
+		if store.Ping() {
+			status = http.StatusOK
+		}
+
+		w.WriteHeader(status)
 	}
-
-	w.WriteHeader(status)
-	return "health", status
 }

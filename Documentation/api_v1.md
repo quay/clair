@@ -19,7 +19,7 @@
   - [DELETE](#delete-namespacesnsnamevulnerabilitiesvulnnamefixesfeaturename)
 - [Notifications](#notifications)
   - [GET](#get-notificationsname)
-  - [DELETE](#delete-notificationname)
+  - [DELETE](#delete-notificationsname)
 
 ## Error Handling
 

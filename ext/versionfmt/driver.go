@@ -63,18 +63,20 @@ type Parser interface {
 // if the provided Parser is nil, this function panics.
 func RegisterParser(name string, p Parser) {
 	if name == "" {
-		panic("Could not register a Parser with an empty name")
+		panic("versionfmt: could not register a Parser with an empty name")
 	}
+
 	if p == nil {
-		panic("Could not register a nil Parser")
+		panic("versionfmt: could not register a nil Parser")
 	}
 
 	parsersM.Lock()
 	defer parsersM.Unlock()
 
-	if _, alreadyExists := parsers[name]; alreadyExists {
-		panic("Parser '" + name + "' is already registered")
+	if _, dup := parsers[name]; dup {
+		panic("versionfmt: RegisterParser called twice for " + name)
 	}
+
 	parsers[name] = p
 }
 

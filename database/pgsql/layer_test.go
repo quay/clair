@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,8 +22,7 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
-	cerrors "github.com/coreos/clair/utils/errors"
-	"github.com/coreos/clair/utils/types"
+	"github.com/coreos/clair/pkg/commonerr"
 )
 
 func TestFindLayer(t *testing.T) {
@@ -91,7 +90,7 @@ func TestFindLayer(t *testing.T) {
 				if assert.Len(t, featureVersion.AffectedBy, 1) {
 					assert.Equal(t, "debian:7", featureVersion.AffectedBy[0].Namespace.Name)
 					assert.Equal(t, "CVE-OPENSSL-1-DEB7", featureVersion.AffectedBy[0].Name)
-					assert.Equal(t, types.High, featureVersion.AffectedBy[0].Severity)
+					assert.Equal(t, database.HighSeverity, featureVersion.AffectedBy[0].Severity)
 					assert.Equal(t, "A vulnerability affecting OpenSSL < 2.0 on Debian 7.0", featureVersion.AffectedBy[0].Description)
 					assert.Equal(t, "http://google.com/#q=CVE-OPENSSL-1-DEB7", featureVersion.AffectedBy[0].Link)
 					assert.Equal(t, "2.0", featureVersion.AffectedBy[0].FixedBy)
@@ -363,19 +362,19 @@ func testInsertLayerUpdate(t *testing.T, datastore database.Datastore) {
 
 func testInsertLayerDelete(t *testing.T, datastore database.Datastore) {
 	err := datastore.DeleteLayer("TestInsertLayerX")
-	assert.Equal(t, cerrors.ErrNotFound, err)
+	assert.Equal(t, commonerr.ErrNotFound, err)
 
 	err = datastore.DeleteLayer("TestInsertLayer3")
 	assert.Nil(t, err)
 
 	_, err = datastore.FindLayer("TestInsertLayer3", false, false)
-	assert.Equal(t, cerrors.ErrNotFound, err)
+	assert.Equal(t, commonerr.ErrNotFound, err)
 
 	_, err = datastore.FindLayer("TestInsertLayer4a", false, false)
-	assert.Equal(t, cerrors.ErrNotFound, err)
+	assert.Equal(t, commonerr.ErrNotFound, err)
 
 	_, err = datastore.FindLayer("TestInsertLayer4b", true, false)
-	assert.Equal(t, cerrors.ErrNotFound, err)
+	assert.Equal(t, commonerr.ErrNotFound, err)
 }
 
 func cmpFV(a, b database.FeatureVersion) bool {

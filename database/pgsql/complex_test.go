@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,8 +28,6 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
-	"github.com/coreos/clair/utils"
-	"github.com/coreos/clair/utils/types"
 )
 
 const (
@@ -93,7 +91,7 @@ func TestRaceAffects(t *testing.T) {
 					Version: strconv.Itoa(version),
 				},
 			},
-			Severity: types.Unknown,
+			Severity: database.UnknownSeverity,
 		}
 
 		vulnerabilities[version] = append(vulnerabilities[version], vulnerability)
@@ -157,7 +155,7 @@ func TestRaceAffects(t *testing.T) {
 			}
 		}
 
-		assert.Len(t, utils.CompareStringLists(expectedAffectedNames, actualAffectedNames), 0)
-		assert.Len(t, utils.CompareStringLists(actualAffectedNames, expectedAffectedNames), 0)
+		assert.Len(t, compareStringLists(expectedAffectedNames, actualAffectedNames), 0)
+		assert.Len(t, compareStringLists(actualAffectedNames, expectedAffectedNames), 0)
 	}
 }

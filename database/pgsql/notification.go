@@ -1,4 +1,4 @@
-// Copyright 2015 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/coreos/clair/database"
-	cerrors "github.com/coreos/clair/utils/errors"
+	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/guregu/null/zero"
 	"github.com/pborman/uuid"
 )
@@ -242,7 +242,7 @@ func (pgSQL *pgSQL) DeleteNotification(name string) error {
 	}
 
 	if affected <= 0 {
-		return cerrors.ErrNotFound
+		return commonerr.ErrNotFound
 	}
 
 	return nil
