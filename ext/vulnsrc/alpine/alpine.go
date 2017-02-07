@@ -17,11 +17,11 @@
 package alpine
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -79,8 +79,13 @@ func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, er
 		return
 	}
 
+	// Get the list of namespaces from the repository.
 	var namespaces []string
-	namespaces, err = detectNamespaces(u.repositoryLocalPath)
+	namespaces, err = ls(u.repositoryLocalPath, directoriesOnly)
+	if err != nil {
+		return
+	}
+
 	// Append any changed vulnerabilities to the response.
 	for _, namespace := range namespaces {
 		var vulns []database.Vulnerability
@@ -104,58 +109,70 @@ func (u *updater) Clean() {
 	}
 }
 
-func detectNamespaces(path string) ([]string, error) {
-	// Open the root directory.
+type lsFilter int
+
+const (
+	filesOnly lsFilter = iota
+	directoriesOnly
+)
+
+func ls(path string, filter lsFilter) ([]string, error) {
 	dir, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 	defer dir.Close()
 
-	// Get a list of the namspaces from the directory names.
 	finfos, err := dir.Readdir(0)
 	if err != nil {
 		return nil, err
 	}
 
-	var namespaces []string
+	var files []string
 	for _, info := range finfos {
-		if !info.IsDir() {
+		if filter == directoriesOnly && !info.IsDir() {
 			continue
 		}
-		// Filter out hidden directories like `.git`.
+
+		if filter == filesOnly && info.IsDir() {
+			continue
+		}
+
 		if strings.HasPrefix(info.Name(), ".") {
 			continue
 		}
 
-		namespaces = append(namespaces, info.Name())
+		files = append(files, info.Name())
 	}
 
-	return namespaces, nil
-}
-
-type parserFunc func(io.Reader) ([]database.Vulnerability, error)
-
-var parsers = map[string]parserFunc{
-	"v3.3": parse33YAML,
-	"v3.4": parse34YAML,
+	return files, nil
 }
 
 func parseVulnsFromNamespace(repositoryPath, namespace string) (vulns []database.Vulnerability, note string, err error) {
-	var file io.ReadCloser
-	file, err = os.Open(repositoryPath + "/" + namespace + "/main.yaml")
+	nsDir := filepath.Join(repositoryPath, namespace)
+	var dbFilenames []string
+	dbFilenames, err = ls(nsDir, filesOnly)
 	if err != nil {
 		return
 	}
-	defer file.Close()
 
-	parseFunc, exists := parsers[namespace]
-	if !exists {
-		note = fmt.Sprintf("The file %s is not mapped to any Alpine version number", namespace)
-		return
+	for _, filename := range dbFilenames {
+		var file io.ReadCloser
+		file, err = os.Open(filepath.Join(nsDir, filename))
+		if err != nil {
+			return
+		}
+
+		var fileVulns []database.Vulnerability
+		fileVulns, err = parseYAML(file)
+		if err != nil {
+			return
+		}
+
+		vulns = append(vulns, fileVulns...)
+		file.Close()
 	}
 
-	vulns, err = parseFunc(file)
 	return
 }
 
@@ -193,61 +210,7 @@ func (u *updater) pullRepository() (commit string, err error) {
 	return
 }
 
-type secdb33File struct {
-	Distro   string `yaml:"distroversion"`
-	Packages []struct {
-		Pkg struct {
-			Name    string   `yaml:"name"`
-			Version string   `yaml:"ver"`
-			Fixes   []string `yaml:"fixes"`
-		} `yaml:"pkg"`
-	} `yaml:"packages"`
-}
-
-func parse33YAML(r io.Reader) (vulns []database.Vulnerability, err error) {
-	var rBytes []byte
-	rBytes, err = ioutil.ReadAll(r)
-	if err != nil {
-		return
-	}
-
-	var file secdb33File
-	err = yaml.Unmarshal(rBytes, &file)
-	if err != nil {
-		return
-	}
-	for _, pack := range file.Packages {
-		pkg := pack.Pkg
-		for _, fix := range pkg.Fixes {
-			err = versionfmt.Valid(dpkg.ParserName, pkg.Version)
-			if err != nil {
-				log.Warningf("could not parse package version '%s': %s. skipping", pkg.Version, err.Error())
-				continue
-			}
-
-			vulns = append(vulns, database.Vulnerability{
-				Name:     fix,
-				Severity: database.UnknownSeverity,
-				Link:     nvdURLPrefix + fix,
-				FixedIn: []database.FeatureVersion{
-					{
-						Feature: database.Feature{
-							Namespace: database.Namespace{
-								Name:          "alpine:" + file.Distro,
-								VersionFormat: dpkg.ParserName,
-							},
-							Name: pkg.Name,
-						},
-						Version: pkg.Version,
-					},
-				},
-			})
-		}
-	}
-	return
-}
-
-type secdb34File struct {
+type secDBFile struct {
 	Distro   string `yaml:"distroversion"`
 	Packages []struct {
 		Pkg struct {
@@ -257,14 +220,14 @@ type secdb34File struct {
 	} `yaml:"packages"`
 }
 
-func parse34YAML(r io.Reader) (vulns []database.Vulnerability, err error) {
+func parseYAML(r io.Reader) (vulns []database.Vulnerability, err error) {
 	var rBytes []byte
 	rBytes, err = ioutil.ReadAll(r)
 	if err != nil {
 		return
 	}
 
-	var file secdb34File
+	var file secDBFile
 	err = yaml.Unmarshal(rBytes, &file)
 	if err != nil {
 		return

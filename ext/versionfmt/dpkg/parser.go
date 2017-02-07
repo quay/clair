@@ -96,10 +96,6 @@ func newVersion(str string) (version, error) {
 		return version{}, errors.New("No version")
 	}
 
-	if !unicode.IsDigit(rune(v.version[0])) {
-		return version{}, errors.New("version does not start with digit")
-	}
-
 	for i := 0; i < len(v.version); i = i + 1 {
 		r := rune(v.version[i])
 		if !unicode.IsDigit(r) && !unicode.IsLetter(r) && !containsRune(versionAllowedSymbols, r) {
