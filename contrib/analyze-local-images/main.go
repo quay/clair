@@ -1,7 +1,3 @@
-// Copyright 2015 clair authors
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
 //
 //     http://www.apache.org/licenses/LICENSE-2.0
@@ -50,6 +46,7 @@ var (
 	flagMyAddress       = flag.String("my-address", "127.0.0.1", "Address from the point of view of Clair")
 	flagMinimumSeverity = flag.String("minimum-severity", "Negligible", "Minimum severity of vulnerabilities to show (Unknown, Negligible, Low, Medium, High, Critical, Defcon1)")
 	flagColorMode       = flag.String("color", "auto", "Colorize the output (always, auto, never)")
+	flagJsonOutput      = flag.Bool("json", false, "Machine parsable json output (true, false)")
 )
 
 type vulnerabilityInfo struct {
@@ -129,7 +126,7 @@ func intMain() int {
 	// Analyze the image.
 	analyzeCh := make(chan error, 1)
 	go func() {
-		analyzeCh <- AnalyzeLocalImage(imageName, minSeverity, *flagEndpoint, *flagMyAddress, tmpPath)
+		analyzeCh <- AnalyzeLocalImage(imageName, minSeverity, *flagEndpoint, *flagMyAddress, tmpPath, *flagJsonOutput)
 	}()
 
 	select {
@@ -144,16 +141,81 @@ func intMain() int {
 	return 0
 }
 
-func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, myAddress, tmpPath string) error {
+func displayText(vulnerabilities []vulnerabilityInfo) {
+	for _, vulnerabilityInfo := range vulnerabilities {
+		vulnerability := vulnerabilityInfo.vulnerability
+		feature := vulnerabilityInfo.feature
+		severity := vulnerabilityInfo.severity
+
+		fmt.Printf("%s (%s)\n", vulnerability.Name, coloredSeverity(severity))
+
+		if vulnerability.Description != "" {
+			fmt.Printf("%s\n\n", text.Indent(text.Wrap(vulnerability.Description, 80), "\t"))
+		}
+
+		fmt.Printf("\tPackage:       %s @ %s\n", feature.Name, feature.Version)
+
+		if vulnerability.FixedBy != "" {
+			fmt.Printf("\tFixed version: %s\n", vulnerability.FixedBy)
+		}
+
+		if vulnerability.Link != "" {
+			fmt.Printf("\tLink:          %s\n", vulnerability.Link)
+		}
+
+		fmt.Printf("\tLayer:         %s\n", feature.AddedBy)
+		fmt.Println("")
+	}
+}
+
+type jsonOutput struct {
+	Vulnerabilities []vulnerabilityOutput `json:"vulnerabilities"`
+}
+
+type vulnerabilityOutput struct {
+	Package  string `json:"package"`
+	Severity string `json:"severity"`
+	Name     string `json:"name"`
+	FixedBy  string `json:"fixedBy"`
+	Link     string `json:"link"`
+}
+
+func displayJson(vulnerabilities []vulnerabilityInfo) {
+	outputs := []vulnerabilityOutput{}
+	for _, info := range vulnerabilities {
+		vulnerability := info.vulnerability
+		feature := info.feature
+		output := vulnerabilityOutput{
+			fmt.Sprintf("%s@%s", feature.Name, feature.Version),
+			vulnerability.Severity,
+			vulnerability.Name,
+			vulnerability.FixedBy,
+			vulnerability.Link,
+		}
+		outputs = append(outputs, output)
+	}
+	output := jsonOutput{outputs}
+	bytes, err := json.Marshal(output)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf(string(bytes))
+}
+
+func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, myAddress, tmpPath string, jsonOutput bool) error {
 	// Save image.
-	log.Printf("Saving %s to local disk (this may take some time)", imageName)
+	if !jsonOutput {
+		log.Printf("Saving %s to local disk (this may take some time)", imageName)
+	}
 	err := save(imageName, tmpPath)
 	if err != nil {
 		return fmt.Errorf("Could not save image: %s", err)
 	}
 
 	// Retrieve history.
-	log.Println("Retrieving image history")
+	if !jsonOutput {
+		log.Println("Retrieving image history")
+	}
 	layerIDs, err := historyFromManifest(tmpPath)
 	if err != nil {
 		layerIDs, err = historyFromCommand(imageName)
@@ -170,7 +232,9 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 			allowedHost = allowedHost[:portIndex]
 		}
 
-		log.Printf("Setting up HTTP server (allowing: %s)\n", allowedHost)
+		if !jsonOutput {
+			log.Printf("Setting up HTTP server (allowing: %s)\n", allowedHost)
+		}
 
 		ch := make(chan error)
 		go listenHTTP(tmpPath, allowedHost, ch)
@@ -185,9 +249,13 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 	}
 
 	// Analyze layers.
-	log.Printf("Analyzing %d layers... \n", len(layerIDs))
+	if !jsonOutput {
+		log.Printf("Analyzing %d layers... \n", len(layerIDs))
+	}
 	for i := 0; i < len(layerIDs); i++ {
-		log.Printf("Analyzing %s\n", layerIDs[i])
+		if !jsonOutput {
+			log.Printf("Analyzing %s\n", layerIDs[i])
+		}
 
 		if i > 0 {
 			err = analyzeLayer(endpoint, tmpPath+"/"+layerIDs[i]+"/layer.tar", layerIDs[i], layerIDs[i-1])
@@ -200,16 +268,20 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 	}
 
 	// Get vulnerabilities.
-	log.Println("Retrieving image's vulnerabilities")
+	if !jsonOutput {
+		log.Println("Retrieving image's vulnerabilities")
+	}
 	layer, err := getLayer(endpoint, layerIDs[len(layerIDs)-1])
 	if err != nil {
 		return fmt.Errorf("Could not get layer information: %s", err)
 	}
 
 	// Print report.
-	fmt.Printf("Clair report for image %s (%s)\n", imageName, time.Now().UTC())
+	if !jsonOutput {
+		fmt.Printf("Clair report for image %s (%s)\n", imageName, time.Now().UTC())
+	}
 
-	if len(layer.Features) == 0 {
+	if len(layer.Features) == 0 && !jsonOutput {
 		fmt.Printf("%s No features have been detected in the image. This usually means that the image isn't supported by Clair.\n", color.YellowString("NOTE:"))
 		return nil
 	}
@@ -241,35 +313,18 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 
 	By(priority).Sort(vulnerabilities)
 
-	for _, vulnerabilityInfo := range vulnerabilities {
-		vulnerability := vulnerabilityInfo.vulnerability
-		feature := vulnerabilityInfo.feature
-		severity := vulnerabilityInfo.severity
-
-		fmt.Printf("%s (%s)\n", vulnerability.Name, coloredSeverity(severity))
-
-		if vulnerability.Description != "" {
-			fmt.Printf("%s\n\n", text.Indent(text.Wrap(vulnerability.Description, 80), "\t"))
-		}
-
-		fmt.Printf("\tPackage:       %s @ %s\n", feature.Name, feature.Version)
-
-		if vulnerability.FixedBy != "" {
-			fmt.Printf("\tFixed version: %s\n", vulnerability.FixedBy)
-		}
-
-		if vulnerability.Link != "" {
-			fmt.Printf("\tLink:          %s\n", vulnerability.Link)
-		}
-
-		fmt.Printf("\tLayer:         %s\n", feature.AddedBy)
-		fmt.Println("")
+	if jsonOutput == true {
+		displayJson(vulnerabilities)
+	} else {
+		displayText(vulnerabilities)
 	}
 
-	if isSafe {
-		fmt.Printf("%s No vulnerabilities were detected in your image\n", color.GreenString("Success!"))
-	} else if !hasVisibleVulnerabilities {
-		fmt.Printf("%s No vulnerabilities matching the minimum severity level were detected in your image\n", color.YellowString("NOTE:"))
+	if !jsonOutput {
+		if isSafe {
+			fmt.Printf("%s No vulnerabilities were detected in your image\n", color.GreenString("Success!"))
+		} else if !hasVisibleVulnerabilities {
+			fmt.Printf("%s No vulnerabilities matching the minimum severity level were detected in your image\n", color.YellowString("NOTE:"))
+		}
 	}
 
 	return nil
