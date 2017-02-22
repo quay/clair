@@ -1,4 +1,4 @@
-# Copyright 2015 clair authors
+# Copyright 2017 clair authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,23 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.6
+FROM golang:1.8-alpine
 
 MAINTAINER Quentin Machu <quentin.machu@coreos.com>
 
-RUN apt-get update && \
-    apt-get install -y git bzr rpm xz-utils && \
-    apt-get autoremove -y && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* # 29NOV2016
-
 VOLUME /config
-
 EXPOSE 6060 6061
 
 ADD .   /go/src/github.com/coreos/clair/
 WORKDIR /go/src/github.com/coreos/clair/
 
-RUN go install -v github.com/coreos/clair/cmd/clair
+RUN apk add --no-cache git bzr rpm xz && \
+    go install -v github.com/coreos/clair/cmd/clair && \
+    mv /go/bin/clair /clair && \
+    rm -rf /go /usr/local/go
 
-ENTRYPOINT ["clair"]
+ENTRYPOINT ["./clair"]
