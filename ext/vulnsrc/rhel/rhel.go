@@ -54,7 +54,7 @@ var (
 
 	rhsaRegexp = regexp.MustCompile(`com.redhat.rhsa-(\d+).xml`)
 
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "updater/fetchers/rhel")
+	log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/vulnsrc/rhel")
 )
 
 type oval struct {
