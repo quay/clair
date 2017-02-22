@@ -27,4 +27,4 @@ RUN apk add --no-cache git bzr rpm xz && \
     mv /go/bin/clair /clair && \
     rm -rf /go /usr/local/go
 
-ENTRYPOINT ["./clair"]
+ENTRYPOINT ["/clair"]
