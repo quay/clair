@@ -333,12 +333,14 @@ func (lv *lockableVulnerability) appendFunc(metadataKey string, metadata interfa
 	}
 }
 
-// doVulnerabilitiesNamespacing takes Vulnerabilities that don't have a Namespace and split them
-// into multiple vulnerabilities that have a Namespace and only contains the FixedIn
-// FeatureVersions corresponding to their Namespace.
+// doVulnerabilitiesNamespacing takes Vulnerabilities that don't have a
+// Namespace and split them into multiple vulnerabilities that have a Namespace
+// and only contains the FixedIn FeatureVersions corresponding to their
+// Namespace.
 //
-// It helps simplifying the fetchers that share the same metadata about a Vulnerability regardless
-// of their actual namespace (ie. same vulnerability information for every version of a distro).
+// It helps simplifying the fetchers that share the same metadata about a
+// Vulnerability regardless of their actual namespace (ie. same vulnerability
+// information for every version of a distro).
 func doVulnerabilitiesNamespacing(vulnerabilities []database.Vulnerability) []database.Vulnerability {
 	vulnerabilitiesMap := make(map[string]*database.Vulnerability)
 
@@ -351,7 +353,7 @@ func doVulnerabilitiesNamespacing(vulnerabilities []database.Vulnerability) []da
 
 			if vulnerability, ok := vulnerabilitiesMap[index]; !ok {
 				newVulnerability := v
-				newVulnerability.Namespace.Name = fv.Feature.Namespace.Name
+				newVulnerability.Namespace = fv.Feature.Namespace
 				newVulnerability.FixedIn = []database.FeatureVersion{fv}
 
 				vulnerabilitiesMap[index] = &newVulnerability
