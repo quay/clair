@@ -30,6 +30,7 @@ import (
 	"github.com/coreos/clair"
 	"github.com/coreos/clair/api"
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/imagefmt"
 	"github.com/coreos/clair/pkg/stopper"
 
 	// Register database driver.
@@ -123,6 +124,7 @@ func main() {
 	flagConfigPath := flag.String("config", "/etc/clair/config.yaml", "Load configuration from the specified file.")
 	flagCPUProfilePath := flag.String("cpu-profile", "", "Write a CPU profile to the specified file before exiting.")
 	flagLogLevel := flag.String("log-level", "info", "Define the logging level.")
+	flagInsecureTLS := flag.Bool("insecure-tls", false, "Disable TLS server's certificate chain and hostname verification when pulling layers.")
 	flag.Parse()
 
 	// Check for dependencies.
@@ -147,6 +149,12 @@ func main() {
 	// Enable CPU Profiling if specified
 	if *flagCPUProfilePath != "" {
 		defer stopCPUProfiling(startCPUProfiling(*flagCPUProfilePath))
+	}
+
+	// Enable TLS server's certificate chain and hostname verification
+	// when pulling layers if specified
+	if *flagInsecureTLS {
+		imagefmt.SetInsecureTLS(*flagInsecureTLS)
 	}
 
 	Boot(config)

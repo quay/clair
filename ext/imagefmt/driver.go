@@ -21,6 +21,7 @@
 package imagefmt
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"math"
@@ -37,6 +38,10 @@ import (
 var (
 	// ErrCouldNotFindLayer is returned when we could not download or open the layer file.
 	ErrCouldNotFindLayer = commonerr.NewBadRequestError("could not find layer")
+
+	// insecureTLS controls whether TLS server's certificate chain and hostname are verified
+	// when pulling layers, verified in default.
+	insecureTLS = false
 
 	log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/imagefmt")
 
@@ -116,7 +121,11 @@ func Extract(format, path string, headers map[string]string, toExtract []string)
 		}
 
 		// Send the request and handle the response.
-		r, err := http.DefaultClient.Do(request)
+		tr := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureTLS},
+		}
+		client := &http.Client{Transport: tr}
+		r, err := client.Do(request)
 		if err != nil {
 			log.Warningf("could not download layer: %s", err)
 			return nil, ErrCouldNotFindLayer
@@ -147,4 +156,10 @@ func Extract(format, path string, headers map[string]string, toExtract []string)
 	}
 
 	return nil, commonerr.NewBadRequestError(fmt.Sprintf("unsupported image format '%s'", format))
+}
+
+// SetInsecureTLS sets the insecureTLS to control whether TLS server's certificate chain
+// and hostname are verified when pulling layers.
+func SetInsecureTLS(insecure bool) {
+	insecureTLS = insecure
 }
