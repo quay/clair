@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Clair Control report : {{.ImageName}}</title>
+
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,600italic,400italic,300italic,300' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css">
+
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: ghostwhite;
+            padding-bottom: 2em;
+        }
+        /* Typography */
+        
+        .lead {
+            font-size: 1.4em;
+        }
+        /* global layout */
+        
+        .container {
+            padding: 0 0;
+        }
+        
+        .clearfix:after {
+            content: "";
+            display: block;
+            clear: both;
+        }
+        
+        .row {
+            margin: 0 -20px;
+        }
+        
+        .row:after {
+            display: block;
+            clear: both;
+        }
+        
+        [class*="col-"] {
+            padding: 0 20px;
+            float: left;
+            box-sizing: border-box;
+        }
+        
+        .col-6 {
+            width: 50%;
+        }
+        
+        .panel {
+            /* padding: 1em; */
+            border-radius: 4px;
+            background: white;
+            box-shadow: 0px 1px 2px #e2e2e2;
+        }
+        
+        .panel h2 {
+            margin-top: 0;
+            padding-bottom: .2em;
+            border-bottom: solid 1px gainsboro;
+        }
+        
+        .panel:last-child {
+            margin-bottom: 0;
+        }
+        /* Header */
+        
+        .app-header {
+            background: #2196F3;
+            color: white;
+            margin: 0 0px 0px 0px;
+            padding: 16px 20px;
+            box-shadow: 0 -2px 16px #263238;
+            position: relative;
+        }
+        
+        .app-header h1 {
+            margin: 0;
+            font-weight: lighter;
+            text-transform: uppercase;
+        }
+        
+        .app-intro {
+            padding: 20px;
+            text-align: center;
+            color: #263238;
+            background: rgba(255, 255, 255, .8);
+            border-bottom: solid 1px #ECEFF1;
+        }
+        
+        .app-intro h2 {
+            font-size: 2em;
+            font-weight: lighter;
+        }
+        
+        .summary {
+            line-height: .6em;
+        }
+        /* report */
+        
+        .report {
+            margin-top: 20px;
+        }
+        
+        .graph {
+            margin: 0 auto;
+            max-width: 960px;
+            margin-top: 30px;
+        }
+        /* Style of the graph */
+        
+        .graph .node {
+            position: relative;
+            display: inline-block;
+            height: 24px;
+            width: 24px;
+            margin: 2px;
+        }
+        
+        .graph .node .dot {
+            position: relative;
+            height: 24px;
+            width: 24px;
+            border-radius: 24px;
+            float: left;
+            background: gray;
+            /* box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+        border: solid 1px rgba(255, 255, 255, .2); */
+        }
+        
+        .graph .node.Defcon1 .dot {
+            background: black;
+        }
+        
+        .graph .node.Critical .dot {
+            background: #e81e1e;
+        }
+        
+        .graph .node.High .dot {
+            background: #E91E63;
+        }
+        
+        .graph .node.Medium .dot {
+            background: #FFA726;
+        }
+        
+        .graph .node.Low .dot {
+            background: #8BC34A;
+        }
+        
+        .graph .node.Negligible .dot {
+            background: #37474F;
+        }
+        
+        .graph .node.Unknown .dot {
+            background: #37474F;
+        }
+        
+        .graph .node .popup {
+            display: none;
+            width: 300px;
+            position: absolute;
+            bottom: 100%;
+            margin-bottom: 20px;
+            margin-left: -150px;
+            left: 2px;
+            background: white;
+            box-shadow: 0px 1px 2px rgba(0, 0, 0, .2);
+            padding: 10px;
+            border-radius: 4px;
+            /* border: solid 1px #e2e2e2; */
+            text-shadow: 0 0 0 transparent;
+        }
+        
+        .graph .node .popup:after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -10px;
+            display: block;
+            width: 0;
+            height: 0;
+            border-width: 10px 10px 0 10px;
+            border-color: white transparent transparent transparent;
+            border-style: solid;
+        }
+        
+        .graph .node .popup:before {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -10px;
+            display: block;
+            width: 0;
+            height: 0;
+            border-width: 11px 11px 0 10px;
+            border-color: rgba(0, 0, 0, .2) transparent transparent transparent;
+            border-style: solid;
+        }
+        
+        .graph .node .popup > div {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .graph .node:hover .dot {
+            opacity: .8;
+        }
+        
+        .graph .node:hover .popup {
+            display: block;
+            max-height: 180px;
+            color: dimgray;
+        }
+        /* bars */
+        
+        .bar-bg {
+            display: inline-block;
+            width: 240px;
+            height: 6px;
+            position: relative;
+        }
+        
+        .bar-bar {
+            display: block;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            background: #E91E63;
+            border-radius: 2px;
+        }
+        
+        .bar-bar.Defcon1 {
+            background: black;
+        }
+        
+        .bar-bar.Critical {
+            background: #e81e1e;
+        }
+        
+        .bar-bar.High {
+            background: #E91E63;
+        }
+        
+        .bar-bar.Medium {
+            background: #FFA726;
+        }
+        
+        .bar-bar.Low {
+            background: #8BC34A;
+        }
+        
+        .bar-bar.Negligible {
+            background: #37474F;
+        }
+        
+        .bar-bar.Unknown {
+            background: #37474F;
+        }
+        /* vulnerabilities */
+        
+        .report {
+            margin: 18px auto;
+            max-width: 960px;
+        }
+        
+        .report .vulnerabilities,
+        .report .features > ul {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .report .features > ul {
+            list-style: none;
+        }
+        
+        .feature {
+            border-bottom: solid 1px #ECEFF1;
+        }
+        
+        .feature:last-child {
+            border-color: #CFD8DC;
+        }
+        
+        .feature__title {
+            padding: 1em;
+        }
+        
+        .vulnerabilities {
+            padding-left: 2.6em !important;
+        }
+        
+        .vulnerability {
+            padding-bottom: .8em;
+            padding-right: 2.2em;
+        }
+        
+        .vulnerabilities .Defcon1 .name {
+            color: black;
+        }
+        
+        .vulnerabilities .Critical .name {
+            color: #e81e1e;
+        }
+        
+        .vulnerabilities .High .name {
+            color: #E91E63;
+        }
+        
+        .vulnerabilities .Medium .name {
+            color: #FFA726;
+        }
+        
+        .vulnerabilities .Low .name {
+            color: #8BC34A;
+        }
+        
+        .vulnerabilities .Negligible .name {
+            color: #37474F;
+        }
+        
+        .vulnerabilities .Unknown .name {
+            color: #37474F;
+        }
+        /* layers */
+        
+        .layer .layer__title {
+            cursor: pointer;
+            padding: 1em;
+            border-bottom: solid 1px #CFD8DC;
+            color: #37474F;
+            margin: 0;
+        }
+        
+        .layer .layer__title:hover {
+            background: #ECEFF1;
+        }
+        
+        .layer.closed .features {
+            display: none;
+        }
+        
+        .summary-text {
+            display: flex;
+            max-width: 940px;
+            margin: 0 auto;
+            margin-bottom: 1em;
+            margin-top: 3em;
+        }
+        
+        .summary-text .node {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .summary-text .node:before {
+            content: '';
+            display: inline-block;
+            height: 10px;
+            width: 10px;
+            border-radius: 50%;
+            background: #2196F3;
+            margin-right: 10px;
+        }
+        
+        .summary-text .node.Defcon1:before {
+            background: black;
+        }
+        
+        .summary-text .node.Critical:before {
+            background: #e81e1e;
+        }
+        
+        .summary-text .node.High:before {
+            background: #E91E63;
+        }
+        
+        .summary-text .node.Medium:before {
+            background: #FFA726;
+        }
+        
+        .summary-text .node.Low:before {
+            background: #8BC34A;
+        }
+        
+        .summary-text .node.Negligible:before {
+            background: #37474F;
+        }
+        
+        .summary-text .node.Unknown:before {
+            background: #37474F;
+        }
+        
+        .relative-graph {
+            display: flex;
+            max-width: 940px;
+            margin: 0 auto;
+            background: #2196F3;
+            flex-direction: row-reverse;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .relative-graph .node {
+            text-align: center;
+            height: 8px;
+            background: #2196F3;
+        }
+        
+        .relative-graph .node.Defcon1 {
+            background: black;
+        }
+        
+        .relative-graph .node.Critical {
+            background: #e81e1e;
+        }
+        
+        .relative-graph .node.High {
+            background: #E91E63;
+        }
+        
+        .relative-graph .node.Medium {
+            background: #FFA726;
+        }
+        
+        .relative-graph .node.Low {
+            background: #8BC34A;
+        }
+        
+        .relative-graph .node.Negligible {
+            background: #37474F;
+        }
+        
+        .relative-graph .node.Unknown {
+            background: #37474F;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header class="app-header">
+            <h1>Clair Control report</h1>
+        </header>
+
+        <div class="app-intro clearfix">
+            <h2>Image: {{.ImageName}}</h2>
+            {{ $ia := .}}
+
+            <section class="summary">
+                <div>
+                    {{with $vulnerabilitiesCount := allVulnerabilities $ia}}
+                    <p><span class="lead"><strong>Total : {{$vulnerabilitiesCount.Total}} vulnerabilities</strong></span></p>
+                    </p>
+                    <div class="summary-text">
+                        {{if gt ($vulnerabilitiesCount.Count "Unknown") 0}}
+                        <div class="node Unknown">Unknown : <strong>{{$vulnerabilitiesCount.Count "Unknown"}}</strong></div>
+                        {{end}} {{if gt ($vulnerabilitiesCount.Count "Negligible") 0}}
+                        <div class="node Negligible">Negligible : <strong>{{$vulnerabilitiesCount.Count "Negligible"}}</strong></div>
+                        {{end}} {{if gt ($vulnerabilitiesCount.Count "Low") 0}}
+                        <div class="node Low">Low : <strong>{{$vulnerabilitiesCount.Count "Low"}}</strong></div>
+                        {{end}} {{if gt ($vulnerabilitiesCount.Count "Medium") 0}}
+                        <div class="node Medium">Medium : <strong>{{$vulnerabilitiesCount.Count "Medium"}}</strong></div>
+                        {{end}} {{if gt ($vulnerabilitiesCount.Count "High") 0}}
+                        <div class="node High">High : <strong>{{$vulnerabilitiesCount.Count "High"}}</strong></div>
+                        {{end}} {{if gt ($vulnerabilitiesCount.Count "Critical") 0}}
+                        <div class="node Critical">Critical : <strong>{{$vulnerabilitiesCount.Count "Critical"}}</strong></div>
+                        {{end}} {{if gt ($vulnerabilitiesCount.Count "Defcon1") 0}}
+                        <div class="node Defcon1">Defcon1 : <strong>{{$vulnerabilitiesCount.Count "Defcon1"}}</strong></div>
+                        {{end}}
+                    </div>
+                    <div class="relative-graph">
+                        <div class="node Defcon1" style="width: {{$vulnerabilitiesCount.RelativeCount "Defcon1"}}%"></div>
+                        <div class="node Critical" style="width: {{$vulnerabilitiesCount.RelativeCount "Critical"}}%"></div>
+                        <div class="node High" style="width: {{$vulnerabilitiesCount.RelativeCount "High"}}%"></div>
+                        <div class="node Medium" style="width: {{$vulnerabilitiesCount.RelativeCount "Medium"}}%"></div>
+                        <div class="node Low" style="width: {{$vulnerabilitiesCount.RelativeCount "Low"}}%"></div>
+                        <div class="node Negligible" style="width: {{$vulnerabilitiesCount.RelativeCount "Negligible"}}%"></div>
+                        <div class="node Unknown" style="width: {{$vulnerabilitiesCount.RelativeCount "Unknown"}}%"></div>
+                    </div>
+                    {{end}}
+                </div>
+            </section>
+            
+            <div class="graph">
+                {{range $k,$v := vulnerabilities $ia}}
+                {{range $v}}
+                <a class="node {{.Severity}}" href="#{{ .Name }}">
+                    <div class="dot"></div>
+                    <div class="popup">
+                        <div><strong>{{.Name}}</strong></div>
+                        <div>{{.Severity}}</div>
+                        <div>{{.Feature}}</div>
+                    </div>
+                </a>
+                {{end}}
+                {{end}}
+            </div>
+        </div>
+
+        <section class="report">
+            <div>
+                <div class="panel">
+                    <div class="layers">
+                        <div id="{{.LastLayer.Name}}" class="layer">
+                            <h3 class="layer__title" data-toggle-layer="{{.LastLayer.Name}}">{{.LastLayer.Name}}</h3>
+                            <div class="features">
+                                <ul>
+                                    {{ range sortedVulnerabilities $ia}}
+                                    <li class="feature">
+                                        <div class="feature__title">
+                                           <strong>{{ .Name }}</strong> <span>{{ .Version }}</span> - <span class="fa fa-exclamation-triangle" aria-hidden="true"></span>
+                                        </div>
+                                        {{ range .Vulnerabilities}}
+                                        <ul class="vulnerabilities">
+                                            <li class="vulnerability {{ .Severity }}">
+                                                <a class="vulnerability__title" name="{{ .Name }}"></a>
+                                                <strong class="name">{{ .Name }}</strong>
+                                                <div>{{ .Description }}</div>
+                                                <a href="{{ .Link }}" target="blank">Link</a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    {{end}}
+                                    {{end}}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <br />
+            </div>
+    </div>
+    </section>
+    </div>
+
+    <script>
+        (function() {
+            const togglers = document.querySelectorAll('[data-toggle-layer]');
+            console.log(togglers);
+
+            for (var i = togglers.length - 1; i >= 0; i--) {
+                togglers[i].onclick = function(e) {
+                    e.target.parentNode.classList.toggle('closed');
+                };
+            }
+        })();
+    </script>
+</body>
+
+</html>

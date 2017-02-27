@@ -1,0 +1,10 @@
+clair:
+  port: 6060
+  healthPort: 6061
+  uri: http://clair
+  report:
+    path: ./reports
+    format: html
+docker:
+  insecure-registries: 
+    - "my-own-registry:5000"
