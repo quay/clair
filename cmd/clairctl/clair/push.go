@@ -13,7 +13,7 @@ import (
 	"github.com/docker/distribution/manifest/schema1"
 	"github.com/docker/distribution/manifest/schema2"
 	"github.com/docker/docker/reference"
-	"github.com/jgsqware/clairctl/docker/dockerdist"
+	"github.com/coreos/clair/cmd/clairctl/docker/dockerdist"
 )
 
 // ErrUnanalizedLayer is returned when the layer was not correctly analyzed

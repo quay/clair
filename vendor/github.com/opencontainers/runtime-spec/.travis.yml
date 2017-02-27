@@ -1,0 +1,22 @@
+language: go
+go:
+  - 1.7
+  - 1.6.3
+  - 1.5.4
+
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - make install.tools
+  - docker pull vbatts/pandoc
+
+install: true
+
+script:
+  - make .govet
+  - make .golint
+  - make .gitvalidation
+  - make docs

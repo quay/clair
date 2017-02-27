@@ -6,8 +6,8 @@ import (
 
 	"github.com/coreos/clair/api/v1"
 	"github.com/docker/docker/reference"
-	"github.com/jgsqware/clairctl/config"
-	"github.com/jgsqware/clairctl/xstrings"
+	"github.com/coreos/clair/cmd/clairctl/config"
+	"github.com/coreos/clair/cmd/clairctl/xstrings"
 )
 
 type layering struct {

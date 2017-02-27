@@ -7,7 +7,7 @@ import (
 	"text/template"
 
 	"github.com/coreos/clair/api/v1"
-	"github.com/coreos/clair/utils/types"
+	"github.com/coreos/clair/database"
 )
 
 //execute go generate ./clair
@@ -45,10 +45,10 @@ func ReportAsHTML(analyzes ImageAnalysis) (string, error) {
 	return doc.String(), nil
 }
 
-func invertedPriorities() []types.Priority {
-	ip := make([]types.Priority, len(types.Priorities))
-	for i, j := 0, len(types.Priorities)-1; i <= j; i, j = i+1, j-1 {
-		ip[i], ip[j] = types.Priorities[j], types.Priorities[i]
+func invertedPriorities() []database.Severity {
+	ip := make([]database.Severity, len(database.Severities))
+	for i, j := 0, len(database.Severities)-1; i <= j; i, j = i+1, j-1 {
+		ip[i], ip[j] = database.Severities[j], database.Severities[i]
 	}
 	return ip
 
@@ -60,7 +60,7 @@ type vulnerabilityWithFeature struct {
 }
 
 //VulnerabiliesCounts Total count of vulnerabilities by type
-type vulnerabiliesCounts map[types.Priority]int
+type vulnerabiliesCounts map[database.Severity]int
 
 //Total return to total of Vulnerabilities
 func (v vulnerabiliesCounts) Total() int {
@@ -73,12 +73,12 @@ func (v vulnerabiliesCounts) Total() int {
 
 //Count return count of severities in Vulnerabilities
 func (v vulnerabiliesCounts) Count(severity string) int {
-	return v[types.Priority(severity)]
+	return v[database.Severity(severity)]
 }
 
 //RelativeCount get the percentage of vulnerabilities of a severity
 func (v vulnerabiliesCounts) RelativeCount(severity string) float64 {
-	count := v[types.Priority(severity)]
+	count := v[database.Severity(severity)]
 	result := float64(count) / float64(v.Total()) * 100
 	return math.Ceil(result*100) / 100
 }
@@ -92,7 +92,7 @@ func allVulnerabilities(imageAnalysis ImageAnalysis) vulnerabiliesCounts {
 	for _, f := range l.Layer.Features {
 
 		for _, v := range f.Vulnerabilities {
-			result[types.Priority(v.Severity)]++
+			result[database.Severity(v.Severity)]++
 		}
 	}
 
@@ -100,15 +100,15 @@ func allVulnerabilities(imageAnalysis ImageAnalysis) vulnerabiliesCounts {
 }
 
 //Vulnerabilities return a list a vulnerabilities
-func vulnerabilities(imageAnalysis ImageAnalysis) map[types.Priority][]vulnerabilityWithFeature {
+func vulnerabilities(imageAnalysis ImageAnalysis) map[database.Severity][]vulnerabilityWithFeature {
 
-	result := make(map[types.Priority][]vulnerabilityWithFeature)
+	result := make(map[database.Severity][]vulnerabilityWithFeature)
 
 	l := imageAnalysis.Layers[len(imageAnalysis.Layers)-1]
 	for _, f := range l.Layer.Features {
 		for _, v := range f.Vulnerabilities {
 
-			result[types.Priority(v.Severity)] = append(result[types.Priority(v.Severity)], vulnerabilityWithFeature{Vulnerability: v, Feature: f.Name + ":" + f.Version})
+			result[database.Severity(v.Severity)] = append(result[database.Severity(v.Severity)], vulnerabilityWithFeature{Vulnerability: v, Feature: f.Name + ":" + f.Version})
 		}
 	}
 
@@ -126,7 +126,7 @@ func sortedVulnerabilities(imageAnalysis ImageAnalysis) []v1.Feature {
 			vulnerabilities := []v1.Vulnerability{}
 			for _, p := range invertedPriorities() {
 				for _, v := range f.Vulnerabilities {
-					if types.Priority(v.Severity) == p {
+					if database.Severity(v.Severity) == p {
 						vulnerabilities = append(vulnerabilities, v)
 					}
 				}

@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/coreos/clair/utils/types"
+	"github.com/coreos/clair/database"
 )
 
 func TestReportAsHtml(t *testing.T) {
@@ -29,7 +29,7 @@ func TestReportAsHtml(t *testing.T) {
 }
 
 func TestInvertedPriorities(t *testing.T) {
-	expected := []types.Priority{types.Defcon1, types.Critical, types.High, types.Medium, types.Low, types.Negligible, types.Unknown}
+	expected := []database.Severity{database.Defcon1Severity, database.CriticalSeverity, database.HighSeverity, database.MediumSeverity, database.LowSeverity, database.NegligibleSeverity, database.UnknownSeverity}
 	ip := invertedPriorities()
 	for i, v := range ip {
 		if v != expected[i] {

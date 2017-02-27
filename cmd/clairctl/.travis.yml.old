@@ -1,0 +1,25 @@
+language: go
+go:
+  - 1.7
+
+install:
+  - go get -v github.com/Masterminds/glide
+  - cd $GOPATH/src/github.com/Masterminds/glide && git checkout tags/v0.12.3 && go install && cd -
+  - glide install -v
+
+script:
+- go build -ldflags "-X github.com/coreos/clair/cmd/clairctl/cmd.version=$(cat VERSION)" -v
+
+deploy:
+  provider: releases
+  api_key:
+    secure: SPeZzw212p/0iYPLVWUkLq226j19oWHBogHIlbKzkp8zNk7tdJEHMthAhka1zxS5afr+JWu3BBdduPHbnvvpXtv2axsrCXVsW7jPEcxXgfM3m/YSxQwjsGojMG318nX/E5ApY8eDhiZuHoTAP67DJZEoLteV5GKvNk7np74bMNexBxCPDIbXepBbjrEqxrUG/uVDFrmFf0LlCKVGxALK42uriaDM1tPGDy0+7zX7a3RqG9J4ROmZCQNzd9+rcur4DndrxYPCvJK3awUwXL5XzdRed24m5S8IG6Q/gMMUhUVECMNZ6/Z+KZ4CKqcQ9e9NvOtHYvO0OtPNrd4/HajZpUpfO008imSj6/g9NxdC6hJYvyK/HuRv5DsLgZukyvwroVSM5rC77FJeOmoLXfEBHo7E16I5XKGcp31NoCv5kdQuaHLxkBZk43CcnT/rraQ8cjCQAERQEh6u0fidyOvZ4vkTW30/c6H25zDejCzDcx1oHL4O8QwJwMfRSifSA8vk81saOurmQeviZK1UkpeWLxMYLpFZ8vN9kK/2Nn24ud9DN7N8bqGob13I8lJ69j9xcXuq/86vITziESZCHaYs2Hw1vSHD8vpkQxu8aSYqPXgwAKDwV9JkGV1/kcUdwpOlD/xkKunluu8Mf5K2JSm9G8xWr6foOibKsuHDn0nH+jY=
+  file: clairctl
+  skip_cleanup: true
+  on:
+    repo: jgsqware/clairctl
+    tags: true
+    branch: master
+env:
+  global:
+    secure: QpHC0r/d3sUNZ4Tisu7IjRnE+exzUUdTRlWUvvepWA2/wdsvsh9IFKmPgHvmt/V46RtByc52HVwE/uE6gF8eVhRs4L4DP/gSi0TxmfNi2m+6EdL1MmFvdIVGfPZDDbFnNNXpWcNJGv5/UDJ8eke003Mtm7/qQfJqH3UzxoWnTrvsA7IHbhxomgsHOFqHU+e6fmaQ3q7neUJEci2HSPLehl11yBwMcsYyFjeW+33GVQeI0m2j1TrcldG3KN63tszIx7tHXTUrIK369nrndLjYWnc7Hi+k6Uc8vPh111/hLBG4UtxffP+/DTkhEtzxDNn3hn4zSKTMIyeKA/UhnySYchzDYOdVZoM0oVxAkbTcdTPWCxS75W1u3AW3QAGxScNEqmy5enrW+kGyRpd1zIRJ1qS2tHAVmos8N6bl5Rp9UJF5UITr9/DyQS93O9DOSY5Z6UVGI5J+MlG89Nr4XJ5NW4ak5yC5fc+9IwM58VMk8ULS3I0g/YBWsWRWHGZrHurnvcGbiXHk5S+anQsiYUV8n3OUa67ai7Duil3qiPklEhHeFZzmXrJMvLdeVxywfvIfKzSEGqDrUYw3hO9pkMzLxDQfvaNzAHWZGJ970N7apX2pnAUgPDsNb8cOnbDSjX36FICAiUZlrkpsz6O6h3Fm/2t/HDCyYH7gf6eJXypUOYc=

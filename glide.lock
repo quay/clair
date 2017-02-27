@@ -1,6 +1,12 @@
-hash: 90e72dd70a9102940fc6126afc2d7d73ee79faaf75cecb3710b15f5a121c67ce
-updated: 2016-11-11T15:36:41.356471726+01:00
+hash: 66c9fb1044a56834964d8f96605217630d1178d15559617ed59a3446c49ab8b1
+updated: 2017-02-27T15:55:20.907327822+01:00
 imports:
+- name: github.com/artyom/untar
+  version: 02ed5a2449a661eb02b1e3d658524223ab726412
+- name: github.com/Azure/go-ansiterm
+  version: fa152c58bc15761d0200cb75fe958b89a9d4888e
+  subpackages:
+  - winterm
 - name: github.com/beorn7/perks
   version: b965b613227fddccbfffe13eae360ed3fa822f8d
   subpackages:
@@ -20,16 +26,113 @@ imports:
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
   - spew
+- name: github.com/docker/distribution
+  version: 129ad8ea0c3760d878b34cffdb9c3be874a7b2f7
+  subpackages:
+  - context
+  - digestset
+  - manifest
+  - manifest/manifestlist
+  - manifest/schema1
+  - manifest/schema2
+  - reference
+  - registry/api/errcode
+  - registry/api/v2
+  - registry/client
+  - registry/client/auth
+  - registry/client/auth/challenge
+  - registry/client/transport
+  - registry/storage/cache
+  - registry/storage/cache/memory
+  - uuid
+- name: github.com/docker/docker
+  version: 48dd90d3985889ca008faa3b041bf31d2ada95c5
+  subpackages:
+  - api
+  - api/types
+  - api/types/blkiodev
+  - api/types/container
+  - api/types/events
+  - api/types/filters
+  - api/types/image
+  - api/types/mount
+  - api/types/network
+  - api/types/reference
+  - api/types/registry
+  - api/types/strslice
+  - api/types/swarm
+  - api/types/time
+  - api/types/versions
+  - api/types/volume
+  - cli/config
+  - cli/config/configfile
+  - client
+  - daemon/graphdriver
+  - distribution
+  - distribution/metadata
+  - distribution/xfer
+  - dockerversion
+  - image
+  - image/v1
+  - layer
+  - oci
+  - opts
+  - pkg/archive
+  - pkg/chrootarchive
+  - pkg/fileutils
+  - pkg/homedir
+  - pkg/httputils
+  - pkg/idtools
+  - pkg/ioutils
+  - pkg/jsonlog
+  - pkg/jsonmessage
+  - pkg/longpath
+  - pkg/mount
+  - pkg/parsers/kernel
+  - pkg/plugingetter
+  - pkg/plugins
+  - pkg/plugins/transport
+  - pkg/pools
+  - pkg/progress
+  - pkg/promise
+  - pkg/random
+  - pkg/reexec
+  - pkg/stringid
+  - pkg/system
+  - pkg/tarsum
+  - pkg/term
+  - pkg/term/windows
+  - pkg/tlsconfig
+  - pkg/useragent
+  - plugin/v2
+  - reference
+  - registry
+- name: github.com/docker/go-connections
+  version: 4ccf312bf1d35e5dbda654e57a9be4c3f3cd0366
+  subpackages:
+  - nat
+  - sockets
+  - tlsconfig
+- name: github.com/docker/go-units
+  version: f2d77a61e3c169b43402a0a1e84f06daf29b8190
+- name: github.com/docker/libtrust
+  version: fa567046d9b14f6aa788882a950d69651d230b21
 - name: github.com/fatih/color
-  version: 1b35f289c47d5c73c398cea8e006b7bcb6234a96
+  version: 87d4004f2ab62d0d255e0a38f1680aa534549fe3
 - name: github.com/fernet/fernet-go
   version: 1b2437bc582b3cfbb341ee5a29f8ef5b42912ff2
+- name: github.com/fsnotify/fsnotify
+  version: bd2828f9f176e52d7222e565abb2d338d3f3c103
 - name: github.com/go-sql-driver/mysql
   version: d512f204a577a4ab037a1816604c48c9c13210be
 - name: github.com/golang/protobuf
   version: 5fc2294e655b78ed8a02082d37808d46c17d7e64
   subpackages:
   - proto
+- name: github.com/gorilla/context
+  version: 14f550f51af52180c2eefed15e5fd18d63c0a64a
+- name: github.com/gorilla/mux
+  version: e444e69cbd2e2e3e0749a2f3c717cec491552bbf
 - name: github.com/guregu/null
   version: 79c5bd36b615db4c06132321189f579c8a5fca98
   subpackages:
@@ -38,8 +141,25 @@ imports:
   version: 5c7531c003d8bf158b0fe5063649a2f41a822146
   subpackages:
   - simplelru
+- name: github.com/hashicorp/hcl
+  version: 99ce73d4fe576449f7a689d4fc2b2ad09a86bdaa
+  subpackages:
+  - hcl/ast
+  - hcl/parser
+  - hcl/scanner
+  - hcl/strconv
+  - hcl/token
+  - json/parser
+  - json/scanner
+  - json/token
+- name: github.com/inconshreveable/mousetrap
+  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+- name: github.com/jgsqware/xnet
+  version: 13630f0737d214dba8344df649039c19551553d8
 - name: github.com/julienschmidt/httprouter
   version: 21439ef4d70ba4f3e2a5ed9249e7b03af4019b40
+- name: github.com/kr/fs
+  version: 2788f0dbd16903de03cb8186e5c7d97b69ad387b
 - name: github.com/kr/text
   version: 7cafcd837844e784b526369c9bce262804aebc60
 - name: github.com/kylelemons/go-gypsy
@@ -50,14 +170,45 @@ imports:
   version: 11fc39a580a008f1f39bb3d11d984fb34ed778d9
   subpackages:
   - oid
+- name: github.com/magiconair/properties
+  version: 0723e352fa358f9322c938cc2dadda874e9151a9
+- name: github.com/mattn/go-shellwords
+  version: 525bedee691b5a8df547cb5cf9f86b7fb1883e24
 - name: github.com/mattn/go-sqlite3
   version: 5510da399572b4962c020184bb291120c0a412e2
 - name: github.com/matttproud/golang_protobuf_extensions
   version: d0c3fe89de86839aecf2e0579c40ba3bb336a453
   subpackages:
   - pbutil
+- name: github.com/Microsoft/go-winio
+  version: ce2922f643c8fd76b46cadc7f404a06282678b34
+- name: github.com/mitchellh/mapstructure
+  version: 482a9fd5fa83e8c4e7817413b80f3eb8feec03ef
+- name: github.com/Nvveen/Gotty
+  version: cd527374f1e5bff4938207604a14f2e38a9cf512
+- name: github.com/opencontainers/go-digest
+  version: 21dfd564fd89c944783d00d069f33e3e7123c448
+- name: github.com/opencontainers/runc
+  version: 157a96a42860b16b50401d131e257c7d7f281d7b
+  subpackages:
+  - libcontainer/configs
+  - libcontainer/devices
+  - libcontainer/system
+  - libcontainer/user
+- name: github.com/opencontainers/runtime-spec
+  version: 1c7c27d043c2a5e513a44084d2b10d77d1402b8c
+  subpackages:
+  - specs-go
 - name: github.com/pborman/uuid
   version: dee7705ef7b324f27ceb85a121c61f2c2e8ce988
+- name: github.com/pelletier/go-buffruneio
+  version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
+- name: github.com/pelletier/go-toml
+  version: 45932ad32dfdd20826f5671da37a5f3ce9f26a8d
+- name: github.com/pkg/errors
+  version: 839d9e913e063e28dfd0e6c7b7512793e0a48be9
+- name: github.com/pkg/sftp
+  version: 4d0e916071f68db74f8a73926335f809396d6b42
 - name: github.com/pmezard/go-difflib
   version: e8554b8641db39598be7f6342874b958f12ae1d4
   subpackages:
@@ -80,24 +231,69 @@ imports:
   version: 406e5b7bfd8201a36e2bb5f7bdae0b03380c2ce8
 - name: github.com/remind101/migrate
   version: d22d647232c20dbea6d2aa1dda7f2737cccce614
-- name: github.com/shiena/ansicolor
-  version: a422bbe96644373c5753384a59d678f7d261ff10
+- name: github.com/Sirupsen/logrus
+  version: d26492970760ca5d33129d2d799e34be5c4782eb
+- name: github.com/spf13/afero
+  version: 52e4a6cfac46163658bd4f123c49b6ee7dc75f78
+  subpackages:
+  - mem
+  - sftp
+- name: github.com/spf13/cast
+  version: 2580bc98dc0e62908119e4737030cc2fdfc45e4c
+- name: github.com/spf13/cobra
+  version: 6e91dded25d73176bf7f60b40dd7aa1f0bf9be8d
+- name: github.com/spf13/jwalterweatherman
+  version: 33c24e77fb80341fe7130ee7c594256ff08ccc46
+- name: github.com/spf13/pflag
+  version: 7597b2702729ebb651fc9bb2adac40bcc62db82d
+- name: github.com/spf13/viper
+  version: 80ab6657f9ec7e5761f6603320d3d58dfe6970f6
 - name: github.com/stretchr/testify
   version: 5b9da39b66e8e994455c2525c4421c8cc00a7f93
   subpackages:
   - assert
 - name: github.com/tylerb/graceful
-  version: 84177357ab104029f9237abcb52339a7b80760ef
+  version: 4654dfbb6ad53cb5e27f37d99b02e16c1872fbbb
+- name: github.com/vbatts/tar-split
+  version: bd4c5d64c3e9297f410025a3b1bd0c58f659e721
+  subpackages:
+  - archive/tar
+  - tar/asm
+  - tar/storage
 - name: github.com/ziutek/mymysql
   version: 75ce5fbba34b1912a3641adbd58cf317d7315821
   subpackages:
   - godrv
   - mysql
   - native
+- name: golang.org/x/crypto
+  version: ca7e7f10cb9fd9c1a6ff7f60436c086d73714180
+  subpackages:
+  - curve25519
+  - ed25519
+  - ed25519/internal/edwards25519
+  - ssh
 - name: golang.org/x/net
   version: 1d7a0b2100da090d8b02afcfb42f97e2c77e71a4
   subpackages:
+  - context
+  - context/ctxhttp
   - netutil
+  - proxy
+- name: golang.org/x/sys
+  version: c200b10b5d5e122be351b67af224adc6128af5bf
+  subpackages:
+  - unix
+  - windows
+- name: golang.org/x/text
+  version: 16e1d1f27f7aba51c74c0aeb7a7ee31a75c5c63c
+  subpackages:
+  - transform
+  - unicode/norm
+- name: golang.org/x/time
+  version: a4bde12657593d5e90d0533a3e4fd95e635124cb
+  subpackages:
+  - rate
 - name: gopkg.in/yaml.v2
   version: f7716cbe52baa25d2e9b0d0da546fcf909fc16b4
-devImports: []
+testImports: []

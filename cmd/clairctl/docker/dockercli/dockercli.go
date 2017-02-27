@@ -19,11 +19,11 @@ import (
 	"github.com/docker/docker/image"
 	"github.com/docker/docker/layer"
 	"github.com/docker/docker/reference"
-	"github.com/jgsqware/clairctl/config"
+	"github.com/coreos/clair/cmd/clairctl/config"
 	"github.com/opencontainers/go-digest"
 )
 
-var log = capnslog.NewPackageLogger("github.com/jgsqware/clairctl", "dockercli")
+var log = capnslog.NewPackageLogger("github.com/coreos/clair/cmd/clairctl", "dockercli")
 
 //GetLocalManifest retrieve manifest for local image
 func GetLocalManifest(imageName string, withExport bool) (reference.NamedTagged, distribution.Manifest, error) {

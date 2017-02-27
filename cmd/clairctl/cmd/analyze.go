@@ -5,9 +5,9 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/jgsqware/clairctl/clair"
-	"github.com/jgsqware/clairctl/config"
-	"github.com/jgsqware/clairctl/docker"
+	"github.com/coreos/clair/cmd/clairctl/clair"
+	"github.com/coreos/clair/cmd/clairctl/config"
+	"github.com/coreos/clair/cmd/clairctl/docker"
 	"github.com/spf13/cobra"
 )
 

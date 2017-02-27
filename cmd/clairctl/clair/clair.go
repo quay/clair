@@ -6,11 +6,11 @@ import (
 
 	"github.com/coreos/clair/api/v1"
 	"github.com/coreos/pkg/capnslog"
-	"github.com/jgsqware/clairctl/xstrings"
+	"github.com/coreos/clair/cmd/clairctl/xstrings"
 	"github.com/spf13/viper"
 )
 
-var log = capnslog.NewPackageLogger("github.com/jgsqware/clairctl", "clair")
+var log = capnslog.NewPackageLogger("github.com/coreos/clair/cmd/clairctl", "clair")
 
 var uri string
 var healthURI string

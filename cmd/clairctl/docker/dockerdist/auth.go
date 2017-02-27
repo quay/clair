@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/jgsqware/clairctl/config"
+	"github.com/coreos/clair/cmd/clairctl/config"
 )
 
 //ErrUnauthorized is return when requested user don't have access to the resource

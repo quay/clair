@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/jgsqware/clairctl/clair"
+	"github.com/coreos/clair/cmd/clairctl/clair"
 	"github.com/spf13/cobra"
 )
 
