@@ -24,6 +24,7 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 )
 
 func TestUbuntuParser(t *testing.T) {
@@ -46,22 +47,31 @@ func TestUbuntuParser(t *testing.T) {
 		expectedFeatureVersions := []database.FeatureVersion{
 			{
 				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "ubuntu:14.04"},
-					Name:      "libmspack",
+					Namespace: database.Namespace{
+						Name:          "ubuntu:14.04",
+						VersionFormat: dpkg.ParserName,
+					},
+					Name: "libmspack",
 				},
 				Version: versionfmt.MaxVersion,
 			},
 			{
 				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "ubuntu:15.04"},
-					Name:      "libmspack",
+					Namespace: database.Namespace{
+						Name:          "ubuntu:15.04",
+						VersionFormat: dpkg.ParserName,
+					},
+					Name: "libmspack",
 				},
 				Version: "0.4-3",
 			},
 			{
 				Feature: database.Feature{
-					Namespace: database.Namespace{Name: "ubuntu:15.10"},
-					Name:      "libmspack-anotherpkg",
+					Namespace: database.Namespace{
+						Name:          "ubuntu:15.10",
+						VersionFormat: dpkg.ParserName,
+					},
+					Name: "libmspack-anotherpkg",
 				},
 				Version: "0.1",
 			},
