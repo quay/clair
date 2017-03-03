@@ -204,10 +204,8 @@ To expose the new behavior, unqualified imports to the package must be added in 
 - _Clair: A Container Image Security Analyzer @  Microservices NYC_ - [Event](https://www.meetup.com/Microservices-NYC/events/230023492/) [Video](https://www.youtube.com/watch?v=ynwKi2yhIX4) [Slides](https://docs.google.com/presentation/d/1ly9wQKQIlI7rlb0JNU1_P-rPDHU4xdRCCM3rxOdjcgc)
 - _Clair: A Container Image Security Analyzer @ Container Orchestration NYC_ - [Event](https://www.meetup.com/Container-Orchestration-NYC/events/229779466/) [Video](https://www.youtube.com/watch?v=wTfCOUDNV_M) [Slides](https://docs.google.com/presentation/d/1ly9wQKQIlI7rlb0JNU1_P-rPDHU4xdRCCM3rxOdjcgc)
 
-### Projects Integrating with Clair
+### Integrations and Production Users
 
-- [Quay](https://quay.io): the first container registry to integrate with Clair
-- [Dockyard](https://github.com/containerops/dockyard): an open source container registry with Clair integration
-- [Clairctl](https://github.com/jgsqware/clairctl): a lightweight command-line tool for working locally with Clair and generate HTML report
-- [Clair w/ SQS](https://github.com/zalando/clair-sqs): a container containing Clair and additional processes that integrate Clair with [Amazon SQS](https://aws.amazon.com/sqs)
-- [Klar](https://github.com/optiopay/klar): a simple command-line integration of Clair and Docker registry, designed to be used in scripts and CI
+- [Projects integrating with Clair](https://github.com/coreos/clair/blob/master/Documentation/integrations.md)
+- [Production users](https://github.com/coreos/clair/blob/master/Documentation/production-users.md)
+
