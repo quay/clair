@@ -3,7 +3,7 @@ This document tracks projects that integrate with Clair. [Join the community](ht
 
 ## Projects
 
-[Quay.io](https://quay.io/): the first container registry to integrate with Clair.
+[Quay.io](https://quay.io/) and [Quay Enterprise](https://quay.io/plans/?tab=enterprise): Quay was the first container registry to integrate with Clair.
 
 [Dockyard](https://github.com/Huawei/dockyard): an open source container registry with Clair integration.
 
