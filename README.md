@@ -164,7 +164,7 @@ By indexing the features of an image into the database, images only need to be r
 | [Ubuntu CVE Tracker]          | Ubuntu 12.04, 12.10, 13.04, 14.04, 14.10, 15.04, 15.10, 16.04 namespaces | [dpkg] | [GPLv2]         |
 | [Red Hat Security Data]       | CentOS 5, 6, 7 namespaces                                                | [rpm]  | [CVRF]          |
 | [Oracle Linux Security Data]  | Oracle Linux 5, 6, 7 namespaces                                          | [rpm]  | [CVRF]          |
-| [Alpine SecDB]                | Alpine 3.3, Alpine 3.4 namespaces                                        | [apk]  | [MIT]           |
+| [Alpine SecDB]                | Alpine 3.3, Alpine 3.4, Alpine 3.5 namespaces                            | [apk]  | [MIT]           |
 | [NIST NVD]                    | Generic Vulnerability Metadata                                           | N/A    | [Public Domain] |
 
 [Debian Security Bug Tracker]: https://security-tracker.debian.org/tracker
