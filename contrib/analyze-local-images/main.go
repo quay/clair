@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -173,7 +172,7 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 		log.Printf("Setting up HTTP server (allowing: %s)\n", allowedHost)
 
 		ch := make(chan error)
-		go listenHTTP(tmpPath, allowedHost, ch)
+		go listenHTTP(tmpPath, ch)
 		select {
 		case err := <-ch:
 			return fmt.Errorf("An error occured when starting HTTP server: %s", err)
@@ -362,20 +361,14 @@ func historyFromCommand(imageName string) ([]string, error) {
 	return layers, nil
 }
 
-func listenHTTP(path, allowedHost string, ch chan error) {
-	restrictedFileServer := func(path, allowedHost string) http.Handler {
+func listenHTTP(path string, ch chan error) {
+	restrictedFileServer := func(path string) http.Handler {
 		fc := func(w http.ResponseWriter, r *http.Request) {
-			host, _, err := net.SplitHostPort(r.RemoteAddr)
-			if err == nil && strings.EqualFold(host, allowedHost) {
-				http.FileServer(http.Dir(path)).ServeHTTP(w, r)
-				return
-			}
-			w.WriteHeader(403)
+			http.FileServer(http.Dir(path)).ServeHTTP(w, r)
 		}
 		return http.HandlerFunc(fc)
 	}
-
-	ch <- http.ListenAndServe(":"+strconv.Itoa(httpPort), restrictedFileServer(path, allowedHost))
+	ch <- http.ListenAndServe(":"+strconv.Itoa(httpPort), restrictedFileServer(path))
 }
 
 func analyzeLayer(endpoint, path, layerName, parentLayerName string) error {
