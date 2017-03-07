@@ -270,7 +270,10 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 		fmt.Printf("%s No vulnerabilities were detected in your image\n", color.GreenString("Success!"))
 	} else if !hasVisibleVulnerabilities {
 		fmt.Printf("%s No vulnerabilities matching the minimum severity level were detected in your image\n", color.YellowString("NOTE:"))
-	}
+	} else {
+                errorTotal := errors.New("total Errors: "+strconv.Itoa(len(vulnerabilities)))
+                return errorTotal
+        }
 
 	return nil
 }
