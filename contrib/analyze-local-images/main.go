@@ -369,8 +369,6 @@ func listenHTTP(path, allowedHost string, ch chan error) {
 		fc := func(w http.ResponseWriter, r *http.Request) {
 			host, _, err := net.SplitHostPort(r.RemoteAddr)
                         allowedIPs, err1 := net.LookupIP(allowedHost)
-                        log.Printf("host: %s; ip: %s", host, allowedIPs[0])
-                        fmt.Println(host,allowedIPs)
 			if err == nil && err1 == nil {
                            allowedIPs = append(allowedIPs, net.ParseIP("172.17.0.1"))
                            for _, a :=range allowedIPs {
