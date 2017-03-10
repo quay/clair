@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -172,7 +173,7 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 		log.Printf("Setting up HTTP server (allowing: %s)\n", allowedHost)
 
 		ch := make(chan error)
-		go listenHTTP(tmpPath, ch)
+		go listenHTTP(tmpPath, allowedHost, ch)
 		select {
 		case err := <-ch:
 			return fmt.Errorf("An error occured when starting HTTP server: %s", err)
@@ -269,7 +270,9 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 		fmt.Printf("%s No vulnerabilities were detected in your image\n", color.GreenString("Success!"))
 	} else if !hasVisibleVulnerabilities {
 		fmt.Printf("%s No vulnerabilities matching the minimum severity level were detected in your image\n", color.YellowString("NOTE:"))
-	}
+	} else {
+		return fmt.Errorf("A total of %d vulnerabilities have been detected in your image", len(vulnerabilities))
+        }
 
 	return nil
 }
@@ -361,14 +364,28 @@ func historyFromCommand(imageName string) ([]string, error) {
 	return layers, nil
 }
 
-func listenHTTP(path string, ch chan error) {
-	restrictedFileServer := func(path string) http.Handler {
+func listenHTTP(path, allowedHost string, ch chan error) {
+	restrictedFileServer := func(path, allowedHost string) http.Handler {
 		fc := func(w http.ResponseWriter, r *http.Request) {
-			http.FileServer(http.Dir(path)).ServeHTTP(w, r)
+			host, _, err := net.SplitHostPort(r.RemoteAddr)
+                        allowedIPs, err1 := net.LookupIP(allowedHost)
+                        log.Printf("host: %s; ip: %s", host, allowedIPs[0])
+                        fmt.Println(host,allowedIPs)
+			if err == nil && err1 == nil {
+                           allowedIPs = append(allowedIPs, net.ParseIP("172.17.0.1"))
+                           for _, a :=range allowedIPs {
+                              if a.String() == host {
+                                http.FileServer(http.Dir(path)).ServeHTTP(w, r)
+                                return
+                              }
+			   }
+                        } 
+			w.WriteHeader(403)
 		}
 		return http.HandlerFunc(fc)
 	}
-	ch <- http.ListenAndServe(":"+strconv.Itoa(httpPort), restrictedFileServer(path))
+
+	ch <- http.ListenAndServe(":"+strconv.Itoa(httpPort), restrictedFileServer(path, allowedHost))
 }
 
 func analyzeLayer(endpoint, path, layerName, parentLayerName string) error {
