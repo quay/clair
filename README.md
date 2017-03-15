@@ -11,7 +11,7 @@ Please use [releases] instead of the `master` branch in order to get stable bina
 
 ![Clair Logo](https://cloud.githubusercontent.com/assets/343539/21630811/c5081e5c-d202-11e6-92eb-919d5999c77a.png)
 
-Clair is an open source project for the static analysis of vulnerabilities in [appc] and [docker] containers.
+Clair is an open source project for the static analysis of vulnerabilities in application containers (currently including [appc] and [docker]).
 
 Vulnerability data is continuously imported from a known set of sources and correlated with the indexed contents of container images in order to produce lists of vulnerabilities that threaten a container.
 When vulnerability data changes upstream, a notification can be delivered, and the API queried to provide the previous state and new state of the vulnerability along with the images affected by both.
@@ -50,12 +50,13 @@ Clair detects some vulnerabilities and sends a webhook to your continuous deploy
 During the first run, Clair will bootstrap its database with vulnerability data from its data sources.
 It can take several minutes before the database has been fully populated.
 
-**NOTE:** These setups are not meant for production workloads, but as a quick way to get started.
+**NOTE:** These setups are meant for running HEAD and not production workloads; please use a stable release in production.
 
 ### Kubernetes
 
-An easy way to run Clair is with Kubernetes 1.2+.
-If you are using the [CoreOS Kubernetes single-node instructions][single-node] for Vagrant you will be able to access the Clair's API at http://172.17.4.99:30060/ after following these instructions.
+If you don't have a local Kubernetes cluster already, check out [minikube].
+
+[minikube]: https://github.com/kubernetes/minikube
 
 ```
 git clone https://github.com/coreos/clair
@@ -64,18 +65,13 @@ kubectl create secret generic clairsecret --from-file=./config.yaml
 kubectl create -f clair-kubernetes.yaml
 ```
 
-[single-node]: https://coreos.com/kubernetes/docs/latest/kubernetes-on-vagrant-single.html
 
 ### Docker Compose
 
-Another easy way to get an instance of Clair running is to use Docker Compose to run everything locally.
-This runs a PostgreSQL database insecurely and locally in a container.
-This method should only be used for testing.
-
 ```sh
-$ curl -L https://raw.githubusercontent.com/coreos/clair/v1.2.4/docker-compose.yml -o $HOME/docker-compose.yml
+$ curl -L https://raw.githubusercontent.com/coreos/clair/master/docker-compose.yml -o $HOME/docker-compose.yml
 $ mkdir $HOME/clair_config
-$ curl -L https://raw.githubusercontent.com/coreos/clair/v1.2.4/config.example.yaml -o $HOME/clair_config/config.yaml
+$ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.example.yaml -o $HOME/clair_config/config.yaml
 $ $EDITOR $HOME/clair_config/config.yaml # Edit database source to be postgresql://postgres:password@postgres:5432?sslmode=disable
 $ docker-compose -f $HOME/docker-compose.yml up -d
 ```
@@ -83,19 +79,13 @@ $ docker-compose -f $HOME/docker-compose.yml up -d
 Docker Compose may start Clair before Postgres which will raise an error.
 If this error is raised, manually execute `docker-compose start clair`.
 
-
 ### Docker
 
-This method assumes you already have a [PostgreSQL 9.4+] database running.
-This is the recommended method for production deployments.
-
-[PostgreSQL 9.4+]: http://postgresql.org
-
 ```sh
-$ mkdir $HOME/clair_config
-$ curl -L https://raw.githubusercontent.com/coreos/clair/v1.2.4/config.example.yaml -o $HOME/clair_config/config.yaml
-$ $EDITOR $HOME/clair_config/config.yaml # Add the URI for your postgres database
-$ docker run -d -p 6060-6061:6060-6061 -v $HOME/clair_config:/config quay.io/coreos/clair:v1.2. -config=/config/config.yaml
+$ mkdir $PWD/clair_config
+$ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.example.yaml -o $PWD/clair_config/config.yaml
+$ docker run -d -e POSTGRES_PASSWORD="" -p 5432:5432 postgres:9.6
+$ docker run -d -p 6060-6061:6060-6061 -v $PWD/clair_config:/config quay.io/coreos/clair-git:latest -config=/config/config.yaml
 ```
 
 ### Source
@@ -115,7 +105,7 @@ In addition, Clair requires that [git], [bzr], [rpm], and [xz] be available on t
 $ go get github.com/coreos/clair
 $ go install github.com/coreos/clair/cmd/clair
 $ $EDITOR config.yaml # Add the URI for your postgres database
-$ ./$GOBIN/clair -config=config.yaml
+$ ./$GOPATH/bin/clair -config=config.yaml
 ```
 
 ### Container images
