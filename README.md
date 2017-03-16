@@ -21,7 +21,7 @@ Our goal is to enable a more transparent view of the security of container-based
 Thus, the project was named `Clair` after the French term which translates to *clear*, *bright*, *transparent*.
 
 [appc]: https://github.com/appc/spec
-[docker]: https://github.com/docker/docker/blob/master/image/spec/v1.md
+[docker]: https://github.com/docker/docker/blob/master/image/spec/v1.2.md
 [extended programmatically]: #customization
 [releases]: https://github.com/coreos/clair/releases
 
