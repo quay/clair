@@ -19,6 +19,7 @@ package ubuntu
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -27,6 +28,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/coreos/pkg/capnslog"
 
@@ -82,9 +85,38 @@ type updater struct {
 	repositoryLocalPath string
 }
 
+type Config struct {
+	Enabled bool
+}
+
 func init() {
 	vulnsrc.RegisterUpdater("ubuntu", &updater{})
 }
+
+func (u *updater) Configure(config *vulnsrc.Config) (bool, error) {
+        var fetcherConfig Config
+
+        // If no configuration for this fetcher, assume enabled
+        if _, ok := config.Params["ubuntu"]; !ok {
+                return true, nil
+        }
+        yamlConfig, err := yaml.Marshal(config.Params["ubuntu"])
+        if err != nil {
+                return false, errors.New("Invalid configuration for Ubuntu fetcher.")
+        }
+        err = yaml.Unmarshal(yamlConfig, &fetcherConfig)
+        if err != nil {
+                return false, errors.New("Invalid configuration for Ubuntu fetcher.")
+        }
+
+        if fetcherConfig.Enabled == true {
+                return true, nil
+        } else {
+                log.Infof("Ubuntu fetcher disabled.")
+                return false, nil
+        }
+}
+
 
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
 	log.Info("fetching Ubuntu vulnerabilities")

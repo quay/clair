@@ -25,6 +25,7 @@ import (
 	"github.com/coreos/clair"
 	"github.com/coreos/clair/api"
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/vulnsrc"
 	"github.com/coreos/clair/ext/notification"
 	"github.com/fernet/fernet-go"
 )
@@ -43,6 +44,7 @@ type File struct {
 type Config struct {
 	Database database.RegistrableComponentConfig
 	Updater  *clair.UpdaterConfig
+	Fetcher  *vulnsrc.Config
 	Notifier *notification.Config
 	API      *api.Config
 }
@@ -61,6 +63,7 @@ func DefaultConfig() Config {
 			HealthPort: 6061,
 			Timeout:    900 * time.Second,
 		},
+		Fetcher: &vulnsrc.Config {},
 		Notifier: &notification.Config{
 			Attempts:         5,
 			RenotifyInterval: 2 * time.Hour,

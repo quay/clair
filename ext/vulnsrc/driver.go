@@ -42,9 +42,16 @@ type UpdateResponse struct {
 	Vulnerabilities []database.Vulnerability
 }
 
+type Config struct {
+	Params   map[string]interface{} `yaml:",inline"`
+}
+
 // Updater represents anything that can fetch vulnerabilities and insert them
 // into a Clair datastore.
 type Updater interface {
+	// Check configuration for Updater
+	Configure(*Config) (bool, error)
+
 	// Update gets vulnerability updates.
 	Update(database.Datastore) (UpdateResponse, error)
 
@@ -74,6 +81,13 @@ func RegisterUpdater(name string, u Updater) {
 	}
 
 	updaters[name] = u
+}
+
+func UnregisterUpdater(name string) {
+	updatersM.Lock()
+	defer updatersM.Unlock()
+
+	delete(updaters, name)
 }
 
 // Updaters returns the list of the registered Updaters.
