@@ -52,7 +52,7 @@ func (rtr router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Infof("%s %d %s %s", http.StatusNotFound, r.Method, r.RequestURI, r.RemoteAddr)
+	log.Infof("%d %s %s %s", http.StatusNotFound, r.Method, r.RequestURI, r.RemoteAddr)
 	http.NotFound(w, r)
 }
 
