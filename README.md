@@ -27,12 +27,12 @@ Thus, the project was named `Clair` after the French term which translates to *c
 
 ## Common Use Cases
 
-### Manual Auditing
+### Audit a single Docker image locally
 
 You're building an application and want to depend on a third-party container image that you found by searching the internet.
 To make sure that you do not knowingly introduce a new vulnerability into your production service, you decide to scan the container for vulnerabilities.
-You `docker pull` the container to your development machine and start an instance of Clair.
-Once it finishes updating, you use the [local image analysis tool] to analyze the container.
+Run `docker pull` to put the image on your development machine and then start an instance of Clair.
+Once it finishes updating, use the [local image analysis tool] to analyze the container.
 You realize this container is vulnerable to many critical CVEs, so you decide to use another one.
 
 [local image analysis tool]: https://github.com/coreos/clair/tree/master/contrib/analyze-local-images
@@ -198,4 +198,3 @@ To expose the new behavior, unqualified imports to the package must be added in 
 
 - [Projects integrating with Clair](https://github.com/coreos/clair/blob/master/Documentation/integrations.md)
 - [Production users](https://github.com/coreos/clair/blob/master/Documentation/production-users.md)
-
