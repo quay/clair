@@ -189,7 +189,7 @@ It can take several minutes before the database has been fully populated, but on
 ### What terminology do I need to understand to work with Clair internals?
 
 - *Image* - a tarball of the contents of a container
-- *Layer* - an *appc* or *Docker* image that may or maybe not be dependent on another image
+- *Layer* - an *appc* or *Docker* image that may or may not be dependent on another image
 - *Feature* - anything that when present could be an indication of a *vulnerability* (e.g. the presence of a file or an installed software package)
 - *Feature Namespace* - a context around *features* and *vulnerabilities* (e.g. an operating system)
 - *Vulnerability Updater* - a Go package that tracks upstream vulnerability data and imports them into Clair
