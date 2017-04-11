@@ -14,16 +14,15 @@ Please use [releases] instead of the `master` branch in order to get stable bina
 Clair is an open source project for the static analysis of vulnerabilities in application containers (currently including [appc] and [docker]).
 
 1. In regular intervals, Clair ingests vulnerability metadata from a configured set of sources and stores it in the database.
-2. Clients use the Clair API to index their container images; this parses a list of installed _source packages_ stores them in the database.
-3. Clients use the Clair API to query the database; combining this data is done in real time, rather than a cached result that needs re-scanning.
-4. When updates to vulnerability metadata occur, a webhook can be configured to page or block deployments.
+2. Clients use the Clair API to index their container images; this parses a list of installed _source packages_ and stores them in the database.
+3. Clients use the Clair API to query the database; correlating data is done in real time, rather than a cached result that needs re-scanning.
+4. When updates to vulnerability metadata occur, a webhook containg the affected images can be configured to page or block deployments.
 
 Our goal is to enable a more transparent view of the security of container-based infrastructure.
 Thus, the project was named `Clair` after the French term which translates to *clear*, *bright*, *transparent*.
 
 [appc]: https://github.com/appc/spec
 [docker]: https://github.com/docker/docker/blob/master/image/spec/v1.2.md
-[extended programmatically]: #customization
 [releases]: https://github.com/coreos/clair/releases
 
 ## When would I use Clair?
@@ -33,28 +32,28 @@ Thus, the project was named `Clair` after the French term which translates to *c
 
 ## Documentation
 
-The latest stable documentation can be found [on the CoreOS website].
-Documentation for the current branch can be found [inside the Documentation directory][docs-dir] at the root of the project's source code.
+* [The CoreOS website] has a rendered version of the latest stable documentation
+* [Inside the Documentation directory] is the source markdown files for documentation
 
-[on the CoreOS website]: https://coreos.com/clair/docs/latest/
-[docs-dir]: /Documentation
+[The CoreOS website]: https://coreos.com/clair/docs/latest/
+[Inside the Documentation directory]: /Documentation
 
-## How do I deploy Clair?
+## Deploying Clair
 
 ### Container Repositories
 
 Clair is officially packaged and released as a container.
 
-* Stable releases can be found at [quay.io/coreos/clair]
-* Stable releases with an embedded instance of [jwtproxy] can be found at [quay.io/coreos/clair-jwt]
-* Development releases can be found at [quay.io/coreos/clair-git]
+* [quay.io/coreos/clair] - Stable releases
+* [quay.io/coreos/clair-jwt] - Stable releases with an embedded instance of [jwtproxy]
+* [quay.io/coreos/clair-git] - Development releases
 
 [quay.io/coreos/clair]: https://quay.io/repository/coreos/clair
 [jwtproxy]: https://github.com/coreos/jwtproxy
 [quay.io/coreos/clair-jwt]: https://quay.io/repository/coreos/clair-jwt
 [quay.io/coreos/clair-git]: https://quay.io/repository/coreos/clair-git
 
-### Production Supported
+### Commercially Supported
 
 Clair is professionally supported as a data source for the [Quay] Security Scanning feature.
 The setup documentation for using Clair for this environment can be found on the [Quay documentation] on the [CoreOS] website.
@@ -66,8 +65,18 @@ Be sure to adjust the version of the documentation to the version of Quay being 
 
 ### Community Supported
 
-The following are community supported instructions to run Clair in a variety of ways.
 **NOTE:** These instructions demonstrate running HEAD and not stable versions.
+
+The following are community supported instructions to run Clair in a variety of ways.
+A database instance is required for all instructions.
+
+Clair currently supports and tests against:
+
+* [Postgres] 9.4
+* [Postgres] 9.5
+* [Postgres] 9.6
+
+[Postgres]: https://www.postgresql.org
 
 #### Kubernetes
 
@@ -107,7 +116,7 @@ $ docker run -d -p 6060-6061:6060-6061 -v $PWD/clair_config:/config quay.io/core
 #### Source
 
 To build Clair, you need to latest stable version of [Go] and a working [Go environment].
-In addition, Clair requires some additional binaries be installed on the system [$PATH]:
+In addition, Clair requires some additional binaries be installed on the system [$PATH] as runtime dependencies:
 
 * [git]
 * [bzr]
@@ -198,7 +207,7 @@ It can take several minutes before the database has been fully populated, but on
 ### How can I customize Clair?
 
 The major components of Clair are all programmatically extensible in the same way Go's standard [database/sql] package is extensible.
-Everything extendable is located in the `ext` directory.
+Everything extensible is located in the `ext` directory.
 
 Custom behavior can be accomplished by creating a package that contains a type that implements an interface declared in Clair and registering that interface in [init()].
 To expose the new behavior, unqualified imports to the package must be added in your own custom [main.go], which should then start Clair using `Boot(*config.Config)`.
