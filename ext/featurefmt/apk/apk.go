@@ -66,6 +66,10 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 			} else {
 				ipkg.Version = version
 			}
+		case line == "":
+			// Restart if the parser reaches another package definition before
+			// creating a valid package.
+			ipkg = database.FeatureVersion{}
 		}
 
 		// If we have a whole feature, store it in the set and try to parse a new
