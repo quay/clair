@@ -60,6 +60,8 @@ This package is not necessary for most modern Linux systems, where the udev
 subsystem provides a more dynamic mechanism for device file management.
 Original-Maintainer: Debian QA Group <packages@qa.debian.org>
 
+Package: brokenPackageWithNoVersionThatShouldGetThrownOut
+
 Package: libgcc1
 Status: install ok installed
 Priority: required

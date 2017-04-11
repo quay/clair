@@ -97,6 +97,9 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 			} else {
 				pkg.Version = version
 			}
+		} else if line == "" {
+			pkg.Feature.Name = ""
+			pkg.Version = ""
 		}
 
 		// Add the package to the result array if we have all the informations
