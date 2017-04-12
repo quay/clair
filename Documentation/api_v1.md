@@ -26,7 +26,7 @@
 #### Description
 
 Every route can optionally provide an `Error` property on the response object.
-The HTTP status code of the response should indicate what type of failure occurred and how the client should reaction.
+The HTTP status code of the response should indicate what type of failure occurred and how the client should react.
 
 #### Client Retry Behavior
 
