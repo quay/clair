@@ -19,11 +19,14 @@ package oracle
 import (
 	"bufio"
 	"encoding/xml"
+	"errors"
 	"io"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/coreos/pkg/capnslog"
 
@@ -79,10 +82,38 @@ type criterion struct {
 	Comment string `xml:"comment,attr"`
 }
 
+type Config struct {
+	Enabled bool
+}
+
 type updater struct{}
 
 func init() {
 	vulnsrc.RegisterUpdater("oracle", &updater{})
+}
+
+func (u *updater) Configure(config *vulnsrc.Config) (bool, error) {
+	var fetcherConfig Config
+
+	// If no configuration for this fetcher, assume enabled
+	if _, ok := config.Params["oracle"]; !ok {
+		return true, nil
+	}
+	yamlConfig, err := yaml.Marshal(config.Params["oracle"])
+	if err != nil {
+		return false, errors.New("Invalid configuration for Oracle Linux fetcher.")
+	}
+	err = yaml.Unmarshal(yamlConfig, &fetcherConfig)
+	if err != nil {
+		return false, errors.New("Invalid configuration for Oracle Linux fetcher.")
+	}
+
+	if fetcherConfig.Enabled == true {
+		return true, nil
+	} else {
+		log.Infof("Oracle Linux fetcher disabled.")
+		return false, nil
+	}
 }
 
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {

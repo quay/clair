@@ -19,11 +19,14 @@ package rhel
 import (
 	"bufio"
 	"encoding/xml"
+	"errors"
 	"io"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/coreos/pkg/capnslog"
 
@@ -83,11 +86,40 @@ type criterion struct {
 	Comment string `xml:"comment,attr"`
 }
 
+type Config struct {
+	Enabled bool
+}
+
 type updater struct{}
 
 func init() {
 	vulnsrc.RegisterUpdater("rhel", &updater{})
 }
+
+func (u *updater) Configure(config *vulnsrc.Config) (bool, error) {
+        var fetcherConfig Config
+
+        // If no configuration for this fetcher, assume enabled
+        if _, ok := config.Params["rhel"]; !ok {
+                return true, nil
+        }
+        yamlConfig, err := yaml.Marshal(config.Params["rhel"])
+        if err != nil {
+                return false, errors.New("Invalid configuration for RHEL fetcher.")
+        }
+        err = yaml.Unmarshal(yamlConfig, &fetcherConfig)
+        if err != nil {
+                return false, errors.New("Invalid configuration for RHEL fetcher.")
+        }
+
+        if fetcherConfig.Enabled == true {
+                return true, nil
+        } else {
+                log.Infof("RHEL fetcher disabled.")
+                return false, nil
+        }
+}
+
 
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
 	log.Info("fetching RHEL vulnerabilities")

@@ -110,7 +110,7 @@ func Boot(config *Config) {
 
 	// Start updater
 	st.Begin()
-	go clair.RunUpdater(config.Updater, db, st)
+	go clair.RunUpdater(config.Updater, config.Fetcher, db, st)
 
 	// Wait for interruption and shutdown gracefully.
 	waitForSignals(syscall.SIGINT, syscall.SIGTERM)

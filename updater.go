@@ -69,7 +69,7 @@ type UpdaterConfig struct {
 
 // RunUpdater begins a process that updates the vulnerability database at
 // regular intervals.
-func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper.Stopper) {
+func RunUpdater(config *UpdaterConfig, fetcherConfig *vulnsrc.Config, datastore database.Datastore, st *stopper.Stopper) {
 	defer st.End()
 
 	// Do not run the updater if there is no config or if the interval is 0.
@@ -80,6 +80,20 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 
 	whoAmI := uuid.New()
 	log.Infof("updater service started. lock identifier: %s", whoAmI)
+
+	for updaterName, updater := range vulnsrc.Updaters() {
+		if configured, err := updater.Configure(fetcherConfig); !configured {
+			vulnsrc.UnregisterUpdater(updaterName)
+			if err != nil {
+				log.Errorf("could not configure updater '%s': %s'", updaterName, err)
+			}
+		}
+	}
+
+	if len(vulnsrc.Updaters()) == 0 {
+		log.Infof("updater service is disabled")
+		return
+	}
 
 	for {
 		var stop bool

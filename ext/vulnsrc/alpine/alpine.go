@@ -19,6 +19,7 @@ package alpine
 import (
 	"io"
 	"io/ioutil"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -48,9 +49,38 @@ func init() {
 	vulnsrc.RegisterUpdater("alpine", &updater{})
 }
 
+type Config struct {
+	Enabled bool
+}
+
 type updater struct {
 	repositoryLocalPath string
 }
+
+func (u *updater) Configure(config *vulnsrc.Config) (bool, error) {
+        var fetcherConfig Config
+
+        // If no configuration for this fetcher, assume enabled
+        if _, ok := config.Params["alpine"]; !ok {
+                return true, nil
+        }
+        yamlConfig, err := yaml.Marshal(config.Params["alpine"])
+        if err != nil {
+                return false, errors.New("Invalid configuration for Alpine Linux fetcher.")
+        }
+        err = yaml.Unmarshal(yamlConfig, &fetcherConfig)
+        if err != nil {
+                return false, errors.New("Invalid configuration for Alpine Linux fetcher.")
+        }
+
+        if fetcherConfig.Enabled == true {
+                return true, nil
+        } else {
+                log.Infof("Alpine Linux fetcher disabled.")
+                return false, nil
+        }
+}
+
 
 func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
 	log.Info("fetching Alpine vulnerabilities")

@@ -56,6 +56,22 @@ clair:
     # The value 0 disables the updater entirely.
     interval: 2h
 
+  fetcher:
+    # You can enable or disable individual fetchers in this section. This is useful for reducing
+    # overall update times by disabling the distributions you will never scan
+    # The default if a distribution is unspecified/unconfigured is true/enabled.
+    alpine:
+      enabled: true
+    debian:
+      enabled: true
+    oracle:
+      enabled: true
+    rhel:
+      enabled: true
+    ubuntu:
+      enabled: true
+
+
   notifier:
     # Number of attempts before the notification is marked as failed to be sent
     attempts: 3
