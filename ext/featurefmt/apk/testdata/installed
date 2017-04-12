@@ -20,6 +20,8 @@ R:ld-musl-x86_64.so.1
 a:0:0:755
 Z:Q1KUwsFGLHn/enpN9+QIpK/FmixtQ=
 
+P:invalidPackageWithoutAVersion
+
 C:Q1yhJHGSZ80L7cL0y4UKKGrBPwrUQ=
 P:busybox
 V:1.24.2-r9
