@@ -115,3 +115,23 @@ func TestOracleParser(t *testing.T) {
 		}
 	}
 }
+
+func TestELSAComparison(t *testing.T) {
+	var table = []struct {
+		left     int
+		right    int
+		expected int
+	}{
+		{20170935, 20170935, 0},
+		{20170934, 20170935, -1},
+		{20170936, 20170935, 1},
+
+		{20170935, 201709331, 1},
+		{201709351, 20170935, 1},
+		{201709331, 20170935, -1},
+	}
+
+	for _, tt := range table {
+		assert.Equal(t, tt.expected, compareELSA(tt.left, tt.right))
+	}
+}
