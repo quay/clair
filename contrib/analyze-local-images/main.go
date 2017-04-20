@@ -154,7 +154,7 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 
 	// Retrieve history.
 	log.Println("Retrieving image history")
-	layerIDs, err = historyFromCommand(imageName)
+	layerIDs, err := historyFromCommand(imageName)
 	if err != nil || len(layerIDs) == 0 {
 		return fmt.Errorf("Could not get image's history: %s", err)
 	}
