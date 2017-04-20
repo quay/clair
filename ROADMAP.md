@@ -7,10 +7,9 @@ The [milestones defined in GitHub](https://github.com/coreos/clair/milestones) r
 
 The roadmap below outlines new features that will be added to Clair, and while subject to change, define what future stable will look like.
 
-### Clair 2.0 (July)
-
-- Standardize component registration
-- Revisit database implementation
-- Improve release distribution
-- Address client UX
-- Expand detection capabilities
+- Support multiple namespaces per image
+  - This enables language-level package managers (e.g. npm, pip)
+- Improve coverage and readability of documentation
+- Decouple the project from Postgres
+- gRPC API supporting direct uploads of images
+- Support operating Clair without internet access

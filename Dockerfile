@@ -14,8 +14,6 @@
 
 FROM golang:1.8-alpine
 
-MAINTAINER Quentin Machu <quentin.machu@coreos.com>
-
 VOLUME /config
 EXPOSE 6060 6061
 

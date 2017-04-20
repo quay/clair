@@ -85,6 +85,36 @@ func init() {
 	vulnsrc.RegisterUpdater("oracle", &updater{})
 }
 
+func compareELSA(left, right int) int {
+	// Fast path equals.
+	if right == left {
+		return 0
+	}
+
+	lstr := strconv.Itoa(left)
+	rstr := strconv.Itoa(right)
+
+	for i := range lstr {
+		// If right is too short to be indexed, left is greater.
+		if i >= len(rstr) {
+			return 1
+		}
+
+		ldigit, _ := strconv.Atoi(string(lstr[i]))
+		rdigit, _ := strconv.Atoi(string(rstr[i]))
+
+		if ldigit > rdigit {
+			return 1
+		} else if ldigit < rdigit {
+			return -1
+		}
+		continue
+	}
+
+	// Everything the length of left is the same.
+	return len(lstr) - len(rstr)
+}
+
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
 	log.Info("fetching Oracle Linux vulnerabilities")
 
@@ -115,7 +145,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		r := elsaRegexp.FindStringSubmatch(line)
 		if len(r) == 2 {
 			elsaNo, _ := strconv.Atoi(r[1])
-			if elsaNo > firstELSA {
+			if compareELSA(elsaNo, firstELSA) > 0 {
 				elsaList = append(elsaList, elsaNo)
 			}
 		}

@@ -11,51 +11,78 @@ Please use [releases] instead of the `master` branch in order to get stable bina
 
 ![Clair Logo](https://cloud.githubusercontent.com/assets/343539/21630811/c5081e5c-d202-11e6-92eb-919d5999c77a.png)
 
-Clair is an open source project for the static analysis of vulnerabilities in [appc] and [docker] containers.
+Clair is an open source project for the static analysis of vulnerabilities in application containers (currently including [appc] and [docker]).
 
-Vulnerability data is continuously imported from a known set of sources and correlated with the indexed contents of container images in order to produce lists of vulnerabilities that threaten a container.
-When vulnerability data changes upstream, a notification can be delivered, and the API queried to provide the previous state and new state of the vulnerability along with the images affected by both.
-All major components can be [extended programmatically] at compile-time without forking the project.
+1. In regular intervals, Clair ingests vulnerability metadata from a configured set of sources and stores it in the database.
+2. Clients use the Clair API to index their container images; this parses a list of installed _source packages_ and stores them in the database.
+3. Clients use the Clair API to query the database; correlating data is done in real time, rather than a cached result that needs re-scanning.
+4. When updates to vulnerability metadata occur, a webhook containg the affected images can be configured to page or block deployments.
 
 Our goal is to enable a more transparent view of the security of container-based infrastructure.
 Thus, the project was named `Clair` after the French term which translates to *clear*, *bright*, *transparent*.
 
 [appc]: https://github.com/appc/spec
-[docker]: https://github.com/docker/docker/blob/master/image/spec/v1.md
-[extended programmatically]: #customization
+[docker]: https://github.com/docker/docker/blob/master/image/spec/v1.2.md
 [releases]: https://github.com/coreos/clair/releases
 
-## Common Use Cases
+## When would I use Clair?
 
-### Manual Auditing
+* You've found an image by searching the internet and want to determine if it's safe enough for you to use in production.
+* You're regularly deploying into a containerized production environment and want operations to alert or block deployments on insecure software.
 
-You're building an application and want to depend on a third-party container image that you found by searching the internet.
-To make sure that you do not knowingly introduce a new vulnerability into your production service, you decide to scan the container for vulnerabilities.
-You `docker pull` the container to your development machine and start an instance of Clair.
-Once it finishes updating, you use the [local image analysis tool] to analyze the container.
-You realize this container is vulnerable to many critical CVEs, so you decide to use another one.
+## Documentation
 
-[local image analysis tool]: https://github.com/coreos/clair/tree/master/contrib/analyze-local-images
+* [The CoreOS website] has a rendered version of the latest stable documentation
+* [Inside the Documentation directory] is the source markdown files for documentation
 
-### Container Registry Integration
+[The CoreOS website]: https://coreos.com/clair/docs/latest/
+[Inside the Documentation directory]: /Documentation
 
-Your company has a continuous-integration pipeline and you want to stop deployments if they introduce a dangerous vulnerability.
-A developer merges some code into the master branch of your codebase.
-The first step of your continuous-integration pipeline automates the testing and building of your container and pushes a new container to your container registry.
-Your container registry notifies Clair which causes the download and indexing of the images for the new container.
-Clair detects some vulnerabilities and sends a webhook to your continuous deployment tool to prevent this vulnerable build from seeing the light of day.
+## Deploying Clair
 
-## Hello Heartbleed
+### Container Repositories
 
-During the first run, Clair will bootstrap its database with vulnerability data from its data sources.
-It can take several minutes before the database has been fully populated.
+Clair is officially packaged and released as a container.
 
-**NOTE:** These setups are not meant for production workloads, but as a quick way to get started.
+* [quay.io/coreos/clair] - Stable releases
+* [quay.io/coreos/clair-jwt] - Stable releases with an embedded instance of [jwtproxy]
+* [quay.io/coreos/clair-git] - Development releases
 
-### Kubernetes
+[quay.io/coreos/clair]: https://quay.io/repository/coreos/clair
+[jwtproxy]: https://github.com/coreos/jwtproxy
+[quay.io/coreos/clair-jwt]: https://quay.io/repository/coreos/clair-jwt
+[quay.io/coreos/clair-git]: https://quay.io/repository/coreos/clair-git
 
-An easy way to run Clair is with Kubernetes 1.2+.
-If you are using the [CoreOS Kubernetes single-node instructions][single-node] for Vagrant you will be able to access the Clair's API at http://172.17.4.99:30060/ after following these instructions.
+### Commercially Supported
+
+Clair is professionally supported as a data source for the [Quay] Security Scanning feature.
+The setup documentation for using Clair for this environment can be found on the [Quay documentation] on the [CoreOS] website.
+Be sure to adjust the version of the documentation to the version of Quay being used in your deployment.
+
+[Quay]: https://quay.io
+[Quay documentation]: https://coreos.com/quay-enterprise/docs/latest/clair.html
+[CoreOS]: https://coreos.com
+
+### Community Supported
+
+**NOTE:** These instructions demonstrate running HEAD and not stable versions.
+
+The following are community supported instructions to run Clair in a variety of ways.
+A database instance is required for all instructions.
+
+Clair currently supports and tests against:
+
+* [Postgres] 9.4
+* [Postgres] 9.5
+* [Postgres] 9.6
+
+[Postgres]: https://www.postgresql.org
+
+#### Kubernetes
+
+If you don't have a local Kubernetes cluster already, check out [minikube].
+
+[minikube]: https://github.com/kubernetes/minikube
 
 ```
 git clone https://github.com/coreos/clair
@@ -64,18 +91,12 @@ kubectl create secret generic clairsecret --from-file=./config.yaml
 kubectl create -f clair-kubernetes.yaml
 ```
 
-[single-node]: https://coreos.com/kubernetes/docs/latest/kubernetes-on-vagrant-single.html
-
-### Docker Compose
-
-Another easy way to get an instance of Clair running is to use Docker Compose to run everything locally.
-This runs a PostgreSQL database insecurely and locally in a container.
-This method should only be used for testing.
+#### Docker Compose
 
 ```sh
-$ curl -L https://raw.githubusercontent.com/coreos/clair/v1.2.4/docker-compose.yml -o $HOME/docker-compose.yml
+$ curl -L https://raw.githubusercontent.com/coreos/clair/master/docker-compose.yml -o $HOME/docker-compose.yml
 $ mkdir $HOME/clair_config
-$ curl -L https://raw.githubusercontent.com/coreos/clair/v1.2.4/config.example.yaml -o $HOME/clair_config/config.yaml
+$ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.example.yaml -o $HOME/clair_config/config.yaml
 $ $EDITOR $HOME/clair_config/config.yaml # Edit database source to be postgresql://postgres:password@postgres:5432?sslmode=disable
 $ docker-compose -f $HOME/docker-compose.yml up -d
 ```
@@ -83,25 +104,24 @@ $ docker-compose -f $HOME/docker-compose.yml up -d
 Docker Compose may start Clair before Postgres which will raise an error.
 If this error is raised, manually execute `docker-compose start clair`.
 
-
-### Docker
-
-This method assumes you already have a [PostgreSQL 9.4+] database running.
-This is the recommended method for production deployments.
-
-[PostgreSQL 9.4+]: http://postgresql.org
+#### Docker
 
 ```sh
-$ mkdir $HOME/clair_config
-$ curl -L https://raw.githubusercontent.com/coreos/clair/v1.2.4/config.example.yaml -o $HOME/clair_config/config.yaml
-$ $EDITOR $HOME/clair_config/config.yaml # Add the URI for your postgres database
-$ docker run -d -p 6060-6061:6060-6061 -v $HOME/clair_config:/config quay.io/coreos/clair:v1.2. -config=/config/config.yaml
+$ mkdir $PWD/clair_config
+$ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.example.yaml -o $PWD/clair_config/config.yaml
+$ docker run -d -e POSTGRES_PASSWORD="" -p 5432:5432 postgres:9.6
+$ docker run -d -p 6060-6061:6060-6061 -v $PWD/clair_config:/config quay.io/coreos/clair-git:latest -config=/config/config.yaml
 ```
 
-### Source
+#### Source
 
 To build Clair, you need to latest stable version of [Go] and a working [Go environment].
-In addition, Clair requires that [git], [bzr], [rpm], and [xz] be available on the system [$PATH].
+In addition, Clair requires some additional binaries be installed on the system [$PATH] as runtime dependencies:
+
+* [git]
+* [bzr]
+* [rpm]
+* [xz]
 
 [Go]: https://github.com/golang/go/releases
 [Go environment]: https://golang.org/doc/code.html
@@ -115,38 +135,19 @@ In addition, Clair requires that [git], [bzr], [rpm], and [xz] be available on t
 $ go get github.com/coreos/clair
 $ go install github.com/coreos/clair/cmd/clair
 $ $EDITOR config.yaml # Add the URI for your postgres database
-$ ./$GOBIN/clair -config=config.yaml
+$ ./$GOPATH/bin/clair -config=config.yaml
 ```
 
-### Container images
+## Frequently Asked Questions
 
-While container images for every releases are available at [quay.io/repository/coreos/clair], container images built on the latest available source code are available at [quay.io/repository/coreos/clair-git].
+### Who's using Clair?
 
-[quay.io/repository/coreos/clair]: https://quay.io/repository/coreos/clair
-[quay.io/repository/coreos/clair-git]: https://quay.io/repository/coreos/clair-git
+You can find [production users] and third party [integrations] documented in their respective pages of the local documentation.
 
-## Documentation
+[production users]: https://github.com/coreos/clair/blob/master/Documentation/production-users.md
+[integrations]: https://github.com/coreos/clair/blob/master/Documentation/integrations.md
 
-The latest stable documentation can be found [on the CoreOS website].
-Documentation for the current branch can be found [inside the Documentation directory][docs-dir] at the root of the project's source code.
-
-[on the CoreOS website]: https://coreos.com/clair/docs/latest/
-[docs-dir]: /Documentation
-
-### Architecture at a Glance
-
-![Simple Clair Diagram](https://cloud.githubusercontent.com/assets/343539/21630809/c1adfbd2-d202-11e6-9dfe-9024139d0a28.png)
-
-### Terminology
-
-- *Image* - a tarball of the contents of a container
-- *Layer* - an *appc* or *Docker* image that may or maybe not be dependent on another image
-- *Feature* - anything that when present could be an indication of a *vulnerability* (e.g. the presence of a file or an installed software package)
-- *Feature Namespace* - a context around *features* and *vulnerabilities* (e.g. an operating system)
-- *Vulnerability Updater* - a Go package that tracks upstream vulnerability data and imports them into Clair
-- *Vulnerability Metadata Appender* - a Go package that tracks upstream vulnerability metadata and appends them into vulnerabilities managed by Clair
-
-### Vulnerability Analysis
+### What do you mean by static analysis?
 
 There are two major ways to perform analysis of programs: [Static Analysis] and [Dynamic Analysis].
 Clair has been designed to perform *static analysis*; containers never need to be executed.
@@ -156,7 +157,7 @@ By indexing the features of an image into the database, images only need to be r
 [Static Analysis]: https://en.wikipedia.org/wiki/Static_program_analysis
 [Dynamic Analysis]: https://en.wikipedia.org/wiki/Dynamic_program_analysis
 
-### Default Data Sources
+### What data sources does Clair currently support?
 
 | Data Source                   | Data Collected                                                           | Format | License         |
 |-------------------------------|--------------------------------------------------------------------------|--------|-----------------|
@@ -164,7 +165,7 @@ By indexing the features of an image into the database, images only need to be r
 | [Ubuntu CVE Tracker]          | Ubuntu 12.04, 12.10, 13.04, 14.04, 14.10, 15.04, 15.10, 16.04 namespaces | [dpkg] | [GPLv2]         |
 | [Red Hat Security Data]       | CentOS 5, 6, 7 namespaces                                                | [rpm]  | [CVRF]          |
 | [Oracle Linux Security Data]  | Oracle Linux 5, 6, 7 namespaces                                          | [rpm]  | [CVRF]          |
-| [Alpine SecDB]                | Alpine 3.3, Alpine 3.4 namespaces                                        | [apk]  | [MIT]           |
+| [Alpine SecDB]                | Alpine 3.3, Alpine 3.4, Alpine 3.5 namespaces                            | [apk]  | [MIT]           |
 | [NIST NVD]                    | Generic Vulnerability Metadata                                           | N/A    | [Public Domain] |
 
 [Debian Security Bug Tracker]: https://security-tracker.debian.org/tracker
@@ -182,11 +183,31 @@ By indexing the features of an image into the database, images only need to be r
 [apk]: http://git.alpinelinux.org/cgit/apk-tools/
 [MIT]: https://gist.github.com/jzelinskie/6da1e2da728424d88518be2adbd76979
 
+### What do most deployments look like?
 
-### Customization
+From a high-level, most deployments integrate with the registry workflow rather than manual API usage by a human.
+They typically take up a form similar to the following diagram:
+
+![Simple Clair Diagram](https://cloud.githubusercontent.com/assets/343539/21630809/c1adfbd2-d202-11e6-9dfe-9024139d0a28.png)
+
+### I just started up Clair and nothing appears to be working, what's the deal?
+
+During the first run, Clair will bootstrap its database with vulnerability data from the configured data sources.
+It can take several minutes before the database has been fully populated, but once this data is stored in the database, subsequent updates will take far less time.
+
+### What terminology do I need to understand to work with Clair internals?
+
+- *Image* - a tarball of the contents of a container
+- *Layer* - an *appc* or *Docker* image that may or may not be dependent on another image
+- *Feature* - anything that when present could be an indication of a *vulnerability* (e.g. the presence of a file or an installed software package)
+- *Feature Namespace* - a context around *features* and *vulnerabilities* (e.g. an operating system)
+- *Vulnerability Updater* - a Go package that tracks upstream vulnerability data and imports them into Clair
+- *Vulnerability Metadata Appender* - a Go package that tracks upstream vulnerability metadata and appends them into vulnerabilities managed by Clair
+
+### How can I customize Clair?
 
 The major components of Clair are all programmatically extensible in the same way Go's standard [database/sql] package is extensible.
-Everything extendable is located in the `ext` directory.
+Everything extensible is located in the `ext` directory.
 
 Custom behavior can be accomplished by creating a package that contains a type that implements an interface declared in Clair and registering that interface in [init()].
 To expose the new behavior, unqualified imports to the package must be added in your own custom [main.go], which should then start Clair using `Boot(*config.Config)`.
@@ -195,19 +216,9 @@ To expose the new behavior, unqualified imports to the package must be added in 
 [init()]: https://golang.org/doc/effective_go.html#init
 [main.go]: https://github.com/coreos/clair/blob/master/cmd/clair/main.go
 
-## Related Links
-
-### Talks & Slides
+### Are there any public presentations on Clair?
 
 - _Clair: The Container Image Security Analyzer @ ContainerDays Boston 2016_ - [Event](http://dynamicinfradays.org/events/2016-boston/) [Video](https://www.youtube.com/watch?v=Kri67PtPv6s) [Slides](https://docs.google.com/presentation/d/1ExQGZs-pQ56TpW_ifcUl2l_ml87fpCMY6-wdug87OFU)
 - _Identifying Common Vulnerabilities and Exposures in Containers with Clair @ CoreOS Fest 2016_ - [Event](https://coreos.com/fest/) [Video](https://www.youtube.com/watch?v=YDCa51BK2q0) [Slides](https://docs.google.com/presentation/d/1pHSI_5LcjnZzZBPiL1cFTZ4LvhzKtzh86eE010XWNLY)
 - _Clair: A Container Image Security Analyzer @  Microservices NYC_ - [Event](https://www.meetup.com/Microservices-NYC/events/230023492/) [Video](https://www.youtube.com/watch?v=ynwKi2yhIX4) [Slides](https://docs.google.com/presentation/d/1ly9wQKQIlI7rlb0JNU1_P-rPDHU4xdRCCM3rxOdjcgc)
 - _Clair: A Container Image Security Analyzer @ Container Orchestration NYC_ - [Event](https://www.meetup.com/Container-Orchestration-NYC/events/229779466/) [Video](https://www.youtube.com/watch?v=wTfCOUDNV_M) [Slides](https://docs.google.com/presentation/d/1ly9wQKQIlI7rlb0JNU1_P-rPDHU4xdRCCM3rxOdjcgc)
-
-### Projects Integrating with Clair
-
-- [Quay](https://quay.io): the first container registry to integrate with Clair
-- [Dockyard](https://github.com/containerops/dockyard): an open source container registry with Clair integration
-- [Clairctl](https://github.com/jgsqware/clairctl): a lightweight command-line tool for working locally with Clair and generate HTML report
-- [Clair w/ SQS](https://github.com/zalando/clair-sqs): a container containing Clair and additional processes that integrate Clair with [Amazon SQS](https://aws.amazon.com/sqs)
-- [Klar](https://github.com/optiopay/klar): a simple command-line integration of Clair and Docker registry, designed to be used in scripts and CI

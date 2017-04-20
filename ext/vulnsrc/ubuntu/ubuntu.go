@@ -377,8 +377,11 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 				// Create and add the new package.
 				featureVersion := database.FeatureVersion{
 					Feature: database.Feature{
-						Namespace: database.Namespace{Name: "ubuntu:" + database.UbuntuReleasesMapping[md["release"]]},
-						Name:      md["package"],
+						Namespace: database.Namespace{
+							Name:          "ubuntu:" + database.UbuntuReleasesMapping[md["release"]],
+							VersionFormat: dpkg.ParserName,
+						},
+						Name: md["package"],
 					},
 					Version: version,
 				}

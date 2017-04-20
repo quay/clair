@@ -154,10 +154,7 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 
 	// Retrieve history.
 	log.Println("Retrieving image history")
-	layerIDs, err := historyFromManifest(tmpPath)
-	if err != nil {
-		layerIDs, err = historyFromCommand(imageName)
-	}
+	layerIDs, err = historyFromCommand(imageName)
 	if err != nil || len(layerIDs) == 0 {
 		return fmt.Errorf("Could not get image's history: %s", err)
 	}
@@ -270,6 +267,8 @@ func AnalyzeLocalImage(imageName string, minSeverity types.Priority, endpoint, m
 		fmt.Printf("%s No vulnerabilities were detected in your image\n", color.GreenString("Success!"))
 	} else if !hasVisibleVulnerabilities {
 		fmt.Printf("%s No vulnerabilities matching the minimum severity level were detected in your image\n", color.YellowString("NOTE:"))
+	} else {
+		return fmt.Errorf("A total of %d vulnerabilities have been detected in your image", len(vulnerabilities))
 	}
 
 	return nil
@@ -305,33 +304,6 @@ func save(imageName, path string) error {
 	}
 
 	return nil
-}
-
-func historyFromManifest(path string) ([]string, error) {
-	mf, err := os.Open(path + "/manifest.json")
-	if err != nil {
-		return nil, err
-	}
-	defer mf.Close()
-
-	// https://github.com/docker/docker/blob/master/image/tarexport/tarexport.go#L17
-	type manifestItem struct {
-		Config   string
-		RepoTags []string
-		Layers   []string
-	}
-
-	var manifest []manifestItem
-	if err = json.NewDecoder(mf).Decode(&manifest); err != nil {
-		return nil, err
-	} else if len(manifest) != 1 {
-		return nil, err
-	}
-	var layers []string
-	for _, layer := range manifest[0].Layers {
-		layers = append(layers, strings.TrimSuffix(layer, "/layer.tar"))
-	}
-	return layers, nil
 }
 
 func historyFromCommand(imageName string) ([]string, error) {
