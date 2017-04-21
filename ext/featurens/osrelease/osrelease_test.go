@@ -72,6 +72,10 @@ REDHAT_SUPPORT_PRODUCT="Fedora"
 REDHAT_SUPPORT_PRODUCT_VERSION=20`),
 			},
 		},
+		{
+			ExpectedNamespace: nil,
+			Files:             tarutil.FilesMap{},
+		},
 	}
 
 	featurens.TestDetector(t, &detector{}, testData)

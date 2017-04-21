@@ -44,6 +44,10 @@ DISTRIB_CODENAME=wheezy
 DISTRIB_DESCRIPTION="Debian 7.1"`),
 			},
 		},
+		{
+			ExpectedNamespace: nil,
+			Files:             tarutil.FilesMap{},
+		},
 	}
 
 	featurens.TestDetector(t, &detector{}, testData)

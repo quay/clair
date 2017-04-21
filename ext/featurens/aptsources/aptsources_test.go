@@ -37,6 +37,10 @@ BUG_REPORT_URL="https://bugs.debian.org/"`),
 				"etc/apt/sources.list": []byte(`deb http://httpredir.debian.org/debian unstable main`),
 			},
 		},
+		{
+			ExpectedNamespace: nil,
+			Files:             tarutil.FilesMap{},
+		},
 	}
 
 	featurens.TestDetector(t, &detector{}, testData)
