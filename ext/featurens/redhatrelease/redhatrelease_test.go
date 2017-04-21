@@ -48,6 +48,10 @@ func TestDetector(t *testing.T) {
 				"etc/system-release": []byte(`CentOS Linux release 7.1.1503 (Core)`),
 			},
 		},
+		{
+			ExpectedNamespace: nil,
+			Files:             tarutil.FilesMap{},
+		},
 	}
 
 	featurens.TestDetector(t, &detector{}, testData)
