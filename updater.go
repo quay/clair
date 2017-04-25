@@ -226,6 +226,7 @@ func fetch(datastore database.Datastore) (bool, []database.Vulnerability, map[st
 			}
 
 			responseC <- &response
+			log.Infof("finished fetching %s", name)
 		}(n, u)
 	}
 
