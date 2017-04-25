@@ -210,7 +210,7 @@ func detectFeatureVersions(name string, files tarutil.FilesMap, namespace *datab
 			continue
 		}
 
-		log.Warningf("layer %s: Layer's namespace is unknown but non-namespaced features have been detected", name)
+		log.Warningf("Namespace unknown for feature %s %s, in layer %s", feature.Feature.Name, feature.Version, name)
 		err = ErrUnsupported
 		return
 	}
