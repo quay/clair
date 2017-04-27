@@ -174,12 +174,21 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	// Set the flag if we found anything.
 	if len(elsaList) > 0 {
 		resp.FlagName = updaterFlag
-		resp.FlagValue = strconv.Itoa(elsaList[len(elsaList)-1])
+		resp.FlagValue = strconv.Itoa(largest(elsaList))
 	} else {
 		log.Debug("no Oracle Linux update.")
 	}
 
 	return resp, nil
+}
+
+func largest(list []int) (largest int) {
+	for _, element := range list {
+		if element > largest {
+			largest = element
+		}
+	}
+	return
 }
 
 func (u *updater) Clean() {}
