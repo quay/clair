@@ -1,0 +1,67 @@
+[
+	{
+		"project": "github.com/coreos/clair",
+		"license": "Apache License 2.0",
+		"confidence": 1
+	},
+	{
+		"project": "github.com/coreos/go-systemd/journal",
+		"license": "Apache License 2.0",
+		"confidence": 0.997
+	},
+	{
+		"project": "github.com/coreos/pkg",
+		"license": "Apache License 2.0",
+		"confidence": 1
+	},
+	{
+		"project": "github.com/davecgh/go-spew/spew",
+		"license": "ISC License",
+		"confidence": 1
+	},
+	{
+		"project": "github.com/golang/protobuf/proto",
+		"license": "BSD 3-clause \"New\" or \"Revised\" License",
+		"confidence": 0.92
+	},
+	{
+		"project": "github.com/matttproud/golang_protobuf_extensions/pbutil",
+		"license": "Apache License 2.0",
+		"confidence": 1
+	},
+	{
+		"project": "github.com/pborman/uuid",
+		"license": "BSD 3-clause \"New\" or \"Revised\" License",
+		"confidence": 0.966
+	},
+	{
+		"project": "github.com/pmezard/go-difflib/difflib",
+		"license": "BSD 3-clause \"New\" or \"Revised\" License",
+		"confidence": 0.983
+	},
+	{
+		"project": "github.com/prometheus/client_golang/prometheus",
+		"license": "Apache License 2.0",
+		"confidence": 1
+	},
+	{
+		"project": "github.com/prometheus/client_model/go",
+		"license": "Apache License 2.0",
+		"confidence": 1
+	},
+	{
+		"project": "github.com/prometheus/common",
+		"license": "Apache License 2.0",
+		"confidence": 1
+	},
+	{
+		"project": "github.com/prometheus/procfs",
+		"license": "Apache License 2.0",
+		"confidence": 1
+	},
+	{
+		"project": "github.com/stretchr/testify/assert",
+		"license": "MIT License",
+		"confidence": 0.943
+	}
+]
