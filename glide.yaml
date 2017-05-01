@@ -91,3 +91,34 @@ import:
   version: ^0.1.0
 - package: github.com/kr/text
 - package: github.com/remind101/migrate
+- package: github.com/artyom/untar
+- package: github.com/docker/distribution
+  version: 129ad8ea0c3760d878b34cffdb9c3be874a7b2f7
+  subpackages:
+  - manifest/schema1
+  - registry/client
+- package: github.com/docker/go-connections
+  version: 4ccf312bf1d35e5dbda654e57a9be4c3f3cd0366
+  subpackages:
+  - tlsconfig
+- package: github.com/spf13/cobra
+- package: github.com/spf13/viper
+- package: github.com/docker/go-units
+  version: ^0.3.1
+- package: github.com/docker/docker
+  version: 48dd90d3985889ca008faa3b041bf31d2ada95c5
+  subpackages:
+  - api/types
+  - cli/config
+  - distribution
+  - reference
+  - registry
+- package: github.com/spf13/pflag
+  version: 7597b2702729ebb651fc9bb2adac40bcc62db82d
+- package: golang.org/x/crypto
+  version: ca7e7f10cb9fd9c1a6ff7f60436c086d73714180
+- package: github.com/opencontainers/go-digest
+  version: 21dfd564fd89c944783d00d069f33e3e7123c448
+- package: github.com/jgsqware/xnet
+- package: github.com/Sirupsen/logrus
+  version: v0.11.0

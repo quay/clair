@@ -4,6 +4,7 @@ package graceful
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"os"
 	"sync"
@@ -19,7 +20,7 @@ func createServer() *http.Server {
 		rw.WriteHeader(http.StatusOK)
 	})
 
-	server := &http.Server{Addr: ":9654", Handler: mux}
+	server := &http.Server{Addr: fmt.Sprintf(":%d", port), Handler: mux}
 
 	return server
 }
@@ -39,7 +40,7 @@ func checkIfConnectionToServerIsHTTP2(t *testing.T, wg *sync.WaitGroup, c chan o
 	}
 
 	client := http.Client{Transport: tr}
-	r, err := client.Get("https://localhost:9654")
+	r, err := client.Get(fmt.Sprintf("https://localhost:%d", port))
 
 	c <- os.Interrupt
 
@@ -47,7 +48,7 @@ func checkIfConnectionToServerIsHTTP2(t *testing.T, wg *sync.WaitGroup, c chan o
 		t.Fatalf("Error encountered while connecting to test server: %s", err)
 	}
 
-	if r.Proto != "HTTP/2.0" {
+	if !r.ProtoAtLeast(2, 0) {
 		t.Fatalf("Expected HTTP/2 connection to server, but connection was using %s", r.Proto)
 	}
 }
@@ -64,7 +65,7 @@ func TestHTTP2ListenAndServeTLS(t *testing.T) {
 	var srv *Server
 	go func() {
 		// set timeout of 0 to test idle connection closing
-		srv = &Server{Timeout: 0, Server: server, interrupt: c}
+		srv = &Server{Timeout: 0, TCPKeepAlive: 1 * time.Minute, Server: server, interrupt: c}
 		srv.ListenAndServeTLS("test-fixtures/cert.crt", "test-fixtures/key.pem")
 		wg.Done()
 	}()
@@ -97,7 +98,7 @@ func TestHTTP2ListenAndServeTLSConfig(t *testing.T) {
 	server2 := createServer()
 
 	go func() {
-		srv := &Server{Timeout: killTime, Server: server2, interrupt: c}
+		srv := &Server{Timeout: killTime, TCPKeepAlive: 1 * time.Minute, Server: server2, interrupt: c}
 
 		cert, err := tls.LoadX509KeyPair("test-fixtures/cert.crt", "test-fixtures/key.pem")
 
@@ -107,6 +108,7 @@ func TestHTTP2ListenAndServeTLSConfig(t *testing.T) {
 
 		tlsConf := &tls.Config{
 			Certificates: []tls.Certificate{cert},
+			NextProtos:   []string{"h2"}, // We need to explicitly enable http/2 in Go 1.7+
 		}
 
 		tlsConf.BuildNameToCertificate()

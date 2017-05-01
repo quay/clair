@@ -3,10 +3,9 @@ package color
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"testing"
 
-	"github.com/shiena/ansicolor"
+	"github.com/mattn/go-colorable"
 )
 
 // Testing colors is kinda different. First we test for given colors and their
@@ -15,6 +14,8 @@ import (
 func TestColor(t *testing.T) {
 	rb := new(bytes.Buffer)
 	Output = rb
+
+	NoColor = false
 
 	testColors := []struct {
 		text string
@@ -28,6 +29,14 @@ func TestColor(t *testing.T) {
 		{text: "magent", code: FgMagenta},
 		{text: "cyan", code: FgCyan},
 		{text: "white", code: FgWhite},
+		{text: "hblack", code: FgHiBlack},
+		{text: "hred", code: FgHiRed},
+		{text: "hgreen", code: FgHiGreen},
+		{text: "hyellow", code: FgHiYellow},
+		{text: "hblue", code: FgHiBlue},
+		{text: "hmagent", code: FgHiMagenta},
+		{text: "hcyan", code: FgHiCyan},
+		{text: "hwhite", code: FgHiWhite},
 	}
 
 	for _, c := range testColors {
@@ -43,6 +52,40 @@ func TestColor(t *testing.T) {
 		if scannedLine != escapedForm {
 			t.Errorf("Expecting %s, got '%s'\n", escapedForm, scannedLine)
 		}
+	}
+}
+
+func TestColorEquals(t *testing.T) {
+	fgblack1 := New(FgBlack)
+	fgblack2 := New(FgBlack)
+	bgblack := New(BgBlack)
+	fgbgblack := New(FgBlack, BgBlack)
+	fgblackbgred := New(FgBlack, BgRed)
+	fgred := New(FgRed)
+	bgred := New(BgRed)
+
+	if !fgblack1.Equals(fgblack2) {
+		t.Error("Two black colors are not equal")
+	}
+
+	if fgblack1.Equals(bgblack) {
+		t.Error("Fg and bg black colors are equal")
+	}
+
+	if fgblack1.Equals(fgbgblack) {
+		t.Error("Fg black equals fg/bg black color")
+	}
+
+	if fgblack1.Equals(fgred) {
+		t.Error("Fg black equals Fg red")
+	}
+
+	if fgblack1.Equals(bgred) {
+		t.Error("Fg black equals Bg red")
+	}
+
+	if fgblack1.Equals(fgblackbgred) {
+		t.Error("Fg black equals fg black bg red")
 	}
 }
 
@@ -62,6 +105,14 @@ func TestNoColor(t *testing.T) {
 		{text: "magent", code: FgMagenta},
 		{text: "cyan", code: FgCyan},
 		{text: "white", code: FgWhite},
+		{text: "hblack", code: FgHiBlack},
+		{text: "hred", code: FgHiRed},
+		{text: "hgreen", code: FgHiGreen},
+		{text: "hyellow", code: FgHiYellow},
+		{text: "hblue", code: FgHiBlue},
+		{text: "hmagent", code: FgHiMagenta},
+		{text: "hcyan", code: FgHiCyan},
+		{text: "hwhite", code: FgHiWhite},
 	}
 
 	for _, c := range testColors {
@@ -94,8 +145,7 @@ func TestNoColor(t *testing.T) {
 
 func TestColorVisual(t *testing.T) {
 	// First Visual Test
-	fmt.Println("")
-	Output = ansicolor.NewAnsiColorWriter(os.Stdout)
+	Output = colorable.NewColorableStdout()
 
 	New(FgRed).Printf("red\t")
 	New(BgRed).Print("         ")

@@ -6,12 +6,8 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
-
-	"golang.org/x/net/netutil"
 )
 
 // Server wraps an http.Server with graceful connection handling.
@@ -46,8 +42,8 @@ type Server struct {
 	ConnState func(net.Conn, http.ConnState)
 
 	// BeforeShutdown is an optional callback function that is called
-	// before the listener is closed.
-	BeforeShutdown func()
+	// before the listener is closed. Returns true if shutdown is allowed
+	BeforeShutdown func() bool
 
 	// ShutdownInitiated is an optional callback function that is called
 	// when shutdown is initiated. It can be used to notify the client
@@ -61,6 +57,10 @@ type Server struct {
 
 	// Logger used to notify of errors on startup and on stop.
 	Logger *log.Logger
+
+	// LogFunc can be assigned with a logging function of your choice, allowing
+	// you to use whatever logging approach you would like
+	LogFunc func(format string, args ...interface{})
 
 	// Interrupted is true if the server is handling a SIGINT or SIGTERM
 	// signal and is thus shutting down.
@@ -96,12 +96,13 @@ func Run(addr string, timeout time.Duration, n http.Handler) {
 		Timeout:      timeout,
 		TCPKeepAlive: 3 * time.Minute,
 		Server:       &http.Server{Addr: addr, Handler: n},
-		Logger:       DefaultLogger(),
+		// Logger:       DefaultLogger(),
 	}
 
 	if err := srv.ListenAndServe(); err != nil {
 		if opErr, ok := err.(*net.OpError); !ok || (ok && opErr.Op != "accept") {
-			srv.Logger.Fatal(err)
+			srv.logf("%s", err)
+			os.Exit(1)
 		}
 	}
 
@@ -138,12 +139,12 @@ func (srv *Server) ListenAndServe() error {
 	if addr == "" {
 		addr = ":http"
 	}
-	l, err := net.Listen("tcp", addr)
+	conn, err := srv.newTCPListener(addr)
 	if err != nil {
 		return err
 	}
 
-	return srv.Serve(l)
+	return srv.Serve(conn)
 }
 
 // ListenAndServeTLS is equivalent to http.Server.ListenAndServeTLS with graceful shutdown enabled.
@@ -171,13 +172,18 @@ func (srv *Server) ListenTLS(certFile, keyFile string) (net.Listener, error) {
 	}
 
 	var err error
-	config.Certificates = make([]tls.Certificate, 1)
-	config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
-	if err != nil {
-		return nil, err
+	if certFile != "" && keyFile != "" {
+		config.Certificates = make([]tls.Certificate, 1)
+		config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	conn, err := net.Listen("tcp", addr)
+	// Enable http2
+	enableHTTP2ForTLSConfig(config)
+
+	conn, err := srv.newTCPListener(addr)
 	if err != nil {
 		return nil, err
 	}
@@ -186,6 +192,28 @@ func (srv *Server) ListenTLS(certFile, keyFile string) (net.Listener, error) {
 
 	tlsListener := tls.NewListener(conn, config)
 	return tlsListener, nil
+}
+
+// Enable HTTP2ForTLSConfig explicitly enables http/2 for a TLS Config. This is due to changes in Go 1.7 where
+// http servers are no longer automatically configured to enable http/2 if the server's TLSConfig is set.
+// See https://github.com/golang/go/issues/15908
+func enableHTTP2ForTLSConfig(t *tls.Config) {
+
+	if TLSConfigHasHTTP2Enabled(t) {
+		return
+	}
+
+	t.NextProtos = append(t.NextProtos, "h2")
+}
+
+// TLSConfigHasHTTP2Enabled checks to see if a given TLS Config has http2 enabled.
+func TLSConfigHasHTTP2Enabled(t *tls.Config) bool {
+	for _, value := range t.NextProtos {
+		if value == "h2" {
+			return true
+		}
+	}
+	return false
 }
 
 // ListenAndServeTLS is equivalent to http.Server.ListenAndServeTLS with graceful shutdown enabled.
@@ -206,7 +234,7 @@ func (srv *Server) ListenAndServeTLSConfig(config *tls.Config) error {
 		addr = ":https"
 	}
 
-	conn, err := net.Listen("tcp", addr)
+	conn, err := srv.newTCPListener(addr)
 	if err != nil {
 		return err
 	}
@@ -223,6 +251,7 @@ func (srv *Server) ListenAndServeTLSConfig(config *tls.Config) error {
 // If timeout is 0, the server never times out. It waits for all active requests to finish.
 func Serve(server *http.Server, l net.Listener, timeout time.Duration) error {
 	srv := &Server{Timeout: timeout, Server: server, Logger: DefaultLogger()}
+
 	return srv.Serve(l)
 }
 
@@ -230,11 +259,7 @@ func Serve(server *http.Server, l net.Listener, timeout time.Duration) error {
 func (srv *Server) Serve(listener net.Listener) error {
 
 	if srv.ListenLimit != 0 {
-		listener = netutil.LimitListener(listener, srv.ListenLimit)
-	}
-
-	if srv.TCPKeepAlive != 0 {
-		listener = tcpKeepAliveListener{listener.(*net.TCPListener), srv.TCPKeepAlive}
+		listener = LimitListener(listener, srv.ListenLimit)
 	}
 
 	// Make our stopchan
@@ -243,17 +268,24 @@ func (srv *Server) Serve(listener net.Listener) error {
 	// Track connection state
 	add := make(chan net.Conn)
 	idle := make(chan net.Conn)
+	active := make(chan net.Conn)
 	remove := make(chan net.Conn)
 
 	srv.Server.ConnState = func(conn net.Conn, state http.ConnState) {
 		switch state {
 		case http.StateNew:
 			add <- conn
+		case http.StateActive:
+			active <- conn
 		case http.StateIdle:
 			idle <- conn
 		case http.StateClosed, http.StateHijacked:
 			remove <- conn
 		}
+
+		srv.stopLock.Lock()
+		defer srv.stopLock.Unlock()
+
 		if srv.ConnState != nil {
 			srv.ConnState(conn, state)
 		}
@@ -262,12 +294,12 @@ func (srv *Server) Serve(listener net.Listener) error {
 	// Manage open connections
 	shutdown := make(chan chan struct{})
 	kill := make(chan struct{})
-	go srv.manageConnections(add, idle, remove, shutdown, kill)
+	go srv.manageConnections(add, idle, active, remove, shutdown, kill)
 
 	interrupt := srv.interruptChan()
 	// Set up the interrupt handler
 	if !srv.NoSignalHandling {
-		signal.Notify(interrupt, syscall.SIGINT, syscall.SIGTERM)
+		signalNotify(interrupt)
 	}
 	quitting := make(chan struct{})
 	go srv.handleInterrupt(interrupt, quitting, listener)
@@ -304,8 +336,7 @@ func (srv *Server) Stop(timeout time.Duration) {
 	defer srv.stopLock.Unlock()
 
 	srv.Timeout = timeout
-	interrupt := srv.interruptChan()
-	interrupt <- syscall.SIGINT
+	sendSignalInt(srv.interruptChan())
 }
 
 // StopChan gets the stop channel which will block until
@@ -327,7 +358,7 @@ func DefaultLogger() *log.Logger {
 	return log.New(os.Stderr, "[graceful] ", 0)
 }
 
-func (srv *Server) manageConnections(add, idle, remove chan net.Conn, shutdown chan chan struct{}, kill chan struct{}) {
+func (srv *Server) manageConnections(add, idle, active, remove chan net.Conn, shutdown chan chan struct{}, kill chan struct{}) {
 	var done chan struct{}
 	srv.connections = map[net.Conn]struct{}{}
 	srv.idleConnections = map[net.Conn]struct{}{}
@@ -335,8 +366,11 @@ func (srv *Server) manageConnections(add, idle, remove chan net.Conn, shutdown c
 		select {
 		case conn := <-add:
 			srv.connections[conn] = struct{}{}
+			srv.idleConnections[conn] = struct{}{} // Newly-added connections are considered idle until they become active.
 		case conn := <-idle:
 			srv.idleConnections[conn] = struct{}{}
+		case conn := <-active:
+			delete(srv.idleConnections, conn)
 		case conn := <-remove:
 			delete(srv.connections, conn)
 			delete(srv.idleConnections, conn)
@@ -355,14 +389,17 @@ func (srv *Server) manageConnections(add, idle, remove chan net.Conn, shutdown c
 			// hit their idle timeout.
 			for k := range srv.idleConnections {
 				if err := k.Close(); err != nil {
-					srv.log("[ERROR] %s", err)
+					srv.logf("[ERROR] %s", err)
 				}
 			}
 		case <-kill:
+			srv.stopLock.Lock()
+			defer srv.stopLock.Unlock()
+
 			srv.Server.ConnState = nil
 			for k := range srv.connections {
 				if err := k.Close(); err != nil {
-					srv.log("[ERROR] %s", err)
+					srv.logf("[ERROR] %s", err)
 				}
 			}
 			return
@@ -384,19 +421,22 @@ func (srv *Server) interruptChan() chan os.Signal {
 func (srv *Server) handleInterrupt(interrupt chan os.Signal, quitting chan struct{}, listener net.Listener) {
 	for _ = range interrupt {
 		if srv.Interrupted {
-			srv.log("already shutting down")
+			srv.logf("already shutting down")
 			continue
 		}
-		srv.log("shutdown initiated")
+		srv.logf("shutdown initiated")
 		srv.Interrupted = true
 		if srv.BeforeShutdown != nil {
-			srv.BeforeShutdown()
+			if !srv.BeforeShutdown() {
+				srv.Interrupted = false
+				continue
+			}
 		}
 
 		close(quitting)
 		srv.SetKeepAlivesEnabled(false)
 		if err := listener.Close(); err != nil {
-			srv.log("[ERROR] %s", err)
+			srv.logf("[ERROR] %s", err)
 		}
 
 		if srv.ShutdownInitiated != nil {
@@ -405,9 +445,11 @@ func (srv *Server) handleInterrupt(interrupt chan os.Signal, quitting chan struc
 	}
 }
 
-func (srv *Server) log(fmt string, v ...interface{}) {
-	if srv.Logger != nil {
-		srv.Logger.Printf(fmt, v...)
+func (srv *Server) logf(format string, args ...interface{}) {
+	if srv.LogFunc != nil {
+		srv.LogFunc(format, args...)
+	} else if srv.Logger != nil {
+		srv.Logger.Printf(format, args...)
 	}
 }
 
@@ -416,6 +458,8 @@ func (srv *Server) shutdown(shutdown chan chan struct{}, kill chan struct{}) {
 	done := make(chan struct{})
 	shutdown <- done
 
+	srv.stopLock.Lock()
+	defer srv.stopLock.Unlock()
 	if srv.Timeout > 0 {
 		select {
 		case <-done:
@@ -433,21 +477,13 @@ func (srv *Server) shutdown(shutdown chan chan struct{}, kill chan struct{}) {
 	srv.chanLock.Unlock()
 }
 
-// tcpKeepAliveListener sets TCP keep-alive timeouts on accepted
-// connections. It's used by ListenAndServe and ListenAndServeTLS so
-// dead TCP connections (e.g. closing laptop mid-download) eventually
-// go away.
-type tcpKeepAliveListener struct {
-	*net.TCPListener
-	keepAlivePeriod time.Duration
-}
-
-func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
-	tc, err := ln.AcceptTCP()
+func (srv *Server) newTCPListener(addr string) (net.Listener, error) {
+	conn, err := net.Listen("tcp", addr)
 	if err != nil {
-		return
+		return conn, err
 	}
-	tc.SetKeepAlive(true)
-	tc.SetKeepAlivePeriod(ln.keepAlivePeriod)
-	return tc, nil
+	if srv.TCPKeepAlive != 0 {
+		conn = keepAliveListener{conn, srv.TCPKeepAlive}
+	}
+	return conn, nil
 }
