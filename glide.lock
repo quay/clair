@@ -1,5 +1,5 @@
-hash: 90e72dd70a9102940fc6126afc2d7d73ee79faaf75cecb3710b15f5a121c67ce
-updated: 2016-11-11T15:36:41.356471726+01:00
+hash: 3244008146f5de85e444b1e7e9b2ec760ad143127b4b193968a6d5e293039d1c
+updated: 2017-05-02T15:32:01.996561192-04:00
 imports:
 - name: github.com/beorn7/perks
   version: b965b613227fddccbfffe13eae360ed3fa822f8d
@@ -21,7 +21,7 @@ imports:
   subpackages:
   - spew
 - name: github.com/fatih/color
-  version: 1b35f289c47d5c73c398cea8e006b7bcb6234a96
+  version: 87d4004f2ab62d0d255e0a38f1680aa534549fe3
 - name: github.com/fernet/fernet-go
   version: 1b2437bc582b3cfbb341ee5a29f8ef5b42912ff2
 - name: github.com/go-sql-driver/mysql
@@ -80,14 +80,14 @@ imports:
   version: 406e5b7bfd8201a36e2bb5f7bdae0b03380c2ce8
 - name: github.com/remind101/migrate
   version: d22d647232c20dbea6d2aa1dda7f2737cccce614
-- name: github.com/shiena/ansicolor
-  version: a422bbe96644373c5753384a59d678f7d261ff10
+- name: github.com/sirupsen/logrus
+  version: ba1b36c82c5e05c4f912a88eab0dcd91a171688f
 - name: github.com/stretchr/testify
   version: 5b9da39b66e8e994455c2525c4421c8cc00a7f93
   subpackages:
   - assert
 - name: github.com/tylerb/graceful
-  version: 84177357ab104029f9237abcb52339a7b80760ef
+  version: 4654dfbb6ad53cb5e27f37d99b02e16c1872fbbb
 - name: github.com/ziutek/mymysql
   version: 75ce5fbba34b1912a3641adbd58cf317d7315821
   subpackages:
@@ -98,6 +98,10 @@ imports:
   version: 1d7a0b2100da090d8b02afcfb42f97e2c77e71a4
   subpackages:
   - netutil
+- name: golang.org/x/sys
+  version: 9ccfe848b9db8435a24c424abbc07a921adf1df5
+  subpackages:
+  - unix
 - name: gopkg.in/yaml.v2
   version: f7716cbe52baa25d2e9b0d0da546fcf909fc16b4
-devImports: []
+testImports: []
