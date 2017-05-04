@@ -30,9 +30,10 @@ import (
 	"strings"
 	"sync"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/pkg/tarutil"
-	"github.com/coreos/pkg/capnslog"
 )
 
 var (
@@ -42,8 +43,6 @@ var (
 	// insecureTLS controls whether TLS server's certificate chain and hostname are verified
 	// when pulling layers, verified in default.
 	insecureTLS = false
-
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/imagefmt")
 
 	extractorsM sync.RWMutex
 	extractors  = make(map[string]Extractor)
@@ -127,13 +126,13 @@ func Extract(format, path string, headers map[string]string, toExtract []string)
 		client := &http.Client{Transport: tr}
 		r, err := client.Do(request)
 		if err != nil {
-			log.Warningf("could not download layer: %s", err)
+			log.WithError(err).Warning("could not download layer")
 			return nil, ErrCouldNotFindLayer
 		}
 
 		// Fail if we don't receive a 2xx HTTP status code.
 		if math.Floor(float64(r.StatusCode/100)) != 2 {
-			log.Warningf("could not download layer: got status code %d, expected 2XX", r.StatusCode)
+			log.WithField("status code", r.StatusCode).Warning("could not download layer: expected 2XX")
 			return nil, ErrCouldNotFindLayer
 		}
 

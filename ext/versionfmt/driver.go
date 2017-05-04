@@ -19,8 +19,6 @@ package versionfmt
 import (
 	"errors"
 	"sync"
-
-	"github.com/coreos/pkg/capnslog"
 )
 
 const (
@@ -39,8 +37,6 @@ var (
 	// ErrInvalidVersion is returned when a function needs to validate a version,
 	// but should return an error in the case where the version is invalid.
 	ErrInvalidVersion = errors.New("invalid version")
-
-	nlog = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/versionfmt")
 
 	parsersM sync.Mutex
 	parsers  = make(map[string]Parser)

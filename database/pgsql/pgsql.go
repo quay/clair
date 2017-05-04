@@ -25,11 +25,11 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/coreos/pkg/capnslog"
 	"github.com/hashicorp/golang-lru"
 	"github.com/lib/pq"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/remind101/migrate"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/database/pgsql/migrations"
@@ -37,8 +37,6 @@ import (
 )
 
 var (
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "pgsql")
-
 	promErrorsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "clair_pgsql_errors_total",
 		Help: "Number of errors that PostgreSQL requests generated.",
@@ -283,7 +281,7 @@ func handleError(desc string, err error) error {
 		return commonerr.ErrNotFound
 	}
 
-	log.Errorf("%s: %v", desc, err)
+	log.WithError(err).WithField("Description", desc).Error("Handled Database Error")
 	promErrorsTotal.WithLabelValues(desc).Inc()
 
 	if _, o := err.(*pq.Error); o || err == sql.ErrTxDone || strings.HasPrefix(err.Error(), "sql:") {

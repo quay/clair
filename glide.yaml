@@ -91,3 +91,5 @@ import:
   version: ^0.1.0
 - package: github.com/kr/text
 - package: github.com/remind101/migrate
+- package: github.com/sirupsen/logrus
+  version: ^0.11.5 

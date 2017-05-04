@@ -25,7 +25,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/coreos/pkg/capnslog"
+	log "github.com/sirupsen/logrus"
+
+	"fmt"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
@@ -48,8 +50,6 @@ var (
 	}
 
 	elsaRegexp = regexp.MustCompile(`com.oracle.elsa-(\d+).xml`)
-
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/vulnsrc/oracle")
 )
 
 type oval struct {
@@ -116,8 +116,7 @@ func compareELSA(left, right int) int {
 }
 
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
-	log.Info("fetching Oracle Linux vulnerabilities")
-
+	log.WithField("package", "Oracle Linux").Info("Start fetching vulnerabilities")
 	// Get the first ELSA we have to manage.
 	flagValue, err := datastore.GetKeyValue(updaterFlag)
 	if err != nil {
@@ -132,7 +131,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	// Fetch the update list.
 	r, err := http.Get(ovalURI)
 	if err != nil {
-		log.Errorf("could not download Oracle's update list: %s", err)
+		log.WithError(err).Error("could not download Oracle's update list")
 		return resp, commonerr.ErrCouldNotDownload
 	}
 	defer r.Body.Close()
@@ -155,7 +154,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		// Download the ELSA's XML file.
 		r, err := http.Get(ovalURI + elsaFilePrefix + strconv.Itoa(elsa) + ".xml")
 		if err != nil {
-			log.Errorf("could not download Oracle's update file: %s", err)
+			log.WithError(err).Error("could not download Oracle's update list")
 			return resp, commonerr.ErrCouldNotDownload
 		}
 
@@ -176,7 +175,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		resp.FlagName = updaterFlag
 		resp.FlagValue = strconv.Itoa(largest(elsaList))
 	} else {
-		log.Debug("no Oracle Linux update.")
+		log.WithField("package", "Oracle Linux").Debug("no update")
 	}
 
 	return resp, nil
@@ -198,7 +197,7 @@ func parseELSA(ovalReader io.Reader) (vulnerabilities []database.Vulnerability, 
 	var ov oval
 	err = xml.NewDecoder(ovalReader).Decode(&ov)
 	if err != nil {
-		log.Errorf("could not decode Oracle's XML: %s", err)
+		log.WithError(err).Error("could not decode Oracle's XML")
 		err = commonerr.ErrCouldNotParse
 		return
 	}
@@ -318,7 +317,7 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 				const prefixLen = len("Oracle Linux ")
 				osVersion, err = strconv.Atoi(strings.TrimSpace(c.Comment[prefixLen : prefixLen+strings.Index(c.Comment[prefixLen:], " ")]))
 				if err != nil {
-					log.Warningf("could not parse Oracle Linux release version from: '%s'.", c.Comment)
+					log.WithError(err).WithField("comment", c.Comment).Warning("could not parse Oracle Linux release version from comment")
 				}
 			} else if strings.Contains(c.Comment, " is earlier than ") {
 				const prefixLen = len(" is earlier than ")
@@ -326,7 +325,7 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 				version := c.Comment[strings.Index(c.Comment, " is earlier than ")+prefixLen:]
 				err := versionfmt.Valid(rpm.ParserName, version)
 				if err != nil {
-					log.Warningf("could not parse package version '%s': %s. skipping", version, err.Error())
+					log.WithError(err).WithField("version", version).Warning("could not parse package version. skipping")
 				} else {
 					featureVersion.Version = version
 				}
@@ -339,7 +338,7 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 		if featureVersion.Feature.Namespace.Name != "" && featureVersion.Feature.Name != "" && featureVersion.Version != "" {
 			featureVersionParameters[featureVersion.Feature.Namespace.Name+":"+featureVersion.Feature.Name] = featureVersion
 		} else {
-			log.Warningf("could not determine a valid package from criterions: %v", criterions)
+			log.WithField("criterions", fmt.Sprintf("%v", criterions)).Warning("could not determine a valid package from criterions")
 		}
 	}
 
@@ -388,7 +387,7 @@ func severity(def definition) database.Severity {
 	case "critical":
 		return database.CriticalSeverity
 	default:
-		log.Warningf("could not determine vulnerability severity from: %s.", def.Severity)
+		log.WithField("severity", def.Severity).Warning("could not determine vulnerability severity")
 		return database.UnknownSeverity
 	}
 }

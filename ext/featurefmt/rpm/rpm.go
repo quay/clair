@@ -22,7 +22,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/coreos/pkg/capnslog"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/featurefmt"
@@ -31,8 +31,6 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/pkg/tarutil"
 )
-
-var log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/featurefmt/rpm")
 
 type lister struct{}
 
@@ -53,20 +51,20 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "rpm")
 	defer os.RemoveAll(tmpDir)
 	if err != nil {
-		log.Errorf("could not create temporary folder for RPM detection: %s", err)
+		log.WithError(err).Error("could not create temporary folder for RPM detection")
 		return []database.FeatureVersion{}, commonerr.ErrFilesystem
 	}
 
 	err = ioutil.WriteFile(tmpDir+"/Packages", f, 0700)
 	if err != nil {
-		log.Errorf("could not create temporary file for RPM detection: %s", err)
+		log.WithError(err).Error("could not create temporary file for RPM detection")
 		return []database.FeatureVersion{}, commonerr.ErrFilesystem
 	}
 
 	// Extract binary package names because RHSA refers to binary package names.
 	out, err := exec.Command("rpm", "--dbpath", tmpDir, "-qa", "--qf", "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE}\n").CombinedOutput()
 	if err != nil {
-		log.Errorf("could not query RPM: %s. output: %s", err, string(out))
+		log.WithError(err).WithField("output", string(out)).Error("could not query RPM")
 		// Do not bubble up because we probably won't be able to fix it,
 		// the database must be corrupted
 		return []database.FeatureVersion{}, nil
@@ -90,7 +88,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 		version := strings.Replace(line[1], "(none):", "", -1)
 		err := versionfmt.Valid(rpm.ParserName, version)
 		if err != nil {
-			log.Warningf("could not parse package version '%s': %s. skipping", line[1], err.Error())
+			log.WithError(err).WithField("version", line[1]).Warning("could not parse package version. skipping")
 			continue
 		}
 

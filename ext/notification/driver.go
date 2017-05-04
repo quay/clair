@@ -24,14 +24,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/coreos/pkg/capnslog"
-
 	"github.com/coreos/clair/database"
 )
 
 var (
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/notification")
-
 	sendersM sync.RWMutex
 	senders  = make(map[string]Sender)
 )

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/codegangsta/negroni"
-	"github.com/tylerb/graceful"
+	"github.com/urfave/negroni"
+	"gopkg.in/tylerb/graceful.v1"
 )
 
 func main() {

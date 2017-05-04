@@ -25,7 +25,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/coreos/pkg/capnslog"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
@@ -39,8 +39,6 @@ const (
 	cveURLPrefix = "https://security-tracker.debian.org/tracker"
 	updaterFlag  = "debianUpdater"
 )
-
-var log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/vulnsrc/debian")
 
 type jsonData map[string]map[string]jsonVuln
 
@@ -62,12 +60,12 @@ func init() {
 }
 
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
-	log.Info("fetching Debian vulnerabilities")
+	log.WithField("package", "Debian").Info("Start fetching vulnerabilities")
 
 	// Download JSON.
 	r, err := http.Get(url)
 	if err != nil {
-		log.Errorf("could not download Debian's update: %s", err)
+		log.WithError(err).Error("could not download Debian's update")
 		return resp, commonerr.ErrCouldNotDownload
 	}
 
@@ -108,14 +106,14 @@ func buildResponse(jsonReader io.Reader, latestKnownHash string) (resp vulnsrc.U
 	var data jsonData
 	err = json.NewDecoder(teedJSONReader).Decode(&data)
 	if err != nil {
-		log.Errorf("could not unmarshal Debian's JSON: %s", err)
+		log.WithError(err).Error("could not unmarshal Debian's JSON")
 		return resp, commonerr.ErrCouldNotParse
 	}
 
 	// Calculate the hash and skip updating if the hash has been seen before.
 	hash = hex.EncodeToString(jsonSHA.Sum(nil))
 	if latestKnownHash == hash {
-		log.Debug("no Debian update")
+		log.WithField("package", "Debian").Debug("no update")
 		return resp, nil
 	}
 
@@ -185,7 +183,7 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.Vulnerability, 
 					// "fixed_version" (if affected).
 					err = versionfmt.Valid(dpkg.ParserName, releaseNode.FixedVersion)
 					if err != nil {
-						log.Warningf("could not parse package version '%s': %s. skipping", releaseNode.FixedVersion, err.Error())
+						log.WithError(err).WithField("version", version).Warning("could not parse package version. skipping")
 						continue
 					}
 					version = releaseNode.FixedVersion
@@ -252,7 +250,7 @@ func SeverityFromUrgency(urgency string) database.Severity {
 		return database.HighSeverity
 
 	default:
-		log.Warningf("could not determine vulnerability severity from: %s", urgency)
+		log.WithField("urgency", urgency).Warning("could not determine vulnerability severity from urgency")
 		return database.UnknownSeverity
 	}
 }

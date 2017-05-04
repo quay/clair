@@ -23,7 +23,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/coreos/pkg/capnslog"
+	log "github.com/sirupsen/logrus"
 	"github.com/tylerb/graceful"
 
 	"github.com/coreos/clair/database"
@@ -31,8 +31,6 @@ import (
 )
 
 const timeoutResponse = `{"Error":{"Message":"Clair failed to respond within the configured timeout window.","Type":"Timeout"}}`
-
-var log = capnslog.NewPackageLogger("github.com/coreos/clair", "api")
 
 // Config is the configuration for the API service.
 type Config struct {
@@ -48,14 +46,14 @@ func Run(cfg *Config, store database.Datastore, st *stopper.Stopper) {
 
 	// Do not run the API service if there is no config.
 	if cfg == nil {
-		log.Infof("main API service is disabled.")
+		log.Info("main API service is disabled.")
 		return
 	}
-	log.Infof("starting main API on port %d.", cfg.Port)
+	log.WithField("port", cfg.Port).Info("starting main API")
 
 	tlsConfig, err := tlsClientConfig(cfg.CAFile)
 	if err != nil {
-		log.Fatalf("could not initialize client cert authentication: %s\n", err)
+		log.WithError(err).Fatal("could not initialize client cert authentication")
 	}
 	if tlsConfig != nil {
 		log.Info("main API configured with client certificate authentication")
@@ -81,10 +79,10 @@ func RunHealth(cfg *Config, store database.Datastore, st *stopper.Stopper) {
 
 	// Do not run the API service if there is no config.
 	if cfg == nil {
-		log.Infof("health API service is disabled.")
+		log.Info("health API service is disabled.")
 		return
 	}
-	log.Infof("starting health API on port %d.", cfg.HealthPort)
+	log.WithField("port", cfg.HealthPort).Info("starting health API")
 
 	srv := &graceful.Server{
 		Timeout:          10 * time.Second, // Interrupt health checks when stopping

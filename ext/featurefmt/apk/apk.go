@@ -19,7 +19,7 @@ import (
 	"bufio"
 	"bytes"
 
-	"github.com/coreos/pkg/capnslog"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/featurefmt"
@@ -27,8 +27,6 @@ import (
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/pkg/tarutil"
 )
-
-var log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/featurefmt/apk")
 
 func init() {
 	featurefmt.RegisterLister("apk", &lister{})
@@ -62,7 +60,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 			version := string(line[2:])
 			err := versionfmt.Valid(dpkg.ParserName, version)
 			if err != nil {
-				log.Warningf("could not parse package version '%s': %s. skipping", version, err.Error())
+				log.WithError(err).WithField("version", version).Warning("could not parse package version. skipping")
 			} else {
 				ipkg.Version = version
 			}

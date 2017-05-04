@@ -24,6 +24,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair"
 	"github.com/coreos/clair/database"
@@ -90,7 +91,7 @@ func writeResponse(w http.ResponseWriter, r *http.Request, status int, resp inte
 		case *json.MarshalerError, *json.UnsupportedTypeError, *json.UnsupportedValueError:
 			panic("v1: failed to marshal response: " + err.Error())
 		default:
-			log.Warningf("failed to write response: %s", err.Error())
+			log.WithError(err).Warning("failed to write response")
 		}
 	}
 }

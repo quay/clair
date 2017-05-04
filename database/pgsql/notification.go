@@ -18,10 +18,12 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/guregu/null/zero"
 	"github.com/pborman/uuid"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/pkg/commonerr"
 )
 
 // do it in tx so we won't insert/update a vuln without notification and vice-versa.
@@ -177,7 +179,7 @@ func (pgSQL *pgSQL) loadLayerIntroducingVulnerability(vulnerability *database.Vu
 
 	_, err = tx.Exec(disableHashJoin)
 	if err != nil {
-		log.Warningf("searchNotificationLayerIntroducingVulnerability: could not disable hash join: %s", err)
+		log.WithError(err).Warning("searchNotificationLayerIntroducingVulnerability: could not disable hash join")
 	}
 
 	// We do `defer observeQueryTime` here because we don't want to observe invalid calls.

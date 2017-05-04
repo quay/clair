@@ -30,7 +30,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/coreos/pkg/capnslog"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/vulnmdsrc"
@@ -42,9 +42,9 @@ const (
 	dataFeedMetaURL string = "http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-%s.meta"
 
 	appenderName string = "NVD"
-)
 
-var log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/vulnmdsrc/nvd")
+	logDataFeedName string = "data feed name"
+)
 
 type appender struct {
 	localPath      string
@@ -90,7 +90,7 @@ func (a *appender) BuildCache(datastore database.Datastore) error {
 	for dataFeedName, dataFeedReader := range dataFeedReaders {
 		var nvd nvd
 		if err = xml.NewDecoder(dataFeedReader).Decode(&nvd); err != nil {
-			log.Errorf("could not decode NVD data feed '%s': %s", dataFeedName, err)
+			log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not decode NVD data feed")
 			return commonerr.ErrCouldNotParse
 		}
 
@@ -134,7 +134,7 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 	for _, dataFeedName := range dataFeedNames {
 		hash, err := getHashFromMetaURL(fmt.Sprintf(dataFeedMetaURL, dataFeedName))
 		if err != nil {
-			log.Warningf("could get get NVD data feed hash '%s': %s", dataFeedName, err)
+			log.WithError(err).WithField(logDataFeedName, dataFeedName).Warning("could not get NVD data feed hash")
 
 			// It's not a big deal, no need interrupt, we're just going to download it again then.
 			continue
@@ -163,14 +163,14 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 			// Download data feed.
 			r, err := http.Get(fmt.Sprintf(dataFeedURL, dataFeedName))
 			if err != nil {
-				log.Errorf("could not download NVD data feed file '%s': %s", dataFeedName, err)
+				log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not download NVD data feed")
 				return dataFeedReaders, dataFeedHashes, commonerr.ErrCouldNotDownload
 			}
 
 			// Un-gzip it.
 			gr, err := gzip.NewReader(r.Body)
 			if err != nil {
-				log.Errorf("could not read NVD data feed file '%s': %s", dataFeedName, err)
+				log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not read NVD data feed")
 				return dataFeedReaders, dataFeedHashes, commonerr.ErrCouldNotDownload
 			}
 
@@ -188,7 +188,7 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 				}
 				dataFeedReaders[dataFeedName] = nrc
 
-				log.Warningf("could not store NVD data feed to filesystem: %s", err)
+				log.WithError(err).Warning("could not store NVD data feed to filesystem")
 			}
 		}
 	}

@@ -20,9 +20,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/coreos/pkg/capnslog"
 	"github.com/pborman/uuid"
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/vulnmdsrc"
@@ -38,8 +38,6 @@ const (
 )
 
 var (
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "clair")
-
 	promUpdaterErrorsTotal = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "clair_updater_errors_total",
 		Help: "Numbers of errors that the updater generated.",
@@ -74,12 +72,12 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 
 	// Do not run the updater if there is no config or if the interval is 0.
 	if config == nil || config.Interval == 0 {
-		log.Infof("updater service is disabled.")
+		log.Info("updater service is disabled.")
 		return
 	}
 
 	whoAmI := uuid.New()
-	log.Infof("updater service started. lock identifier: %s", whoAmI)
+	log.WithField("lock identifier", whoAmI).Info("updater service started")
 
 	for {
 		var stop bool
@@ -89,7 +87,7 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 		nextUpdate := time.Now().UTC()
 		lastUpdate, firstUpdate, err := getLastUpdate(datastore)
 		if err != nil {
-			log.Errorf("an error occured while getting the last update time")
+			log.WithError(err).Error("an error occured while getting the last update time")
 			nextUpdate = nextUpdate.Add(config.Interval)
 		} else if firstUpdate == false {
 			nextUpdate = lastUpdate.Add(config.Interval)
@@ -133,7 +131,7 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 					log.Debug("update lock is already taken")
 					nextUpdate = hasLockUntil
 				} else {
-					log.Debugf("update lock is already taken by %s until %v", lockOwner, lockExpiration)
+					log.WithFields(log.Fields{"lock owner": lockOwner, "lock expiration": lockExpiration}).Debug("update lock is already taken")
 					nextUpdate = lockExpiration
 				}
 			}
@@ -142,7 +140,7 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 		// Sleep, but remain stoppable until approximately the next update time.
 		now := time.Now().UTC()
 		waitUntil := nextUpdate.Add(time.Duration(rand.ExpFloat64()/0.5) * time.Second)
-		log.Debugf("next update attempt scheduled for %v.", waitUntil)
+		log.WithField("scheduled time", waitUntil).Debug("next update attempt scheduled")
 		if !waitUntil.Before(now) {
 			if !st.Sleep(waitUntil.Sub(time.Now())) {
 				break
@@ -172,11 +170,11 @@ func update(datastore database.Datastore, firstUpdate bool) {
 	status, vulnerabilities, flags, notes := fetch(datastore)
 
 	// Insert vulnerabilities.
-	log.Tracef("inserting %d vulnerabilities for update", len(vulnerabilities))
+	log.WithField("count", len(vulnerabilities)).Debug("inserting vulnerabilities for update")
 	err := datastore.InsertVulnerabilities(vulnerabilities, !firstUpdate)
 	if err != nil {
 		promUpdaterErrorsTotal.Inc()
-		log.Errorf("an error occured when inserting vulnerabilities for update: %s", err)
+		log.WithError(err).Error("an error occured when inserting vulnerabilities for update")
 		return
 	}
 	vulnerabilities = nil
@@ -188,7 +186,7 @@ func update(datastore database.Datastore, firstUpdate bool) {
 
 	// Log notes.
 	for _, note := range notes {
-		log.Warningf("fetcher note: %s", note)
+		log.WithField("note", note).Warning("fetcher note")
 	}
 	promUpdaterNotesTotal.Set(float64(len(notes)))
 
@@ -219,14 +217,14 @@ func fetch(datastore database.Datastore) (bool, []database.Vulnerability, map[st
 			response, err := u.Update(datastore)
 			if err != nil {
 				promUpdaterErrorsTotal.Inc()
-				log.Errorf("an error occured when fetching update '%s': %s.", name, err)
+				log.WithError(err).WithField("updater name", name).Error("an error occured when fetching update")
 				status = false
 				responseC <- nil
 				return
 			}
 
 			responseC <- &response
-			log.Infof("finished fetching %s", name)
+			log.WithField("updater name", name).Info("finished fetching")
 		}(n, u)
 	}
 
@@ -273,7 +271,7 @@ func addMetadata(datastore database.Datastore, vulnerabilities []database.Vulner
 			// Build up a metadata cache.
 			if err := appender.BuildCache(datastore); err != nil {
 				promUpdaterErrorsTotal.Inc()
-				log.Errorf("an error occured when loading metadata fetcher '%s': %s.", name, err)
+				log.WithError(err).WithField("appender name", name).Error("an error occured when loading metadata fetcher")
 				return
 			}
 
