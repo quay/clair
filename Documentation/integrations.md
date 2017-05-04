@@ -1,4 +1,5 @@
 # Integrations
+
 This document tracks projects that integrate with Clair. [Join the community](https://github.com/coreos/clair/), and help us keep the list up-to-date.
 
 ## Projects
@@ -15,5 +16,9 @@ This document tracks projects that integrate with Clair. [Join the community](ht
 
 [reg](https://github.com/jessfraz/reg#vulnerability-reports): a docker registry CLI, which also runs Clair.
 
+[analyze-local-images](https://github.com/coreos/analyze-local-images): a deprecated tool to analyze local Docker images
 
-[sqs]: https://aws.amazon.com/sqs/ 
+[check_openvz_mirror_with_clair](https://github.com/FastVPSEestiOu/check_openvz_mirror_with_clair): a tool to use Clair to analyze OpenVZ templates
+
+
+[sqs]: https://aws.amazon.com/sqs/
