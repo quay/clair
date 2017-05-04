@@ -12,20 +12,28 @@ To install the tool, simply run the following command, with a proper Go environm
 
 You also need a working Clair instance. To learn how to run Clair, take a look at the [README](https://github.com/coreos/clair/blob/master/README.md). You then should wait for its initial vulnerability update to complete, which may take some time.
 
-# Usage
+## Usage
 
 If you are running Clair locally (ie. compiled or local Docker),
 
-```
-analyze-local-images <Docker Image ID>
+```bash
+  analyze-local-images <Docker Image ID>
 ```
 
 Or, If you run Clair remotely (ie. boot2docker),
 
-```
-analyze-local-images -endpoint "http://<CLAIR-IP-ADDRESS>:6060" -my-address "<MY-IP-ADDRESS>" <Docker Image ID>
+```bash
+  analyze-local-images -endpoint "http://<CLAIR-IP-ADDRESS>:6060" -my-address "<MY-IP-ADDRESS>" <Docker Image ID>
 ```
 
 Clair needs access to the image files. If you run Clair locally, this tool will store the files in the system's temporary folder and Clair will find them there. It means if Clair is running in Docker, the host's temporary folder must be mounted in the Clair's container. If you run Clair remotely, this tool will run a small HTTP server to let Clair downloading them. It listens on the port 9279 and allows a single host: Clair's IP address, extracted from the `-endpoint` parameter. The `my-address` parameters defines the IP address of the HTTP server that Clair will use to download the images. With boot2docker, these parameters would be `-endpoint "http://192.168.99.100:6060" -my-address "192.168.99.1"`.
 
 As it runs an HTTP server and not an HTTP**S** one, be sure to **not** expose sensitive data and container images.
+
+If run Clair remotely (Docker for Mac) in combination with [Docker](https://github.com/coreos/clair#docker)
+
+```bash
+  TMPDIR=/tmp analyze-local-images <Docker Image ID>
+```
+Clair needs access to the images that are stored locally through `analyze-local-images`. This sets temporarily  TMPDIR
+to `/tmp`, so that the Docker Image is saved under the same path like in the `docker-compose.yml`. After this the clair container will found the saved image otherwise it says `Could not analyze layer: Got response 400 with message {"Error":{"Message":"could not find layer"}}` .
