@@ -9,6 +9,8 @@ There are absolutely no guarantees and it only uses a minimal subset of Clair's 
 To install the tool, simply run the following command, with a proper Go environment:
 
     go get -u github.com/coreos/clair/contrib/analyze-local-images
+    cd analyze-local-images
+    go build
 
 You also need a working Clair instance. To learn how to run Clair, take a look at the [README](https://github.com/coreos/clair/blob/master/README.md). You then should wait for its initial vulnerability update to complete, which may take some time.
 
