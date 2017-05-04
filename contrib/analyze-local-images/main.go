@@ -368,10 +368,16 @@ func listenHTTP(path, allowedHost string, ch chan error) {
 	restrictedFileServer := func(path, allowedHost string) http.Handler {
 		fc := func(w http.ResponseWriter, r *http.Request) {
 			host, _, err := net.SplitHostPort(r.RemoteAddr)
-			if err == nil && strings.EqualFold(host, allowedHost) {
-				http.FileServer(http.Dir(path)).ServeHTTP(w, r)
-				return
-			}
+                        allowedIPs, err1 := net.LookupIP(allowedHost)
+			if err == nil && err1 == nil {
+                           allowedIPs = append(allowedIPs, net.ParseIP("172.17.0.1"))
+                           for _, a :=range allowedIPs {
+                              if a.String() == host {
+                                http.FileServer(http.Dir(path)).ServeHTTP(w, r)
+                                return
+                              }
+			   }
+                        } 
 			w.WriteHeader(403)
 		}
 		return http.HandlerFunc(fc)
