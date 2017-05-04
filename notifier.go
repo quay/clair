@@ -20,6 +20,7 @@ import (
 	"github.com/coreos/pkg/timeutil"
 	"github.com/pborman/uuid"
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/notification"
@@ -32,6 +33,9 @@ const (
 	notifierMaxBackOff          = 15 * time.Minute
 	notifierLockRefreshDuration = time.Minute * 2
 	notifierLockDuration        = time.Minute*8 + notifierLockRefreshDuration
+
+	logSenderName = "sender name"
+	logNotiName   = "notification name"
 )
 
 var (
@@ -59,23 +63,23 @@ func RunNotifier(config *notification.Config, datastore database.Datastore, stop
 	// Configure registered notifiers.
 	for senderName, sender := range notification.Senders() {
 		if configured, err := sender.Configure(config); configured {
-			log.Infof("sender '%s' configured\n", senderName)
+			log.WithField(logSenderName, senderName).Info("sender configured")
 		} else {
 			notification.UnregisterSender(senderName)
 			if err != nil {
-				log.Errorf("could not configure notifier '%s': %s", senderName, err)
+				log.WithError(err).WithField(logSenderName, senderName).Error("could not configure notifier")
 			}
 		}
 	}
 
 	// Do not run the updater if there is no notifier enabled.
 	if len(notification.Senders()) == 0 {
-		log.Infof("notifier service is disabled")
+		log.Info("notifier service is disabled")
 		return
 	}
 
 	whoAmI := uuid.New()
-	log.Infof("notifier service started. lock identifier: %s\n", whoAmI)
+	log.WithField("lock identifier", whoAmI).Info("notifier service started")
 
 	for running := true; running; {
 		// Find task.
@@ -123,7 +127,7 @@ func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoA
 		if err != nil {
 			// There is no notification or an error occurred.
 			if err != commonerr.ErrNotFound {
-				log.Warningf("could not get notification to send: %s", err)
+				log.WithError(err).Warning("could not get notification to send")
 			}
 
 			// Wait.
@@ -136,7 +140,7 @@ func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoA
 
 		// Lock the notification.
 		if hasLock, _ := datastore.Lock(notification.Name, whoAmI, notifierLockDuration, false); hasLock {
-			log.Infof("found and locked a notification: %s", notification.Name)
+			log.WithField(logNotiName, notification.Name).Info("found and locked a notification")
 			return &notification
 		}
 	}
@@ -150,13 +154,13 @@ func handleTask(n database.VulnerabilityNotification, st *stopper.Stopper, maxAt
 		for {
 			// Max attempts exceeded.
 			if attempts >= maxAttempts {
-				log.Infof("giving up on sending notification '%s' via sender '%s': max attempts exceeded (%d)\n", n.Name, senderName, maxAttempts)
+				log.WithFields(log.Fields{logNotiName: n.Name, logSenderName: senderName, "max attempts": maxAttempts}).Info("giving up on sending notification : max attempts exceeded")
 				return false, false
 			}
 
 			// Backoff.
 			if backOff > 0 {
-				log.Infof("waiting %v before retrying to send notification '%s' via sender '%s' (Attempt %d / %d)\n", backOff, n.Name, senderName, attempts+1, maxAttempts)
+				log.WithFields(log.Fields{"duration": backOff, logNotiName: n.Name, logSenderName: senderName, "attempts": attempts + 1, "max attempts": maxAttempts}).Info("waiting before retrying to send notification")
 				if !st.Sleep(backOff) {
 					return false, true
 				}
@@ -166,7 +170,7 @@ func handleTask(n database.VulnerabilityNotification, st *stopper.Stopper, maxAt
 			if err := sender.Send(n); err != nil {
 				// Send failed; increase attempts/backoff and retry.
 				promNotifierBackendErrorsTotal.WithLabelValues(senderName).Inc()
-				log.Errorf("could not send notification '%s' via notifier '%s': %v", n.Name, senderName, err)
+				log.WithError(err).WithFields(log.Fields{logSenderName: senderName, logNotiName: n.Name}).Error("could not send notification via notifier")
 				backOff = timeutil.ExpBackoff(backOff, notifierMaxBackOff)
 				attempts++
 				continue
@@ -177,6 +181,6 @@ func handleTask(n database.VulnerabilityNotification, st *stopper.Stopper, maxAt
 		}
 	}
 
-	log.Infof("successfully sent notification '%s'\n", n.Name)
+	log.WithField(logNotiName, n.Name).Info("successfully sent notification")
 	return true, false
 }

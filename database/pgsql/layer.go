@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/guregu/null/zero"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/commonerr"
@@ -92,11 +93,11 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 
 		_, err = tx.Exec(disableHashJoin)
 		if err != nil {
-			log.Warningf("FindLayer: could not disable hash join: %s", err)
+			log.WithError(err).Warningf("FindLayer: could not disable hash join")
 		}
 		_, err = tx.Exec(disableMergeJoin)
 		if err != nil {
-			log.Warningf("FindLayer: could not disable merge join: %s", err)
+			log.WithError(err).Warningf("FindLayer: could not disable merge join")
 		}
 
 		t = time.Now()
@@ -164,7 +165,7 @@ func getLayerFeatureVersions(tx *sql.Tx, layerID int) ([]database.FeatureVersion
 		case "del":
 			delete(mapFeatureVersions, fv.ID)
 		default:
-			log.Warningf("unknown Layer_diff_FeatureVersion's modification: %s", modification)
+			log.WithField("modification", modification).Warning("unknown Layer_diff_FeatureVersion's modification")
 			return featureVersions, database.ErrInconsistent
 		}
 	}

@@ -20,7 +20,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/coreos/pkg/capnslog"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/featurefmt"
@@ -30,8 +30,6 @@ import (
 )
 
 var (
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/featurefmt/dpkg")
-
 	dpkgSrcCaptureRegexp      = regexp.MustCompile(`Source: (?P<name>[^\s]*)( \((?P<version>.*)\))?`)
 	dpkgSrcCaptureRegexpNames = dpkgSrcCaptureRegexp.SubexpNames()
 )
@@ -79,7 +77,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 				version := md["version"]
 				err = versionfmt.Valid(dpkg.ParserName, version)
 				if err != nil {
-					log.Warningf("could not parse package version '%s': %s. skipping", string(line[1]), err.Error())
+					log.WithError(err).WithField("version", string(line[1])).Warning("could not parse package version. skipping")
 				} else {
 					pkg.Version = version
 				}
@@ -93,7 +91,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 			version := strings.TrimPrefix(line, "Version: ")
 			err = versionfmt.Valid(dpkg.ParserName, version)
 			if err != nil {
-				log.Warningf("could not parse package version '%s': %s. skipping", string(line[1]), err.Error())
+				log.WithError(err).WithField("version", string(line[1])).Warning("could not parse package version. skipping")
 			} else {
 				pkg.Version = version
 			}

@@ -17,6 +17,8 @@ package clair
 import (
 	"regexp"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/featurefmt"
 	"github.com/coreos/clair/ext/featurens"
@@ -28,7 +30,8 @@ import (
 const (
 	// Version (integer) represents the worker version.
 	// Increased each time the engine changes.
-	Version = 3
+	Version      = 3
+	logLayerName = "layer"
 )
 
 var (
@@ -67,8 +70,7 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 		return commonerr.NewBadRequestError("could not process a layer which does not have a format")
 	}
 
-	log.Debugf("layer %s: processing (Location: %s, Engine version: %d, Parent: %s, Format: %s)",
-		name, cleanURL(path), Version, parentName, imageFormat)
+	log.WithFields(log.Fields{logLayerName: name, "path": cleanURL(path), "engine version": Version, "parent layer": parentName, "format": imageFormat}).Debug("processing layer")
 
 	// Check to see if the layer is already in the database.
 	layer, err := datastore.FindLayer(name, false, false)
@@ -88,8 +90,7 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 				return err
 			}
 			if err == commonerr.ErrNotFound {
-				log.Warningf("layer %s: the parent layer (%s) is unknown. it must be processed first", name,
-					parentName)
+				log.WithFields(log.Fields{logLayerName: name, "parent layer": parentName}).Warning("the parent layer is unknown. it must be processed first")
 				return ErrParentUnknown
 			}
 			layer.Parent = &parent
@@ -97,13 +98,10 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 	} else {
 		// The layer is already in the database, check if we need to update it.
 		if layer.EngineVersion >= Version {
-			log.Debugf(`layer %s: layer content has already been processed in the past with engine %d.
-        Current engine is %d. skipping analysis`, name, layer.EngineVersion, Version)
+			log.WithFields(log.Fields{logLayerName: name, "past engine version": layer.EngineVersion, "current engine version": Version}).Debug("layer content has already been processed in the past with older engine. skipping analysis")
 			return nil
 		}
-
-		log.Debugf(`layer %s: layer content has been analyzed in the past with engine %d. Current
-      engine is %d. analyzing again`, name, layer.EngineVersion, Version)
+		log.WithFields(log.Fields{logLayerName: name, "past engine version": layer.EngineVersion, "current engine version": Version}).Debug("layer content has already been processed in the past with older engine. analyzing again")
 	}
 
 	// Analyze the content.
@@ -121,7 +119,7 @@ func detectContent(imageFormat, name, path string, headers map[string]string, pa
 	totalRequiredFiles := append(featurefmt.RequiredFilenames(), featurens.RequiredFilenames()...)
 	files, err := imagefmt.Extract(imageFormat, path, headers, totalRequiredFiles)
 	if err != nil {
-		log.Errorf("layer %s: failed to extract data from %s: %s", name, cleanURL(path), err)
+		log.WithError(err).WithFields(log.Fields{logLayerName: name, "path": cleanURL(path)}).Error("failed to extract data from path")
 		return
 	}
 
@@ -136,7 +134,7 @@ func detectContent(imageFormat, name, path string, headers map[string]string, pa
 		return
 	}
 	if len(featureVersions) > 0 {
-		log.Debugf("layer %s: detected %d features", name, len(featureVersions))
+		log.WithFields(log.Fields{logLayerName: name, "feature count": len(featureVersions)}).Debug("detected features")
 	}
 
 	return
@@ -148,7 +146,7 @@ func detectNamespace(name string, files tarutil.FilesMap, parent *database.Layer
 		return
 	}
 	if namespace != nil {
-		log.Debugf("layer %s: detected namespace %q", name, namespace.Name)
+		log.WithFields(log.Fields{logLayerName: name, "detected namespace": namespace.Name}).Debug("detected namespace")
 		return
 	}
 
@@ -156,7 +154,7 @@ func detectNamespace(name string, files tarutil.FilesMap, parent *database.Layer
 	if parent != nil {
 		namespace = parent.Namespace
 		if namespace != nil {
-			log.Debugf("layer %s: detected namespace %q (from parent)", name, namespace.Name)
+			log.WithFields(log.Fields{logLayerName: name, "detected namespace": namespace.Name}).Debug("detected namespace (from parent)")
 			return
 		}
 	}
@@ -210,7 +208,7 @@ func detectFeatureVersions(name string, files tarutil.FilesMap, namespace *datab
 			continue
 		}
 
-		log.Warningf("Namespace unknown for feature %s %s, in layer %s", feature.Feature.Name, feature.Version, name)
+		log.WithFields(log.Fields{"feature name": feature.Feature.Name, "feature version": feature.Version, logLayerName: name}).Warning("Namespace unknown")
 		err = ErrUnsupported
 		return
 	}

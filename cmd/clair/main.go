@@ -25,12 +25,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/coreos/pkg/capnslog"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair"
 	"github.com/coreos/clair/api"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/imagefmt"
+	"github.com/coreos/clair/pkg/formatter"
 	"github.com/coreos/clair/pkg/stopper"
 
 	// Register database driver.
@@ -56,8 +57,6 @@ import (
 	_ "github.com/coreos/clair/ext/vulnsrc/ubuntu"
 )
 
-var log = capnslog.NewPackageLogger("github.com/coreos/clair/cmd/clair", "main")
-
 func waitForSignals(signals ...os.Signal) {
 	interrupts := make(chan os.Signal, 1)
 	signal.Notify(interrupts, signals...)
@@ -67,12 +66,12 @@ func waitForSignals(signals ...os.Signal) {
 func startCPUProfiling(path string) *os.File {
 	f, err := os.Create(path)
 	if err != nil {
-		log.Fatalf("failed to create profile file: %s", err)
+		log.WithError(err).Fatal("failed to create profile file")
 	}
 
 	err = pprof.StartCPUProfile(f)
 	if err != nil {
-		log.Fatalf("failed to start CPU profiling: %s", err)
+		log.WithError(err).Fatal("failed to start CPU profiling")
 	}
 
 	log.Info("started CPU profiling")
@@ -131,20 +130,22 @@ func main() {
 	for _, bin := range []string{"git", "bzr", "rpm", "xz"} {
 		_, err := exec.LookPath(bin)
 		if err != nil {
-			log.Fatalf("failed to find dependency: %s", bin)
+			log.WithError(err).WithField("dependency", bin).Fatal("failed to find dependency")
 		}
 	}
 
 	// Load configuration
 	config, err := LoadConfig(*flagConfigPath)
 	if err != nil {
-		log.Fatalf("failed to load configuration: %s", err)
+		log.WithError(err).Fatal("failed to load configuration")
 	}
 
 	// Initialize logging system
-	logLevel, err := capnslog.ParseLevel(strings.ToUpper(*flagLogLevel))
-	capnslog.SetGlobalLogLevel(logLevel)
-	capnslog.SetFormatter(capnslog.NewPrettyFormatter(os.Stdout, false))
+
+	logLevel, err := log.ParseLevel(strings.ToUpper(*flagLogLevel))
+	log.SetLevel(logLevel)
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&formatter.JSONExtendedFormatter{ShowLn: true})
 
 	// Enable CPU Profiling if specified
 	if *flagCPUProfilePath != "" {

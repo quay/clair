@@ -18,6 +18,8 @@ import (
 	"database/sql"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/coreos/clair/pkg/commonerr"
 )
 

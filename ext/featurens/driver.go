@@ -20,7 +20,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/coreos/pkg/capnslog"
+	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
@@ -28,8 +28,6 @@ import (
 )
 
 var (
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/featurens")
-
 	detectorsM sync.RWMutex
 	detectors  = make(map[string]Detector)
 )
@@ -79,12 +77,12 @@ func Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 	for name, detector := range detectors {
 		namespace, err := detector.Detect(files)
 		if err != nil {
-			log.Warningf("failed while attempting to detect namespace %s: %s", name, err)
+			log.WithError(err).WithField("name", name).Warning("failed while attempting to detect namespace")
 			return nil, err
 		}
 
 		if namespace != nil {
-			log.Debugf("detected namespace %s: %#v", name, namespace)
+			log.WithFields(log.Fields{"name": name, "namespace": namespace.Name}).Debug("detected namespace")
 			return namespace, nil
 		}
 	}

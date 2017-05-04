@@ -19,13 +19,14 @@ package rhel
 import (
 	"bufio"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/coreos/pkg/capnslog"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
@@ -53,8 +54,6 @@ var (
 	}
 
 	rhsaRegexp = regexp.MustCompile(`com.redhat.rhsa-(\d+).xml`)
-
-	log = capnslog.NewPackageLogger("github.com/coreos/clair", "ext/vulnsrc/rhel")
 )
 
 type oval struct {
@@ -90,8 +89,7 @@ func init() {
 }
 
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
-	log.Info("fetching RHEL vulnerabilities")
-
+	log.WithField("package", "RHEL").Info("Start fetching vulnerabilities")
 	// Get the first RHSA we have to manage.
 	flagValue, err := datastore.GetKeyValue(updaterFlag)
 	if err != nil {
@@ -105,7 +103,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	// Fetch the update list.
 	r, err := http.Get(ovalURI)
 	if err != nil {
-		log.Errorf("could not download RHEL's update list: %s", err)
+		log.WithError(err).Error("could not download RHEL's update list")
 		return resp, commonerr.ErrCouldNotDownload
 	}
 
@@ -127,7 +125,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		// Download the RHSA's XML file.
 		r, err := http.Get(ovalURI + rhsaFilePrefix + strconv.Itoa(rhsa) + ".xml")
 		if err != nil {
-			log.Errorf("could not download RHEL's update file: %s", err)
+			log.WithError(err).Error("could not download RHEL's update list")
 			return resp, commonerr.ErrCouldNotDownload
 		}
 
@@ -148,7 +146,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		resp.FlagName = updaterFlag
 		resp.FlagValue = strconv.Itoa(rhsaList[len(rhsaList)-1])
 	} else {
-		log.Debug("no Red Hat update.")
+		log.WithField("package", "Red Hat").Debug("no update")
 	}
 
 	return resp, nil
@@ -161,7 +159,7 @@ func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.Vulnerability, 
 	var ov oval
 	err = xml.NewDecoder(ovalReader).Decode(&ov)
 	if err != nil {
-		log.Errorf("could not decode RHEL's XML: %s", err)
+		log.WithError(err).Error("could not decode RHEL's XML")
 		err = commonerr.ErrCouldNotParse
 		return
 	}
@@ -281,7 +279,7 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 				const prefixLen = len("Red Hat Enterprise Linux ")
 				osVersion, err = strconv.Atoi(strings.TrimSpace(c.Comment[prefixLen : prefixLen+strings.Index(c.Comment[prefixLen:], " ")]))
 				if err != nil {
-					log.Warningf("could not parse Red Hat release version from: '%s'.", c.Comment)
+					log.WithField("criterion comment", c.Comment).Warning("could not parse Red Hat release version from criterion comment")
 				}
 			} else if strings.Contains(c.Comment, " is earlier than ") {
 				const prefixLen = len(" is earlier than ")
@@ -289,7 +287,7 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 				version := c.Comment[strings.Index(c.Comment, " is earlier than ")+prefixLen:]
 				err := versionfmt.Valid(rpm.ParserName, version)
 				if err != nil {
-					log.Warningf("could not parse package version '%s': %s. skipping", version, err.Error())
+					log.WithError(err).WithField("version", version).Warning("could not parse package version. skipping")
 				} else {
 					featureVersion.Version = version
 					featureVersion.Feature.Namespace.VersionFormat = rpm.ParserName
@@ -307,7 +305,7 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 		if featureVersion.Feature.Namespace.Name != "" && featureVersion.Feature.Name != "" && featureVersion.Version != "" {
 			featureVersionParameters[featureVersion.Feature.Namespace.Name+":"+featureVersion.Feature.Name] = featureVersion
 		} else {
-			log.Warningf("could not determine a valid package from criterions: %v", criterions)
+			log.WithField("criterions", fmt.Sprintf("%v", criterions)).Warning("could not determine a valid package from criterions")
 		}
 	}
 
