@@ -1,0 +1,31 @@
+package: github.com/coreos/clair
+import:
+- package: github.com/coreos/pkg
+  version: ^3.0.0
+  subpackages:
+  - timeutil
+- package: github.com/fernet/fernet-go
+- package: github.com/guregu/null
+  version: ^3.1.0
+  subpackages:
+  - zero
+- package: github.com/hashicorp/golang-lru
+- package: github.com/julienschmidt/httprouter
+  version: ^1.1.0
+- package: github.com/lib/pq
+- package: github.com/pborman/uuid
+  version: ^1.0.0
+- package: github.com/prometheus/client_golang
+  version: ^0.8.0
+  subpackages:
+  - prometheus
+- package: github.com/remind101/migrate
+- package: github.com/sirupsen/logrus
+  version: ^0.11.5
+- package: github.com/stretchr/testify
+  version: ^1.1.4
+  subpackages:
+  - assert
+- package: github.com/tylerb/graceful
+  version: ^1.2.15
+- package: gopkg.in/yaml.v2
