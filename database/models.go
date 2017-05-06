@@ -83,11 +83,16 @@ type Vulnerability struct {
 type MetadataMap map[string]interface{}
 
 func (mm *MetadataMap) Scan(value interface{}) error {
-	val, ok := value.([]byte)
-	if !ok {
+	if value == nil {
 		return nil
 	}
-	return json.Unmarshal(val, mm)
+
+	// github.com/lib/pq decodes TEXT/VARCHAR fields into strings.
+	val, ok := value.(string)
+	if !ok {
+		panic("got type other than []byte from database")
+	}
+	return json.Unmarshal([]byte(val), mm)
 }
 
 func (mm *MetadataMap) Value() (driver.Value, error) {
