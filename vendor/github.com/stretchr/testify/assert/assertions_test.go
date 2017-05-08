@@ -195,6 +195,28 @@ func TestEqual(t *testing.T) {
 
 }
 
+func TestFormatUnequalValues(t *testing.T) {
+	expected, actual := formatUnequalValues("foo", "bar")
+	Equal(t, `"foo"`, expected, "value should not include type")
+	Equal(t, `"bar"`, actual, "value should not include type")
+
+	expected, actual = formatUnequalValues(123, 123)
+	Equal(t, `123`, expected, "value should not include type")
+	Equal(t, `123`, actual, "value should not include type")
+
+	expected, actual = formatUnequalValues(int64(123), int32(123))
+	Equal(t, `int64(123)`, expected, "value should include type")
+	Equal(t, `int32(123)`, actual, "value should include type")
+
+	type testStructType struct {
+		Val string
+	}
+
+	expected, actual = formatUnequalValues(&testStructType{Val: "test"}, &testStructType{Val: "test"})
+	Equal(t, `&assert.testStructType{Val:"test"}`, expected, "value should not include type annotation")
+	Equal(t, `&assert.testStructType{Val:"test"}`, actual, "value should not include type annotation")
+}
+
 func TestNotNil(t *testing.T) {
 
 	mockT := new(testing.T)
@@ -523,7 +545,25 @@ func TestNoError(t *testing.T) {
 
 	False(t, NoError(mockT, err), "NoError with error should return False")
 
+	// returning an empty error interface
+	err = func() error {
+		var err *customError
+		if err != nil {
+			t.Fatal("err should be nil here")
+		}
+		return err
+	}()
+
+	if err == nil { // err is not nil here!
+		t.Errorf("Error should be nil due to empty interface", err)
+	}
+
+	False(t, NoError(mockT, err), "NoError should fail with empty error interface")
 }
+
+type customError struct{}
+
+func (*customError) Error() string { return "fail" }
 
 func TestError(t *testing.T) {
 
@@ -539,6 +579,20 @@ func TestError(t *testing.T) {
 
 	True(t, Error(mockT, err), "Error with error should return True")
 
+	// returning an empty error interface
+	err = func() error {
+		var err *customError
+		if err != nil {
+			t.Fatal("err should be nil here")
+		}
+		return err
+	}()
+
+	if err == nil { // err is not nil here!
+		t.Errorf("Error should be nil due to empty interface", err)
+	}
+
+	True(t, Error(mockT, err), "Error should pass with empty error interface")
 }
 
 func TestEqualError(t *testing.T) {
@@ -571,6 +625,7 @@ func Test_isEmpty(t *testing.T) {
 	True(t, isEmpty(false))
 	True(t, isEmpty(map[string]string{}))
 	True(t, isEmpty(new(time.Time)))
+	True(t, isEmpty(time.Time{}))
 	True(t, isEmpty(make(chan struct{})))
 	False(t, isEmpty("something"))
 	False(t, isEmpty(errors.New("something")))
@@ -587,7 +642,8 @@ func TestEmpty(t *testing.T) {
 	mockT := new(testing.T)
 	chWithValue := make(chan struct{}, 1)
 	chWithValue <- struct{}{}
-	var ti *time.Time
+	var tiP *time.Time
+	var tiNP time.Time
 	var s *string
 	var f *os.File
 
@@ -599,7 +655,8 @@ func TestEmpty(t *testing.T) {
 	True(t, Empty(mockT, make(chan struct{})), "Channel without values is empty")
 	True(t, Empty(mockT, s), "Nil string pointer is empty")
 	True(t, Empty(mockT, f), "Nil os.File pointer is empty")
-	True(t, Empty(mockT, ti), "Nil time.Time pointer is empty")
+	True(t, Empty(mockT, tiP), "Nil time.Time pointer is empty")
+	True(t, Empty(mockT, tiNP), "time.Time is empty")
 
 	False(t, Empty(mockT, "something"), "Non Empty string is not empty")
 	False(t, Empty(mockT, errors.New("something")), "Non nil object is not empty")
@@ -827,10 +884,11 @@ func TestInEpsilon(t *testing.T) {
 		{-2.2, -2.1, 0.1},
 		{uint64(100), uint8(101), 0.01},
 		{0.1, -0.1, 2},
+		{0.1, 0, 2},
 	}
 
 	for _, tc := range cases {
-		True(t, InEpsilon(mockT, tc.a, tc.b, tc.epsilon, "Expected %V and %V to have a relative difference of %v", tc.a, tc.b, tc.epsilon))
+		True(t, InEpsilon(t, tc.a, tc.b, tc.epsilon, "Expected %V and %V to have a relative difference of %v", tc.a, tc.b, tc.epsilon), "test: %q", tc)
 	}
 
 	cases = []struct {
@@ -844,6 +902,7 @@ func TestInEpsilon(t *testing.T) {
 		{2.1, -2.2, 1},
 		{2.1, "bla-bla", 0},
 		{0.1, -0.1, 1.99},
+		{0, 0.1, 2}, // expected must be different to zero
 	}
 
 	for _, tc := range cases {
@@ -1086,4 +1145,66 @@ func TestDiffEmptyCases(t *testing.T) {
 	Equal(t, "", diff(1, 2))
 	Equal(t, "", diff(1, 2))
 	Equal(t, "", diff([]int{1}, []bool{true}))
+}
+
+// Ensure there are no data races
+func TestDiffRace(t *testing.T) {
+	t.Parallel()
+
+	expected := map[string]string{
+		"a": "A",
+		"b": "B",
+		"c": "C",
+	}
+
+	actual := map[string]string{
+		"d": "D",
+		"e": "E",
+		"f": "F",
+	}
+
+	// run diffs in parallel simulating tests with t.Parallel()
+	numRoutines := 10
+	rChans := make([]chan string, numRoutines)
+	for idx := range rChans {
+		rChans[idx] = make(chan string)
+		go func(ch chan string) {
+			defer close(ch)
+			ch <- diff(expected, actual)
+		}(rChans[idx])
+	}
+
+	for _, ch := range rChans {
+		for msg := range ch {
+			NotZero(t, msg) // dummy assert
+		}
+	}
+}
+
+type mockTestingT struct {
+}
+
+func (m *mockTestingT) Errorf(format string, args ...interface{}) {}
+
+func TestFailNowWithPlainTestingT(t *testing.T) {
+	mockT := &mockTestingT{}
+
+	Panics(t, func() {
+		FailNow(mockT, "failed")
+	}, "should panic since mockT is missing FailNow()")
+}
+
+type mockFailNowTestingT struct {
+}
+
+func (m *mockFailNowTestingT) Errorf(format string, args ...interface{}) {}
+
+func (m *mockFailNowTestingT) FailNow() {}
+
+func TestFailNowWithFullTestingT(t *testing.T) {
+	mockT := &mockFailNowTestingT{}
+
+	NotPanics(t, func() {
+		FailNow(mockT, "failed")
+	}, "should call mockT.FailNow() rather than panicking")
 }

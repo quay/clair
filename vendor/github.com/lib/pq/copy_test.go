@@ -3,6 +3,7 @@ package pq
 import (
 	"bytes"
 	"database/sql"
+	"database/sql/driver"
 	"strings"
 	"testing"
 )
@@ -381,6 +382,7 @@ func TestCopyRespLoopConnectionError(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer stmt.Close()
 
 	_, err = db.Exec("SELECT pg_terminate_backend($1)", pid)
 	if err != nil {
@@ -402,15 +404,16 @@ func TestCopyRespLoopConnectionError(t *testing.T) {
 	}
 	pge, ok := err.(*Error)
 	if !ok {
-		t.Fatalf("expected *pq.Error, got %+#v", err)
+		if err == driver.ErrBadConn {
+			// likely an EPIPE
+		} else {
+			t.Fatalf("expected *pq.Error or driver.ErrBadConn, got %+#v", err)
+		}
 	} else if pge.Code.Name() != "admin_shutdown" {
 		t.Fatalf("expected admin_shutdown, got %s", pge.Code.Name())
 	}
 
-	err = stmt.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
+	_ = stmt.Close()
 }
 
 func BenchmarkCopyIn(b *testing.B) {

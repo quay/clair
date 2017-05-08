@@ -59,10 +59,11 @@ func addCgoDumpTests() {
 	v3Len := fmt.Sprintf("%d", v3l)
 	v3Cap := fmt.Sprintf("%d", v3c)
 	v3t := "[6]testdata._Ctype_unsignedchar"
+	v3t2 := "[6]testdata._Ctype_uchar"
 	v3s := "(len=" + v3Len + " cap=" + v3Cap + ") " +
 		"{\n 00000000  74 65 73 74 33 00                               " +
 		"  |test3.|\n}"
-	addDumpTest(v3, "("+v3t+") "+v3s+"\n")
+	addDumpTest(v3, "("+v3t+") "+v3s+"\n", "("+v3t2+") "+v3s+"\n")
 
 	// C signed char array.
 	v4, v4l, v4c := testdata.GetCgoSignedCharArray()

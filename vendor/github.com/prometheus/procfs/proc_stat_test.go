@@ -1,6 +1,9 @@
 package procfs
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestProcStat(t *testing.T) {
 	p, err := FS("fixtures").NewProc(26231)
@@ -66,7 +69,7 @@ func TestProcStatResidentMemory(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if want, have := 1981*4096, s.ResidentMemory(); want != have {
+	if want, have := 1981*os.Getpagesize(), s.ResidentMemory(); want != have {
 		t.Errorf("want resident memory %d, have %d", want, have)
 	}
 }

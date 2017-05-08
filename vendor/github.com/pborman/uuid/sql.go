@@ -15,6 +15,11 @@ import (
 func (uuid *UUID) Scan(src interface{}) error {
 	switch src.(type) {
 	case string:
+		// if an empty UUID comes from a table, we return a null UUID
+		if src.(string) == "" {
+			return nil
+		}
+
 		// see uuid.Parse for required string format
 		parsed := Parse(src.(string))
 
@@ -25,6 +30,11 @@ func (uuid *UUID) Scan(src interface{}) error {
 		*uuid = parsed
 	case []byte:
 		b := src.([]byte)
+
+		// if an empty UUID comes from a table, we return a null UUID
+		if len(b) == 0 {
+			return nil
+		}
 
 		// assumes a simple slice of bytes if 16 bytes
 		// otherwise attempts to parse

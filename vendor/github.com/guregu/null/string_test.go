@@ -93,17 +93,26 @@ func TestMarshalString(t *testing.T) {
 	data, err := json.Marshal(str)
 	maybePanic(err)
 	assertJSONEquals(t, data, `"test"`, "non-empty json marshal")
+	data, err = str.MarshalText()
+	maybePanic(err)
+	assertJSONEquals(t, data, "test", "non-empty text marshal")
 
 	// empty values should be encoded as an empty string
 	zero := StringFrom("")
 	data, err = json.Marshal(zero)
 	maybePanic(err)
 	assertJSONEquals(t, data, `""`, "empty json marshal")
+	data, err = zero.MarshalText()
+	maybePanic(err)
+	assertJSONEquals(t, data, "", "string marshal text")
 
 	null := StringFromPtr(nil)
 	data, err = json.Marshal(null)
 	maybePanic(err)
 	assertJSONEquals(t, data, `null`, "null json marshal")
+	data, err = null.MarshalText()
+	maybePanic(err)
+	assertJSONEquals(t, data, "", "string marshal text")
 }
 
 // Tests omitempty... broken until Go 1.4

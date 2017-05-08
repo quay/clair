@@ -2,15 +2,10 @@ package netutil
 
 import (
 	"io"
+	"log"
 	"net"
 	"sync"
 	"time"
-
-	"github.com/coreos/pkg/capnslog"
-)
-
-var (
-	log = capnslog.NewPackageLogger("github.com/coreos/pkg/netutil", "main")
 )
 
 // ProxyTCP proxies between two TCP connections.
@@ -30,9 +25,9 @@ func ProxyTCP(conn1, conn2 net.Conn, tlsWriteDeadline, tlsReadDeadline time.Dura
 
 func copyBytes(dst, src net.Conn, wg *sync.WaitGroup, writeDeadline, readDeadline time.Duration) {
 	defer wg.Done()
-	n, err := io.Copy(dst, src)
+	_, err := io.Copy(dst, src)
 	if err != nil {
-		log.Errorf("proxy i/o error: %v", err)
+		log.Printf("proxy i/o error: %v", err)
 	}
 
 	if cr, ok := src.(*net.TCPConn); ok {
@@ -50,6 +45,4 @@ func copyBytes(dst, src net.Conn, wg *sync.WaitGroup, writeDeadline, readDeadlin
 		rto := time.Now().Add(readDeadline)
 		dst.SetReadDeadline(rto)
 	}
-
-	log.Debugf("proxy copied %d bytes %s -> %s", n, src.RemoteAddr(), dst.RemoteAddr())
 }

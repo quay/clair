@@ -87,31 +87,31 @@ func TestHstore(t *testing.T) {
 	// a few example maps to test out
 	hsOnePair := Hstore{
 		Map: map[string]sql.NullString{
-			"key1": {"value1", true},
+			"key1": {String: "value1", Valid: true},
 		},
 	}
 
 	hsThreePairs := Hstore{
 		Map: map[string]sql.NullString{
-			"key1": {"value1", true},
-			"key2": {"value2", true},
-			"key3": {"value3", true},
+			"key1": {String: "value1", Valid: true},
+			"key2": {String: "value2", Valid: true},
+			"key3": {String: "value3", Valid: true},
 		},
 	}
 
 	hsSmorgasbord := Hstore{
 		Map: map[string]sql.NullString{
-			"nullstring":             {"NULL", true},
-			"actuallynull":           {"", false},
-			"NULL":                   {"NULL string key", true},
-			"withbracket":            {"value>42", true},
-			"withequal":              {"value=42", true},
-			`"withquotes1"`:          {`this "should" be fine`, true},
-			`"withquotes"2"`:         {`this "should\" also be fine`, true},
-			"embedded1":              {"value1=>x1", true},
-			"embedded2":              {`"value2"=>x2`, true},
-			"withnewlines":           {"\n\nvalue\t=>2", true},
-			"<<all sorts of crazy>>": {`this, "should,\" also, => be fine`, true},
+			"nullstring":             {String: "NULL", Valid: true},
+			"actuallynull":           {String: "", Valid: false},
+			"NULL":                   {String: "NULL string key", Valid: true},
+			"withbracket":            {String: "value>42", Valid: true},
+			"withequal":              {String: "value=42", Valid: true},
+			`"withquotes1"`:          {String: `this "should" be fine`, Valid: true},
+			`"withquotes"2"`:         {String: `this "should\" also be fine`, Valid: true},
+			"embedded1":              {String: "value1=>x1", Valid: true},
+			"embedded2":              {String: `"value2"=>x2`, Valid: true},
+			"withnewlines":           {String: "\n\nvalue\t=>2", Valid: true},
+			"<<all sorts of crazy>>": {String: `this, "should,\" also, => be fine`, Valid: true},
 		},
 	}
 
