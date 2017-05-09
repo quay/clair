@@ -105,6 +105,7 @@ func LoadConfig(path string) (config *Config, err error) {
 	} else {
 		_, err = fernet.DecodeKey(config.API.PaginationKey)
 		if err != nil {
+			err = errors.New("Invalid Pagination key; must be 32-bit URL-safe base64")
 			return
 		}
 	}
