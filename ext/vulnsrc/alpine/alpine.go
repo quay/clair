@@ -35,8 +35,7 @@ import (
 )
 
 const (
-	// When available, this should be updated to use HTTPS.
-	secdbGitURL  = "http://git.alpinelinux.org/cgit/alpine-secdb"
+	secdbGitURL  = "https://git.alpinelinux.org/cgit/alpine-secdb"
 	updaterFlag  = "alpine-secdbUpdater"
 	nvdURLPrefix = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
 )
