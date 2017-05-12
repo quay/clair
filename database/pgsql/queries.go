@@ -77,11 +77,16 @@ const (
 
 	// layer.go
 	searchLayer = `
-		SELECT l.id, l.name, l.engineversion, p.id, p.name, n.id, n.name, n.version_format
-		FROM Layer l
-			LEFT JOIN Layer p ON l.parent_id = p.id
-			LEFT JOIN Namespace n ON l.namespace_id = n.id
+			SELECT l.id, l.name, l.engineversion, p.id, p.name
+			FROM Layer l
+				LEFT JOIN Layer p ON l.parent_id = p.id
 		WHERE l.name = $1;`
+
+	searchLayerNamespace = `
+			SELECT n.id, n.name, n.version_format 
+			FROM Namespace n
+				JOIN Layer_Namespace lns ON lns.namespace_id = n.id 
+			WHERE lns.layer_id = $1`
 
 	searchLayerFeatureVersion = `
 		WITH RECURSIVE layer_tree(id, name, parent_id, depth, path, cycle) AS(
@@ -113,11 +118,14 @@ const (
 						AND v.deleted_at IS NULL`
 
 	insertLayer = `
-		INSERT INTO Layer(name, engineversion, parent_id, namespace_id, created_at)
-    VALUES($1, $2, $3, $4, CURRENT_TIMESTAMP)
-    RETURNING id`
+		INSERT INTO Layer(name, engineversion, parent_id, created_at)
+		VALUES($1, $2, $3, CURRENT_TIMESTAMP)
+		RETURNING id`
 
-	updateLayer = `UPDATE LAYER SET engineversion = $2, namespace_id = $3 WHERE id = $1`
+	insertLayerNamespace = `INSERT INTO Layer_Namespace(layer_id, namespace_id) VALUES($1, $2)`
+	removeLayerNamespace = `DELETE FROM Layer_Namespace WHERE layer_id = $1`
+
+	updateLayer = `UPDATE LAYER SET engineversion = $2 WHERE id = $1`
 
 	removeLayerDiffFeatureVersion = `
 		DELETE FROM Layer_diff_FeatureVersion

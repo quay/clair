@@ -85,7 +85,10 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 	// Ensure that the 'wheezy' layer has the expected namespace and features.
 	wheezy, ok := datastore.layers["wheezy"]
 	if assert.True(t, ok, "layer 'wheezy' not processed") {
-		assert.Equal(t, "debian:7", wheezy.Namespace.Name)
+		if !assert.Len(t, wheezy.Namespaces, 1) {
+			return
+		}
+		assert.Equal(t, "debian:7", wheezy.Namespaces[0].Name)
 		assert.Len(t, wheezy.Features, 52)
 
 		for _, nufv := range nonUpgradedFeatureVersions {
@@ -98,7 +101,10 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 	// Ensure that the 'wheezy' layer has the expected namespace and non-upgraded features.
 	jessie, ok := datastore.layers["jessie"]
 	if assert.True(t, ok, "layer 'jessie' not processed") {
-		assert.Equal(t, "debian:8", jessie.Namespace.Name)
+		if !assert.Len(t, jessie.Namespaces, 1) {
+			return
+		}
+		assert.Equal(t, "debian:8", jessie.Namespaces[0].Name)
 		assert.Len(t, jessie.Features, 74)
 
 		for _, nufv := range nonUpgradedFeatureVersions {

@@ -68,26 +68,25 @@ func RegisterDetector(name string, d Detector) {
 	detectors[name] = d
 }
 
-// Detect iterators through all registered Detectors and returns the first
-// non-nil detected namespace.
-func Detect(files tarutil.FilesMap) (*database.Namespace, error) {
+// Detect iterators through all registered Detectors and returns all non-nil detected namespaces
+func Detect(files tarutil.FilesMap) ([]database.Namespace, error) {
 	detectorsM.RLock()
 	defer detectorsM.RUnlock()
-
+	var namespaces []database.Namespace
 	for name, detector := range detectors {
 		namespace, err := detector.Detect(files)
 		if err != nil {
 			log.WithError(err).WithField("name", name).Warning("failed while attempting to detect namespace")
-			return nil, err
+			return []database.Namespace{}, err
 		}
 
 		if namespace != nil {
 			log.WithFields(log.Fields{"name": name, "namespace": namespace.Name}).Debug("detected namespace")
-			return namespace, nil
+			namespaces = append(namespaces, *namespace)
 		}
 	}
 
-	return nil, nil
+	return namespaces, nil
 }
 
 // RequiredFilenames returns the total list of files required for all

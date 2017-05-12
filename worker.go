@@ -105,7 +105,7 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 	}
 
 	// Analyze the content.
-	layer.Namespace, layer.Features, err = detectContent(imageFormat, name, path, headers, layer.Parent)
+	layer.Namespaces, layer.Features, err = detectContent(imageFormat, name, path, headers, layer.Parent)
 	if err != nil {
 		return err
 	}
@@ -115,7 +115,7 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 
 // detectContent downloads a layer's archive and extracts its Namespace and
 // Features.
-func detectContent(imageFormat, name, path string, headers map[string]string, parent *database.Layer) (namespace *database.Namespace, featureVersions []database.FeatureVersion, err error) {
+func detectContent(imageFormat, name, path string, headers map[string]string, parent *database.Layer) (namespaces []database.Namespace, featureVersions []database.FeatureVersion, err error) {
 	totalRequiredFiles := append(featurefmt.RequiredFilenames(), featurens.RequiredFilenames()...)
 	files, err := imagefmt.Extract(imageFormat, path, headers, totalRequiredFiles)
 	if err != nil {
@@ -123,15 +123,20 @@ func detectContent(imageFormat, name, path string, headers map[string]string, pa
 		return
 	}
 
-	namespace, err = detectNamespace(name, files, parent)
+	namespaces, err = detectNamespaces(name, files, parent)
 	if err != nil {
 		return
 	}
 
 	// Detect features.
-	featureVersions, err = detectFeatureVersions(name, files, namespace, parent)
-	if err != nil {
-		return
+	var fv []database.FeatureVersion
+	// detect feature versions in all namespaces
+	for _, namespace := range namespaces {
+		fv, err = detectFeatureVersions(name, files, &namespace, parent)
+		if err != nil {
+			return
+		}
+		featureVersions = append(featureVersions, fv...)
 	}
 	if len(featureVersions) > 0 {
 		log.WithFields(log.Fields{logLayerName: name, "feature count": len(featureVersions)}).Debug("detected features")
@@ -140,23 +145,24 @@ func detectContent(imageFormat, name, path string, headers map[string]string, pa
 	return
 }
 
-func detectNamespace(name string, files tarutil.FilesMap, parent *database.Layer) (namespace *database.Namespace, err error) {
-	namespace, err = featurens.Detect(files)
+func detectNamespaces(name string, files tarutil.FilesMap, parent *database.Layer) (namespaces []database.Namespace, err error) {
+	namespaces, err = featurens.Detect(files)
 	if err != nil {
 		return
 	}
-	if namespace != nil {
-		log.WithFields(log.Fields{logLayerName: name, "detected namespace": namespace.Name}).Debug("detected namespace")
+	if len(namespaces) > 0 {
+		for _, ns := range namespaces {
+			log.WithFields(log.Fields{logLayerName: name, "detected namespace": ns.Name}).Debug("detected namespace")
+		}
 		return
 	}
 
 	// Fallback to the parent's namespace.
 	if parent != nil {
-		namespace = parent.Namespace
-		if namespace != nil {
-			log.WithFields(log.Fields{logLayerName: name, "detected namespace": namespace.Name}).Debug("detected namespace (from parent)")
-			return
+		for _, ns := range parent.Namespaces {
+			log.WithFields(log.Fields{logLayerName: name, "detected namespace": ns.Name}).Debug("detected namespace (from parent)")
 		}
+		return
 	}
 
 	return
