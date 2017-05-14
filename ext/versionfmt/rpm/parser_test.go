@@ -162,6 +162,11 @@ func TestParseAndCompare(t *testing.T) {
 		{"1.0~rc1~git123", EQUAL, "1.0~rc1~git123"},
 		{"1.0~rc1~git123", LESS, "1.0~rc1"},
 		{"1.0~rc1", GREATER, "1.0~rc1~git123"},
+		{"1~", GREATER, "1~~"},
+		{"2~", GREATER, "1"},
+		{"1.0", GREATER, "1.0-~"},
+		{"1.0", LESS, "1.0-1~"},
+		{"~", GREATER, "~~"},
 	}
 
 	var (
