@@ -212,23 +212,9 @@ func rpmvercmp(strA, strB string) int {
 			} else if len(b) > len(a) {
 				return -1
 			}
-
 		} else if unicode.IsNumber([]rune(b)[0]) {
 			// a is alpha, b is numeric
 			return -1
-		}
-
-		// This is the last iteration.
-		if i == segs-1 {
-			// If there is a tilde in a segment past the min number of segments, find
-			// it before we rely on string compare.
-			lia := strings.LastIndex(strA, "~")
-			lib := strings.LastIndex(strB, "~")
-			if lia > lib {
-				return -1
-			} else if lia < lib {
-				return 1
-			}
 		}
 
 		// string compare
@@ -242,6 +228,13 @@ func rpmvercmp(strA, strB string) int {
 	// segments were all the same but separators must have been different
 	if len(segsa) == len(segsb) {
 		return 0
+	}
+
+	// If there is a tilde in a segment past the min number of segments, find it.
+	if len(segsa) > segs && []rune(segsa[segs])[0] == '~' {
+		return -1
+	} else if len(segsb) > segs && []rune(segsb[segs])[0] == '~' {
+		return 1
 	}
 
 	// whoever has the most segments wins
