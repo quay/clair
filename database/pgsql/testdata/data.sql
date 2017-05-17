@@ -36,11 +36,11 @@ INSERT INTO layer (id, name, engineversion, parent_id) VALUES
   (5, 'layer-3b', 1, 3);
 
 INSERT INTO layer_namespace (id, layer_id, namespace_id) VALUES
-(1, 2, 1),
-(2, 3, 1),
-(3, 4, 1),
-(4, 5, 2),
-(5, 5, 1);
+  (1, 2, 1),
+  (2, 3, 1),
+  (3, 4, 1),
+  (4, 5, 2),
+  (5, 5, 1);
 
 INSERT INTO layer_diff_featureversion (id, layer_id, featureversion_id, modification) VALUES
   (1, 2, 1, 'add'),
