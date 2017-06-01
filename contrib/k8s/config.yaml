@@ -15,13 +15,16 @@
 # The values specified here are the default values that Clair uses if no configuration file is specified or if the keys are not defined.
 clair:
   database:
-    # PostgreSQL Connection string
-    # http://www.postgresql.org/docs/9.4/static/libpq-connect.html
-    source: postgres://postgres:password@postgres:5432/postgres?sslmode=disable
+    # Database driver
+    type: pgsql
+    options:
+      # PostgreSQL Connection string
+      # https://www.postgresql.org/docs/current/static/libpq-connect.html#LIBPQ-CONNSTRING
+      source: postgres://postgres:password@postgres:5432/postgres?sslmode=disable
 
-    # Number of elements kept in the cache
-    # Values unlikely to change (e.g. namespaces) are cached in order to save prevent needless roundtrips to the database.
-    cacheSize: 16384
+      # Number of elements kept in the cache
+      # Values unlikely to change (e.g. namespaces) are cached in order to save prevent needless roundtrips to the database.
+      cachesize: 16384
 
   api:
     # API server port
@@ -37,7 +40,7 @@ clair:
     # 32-bit URL-safe base64 key used to encrypt pagination tokens
     # If one is not provided, it will be generated.
     # Multiple clair instances in the same cluster need the same value.
-    paginationKey:
+    paginationkey:
 
     # Optional PKI configuration
     # If you want to easily generate client certificates and CAs, try the following projects:
@@ -58,7 +61,7 @@ clair:
     attempts: 3
 
     # Duration before a failed notification is retried
-    renotifyInterval: 2h
+    renotifyinterval: 2h
 
     http:
       # Optional endpoint that will receive notifications via POST requests
@@ -72,3 +75,6 @@ clair:
       cafile:
       keyfile:
       certfile:
+
+      # Optional HTTP Proxy: must be a valid URL (including the scheme).
+      proxy:
