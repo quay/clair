@@ -24,6 +24,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/coreos/clair/api/httputil"
 	"github.com/coreos/clair/database"
 )
 
@@ -54,7 +55,7 @@ func httpHandler(h handler, ctx *context) httprouter.Handle {
 			WithLabelValues(route, statusStr).
 			Observe(float64(time.Since(start).Nanoseconds()) / float64(time.Millisecond))
 
-		log.WithFields(log.Fields{"remote addr": r.RemoteAddr, "method": r.Method, "request uri": r.RequestURI, "status": statusStr, "elapsed time": time.Since(start)}).Info("Handled HTTP request")
+		log.WithFields(log.Fields{"remote addr": httputil.GetClientAddr(r), "method": r.Method, "request uri": r.RequestURI, "status": statusStr, "elapsed time": time.Since(start)}).Info("Handled HTTP request")
 	}
 }
 

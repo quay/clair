@@ -21,6 +21,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/coreos/clair/api/httputil"
 	"github.com/coreos/clair/api/v1"
 	"github.com/coreos/clair/database"
 )
@@ -53,7 +54,7 @@ func (rtr router) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.WithFields(log.Fields{"status": http.StatusNotFound, "method": r.Method, "request uri": r.RequestURI, "remote addr": r.RemoteAddr}).Info("Served HTTP request")
+	log.WithFields(log.Fields{"status": http.StatusNotFound, "method": r.Method, "request uri": r.RequestURI, "remote addr": httputil.GetClientAddr(r)}).Info("Served HTTP request")
 	http.NotFound(w, r)
 }
 
