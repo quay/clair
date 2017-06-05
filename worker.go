@@ -145,26 +145,29 @@ func detectContent(imageFormat, name, path string, headers map[string]string, pa
 	return
 }
 
+// detectNamespaces returns a list of unique namespaces detected in a layer and its ancestry.
 func detectNamespaces(name string, files tarutil.FilesMap, parent *database.Layer) (namespaces []database.Namespace, err error) {
-	namespaces, err = featurens.Detect(files)
+	nsSet := map[string]*database.Namespace{}
+	nsCurrent, err := featurens.Detect(files)
 	if err != nil {
 		return
 	}
-	if len(namespaces) > 0 {
-		for _, ns := range namespaces {
-			log.WithFields(log.Fields{logLayerName: name, "detected namespace": ns.Name}).Debug("detected namespace")
-		}
-		return
+
+	for _, ns := range nsCurrent {
+		nsSet[ns.Name] = &ns
+		log.WithFields(log.Fields{logLayerName: name, "detected namespace": ns.Name}).Debug("detected namespace")
 	}
 
-	// Fallback to the parent's namespace.
 	if parent != nil {
 		for _, ns := range parent.Namespaces {
+			nsSet[ns.Name] = &ns
 			log.WithFields(log.Fields{logLayerName: name, "detected namespace": ns.Name}).Debug("detected namespace (from parent)")
 		}
-		return
 	}
 
+	for _, ns := range nsSet {
+		namespaces = append(namespaces, *ns)
+	}
 	return
 }
 

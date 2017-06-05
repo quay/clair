@@ -101,11 +101,16 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 	// Ensure that the 'wheezy' layer has the expected namespace and non-upgraded features.
 	jessie, ok := datastore.layers["jessie"]
 	if assert.True(t, ok, "layer 'jessie' not processed") {
-		if !assert.Len(t, jessie.Namespaces, 1) {
+		if !assert.Len(t, jessie.Namespaces, 2) {
 			return
 		}
-		assert.Equal(t, "debian:8", jessie.Namespaces[0].Name)
-		assert.Len(t, jessie.Features, 74)
+		nsNames := []string{jessie.Namespaces[0].Name, jessie.Namespaces[1].Name}
+		// the old features and namespace should remain here with only the features in new namespaces detected
+		assert.Contains(t, nsNames, "debian:8")
+		assert.Contains(t, nsNames, "debian:7")
+
+		// because the featurefmt detects the features under "debian:8" and "debian:7", therefore the number of features is duplicated
+		assert.Len(t, jessie.Features, 148)
 
 		for _, nufv := range nonUpgradedFeatureVersions {
 			nufv.Feature.Namespace.Name = "debian:7"
