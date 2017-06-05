@@ -1,0 +1,371 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "clair.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/ancestry": {
+      "post": {
+        "operationId": "PostAncestry",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clairpbPostAncestryResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/clairpbPostAncestryRequest"
+            }
+          }
+        ],
+        "tags": [
+          "AncestryService"
+        ]
+      }
+    },
+    "/ancestry/{ancestry_name}": {
+      "get": {
+        "operationId": "GetAncestry",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clairpbGetAncestryResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "ancestry_name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "with_vulnerabilities",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          },
+          {
+            "name": "with_features",
+            "in": "query",
+            "required": false,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "AncestryService"
+        ]
+      }
+    },
+    "/notifications/{name}": {
+      "get": {
+        "operationId": "GetNotification",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clairpbGetNotificationResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "tags": [
+          "NotificationService"
+        ]
+      },
+      "delete": {
+        "operationId": "DeleteNotification",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "NotificationService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "PostAncestryRequestPostLayer": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "headers": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "clairpbAncestry": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "engine_version": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clairpbLayer"
+          }
+        }
+      }
+    },
+    "clairpbFeature": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "namespace_name": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "version_format": {
+          "type": "string"
+        },
+        "added_by": {
+          "type": "string"
+        },
+        "vulnerabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clairpbVulnerability"
+          }
+        }
+      }
+    },
+    "clairpbGetAncestryResponse": {
+      "type": "object",
+      "properties": {
+        "ancestry": {
+          "$ref": "#/definitions/clairpbAncestry"
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clairpbFeature"
+          }
+        }
+      }
+    },
+    "clairpbGetNotificationResponse": {
+      "type": "object",
+      "properties": {
+        "notification": {
+          "$ref": "#/definitions/clairpbNotification"
+        }
+      }
+    },
+    "clairpbLayer": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "namespace_names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "clairpbLayersIntroducingVulnerabilty": {
+      "type": "object",
+      "properties": {
+        "vulnerability": {
+          "$ref": "#/definitions/clairpbVulnerability"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clairpbOrderedLayerName"
+          }
+        }
+      }
+    },
+    "clairpbNotification": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "created": {
+          "type": "string"
+        },
+        "notified": {
+          "type": "string"
+        },
+        "deleted": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "page": {
+          "$ref": "#/definitions/clairpbPage"
+        }
+      }
+    },
+    "clairpbOrderedLayerName": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "layer_name": {
+          "type": "string"
+        }
+      }
+    },
+    "clairpbPage": {
+      "type": "object",
+      "properties": {
+        "this_token": {
+          "type": "string"
+        },
+        "next_token": {
+          "type": "string"
+        },
+        "old": {
+          "$ref": "#/definitions/clairpbLayersIntroducingVulnerabilty"
+        },
+        "new": {
+          "$ref": "#/definitions/clairpbLayersIntroducingVulnerabilty"
+        }
+      }
+    },
+    "clairpbPostAncestryRequest": {
+      "type": "object",
+      "properties": {
+        "ancestry_name": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string"
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PostAncestryRequestPostLayer"
+          }
+        }
+      }
+    },
+    "clairpbPostAncestryResponse": {
+      "type": "object",
+      "properties": {
+        "engine_version": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "clairpbVulnerability": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "namespace_name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "link": {
+          "type": "string"
+        },
+        "severity": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "string"
+        },
+        "fixed_by": {
+          "type": "string"
+        },
+        "fixed_in_features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clairpbFeature"
+          }
+        }
+      }
+    },
+    "protobufEmpty": {
+      "type": "object",
+      "description": "service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe JSON representation for `Empty` is empty JSON object `{}`.",
+      "title": "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:"
+    }
+  }
+}

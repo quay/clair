@@ -59,6 +59,7 @@ func DefaultConfig() Config {
 		API: &api.Config{
 			Port:       6060,
 			HealthPort: 6061,
+			GrpcPort:   6070,
 			Timeout:    900 * time.Second,
 		},
 		Notifier: &notification.Config{

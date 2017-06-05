@@ -26,6 +26,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/tylerb/graceful"
 
+	"github.com/coreos/clair/api/v2"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/stopper"
 )
@@ -35,10 +36,22 @@ const timeoutResponse = `{"Error":{"Message":"Clair failed to respond within the
 // Config is the configuration for the API service.
 type Config struct {
 	Port                      int
+	GrpcPort                  int
 	HealthPort                int
 	Timeout                   time.Duration
 	PaginationKey             string
 	CertFile, KeyFile, CAFile string
+}
+
+func RunV2(cfg *Config, store database.Datastore) {
+	tlsConfig, err := tlsClientConfig(cfg.CAFile)
+	if err != nil {
+		log.WithError(err).Fatal("could not initialize client cert authentication")
+	}
+	if tlsConfig != nil {
+		log.Info("main API configured with client certificate authentication")
+	}
+	v2.Run(cfg.GrpcPort, tlsConfig, cfg.PaginationKey, cfg.CertFile, cfg.KeyFile, store)
 }
 
 func Run(cfg *Config, store database.Datastore, st *stopper.Stopper) {

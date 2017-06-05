@@ -29,7 +29,7 @@ clair:
   api:
     # API server port
     port: 6060
-
+    grpcPort: 6070
     # Health server port
     # This is an unencrypted endpoint useful for load balancers to check to healthiness of the clair server.
     healthport: 6061
