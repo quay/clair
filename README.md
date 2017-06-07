@@ -75,6 +75,7 @@ Clair currently supports and tests against:
 * [Postgres] 9.4
 * [Postgres] 9.5
 * [Postgres] 9.6
+* [Docker] 1.9.1
 
 [Postgres]: https://www.postgresql.org
 
