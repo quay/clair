@@ -344,6 +344,7 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 			// Only consider the package if its status is needed, active, deferred, not-affected or
 			// released. Ignore DNE (package does not exist), needs-triage, ignored, pending.
 			if md["status"] == "needed" || md["status"] == "active" || md["status"] == "deferred" || md["status"] == "released" || md["status"] == "not-affected" {
+			    md["release"] = strings.Split(md["release"], "/")[0]
 				if _, isReleaseIgnored := ubuntuIgnoredReleases[md["release"]]; isReleaseIgnored {
 					continue
 				}

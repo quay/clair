@@ -68,6 +68,8 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 				OS = "debian"
 				break
 			}
+
+			line[2] = strings.Split(line[2], "/")[0]
 			version, found = database.UbuntuReleasesMapping[line[2]]
 			if found {
 				OS = "ubuntu"
