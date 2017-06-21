@@ -110,7 +110,7 @@ If this error is raised, manually execute `docker-compose start clair`.
 $ mkdir $PWD/clair_config
 $ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.example.yaml -o $PWD/clair_config/config.yaml
 $ docker run -d -e POSTGRES_PASSWORD="" -p 5432:5432 postgres:9.6
-$ docker run -d -p 6060-6061:6060-6061 -v $PWD/clair_config:/config quay.io/coreos/clair-git:latest -config=/config/config.yaml
+$ docker run -d -p 6060-6061:6060-6061 -v /tmp:/tmp -v $PWD/clair_config:/config quay.io/coreos/clair-git:latest -config=/config/config.yaml
 ```
 
 #### Source
