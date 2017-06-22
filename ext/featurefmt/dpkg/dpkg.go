@@ -37,7 +37,7 @@ var (
 type lister struct{}
 
 func init() {
-	featurefmt.RegisterLister("dpkg", &lister{})
+	featurefmt.RegisterLister("dpkg", dpkg.ParserName, &lister{})
 }
 
 func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion, error) {

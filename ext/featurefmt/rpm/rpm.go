@@ -35,7 +35,7 @@ import (
 type lister struct{}
 
 func init() {
-	featurefmt.RegisterLister("rpm", &lister{})
+	featurefmt.RegisterLister("rpm", rpm.ParserName, &lister{})
 }
 
 func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion, error) {

@@ -23,14 +23,17 @@ import (
 	"sync"
 	"testing"
 
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/tarutil"
-	"github.com/stretchr/testify/assert"
 )
 
 var (
-	listersM sync.RWMutex
-	listers  = make(map[string]Lister)
+	listersM             sync.RWMutex
+	listers              = make(map[string]Lister)
+	versionfmtListerName = make(map[string][]string)
 )
 
 // Lister represents an ability to list the features present in an image layer.
@@ -49,7 +52,7 @@ type Lister interface {
 //
 // If called twice with the same name, the name is blank, or if the provided
 // Lister is nil, this function panics.
-func RegisterLister(name string, l Lister) {
+func RegisterLister(name string, versionfmt string, l Lister) {
 	if name == "" {
 		panic("featurefmt: could not register a Lister with an empty name")
 	}
@@ -65,19 +68,35 @@ func RegisterLister(name string, l Lister) {
 	}
 
 	listers[name] = l
+	versionfmtListerName[versionfmt] = append(versionfmtListerName[versionfmt], name)
 }
 
 // ListFeatures produces the list of FeatureVersions in an image layer using
 // every registered Lister.
-func ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion, error) {
+func ListFeatures(files tarutil.FilesMap, namespace *database.Namespace) ([]database.FeatureVersion, error) {
 	listersM.RLock()
 	defer listersM.RUnlock()
 
-	var totalFeatures []database.FeatureVersion
-	for _, lister := range listers {
-		features, err := lister.ListFeatures(files)
+	var (
+		totalFeatures []database.FeatureVersion
+		listersName   []string
+		found         bool
+	)
+
+	if namespace == nil {
+		log.Debug("Can't detect features without namespace")
+		return totalFeatures, nil
+	}
+
+	if listersName, found = versionfmtListerName[namespace.VersionFormat]; !found {
+		log.WithFields(log.Fields{"namespace": namespace.Name, "version format": namespace.VersionFormat}).Debug("Unsupported Namespace")
+		return totalFeatures, nil
+	}
+
+	for _, listerName := range listersName {
+		features, err := listers[listerName].ListFeatures(files)
 		if err != nil {
-			return []database.FeatureVersion{}, err
+			return totalFeatures, err
 		}
 		totalFeatures = append(totalFeatures, features...)
 	}
