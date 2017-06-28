@@ -72,7 +72,7 @@ func RegisterDetector(name string, d Detector) {
 func Detect(files tarutil.FilesMap) ([]database.Namespace, error) {
 	detectorsM.RLock()
 	defer detectorsM.RUnlock()
-	var namespaces []database.Namespace
+	namespaces := map[string]*database.Namespace{}
 	for name, detector := range detectors {
 		namespace, err := detector.Detect(files)
 		if err != nil {
@@ -82,11 +82,15 @@ func Detect(files tarutil.FilesMap) ([]database.Namespace, error) {
 
 		if namespace != nil {
 			log.WithFields(log.Fields{"name": name, "namespace": namespace.Name}).Debug("detected namespace")
-			namespaces = append(namespaces, *namespace)
+			namespaces[namespace.Name] = namespace
 		}
 	}
 
-	return namespaces, nil
+	nslist := []database.Namespace{}
+	for _, ns := range namespaces {
+		nslist = append(nslist, *ns)
+	}
+	return nslist, nil
 }
 
 // RequiredFilenames returns the total list of files required for all

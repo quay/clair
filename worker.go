@@ -128,16 +128,11 @@ func detectContent(imageFormat, name, path string, headers map[string]string, pa
 		return
 	}
 
-	// Detect features.
-	var fv []database.FeatureVersion
-	// detect feature versions in all namespaces
-	for _, namespace := range namespaces {
-		fv, err = detectFeatureVersions(name, files, &namespace, parent)
-		if err != nil {
-			return
-		}
-		featureVersions = append(featureVersions, fv...)
+	featureVersions, err = detectFeatureVersions(name, files, namespaces, parent)
+	if err != nil {
+		return
 	}
+
 	if len(featureVersions) > 0 {
 		log.WithFields(log.Fields{logLayerName: name, "feature count": len(featureVersions)}).Debug("detected features")
 	}
@@ -153,16 +148,18 @@ func detectNamespaces(name string, files tarutil.FilesMap, parent *database.Laye
 		return
 	}
 
-	for _, ns := range nsCurrent {
-		nsSet[ns.Name] = &ns
-		log.WithFields(log.Fields{logLayerName: name, "detected namespace": ns.Name}).Debug("detected namespace")
-	}
-
 	if parent != nil {
 		for _, ns := range parent.Namespaces {
-			nsSet[ns.Name] = &ns
-			log.WithFields(log.Fields{logLayerName: name, "detected namespace": ns.Name}).Debug("detected namespace (from parent)")
+			// Under assumption that one version format corresponds to one type
+			// of namespace.
+			nsSet[ns.VersionFormat] = &ns
+			log.WithFields(log.Fields{logLayerName: name, "detected namespace": ns.Name, "version format": ns.VersionFormat}).Debug("detected namespace (from parent)")
 		}
+	}
+
+	for _, ns := range nsCurrent {
+		nsSet[ns.VersionFormat] = &ns
+		log.WithFields(log.Fields{logLayerName: name, "detected namespace": ns.Name, "version format": ns.VersionFormat}).Debug("detected namespace")
 	}
 
 	for _, ns := range nsSet {
@@ -171,25 +168,7 @@ func detectNamespaces(name string, files tarutil.FilesMap, parent *database.Laye
 	return
 }
 
-func detectFeatureVersions(name string, files tarutil.FilesMap, namespace *database.Namespace, parent *database.Layer) (features []database.FeatureVersion, err error) {
-	// TODO(Quentin-M): We need to pass the parent image to DetectFeatures because it's possible that
-	// some detectors would need it in order to produce the entire feature list (if they can only
-	// detect a diff). Also, we should probably pass the detected namespace so detectors could
-	// make their own decision.
-	features, err = featurefmt.ListFeatures(files)
-	if err != nil {
-		return
-	}
-
-	// If there are no FeatureVersions, use parent's FeatureVersions if possible.
-	// TODO(Quentin-M): We eventually want to give the choice to each detectors to use none/some of
-	// their parent's FeatureVersions. It would be useful for detectors that can't find their entire
-	// result using one Layer.
-	if len(features) == 0 && parent != nil {
-		features = parent.Features
-		return
-	}
-
+func detectFeatureVersions(name string, files tarutil.FilesMap, namespaces []database.Namespace, parent *database.Layer) (features []database.FeatureVersion, err error) {
 	// Build a map of the namespaces for each FeatureVersion in our parent layer.
 	parentFeatureNamespaces := make(map[string]database.Namespace)
 	if parent != nil {
@@ -198,28 +177,44 @@ func detectFeatureVersions(name string, files tarutil.FilesMap, namespace *datab
 		}
 	}
 
-	// Ensure that each FeatureVersion has an associated Namespace.
-	for i, feature := range features {
-		if feature.Feature.Namespace.Name != "" {
-			// There is a Namespace associated.
-			continue
+	for _, ns := range namespaces {
+		// TODO(Quentin-M): We need to pass the parent image to DetectFeatures because it's possible that
+		// some detectors would need it in order to produce the entire feature list (if they can only
+		// detect a diff). Also, we should probably pass the detected namespace so detectors could
+		// make their own decision.
+		detectedFeatures, err := featurefmt.ListFeatures(files, &ns)
+		if err != nil {
+			return features, err
 		}
 
-		if parentFeatureNamespace, ok := parentFeatureNamespaces[feature.Feature.Name+":"+feature.Version]; ok {
-			// The FeatureVersion is present in the parent layer; associate with their Namespace.
-			features[i].Feature.Namespace = parentFeatureNamespace
-			continue
-		}
+		// Ensure that each FeatureVersion has an associated Namespace.
+		for i, feature := range detectedFeatures {
+			if feature.Feature.Namespace.Name != "" {
+				// There is a Namespace associated.
+				continue
+			}
 
-		if namespace != nil {
-			// The Namespace has been detected in this layer; associate it.
-			features[i].Feature.Namespace = *namespace
-			continue
-		}
+			if parentFeatureNamespace, ok := parentFeatureNamespaces[feature.Feature.Name+":"+feature.Version]; ok {
+				// The FeatureVersion is present in the parent layer; associate
+				// with their Namespace.
+				// This might cause problem because a package  with same feature
+				// name and version could be different in parent layer's
+				// namespace and current layer's namespace
+				detectedFeatures[i].Feature.Namespace = parentFeatureNamespace
+				continue
+			}
 
-		log.WithFields(log.Fields{"feature name": feature.Feature.Name, "feature version": feature.Version, logLayerName: name}).Warning("Namespace unknown")
-		err = ErrUnsupported
-		return
+			detectedFeatures[i].Feature.Namespace = ns
+		}
+		features = append(features, detectedFeatures...)
+	}
+
+	// If there are no FeatureVersions, use parent's FeatureVersions if possible.
+	// TODO(Quentin-M): We eventually want to give the choice to each detectors to use none/some of
+	// their parent's FeatureVersions. It would be useful for detectors that can't find their entire
+	// result using one Layer.
+	if len(features) == 0 && parent != nil {
+		features = parent.Features
 	}
 
 	return
