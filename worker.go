@@ -56,7 +56,7 @@ func cleanURL(str string) string {
 //
 // TODO(Quentin-M): We could have a goroutine that looks for layers that have
 // been analyzed with an older engine version and that processes them.
-func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, path string, headers map[string]string) error {
+func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, path string, headers map[string]string, namespaceName string) error {
 	// Verify parameters.
 	if name == "" {
 		return commonerr.NewBadRequestError("could not process a layer which does not have a name")
@@ -104,8 +104,19 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 		log.WithFields(log.Fields{logLayerName: name, "past engine version": layer.EngineVersion, "current engine version": Version}).Debug("layer content has already been processed in the past with older engine. analyzing again")
 	}
 
+	// Check to see if the user's provided Namespace exists
+	var namespace *database.Namespace
+	if namespaceName != "" {
+		namespace, err = datastore.GetNamespace(namespaceName)
+		if err != nil {
+			if err == commonerr.ErrNotFound {
+				return commonerr.NewBadRequestError("could not find provided namespace")
+			}
+			return err
+		}
+	}
 	// Analyze the content.
-	layer.Namespace, layer.Features, err = detectContent(imageFormat, name, path, headers, layer.Parent)
+	layer.Namespace, layer.Features, err = detectContent(imageFormat, name, path, headers, layer.Parent, namespace)
 	if err != nil {
 		return err
 	}
@@ -115,7 +126,7 @@ func ProcessLayer(datastore database.Datastore, imageFormat, name, parentName, p
 
 // detectContent downloads a layer's archive and extracts its Namespace and
 // Features.
-func detectContent(imageFormat, name, path string, headers map[string]string, parent *database.Layer) (namespace *database.Namespace, featureVersions []database.FeatureVersion, err error) {
+func detectContent(imageFormat, name, path string, headers map[string]string, parent *database.Layer, ns *database.Namespace) (namespace *database.Namespace, featureVersions []database.FeatureVersion, err error) {
 	totalRequiredFiles := append(featurefmt.RequiredFilenames(), featurens.RequiredFilenames()...)
 	files, err := imagefmt.Extract(imageFormat, path, headers, totalRequiredFiles)
 	if err != nil {
@@ -126,6 +137,11 @@ func detectContent(imageFormat, name, path string, headers map[string]string, pa
 	namespace, err = detectNamespace(name, files, parent)
 	if err != nil {
 		return
+	}
+
+	if namespace == nil && ns != nil {
+		log.WithFields(log.Fields{logLayerName: name, "namespace provided by user": ns.Name}).Debug("detected namespace")
+		namespace = ns
 	}
 
 	// Detect features.

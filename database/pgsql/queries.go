@@ -40,6 +40,7 @@ const (
 
 	searchNamespace = `SELECT id FROM Namespace WHERE name = $1`
 	listNamespace   = `SELECT id, name, version_format FROM Namespace`
+	getNamespace    = `SELECT id, name, version_format FROM Namespace WHERE name = $1`
 
 	// feature.go
 	soiFeature = `

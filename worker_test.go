@@ -34,12 +34,14 @@ import (
 
 type mockDatastore struct {
 	database.MockDatastore
-	layers map[string]database.Layer
+	layers     map[string]database.Layer
+	namespaces map[string]database.Namespace
 }
 
 func newMockDatastore() *mockDatastore {
 	return &mockDatastore{
-		layers: make(map[string]database.Layer),
+		layers:     make(map[string]database.Layer),
+		namespaces: make(map[string]database.Namespace),
 	}
 }
 
@@ -59,6 +61,15 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 		}
 		return database.Layer{}, commonerr.ErrNotFound
 	}
+	datastore.FctGetNamespace = func(namespaceName string) (*database.Namespace, error) {
+		if namespace, exists := datastore.namespaces[namespaceName]; exists {
+			return &namespace, nil
+		}
+		return nil, commonerr.ErrNotFound
+	}
+
+	// Add Namespace
+	datastore.namespaces["debian:7"] = database.Namespace{Name: "debian:7"}
 
 	// Create the list of FeatureVersions that should not been upgraded from one layer to another.
 	nonUpgradedFeatureVersions := []database.FeatureVersion{
@@ -78,9 +89,17 @@ func TestProcessWithDistUpgrade(t *testing.T) {
 	// wheezy.tar: FROM debian:wheezy
 	// jessie.tar: RUN sed -i "s/precise/trusty/" /etc/apt/sources.list && apt-get update &&
 	//             apt-get -y dist-upgrade
-	assert.Nil(t, ProcessLayer(datastore, "Docker", "blank", "", testDataPath+"blank.tar.gz", nil))
-	assert.Nil(t, ProcessLayer(datastore, "Docker", "wheezy", "blank", testDataPath+"wheezy.tar.gz", nil))
-	assert.Nil(t, ProcessLayer(datastore, "Docker", "jessie", "wheezy", testDataPath+"jessie.tar.gz", nil))
+	assert.Nil(t, ProcessLayer(datastore, "Docker", "blank", "", testDataPath+"blank.tar.gz", nil, ""))
+	assert.Nil(t, ProcessLayer(datastore, "Docker", "blankWithNamespace", "", testDataPath+"blank.tar.gz", nil, "debian:7"))
+	assert.Nil(t, ProcessLayer(datastore, "Docker", "wheezy", "blank", testDataPath+"wheezy.tar.gz", nil, ""))
+	assert.Nil(t, ProcessLayer(datastore, "Docker", "jessie", "wheezy", testDataPath+"jessie.tar.gz", nil, ""))
+
+	// Ensure that the 'blankWithNamespace' layer has the provided namespace
+	blankWithNamespace, ok := datastore.layers["blankWithNamespace"]
+	if assert.True(t, ok, "layer 'blankWithNamespace' not processed") {
+		assert.Equal(t, "debian:7", blankWithNamespace.Namespace.Name)
+		assert.Len(t, blankWithNamespace.Features, 0)
+	}
 
 	// Ensure that the 'wheezy' layer has the expected namespace and features.
 	wheezy, ok := datastore.layers["wheezy"]
