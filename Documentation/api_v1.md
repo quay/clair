@@ -66,6 +66,7 @@ In order to analyze a container image, this route has to be called for each laye
 This request blocks for the entire duration of the downloading and indexing of the layer and displays the provided Layer with an updated `IndexByVersion` property.
 The Name field must be unique globally. Consequently, using the Blob digest describing the Layer content is not sufficient as Clair won't be able to differentiate two empty filesystem diffs that belong to two different image trees.
 The Authorization field is an optional value whose contents will fill the Authorization HTTP Header when requesting the layer via HTTP.
+The NamespaceName field is an optional value used when the namespace can't be determined by Clair.
 
 #### Example Request
 
@@ -82,7 +83,8 @@ POST http://localhost:6060/v1/layers HTTP/1.1
       "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWV9.EkN-DOsnsuRjRO6BxXemmJDm3HbxrbRzXglbN2S4sOkopdU4IsDxTI8jO19W_A4K8ZPJijNLis4EZsHeY559a4DFOd50_OqgHGuERTqYZyuhtF39yxJPAjUESwxk2J5k_4zM3O-vtd1Ghyo4IbqKKSy6J9mTniYJPenn5-HIirE"
     },
     "ParentName": "140f9bdfeb9784cf8730e9dab5dd12fbd704151cf555ac8cae650451794e5ac2",
-    "Format": "Docker"
+    "Format": "Docker",
+    "NamespaceName": "debian:7"
   }
 }
 ```
