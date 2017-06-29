@@ -20,6 +20,7 @@ import "time"
 // The default behavior of each method is to simply panic.
 type MockDatastore struct {
 	FctListNamespaces           func() ([]Namespace, error)
+	FctGetNamespace             func(namespaceName string) (*Namespace, error)
 	FctInsertLayer              func(Layer) error
 	FctFindLayer                func(name string, withFeatures, withVulnerabilities bool) (Layer, error)
 	FctDeleteLayer              func(name string) error
@@ -45,6 +46,13 @@ type MockDatastore struct {
 func (mds *MockDatastore) ListNamespaces() ([]Namespace, error) {
 	if mds.FctListNamespaces != nil {
 		return mds.FctListNamespaces()
+	}
+	panic("required mock function not implemented")
+}
+
+func (mds *MockDatastore) GetNamespace(namespaceName string) (*Namespace, error) {
+	if mds.FctGetNamespace != nil {
+		return mds.FctGetNamespace(namespaceName)
 	}
 	panic("required mock function not implemented")
 }

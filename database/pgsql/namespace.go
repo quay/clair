@@ -73,3 +73,12 @@ func (pgSQL *pgSQL) ListNamespaces() (namespaces []database.Namespace, err error
 
 	return namespaces, err
 }
+
+func (pgSQL *pgSQL) GetNamespace(namespaceName string) (*database.Namespace, error) {
+	var ns database.Namespace
+	err := pgSQL.QueryRow(getNamespace, namespaceName).Scan(&ns.ID, &ns.Name, &ns.VersionFormat)
+	if err != nil {
+		return nil, handleError("getNamespace", err)
+	}
+	return &ns, nil
+}

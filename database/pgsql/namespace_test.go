@@ -72,3 +72,22 @@ func TestListNamespace(t *testing.T) {
 		}
 	}
 }
+
+func TestGetNamespace(t *testing.T) {
+	datastore, err := openDatabaseForTest("GetNamespace", true)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	defer datastore.Close()
+
+	// Invalid Namespace.
+	ns0, err := datastore.GetNamespace("Not present")
+	assert.NotNil(t, err)
+	assert.Nil(t, ns0)
+
+	// Valid Namespace.
+	ns1, err := datastore.GetNamespace("debian:7")
+	assert.Nil(t, err)
+	assert.Equal(t, ns1.Name, "debian:7")
+}

@@ -76,6 +76,9 @@ type Datastore interface {
 	// ListNamespaces returns the entire list of known Namespaces.
 	ListNamespaces() ([]Namespace, error)
 
+	//GetNamespace returns the namespace with name namespaceName
+	GetNamespace(namespaceName string) (*Namespace, error)
+
 	// InsertLayer stores a Layer in the database.
 	//
 	// A Layer is uniquely identified by its Name.
