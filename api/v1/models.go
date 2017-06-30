@@ -15,14 +15,9 @@
 package v1
 
 import (
-	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"time"
 
-	"github.com/fernet/fernet-go"
-
+	"github.com/coreos/clair/api/token"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 )
@@ -227,7 +222,7 @@ func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotifica
 
 	var nextPageStr string
 	if nextPage != database.NoVulnerabilityNotificationPage {
-		nextPageBytes, _ := tokenMarshal(nextPage, key)
+		nextPageBytes, _ := token.Marshal(nextPage, key)
 		nextPageStr = string(nextPageBytes)
 	}
 
@@ -319,25 +314,4 @@ type FeatureEnvelope struct {
 	Feature  *Feature   `json:"Feature,omitempty"`
 	Features *[]Feature `json:"Features,omitempty"`
 	Error    *Error     `json:"Error,omitempty"`
-}
-
-func tokenUnmarshal(token string, key string, v interface{}) error {
-	k, _ := fernet.DecodeKey(key)
-	msg := fernet.VerifyAndDecrypt([]byte(token), time.Hour, []*fernet.Key{k})
-	if msg == nil {
-		return errors.New("invalid or expired pagination token")
-	}
-
-	return json.NewDecoder(bytes.NewBuffer(msg)).Decode(&v)
-}
-
-func tokenMarshal(v interface{}, key string) ([]byte, error) {
-	var buf bytes.Buffer
-	err := json.NewEncoder(&buf).Encode(v)
-	if err != nil {
-		return nil, err
-	}
-
-	k, _ := fernet.DecodeKey(key)
-	return fernet.EncryptAndSign(buf.Bytes(), k)
 }

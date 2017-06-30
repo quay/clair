@@ -76,8 +76,10 @@ func toStringBlock(ss []string) *uint16 {
 // CreateService installs new service name on the system.
 // The service will be executed by running exepath binary.
 // Use config c to specify service parameters.
-// If service StartType is set to StartAutomatic,
-// args will be passed to svc.Handle.Execute.
+// Any args will be passed as command-line arguments when
+// the service is started; these arguments are distinct from
+// the arguments passed to Service.Start or via the "Start
+// parameters" field in the service's Properties dialog box.
 func (m *Mgr) CreateService(name, exepath string, c Config, args ...string) (*Service, error) {
 	if c.StartType == 0 {
 		c.StartType = StartManual

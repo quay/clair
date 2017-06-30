@@ -104,6 +104,7 @@ func Boot(config *Config) {
 	// Start API
 	st.Begin()
 	go api.Run(config.API, db, st)
+	go api.RunV2(config.API, db)
 	st.Begin()
 	go api.RunHealth(config.API, db, st)
 
