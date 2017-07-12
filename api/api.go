@@ -35,11 +35,9 @@ const timeoutResponse = `{"Error":{"Message":"Clair failed to respond within the
 
 // Config is the configuration for the API service.
 type Config struct {
-	Port                      int
 	GrpcPort                  int
 	HealthPort                int
 	Timeout                   time.Duration
-	PaginationKey             string
 	CertFile, KeyFile, CAFile string
 }
 
@@ -51,40 +49,7 @@ func RunV2(cfg *Config, store database.Datastore) {
 	if tlsConfig != nil {
 		log.Info("main API configured with client certificate authentication")
 	}
-	v2.Run(cfg.GrpcPort, tlsConfig, cfg.PaginationKey, cfg.CertFile, cfg.KeyFile, store)
-}
-
-func Run(cfg *Config, store database.Datastore, st *stopper.Stopper) {
-	defer st.End()
-
-	// Do not run the API service if there is no config.
-	if cfg == nil {
-		log.Info("main API service is disabled.")
-		return
-	}
-	log.WithField("port", cfg.Port).Info("starting main API")
-
-	tlsConfig, err := tlsClientConfig(cfg.CAFile)
-	if err != nil {
-		log.WithError(err).Fatal("could not initialize client cert authentication")
-	}
-	if tlsConfig != nil {
-		log.Info("main API configured with client certificate authentication")
-	}
-
-	srv := &graceful.Server{
-		Timeout:          0,    // Already handled by our TimeOut middleware
-		NoSignalHandling: true, // We want to use our own Stopper
-		Server: &http.Server{
-			Addr:      ":" + strconv.Itoa(cfg.Port),
-			TLSConfig: tlsConfig,
-			Handler:   http.TimeoutHandler(newAPIHandler(cfg, store), cfg.Timeout, timeoutResponse),
-		},
-	}
-
-	listenAndServeWithStopper(srv, st, cfg.CertFile, cfg.KeyFile)
-
-	log.Info("main API stopped")
+	v2.Run(cfg.GrpcPort, tlsConfig, cfg.CertFile, cfg.KeyFile, store)
 }
 
 func RunHealth(cfg *Config, store database.Datastore, st *stopper.Stopper) {

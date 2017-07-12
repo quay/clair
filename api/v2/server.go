@@ -48,7 +48,7 @@ func handleShutdown(err error) {
 var (
 	promResponseDurationMilliseconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "clair_v2_api_response_duration_milliseconds",
-		Help:    "The duration of time it takes to receieve and write a response to an V2 API request",
+		Help:    "The duration of time it takes to receive and write a response to an V2 API request",
 		Buckets: prometheus.ExponentialBuckets(9.375, 2, 10),
 	}, []string{"route", "code"})
 )
@@ -57,7 +57,7 @@ func init() {
 	prometheus.MustRegister(promResponseDurationMilliseconds)
 }
 
-func newGrpcServer(paginationKey string, store database.Datastore, tlsConfig *tls.Config) *grpc.Server {
+func newGrpcServer(store database.Datastore, tlsConfig *tls.Config) *grpc.Server {
 	grpcOpts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
 		grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
@@ -69,7 +69,7 @@ func newGrpcServer(paginationKey string, store database.Datastore, tlsConfig *tl
 
 	grpcServer := grpc.NewServer(grpcOpts...)
 	pb.RegisterAncestryServiceServer(grpcServer, &AncestryServer{Store: store})
-	pb.RegisterNotificationServiceServer(grpcServer, &NotificationServer{PaginationKey: paginationKey, Store: store})
+	pb.RegisterNotificationServiceServer(grpcServer, &NotificationServer{Store: store})
 	return grpcServer
 }
 
@@ -98,11 +98,11 @@ func logHandler(handler http.Handler) http.Handler {
 		}
 
 		log.WithFields(log.Fields{
-			"remote addr":  r.RemoteAddr,
-			"method":       r.Method,
-			"request uri":  r.RequestURI,
-			"status":       statusStr,
-			"elapsed time": time.Since(start),
+			"remote addr":       r.RemoteAddr,
+			"method":            r.Method,
+			"request uri":       r.RequestURI,
+			"status":            statusStr,
+			"elapsed time (ms)": float64(time.Since(start).Nanoseconds()) * 1e-6,
 		}).Info("Handled HTTP request")
 	})
 }
@@ -148,7 +148,7 @@ func servePrometheus(mux *http.ServeMux) {
 }
 
 // Run initializes grpc and grpc gateway api services on the same port
-func Run(GrpcPort int, tlsConfig *tls.Config, PaginationKey, CertFile, KeyFile string, store database.Datastore) {
+func Run(GrpcPort int, tlsConfig *tls.Config, CertFile, KeyFile string, store database.Datastore) {
 	l, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", GrpcPort))
 	if err != nil {
 		log.WithError(err).Fatalf("could not bind to port %d", GrpcPort)
@@ -175,7 +175,7 @@ func Run(GrpcPort int, tlsConfig *tls.Config, PaginationKey, CertFile, KeyFile s
 		apiListener = tls.NewListener(tcpMux.Match(cmux.Any()), tlsConfig)
 		go func() { handleShutdown(tcpMux.Serve()) }()
 
-		grpcServer := newGrpcServer(PaginationKey, store, tlsConfig)
+		grpcServer := newGrpcServer(store, tlsConfig)
 		gwmux := newGrpcGatewayServer(ctx, apiListener.Addr().String(), tlsConfig)
 
 		httpMux.Handle("/", gwmux)
@@ -188,7 +188,7 @@ func Run(GrpcPort int, tlsConfig *tls.Config, PaginationKey, CertFile, KeyFile s
 		apiListener = tcpMux.Match(cmux.Any())
 		go func() { handleShutdown(tcpMux.Serve()) }()
 
-		grpcServer := newGrpcServer(PaginationKey, store, nil)
+		grpcServer := newGrpcServer(store, nil)
 		go func() { handleShutdown(grpcServer.Serve(grpcL)) }()
 
 		gwmux := newGrpcGatewayServer(ctx, apiListener.Addr().String(), nil)
