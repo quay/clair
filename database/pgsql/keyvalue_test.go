@@ -21,32 +21,30 @@ import (
 )
 
 func TestKeyValue(t *testing.T) {
-	datastore, err := openDatabaseForTest("KeyValue", false)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	defer datastore.Close()
+	datastore, tx := openSessionForTest(t, "KeyValue", true)
+	defer closeTest(t, datastore, tx)
 
 	// Get non-existing key/value
-	f, err := datastore.GetKeyValue("test")
+	f, ok, err := tx.FindKeyValue("test")
 	assert.Nil(t, err)
-	assert.Empty(t, "", f)
+	assert.False(t, ok)
 
 	// Try to insert invalid key/value.
-	assert.Error(t, datastore.InsertKeyValue("test", ""))
-	assert.Error(t, datastore.InsertKeyValue("", "test"))
-	assert.Error(t, datastore.InsertKeyValue("", ""))
+	assert.Error(t, tx.UpdateKeyValue("test", ""))
+	assert.Error(t, tx.UpdateKeyValue("", "test"))
+	assert.Error(t, tx.UpdateKeyValue("", ""))
 
 	// Insert and verify.
-	assert.Nil(t, datastore.InsertKeyValue("test", "test1"))
-	f, err = datastore.GetKeyValue("test")
+	assert.Nil(t, tx.UpdateKeyValue("test", "test1"))
+	f, ok, err = tx.FindKeyValue("test")
 	assert.Nil(t, err)
+	assert.True(t, ok)
 	assert.Equal(t, "test1", f)
 
 	// Update and verify.
-	assert.Nil(t, datastore.InsertKeyValue("test", "test2"))
-	f, err = datastore.GetKeyValue("test")
+	assert.Nil(t, tx.UpdateKeyValue("test", "test2"))
+	f, ok, err = tx.FindKeyValue("test")
 	assert.Nil(t, err)
+	assert.True(t, ok)
 	assert.Equal(t, "test2", f)
 }

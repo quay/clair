@@ -31,6 +31,7 @@ import (
 	"github.com/remind101/migrate"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/coreos/clair/api/token"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/database/pgsql/migrations"
 	"github.com/coreos/clair/pkg/commonerr"
@@ -59,7 +60,7 @@ var (
 
 	promConcurrentLockVAFV = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "clair_pgsql_concurrent_lock_vafv_total",
-		Help: "Number of transactions trying to hold the exclusive Vulnerability_Affects_FeatureVersion lock.",
+		Help: "Number of transactions trying to hold the exclusive Vulnerability_Affects_Feature lock.",
 	})
 )
 
@@ -73,15 +74,63 @@ func init() {
 	database.Register("pgsql", openDatabase)
 }
 
-type Queryer interface {
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+// pgSessionCache is the session's cache, which holds the pgSQL's cache and the
+// individual session's cache. Only when session.Commit is called, all the
+// changes to pgSQL cache will be applied.
+type pgSessionCache struct {
+	c *lru.ARCCache
 }
 
 type pgSQL struct {
 	*sql.DB
+
 	cache  *lru.ARCCache
 	config Config
+}
+
+type pgSession struct {
+	*sql.Tx
+
+	paginationKey string
+}
+
+type idPageNumber struct {
+	// StartID is an implementation detail for paginating by an ID required to
+	// be unique to every ancestry and always increasing.
+	//
+	// StartID is used to search for ancestry with ID >= StartID
+	StartID int64
+}
+
+func encryptPage(page idPageNumber, paginationKey string) (result database.PageNumber, err error) {
+	resultBytes, err := token.Marshal(page, paginationKey)
+	if err != nil {
+		return result, err
+	}
+	result = database.PageNumber(resultBytes)
+	return result, nil
+}
+
+func decryptPage(page database.PageNumber, paginationKey string) (result idPageNumber, err error) {
+	err = token.Unmarshal(string(page), paginationKey, &result)
+	return
+}
+
+// Begin initiates a transaction to database. The expected transaction isolation
+// level in this implementation is "Read Committed".
+func (pgSQL *pgSQL) Begin() (database.Session, error) {
+	tx, err := pgSQL.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+	return &pgSession{
+		Tx:            tx,
+		paginationKey: pgSQL.config.PaginationKey,
+	}, nil
+}
+
+func (tx *pgSession) Commit() error {
+	return tx.Tx.Commit()
 }
 
 // Close closes the database and destroys if ManageDatabaseLifecycle has been specified in
@@ -109,6 +158,7 @@ type Config struct {
 
 	ManageDatabaseLifecycle bool
 	FixturePath             string
+	PaginationKey           string
 }
 
 // openDatabase opens a PostgresSQL-backed Datastore using the given
@@ -132,6 +182,10 @@ func openDatabase(registrableComponentConfig database.RegistrableComponentConfig
 	err = yaml.Unmarshal(bytes, &pg.config)
 	if err != nil {
 		return nil, fmt.Errorf("pgsql: could not load configuration: %v", err)
+	}
+
+	if pg.config.PaginationKey == "" {
+		panic("pagination key should be given")
 	}
 
 	dbName, pgSourceURL, err := parseConnectionString(pg.config.Source)
@@ -179,7 +233,7 @@ func openDatabase(registrableComponentConfig database.RegistrableComponentConfig
 		_, err = pg.DB.Exec(string(d))
 		if err != nil {
 			pg.Close()
-			return nil, fmt.Errorf("pgsql: an error occured while importing fixtures: %v", err)
+			return nil, fmt.Errorf("pgsql: an error occurred while importing fixtures: %v", err)
 		}
 	}
 
@@ -217,7 +271,7 @@ func migrateDatabase(db *sql.DB) error {
 
 	err := migrate.NewPostgresMigrator(db).Exec(migrate.Up, migrations.Migrations...)
 	if err != nil {
-		return fmt.Errorf("pgsql: an error occured while running migrations: %v", err)
+		return fmt.Errorf("pgsql: an error occurred while running migrations: %v", err)
 	}
 
 	log.Info("database migration ran successfully")
@@ -271,7 +325,8 @@ func dropDatabase(source, dbName string) error {
 }
 
 // handleError logs an error with an extra description and masks the error if it's an SQL one.
-// This ensures we never return plain SQL errors and leak anything.
+// The function ensures we never return plain SQL errors and leak anything.
+// The function should be used for every database query error.
 func handleError(desc string, err error) error {
 	if err == nil {
 		return nil
@@ -297,6 +352,11 @@ func isErrUniqueViolation(err error) bool {
 	return ok && pqErr.Code == "23505"
 }
 
+// observeQueryTime computes the time elapsed since `start` to represent the
+// query time.
+// 1. `query` is a pgSession function name.
+// 2. `subquery` is a specific query or a batched query.
+// 3. `start` is the time right before query is executed.
 func observeQueryTime(query, subquery string, start time.Time) {
 	promQueryDurationMilliseconds.
 		WithLabelValues(query, subquery).

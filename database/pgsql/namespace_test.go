@@ -15,60 +15,69 @@
 package pgsql
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/versionfmt/dpkg"
 )
 
-func TestInsertNamespace(t *testing.T) {
-	datastore, err := openDatabaseForTest("InsertNamespace", false)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	defer datastore.Close()
+func TestPersistNamespaces(t *testing.T) {
+	datastore, tx := openSessionForTest(t, "PersistNamespaces", false)
+	defer closeTest(t, datastore, tx)
 
-	// Invalid Namespace.
-	id0, err := datastore.insertNamespace(database.Namespace{})
-	assert.NotNil(t, err)
-	assert.Zero(t, id0)
+	ns1 := database.Namespace{}
+	ns2 := database.Namespace{Name: "t", VersionFormat: "b"}
 
-	// Insert Namespace and ensure we can find it.
-	id1, err := datastore.insertNamespace(database.Namespace{
-		Name:          "TestInsertNamespace1",
-		VersionFormat: dpkg.ParserName,
-	})
-	assert.Nil(t, err)
-	id2, err := datastore.insertNamespace(database.Namespace{
-		Name:          "TestInsertNamespace1",
-		VersionFormat: dpkg.ParserName,
-	})
-	assert.Nil(t, err)
-	assert.Equal(t, id1, id2)
+	// Empty Case
+	assert.Nil(t, tx.PersistNamespaces([]database.Namespace{}))
+	// Invalid Case
+	assert.NotNil(t, tx.PersistNamespaces([]database.Namespace{ns1}))
+	// Duplicated Case
+	assert.Nil(t, tx.PersistNamespaces([]database.Namespace{ns2, ns2}))
+	// Existing Case
+	assert.Nil(t, tx.PersistNamespaces([]database.Namespace{ns2}))
+
+	nsList := listNamespaces(t, tx)
+	assert.Len(t, nsList, 1)
+	assert.Equal(t, ns2, nsList[0])
 }
 
-func TestListNamespace(t *testing.T) {
-	datastore, err := openDatabaseForTest("ListNamespaces", true)
-	if err != nil {
-		t.Error(err)
-		return
-	}
-	defer datastore.Close()
-
-	namespaces, err := datastore.ListNamespaces()
-	assert.Nil(t, err)
-	if assert.Len(t, namespaces, 2) {
-		for _, namespace := range namespaces {
-			switch namespace.Name {
-			case "debian:7", "debian:8":
-				continue
-			default:
-				assert.Error(t, fmt.Errorf("ListNamespaces should not have returned '%s'", namespace.Name))
+func assertNamespacesEqual(t *testing.T, expected []database.Namespace, actual []database.Namespace) bool {
+	if assert.Len(t, actual, len(expected)) {
+		has := map[database.Namespace]bool{}
+		for _, i := range expected {
+			has[i] = false
+		}
+		for _, i := range actual {
+			has[i] = true
+		}
+		for key, v := range has {
+			if !assert.True(t, v, key.Name+"is expected") {
+				return false
 			}
 		}
+		return true
 	}
+	return false
+}
+
+func listNamespaces(t *testing.T, tx *pgSession) []database.Namespace {
+	rows, err := tx.Query("SELECT name, version_format FROM namespace")
+	if err != nil {
+		t.FailNow()
+	}
+	defer rows.Close()
+
+	namespaces := []database.Namespace{}
+	for rows.Next() {
+		var ns database.Namespace
+		err := rows.Scan(&ns.Name, &ns.VersionFormat)
+		if err != nil {
+			t.FailNow()
+		}
+		namespaces = append(namespaces, ns)
+	}
+
+	return namespaces
 }

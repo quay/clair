@@ -14,185 +14,159 @@
 
 package pgsql
 
-import "strconv"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/lib/pq"
+)
 
 const (
-	lockVulnerabilityAffects = `LOCK Vulnerability_Affects_FeatureVersion IN SHARE ROW EXCLUSIVE MODE`
-	disableHashJoin          = `SET LOCAL enable_hashjoin = off`
-	disableMergeJoin         = `SET LOCAL enable_mergejoin = off`
+	lockVulnerabilityAffects = `LOCK vulnerability_affected_namespaced_feature IN SHARE ROW EXCLUSIVE MODE`
 
 	// keyvalue.go
-	updateKeyValue = `UPDATE KeyValue SET value = $1 WHERE key = $2`
-	insertKeyValue = `INSERT INTO KeyValue(key, value) VALUES($1, $2)`
 	searchKeyValue = `SELECT value FROM KeyValue WHERE key = $1`
+	upsertKeyValue = `
+		INSERT INTO KeyValue(key, value) 
+			VALUES ($1, $2) 
+			ON CONFLICT ON CONSTRAINT keyvalue_key_key 
+			DO UPDATE SET key=$1, value=$2`
 
 	// namespace.go
-	soiNamespace = `
-		WITH new_namespace AS (
-			INSERT INTO Namespace(name, version_format)
-			SELECT CAST($1 AS VARCHAR), CAST($2 AS VARCHAR)
-			WHERE NOT EXISTS (SELECT name FROM Namespace WHERE name = $1)
-			RETURNING id
-		)
-		SELECT id FROM Namespace WHERE name = $1
-		UNION
-		SELECT id FROM new_namespace`
 
-	searchNamespace = `SELECT id FROM Namespace WHERE name = $1`
-	listNamespace   = `SELECT id, name, version_format FROM Namespace`
+	searchNamespaceID = `SELECT id FROM Namespace WHERE name = $1 AND version_format = $2`
 
 	// feature.go
-	soiFeature = `
-		WITH new_feature AS (
-			INSERT INTO Feature(name, namespace_id)
-			SELECT CAST($1 AS VARCHAR), CAST($2 AS INTEGER)
-			WHERE NOT EXISTS (SELECT id FROM Feature WHERE name = $1 AND namespace_id = $2)
+	soiNamespacedFeature = `
+		WITH new_feature_ns AS (
+			INSERT INTO namespaced_feature(feature_id, namespace_id)
+			SELECT CAST ($1 AS INTEGER), CAST ($2 AS INTEGER)
+			WHERE NOT EXISTS ( SELECT id FROM namespaced_feature WHERE namespaced_feature.feature_id = $1 AND namespaced_feature.namespace_id = $2)
 			RETURNING id
 		)
-		SELECT id FROM Feature WHERE name = $1 AND namespace_id = $2
+		SELECT id FROM namespaced_feature WHERE namespaced_feature.feature_id = $1 AND namespaced_feature.namespace_id = $2
 		UNION
-		SELECT id FROM new_feature`
+		SELECT id FROM new_feature_ns`
 
-	searchFeatureVersion = `
-		SELECT id FROM FeatureVersion WHERE feature_id = $1 AND version = $2`
+	searchPotentialAffectingVulneraibilities = `
+		SELECT nf.id, v.id, vaf.affected_version, vaf.id
+		FROM vulnerability_affected_feature AS vaf, vulnerability AS v,
+			namespaced_feature AS nf, feature AS f
+		WHERE nf.id = ANY($1)
+			AND nf.feature_id = f.id
+			AND nf.namespace_id = v.namespace_id
+			AND vaf.feature_name = f.name
+			AND vaf.vulnerability_id = v.id
+			AND v.deleted_at IS NULL`
 
-	soiFeatureVersion = `
-		WITH new_featureversion AS (
-			INSERT INTO FeatureVersion(feature_id, version)
-			SELECT CAST($1 AS INTEGER), CAST($2 AS VARCHAR)
-			WHERE NOT EXISTS (SELECT id FROM FeatureVersion WHERE feature_id = $1 AND version = $2)
-			RETURNING id
-		)
-		SELECT false, id FROM FeatureVersion WHERE feature_id = $1 AND version = $2
-		UNION
-		SELECT true, id FROM new_featureversion`
-
-	searchVulnerabilityFixedInFeature = `
-		SELECT id, vulnerability_id, version FROM Vulnerability_FixedIn_Feature
-    WHERE feature_id = $1`
-
-	insertVulnerabilityAffectsFeatureVersion = `
-		INSERT INTO Vulnerability_Affects_FeatureVersion(vulnerability_id, featureversion_id, fixedin_id)
-		VALUES($1, $2, $3)`
+	searchNamespacedFeaturesVulnerabilities = `
+		SELECT vanf.namespaced_feature_id, v.name, v.description, v.link, 
+			v.severity, v.metadata, vaf.fixedin, n.name, n.version_format
+		FROM vulnerability_affected_namespaced_feature AS vanf, 
+			Vulnerability AS v,
+			vulnerability_affected_feature AS vaf,
+			namespace AS n
+		WHERE vanf.namespaced_feature_id = ANY($1)
+			AND vaf.id = vanf.added_by
+			AND v.id = vanf.vulnerability_id
+			AND n.id = v.namespace_id
+			AND v.deleted_at IS NULL`
 
 	// layer.go
-	searchLayer = `
-			SELECT l.id, l.name, l.engineversion, p.id, p.name
-			FROM Layer l
-				LEFT JOIN Layer p ON l.parent_id = p.id
-		WHERE l.name = $1;`
+	searchLayerIDs = `SELECT id, hash FROM layer WHERE hash = ANY($1);`
 
-	searchLayerNamespace = `
-			SELECT n.id, n.name, n.version_format 
-			FROM Namespace n
-				JOIN Layer_Namespace lns ON lns.namespace_id = n.id 
-			WHERE lns.layer_id = $1`
+	searchLayerFeatures = `
+		SELECT feature.Name, feature.Version, feature.version_format 
+		FROM feature, layer_feature
+		WHERE layer_feature.layer_id = $1
+			AND layer_feature.feature_id = feature.id`
 
-	searchLayerFeatureVersion = `
-		WITH RECURSIVE layer_tree(id, name, parent_id, depth, path, cycle) AS(
-			SELECT l.id, l.name, l.parent_id, 1, ARRAY[l.id], false
-			FROM Layer l
-			WHERE l.id = $1
-		UNION ALL
-			SELECT l.id, l.name, l.parent_id, lt.depth + 1, path || l.id, l.id = ANY(path)
-			FROM Layer l, layer_tree lt
-			WHERE l.id = lt.parent_id
-		)
-		SELECT ldf.featureversion_id, ldf.modification, fn.id, fn.name, fn.version_format, f.id, f.name, fv.id, fv.version, ltree.id, ltree.name
-		FROM Layer_diff_FeatureVersion ldf
-		JOIN (
-			SELECT row_number() over (ORDER BY depth DESC), id, name FROM layer_tree
-		) AS ltree (ordering, id, name) ON ldf.layer_id = ltree.id, FeatureVersion fv, Feature f, Namespace fn
-		WHERE ldf.featureversion_id = fv.id AND fv.feature_id = f.id AND f.namespace_id = fn.id
-		ORDER BY ltree.ordering`
+	searchLayerNamespaces = `
+		SELECT namespace.Name, namespace.version_format 
+		FROM namespace, layer_namespace 
+		WHERE layer_namespace.layer_id = $1 
+			AND layer_namespace.namespace_id = namespace.id`
 
-	searchFeatureVersionVulnerability = `
-			SELECT vafv.featureversion_id, v.id, v.name, v.description, v.link, v.severity, v.metadata,
-				vn.name, vn.version_format, vfif.version
-			FROM Vulnerability_Affects_FeatureVersion vafv, Vulnerability v,
-					 Namespace vn, Vulnerability_FixedIn_Feature vfif
-			WHERE vafv.featureversion_id = ANY($1::integer[])
-						AND vfif.vulnerability_id = v.id
-						AND vafv.fixedin_id = vfif.id
-						AND v.namespace_id = vn.id
-						AND v.deleted_at IS NULL`
-
-	insertLayer = `
-		INSERT INTO Layer(name, engineversion, parent_id, created_at)
-		VALUES($1, $2, $3, CURRENT_TIMESTAMP)
-		RETURNING id`
-
-	insertLayerNamespace = `INSERT INTO Layer_Namespace(layer_id, namespace_id) VALUES($1, $2)`
-	removeLayerNamespace = `DELETE FROM Layer_Namespace WHERE layer_id = $1`
-
-	updateLayer = `UPDATE LAYER SET engineversion = $2 WHERE id = $1`
-
-	removeLayerDiffFeatureVersion = `
-		DELETE FROM Layer_diff_FeatureVersion
-		WHERE layer_id = $1`
-
-	insertLayerDiffFeatureVersion = `
-		INSERT INTO Layer_diff_FeatureVersion(layer_id, featureversion_id, modification)
-			SELECT $1, fv.id, $2
-			FROM FeatureVersion fv
-			WHERE fv.id = ANY($3::integer[])`
-
-	removeLayer = `DELETE FROM Layer WHERE name = $1`
+	searchLayer          = `SELECT id FROM layer WHERE hash = $1`
+	searchLayerDetectors = `SELECT detector FROM layer_detector WHERE layer_id = $1`
+	searchLayerListers   = `SELECT lister FROM layer_lister WHERE layer_id = $1`
 
 	// lock.go
-	insertLock        = `INSERT INTO Lock(name, owner, until) VALUES($1, $2, $3)`
+	soiLock = `INSERT INTO lock(name, owner, until) VALUES ($1, $2, $3)`
+
 	searchLock        = `SELECT owner, until FROM Lock WHERE name = $1`
 	updateLock        = `UPDATE Lock SET until = $3 WHERE name = $1 AND owner = $2`
 	removeLock        = `DELETE FROM Lock WHERE name = $1 AND owner = $2`
 	removeLockExpired = `DELETE FROM LOCK WHERE until < CURRENT_TIMESTAMP`
 
 	// vulnerability.go
-	searchVulnerabilityBase = `
-	  SELECT v.id, v.name, n.id, n.name, n.version_format, v.description, v.link, v.severity, v.metadata
-	  FROM Vulnerability v JOIN Namespace n ON v.namespace_id = n.id`
-	searchVulnerabilityForUpdate          = ` FOR UPDATE OF v`
-	searchVulnerabilityByNamespaceAndName = ` WHERE n.name = $1 AND v.name = $2 AND v.deleted_at IS NULL`
-	searchVulnerabilityByID               = ` WHERE v.id = $1`
-	searchVulnerabilityByNamespace        = ` WHERE n.name = $1 AND v.deleted_at IS NULL
-		  				  AND v.id >= $2
-						  ORDER BY v.id
-						  LIMIT $3`
+	searchVulnerability = `
+		SELECT v.id, v.description, v.link, v.severity, v.metadata, n.version_format 
+		FROM vulnerability AS v, namespace AS n
+		WHERE v.namespace_id = n.id
+		AND v.name = $1
+		AND n.name = $2
+		AND v.deleted_at IS NULL
+		`
 
-	searchVulnerabilityFixedIn = `
-		SELECT vfif.version, f.id, f.Name
-		FROM Vulnerability_FixedIn_Feature vfif JOIN Feature f ON vfif.feature_id = f.id
-		WHERE vfif.vulnerability_id = $1`
+	insertVulnerabilityAffected = `
+		INSERT INTO vulnerability_affected_feature(vulnerability_id, feature_name, affected_version, fixedin)
+		VALUES ($1, $2, $3, $4)
+		RETURNING ID
+	`
+
+	searchVulnerabilityAffected = `
+		SELECT vulnerability_id, feature_name, affected_version, fixedin 
+		FROM vulnerability_affected_feature
+		WHERE vulnerability_id = ANY($1)
+	`
+
+	searchVulnerabilityByID = `
+		SELECT v.name, v.description, v.link, v.severity, v.metadata, n.name, n.version_format
+		FROM vulnerability AS v, namespace AS n
+		WHERE v.namespace_id = n.id
+			AND v.id = $1`
+
+	searchVulnerabilityPotentialAffected = `
+		WITH req AS (
+			SELECT vaf.id AS vaf_id, n.id AS n_id, vaf.feature_name AS name, v.id AS vulnerability_id
+			FROM vulnerability_affected_feature AS vaf,
+				vulnerability AS v,
+				namespace AS n
+			WHERE vaf.vulnerability_id = ANY($1)
+			AND v.id = vaf.vulnerability_id
+			AND n.id = v.namespace_id
+			)
+		SELECT req.vulnerability_id, nf.id, f.version, req.vaf_id AS added_by
+		FROM feature AS f, namespaced_feature AS nf, req
+		WHERE f.name = req.name
+		AND nf.namespace_id = req.n_id
+		AND nf.feature_id = f.id`
+
+	insertVulnerabilityAffectedNamespacedFeature = `
+		INSERT INTO vulnerability_affected_namespaced_feature(vulnerability_id, namespaced_feature_id, added_by)
+		VALUES ($1, $2, $3)`
 
 	insertVulnerability = `
-		INSERT INTO Vulnerability(namespace_id, name, description, link, severity, metadata, created_at)
-		VALUES($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP)
-		RETURNING id`
-
-	soiVulnerabilityFixedInFeature = `
-		WITH new_fixedinfeature AS (
-			INSERT INTO Vulnerability_FixedIn_Feature(vulnerability_id, feature_id, version)
-			SELECT CAST($1 AS INTEGER), CAST($2 AS INTEGER), CAST($3 AS VARCHAR)
-			WHERE NOT EXISTS (SELECT id FROM Vulnerability_FixedIn_Feature WHERE vulnerability_id = $1 AND feature_id = $2)
-			RETURNING id
+		WITH ns AS (
+			SELECT id FROM namespace WHERE name = $6 AND version_format = $7
 		)
-		SELECT false, id FROM Vulnerability_FixedIn_Feature WHERE vulnerability_id = $1 AND feature_id = $2
-		UNION
-		SELECT true, id FROM new_fixedinfeature`
-
-	searchFeatureVersionByFeature = `SELECT id, version FROM FeatureVersion WHERE feature_id = $1`
+		INSERT INTO Vulnerability(namespace_id, name, description, link, severity, metadata, created_at)
+		VALUES((SELECT id FROM ns), $1, $2, $3, $4, $5, CURRENT_TIMESTAMP)
+		RETURNING id`
 
 	removeVulnerability = `
 		UPDATE Vulnerability
-    SET deleted_at = CURRENT_TIMESTAMP
-    WHERE namespace_id = (SELECT id FROM Namespace WHERE name = $1)
-          AND name = $2
-          AND deleted_at IS NULL
-    RETURNING id`
+		SET deleted_at = CURRENT_TIMESTAMP
+		WHERE namespace_id = (SELECT id FROM Namespace WHERE name = $1)
+			AND name = $2
+			AND deleted_at IS NULL
+		RETURNING id`
 
 	// notification.go
 	insertNotification = `
 		INSERT INTO Vulnerability_Notification(name, created_at, old_vulnerability_id, new_vulnerability_id)
-    VALUES($1, CURRENT_TIMESTAMP, $2, $3)`
+		VALUES ($1, $2, $3, $4)`
 
 	updatedNotificationNotified = `
 		UPDATE Vulnerability_Notification
@@ -202,10 +176,10 @@ const (
 	removeNotification = `
 		UPDATE Vulnerability_Notification
 	  SET deleted_at = CURRENT_TIMESTAMP
-	  WHERE name = $1`
+	  WHERE name = $1 AND deleted_at IS NULL`
 
 	searchNotificationAvailable = `
-		SELECT id, name, created_at, notified_at, deleted_at
+		SELECT name, created_at, notified_at, deleted_at
 		FROM Vulnerability_Notification
 		WHERE (notified_at IS NULL OR notified_at < $1)
 					AND deleted_at IS NULL
@@ -214,43 +188,231 @@ const (
 		LIMIT 1`
 
 	searchNotification = `
-		SELECT id, name, created_at, notified_at, deleted_at, old_vulnerability_id, new_vulnerability_id
+		SELECT created_at, notified_at, deleted_at, old_vulnerability_id, new_vulnerability_id
 		FROM Vulnerability_Notification
 		WHERE name = $1`
 
-	searchNotificationLayerIntroducingVulnerability = `
-		WITH LDFV AS (
-		  SELECT DISTINCT ldfv.layer_id
-		  FROM Vulnerability_Affects_FeatureVersion vafv, FeatureVersion fv, Layer_diff_FeatureVersion ldfv
-		  WHERE ldfv.layer_id >= $2
-		    AND vafv.vulnerability_id = $1
-		    AND vafv.featureversion_id = fv.id
-		    AND ldfv.featureversion_id = fv.id
-		    AND ldfv.modification = 'add'
-		  ORDER BY ldfv.layer_id
-		)
-		SELECT l.id, l.name
-		FROM LDFV, Layer l
-		WHERE LDFV.layer_id = l.id
-		LIMIT $3`
+	searchNotificationVulnerableAncestry = `
+	   SELECT DISTINCT ON (a.id)
+			a.id, a.name
+		FROM vulnerability_affected_namespaced_feature AS vanf,
+			ancestry AS a, ancestry_feature AS af
+		WHERE vanf.vulnerability_id = $1
+			AND a.id >= $2
+			AND a.id = af.ancestry_id
+			AND af.namespaced_feature_id = vanf.namespaced_feature_id
+		ORDER BY a.id ASC
+		LIMIT $3;`
 
-	// complex_test.go
-	searchComplexTestFeatureVersionAffects = `
-		SELECT v.name
-    FROM FeatureVersion fv
-      LEFT JOIN Vulnerability_Affects_FeatureVersion vaf ON fv.id = vaf.featureversion_id
-      JOIN Vulnerability v ON vaf.vulnerability_id = v.id
-    WHERE featureversion_id = $1`
+	// ancestry.go
+	persistAncestryLister = `
+		INSERT INTO ancestry_lister (ancestry_id, lister)
+		SELECT CAST ($1 AS INTEGER), CAST ($2 AS TEXT)
+		WHERE NOT EXISTS (SELECT id FROM ancestry_lister WHERE ancestry_id = $1 AND lister = $2) ON CONFLICT DO NOTHING`
+
+	persistAncestryDetector = `
+	INSERT INTO ancestry_detector (ancestry_id, detector)
+		SELECT CAST ($1 AS INTEGER), CAST ($2 AS TEXT)
+		WHERE NOT EXISTS (SELECT id FROM ancestry_detector WHERE ancestry_id = $1 AND detector = $2) ON CONFLICT DO NOTHING`
+
+	insertAncestry = `INSERT INTO ancestry (name) VALUES ($1) RETURNING id`
+
+	searchAncestryLayer = `
+		SELECT layer.hash
+		FROM layer, ancestry_layer
+		WHERE ancestry_layer.ancestry_id = $1
+			AND ancestry_layer.layer_id = layer.id
+		ORDER BY ancestry_layer.ancestry_index ASC`
+
+	searchAncestryFeatures = `
+			SELECT namespace.name, namespace.version_format, feature.name, feature.version 
+			FROM namespace, feature, ancestry, namespaced_feature, ancestry_feature
+			WHERE ancestry.name = $1
+				AND ancestry.id = ancestry_feature.ancestry_id
+				AND ancestry_feature.namespaced_feature_id = namespaced_feature.id
+				AND namespaced_feature.feature_id = feature.id
+				AND namespaced_feature.namespace_id = namespace.id`
+
+	searchAncestry          = `SELECT id FROM ancestry WHERE name = $1`
+	searchAncestryDetectors = `SELECT detector FROM ancestry_detector WHERE ancestry_id = $1`
+	searchAncestryListers   = `SELECT lister FROM ancestry_lister WHERE ancestry_id = $1`
+	removeAncestry          = `DELETE FROM ancestry WHERE name = $1`
+	insertAncestryLayer     = `INSERT INTO ancestry_layer(ancestry_id, ancestry_index, layer_id) VALUES($1,$2,$3)`
+	insertAncestryFeature   = `INSERT INTO ancestry_feature(ancestry_id, namespaced_feature_id) VALUES ($1, $2)`
 )
 
-// buildInputArray constructs a PostgreSQL input array from the specified integers.
-// Useful to use the `= ANY($1::integer[])` syntax that let us use a IN clause while using
-// a single placeholder.
-func buildInputArray(ints []int) string {
-	str := "{"
-	for i := 0; i < len(ints)-1; i++ {
-		str = str + strconv.Itoa(ints[i]) + ","
+// NOTE(Sida): Every search query can only have count less than postgres set
+// stack depth. IN will be resolved to nested OR_s and the parser might exceed
+// stack depth. TODO(Sida): Generate different queries for different count: if
+// count < 5120, use IN; for count > 5120 and < 65536, use temporary table; for
+// count > 65535, use is expected to split data into batches.
+func querySearchLastDeletedVulnerabilityID(count int) string {
+	return fmt.Sprintf(`
+			SELECT vid, vname, nname FROM (
+				SELECT v.id AS vid, v.name AS vname, n.name AS nname, 
+				row_number() OVER (
+					PARTITION by (v.name, n.name) 
+					ORDER BY v.deleted_at DESC
+					) AS rownum 
+				FROM vulnerability AS v, namespace AS n 
+				WHERE v.namespace_id = n.id 
+					AND (v.name, n.name) IN ( %s )
+					AND v.deleted_at IS NOT NULL
+				) tmp WHERE rownum <= 1`,
+		queryString(2, count))
+}
+
+func querySearchNotDeletedVulnerabilityID(count int) string {
+	return fmt.Sprintf(`
+		SELECT v.id, v.name, n.name FROM vulnerability AS v, namespace AS n
+		WHERE v.namespace_id = n.id AND (v.name, n.name) IN (%s) 
+		AND v.deleted_at IS NULL`,
+		queryString(2, count))
+}
+
+func querySearchFeatureID(featureCount int) string {
+	return fmt.Sprintf(`
+		SELECT id, name, version, version_format 
+		FROM Feature WHERE (name, version, version_format) IN (%s)`,
+		queryString(3, featureCount),
+	)
+}
+
+func querySearchNamespacedFeature(nsfCount int) string {
+	return fmt.Sprintf(`
+	SELECT nf.id, f.name, f.version, f.version_format, n.name
+		FROM namespaced_feature AS nf, feature AS f, namespace AS n
+		WHERE nf.feature_id = f.id
+			AND nf.namespace_id = n.id
+			AND n.version_format = f.version_format 
+			AND (f.name, f.version, f.version_format, n.name) IN (%s)`,
+		queryString(4, nsfCount),
+	)
+}
+
+func querySearchNamespace(nsCount int) string {
+	return fmt.Sprintf(
+		`SELECT id, name, version_format 
+		FROM namespace WHERE (name, version_format) IN (%s)`,
+		queryString(2, nsCount),
+	)
+}
+
+func queryInsert(count int, table string, columns ...string) string {
+	base := `INSERT INTO %s (%s) VALUES %s`
+	t := pq.QuoteIdentifier(table)
+	cols := make([]string, len(columns))
+	for i, c := range columns {
+		cols[i] = pq.QuoteIdentifier(c)
 	}
-	str = str + strconv.Itoa(ints[len(ints)-1]) + "}"
-	return str
+	colsQuoted := strings.Join(cols, ",")
+	return fmt.Sprintf(base, t, colsQuoted, queryString(len(columns), count))
+}
+
+func queryPersist(count int, table, constraint string, columns ...string) string {
+	ct := ""
+	if constraint != "" {
+		ct = fmt.Sprintf("ON CONSTRAINT %s", constraint)
+	}
+	return fmt.Sprintf("%s ON CONFLICT %s DO NOTHING", queryInsert(count, table, columns...), ct)
+}
+
+func queryInsertNotifications(count int) string {
+	return queryInsert(count,
+		"vulnerability_notification",
+		"name",
+		"created_at",
+		"old_vulnerability_id",
+		"new_vulnerability_id",
+	)
+}
+
+func queryPersistFeature(count int) string {
+	return queryPersist(count,
+		"feature",
+		"feature_name_version_version_format_key",
+		"name",
+		"version",
+		"version_format")
+}
+
+func queryPersistLayerFeature(count int) string {
+	return queryPersist(count,
+		"layer_feature",
+		"layer_feature_layer_id_feature_id_key",
+		"layer_id",
+		"feature_id")
+}
+
+func queryPersistNamespace(count int) string {
+	return queryPersist(count,
+		"namespace",
+		"namespace_name_version_format_key",
+		"name",
+		"version_format")
+}
+
+func queryPersistLayerListers(count int) string {
+	return queryPersist(count,
+		"layer_lister",
+		"layer_lister_layer_id_lister_key",
+		"layer_id",
+		"lister")
+}
+
+func queryPersistLayerDetectors(count int) string {
+	return queryPersist(count,
+		"layer_detector",
+		"layer_detector_layer_id_detector_key",
+		"layer_id",
+		"detector")
+}
+
+func queryPersistLayerNamespace(count int) string {
+	return queryPersist(count,
+		"layer_namespace",
+		"layer_namespace_layer_id_namespace_id_key",
+		"layer_id",
+		"namespace_id")
+}
+
+// size of key and array should be both greater than 0
+func queryString(keySize, arraySize int) string {
+	if arraySize <= 0 || keySize <= 0 {
+		panic("Bulk Query requires size of element tuple and number of elements to be greater than 0")
+	}
+	keys := make([]string, 0, arraySize)
+	for i := 0; i < arraySize; i++ {
+		key := make([]string, keySize)
+		for j := 0; j < keySize; j++ {
+			key[j] = fmt.Sprintf("$%d", i*keySize+j+1)
+		}
+		keys = append(keys, fmt.Sprintf("(%s)", strings.Join(key, ",")))
+	}
+	return strings.Join(keys, ",")
+}
+
+func queryPersistNamespacedFeature(count int) string {
+	return queryPersist(count, "namespaced_feature",
+		"namespaced_feature_namespace_id_feature_id_key",
+		"feature_id",
+		"namespace_id")
+}
+
+func queryPersistVulnerabilityAffectedNamespacedFeature(count int) string {
+	return queryPersist(count, "vulnerability_affected_namespaced_feature",
+		"vulnerability_affected_namesp_vulnerability_id_namespaced_f_key",
+		"vulnerability_id",
+		"namespaced_feature_id",
+		"added_by")
+}
+
+func queryPersistLayer(count int) string {
+	return queryPersist(count, "layer", "", "hash")
+}
+
+func queryInvalidateVulnerabilityCache(count int) string {
+	return fmt.Sprintf(`DELETE FROM vulnerability_affected_feature 
+		WHERE vulnerability_id = (%s)`,
+		queryString(1, count))
 }
