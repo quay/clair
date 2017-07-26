@@ -23,9 +23,9 @@ import (
 )
 
 var (
-	// ErrBackendException is an error that occurs when the database backend does
-	// not work properly (ie. unreachable).
-	ErrBackendException = errors.New("database: an error occured when querying the backend")
+	// ErrBackendException is an error that occurs when the database backend
+	// does not work properly (ie. unreachable).
+	ErrBackendException = errors.New("database: an error occurred when querying the backend")
 
 	// ErrInconsistent is an error that occurs when a database consistency check
 	// fails (i.e. when an entity which is supposed to be unique is detected
@@ -43,8 +43,8 @@ type RegistrableComponentConfig struct {
 
 var drivers = make(map[string]Driver)
 
-// Driver is a function that opens a Datastore specified by its database driver type and specific
-// configuration.
+// Driver is a function that opens a Datastore specified by its database driver
+// type and specific configuration.
 type Driver func(RegistrableComponentConfig) (Datastore, error)
 
 // Register makes a Constructor available by the provided name.
@@ -70,130 +70,127 @@ func Open(cfg RegistrableComponentConfig) (Datastore, error) {
 	return driver(cfg)
 }
 
-// Datastore represents the required operations on a persistent data store for
-// a Clair deployment.
-type Datastore interface {
-	// ListNamespaces returns the entire list of known Namespaces.
-	ListNamespaces() ([]Namespace, error)
-
-	// InsertLayer stores a Layer in the database.
+// Session contains the required operations on a persistent data store for a
+// Clair deployment.
+//
+// Session is started by Datastore.Begin and terminated with Commit or Rollback.
+// Besides Commit and Rollback, other functions cannot be called after the
+// session is terminated.
+// Any function is not guaranteed to be called successfully if there's a session
+// failure.
+type Session interface {
+	// Commit commits changes to datastore.
 	//
-	// A Layer is uniquely identified by its Name.
-	// The Name and EngineVersion fields are mandatory.
-	// If a Parent is specified, it is expected that it has been retrieved using
-	// FindLayer.
-	// If a Layer that already exists is inserted and the EngineVersion of the
-	// given Layer is higher than the stored one, the stored Layer should be
-	// updated.
-	// The function has to be idempotent, inserting a layer that already exists
-	// shouldn't return an error.
-	InsertLayer(Layer) error
+	// Commit call after Rollback does no-op.
+	Commit() error
 
-	// FindLayer retrieves a Layer from the database.
+	// Rollback drops changes to datastore.
 	//
-	// When `withFeatures` is true, the Features field should be filled.
-	// When `withVulnerabilities` is true, the Features field should be filled
-	// and their AffectedBy fields should contain every vulnerabilities that
-	// affect them.
-	FindLayer(name string, withFeatures, withVulnerabilities bool) (Layer, error)
+	// Rollback call after Commit does no-op.
+	Rollback() error
 
-	// DeleteLayer deletes a Layer from the database and every layers that are
-	// based on it, recursively.
-	DeleteLayer(name string) error
+	// UpsertAncestry inserts or replaces an ancestry and its namespaced
+	// features and processors used to scan the ancestry.
+	UpsertAncestry(ancestry Ancestry, features []NamespacedFeature, processedBy Processors) error
 
-	// ListVulnerabilities returns the list of vulnerabilities of a particular
-	// Namespace.
+	// FindAncestry retrieves an ancestry with processors used to scan the
+	// ancestry. If the ancestry is not found, return false.
 	//
-	// The Limit and page parameters are used to paginate the return list.
-	// The first given page should be 0.
-	// The function should return the next available page. If there are no more
-	// pages, -1 has to be returned.
-	ListVulnerabilities(namespaceName string, limit int, page int) ([]Vulnerability, int, error)
+	// The ancestry's processors are returned to short cut processing ancestry
+	// if it has been processed by all processors in the current Clair instance.
+	FindAncestry(name string) (ancestry Ancestry, processedBy Processors, found bool, err error)
 
-	// InsertVulnerabilities stores the given Vulnerabilities in the database,
-	// updating them if necessary.
+	// FindAncestryFeatures retrieves an ancestry with all detected namespaced
+	// features. If the ancestry is not found, return false.
+	FindAncestryFeatures(name string) (ancestry AncestryWithFeatures, found bool, err error)
+
+	// PersistFeatures inserts a set of features if not in the database.
+	PersistFeatures(features []Feature) error
+
+	// PersistNamespacedFeatures inserts a set of namespaced features if not in
+	// the database.
+	PersistNamespacedFeatures([]NamespacedFeature) error
+
+	// CacheAffectedNamespacedFeatures relates the namespaced features with the
+	// vulnerabilities affecting these features.
 	//
-	// A vulnerability is uniquely identified by its Namespace and its Name.
-	// The FixedIn field may only contain a partial list of Features that are
-	// affected by the Vulnerability, along with the version in which the
-	// vulnerability is fixed. It is the responsibility of the implementation to
-	// update the list properly.
-	// A version equals to versionfmt.MinVersion means that the given Feature is
-	// not being affected by the Vulnerability at all and thus, should be removed
-	// from the list.
-	// It is important that Features should be unique in the FixedIn list. For
-	// example, it doesn't make sense to have two `openssl` Feature listed as a
-	// Vulnerability can only be fixed in one Version. This is true because
-	// Vulnerabilities and Features are namespaced (i.e. specific to one
-	// operating system).
-	// Each vulnerability insertion or update has to create a Notification that
-	// will contain the old and the updated Vulnerability, unless
-	// createNotification equals to true.
-	InsertVulnerabilities(vulnerabilities []Vulnerability, createNotification bool) error
+	// NOTE(Sida): it's not necessary for every database implementation and so
+	// this function may have a better home.
+	CacheAffectedNamespacedFeatures([]NamespacedFeature) error
 
-	// FindVulnerability retrieves a Vulnerability from the database, including
-	// the FixedIn list.
-	FindVulnerability(namespaceName, name string) (Vulnerability, error)
+	// FindAffectedNamespacedFeatures retrieves a set of namespaced features
+	// with affecting vulnerabilities.
+	FindAffectedNamespacedFeatures(features []NamespacedFeature) ([]NullableAffectedNamespacedFeature, error)
 
-	// DeleteVulnerability removes a Vulnerability from the database.
+	// PersistNamespaces inserts a set of namespaces if not in the database.
+	PersistNamespaces([]Namespace) error
+
+	// PersistLayer inserts a layer if not in the datastore.
+	PersistLayer(Layer) error
+
+	// PersistLayerContent persists a layer's content in the database. The given
+	// namespaces and features can be partial content of this layer.
 	//
-	// It has to create a Notification that will contain the old Vulnerability.
-	DeleteVulnerability(namespaceName, name string) error
+	// The layer, namespaces and features are expected to be already existing
+	// in the database.
+	PersistLayerContent(hash string, namespaces []Namespace, features []Feature, processedBy Processors) error
 
-	// InsertVulnerabilityFixes adds new FixedIn Feature or update the Versions
-	// of existing ones to the specified Vulnerability in the database.
+	// FindLayer retrieves a layer and the processors scanned the layer.
+	FindLayer(hash string) (layer Layer, processedBy Processors, found bool, err error)
+
+	// FindLayerWithContent returns a layer with all detected features and
+	// namespaces.
+	FindLayerWithContent(hash string) (layer LayerWithContent, found bool, err error)
+
+	// InsertVulnerabilities inserts a set of UNIQUE vulnerabilities with
+	// affected features into database, assuming that all vulnerabilities
+	// provided are NOT in database and all vulnerabilities' namespaces are
+	// already in the database.
+	InsertVulnerabilities([]VulnerabilityWithAffected) error
+
+	// FindVulnerability retrieves a set of Vulnerabilities with affected
+	// features.
+	FindVulnerabilities([]VulnerabilityID) ([]NullableVulnerability, error)
+
+	// DeleteVulnerability removes a set of Vulnerabilities assuming that the
+	// requested vulnerabilities are in the database.
+	DeleteVulnerabilities([]VulnerabilityID) error
+
+	// InsertVulnerabilityNotifications inserts a set of unique vulnerability
+	// notifications into datastore, assuming that they are not in the database.
+	InsertVulnerabilityNotifications([]VulnerabilityNotification) error
+
+	// FindNewNotification retrieves a notification, which has never been
+	// notified or notified before a certain time.
+	FindNewNotification(notifiedBefore time.Time) (hook NotificationHook, found bool, err error)
+
+	// FindVulnerabilityNotification retrieves a vulnerability notification with
+	// affected ancestries affected by old or new vulnerability.
 	//
-	// It has has to create a Notification that will contain the old and the
-	// updated Vulnerability.
-	InsertVulnerabilityFixes(vulnerabilityNamespace, vulnerabilityName string, fixes []FeatureVersion) error
-
-	// DeleteVulnerabilityFix removes a FixedIn Feature from the specified
-	// Vulnerability in the database. It can be used to store the fact that a
-	// Vulnerability no longer affects the given Feature in any Version.
+	// Because the number of affected ancestries maybe large, they are paginated
+	// and their pages are specified by the given encrypted PageNumbers, which,
+	// if empty, are always considered first page.
 	//
-	// It has has to create a Notification that will contain the old and the
-	// updated Vulnerability.
-	DeleteVulnerabilityFix(vulnerabilityNamespace, vulnerabilityName, featureName string) error
+	// Session interface implementation should have encrypt and decrypt
+	// functions for PageNumber.
+	FindVulnerabilityNotification(name string, limit int,
+		oldVulnerabilityPage PageNumber,
+		newVulnerabilityPage PageNumber) (
+		noti VulnerabilityNotificationWithVulnerable,
+		found bool, err error)
 
-	// GetAvailableNotification returns the Name, Created, Notified and Deleted
-	// fields of a Notification that should be handled.
-	//
-	// The renotify interval defines how much time after being marked as Notified
-	// by SetNotificationNotified, a Notification that hasn't been deleted should
-	// be returned again by this function.
-	// A Notification for which there is a valid Lock with the same Name should
-	// not be returned.
-	GetAvailableNotification(renotifyInterval time.Duration) (VulnerabilityNotification, error)
+	// MarkNotificationNotified marks a Notification as notified now, assuming
+	// the requested notification is in the database.
+	MarkNotificationNotified(name string) error
 
-	// GetNotification returns a Notification, including its OldVulnerability and
-	// NewVulnerability fields.
-	//
-	// On these Vulnerabilities, LayersIntroducingVulnerability should be filled
-	// with every Layer that introduces the Vulnerability (i.e. adds at least one
-	// affected FeatureVersion).
-	// The Limit and page parameters are used to paginate
-	// LayersIntroducingVulnerability. The first given page should be
-	// VulnerabilityNotificationFirstPage. The function will then return the next
-	// available page. If there is no more page, NoVulnerabilityNotificationPage
-	// has to be returned.
-	GetNotification(name string, limit int, page VulnerabilityNotificationPageNumber) (VulnerabilityNotification, VulnerabilityNotificationPageNumber, error)
-
-	// SetNotificationNotified marks a Notification as notified and thus, makes
-	// it unavailable for GetAvailableNotification, until the renotify duration
-	// is elapsed.
-	SetNotificationNotified(name string) error
-
-	// DeleteNotification marks a Notification as deleted, and thus, makes it
-	// unavailable for GetAvailableNotification.
+	// DeleteNotification removes a Notification in the database.
 	DeleteNotification(name string) error
 
-	// InsertKeyValue stores or updates a simple key/value pair in the database.
-	InsertKeyValue(key, value string) error
+	// UpdateKeyValue stores or updates a simple key/value pair.
+	UpdateKeyValue(key, value string) error
 
-	// GetKeyValue retrieves a value from the database from the given key.
-	//
-	// It returns an empty string if there is no such key.
-	GetKeyValue(key string) (string, error)
+	// FindKeyValue retrieves a value from the given key.
+	FindKeyValue(key string) (value string, found bool, err error)
 
 	// Lock creates or renew a Lock in the database with the given name, owner
 	// and duration.
@@ -204,14 +201,20 @@ type Datastore interface {
 	// Lock should not block, it should instead returns whether the Lock has been
 	// successfully acquired/renewed. If it's the case, the expiration time of
 	// that Lock is returned as well.
-	Lock(name string, owner string, duration time.Duration, renew bool) (bool, time.Time)
+	Lock(name string, owner string, duration time.Duration, renew bool) (success bool, expiration time.Time, err error)
 
 	// Unlock releases an existing Lock.
-	Unlock(name, owner string)
+	Unlock(name, owner string) error
 
 	// FindLock returns the owner of a Lock specified by the name, and its
 	// expiration time if it exists.
-	FindLock(name string) (string, time.Time, error)
+	FindLock(name string) (owner string, expiration time.Time, found bool, err error)
+}
+
+// Datastore represents a persistent data store
+type Datastore interface {
+	// Begin starts a session to change.
+	Begin() (Session, error)
 
 	// Ping returns the health status of the database.
 	Ping() bool

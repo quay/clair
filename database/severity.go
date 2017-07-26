@@ -36,7 +36,7 @@ const (
 	// NegligibleSeverity is technically a security problem, but is only
 	// theoretical in nature, requires a very special situation, has almost no
 	// install base, or does no real damage. These tend not to get backport from
-	// upstreams, and will likely not be included in security updates unless
+	// upstream, and will likely not be included in security updates unless
 	// there is an easy fix and some other issue causes an update.
 	NegligibleSeverity Severity = "Negligible"
 
@@ -93,7 +93,7 @@ func NewSeverity(s string) (Severity, error) {
 // Compare determines the equality of two severities.
 //
 // If the severities are equal, returns 0.
-// If the receiever is less, returns -1.
+// If the receiver is less, returns -1.
 // If the receiver is greater, returns 1.
 func (s Severity) Compare(s2 Severity) int {
 	var i1, i2 int
@@ -131,4 +131,14 @@ func (s *Severity) Scan(value interface{}) error {
 // Value implements the database/sql/driver.Valuer interface.
 func (s Severity) Value() (driver.Value, error) {
 	return string(s), nil
+}
+
+// Valid checks if the severity is valid or not.
+func (s Severity) Valid() bool {
+	for _, v := range Severities {
+		if s == v {
+			return true
+		}
+	}
+	return false
 }
