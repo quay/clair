@@ -19,6 +19,8 @@ package versionfmt
 import (
 	"errors"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -50,6 +52,18 @@ type Parser interface {
 	// Compare parses two different version strings.
 	// Returns 0 when equal, -1 when a < b, 1 when b < a.
 	Compare(a, b string) (int, error)
+
+	// InRange computes if a is in range of b
+	//
+	// NOTE(Sida): For legacy version formats, rangeB is a version and
+	// always use if versionA < rangeB as threshold.
+	InRange(versionA, rangeB string) (bool, error)
+
+	// GetFixedIn computes a fixed in version for a certain version range.
+	//
+	// NOTE(Sida): For legacy version formats, rangeA is a version and
+	// be returned directly becuase it was considered fixed in version.
+	GetFixedIn(rangeA string) (string, error)
 }
 
 // RegisterParser provides a way to dynamically register an implementation of a
@@ -109,4 +123,29 @@ func Compare(format, versionA, versionB string) (int, error) {
 	}
 
 	return versionParser.Compare(versionA, versionB)
+}
+
+// InRange is a helper function that checks if `versionA` is in `rangeB`
+func InRange(format, version, versionRange string) (bool, error) {
+	versionParser, exists := GetParser(format)
+	if !exists {
+		return false, ErrUnknownVersionFormat
+	}
+
+	in, err := versionParser.InRange(version, versionRange)
+	if err != nil {
+		log.WithFields(log.Fields{"Format": format, "Version": version, "Range": versionRange}).Error(err)
+	}
+	return in, err
+}
+
+// GetFixedIn is a helper function that computes the next fixed in version given
+// a affected version range `rangeA`.
+func GetFixedIn(format, rangeA string) (string, error) {
+	versionParser, exists := GetParser(format)
+	if !exists {
+		return "", ErrUnknownVersionFormat
+	}
+
+	return versionParser.GetFixedIn(rangeA)
 }

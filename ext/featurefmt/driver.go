@@ -38,8 +38,8 @@ var (
 
 // Lister represents an ability to list the features present in an image layer.
 type Lister interface {
-	// ListFeatures produces a list of FeatureVersions present in an image layer.
-	ListFeatures(tarutil.FilesMap) ([]database.FeatureVersion, error)
+	// ListFeatures produces a list of Features present in an image layer.
+	ListFeatures(tarutil.FilesMap) ([]database.Feature, error)
 
 	// RequiredFilenames returns the list of files required to be in the FilesMap
 	// provided to the ListFeatures method.
@@ -71,34 +71,24 @@ func RegisterLister(name string, versionfmt string, l Lister) {
 	versionfmtListerName[versionfmt] = append(versionfmtListerName[versionfmt], name)
 }
 
-// ListFeatures produces the list of FeatureVersions in an image layer using
+// ListFeatures produces the list of Features in an image layer using
 // every registered Lister.
-func ListFeatures(files tarutil.FilesMap, namespace *database.Namespace) ([]database.FeatureVersion, error) {
+func ListFeatures(files tarutil.FilesMap, listerNames []string) ([]database.Feature, error) {
 	listersM.RLock()
 	defer listersM.RUnlock()
 
-	var (
-		totalFeatures []database.FeatureVersion
-		listersName   []string
-		found         bool
-	)
+	var totalFeatures []database.Feature
 
-	if namespace == nil {
-		log.Debug("Can't detect features without namespace")
-		return totalFeatures, nil
-	}
-
-	if listersName, found = versionfmtListerName[namespace.VersionFormat]; !found {
-		log.WithFields(log.Fields{"namespace": namespace.Name, "version format": namespace.VersionFormat}).Debug("Unsupported Namespace")
-		return totalFeatures, nil
-	}
-
-	for _, listerName := range listersName {
-		features, err := listers[listerName].ListFeatures(files)
-		if err != nil {
-			return totalFeatures, err
+	for _, name := range listerNames {
+		if lister, ok := listers[name]; ok {
+			features, err := lister.ListFeatures(files)
+			if err != nil {
+				return []database.Feature{}, err
+			}
+			totalFeatures = append(totalFeatures, features...)
+		} else {
+			log.WithField("Name", name).Warn("Unknown Lister")
 		}
-		totalFeatures = append(totalFeatures, features...)
 	}
 
 	return totalFeatures, nil
@@ -106,7 +96,7 @@ func ListFeatures(files tarutil.FilesMap, namespace *database.Namespace) ([]data
 
 // RequiredFilenames returns the total list of files required for all
 // registered Listers.
-func RequiredFilenames() (files []string) {
+func RequiredFilenames(listerNames []string) (files []string) {
 	listersM.RLock()
 	defer listersM.RUnlock()
 
@@ -117,10 +107,19 @@ func RequiredFilenames() (files []string) {
 	return
 }
 
+// ListListers returns the names of all the registered feature listers.
+func ListListers() []string {
+	r := []string{}
+	for name := range listers {
+		r = append(r, name)
+	}
+	return r
+}
+
 // TestData represents the data used to test an implementation of Lister.
 type TestData struct {
-	Files           tarutil.FilesMap
-	FeatureVersions []database.FeatureVersion
+	Files    tarutil.FilesMap
+	Features []database.Feature
 }
 
 // LoadFileForTest can be used in order to obtain the []byte contents of a file
@@ -136,9 +135,9 @@ func LoadFileForTest(name string) []byte {
 func TestLister(t *testing.T, l Lister, testData []TestData) {
 	for _, td := range testData {
 		featureVersions, err := l.ListFeatures(td.Files)
-		if assert.Nil(t, err) && assert.Len(t, featureVersions, len(td.FeatureVersions)) {
-			for _, expectedFeatureVersion := range td.FeatureVersions {
-				assert.Contains(t, featureVersions, expectedFeatureVersion)
+		if assert.Nil(t, err) && assert.Len(t, featureVersions, len(td.Features)) {
+			for _, expectedFeature := range td.Features {
+				assert.Contains(t, featureVersions, expectedFeature)
 			}
 		}
 	}

@@ -38,41 +38,38 @@ func TestRHELParser(t *testing.T) {
 		assert.Equal(t, database.MediumSeverity, vulnerabilities[0].Severity)
 		assert.Equal(t, `Xerces-C is a validating XML parser written in a portable subset of C++. A flaw was found in the way the Xerces-C XML parser processed certain XML documents. A remote attacker could provide specially crafted XML input that, when parsed by an application using Xerces-C, would cause that application to crash.`, vulnerabilities[0].Description)
 
-		expectedFeatureVersions := []database.FeatureVersion{
+		expectedFeatures := []database.AffectedFeature{
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{
-						Name:          "centos:7",
-						VersionFormat: rpm.ParserName,
-					},
-					Name: "xerces-c",
+				Namespace: database.Namespace{
+					Name:          "centos:7",
+					VersionFormat: rpm.ParserName,
 				},
-				Version: "0:3.1.1-7.el7_1",
+				FeatureName:     "xerces-c",
+				AffectedVersion: "0:3.1.1-7.el7_1",
+				FixedInVersion:  "0:3.1.1-7.el7_1",
 			},
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{
-						Name:          "centos:7",
-						VersionFormat: rpm.ParserName,
-					},
-					Name: "xerces-c-devel",
+				Namespace: database.Namespace{
+					Name:          "centos:7",
+					VersionFormat: rpm.ParserName,
 				},
-				Version: "0:3.1.1-7.el7_1",
+				FeatureName:     "xerces-c-devel",
+				AffectedVersion: "0:3.1.1-7.el7_1",
+				FixedInVersion:  "0:3.1.1-7.el7_1",
 			},
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{
-						Name:          "centos:7",
-						VersionFormat: rpm.ParserName,
-					},
-					Name: "xerces-c-doc",
+				Namespace: database.Namespace{
+					Name:          "centos:7",
+					VersionFormat: rpm.ParserName,
 				},
-				Version: "0:3.1.1-7.el7_1",
+				FeatureName:     "xerces-c-doc",
+				AffectedVersion: "0:3.1.1-7.el7_1",
+				FixedInVersion:  "0:3.1.1-7.el7_1",
 			},
 		}
 
-		for _, expectedFeatureVersion := range expectedFeatureVersions {
-			assert.Contains(t, vulnerabilities[0].FixedIn, expectedFeatureVersion)
+		for _, expectedFeature := range expectedFeatures {
+			assert.Contains(t, vulnerabilities[0].Affected, expectedFeature)
 		}
 	}
 
@@ -85,31 +82,29 @@ func TestRHELParser(t *testing.T) {
 		assert.Equal(t, database.CriticalSeverity, vulnerabilities[0].Severity)
 		assert.Equal(t, `Mozilla Firefox is an open source web browser. XULRunner provides the XUL Runtime environment for Mozilla Firefox. Several flaws were found in the processing of malformed web content. A web page containing malicious content could cause Firefox to crash or, potentially, execute arbitrary code with the privileges of the user running Firefox.`, vulnerabilities[0].Description)
 
-		expectedFeatureVersions := []database.FeatureVersion{
+		expectedFeatures := []database.AffectedFeature{
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{
-						Name:          "centos:6",
-						VersionFormat: rpm.ParserName,
-					},
-					Name: "firefox",
+				Namespace: database.Namespace{
+					Name:          "centos:6",
+					VersionFormat: rpm.ParserName,
 				},
-				Version: "0:38.1.0-1.el6_6",
+				FeatureName:     "firefox",
+				FixedInVersion:  "0:38.1.0-1.el6_6",
+				AffectedVersion: "0:38.1.0-1.el6_6",
 			},
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{
-						Name:          "centos:7",
-						VersionFormat: rpm.ParserName,
-					},
-					Name: "firefox",
+				Namespace: database.Namespace{
+					Name:          "centos:7",
+					VersionFormat: rpm.ParserName,
 				},
-				Version: "0:38.1.0-1.el7_1",
+				FeatureName:     "firefox",
+				FixedInVersion:  "0:38.1.0-1.el7_1",
+				AffectedVersion: "0:38.1.0-1.el7_1",
 			},
 		}
 
-		for _, expectedFeatureVersion := range expectedFeatureVersions {
-			assert.Contains(t, vulnerabilities[0].FixedIn, expectedFeatureVersion)
+		for _, expectedFeature := range expectedFeatures {
+			assert.Contains(t, vulnerabilities[0].Affected, expectedFeature)
 		}
 	}
 }

@@ -38,7 +38,7 @@ import (
 
 var (
 	// ErrCouldNotFindLayer is returned when we could not download or open the layer file.
-	ErrCouldNotFindLayer = commonerr.NewBadRequestError("could not find layer")
+	ErrCouldNotFindLayer = commonerr.NewBadRequestError("could not find layer from given path")
 
 	// insecureTLS controls whether TLS server's certificate chain and hostname are verified
 	// when pulling layers, verified in default.

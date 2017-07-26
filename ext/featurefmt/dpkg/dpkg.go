@@ -40,16 +40,16 @@ func init() {
 	featurefmt.RegisterLister("dpkg", dpkg.ParserName, &lister{})
 }
 
-func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion, error) {
+func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {
 	f, hasFile := files["var/lib/dpkg/status"]
 	if !hasFile {
-		return []database.FeatureVersion{}, nil
+		return []database.Feature{}, nil
 	}
 
 	// Create a map to store packages and ensure their uniqueness
-	packagesMap := make(map[string]database.FeatureVersion)
+	packagesMap := make(map[string]database.Feature)
 
-	var pkg database.FeatureVersion
+	var pkg database.Feature
 	var err error
 	scanner := bufio.NewScanner(strings.NewReader(string(f)))
 	for scanner.Scan() {
@@ -59,7 +59,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 			// Package line
 			// Defines the name of the package
 
-			pkg.Feature.Name = strings.TrimSpace(strings.TrimPrefix(line, "Package: "))
+			pkg.Name = strings.TrimSpace(strings.TrimPrefix(line, "Package: "))
 			pkg.Version = ""
 		} else if strings.HasPrefix(line, "Source: ") {
 			// Source line (Optionnal)
@@ -72,7 +72,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 				md[dpkgSrcCaptureRegexpNames[i]] = strings.TrimSpace(n)
 			}
 
-			pkg.Feature.Name = md["name"]
+			pkg.Name = md["name"]
 			if md["version"] != "" {
 				version := md["version"]
 				err = versionfmt.Valid(dpkg.ParserName, version)
@@ -96,21 +96,22 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 				pkg.Version = version
 			}
 		} else if line == "" {
-			pkg.Feature.Name = ""
+			pkg.Name = ""
 			pkg.Version = ""
 		}
 
 		// Add the package to the result array if we have all the informations
-		if pkg.Feature.Name != "" && pkg.Version != "" {
-			packagesMap[pkg.Feature.Name+"#"+pkg.Version] = pkg
-			pkg.Feature.Name = ""
+		if pkg.Name != "" && pkg.Version != "" {
+			packagesMap[pkg.Name+"#"+pkg.Version] = pkg
+			pkg.Name = ""
 			pkg.Version = ""
 		}
 	}
 
-	// Convert the map to a slice
-	packages := make([]database.FeatureVersion, 0, len(packagesMap))
+	// Convert the map to a slice and add version format.
+	packages := make([]database.Feature, 0, len(packagesMap))
 	for _, pkg := range packagesMap {
+		pkg.VersionFormat = dpkg.ParserName
 		packages = append(packages, pkg)
 	}
 

@@ -38,27 +38,27 @@ func init() {
 	featurefmt.RegisterLister("rpm", rpm.ParserName, &lister{})
 }
 
-func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion, error) {
+func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {
 	f, hasFile := files["var/lib/rpm/Packages"]
 	if !hasFile {
-		return []database.FeatureVersion{}, nil
+		return []database.Feature{}, nil
 	}
 
 	// Create a map to store packages and ensure their uniqueness
-	packagesMap := make(map[string]database.FeatureVersion)
+	packagesMap := make(map[string]database.Feature)
 
 	// Write the required "Packages" file to disk
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "rpm")
 	defer os.RemoveAll(tmpDir)
 	if err != nil {
 		log.WithError(err).Error("could not create temporary folder for RPM detection")
-		return []database.FeatureVersion{}, commonerr.ErrFilesystem
+		return []database.Feature{}, commonerr.ErrFilesystem
 	}
 
 	err = ioutil.WriteFile(tmpDir+"/Packages", f, 0700)
 	if err != nil {
 		log.WithError(err).Error("could not create temporary file for RPM detection")
-		return []database.FeatureVersion{}, commonerr.ErrFilesystem
+		return []database.Feature{}, commonerr.ErrFilesystem
 	}
 
 	// Extract binary package names because RHSA refers to binary package names.
@@ -67,7 +67,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 		log.WithError(err).WithField("output", string(out)).Error("could not query RPM")
 		// Do not bubble up because we probably won't be able to fix it,
 		// the database must be corrupted
-		return []database.FeatureVersion{}, nil
+		return []database.Feature{}, nil
 	}
 
 	scanner := bufio.NewScanner(strings.NewReader(string(out)))
@@ -93,18 +93,17 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 		}
 
 		// Add package
-		pkg := database.FeatureVersion{
-			Feature: database.Feature{
-				Name: line[0],
-			},
+		pkg := database.Feature{
+			Name:    line[0],
 			Version: version,
 		}
-		packagesMap[pkg.Feature.Name+"#"+pkg.Version] = pkg
+		packagesMap[pkg.Name+"#"+pkg.Version] = pkg
 	}
 
 	// Convert the map to a slice
-	packages := make([]database.FeatureVersion, 0, len(packagesMap))
+	packages := make([]database.Feature, 0, len(packagesMap))
 	for _, pkg := range packagesMap {
+		pkg.VersionFormat = rpm.ParserName
 		packages = append(packages, pkg)
 	}
 

@@ -19,28 +19,35 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/featurefmt"
+	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/pkg/tarutil"
 )
 
 func TestDpkgFeatureDetection(t *testing.T) {
+	testFeatures := []database.Feature{
+		// Two packages from this source are installed, it should only appear one time
+		{
+			Name:    "pam",
+			Version: "1.1.8-3.1ubuntu3",
+		},
+		{
+			Name:    "makedev",         // The source name and the package name are equals
+			Version: "2.3.1-93ubuntu1", // The version comes from the "Version:" line
+		},
+		{
+			Name:    "gcc-5",
+			Version: "5.1.1-12ubuntu1", // The version comes from the "Source:" line
+		},
+	}
+
+	for i := range testFeatures {
+		testFeatures[i].VersionFormat = dpkg.ParserName
+	}
+
 	testData := []featurefmt.TestData{
 		// Test an Ubuntu dpkg status file
 		{
-			FeatureVersions: []database.FeatureVersion{
-				// Two packages from this source are installed, it should only appear one time
-				{
-					Feature: database.Feature{Name: "pam"},
-					Version: "1.1.8-3.1ubuntu3",
-				},
-				{
-					Feature: database.Feature{Name: "makedev"}, // The source name and the package name are equals
-					Version: "2.3.1-93ubuntu1",                 // The version comes from the "Version:" line
-				},
-				{
-					Feature: database.Feature{Name: "gcc-5"},
-					Version: "5.1.1-12ubuntu1", // The version comes from the "Source:" line
-				},
-			},
+			Features: testFeatures,
 			Files: tarutil.FilesMap{
 				"var/lib/dpkg/status": featurefmt.LoadFileForTest("dpkg/testdata/status"),
 			},

@@ -16,161 +16,240 @@ package database
 
 import "time"
 
+// MockSession implements Session and enables overriding each available method.
+// The default behavior of each method is to simply panic.
+type MockSession struct {
+	FctCommit                           func() error
+	FctRollback                         func() error
+	FctUpsertAncestry                   func(Ancestry, []NamespacedFeature, Processors) error
+	FctFindAncestry                     func(name string) (Ancestry, Processors, bool, error)
+	FctFindAncestryFeatures             func(name string) (AncestryWithFeatures, bool, error)
+	FctFindAffectedNamespacedFeatures   func(features []NamespacedFeature) ([]NullableAffectedNamespacedFeature, error)
+	FctPersistNamespaces                func([]Namespace) error
+	FctPersistFeatures                  func([]Feature) error
+	FctPersistNamespacedFeatures        func([]NamespacedFeature) error
+	FctCacheAffectedNamespacedFeatures  func([]NamespacedFeature) error
+	FctPersistLayer                     func(Layer) error
+	FctPersistLayerContent              func(hash string, namespaces []Namespace, features []Feature, processedBy Processors) error
+	FctFindLayer                        func(name string) (Layer, Processors, bool, error)
+	FctFindLayerWithContent             func(name string) (LayerWithContent, bool, error)
+	FctInsertVulnerabilities            func([]VulnerabilityWithAffected) error
+	FctFindVulnerabilities              func([]VulnerabilityID) ([]NullableVulnerability, error)
+	FctDeleteVulnerabilities            func([]VulnerabilityID) error
+	FctInsertVulnerabilityNotifications func([]VulnerabilityNotification) error
+	FctFindNewNotification              func(lastNotified time.Time) (NotificationHook, bool, error)
+	FctFindVulnerabilityNotification    func(name string, limit int, oldPage PageNumber, newPage PageNumber) (
+		vuln VulnerabilityNotificationWithVulnerable, ok bool, err error)
+	FctMarkNotificationNotified func(name string) error
+	FctDeleteNotification       func(name string) error
+	FctUpdateKeyValue           func(key, value string) error
+	FctFindKeyValue             func(key string) (string, bool, error)
+	FctLock                     func(name string, owner string, duration time.Duration, renew bool) (bool, time.Time, error)
+	FctUnlock                   func(name, owner string) error
+	FctFindLock                 func(name string) (string, time.Time, bool, error)
+}
+
+func (ms *MockSession) Commit() error {
+	if ms.FctCommit != nil {
+		return ms.FctCommit()
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) Rollback() error {
+	if ms.FctRollback != nil {
+		return ms.FctRollback()
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) UpsertAncestry(ancestry Ancestry, features []NamespacedFeature, processedBy Processors) error {
+	if ms.FctUpsertAncestry != nil {
+		return ms.FctUpsertAncestry(ancestry, features, processedBy)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) FindAncestry(name string) (Ancestry, Processors, bool, error) {
+	if ms.FctFindAncestry != nil {
+		return ms.FctFindAncestry(name)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) FindAncestryFeatures(name string) (AncestryWithFeatures, bool, error) {
+	if ms.FctFindAncestryFeatures != nil {
+		return ms.FctFindAncestryFeatures(name)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) FindAffectedNamespacedFeatures(features []NamespacedFeature) ([]NullableAffectedNamespacedFeature, error) {
+	if ms.FctFindAffectedNamespacedFeatures != nil {
+		return ms.FctFindAffectedNamespacedFeatures(features)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) PersistNamespaces(namespaces []Namespace) error {
+	if ms.FctPersistNamespaces != nil {
+		return ms.FctPersistNamespaces(namespaces)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) PersistFeatures(features []Feature) error {
+	if ms.FctPersistFeatures != nil {
+		return ms.FctPersistFeatures(features)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) PersistNamespacedFeatures(namespacedFeatures []NamespacedFeature) error {
+	if ms.FctPersistNamespacedFeatures != nil {
+		return ms.FctPersistNamespacedFeatures(namespacedFeatures)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) CacheAffectedNamespacedFeatures(namespacedFeatures []NamespacedFeature) error {
+	if ms.FctCacheAffectedNamespacedFeatures != nil {
+		return ms.FctCacheAffectedNamespacedFeatures(namespacedFeatures)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) PersistLayer(layer Layer) error {
+	if ms.FctPersistLayer != nil {
+		return ms.FctPersistLayer(layer)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) PersistLayerContent(hash string, namespaces []Namespace, features []Feature, processedBy Processors) error {
+	if ms.FctPersistLayerContent != nil {
+		return ms.FctPersistLayerContent(hash, namespaces, features, processedBy)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) FindLayer(name string) (Layer, Processors, bool, error) {
+	if ms.FctFindLayer != nil {
+		return ms.FctFindLayer(name)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) FindLayerWithContent(name string) (LayerWithContent, bool, error) {
+	if ms.FctFindLayerWithContent != nil {
+		return ms.FctFindLayerWithContent(name)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) InsertVulnerabilities(vulnerabilities []VulnerabilityWithAffected) error {
+	if ms.FctInsertVulnerabilities != nil {
+		return ms.FctInsertVulnerabilities(vulnerabilities)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) FindVulnerabilities(vulnerabilityIDs []VulnerabilityID) ([]NullableVulnerability, error) {
+	if ms.FctFindVulnerabilities != nil {
+		return ms.FctFindVulnerabilities(vulnerabilityIDs)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) DeleteVulnerabilities(VulnerabilityIDs []VulnerabilityID) error {
+	if ms.FctDeleteVulnerabilities != nil {
+		return ms.FctDeleteVulnerabilities(VulnerabilityIDs)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) InsertVulnerabilityNotifications(vulnerabilityNotifications []VulnerabilityNotification) error {
+	if ms.FctInsertVulnerabilityNotifications != nil {
+		return ms.FctInsertVulnerabilityNotifications(vulnerabilityNotifications)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) FindNewNotification(lastNotified time.Time) (NotificationHook, bool, error) {
+	if ms.FctFindNewNotification != nil {
+		return ms.FctFindNewNotification(lastNotified)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) FindVulnerabilityNotification(name string, limit int, oldPage PageNumber, newPage PageNumber) (
+	VulnerabilityNotificationWithVulnerable, bool, error) {
+	if ms.FctFindVulnerabilityNotification != nil {
+		return ms.FctFindVulnerabilityNotification(name, limit, oldPage, newPage)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) MarkNotificationNotified(name string) error {
+	if ms.FctMarkNotificationNotified != nil {
+		return ms.FctMarkNotificationNotified(name)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) DeleteNotification(name string) error {
+	if ms.FctDeleteNotification != nil {
+		return ms.FctDeleteNotification(name)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) UpdateKeyValue(key, value string) error {
+	if ms.FctUpdateKeyValue != nil {
+		return ms.FctUpdateKeyValue(key, value)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) FindKeyValue(key string) (string, bool, error) {
+	if ms.FctFindKeyValue != nil {
+		return ms.FctFindKeyValue(key)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) Lock(name string, owner string, duration time.Duration, renew bool) (bool, time.Time, error) {
+	if ms.FctLock != nil {
+		return ms.FctLock(name, owner, duration, renew)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) Unlock(name, owner string) error {
+	if ms.FctUnlock != nil {
+		return ms.FctUnlock(name, owner)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) FindLock(name string) (string, time.Time, bool, error) {
+	if ms.FctFindLock != nil {
+		return ms.FctFindLock(name)
+	}
+	panic("required mock function not implemented")
+}
+
 // MockDatastore implements Datastore and enables overriding each available method.
 // The default behavior of each method is to simply panic.
 type MockDatastore struct {
-	FctListNamespaces           func() ([]Namespace, error)
-	FctInsertLayer              func(Layer) error
-	FctFindLayer                func(name string, withFeatures, withVulnerabilities bool) (Layer, error)
-	FctDeleteLayer              func(name string) error
-	FctListVulnerabilities      func(namespaceName string, limit int, page int) ([]Vulnerability, int, error)
-	FctInsertVulnerabilities    func(vulnerabilities []Vulnerability, createNotification bool) error
-	FctFindVulnerability        func(namespaceName, name string) (Vulnerability, error)
-	FctDeleteVulnerability      func(namespaceName, name string) error
-	FctInsertVulnerabilityFixes func(vulnerabilityNamespace, vulnerabilityName string, fixes []FeatureVersion) error
-	FctDeleteVulnerabilityFix   func(vulnerabilityNamespace, vulnerabilityName, featureName string) error
-	FctGetAvailableNotification func(renotifyInterval time.Duration) (VulnerabilityNotification, error)
-	FctGetNotification          func(name string, limit int, page VulnerabilityNotificationPageNumber) (VulnerabilityNotification, VulnerabilityNotificationPageNumber, error)
-	FctSetNotificationNotified  func(name string) error
-	FctDeleteNotification       func(name string) error
-	FctInsertKeyValue           func(key, value string) error
-	FctGetKeyValue              func(key string) (string, error)
-	FctLock                     func(name string, owner string, duration time.Duration, renew bool) (bool, time.Time)
-	FctUnlock                   func(name, owner string)
-	FctFindLock                 func(name string) (string, time.Time, error)
-	FctPing                     func() bool
-	FctClose                    func()
+	FctBegin func() (Session, error)
+	FctPing  func() bool
+	FctClose func()
 }
 
-func (mds *MockDatastore) ListNamespaces() ([]Namespace, error) {
-	if mds.FctListNamespaces != nil {
-		return mds.FctListNamespaces()
-	}
-	panic("required mock function not implemented")
-}
-
-func (mds *MockDatastore) InsertLayer(layer Layer) error {
-	if mds.FctInsertLayer != nil {
-		return mds.FctInsertLayer(layer)
-	}
-	panic("required mock function not implemented")
-}
-
-func (mds *MockDatastore) FindLayer(name string, withFeatures, withVulnerabilities bool) (Layer, error) {
-	if mds.FctFindLayer != nil {
-		return mds.FctFindLayer(name, withFeatures, withVulnerabilities)
-	}
-	panic("required mock function not implemented")
-}
-
-func (mds *MockDatastore) DeleteLayer(name string) error {
-	if mds.FctDeleteLayer != nil {
-		return mds.FctDeleteLayer(name)
-	}
-	panic("required mock function not implemented")
-}
-
-func (mds *MockDatastore) ListVulnerabilities(namespaceName string, limit int, page int) ([]Vulnerability, int, error) {
-	if mds.FctListVulnerabilities != nil {
-		return mds.FctListVulnerabilities(namespaceName, limit, page)
-	}
-	panic("required mock function not implemented")
-}
-
-func (mds *MockDatastore) InsertVulnerabilities(vulnerabilities []Vulnerability, createNotification bool) error {
-	if mds.FctInsertVulnerabilities != nil {
-		return mds.FctInsertVulnerabilities(vulnerabilities, createNotification)
-	}
-	panic("required mock function not implemented")
-}
-
-func (mds *MockDatastore) FindVulnerability(namespaceName, name string) (Vulnerability, error) {
-	if mds.FctFindVulnerability != nil {
-		return mds.FctFindVulnerability(namespaceName, name)
-	}
-	panic("required mock function not implemented")
-}
-
-func (mds *MockDatastore) DeleteVulnerability(namespaceName, name string) error {
-	if mds.FctDeleteVulnerability != nil {
-		return mds.FctDeleteVulnerability(namespaceName, name)
-	}
-	panic("required mock function not implemented")
-}
-
-func (mds *MockDatastore) InsertVulnerabilityFixes(vulnerabilityNamespace, vulnerabilityName string, fixes []FeatureVersion) error {
-	if mds.FctInsertVulnerabilityFixes != nil {
-		return mds.FctInsertVulnerabilityFixes(vulnerabilityNamespace, vulnerabilityName, fixes)
-	}
-	panic("required mock function not implemented")
-}
-
-func (mds *MockDatastore) DeleteVulnerabilityFix(vulnerabilityNamespace, vulnerabilityName, featureName string) error {
-	if mds.FctDeleteVulnerabilityFix != nil {
-		return mds.FctDeleteVulnerabilityFix(vulnerabilityNamespace, vulnerabilityName, featureName)
-	}
-	panic("required mock function not implemented")
-}
-
-func (mds *MockDatastore) GetAvailableNotification(renotifyInterval time.Duration) (VulnerabilityNotification, error) {
-	if mds.FctGetAvailableNotification != nil {
-		return mds.FctGetAvailableNotification(renotifyInterval)
-	}
-	panic("required mock function not implemented")
-}
-
-func (mds *MockDatastore) GetNotification(name string, limit int, page VulnerabilityNotificationPageNumber) (VulnerabilityNotification, VulnerabilityNotificationPageNumber, error) {
-	if mds.FctGetNotification != nil {
-		return mds.FctGetNotification(name, limit, page)
-	}
-	panic("required mock function not implemented")
-}
-
-func (mds *MockDatastore) SetNotificationNotified(name string) error {
-	if mds.FctSetNotificationNotified != nil {
-		return mds.FctSetNotificationNotified(name)
-	}
-	panic("required mock function not implemented")
-}
-
-func (mds *MockDatastore) DeleteNotification(name string) error {
-	if mds.FctDeleteNotification != nil {
-		return mds.FctDeleteNotification(name)
-	}
-	panic("required mock function not implemented")
-}
-func (mds *MockDatastore) InsertKeyValue(key, value string) error {
-	if mds.FctInsertKeyValue != nil {
-		return mds.FctInsertKeyValue(key, value)
-	}
-	panic("required mock function not implemented")
-}
-
-func (mds *MockDatastore) GetKeyValue(key string) (string, error) {
-	if mds.FctGetKeyValue != nil {
-		return mds.FctGetKeyValue(key)
-	}
-	panic("required mock function not implemented")
-}
-
-func (mds *MockDatastore) Lock(name string, owner string, duration time.Duration, renew bool) (bool, time.Time) {
-	if mds.FctLock != nil {
-		return mds.FctLock(name, owner, duration, renew)
-	}
-	panic("required mock function not implemented")
-}
-
-func (mds *MockDatastore) Unlock(name, owner string) {
-	if mds.FctUnlock != nil {
-		mds.FctUnlock(name, owner)
-		return
-	}
-	panic("required mock function not implemented")
-}
-
-func (mds *MockDatastore) FindLock(name string) (string, time.Time, error) {
-	if mds.FctFindLock != nil {
-		return mds.FctFindLock(name)
+func (mds *MockDatastore) Begin() (Session, error) {
+	if mds.FctBegin != nil {
+		return mds.FctBegin()
 	}
 	panic("required mock function not implemented")
 }
