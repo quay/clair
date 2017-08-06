@@ -22,4 +22,6 @@ This document tracks projects that integrate with Clair. [Join the community](ht
 
 [Portus](http://port.us.org/features/6_security_scanning.html#coreos-clair): an authorization service and frontend for Docker registry (v2).
 
+[clair-scanner](https://github.com/arminc/clair-scanner): a spin-off from 'analyze-local-images' who blocks on vulnerabilities with whitelist possibility
+
 [sqs]: https://aws.amazon.com/sqs/
