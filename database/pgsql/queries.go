@@ -413,6 +413,6 @@ func queryPersistLayer(count int) string {
 
 func queryInvalidateVulnerabilityCache(count int) string {
 	return fmt.Sprintf(`DELETE FROM vulnerability_affected_feature 
-		WHERE vulnerability_id = (%s)`,
+		WHERE vulnerability_id IN (%s)`,
 		queryString(1, count))
 }
