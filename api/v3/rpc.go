@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v2
+package v3
 
 import (
 	"fmt"
@@ -24,7 +24,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/coreos/clair"
-	pb "github.com/coreos/clair/api/v2/clairpb"
+	pb "github.com/coreos/clair/api/v3/clairpb"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/commonerr"
 )

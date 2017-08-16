@@ -31,7 +31,7 @@ clair:
       paginationkey: 
 
   api:
-    # v2 grpc/RESTful API server port
+    # v3 grpc/RESTful API server port
     grpcport : 6060
 
     # Health server port

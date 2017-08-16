@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v2
+package v3
 
 import (
 	"context"
@@ -32,7 +32,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	pb "github.com/coreos/clair/api/v2/clairpb"
+	pb "github.com/coreos/clair/api/v3/clairpb"
 	"github.com/coreos/clair/database"
 )
 
@@ -47,7 +47,7 @@ func handleShutdown(err error) {
 
 var (
 	promResponseDurationMilliseconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name:    "clair_v2_api_response_duration_milliseconds",
+		Name:    "clair_v3_api_response_duration_milliseconds",
 		Help:    "The duration of time it takes to receive and write a response to an V2 API request",
 		Buckets: prometheus.ExponentialBuckets(9.375, 2, 10),
 	}, []string{"route", "code"})

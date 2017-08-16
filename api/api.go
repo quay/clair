@@ -26,7 +26,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/tylerb/graceful"
 
-	"github.com/coreos/clair/api/v2"
+	"github.com/coreos/clair/api/v3"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/stopper"
 )
@@ -49,7 +49,7 @@ func RunV2(cfg *Config, store database.Datastore) {
 	if tlsConfig != nil {
 		log.Info("main API configured with client certificate authentication")
 	}
-	v2.Run(cfg.GrpcPort, tlsConfig, cfg.CertFile, cfg.KeyFile, store)
+	v3.Run(cfg.GrpcPort, tlsConfig, cfg.CertFile, cfg.KeyFile, store)
 }
 
 func RunHealth(cfg *Config, store database.Datastore, st *stopper.Stopper) {
