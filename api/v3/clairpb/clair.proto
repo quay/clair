@@ -18,6 +18,7 @@ option go_package = "clairpb";
 package clairpb;
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 
 message Vulnerability {
 	string name = 1;
@@ -26,60 +27,72 @@ message Vulnerability {
 	string link = 4;
 	string severity = 5;
 	string metadata = 6;
+	// fixed_by exists when vulnerability is under feature.
 	string fixed_by = 7;
-	repeated Feature fixed_in_features = 8;
+	// affected_versions exists when vulnerability is under notification.
+	repeated Feature affected_versions = 8;
 }
 
-message Feature {
+message ClairStatus {
+	// listers and detectors are processors implemented in this Clair and used to
+	// scan ancestries
+	repeated string listers = 1;
+	repeated string detectors = 2;
+	google.protobuf.Timestamp last_update_time = 3;
+}
+
+message Feature{
 	string name = 1;
 	string namespace_name = 2;
 	string version = 3;
 	string version_format = 4;
-	string added_by = 5;
-	repeated Vulnerability vulnerabilities = 6;
+	repeated Vulnerability vulnerabilities = 5;
 }
 
 message Ancestry {
 	string name = 1;
-	int32 engine_version = 2;
+	repeated Feature features = 2;
 	repeated Layer layers = 3;
-}
 
-message LayersIntroducingVulnerabilty {
-	Vulnerability vulnerability = 1;
-	repeated OrderedLayerName layers = 2;
-}
-
-message OrderedLayerName {
-	int32 index = 1;
-	string layer_name = 2;
+	// scanned_listers and scanned_detectors are used to scan this ancestry, it
+	// may be different from listers and detectors in ClairStatus since the
+	// ancestry could be scanned by previous version of Clair.
+	repeated string scanned_listers = 4;
+	repeated string scanned_detectors = 5;
 }
 
 message Layer {
-	string name = 1;
-	repeated string namespace_names = 2;
+	string hash = 1;
 }
 
 message Notification {
 	string name = 1;
 	string created = 2;
 	string notified = 3;
-	string deleted = 4;
-	int32 limit = 5;
-	Page page = 6;
+	string deleted = 4;	
+	PagedVulnerableAncestries old = 5;
+	PagedVulnerableAncestries new = 6;
 }
 
-message Page {
-	string this_token = 1;
-	string next_token = 2;
-	LayersIntroducingVulnerabilty old = 3;
-	LayersIntroducingVulnerabilty new = 4;
+message IndexedAncestryName {
+	// index is unique to name in all streams simultaneously streamed, increasing
+	// and larger than all indexes in previous page in same stream.
+	int32 index = 1;
+	string name = 2;
 }
 
+message PagedVulnerableAncestries {
+	string current_page = 1;
+	// if next_page is empty, it signals the end of all pages.
+	string next_page = 2;
+	int32 limit = 3;	
+	Vulnerability vulnerability = 4;
+	repeated IndexedAncestryName ancestries = 5;
+}
 
 message PostAncestryRequest {
 	message PostLayer {
-		string name = 1;
+		string hash = 1;
 		string path = 2;
 		map<string, string> headers = 3;
 	}
@@ -89,7 +102,7 @@ message PostAncestryRequest {
 }
 
 message PostAncestryResponse {
-	int32 engine_version = 1;
+	ClairStatus status = 1; 
 }
 
 message GetAncestryRequest {
@@ -100,24 +113,24 @@ message GetAncestryRequest {
 
 message GetAncestryResponse {
 	Ancestry ancestry = 1;
-	repeated Feature features = 2;
+	ClairStatus status = 2; 
 }
 
 message GetNotificationRequest {
-	string page = 1;
-	int32 limit = 2;
-	string name = 3;
+	// if the vulnerability_page is empty, it implies the first page.
+	string old_vulnerability_page = 1;
+	string new_vulnerability_page = 2;
+	int32 limit = 3;
+	string name = 4;
 }
 
 message GetNotificationResponse {
 	Notification notification = 1;
 }
 
-message DeleteNotificationRequest {
+message MarkNotificationAsReadRequest {
 	string name = 1;
 }
-
-
 
 service AncestryService{
 	rpc PostAncestry(PostAncestryRequest) returns (PostAncestryResponse) {
@@ -141,7 +154,7 @@ service NotificationService{
 		};
 	}
 
-	rpc DeleteNotification(DeleteNotificationRequest) returns (google.protobuf.Empty) {
+	rpc MarkNotificationAsRead(MarkNotificationAsReadRequest) returns (google.protobuf.Empty) {
 		option (google.api.http) = {
 			delete: "/notifications/{name}"
 		};

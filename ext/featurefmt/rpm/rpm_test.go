@@ -19,6 +19,7 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/featurefmt"
+	"github.com/coreos/clair/ext/versionfmt/rpm"
 	"github.com/coreos/clair/pkg/tarutil"
 )
 
@@ -27,16 +28,18 @@ func TestRpmFeatureDetection(t *testing.T) {
 		// Test a CentOS 7 RPM database
 		// Memo: Use the following command on a RPM-based system to shrink a database: rpm -qa --qf "%{NAME}\n" |tail -n +3| xargs rpm -e --justdb
 		{
-			FeatureVersions: []database.FeatureVersion{
+			Features: []database.Feature{
 				// Two packages from this source are installed, it should only appear once
 				{
-					Feature: database.Feature{Name: "centos-release"},
-					Version: "7-1.1503.el7.centos.2.8",
+					Name:          "centos-release",
+					Version:       "7-1.1503.el7.centos.2.8",
+					VersionFormat: rpm.ParserName,
 				},
 				// Two packages from this source are installed, it should only appear once
 				{
-					Feature: database.Feature{Name: "filesystem"},
-					Version: "3.2-18.el7",
+					Name:          "filesystem",
+					Version:       "3.2-18.el7",
+					VersionFormat: rpm.ParserName,
 				},
 			},
 			Files: tarutil.FilesMap{

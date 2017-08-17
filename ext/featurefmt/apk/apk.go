@@ -34,17 +34,17 @@ func init() {
 
 type lister struct{}
 
-func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion, error) {
+func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {
 	file, exists := files["lib/apk/db/installed"]
 	if !exists {
-		return []database.FeatureVersion{}, nil
+		return []database.Feature{}, nil
 	}
 
 	// Iterate over each line in the "installed" file attempting to parse each
 	// package into a feature that will be stored in a set to guarantee
 	// uniqueness.
-	pkgSet := make(map[string]database.FeatureVersion)
-	ipkg := database.FeatureVersion{}
+	pkgSet := make(map[string]database.Feature)
+	ipkg := database.Feature{}
 	scanner := bufio.NewScanner(bytes.NewBuffer(file))
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -55,7 +55,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 		// Parse the package name or version.
 		switch {
 		case line[:2] == "P:":
-			ipkg.Feature.Name = line[2:]
+			ipkg.Name = line[2:]
 		case line[:2] == "V:":
 			version := string(line[2:])
 			err := versionfmt.Valid(dpkg.ParserName, version)
@@ -67,20 +67,21 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion,
 		case line == "":
 			// Restart if the parser reaches another package definition before
 			// creating a valid package.
-			ipkg = database.FeatureVersion{}
+			ipkg = database.Feature{}
 		}
 
 		// If we have a whole feature, store it in the set and try to parse a new
 		// one.
-		if ipkg.Feature.Name != "" && ipkg.Version != "" {
-			pkgSet[ipkg.Feature.Name+"#"+ipkg.Version] = ipkg
-			ipkg = database.FeatureVersion{}
+		if ipkg.Name != "" && ipkg.Version != "" {
+			pkgSet[ipkg.Name+"#"+ipkg.Version] = ipkg
+			ipkg = database.Feature{}
 		}
 	}
 
-	// Convert the map into a slice.
-	pkgs := make([]database.FeatureVersion, 0, len(pkgSet))
+	// Convert the map into a slice and attach the version format
+	pkgs := make([]database.Feature, 0, len(pkgSet))
 	for _, pkg := range pkgSet {
+		pkg.VersionFormat = dpkg.ParserName
 		pkgs = append(pkgs, pkg)
 	}
 

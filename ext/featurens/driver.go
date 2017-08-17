@@ -69,20 +69,24 @@ func RegisterDetector(name string, d Detector) {
 }
 
 // Detect iterators through all registered Detectors and returns all non-nil detected namespaces
-func Detect(files tarutil.FilesMap) ([]database.Namespace, error) {
+func Detect(files tarutil.FilesMap, detectorNames []string) ([]database.Namespace, error) {
 	detectorsM.RLock()
 	defer detectorsM.RUnlock()
 	namespaces := map[string]*database.Namespace{}
-	for name, detector := range detectors {
-		namespace, err := detector.Detect(files)
-		if err != nil {
-			log.WithError(err).WithField("name", name).Warning("failed while attempting to detect namespace")
-			return []database.Namespace{}, err
-		}
+	for _, name := range detectorNames {
+		if detector, ok := detectors[name]; ok {
+			namespace, err := detector.Detect(files)
+			if err != nil {
+				log.WithError(err).WithField("name", name).Warning("failed while attempting to detect namespace")
+				return nil, err
+			}
 
-		if namespace != nil {
-			log.WithFields(log.Fields{"name": name, "namespace": namespace.Name}).Debug("detected namespace")
-			namespaces[namespace.Name] = namespace
+			if namespace != nil {
+				log.WithFields(log.Fields{"name": name, "namespace": namespace.Name}).Debug("detected namespace")
+				namespaces[namespace.Name] = namespace
+			}
+		} else {
+			log.WithField("Name", name).Warn("Unknown namespace detector")
 		}
 	}
 
@@ -95,7 +99,7 @@ func Detect(files tarutil.FilesMap) ([]database.Namespace, error) {
 
 // RequiredFilenames returns the total list of files required for all
 // registered Detectors.
-func RequiredFilenames() (files []string) {
+func RequiredFilenames(detectorNames []string) (files []string) {
 	detectorsM.RLock()
 	defer detectorsM.RUnlock()
 
@@ -104,6 +108,15 @@ func RequiredFilenames() (files []string) {
 	}
 
 	return
+}
+
+// ListDetectors returns the names of all registered namespace detectors.
+func ListDetectors() []string {
+	r := []string{}
+	for name := range detectors {
+		r = append(r, name)
+	}
+	return r
 }
 
 // TestData represents the data used to test an implementation of Detector.

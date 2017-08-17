@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2017 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package migrations
+package strutil
 
-import "github.com/remind101/migrate"
+import (
+	"testing"
 
-func init() {
-	RegisterMigration(migrate.Migration{
-		ID: 4,
-		Up: migrate.Queries([]string{
-			`CREATE INDEX vulnerability_notification_deleted_at_idx ON Vulnerability_Notification (deleted_at);`,
-		}),
-		Down: migrate.Queries([]string{
-			`DROP INDEX vulnerability_notification_deleted_at_idx;`,
-		}),
-	})
+	"github.com/stretchr/testify/assert"
+)
+
+func TestStringComparison(t *testing.T) {
+	cmp := CompareStringLists([]string{"a", "b", "b", "a"}, []string{"a", "c"})
+	assert.Len(t, cmp, 1)
+	assert.NotContains(t, cmp, "a")
+	assert.Contains(t, cmp, "b")
+
+	cmp = CompareStringListsInBoth([]string{"a", "a", "b", "c"}, []string{"a", "c", "c"})
+	assert.Len(t, cmp, 2)
+	assert.NotContains(t, cmp, "b")
+	assert.Contains(t, cmp, "a")
+	assert.Contains(t, cmp, "c")
 }

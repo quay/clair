@@ -20,13 +20,17 @@ import (
 	"os"
 	"time"
 
+	"github.com/fernet/fernet-go"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
 	"github.com/coreos/clair"
 	"github.com/coreos/clair/api"
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/featurefmt"
+	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/ext/notification"
-	"github.com/fernet/fernet-go"
+	"github.com/coreos/clair/ext/vulnsrc"
 )
 
 // ErrDatasourceNotLoaded is returned when the datasource variable in the
@@ -43,6 +47,7 @@ type File struct {
 type Config struct {
 	Database database.RegistrableComponentConfig
 	Updater  *clair.UpdaterConfig
+	Worker   *clair.WorkerConfig
 	Notifier *notification.Config
 	API      *api.Config
 }
@@ -54,12 +59,16 @@ func DefaultConfig() Config {
 			Type: "pgsql",
 		},
 		Updater: &clair.UpdaterConfig{
-			Interval: 1 * time.Hour,
+			EnabledUpdaters: vulnsrc.ListUpdaters(),
+			Interval:        1 * time.Hour,
+		},
+		Worker: &clair.WorkerConfig{
+			EnabledDetectors: featurens.ListDetectors(),
+			EnabledListers:   featurefmt.ListListers(),
 		},
 		API: &api.Config{
-			Port:       6060,
 			HealthPort: 6061,
-			GrpcPort:   6070,
+			GrpcPort:   6060,
 			Timeout:    900 * time.Second,
 		},
 		Notifier: &notification.Config{
@@ -97,14 +106,15 @@ func LoadConfig(path string) (config *Config, err error) {
 	config = &cfgFile.Clair
 
 	// Generate a pagination key if none is provided.
-	if config.API.PaginationKey == "" {
+	if v, ok := config.Database.Options["paginationkey"]; !ok || v == nil || v.(string) == "" {
+		log.Warn("pagination key is empty, generating...")
 		var key fernet.Key
 		if err = key.Generate(); err != nil {
 			return
 		}
-		config.API.PaginationKey = key.Encode()
+		config.Database.Options["paginationkey"] = key.Encode()
 	} else {
-		_, err = fernet.DecodeKey(config.API.PaginationKey)
+		_, err = fernet.DecodeKey(config.Database.Options["paginationkey"].(string))
 		if err != nil {
 			err = errors.New("Invalid Pagination key; must be 32-bit URL-safe base64")
 			return

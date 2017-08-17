@@ -121,6 +121,20 @@ func (p parser) Valid(str string) bool {
 	return err == nil
 }
 
+func (p parser) InRange(versionA, rangeB string) (bool, error) {
+	cmp, err := p.Compare(versionA, rangeB)
+	if err != nil {
+		return false, err
+	}
+	return cmp < 0, nil
+}
+
+func (p parser) GetFixedIn(fixedIn string) (string, error) {
+	// In the old version format parser design, the string to determine fixed in
+	// version is the fixed in version.
+	return fixedIn, nil
+}
+
 func (p parser) Compare(a, b string) (int, error) {
 	v1, err := newVersion(a)
 	if err != nil {

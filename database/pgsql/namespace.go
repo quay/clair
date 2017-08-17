@@ -15,61 +15,82 @@
 package pgsql
 
 import (
-	"time"
+	"database/sql"
+	"errors"
+	"sort"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
-func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (int, error) {
-	if namespace.Name == "" {
-		return 0, commonerr.NewBadRequestError("could not find/insert invalid Namespace")
+var (
+	errNamespaceNotFound = errors.New("Requested Namespace is not in database")
+)
+
+// PersistNamespaces soi namespaces into database.
+func (tx *pgSession) PersistNamespaces(namespaces []database.Namespace) error {
+	if len(namespaces) == 0 {
+		return nil
 	}
 
-	if pgSQL.cache != nil {
-		promCacheQueriesTotal.WithLabelValues("namespace").Inc()
-		if id, found := pgSQL.cache.Get("namespace:" + namespace.Name); found {
-			promCacheHitsTotal.WithLabelValues("namespace").Inc()
-			return id.(int), nil
+	// Sorting is needed before inserting into database to prevent deadlock.
+	sort.Slice(namespaces, func(i, j int) bool {
+		return namespaces[i].Name < namespaces[j].Name &&
+			namespaces[i].VersionFormat < namespaces[j].VersionFormat
+	})
+
+	keys := make([]interface{}, len(namespaces)*2)
+	for i, ns := range namespaces {
+		if ns.Name == "" || ns.VersionFormat == "" {
+			return commonerr.NewBadRequestError("Empty namespace name or version format is not allowed")
 		}
+		keys[i*2] = ns.Name
+		keys[i*2+1] = ns.VersionFormat
 	}
 
-	// We do `defer observeQueryTime` here because we don't want to observe cached namespaces.
-	defer observeQueryTime("insertNamespace", "all", time.Now())
-
-	var id int
-	err := pgSQL.QueryRow(soiNamespace, namespace.Name, namespace.VersionFormat).Scan(&id)
+	_, err := tx.Exec(queryPersistNamespace(len(namespaces)), keys...)
 	if err != nil {
-		return 0, handleError("soiNamespace", err)
+		return handleError("queryPersistNamespace", err)
 	}
-
-	if pgSQL.cache != nil {
-		pgSQL.cache.Add("namespace:"+namespace.Name, id)
-	}
-
-	return id, nil
+	return nil
 }
 
-func (pgSQL *pgSQL) ListNamespaces() (namespaces []database.Namespace, err error) {
-	rows, err := pgSQL.Query(listNamespace)
-	if err != nil {
-		return namespaces, handleError("listNamespace", err)
+func (tx *pgSession) findNamespaceIDs(namespaces []database.Namespace) ([]sql.NullInt64, error) {
+	if len(namespaces) == 0 {
+		return nil, nil
 	}
+
+	keys := make([]interface{}, len(namespaces)*2)
+	nsMap := map[database.Namespace]sql.NullInt64{}
+	for i, n := range namespaces {
+		keys[i*2] = n.Name
+		keys[i*2+1] = n.VersionFormat
+		nsMap[n] = sql.NullInt64{}
+	}
+
+	rows, err := tx.Query(querySearchNamespace(len(namespaces)), keys...)
+	if err != nil {
+		return nil, handleError("searchNamespace", err)
+	}
+
 	defer rows.Close()
 
+	var (
+		id sql.NullInt64
+		ns database.Namespace
+	)
 	for rows.Next() {
-		var ns database.Namespace
-
-		err = rows.Scan(&ns.ID, &ns.Name, &ns.VersionFormat)
+		err := rows.Scan(&id, &ns.Name, &ns.VersionFormat)
 		if err != nil {
-			return namespaces, handleError("listNamespace.Scan()", err)
+			return nil, handleError("searchNamespace", err)
 		}
-
-		namespaces = append(namespaces, ns)
-	}
-	if err = rows.Err(); err != nil {
-		return namespaces, handleError("listNamespace.Rows()", err)
+		nsMap[ns] = id
 	}
 
-	return namespaces, err
+	ids := make([]sql.NullInt64, len(namespaces))
+	for i, ns := range namespaces {
+		ids[i] = nsMap[ns]
+	}
+
+	return ids, nil
 }

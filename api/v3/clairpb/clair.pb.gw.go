@@ -112,8 +112,8 @@ func request_NotificationService_GetNotification_0(ctx context.Context, marshale
 
 }
 
-func request_NotificationService_DeleteNotification_0(ctx context.Context, marshaler runtime.Marshaler, client NotificationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq DeleteNotificationRequest
+func request_NotificationService_MarkNotificationAsRead_0(ctx context.Context, marshaler runtime.Marshaler, client NotificationServiceClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq MarkNotificationAsReadRequest
 	var metadata runtime.ServerMetadata
 
 	var (
@@ -134,7 +134,7 @@ func request_NotificationService_DeleteNotification_0(ctx context.Context, marsh
 		return nil, metadata, err
 	}
 
-	msg, err := client.DeleteNotification(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	msg, err := client.MarkNotificationAsRead(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -301,7 +301,7 @@ func RegisterNotificationServiceHandler(ctx context.Context, mux *runtime.ServeM
 
 	})
 
-	mux.Handle("DELETE", pattern_NotificationService_DeleteNotification_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+	mux.Handle("DELETE", pattern_NotificationService_MarkNotificationAsRead_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 		if cn, ok := w.(http.CloseNotifier); ok {
@@ -319,14 +319,14 @@ func RegisterNotificationServiceHandler(ctx context.Context, mux *runtime.ServeM
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_NotificationService_DeleteNotification_0(rctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_NotificationService_MarkNotificationAsRead_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
-		forward_NotificationService_DeleteNotification_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+		forward_NotificationService_MarkNotificationAsRead_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -336,11 +336,11 @@ func RegisterNotificationServiceHandler(ctx context.Context, mux *runtime.ServeM
 var (
 	pattern_NotificationService_GetNotification_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"notifications", "name"}, ""))
 
-	pattern_NotificationService_DeleteNotification_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"notifications", "name"}, ""))
+	pattern_NotificationService_MarkNotificationAsRead_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"notifications", "name"}, ""))
 )
 
 var (
 	forward_NotificationService_GetNotification_0 = runtime.ForwardResponseMessage
 
-	forward_NotificationService_DeleteNotification_0 = runtime.ForwardResponseMessage
+	forward_NotificationService_MarkNotificationAsRead_0 = runtime.ForwardResponseMessage
 )

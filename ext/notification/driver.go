@@ -23,8 +23,6 @@ package notification
 import (
 	"sync"
 	"time"
-
-	"github.com/coreos/clair/database"
 )
 
 var (
@@ -47,7 +45,7 @@ type Sender interface {
 	Configure(*Config) (bool, error)
 
 	// Send informs the existence of the specified notification.
-	Send(notification database.VulnerabilityNotification) error
+	Send(notificationName string) error
 }
 
 // RegisterSender makes a Sender available by the provided name.

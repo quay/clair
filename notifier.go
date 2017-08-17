@@ -24,7 +24,6 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/notification"
-	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/pkg/stopper"
 )
 
@@ -94,14 +93,16 @@ func RunNotifier(config *notification.Config, datastore database.Datastore, stop
 		go func() {
 			success, interrupted := handleTask(*notification, stopper, config.Attempts)
 			if success {
-				datastore.SetNotificationNotified(notification.Name)
-
+				err := markNotificationNotified(datastore, notification.Name)
+				if err != nil {
+					log.WithError(err).Error("Failed to mark notification notified")
+				}
 				promNotifierLatencyMilliseconds.Observe(float64(time.Since(notification.Created).Nanoseconds()) / float64(time.Millisecond))
 			}
 			if interrupted {
 				running = false
 			}
-			datastore.Unlock(notification.Name, whoAmI)
+			unlock(datastore, notification.Name, whoAmI)
 			done <- true
 		}()
 
@@ -112,7 +113,10 @@ func RunNotifier(config *notification.Config, datastore database.Datastore, stop
 			case <-done:
 				break outer
 			case <-time.After(notifierLockRefreshDuration):
-				datastore.Lock(notification.Name, whoAmI, notifierLockDuration, true)
+				lock(datastore, notification.Name, whoAmI, notifierLockDuration, true)
+			case <-stopper.Chan():
+				running = false
+				break
 			}
 		}
 	}
@@ -120,13 +124,11 @@ func RunNotifier(config *notification.Config, datastore database.Datastore, stop
 	log.Info("notifier service stopped")
 }
 
-func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoAmI string, stopper *stopper.Stopper) *database.VulnerabilityNotification {
+func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoAmI string, stopper *stopper.Stopper) *database.NotificationHook {
 	for {
-		// Find a notification to send.
-		notification, err := datastore.GetAvailableNotification(renotifyInterval)
-		if err != nil {
-			// There is no notification or an error occurred.
-			if err != commonerr.ErrNotFound {
+		notification, ok, err := findNewNotification(datastore, renotifyInterval)
+		if err != nil || !ok {
+			if !ok {
 				log.WithError(err).Warning("could not get notification to send")
 			}
 
@@ -139,14 +141,14 @@ func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoA
 		}
 
 		// Lock the notification.
-		if hasLock, _ := datastore.Lock(notification.Name, whoAmI, notifierLockDuration, false); hasLock {
+		if hasLock, _ := lock(datastore, notification.Name, whoAmI, notifierLockDuration, false); hasLock {
 			log.WithField(logNotiName, notification.Name).Info("found and locked a notification")
 			return &notification
 		}
 	}
 }
 
-func handleTask(n database.VulnerabilityNotification, st *stopper.Stopper, maxAttempts int) (bool, bool) {
+func handleTask(n database.NotificationHook, st *stopper.Stopper, maxAttempts int) (bool, bool) {
 	// Send notification.
 	for senderName, sender := range notification.Senders() {
 		var attempts int
@@ -167,7 +169,7 @@ func handleTask(n database.VulnerabilityNotification, st *stopper.Stopper, maxAt
 			}
 
 			// Send using the current notifier.
-			if err := sender.Send(n); err != nil {
+			if err := sender.Send(n.Name); err != nil {
 				// Send failed; increase attempts/backoff and retry.
 				promNotifierBackendErrorsTotal.WithLabelValues(senderName).Inc()
 				log.WithError(err).WithFields(log.Fields{logSenderName: senderName, logNotiName: n.Name}).Error("could not send notification via notifier")
@@ -183,4 +185,67 @@ func handleTask(n database.VulnerabilityNotification, st *stopper.Stopper, maxAt
 
 	log.WithField(logNotiName, n.Name).Info("successfully sent notification")
 	return true, false
+}
+
+func findNewNotification(datastore database.Datastore, renotifyInterval time.Duration) (database.NotificationHook, bool, error) {
+	tx, err := datastore.Begin()
+	if err != nil {
+		return database.NotificationHook{}, false, err
+	}
+	defer tx.Rollback()
+	return tx.FindNewNotification(time.Now().Add(-renotifyInterval))
+}
+
+func markNotificationNotified(datastore database.Datastore, name string) error {
+	tx, err := datastore.Begin()
+	if err != nil {
+		log.WithError(err).Error("an error happens when beginning database transaction")
+	}
+	defer tx.Rollback()
+
+	if err := tx.MarkNotificationNotified(name); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// unlock removes a lock with provided name, owner. Internally, it handles
+// database transaction and catches error.
+func unlock(datastore database.Datastore, name, owner string) {
+	tx, err := datastore.Begin()
+	if err != nil {
+		return
+	}
+
+	defer tx.Rollback()
+
+	if err := tx.Unlock(name, owner); err != nil {
+		return
+	}
+	if err := tx.Commit(); err != nil {
+		return
+	}
+}
+
+func lock(datastore database.Datastore, name string, owner string, duration time.Duration, renew bool) (bool, time.Time) {
+	// any error will cause the function to catch the error and return false.
+	tx, err := datastore.Begin()
+	if err != nil {
+		return false, time.Time{}
+	}
+
+	defer tx.Rollback()
+
+	locked, t, err := tx.Lock(name, owner, duration, renew)
+	if err != nil {
+		return false, time.Time{}
+	}
+
+	if locked {
+		if err := tx.Commit(); err != nil {
+			return false, time.Time{}
+		}
+	}
+
+	return locked, t
 }

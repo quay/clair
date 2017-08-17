@@ -29,7 +29,6 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/notification"
 )
 
@@ -112,9 +111,9 @@ type notificationEnvelope struct {
 	}
 }
 
-func (s *sender) Send(notification database.VulnerabilityNotification) error {
+func (s *sender) Send(notificationName string) error {
 	// Marshal notification.
-	jsonNotification, err := json.Marshal(notificationEnvelope{struct{ Name string }{notification.Name}})
+	jsonNotification, err := json.Marshal(notificationEnvelope{struct{ Name string }{notificationName}})
 	if err != nil {
 		return fmt.Errorf("could not marshal: %s", err)
 	}

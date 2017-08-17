@@ -98,10 +98,23 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		return resp, err
 	}
 
-	// Get the latest revision number we successfully applied in the database.
-	dbRevisionNumber, err := datastore.GetKeyValue("ubuntuUpdater")
+	tx, err := datastore.Begin()
 	if err != nil {
 		return resp, err
+	}
+
+	// Get the latest revision number we successfully applied in the database.
+	dbRevisionNumber, ok, err := tx.FindKeyValue("ubuntuUpdater")
+	if err != nil {
+		return resp, err
+	}
+
+	if err := tx.Rollback(); err != nil {
+		return resp, err
+	}
+
+	if !ok {
+		dbRevisionNumber = ""
 	}
 
 	// Get the list of vulnerabilities that we have to update.
@@ -278,10 +291,14 @@ func collectModifiedVulnerabilities(revision int, dbRevision, repositoryLocalPat
 	return modifiedCVE, nil
 }
 
-func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability, unknownReleases map[string]struct{}, err error) {
+func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.VulnerabilityWithAffected, unknownReleases map[string]struct{}, err error) {
 	unknownReleases = make(map[string]struct{})
 	readingDescription := false
 	scanner := bufio.NewScanner(fileContent)
+
+	// only unique major releases will be considered. All sub releases' (e.g.
+	// precise/esm) features are considered belong to major releases.
+	uniqueRelease := map[string]struct{}{}
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -344,7 +361,7 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 			// Only consider the package if its status is needed, active, deferred, not-affected or
 			// released. Ignore DNE (package does not exist), needs-triage, ignored, pending.
 			if md["status"] == "needed" || md["status"] == "active" || md["status"] == "deferred" || md["status"] == "released" || md["status"] == "not-affected" {
-			    md["release"] = strings.Split(md["release"], "/")[0]
+				md["release"] = strings.Split(md["release"], "/")[0]
 				if _, isReleaseIgnored := ubuntuIgnoredReleases[md["release"]]; isReleaseIgnored {
 					continue
 				}
@@ -363,8 +380,6 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 						}
 						version = md["note"]
 					}
-				} else if md["status"] == "not-affected" {
-					version = versionfmt.MinVersion
 				} else {
 					version = versionfmt.MaxVersion
 				}
@@ -372,18 +387,30 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 					continue
 				}
 
-				// Create and add the new package.
-				featureVersion := database.FeatureVersion{
-					Feature: database.Feature{
-						Namespace: database.Namespace{
-							Name:          "ubuntu:" + database.UbuntuReleasesMapping[md["release"]],
-							VersionFormat: dpkg.ParserName,
-						},
-						Name: md["package"],
-					},
-					Version: version,
+				releaseName := "ubuntu:" + database.UbuntuReleasesMapping[md["release"]]
+				if _, ok := uniqueRelease[releaseName+"_:_"+md["package"]]; ok {
+					continue
 				}
-				vulnerability.FixedIn = append(vulnerability.FixedIn, featureVersion)
+
+				uniqueRelease[releaseName+"_:_"+md["package"]] = struct{}{}
+				var fixedinVersion string
+				if version == versionfmt.MaxVersion {
+					fixedinVersion = ""
+				} else {
+					fixedinVersion = version
+				}
+
+				// Create and add the new package.
+				featureVersion := database.AffectedFeature{
+					Namespace: database.Namespace{
+						Name:          releaseName,
+						VersionFormat: dpkg.ParserName,
+					},
+					FeatureName:     md["package"],
+					AffectedVersion: version,
+					FixedInVersion:  fixedinVersion,
+				}
+				vulnerability.Affected = append(vulnerability.Affected, featureVersion)
 			}
 		}
 	}
