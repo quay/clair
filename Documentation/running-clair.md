@@ -61,7 +61,7 @@ kubectl create -f clair-kubernetes.yaml
 ```sh
 $ curl -L https://raw.githubusercontent.com/coreos/clair/master/docker-compose.yml -o $HOME/docker-compose.yml
 $ mkdir $HOME/clair_config
-$ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.example.yaml -o $HOME/clair_config/config.yaml
+$ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.yaml.sample -o $HOME/clair_config/config.yaml
 $ $EDITOR $HOME/clair_config/config.yaml # Edit database source to be postgresql://postgres:password@postgres:5432?sslmode=disable
 $ docker-compose -f $HOME/docker-compose.yml up -d
 ```
@@ -73,7 +73,7 @@ If this error is raised, manually execute `docker-compose start clair`.
 
 ```sh
 $ mkdir $PWD/clair_config
-$ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.example.yaml -o $PWD/clair_config/config.yaml
+$ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.yaml.sample -o $PWD/clair_config/config.yaml
 $ docker run -d -e POSTGRES_PASSWORD="" -p 5432:5432 postgres:9.6
 $ docker run -d -p 6060-6061:6060-6061 -v $PWD/clair_config:/config quay.io/coreos/clair-git:latest -config=/config/config.yaml
 ```
