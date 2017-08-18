@@ -1,67 +1,132 @@
 [
 	{
+		"project": "github.com/beorn7/perks/quantile",
+		"licenses": [
+			{
+				"type": "MIT License",
+				"confidence": 0.9891304347826086
+			}
+		]
+	},
+	{
 		"project": "github.com/coreos/clair",
-		"license": "Apache License 2.0",
-		"confidence": 1
+		"licenses": [
+			{
+				"type": "Apache License 2.0",
+				"confidence": 1
+			}
+		]
 	},
 	{
-		"project": "github.com/coreos/go-systemd/journal",
-		"license": "Apache License 2.0",
-		"confidence": 0.997
-	},
-	{
-		"project": "github.com/coreos/pkg",
-		"license": "Apache License 2.0",
-		"confidence": 1
-	},
-	{
-		"project": "github.com/davecgh/go-spew/spew",
-		"license": "ISC License",
-		"confidence": 1
+		"project": "github.com/coreos/pkg/timeutil",
+		"licenses": [
+			{
+				"type": "Apache License 2.0",
+				"confidence": 1
+			}
+		]
 	},
 	{
 		"project": "github.com/golang/protobuf/proto",
-		"license": "BSD 3-clause \"New\" or \"Revised\" License",
-		"confidence": 0.92
+		"licenses": [
+			{
+				"type": "BSD 3-clause \"New\" or \"Revised\" License",
+				"confidence": 0.92
+			}
+		]
 	},
 	{
 		"project": "github.com/matttproud/golang_protobuf_extensions/pbutil",
-		"license": "Apache License 2.0",
-		"confidence": 1
+		"licenses": [
+			{
+				"type": "Apache License 2.0",
+				"confidence": 1
+			}
+		]
 	},
 	{
 		"project": "github.com/pborman/uuid",
-		"license": "BSD 3-clause \"New\" or \"Revised\" License",
-		"confidence": 0.966
-	},
-	{
-		"project": "github.com/pmezard/go-difflib/difflib",
-		"license": "BSD 3-clause \"New\" or \"Revised\" License",
-		"confidence": 0.983
+		"licenses": [
+			{
+				"type": "BSD 3-clause \"New\" or \"Revised\" License",
+				"confidence": 0.9663865546218487
+			}
+		]
 	},
 	{
 		"project": "github.com/prometheus/client_golang/prometheus",
-		"license": "Apache License 2.0",
-		"confidence": 1
+		"licenses": [
+			{
+				"type": "Apache License 2.0",
+				"confidence": 1
+			}
+		]
 	},
 	{
 		"project": "github.com/prometheus/client_model/go",
-		"license": "Apache License 2.0",
-		"confidence": 1
+		"licenses": [
+			{
+				"type": "Apache License 2.0",
+				"confidence": 1
+			}
+		]
 	},
 	{
 		"project": "github.com/prometheus/common",
-		"license": "Apache License 2.0",
-		"confidence": 1
+		"licenses": [
+			{
+				"type": "Apache License 2.0",
+				"confidence": 1
+			}
+		]
 	},
 	{
 		"project": "github.com/prometheus/procfs",
-		"license": "Apache License 2.0",
-		"confidence": 1
+		"licenses": [
+			{
+				"type": "Apache License 2.0",
+				"confidence": 1
+			}
+		]
+	},
+	{
+		"project": "github.com/sirupsen/logrus",
+		"licenses": [
+			{
+				"type": "MIT License",
+				"confidence": 1
+			}
+		]
 	},
 	{
 		"project": "github.com/stretchr/testify/assert",
-		"license": "MIT License",
-		"confidence": 0.943
+		"licenses": [
+			{
+				"type": "MIT License",
+				"confidence": 0.9430051813471503
+			},
+			{
+				"type": "MIT License",
+				"confidence": 0.9430051813471503
+			}
+		]
+	},
+	{
+		"project": "github.com/stretchr/testify/vendor/github.com/davecgh/go-spew/spew",
+		"licenses": [
+			{
+				"type": "ISC License",
+				"confidence": 0.9850746268656716
+			}
+		]
+	},
+	{
+		"project": "github.com/stretchr/testify/vendor/github.com/pmezard/go-difflib/difflib",
+		"licenses": [
+			{
+				"type": "BSD 3-clause \"New\" or \"Revised\" License",
+				"confidence": 0.9830508474576272
+			}
+		]
 	}
 ]
