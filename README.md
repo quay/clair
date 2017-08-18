@@ -46,7 +46,7 @@ Thus, the project was named `Clair` after the French term which translates to *c
 
 ## Contact
 
-- IRC: #[etcd](irc://irc.freenode.org:6667/#clair) on freenode.org
+- IRC: #[clair](irc://irc.freenode.org:6667/#clair) on freenode.org
 - Bugs: [issues](https://github.com/coreos/etcd/issues)
 
 ## Contributing
