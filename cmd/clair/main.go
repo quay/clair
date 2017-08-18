@@ -143,7 +143,7 @@ func Boot(config *Config) {
 	go clair.RunNotifier(config.Notifier, db, st)
 
 	// Start API
-	go api.RunV2(config.API, db)
+	go api.Run(config.API, db)
 
 	st.Begin()
 	go api.RunHealth(config.API, db, st)

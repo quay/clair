@@ -20,7 +20,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"strconv"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -35,13 +34,13 @@ const timeoutResponse = `{"Error":{"Message":"Clair failed to respond within the
 
 // Config is the configuration for the API service.
 type Config struct {
-	GrpcPort                  int
-	HealthPort                int
+	Addr                      string
+	HealthAddr                string
 	Timeout                   time.Duration
 	CertFile, KeyFile, CAFile string
 }
 
-func RunV2(cfg *Config, store database.Datastore) {
+func Run(cfg *Config, store database.Datastore) {
 	tlsConfig, err := tlsClientConfig(cfg.CAFile)
 	if err != nil {
 		log.WithError(err).Fatal("could not initialize client cert authentication")
@@ -49,7 +48,7 @@ func RunV2(cfg *Config, store database.Datastore) {
 	if tlsConfig != nil {
 		log.Info("main API configured with client certificate authentication")
 	}
-	v3.Run(cfg.GrpcPort, tlsConfig, cfg.CertFile, cfg.KeyFile, store)
+	v3.Run(cfg.Addr, tlsConfig, cfg.CertFile, cfg.KeyFile, store)
 }
 
 func RunHealth(cfg *Config, store database.Datastore, st *stopper.Stopper) {
@@ -60,13 +59,13 @@ func RunHealth(cfg *Config, store database.Datastore, st *stopper.Stopper) {
 		log.Info("health API service is disabled.")
 		return
 	}
-	log.WithField("port", cfg.HealthPort).Info("starting health API")
+	log.WithField("addr", cfg.HealthAddr).Info("starting health API")
 
 	srv := &graceful.Server{
 		Timeout:          10 * time.Second, // Interrupt health checks when stopping
 		NoSignalHandling: true,             // We want to use our own Stopper
 		Server: &http.Server{
-			Addr:    ":" + strconv.Itoa(cfg.HealthPort),
+			Addr:    cfg.HealthAddr,
 			Handler: http.TimeoutHandler(newHealthHandler(store), cfg.Timeout, timeoutResponse),
 		},
 	}
