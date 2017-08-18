@@ -4,5 +4,4 @@ This document tracks people and use cases for Clair in production. [Join the com
 
 ## [Quay.io](https://quay.io/)
 
-Quay is CoreOS' enterprise-ready container registry. It displays the results of a Clair security scan on each hosted image's page.
-
+Quay.io is hosted and enterprise-ready container registry. It displays the results of a Clair security scan for each image uploaded to the registry.

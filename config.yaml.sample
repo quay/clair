@@ -25,7 +25,7 @@ clair:
       # Number of elements kept in the cache
       # Values unlikely to change (e.g. namespaces) are cached in order to save prevent needless roundtrips to the database.
       cachesize: 16384
-      
+
       # 32-bit URL-safe base64 key used to encrypt pagination tokens
       # If one is not provided, it will be generated.
       # Multiple clair instances in the same cluster need the same value.
