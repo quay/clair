@@ -17,7 +17,6 @@ package v3
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"net"
 	"net/http"
 	"strconv"
@@ -147,11 +146,11 @@ func servePrometheus(mux *http.ServeMux) {
 	mux.Handle("/metrics", prometheus.Handler())
 }
 
-// Run initializes grpc and grpc gateway api services on the same port
-func Run(GrpcPort int, tlsConfig *tls.Config, CertFile, KeyFile string, store database.Datastore) {
-	l, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", GrpcPort))
+// Run initializes grpc and grpc gateway api services on the same address
+func Run(Addr string, tlsConfig *tls.Config, CertFile, KeyFile string, store database.Datastore) {
+	l, err := net.Listen("tcp", Addr)
 	if err != nil {
-		log.WithError(err).Fatalf("could not bind to port %d", GrpcPort)
+		log.WithError(err).Fatalf("could not listen to address" + Addr)
 	}
 	log.WithField("addr", l.Addr().String()).Info("starting grpc server")
 

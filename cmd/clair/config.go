@@ -67,8 +67,8 @@ func DefaultConfig() Config {
 			EnabledListers:   featurefmt.ListListers(),
 		},
 		API: &api.Config{
-			HealthPort: 6061,
-			GrpcPort:   6060,
+			HealthAddr: "0.0.0.0:6061",
+			Addr:       "0.0.0.0:6060",
 			Timeout:    900 * time.Second,
 		},
 		Notifier: &notification.Config{
