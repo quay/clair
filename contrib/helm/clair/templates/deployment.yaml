@@ -24,6 +24,7 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         args:
         - "-log-level={{ .Values.logLevel }}"
+        {{ if .Values.insecureTls }}- "--insecure-tls" {{end}}
         ports:
         - name: clair-api
           containerPort: {{ .Values.service.internalApiPort }}

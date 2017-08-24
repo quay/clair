@@ -3,6 +3,7 @@
 # Declare variables to be passed into your templates.
 replicaCount: 1
 logLevel: info
+insecureTls: false
 image:
   repository: quay.io/coreos/clair-git
   tag: latest
