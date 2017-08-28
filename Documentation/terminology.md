@@ -1,4 +1,4 @@
-# Terminiology
+# Terminology
 
 ## Container
 
