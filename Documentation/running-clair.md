@@ -109,3 +109,8 @@ $ ./$GOPATH/bin/clair -config=config.yaml
 
 During the first run, Clair will bootstrap its database with vulnerability data from the configured data sources.
 It can take several minutes before the database has been fully populated, but once this data is stored in the database, subsequent updates will take far less time.
+
+### I'm seeing Linux kernel vulnerabilities in my image, that doesn't make any sense since containers share the host kernel!
+
+Many container base images using Linux distributions as a foundation will install dummy kernel packages that do nothing but satisfy their package manager's dependency requirements.
+The Clair developers have taken the stance that Clair should not filter results, providing the most accurate data as possible to user interfaces that can then apply filters that make sense for their users.
