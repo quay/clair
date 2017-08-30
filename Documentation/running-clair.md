@@ -44,14 +44,15 @@ A [PostgreSQL 9.4+] database instance is required for all instructions.
 #### Kubernetes
 
 If you don't have a local Kubernetes cluster already, check out [minikube].
+This also requires [helm].
 
 [minikube]: https://github.com/kubernetes/minikube
+[helm]: https://github.com/kubernetes/helm
 
 ```
 git clone https://github.com/coreos/clair
-cd clair/contrib/k8s
-kubectl create secret generic clairsecret --from-file=./config.yaml
-kubectl create -f clair-kubernetes.yaml
+cd clair/contrib/helm
+helm install clair
 ```
 
 ### Local
