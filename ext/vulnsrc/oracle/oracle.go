@@ -36,9 +36,10 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
+var ovalURI = "https://linux.oracle.com/oval/"
+
 const (
 	firstOracle5ELSA = 20070057
-	ovalURI          = "https://linux.oracle.com/oval/"
 	elsaFilePrefix   = "com.oracle.elsa-"
 	updaterFlag      = "oracleUpdater"
 )
@@ -201,6 +202,10 @@ func largest(list []int) (largest int) {
 }
 
 func (u *updater) Clean() {}
+
+func (u *updater) SetSourceUrl(sourceURL string) {
+	ovalURI = sourceURL
+}
 
 func parseELSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWithAffected, err error) {
 	// Decode the XML.

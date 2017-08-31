@@ -37,9 +37,10 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
+var trackerRepository = "https://launchpad.net/ubuntu-cve-tracker"
+
 const (
 	trackerURI        = "https://launchpad.net/ubuntu-cve-tracker"
-	trackerRepository = "https://launchpad.net/ubuntu-cve-tracker"
 	updaterFlag       = "ubuntuUpdater"
 	cveURL            = "http://people.ubuntu.com/~ubuntu-security/cve/%s"
 )
@@ -173,6 +174,10 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 
 func (u *updater) Clean() {
 	os.RemoveAll(u.repositoryLocalPath)
+}
+
+func (u *updater) SetSourceUrl(sourceURL string) {
+	trackerRepository = sourceURL
 }
 
 func (u *updater) pullRepository() (err error) {

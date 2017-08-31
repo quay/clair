@@ -35,12 +35,13 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
+var ovalURI = "https://www.redhat.com/security/data/oval/"
+
 const (
 	// Before this RHSA, it deals only with RHEL <= 4.
 	firstRHEL5RHSA      = 20070044
 	firstConsideredRHEL = 5
 
-	ovalURI        = "https://www.redhat.com/security/data/oval/"
 	rhsaFilePrefix = "com.redhat.rhsa-"
 	updaterFlag    = "rhelUpdater"
 )
@@ -168,6 +169,10 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 }
 
 func (u *updater) Clean() {}
+
+func (u *updater) SetSourceUrl(sourceURL string) {
+	ovalURI = sourceURL
+}
 
 func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWithAffected, err error) {
 	// Decode the XML.

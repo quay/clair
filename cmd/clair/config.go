@@ -61,6 +61,7 @@ func DefaultConfig() Config {
 		Updater: &clair.UpdaterConfig{
 			EnabledUpdaters: vulnsrc.ListUpdaters(),
 			Interval:        1 * time.Hour,
+			SourceURLs:      make(map[string]string),
 		},
 		Worker: &clair.WorkerConfig{
 			EnabledDetectors: featurens.ListDetectors(),

@@ -34,8 +34,9 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
+var url = "https://security-tracker.debian.org/tracker/data/json"
+
 const (
-	url          = "https://security-tracker.debian.org/tracker/data/json"
 	cveURLPrefix = "https://security-tracker.debian.org/tracker"
 	updaterFlag  = "debianUpdater"
 )
@@ -100,6 +101,10 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 }
 
 func (u *updater) Clean() {}
+
+func (u *updater) SetSourceUrl(sourceURL string) {
+	url = sourceURL
+}
 
 func buildResponse(jsonReader io.Reader, latestKnownHash string) (resp vulnsrc.UpdateResponse, err error) {
 	hash := latestKnownHash

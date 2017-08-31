@@ -57,6 +57,9 @@ var (
 
 	// EnabledUpdaters contains all updaters to be used for update.
 	EnabledUpdaters []string
+
+	// SourceURLs contains any modified vulnerability data sources
+	SourceURLs map[string]string
 )
 
 func init() {
@@ -69,6 +72,7 @@ func init() {
 type UpdaterConfig struct {
 	EnabledUpdaters []string
 	Interval        time.Duration
+	SourceURLs map[string]string
 }
 
 type vulnerabilityChange struct {
@@ -276,6 +280,9 @@ func fetch(datastore database.Datastore) (bool, []database.VulnerabilityWithAffe
 			continue
 		}
 		numUpdaters++
+		if url, ok := SourceURLs[n]; ok {
+			u.SetSourceUrl(url)
+		}
 		go func(name string, u vulnsrc.Updater) {
 			response, err := u.Update(datastore)
 			if err != nil {
