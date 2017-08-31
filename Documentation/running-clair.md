@@ -44,7 +44,7 @@ A [PostgreSQL 9.4+] database instance is required for all instructions.
 #### Kubernetes (Helm)
 
 If you don't have a local Kubernetes cluster already, check out [minikube].
-This assumes you've already ran helm init and you have access to a currently running instance of Tiller.
+This assumes you've already ran `helm init` and you have access to a currently running instance of Tiller.
 
 [minikube]: https://github.com/kubernetes/minikube
 
