@@ -34,7 +34,7 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
-var	secdbGitURL = "https://git.alpinelinux.org/cgit/alpine-secdb"
+var secdbGitURL = "https://git.alpinelinux.org/cgit/alpine-secdb"
 
 const (
 	updaterFlag  = "alpine-secdbUpdater"

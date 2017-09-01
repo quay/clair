@@ -72,7 +72,7 @@ func init() {
 type UpdaterConfig struct {
 	EnabledUpdaters []string
 	Interval        time.Duration
-	SourceURLs map[string]string
+	SourceURLs      map[string]string
 }
 
 type vulnerabilityChange struct {
