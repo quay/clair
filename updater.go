@@ -58,7 +58,7 @@ var (
 	// EnabledUpdaters contains all updaters to be used for update.
 	EnabledUpdaters []string
 
-	// SourceURLs contains any modified vulnerability data sources
+	// SourceURLs contains any alternative vulnerability data sources
 	SourceURLs map[string]string
 )
 
