@@ -68,12 +68,21 @@ clair:
     # Frequency the database will be updated with vulnerabilities from the default data sources
     # The value 0 disables the updater entirely.
     interval: 2h
+
     enabledupdaters: 
       - debian
       - ubuntu
       - rhel
       - oracle
       - alpine
+
+    # Vulnerability data sources
+    sourceurls:
+      alpine: "https://git.alpinelinux.org/cgit/alpine-secdb"
+      debian: "https://security-tracker.debian.org/tracker/data/json"
+      oracle: "https://linux.oracle.com/oval/"
+      rhel:   "https://www.redhat.com/security/data/oval/"
+      ubuntu: "https://launchpad.net/ubuntu-cve-tracker"
 
   notifier:
     # Number of attempts before the notification is marked as failed to be sent
