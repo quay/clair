@@ -36,6 +36,7 @@ resources:
     cpu: 100m
     memory: 128Mi
 config:
+  # postgresURI: "postgres://user:password@host:5432/postgres?sslmode=disable"
   paginationKey: "XxoPtCUzrUv4JV5dS+yQ+MdW7yLEJnRMwigVY/bpgtQ="
   updateInterval: 2h
   notificationWebhookEndpoint: https://example.com/notify/me
@@ -55,13 +56,13 @@ config:
   - apk
   - dpkg
   - rpm
-## Configuration values for the postgresql dependency.
-## ref: https://github.com/kubernetes/charts/blob/master/stable/postgresql/README.md
-##
+# Configuration values for the postgresql dependency.
+# ref: https://github.com/kubernetes/charts/blob/master/stable/postgresql/README.md
 postgresql:
   cpu: 1000m
   memory: 1Gi
-## Harcording for now till https://github.com/kubernetes/helm/issues/2196
+# These values are hardcoded until Helm supports secrets.
+# For more info see: https://github.com/kubernetes/helm/issues/2196
   postgresUser: clair
   postgresPassword: clair
   postgresDatabase: clair
