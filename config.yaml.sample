@@ -33,7 +33,7 @@ clair:
 
   api:
     # v3 grpc/RESTful API server address
-    addr: "127.0.0.1:6060"
+    addr: "0.0.0.0:6060"
 
     # Health server address
     # This is an unencrypted endpoint useful for load balancers to check to healthiness of the clair server.
