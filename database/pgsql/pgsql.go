@@ -22,6 +22,7 @@ import (
 	"net/url"
 	"strings"
 	"time"
+	"os"
 
 	"gopkg.in/yaml.v2"
 
@@ -202,7 +203,12 @@ func openDatabase(registrableComponentConfig database.RegistrableComponentConfig
 	}
 
 	// Open database.
-	pg.DB, err = sql.Open("postgres", pg.config.Source)
+	host := os.Getenv("POSTGRESQL_SERVICE_HOST")
+	
+	modifiedSource := strings.Replace(pg.config.Source, "$POSTGRESQL_SERVICE_HOST", host, -1)
+	fmt.Println("postgresql hostname replaced: ", modifiedSource)
+	
+	pg.DB, err = sql.Open("postgres", modifiedSource)
 	if err != nil {
 		pg.Close()
 		return nil, fmt.Errorf("pgsql: could not open database: %v", err)
