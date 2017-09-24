@@ -14,11 +14,15 @@
 
 FROM golang:1.8-alpine
 
+ENV POSTGRESQL_SERVICE_HOST localhost
+
 VOLUME /config
 EXPOSE 6060 6061
 
 ADD .   /go/src/github.com/coreos/clair/
 WORKDIR /go/src/github.com/coreos/clair/
+
+COPY /config.yaml /etc/clair/config.yaml
 
 RUN apk add --no-cache git bzr rpm xz && \
     go install -v github.com/coreos/clair/cmd/clair && \
