@@ -58,6 +58,7 @@ import (
 	_ "github.com/coreos/clair/ext/vulnsrc/debian"
 	_ "github.com/coreos/clair/ext/vulnsrc/oracle"
 	_ "github.com/coreos/clair/ext/vulnsrc/rhel"
+	_ "github.com/coreos/clair/ext/vulnsrc/suse"
 	_ "github.com/coreos/clair/ext/vulnsrc/ubuntu"
 )
 
