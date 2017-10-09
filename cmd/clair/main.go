@@ -55,8 +55,97 @@ import (
 	_ "github.com/coreos/clair/ext/vulnsrc/oracle"
 	_ "github.com/coreos/clair/ext/vulnsrc/rhel"
 	_ "github.com/coreos/clair/ext/vulnsrc/ubuntu"
+	"gopkg.in/yaml.v2"
+
+	"github.com/coreos/clair/ext/notification"
+	"io/ioutil"
+	"github.com/fernet/fernet-go"
+	"errors"
 )
 
+// ErrDatasourceNotLoaded is returned when the datasource variable in the
+// configuration file is not loaded properly
+var ErrDatasourceNotLoaded = errors.New("could not load configuration: no database source specified")
+
+// File represents a YAML configuration file that namespaces all Clair
+// configuration under the top-level "clair" key.
+type File struct {
+	Clair Config `yaml:"clair"`
+}
+
+// Config is the global configuration for an instance of Clair.
+type Config struct {
+	Database database.RegistrableComponentConfig
+	Updater  *clair.UpdaterConfig
+	Notifier *notification.Config
+	API      *api.Config
+}
+
+// DefaultConfig is a configuration that can be used as a fallback value.
+func DefaultConfig() Config {
+	return Config{
+		Database: database.RegistrableComponentConfig{
+			Type: "pgsql",
+		},
+		Updater: &clair.UpdaterConfig{
+			Interval: 1 * time.Hour,
+		},
+		API: &api.Config{
+			Port:       6060,
+			HealthPort: 6061,
+			Timeout:    900 * time.Second,
+		},
+		Notifier: &notification.Config{
+			Attempts:         5,
+			RenotifyInterval: 2 * time.Hour,
+		},
+	}
+}
+
+// LoadConfig is a shortcut to open a file, read it, and generate a Config.
+//
+// It supports relative and absolute paths. Given "", it returns DefaultConfig.
+func LoadConfig(path string) (config *Config, err error) {
+	var cfgFile File
+	cfgFile.Clair = DefaultConfig()
+	if path == "" {
+		return &cfgFile.Clair, nil
+	}
+
+	f, err := os.Open(os.ExpandEnv(path))
+	if err != nil {
+		return
+	}
+	defer f.Close()
+
+	d, err := ioutil.ReadAll(f)
+	if err != nil {
+		return
+	}
+
+	err = yaml.Unmarshal(d, &cfgFile)
+	if err != nil {
+		return
+	}
+	config = &cfgFile.Clair
+
+	// Generate a pagination key if none is provided.
+	if config.API.PaginationKey == "" {
+		var key fernet.Key
+		if err = key.Generate(); err != nil {
+			return
+		}
+		config.API.PaginationKey = key.Encode()
+	} else {
+		_, err = fernet.DecodeKey(config.API.PaginationKey)
+		if err != nil {
+			err = errors.New("Invalid Pagination key; must be 32-bit URL-safe base64")
+			return
+		}
+	}
+
+	return
+}
 func waitForSignals(signals ...os.Signal) {
 	interrupts := make(chan os.Signal, 1)
 	signal.Notify(interrupts, signals...)

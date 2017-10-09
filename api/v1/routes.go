@@ -111,11 +111,14 @@ func postLayer(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx 
 
 	err = clair.ProcessLayer(ctx.Store, request.Layer.Format, request.Layer.Name, request.Layer.ParentName, request.Layer.Path, request.Layer.Headers)
 	if err != nil {
+		//tarutil: could not extract the archive
 		if err == tarutil.ErrCouldNotExtract ||
+			//tarutil: could not extract one or more files from the archive: file too big
 			err == tarutil.ErrExtractedFileTooBig ||
+			//worker: OS and/or package manager are not supported
 			err == clair.ErrUnsupported {
 			writeResponse(w, r, statusUnprocessableEntity, LayerEnvelope{Error: &Error{err.Error()}})
-			return postLayerRoute, statusUnprocessableEntity
+			return postLayerRoute, statusUnprocessableEntity	//422
 		}
 
 		if _, badreq := err.(*commonerr.ErrBadRequest); badreq {
