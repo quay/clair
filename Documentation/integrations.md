@@ -25,3 +25,5 @@ This document tracks projects that integrate with Clair. [Join the community](ht
 [clair-scanner](https://github.com/arminc/clair-scanner): a project similar to 'analyze-local-images' with a whitelisting feature
 
 [sqs]: https://aws.amazon.com/sqs/
+
+[clair-singularity](https://github.com/dctrud/clair-singularity): a command-line tool to scan [Singularity](http://singularity.lbl.gov/) container images using Clair.
