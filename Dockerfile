@@ -26,4 +26,7 @@ RUN apk add --no-cache git rpm xz && \
     mv /go/bin/clair /clair && \
     rm -rf /go /usr/local/go
 
-ENTRYPOINT ["/clair"]
+RUN curl -L https://github.com/Yelp/dumb-init/releases/download/v1.2.0/dumb-init_1.2.0_amd64 > /usr/local/bin/dumb-init \
+	&& chmod +x /usr/local/bin/dumb-init
+ENTRYPOINT ["/usr/local/bin/dumb-init", "--", "/clair"]
+
