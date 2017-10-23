@@ -41,7 +41,7 @@ type nvdCVSSBaseMetrics struct {
 	Authentication   string  `xml:"authentication"`
 	ConfImpact       string  `xml:"confidentiality-impact"`
 	IntegImpact      string  `xml:"integrity-impact"`
-	AvailImpact      string  `xml:"avaibility-impact"`
+	AvailImpact      string  `xml:"availability-impact"`
 }
 
 var vectorValuesToLetters map[string]string
