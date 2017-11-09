@@ -50,7 +50,7 @@ This assumes you've already ran `helm init` and you have access to a currently r
 
 ```
 git clone https://github.com/coreos/clair
-cd clair/contrib/helm
+cd clair/contrib/helm/clair
 cp values.yaml ~/my_custom_values.yaml
 vi ~/my_custom_values.yaml
 helm install clair -f ~/my_custom_values.yaml
