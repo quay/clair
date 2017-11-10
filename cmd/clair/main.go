@@ -132,10 +132,22 @@ func Boot(config *Config) {
 	st := stopper.NewStopper()
 
 	// Open database
-	db, err := database.Open(config.Database)
-	if err != nil {
-		log.Fatal(err)
+	var db database.Datastore
+	var dbError error
+	maxConnectionAttempts := 20
+	for attempts := 1; attempts <= maxConnectionAttempts; attempts++ {
+		db, dbError = database.Open(config.Database)
+		if dbError == nil {
+			break
+		}
+		log.Error(dbError);
+		time.Sleep(time.Duration(attempts) * time.Second)
 	}
+
+	if dbError != nil {
+		log.Fatal(dbError)
+	}
+
 	defer db.Close()
 
 	// Start notifier
