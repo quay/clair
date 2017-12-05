@@ -57,8 +57,9 @@ type NVDMetadata struct {
 }
 
 type NVDmetadataCVSSv2 struct {
-	Vectors string
-	Score   float64
+	PublishedDateTime string
+	Vectors           string
+	Score             float64
 }
 
 func init() {
@@ -82,6 +83,7 @@ func (a *appender) BuildCache(datastore database.Datastore) error {
 	// Get data feeds.
 	dataFeedReaders, dataFeedHashes, err := getDataFeeds(a.dataFeedHashes, a.localPath)
 	if err != nil {
+		log.Info(err)
 		return err
 	}
 	a.dataFeedHashes = dataFeedHashes
@@ -160,8 +162,17 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 				}
 			}
 
+			//A custom HTTP client limiting the amound of Idle connections is helpful when retrieving the feeds from nvd.nist.gov due to the number of timeouts.
+			var netClient = &http.Client{}
+			tr := &http.Transport{
+				MaxIdleConns:        20,
+				MaxIdleConnsPerHost: 20,
+			}
+
+			netClient = &http.Client{Transport: tr}
+
 			// Download data feed.
-			r, err := http.Get(fmt.Sprintf(dataFeedURL, dataFeedName))
+			r, err := netClient.Get(fmt.Sprintf(dataFeedURL, dataFeedName))
 			if err != nil {
 				log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not download NVD data feed")
 				return dataFeedReaders, dataFeedHashes, commonerr.ErrCouldNotDownload
