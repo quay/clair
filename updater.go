@@ -31,10 +31,11 @@ import (
 )
 
 const (
-	updaterLastFlagName        = "updater/last"
-	updaterLockName            = "updater"
-	updaterLockDuration        = updaterLockRefreshDuration + time.Minute*2
-	updaterLockRefreshDuration = time.Minute * 8
+	updaterLastFlagName              = "updater/last"
+	updaterLockName                  = "updater"
+	updaterLockDuration              = updaterLockRefreshDuration + time.Minute*2
+	updaterLockRefreshDuration       = time.Minute * 8
+	updaterSleepBetweenLoopsDuration = time.Minute
 )
 
 var (
@@ -124,7 +125,14 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 				if stop {
 					break
 				}
+
+				// Sleep for a short duration to prevent pinning the CPU on a
+				// consistent failure.
+				if stopped := sleepUpdater(time.Now().Add(updaterSleepBetweenLoopsDuration), st); stopped {
+					break
+				}
 				continue
+
 			} else {
 				lockOwner, lockExpiration, err := datastore.FindLock(updaterLockName)
 				if err != nil {
@@ -137,14 +145,8 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 			}
 		}
 
-		// Sleep, but remain stoppable until approximately the next update time.
-		now := time.Now().UTC()
-		waitUntil := nextUpdate.Add(time.Duration(rand.ExpFloat64()/0.5) * time.Second)
-		log.WithField("scheduled time", waitUntil).Debug("next update attempt scheduled")
-		if !waitUntil.Before(now) {
-			if !st.Sleep(waitUntil.Sub(time.Now())) {
-				break
-			}
+		if stopped := sleepUpdater(nextUpdate, st); stopped {
+			break
 		}
 	}
 
@@ -157,6 +159,19 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 	}
 
 	log.Info("updater service stopped")
+}
+
+// sleepUpdater sleeps the updater for an approximate duration, but remains
+// able to be cancelled by a stopper.
+func sleepUpdater(approxWakeup time.Time, st *stopper.Stopper) (stopped bool) {
+	waitUntil := approxWakeup.Add(time.Duration(rand.ExpFloat64()/0.5) * time.Second)
+	log.WithField("scheduled time", waitUntil).Debug("updater sleeping")
+	if !waitUntil.Before(time.Now().UTC()) {
+		if !st.Sleep(waitUntil.Sub(time.Now())) {
+			return true
+		}
+	}
+	return false
 }
 
 // update fetches all the vulnerabilities from the registered fetchers, upserts
