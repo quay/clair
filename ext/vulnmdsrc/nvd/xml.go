@@ -26,8 +26,9 @@ type nvd struct {
 }
 
 type nvdEntry struct {
-	Name string  `xml:"http://scap.nist.gov/schema/vulnerability/0.4 cve-id"`
-	CVSS nvdCVSS `xml:"http://scap.nist.gov/schema/vulnerability/0.4 cvss"`
+	Name              string  `xml:"http://scap.nist.gov/schema/vulnerability/0.4 cve-id"`
+	CVSS              nvdCVSS `xml:"http://scap.nist.gov/schema/vulnerability/0.4 cvss"`
+	PublishedDateTime string  `xml:"http://scap.nist.gov/schema/vulnerability/0.4 published-datetime"`
 }
 
 type nvdCVSS struct {
@@ -64,8 +65,9 @@ func init() {
 func (n nvdEntry) Metadata() *NVDMetadata {
 	metadata := &NVDMetadata{
 		CVSSv2: NVDmetadataCVSSv2{
-			Vectors: n.CVSS.BaseMetrics.String(),
-			Score:   n.CVSS.BaseMetrics.Score,
+			PublishedDateTime: n.PublishedDateTime,
+			Vectors:           n.CVSS.BaseMetrics.String(),
+			Score:             n.CVSS.BaseMetrics.Score,
 		},
 	}
 
