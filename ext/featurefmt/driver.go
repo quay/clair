@@ -23,20 +23,23 @@ import (
 	"sync"
 	"testing"
 
+	log "github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/tarutil"
-	"github.com/stretchr/testify/assert"
 )
 
 var (
-	listersM sync.RWMutex
-	listers  = make(map[string]Lister)
+	listersM             sync.RWMutex
+	listers              = make(map[string]Lister)
+	versionfmtListerName = make(map[string][]string)
 )
 
 // Lister represents an ability to list the features present in an image layer.
 type Lister interface {
-	// ListFeatures produces a list of FeatureVersions present in an image layer.
-	ListFeatures(tarutil.FilesMap) ([]database.FeatureVersion, error)
+	// ListFeatures produces a list of Features present in an image layer.
+	ListFeatures(tarutil.FilesMap) ([]database.Feature, error)
 
 	// RequiredFilenames returns the list of files required to be in the FilesMap
 	// provided to the ListFeatures method.
@@ -49,7 +52,7 @@ type Lister interface {
 //
 // If called twice with the same name, the name is blank, or if the provided
 // Lister is nil, this function panics.
-func RegisterLister(name string, l Lister) {
+func RegisterLister(name string, versionfmt string, l Lister) {
 	if name == "" {
 		panic("featurefmt: could not register a Lister with an empty name")
 	}
@@ -65,21 +68,27 @@ func RegisterLister(name string, l Lister) {
 	}
 
 	listers[name] = l
+	versionfmtListerName[versionfmt] = append(versionfmtListerName[versionfmt], name)
 }
 
-// ListFeatures produces the list of FeatureVersions in an image layer using
+// ListFeatures produces the list of Features in an image layer using
 // every registered Lister.
-func ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion, error) {
+func ListFeatures(files tarutil.FilesMap, listerNames []string) ([]database.Feature, error) {
 	listersM.RLock()
 	defer listersM.RUnlock()
 
-	var totalFeatures []database.FeatureVersion
-	for _, lister := range listers {
-		features, err := lister.ListFeatures(files)
-		if err != nil {
-			return []database.FeatureVersion{}, err
+	var totalFeatures []database.Feature
+
+	for _, name := range listerNames {
+		if lister, ok := listers[name]; ok {
+			features, err := lister.ListFeatures(files)
+			if err != nil {
+				return []database.Feature{}, err
+			}
+			totalFeatures = append(totalFeatures, features...)
+		} else {
+			log.WithField("Name", name).Warn("Unknown Lister")
 		}
-		totalFeatures = append(totalFeatures, features...)
 	}
 
 	return totalFeatures, nil
@@ -87,7 +96,7 @@ func ListFeatures(files tarutil.FilesMap) ([]database.FeatureVersion, error) {
 
 // RequiredFilenames returns the total list of files required for all
 // registered Listers.
-func RequiredFilenames() (files []string) {
+func RequiredFilenames(listerNames []string) (files []string) {
 	listersM.RLock()
 	defer listersM.RUnlock()
 
@@ -98,10 +107,19 @@ func RequiredFilenames() (files []string) {
 	return
 }
 
+// ListListers returns the names of all the registered feature listers.
+func ListListers() []string {
+	r := []string{}
+	for name := range listers {
+		r = append(r, name)
+	}
+	return r
+}
+
 // TestData represents the data used to test an implementation of Lister.
 type TestData struct {
-	Files           tarutil.FilesMap
-	FeatureVersions []database.FeatureVersion
+	Files    tarutil.FilesMap
+	Features []database.Feature
 }
 
 // LoadFileForTest can be used in order to obtain the []byte contents of a file
@@ -117,9 +135,9 @@ func LoadFileForTest(name string) []byte {
 func TestLister(t *testing.T, l Lister, testData []TestData) {
 	for _, td := range testData {
 		featureVersions, err := l.ListFeatures(td.Files)
-		if assert.Nil(t, err) && assert.Len(t, featureVersions, len(td.FeatureVersions)) {
-			for _, expectedFeatureVersion := range td.FeatureVersions {
-				assert.Contains(t, featureVersions, expectedFeatureVersion)
+		if assert.Nil(t, err) && assert.Len(t, featureVersions, len(td.Features)) {
+			for _, expectedFeature := range td.Features {
+				assert.Contains(t, featureVersions, expectedFeature)
 			}
 		}
 	}

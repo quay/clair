@@ -20,9 +20,10 @@ EXPOSE 6060 6061
 ADD .   /go/src/github.com/coreos/clair/
 WORKDIR /go/src/github.com/coreos/clair/
 
-RUN apk add --no-cache git bzr rpm xz && \
+RUN apk add --no-cache git bzr rpm xz dumb-init && \
     go install -v github.com/coreos/clair/cmd/clair && \
     mv /go/bin/clair /clair && \
     rm -rf /go /usr/local/go
 
-ENTRYPOINT ["/clair"]
+ENTRYPOINT ["/usr/bin/dumb-init", "--", "/clair"]
+

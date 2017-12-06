@@ -60,9 +60,19 @@ func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, er
 
 	// Ask the database for the latest commit we successfully applied.
 	var dbCommit string
-	dbCommit, err = db.GetKeyValue(updaterFlag)
+	tx, err := db.Begin()
 	if err != nil {
 		return
+	}
+	defer tx.Rollback()
+
+	dbCommit, ok, err := tx.FindKeyValue(updaterFlag)
+	if err != nil {
+		return
+	}
+
+	if !ok {
+		dbCommit = ""
 	}
 
 	// Set the updaterFlag to equal the commit processed.
@@ -84,7 +94,7 @@ func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, er
 
 	// Append any changed vulnerabilities to the response.
 	for _, namespace := range namespaces {
-		var vulns []database.Vulnerability
+		var vulns []database.VulnerabilityWithAffected
 		var note string
 		vulns, note, err = parseVulnsFromNamespace(u.repositoryLocalPath, namespace)
 		if err != nil {
@@ -144,7 +154,7 @@ func ls(path string, filter lsFilter) ([]string, error) {
 	return files, nil
 }
 
-func parseVulnsFromNamespace(repositoryPath, namespace string) (vulns []database.Vulnerability, note string, err error) {
+func parseVulnsFromNamespace(repositoryPath, namespace string) (vulns []database.VulnerabilityWithAffected, note string, err error) {
 	nsDir := filepath.Join(repositoryPath, namespace)
 	var dbFilenames []string
 	dbFilenames, err = ls(nsDir, filesOnly)
@@ -159,7 +169,7 @@ func parseVulnsFromNamespace(repositoryPath, namespace string) (vulns []database
 			return
 		}
 
-		var fileVulns []database.Vulnerability
+		var fileVulns []database.VulnerabilityWithAffected
 		fileVulns, err = parseYAML(file)
 		if err != nil {
 			return
@@ -216,7 +226,7 @@ type secDBFile struct {
 	} `yaml:"packages"`
 }
 
-func parseYAML(r io.Reader) (vulns []database.Vulnerability, err error) {
+func parseYAML(r io.Reader) (vulns []database.VulnerabilityWithAffected, err error) {
 	var rBytes []byte
 	rBytes, err = ioutil.ReadAll(r)
 	if err != nil {
@@ -239,20 +249,24 @@ func parseYAML(r io.Reader) (vulns []database.Vulnerability, err error) {
 			}
 
 			for _, vulnStr := range vulnStrs {
-				var vuln database.Vulnerability
+				var vuln database.VulnerabilityWithAffected
 				vuln.Severity = database.UnknownSeverity
 				vuln.Name = vulnStr
 				vuln.Link = nvdURLPrefix + vulnStr
-				vuln.FixedIn = []database.FeatureVersion{
+
+				var fixedInVersion string
+				if version != versionfmt.MaxVersion {
+					fixedInVersion = version
+				}
+				vuln.Affected = []database.AffectedFeature{
 					{
-						Feature: database.Feature{
-							Namespace: database.Namespace{
-								Name:          "alpine:" + file.Distro,
-								VersionFormat: dpkg.ParserName,
-							},
-							Name: pkg.Name,
+						FeatureName:     pkg.Name,
+						AffectedVersion: version,
+						FixedInVersion:  fixedInVersion,
+						Namespace: database.Namespace{
+							Name:          "alpine:" + file.Distro,
+							VersionFormat: dpkg.ParserName,
 						},
-						Version: version,
 					},
 				}
 				vulns = append(vulns, vuln)

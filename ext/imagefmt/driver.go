@@ -38,7 +38,7 @@ import (
 
 var (
 	// ErrCouldNotFindLayer is returned when we could not download or open the layer file.
-	ErrCouldNotFindLayer = commonerr.NewBadRequestError("could not find layer")
+	ErrCouldNotFindLayer = commonerr.NewBadRequestError("could not find layer from given path")
 
 	// insecureTLS controls whether TLS server's certificate chain and hostname are verified
 	// when pulling layers, verified in default.
@@ -122,6 +122,7 @@ func Extract(format, path string, headers map[string]string, toExtract []string)
 		// Send the request and handle the response.
 		tr := &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureTLS},
+			Proxy:           http.ProxyFromEnvironment,
 		}
 		client := &http.Client{Transport: tr}
 		r, err := client.Do(request)

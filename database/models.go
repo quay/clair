@@ -20,49 +20,115 @@ import (
 	"time"
 )
 
-// ID is only meant to be used by database implementations and should never be used for anything else.
-type Model struct {
-	ID int
+// Processors are extentions to scan layer's content.
+type Processors struct {
+	Listers   []string
+	Detectors []string
 }
 
+// Ancestry is a manifest that keeps all layers in an image in order.
+type Ancestry struct {
+	Name string
+	// Layers should be ordered and i_th layer is the parent of i+1_th layer in
+	// the slice.
+	Layers []Layer
+}
+
+// AncestryWithFeatures is an ancestry with namespaced features detected in the
+// ancestry, which is processed by `ProcessedBy`.
+type AncestryWithFeatures struct {
+	Ancestry
+
+	ProcessedBy Processors
+	Features    []NamespacedFeature
+}
+
+// Layer corresponds to a layer in an image processed by `ProcessedBy`.
 type Layer struct {
-	Model
-
-	Name          string
-	EngineVersion int
-	Parent        *Layer
-	Namespaces    []Namespace
-	Features      []FeatureVersion
+	// Hash is content hash of the layer.
+	Hash string
 }
 
-type Namespace struct {
-	Model
+// LayerWithContent is a layer with its detected namespaces and features by
+// ProcessedBy.
+type LayerWithContent struct {
+	Layer
 
+	ProcessedBy Processors
+	Namespaces  []Namespace
+	Features    []Feature
+}
+
+// Namespace is the contextual information around features.
+//
+// e.g. Debian:7, NodeJS.
+type Namespace struct {
 	Name          string
 	VersionFormat string
 }
 
+// Feature represents a package detected in a layer but the namespace is not
+// determined.
+//
+// e.g. Name: OpenSSL, Version: 1.0, VersionFormat: dpkg.
+// dpkg implies the installer package manager but the namespace (might be
+// debian:7, debian:8, ...) could not be determined.
 type Feature struct {
-	Model
+	Name          string
+	Version       string
+	VersionFormat string
+}
 
-	Name      string
+// NamespacedFeature is a feature with determined namespace and can be affected
+// by vulnerabilities.
+//
+// e.g. OpenSSL 1.0 dpkg Debian:7.
+type NamespacedFeature struct {
+	Feature
+
 	Namespace Namespace
 }
 
-type FeatureVersion struct {
-	Model
+// AffectedNamespacedFeature is a namespaced feature affected by the
+// vulnerabilities with fixed-in versions for this feature.
+type AffectedNamespacedFeature struct {
+	NamespacedFeature
 
-	Feature    Feature
-	Version    string
-	AffectedBy []Vulnerability
-
-	// For output purposes. Only make sense when the feature version is in the context of an image.
-	AddedBy Layer
+	AffectedBy []VulnerabilityWithFixedIn
 }
 
-type Vulnerability struct {
-	Model
+// VulnerabilityWithFixedIn is used for AffectedNamespacedFeature to retrieve
+// the affecting vulnerabilities and the fixed-in versions for the feature.
+type VulnerabilityWithFixedIn struct {
+	Vulnerability
 
+	FixedInVersion string
+}
+
+// AffectedFeature is used to determine whether a namespaced feature is affected
+// by a Vulnerability. Namespace and Feature Name is unique. Affected Feature is
+// bound to vulnerability.
+type AffectedFeature struct {
+	Namespace   Namespace
+	FeatureName string
+	// FixedInVersion is known next feature version that's not affected by the
+	// vulnerability. Empty FixedInVersion means the unaffected version is
+	// unknown.
+	FixedInVersion string
+	// AffectedVersion contains the version range to determine whether or not a
+	// feature is affected.
+	AffectedVersion string
+}
+
+// VulnerabilityID is an identifier for every vulnerability. Every vulnerability
+// has unique namespace and name.
+type VulnerabilityID struct {
+	Name      string
+	Namespace string
+}
+
+// Vulnerability represents CVE or similar vulnerability reports.
+type Vulnerability struct {
 	Name      string
 	Namespace Namespace
 
@@ -71,16 +137,84 @@ type Vulnerability struct {
 	Severity    Severity
 
 	Metadata MetadataMap
-
-	FixedIn                        []FeatureVersion
-	LayersIntroducingVulnerability []Layer
-
-	// For output purposes. Only make sense when the vulnerability
-	// is already about a specific Feature/FeatureVersion.
-	FixedBy string `json:",omitempty"`
 }
 
+// VulnerabilityWithAffected is an vulnerability with all known affected
+// features.
+type VulnerabilityWithAffected struct {
+	Vulnerability
+
+	Affected []AffectedFeature
+}
+
+// PagedVulnerableAncestries is a vulnerability with a page of affected
+// ancestries each with a special index attached for streaming purpose. The
+// current page number and next page number are for navigate.
+type PagedVulnerableAncestries struct {
+	Vulnerability
+
+	// Affected is a map of special indexes to Ancestries, which the pair
+	// should be unique in a stream. Every indexes in the map should be larger
+	// than previous page.
+	Affected map[int]string
+
+	Limit   int
+	Current PageNumber
+	Next    PageNumber
+
+	// End signals the end of the pages.
+	End bool
+}
+
+// NotificationHook is a message sent to another service to inform of a change
+// to a Vulnerability or the Ancestries affected by a Vulnerability. It contains
+// the name of a notification that should be read and marked as read via the
+// API.
+type NotificationHook struct {
+	Name string
+
+	Created  time.Time
+	Notified time.Time
+	Deleted  time.Time
+}
+
+// VulnerabilityNotification is a notification for vulnerability changes.
+type VulnerabilityNotification struct {
+	NotificationHook
+
+	Old *Vulnerability
+	New *Vulnerability
+}
+
+// VulnerabilityNotificationWithVulnerable is a notification for vulnerability
+// changes with vulnerable ancestries.
+type VulnerabilityNotificationWithVulnerable struct {
+	NotificationHook
+
+	Old *PagedVulnerableAncestries
+	New *PagedVulnerableAncestries
+}
+
+// PageNumber is used to do pagination.
+type PageNumber string
+
 type MetadataMap map[string]interface{}
+
+// NullableAffectedNamespacedFeature is an affectednamespacedfeature with
+// whether it's found in datastore.
+type NullableAffectedNamespacedFeature struct {
+	AffectedNamespacedFeature
+
+	Valid bool
+}
+
+// NullableVulnerability is a vulnerability with whether the vulnerability is
+// found in datastore.
+type NullableVulnerability struct {
+	VulnerabilityWithAffected
+
+	Valid bool
+}
 
 func (mm *MetadataMap) Scan(value interface{}) error {
 	if value == nil {
@@ -99,25 +233,3 @@ func (mm *MetadataMap) Value() (driver.Value, error) {
 	json, err := json.Marshal(*mm)
 	return string(json), err
 }
-
-type VulnerabilityNotification struct {
-	Model
-
-	Name string
-
-	Created  time.Time
-	Notified time.Time
-	Deleted  time.Time
-
-	OldVulnerability *Vulnerability
-	NewVulnerability *Vulnerability
-}
-
-type VulnerabilityNotificationPageNumber struct {
-	// -1 means that we reached the end already.
-	OldVulnerability int
-	NewVulnerability int
-}
-
-var VulnerabilityNotificationFirstPage = VulnerabilityNotificationPageNumber{0, 0}
-var NoVulnerabilityNotificationPage = VulnerabilityNotificationPageNumber{-1, -1}

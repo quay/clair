@@ -40,41 +40,38 @@ func TestOracleParser(t *testing.T) {
 		assert.Equal(t, database.MediumSeverity, vulnerabilities[0].Severity)
 		assert.Equal(t, ` [3.1.1-7] Resolves: rhbz#1217104 CVE-2015-0252 `, vulnerabilities[0].Description)
 
-		expectedFeatureVersions := []database.FeatureVersion{
+		expectedFeatures := []database.AffectedFeature{
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{
-						Name:          "oracle:7",
-						VersionFormat: rpm.ParserName,
-					},
-					Name: "xerces-c",
+				Namespace: database.Namespace{
+					Name:          "oracle:7",
+					VersionFormat: rpm.ParserName,
 				},
-				Version: "0:3.1.1-7.el7_1",
+				FeatureName:     "xerces-c",
+				FixedInVersion:  "0:3.1.1-7.el7_1",
+				AffectedVersion: "0:3.1.1-7.el7_1",
 			},
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{
-						Name:          "oracle:7",
-						VersionFormat: rpm.ParserName,
-					},
-					Name: "xerces-c-devel",
+				Namespace: database.Namespace{
+					Name:          "oracle:7",
+					VersionFormat: rpm.ParserName,
 				},
-				Version: "0:3.1.1-7.el7_1",
+				FeatureName:     "xerces-c-devel",
+				FixedInVersion:  "0:3.1.1-7.el7_1",
+				AffectedVersion: "0:3.1.1-7.el7_1",
 			},
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{
-						Name:          "oracle:7",
-						VersionFormat: rpm.ParserName,
-					},
-					Name: "xerces-c-doc",
+				Namespace: database.Namespace{
+					Name:          "oracle:7",
+					VersionFormat: rpm.ParserName,
 				},
-				Version: "0:3.1.1-7.el7_1",
+				FeatureName:     "xerces-c-doc",
+				FixedInVersion:  "0:3.1.1-7.el7_1",
+				AffectedVersion: "0:3.1.1-7.el7_1",
 			},
 		}
 
-		for _, expectedFeatureVersion := range expectedFeatureVersions {
-			assert.Contains(t, vulnerabilities[0].FixedIn, expectedFeatureVersion)
+		for _, expectedFeature := range expectedFeatures {
+			assert.Contains(t, vulnerabilities[0].Affected, expectedFeature)
 		}
 	}
 
@@ -87,31 +84,29 @@ func TestOracleParser(t *testing.T) {
 		assert.Equal(t, "http://linux.oracle.com/errata/ELSA-2015-1207.html", vulnerabilities[0].Link)
 		assert.Equal(t, database.CriticalSeverity, vulnerabilities[0].Severity)
 		assert.Equal(t, ` [38.1.0-1.0.1.el7_1] - Add firefox-oracle-default-prefs.js and remove the corresponding Red Hat file [38.1.0-1] - Update to 38.1.0 ESR [38.0.1-2] - Fixed rhbz#1222807 by removing preun section `, vulnerabilities[0].Description)
-		expectedFeatureVersions := []database.FeatureVersion{
+		expectedFeatures := []database.AffectedFeature{
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{
-						Name:          "oracle:6",
-						VersionFormat: rpm.ParserName,
-					},
-					Name: "firefox",
+				Namespace: database.Namespace{
+					Name:          "oracle:6",
+					VersionFormat: rpm.ParserName,
 				},
-				Version: "0:38.1.0-1.0.1.el6_6",
+				FeatureName:     "firefox",
+				FixedInVersion:  "0:38.1.0-1.0.1.el6_6",
+				AffectedVersion: "0:38.1.0-1.0.1.el6_6",
 			},
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{
-						Name:          "oracle:7",
-						VersionFormat: rpm.ParserName,
-					},
-					Name: "firefox",
+				Namespace: database.Namespace{
+					Name:          "oracle:7",
+					VersionFormat: rpm.ParserName,
 				},
-				Version: "0:38.1.0-1.0.1.el7_1",
+				FeatureName:     "firefox",
+				FixedInVersion:  "0:38.1.0-1.0.1.el7_1",
+				AffectedVersion: "0:38.1.0-1.0.1.el7_1",
 			},
 		}
 
-		for _, expectedFeatureVersion := range expectedFeatureVersions {
-			assert.Contains(t, vulnerabilities[0].FixedIn, expectedFeatureVersion)
+		for _, expectedFeature := range expectedFeatures {
+			assert.Contains(t, vulnerabilities[0].Affected, expectedFeature)
 		}
 	}
 }

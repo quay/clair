@@ -8,7 +8,7 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/pkg/tarutil"
-	
+
 	_ "github.com/coreos/clair/ext/featurens/alpinerelease"
 	_ "github.com/coreos/clair/ext/featurens/aptsources"
 	_ "github.com/coreos/clair/ext/featurens/lsbrelease"
@@ -35,7 +35,7 @@ func assertnsNameEqual(t *testing.T, nslist_expected, nslist []database.Namespac
 
 func testMultipleNamespace(t *testing.T, testData []MultipleNamespaceTestData) {
 	for _, td := range testData {
-		nslist, err := featurens.Detect(td.Files)
+		nslist, err := featurens.Detect(td.Files, featurens.ListDetectors())
 		assert.Nil(t, err)
 		assertnsNameEqual(t, td.ExpectedNamespaces, nslist)
 	}

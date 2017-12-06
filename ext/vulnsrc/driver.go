@@ -39,11 +39,10 @@ type UpdateResponse struct {
 	FlagName        string
 	FlagValue       string
 	Notes           []string
-	Vulnerabilities []database.Vulnerability
+	Vulnerabilities []database.VulnerabilityWithAffected
 }
 
-// Updater represents anything that can fetch vulnerabilities and insert them
-// into a Clair datastore.
+// Updater represents anything that can fetch vulnerabilities.
 type Updater interface {
 	// Update gets vulnerability updates.
 	Update(database.Datastore) (UpdateResponse, error)
@@ -87,4 +86,13 @@ func Updaters() map[string]Updater {
 	}
 
 	return ret
+}
+
+// ListUpdaters returns the names of registered vulnerability updaters.
+func ListUpdaters() []string {
+	r := []string{}
+	for u := range updaters {
+		r = append(r, u)
+	}
+	return r
 }

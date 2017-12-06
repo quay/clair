@@ -1,0 +1,47 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    hertiage: {{ .Release.Service | quote }}
+    release: {{ .Release.Name | quote }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    component: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "fullname" . }}
+    spec:
+      volumes:
+      - name: "{{ .Chart.Name }}-config"
+        configMap:
+          name: {{ template "fullname" . }}
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        args:
+        - "-log-level={{ .Values.logLevel }}"
+        {{ if .Values.insecureTls }}- "--insecure-tls" {{end}}
+        ports:
+        - name: clair-api
+          containerPort: {{ .Values.service.internalApiPort }}
+          protocol: TCP
+        - name: clair-health
+          containerPort: {{ .Values.service.internalHealthPort }}
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.service.internalHealthPort }}
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.service.internalHealthPort }}
+        volumeMounts:
+        - name: "{{ .Chart.Name }}-config"
+          mountPath: /etc/clair
+        resources:
+{{ toYaml .Values.resources | indent 10 }}

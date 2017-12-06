@@ -15,6 +15,7 @@
 package pgsql
 
 import (
+	"errors"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -22,86 +23,91 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
+var (
+	errLockNotFound = errors.New("lock is not in database")
+)
+
 // Lock tries to set a temporary lock in the database.
 //
 // Lock does not block, instead, it returns true and its expiration time
-// is the lock has been successfully acquired or false otherwise
-func (pgSQL *pgSQL) Lock(name string, owner string, duration time.Duration, renew bool) (bool, time.Time) {
+// is the lock has been successfully acquired or false otherwise.
+func (tx *pgSession) Lock(name string, owner string, duration time.Duration, renew bool) (bool, time.Time, error) {
 	if name == "" || owner == "" || duration == 0 {
 		log.Warning("could not create an invalid lock")
-		return false, time.Time{}
+		return false, time.Time{}, commonerr.NewBadRequestError("Invalid Lock Parameters")
 	}
 
-	defer observeQueryTime("Lock", "all", time.Now())
-
-	// Compute expiration.
 	until := time.Now().Add(duration)
-
 	if renew {
+		defer observeQueryTime("Lock", "update", time.Now())
 		// Renew lock.
-		r, err := pgSQL.Exec(updateLock, name, owner, until)
+		r, err := tx.Exec(updateLock, name, owner, until)
 		if err != nil {
-			handleError("updateLock", err)
-			return false, until
+			return false, until, handleError("updateLock", err)
 		}
-		if n, _ := r.RowsAffected(); n > 0 {
-			// Updated successfully.
-			return true, until
+
+		if n, err := r.RowsAffected(); err == nil {
+			return n > 0, until, nil
 		}
-	} else {
-		// Prune locks.
-		pgSQL.pruneLocks()
+		return false, until, handleError("updateLock", err)
+	} else if err := tx.pruneLocks(); err != nil {
+		return false, until, err
 	}
 
 	// Lock.
-	_, err := pgSQL.Exec(insertLock, name, owner, until)
+	defer observeQueryTime("Lock", "soiLock", time.Now())
+	_, err := tx.Exec(soiLock, name, owner, until)
 	if err != nil {
-		if !isErrUniqueViolation(err) {
-			handleError("insertLock", err)
+		if isErrUniqueViolation(err) {
+			return false, until, nil
 		}
-		return false, until
+		return false, until, handleError("insertLock", err)
 	}
-
-	return true, until
+	return true, until, nil
 }
 
 // Unlock unlocks a lock specified by its name if I own it
-func (pgSQL *pgSQL) Unlock(name, owner string) {
+func (tx *pgSession) Unlock(name, owner string) error {
 	if name == "" || owner == "" {
-		log.Warning("could not delete an invalid lock")
-		return
+		return commonerr.NewBadRequestError("Invalid Lock Parameters")
 	}
 
 	defer observeQueryTime("Unlock", "all", time.Now())
 
-	pgSQL.Exec(removeLock, name, owner)
+	_, err := tx.Exec(removeLock, name, owner)
+	return err
 }
 
 // FindLock returns the owner of a lock specified by its name and its
 // expiration time.
-func (pgSQL *pgSQL) FindLock(name string) (string, time.Time, error) {
+func (tx *pgSession) FindLock(name string) (string, time.Time, bool, error) {
 	if name == "" {
-		log.Warning("could not find an invalid lock")
-		return "", time.Time{}, commonerr.NewBadRequestError("could not find an invalid lock")
+		return "", time.Time{}, false, commonerr.NewBadRequestError("could not find an invalid lock")
 	}
 
 	defer observeQueryTime("FindLock", "all", time.Now())
 
 	var owner string
 	var until time.Time
-	err := pgSQL.QueryRow(searchLock, name).Scan(&owner, &until)
+	err := tx.QueryRow(searchLock, name).Scan(&owner, &until)
 	if err != nil {
-		return owner, until, handleError("searchLock", err)
+		return owner, until, false, handleError("searchLock", err)
 	}
 
-	return owner, until, nil
+	return owner, until, true, nil
 }
 
 // pruneLocks removes every expired locks from the database
-func (pgSQL *pgSQL) pruneLocks() {
+func (tx *pgSession) pruneLocks() error {
 	defer observeQueryTime("pruneLocks", "all", time.Now())
 
-	if _, err := pgSQL.Exec(removeLockExpired); err != nil {
-		handleError("removeLockExpired", err)
+	if r, err := tx.Exec(removeLockExpired); err != nil {
+		return handleError("removeLockExpired", err)
+	} else if affected, err := r.RowsAffected(); err != nil {
+		return handleError("removeLockExpired", err)
+	} else {
+		log.Debugf("Pruned %d Locks", affected)
 	}
+
+	return nil
 }

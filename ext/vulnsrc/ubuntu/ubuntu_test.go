@@ -44,41 +44,37 @@ func TestUbuntuParser(t *testing.T) {
 		_, hasUnkownRelease := unknownReleases["unknown"]
 		assert.True(t, hasUnkownRelease)
 
-		expectedFeatureVersions := []database.FeatureVersion{
+		expectedFeatures := []database.AffectedFeature{
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{
-						Name:          "ubuntu:14.04",
-						VersionFormat: dpkg.ParserName,
-					},
-					Name: "libmspack",
+				Namespace: database.Namespace{
+					Name:          "ubuntu:14.04",
+					VersionFormat: dpkg.ParserName,
 				},
-				Version: versionfmt.MaxVersion,
+				FeatureName:     "libmspack",
+				AffectedVersion: versionfmt.MaxVersion,
 			},
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{
-						Name:          "ubuntu:15.04",
-						VersionFormat: dpkg.ParserName,
-					},
-					Name: "libmspack",
+				Namespace: database.Namespace{
+					Name:          "ubuntu:15.04",
+					VersionFormat: dpkg.ParserName,
 				},
-				Version: "0.4-3",
+				FeatureName:     "libmspack",
+				FixedInVersion:  "0.4-3",
+				AffectedVersion: "0.4-3",
 			},
 			{
-				Feature: database.Feature{
-					Namespace: database.Namespace{
-						Name:          "ubuntu:15.10",
-						VersionFormat: dpkg.ParserName,
-					},
-					Name: "libmspack-anotherpkg",
+				Namespace: database.Namespace{
+					Name:          "ubuntu:15.10",
+					VersionFormat: dpkg.ParserName,
 				},
-				Version: "0.1",
+				FeatureName:     "libmspack-anotherpkg",
+				FixedInVersion:  "0.1",
+				AffectedVersion: "0.1",
 			},
 		}
 
-		for _, expectedFeatureVersion := range expectedFeatureVersions {
-			assert.Contains(t, vulnerability.FixedIn, expectedFeatureVersion)
+		for _, expectedFeature := range expectedFeatures {
+			assert.Contains(t, vulnerability.Affected, expectedFeature)
 		}
 	}
 }

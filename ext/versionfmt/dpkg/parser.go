@@ -120,6 +120,18 @@ func (p parser) Valid(str string) bool {
 	return err == nil
 }
 
+func (p parser) InRange(versionA, rangeB string) (bool, error) {
+	cmp, err := p.Compare(versionA, rangeB)
+	if err != nil {
+		return false, err
+	}
+	return cmp < 0, nil
+}
+
+func (p parser) GetFixedIn(fixedIn string) (string, error) {
+	return fixedIn, nil
+}
+
 // Compare function compares two Debian-like package version
 //
 // The implementation is based on http://man.he.net/man5/deb-version
