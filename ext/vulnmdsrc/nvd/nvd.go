@@ -83,7 +83,6 @@ func (a *appender) BuildCache(datastore database.Datastore) error {
 	// Get data feeds.
 	dataFeedReaders, dataFeedHashes, err := getDataFeeds(a.dataFeedHashes, a.localPath)
 	if err != nil {
-		log.Info(err)
 		return err
 	}
 	a.dataFeedHashes = dataFeedHashes

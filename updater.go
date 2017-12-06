@@ -142,7 +142,6 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 					break
 				}
 				continue
-
 			} else {
 				lockOwner, lockExpiration, ok, err := findLock(datastore, updaterLockName)
 				if !ok || err != nil {
