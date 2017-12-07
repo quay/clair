@@ -97,3 +97,8 @@ clair:
 
       # Optional HTTP Proxy: must be a valid URL (including the scheme).
       proxy:
+
+  grafeas:
+    enabled: false
+    addr: "http://grafeas.example.com"
+    projectId: "vuln-scanner"
