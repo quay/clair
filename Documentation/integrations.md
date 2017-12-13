@@ -8,6 +8,8 @@ This document tracks projects that integrate with Clair. [Join the community](ht
 
 [Dockyard](https://github.com/Huawei/dockyard): an open source container registry with Clair integration.
 
+[Yair](https://github.com/yfoelling/yair): a lightweight command-line for working with clair with many different outputs. Mainly designed for usage in a CI Job.
+
 [Clairctl](https://github.com/jgsqware/clairctl): a lightweight command-line tool for working locally with Clair and generate HTML report.
 
 [Clair-SQS](https://github.com/zalando-incubator/clair-sqs): a container containing Clair and additional processes that integrate Clair with [Amazon SQS][sqs].
