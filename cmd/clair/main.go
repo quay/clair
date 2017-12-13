@@ -141,7 +141,7 @@ func Boot(config *Config) {
 		if dbError == nil {
 			break
 		}
-		log.Error(dbError);
+		log.WithError(dbError).Error("failed to connect to database")
 		time.Sleep(time.Duration(attempts) * time.Second)
 	}
 	if dbError != nil {
