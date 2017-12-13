@@ -61,6 +61,8 @@ import (
 	_ "github.com/coreos/clair/ext/vulnsrc/ubuntu"
 )
 
+const maxDBConnectionAttempts = 20
+
 func waitForSignals(signals ...os.Signal) {
 	interrupts := make(chan os.Signal, 1)
 	signal.Notify(interrupts, signals...)
@@ -132,10 +134,20 @@ func Boot(config *Config) {
 	st := stopper.NewStopper()
 
 	// Open database
-	db, err := database.Open(config.Database)
-	if err != nil {
-		log.Fatal(err)
+	var db database.Datastore
+	var dbError error
+	for attempts := 1; attempts <= maxDBConnectionAttempts; attempts++ {
+		db, dbError = database.Open(config.Database)
+		if dbError == nil {
+			break
+		}
+		log.WithError(dbError).Error("failed to connect to database")
+		time.Sleep(time.Duration(attempts) * time.Second)
 	}
+	if dbError != nil {
+		log.Fatal(dbError)
+	}
+
 	defer db.Close()
 
 	// Start notifier
