@@ -70,6 +70,7 @@ type definition struct {
 type reference struct {
 	Source string `xml:"source,attr"`
 	URI    string `xml:"ref_url,attr"`
+	ID     string `xml:"ref_id,attr"`
 }
 
 type criteria struct {
@@ -198,8 +199,6 @@ func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWi
 		if len(pkgs) > 0 {
 			vulnerability := database.VulnerabilityWithAffected{
 				Vulnerability: database.Vulnerability{
-					Name:        name(definition),
-					Link:        link(definition),
 					Severity:    severity(definition),
 					Description: description(definition),
 				},
@@ -207,7 +206,15 @@ func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWi
 			for _, p := range pkgs {
 				vulnerability.Affected = append(vulnerability.Affected, p)
 			}
-			vulnerabilities = append(vulnerabilities, vulnerability)
+
+			// One vulnerability by CVE
+			for _, reference := range definition.References {
+				if reference.Source == "CVE" {
+					vulnerability.Name = reference.ID
+					vulnerability.Link = reference.URI
+					vulnerabilities = append(vulnerabilities, vulnerability)
+				}
+			}
 		}
 	}
 
@@ -355,21 +362,6 @@ func description(def definition) (desc string) {
 	desc = strings.Replace(def.Description, "\n\n\n", " ", -1)
 	desc = strings.Replace(desc, "\n\n", " ", -1)
 	desc = strings.Replace(desc, "\n", " ", -1)
-	return
-}
-
-func name(def definition) string {
-	return strings.TrimSpace(def.Title[:strings.Index(def.Title, ": ")])
-}
-
-func link(def definition) (link string) {
-	for _, reference := range def.References {
-		if reference.Source == "RHSA" {
-			link = reference.URI
-			break
-		}
-	}
-
 	return
 }
 
