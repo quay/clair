@@ -51,7 +51,7 @@ Thus, the project was named `Clair` after the French term which translates to *c
 
 ## Contributing
 
-See [CONTRIBUTING](CONTRIBUTING.md) for details on submitting patches and the contribution workflow.
+See [CONTRIBUTING](.github/CONTRIBUTING.md) for details on submitting patches and the contribution workflow.
 
 ## License
 
