@@ -197,6 +197,8 @@ func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWi
 	for _, definition := range ov.Definitions {
 		pkgs := toFeatures(definition.Criteria)
 		if len(pkgs) > 0 {
+
+			// Init vulnerability
 			vulnerability := database.VulnerabilityWithAffected{
 				Vulnerability: database.Vulnerability{
 					Severity:    severity(definition),
@@ -207,11 +209,15 @@ func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWi
 				vulnerability.Affected = append(vulnerability.Affected, p)
 			}
 
-			// One vulnerability by CVE
-			for _, reference := range definition.References {
-				if reference.Source == "CVE" {
-					vulnerability.Name = reference.ID
-					vulnerability.Link = reference.URI
+			// Only RHSA is present
+			if len(definition.References) == 1 {
+				vulnerability.Name = rhsaName(definition)
+				vulnerability.Link = definition.References[0].URI
+				vulnerabilities = append(vulnerabilities, vulnerability)
+			} else {
+				for _, reference := range definition.References[1:] {
+					vulnerability.Name = name(reference)
+					vulnerability.Link = link(reference)
 					vulnerabilities = append(vulnerabilities, vulnerability)
 				}
 			}
@@ -379,4 +385,16 @@ func severity(def definition) database.Severity {
 		log.Warningf("could not determine vulnerability severity from: %s.", def.Title)
 		return database.UnknownSeverity
 	}
+}
+
+func name(ref reference) string {
+	return ref.ID
+}
+
+func link(ref reference) string {
+	return ref.URI
+}
+
+func rhsaName(def definition) string {
+	return strings.TrimSpace(def.Title[:strings.Index(def.Title, ": ")])
 }
