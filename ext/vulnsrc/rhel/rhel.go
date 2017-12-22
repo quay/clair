@@ -213,7 +213,6 @@ func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWi
 
 			// Only RHSA is present
 			if len(definition.References) == 1 {
-				vulnerability.Link = definition.References[0].URI
 				vulnerabilities = append(vulnerabilities, vulnerability)
 			} else {
 				for _, reference := range definition.References[1:] {
