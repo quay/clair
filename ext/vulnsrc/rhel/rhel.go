@@ -201,6 +201,8 @@ func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWi
 			// Init vulnerability
 			vulnerability := database.VulnerabilityWithAffected{
 				Vulnerability: database.Vulnerability{
+					Name:        rhsaName(definition),
+					Link:        rhsaLink(definition),
 					Severity:    severity(definition),
 					Description: description(definition),
 				},
@@ -211,13 +213,12 @@ func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWi
 
 			// Only RHSA is present
 			if len(definition.References) == 1 {
-				vulnerability.Name = rhsaName(definition)
 				vulnerability.Link = definition.References[0].URI
 				vulnerabilities = append(vulnerabilities, vulnerability)
 			} else {
 				for _, reference := range definition.References[1:] {
-					vulnerability.Name = name(reference)
-					vulnerability.Link = link(reference)
+					vulnerability.Name = reference.ID
+					vulnerability.Link = reference.URI
 					vulnerabilities = append(vulnerabilities, vulnerability)
 				}
 			}
@@ -387,14 +388,13 @@ func severity(def definition) database.Severity {
 	}
 }
 
-func name(ref reference) string {
-	return ref.ID
-}
-
-func link(ref reference) string {
-	return ref.URI
-}
-
 func rhsaName(def definition) string {
 	return strings.TrimSpace(def.Title[:strings.Index(def.Title, ": ")])
+}
+
+func rhsaLink(def definition) (link string) {
+	if len(def.References) > 0 {
+		link = def.References[0].URI
+	}
+	return
 }
