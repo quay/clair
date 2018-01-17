@@ -1,0 +1,1665 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "v1alpha1/proto/grafeas.proto",
+    "version": "version not set"
+  },
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1alpha1/projects": {
+      "get": {
+        "summary": "Lists `Projects`",
+        "operationId": "ListProjects",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiListProjectsResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "filter",
+            "description": "The filter expression.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page_size",
+            "description": "Number of projects to return in the list.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_token",
+            "description": "Token to provide to skip to a particular spot in the list.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GrafeasProjects"
+        ]
+      }
+    },
+    "/v1alpha1/{name}": {
+      "get": {
+        "summary": "Returns the requested `Project`.",
+        "operationId": "GetProject",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiProject"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GrafeasProjects"
+        ]
+      },
+      "delete": {
+        "summary": "Deletes the given `Project` from the system.",
+        "operationId": "DeleteProject",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GrafeasProjects"
+        ]
+      },
+      "post": {
+        "summary": "Creates a new `Project`.",
+        "operationId": "CreateProject",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/protobufEmpty"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "GrafeasProjects"
+        ]
+      },
+      "patch": {
+        "summary": "Updates an existing `Note`.",
+        "operationId": "UpdateNote",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiNote"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiNote"
+            }
+          }
+        ],
+        "tags": [
+          "Grafeas"
+        ]
+      }
+    },
+    "/v1alpha1/{name}/notes": {
+      "get": {
+        "summary": "Gets the `Note` attached to the given `Occurrence`.",
+        "operationId": "GetOccurrenceNote",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiNote"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Grafeas"
+        ]
+      }
+    },
+    "/v1alpha1/{name}/occurrences": {
+      "get": {
+        "summary": "Lists `Occurrences` referencing the specified `Note`. Use this method to\nget all occurrences referencing your `Note` across all your customer\nprojects.",
+        "operationId": "ListNoteOccurrences",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiListNoteOccurrencesResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "filter",
+            "description": "The filter expression.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page_size",
+            "description": "Number of notes to return in the list.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_token",
+            "description": "Token to provide to skip to a particular spot in the list.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Grafeas"
+        ]
+      }
+    },
+    "/v1alpha1/{parent}/notes": {
+      "get": {
+        "summary": "Lists all `Notes` for a given project.",
+        "operationId": "ListNotes",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiListNotesResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "parent",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "filter",
+            "description": "The filter expression.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page_size",
+            "description": "Number of notes to return in the list.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_token",
+            "description": "Token to provide to skip to a particular spot in the list.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Grafeas"
+        ]
+      },
+      "post": {
+        "summary": "Creates a new `Note`.",
+        "operationId": "CreateNote",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiNote"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "parent",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiNote"
+            }
+          }
+        ],
+        "tags": [
+          "Grafeas"
+        ]
+      }
+    },
+    "/v1alpha1/{parent}/occurrences": {
+      "get": {
+        "summary": "Lists active `Occurrences` for a given project matching the filters.",
+        "operationId": "ListOccurrences",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiListOccurrencesResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "parent",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "filter",
+            "description": "The filter expression.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "page_size",
+            "description": "Number of occurrences to return in the list.",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "page_token",
+            "description": "Token to provide to skip to a particular spot in the list.",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Grafeas"
+        ]
+      },
+      "post": {
+        "summary": "Creates a new `Occurrence`. Use this method to create `Occurrences`\nfor a resource.",
+        "operationId": "CreateOccurrence",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/apiOccurrence"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "parent",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiOccurrence"
+            }
+          }
+        ],
+        "tags": [
+          "Grafeas"
+        ]
+      }
+    },
+    "/v1alpha1/{parent}/operations": {
+      "post": {
+        "summary": "Creates a new `Operation`.",
+        "operationId": "CreateOperation",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/longrunningOperation"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "parent",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiCreateOperationRequest"
+            }
+          }
+        ],
+        "tags": [
+          "Grafeas"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "BuildSignatureKeyType": {
+      "type": "string",
+      "enum": [
+        "KEY_TYPE_UNSPECIFIED",
+        "PGP_ASCII_ARMORED",
+        "PKIX_PEM"
+      ],
+      "default": "KEY_TYPE_UNSPECIFIED",
+      "description": "- KEY_TYPE_UNSPECIFIED: `KeyType` is not set.\n - PGP_ASCII_ARMORED: `PGP ASCII Armored` public key.\n - PKIX_PEM: `PKIX PEM` public key.",
+      "title": "Public key formats"
+    },
+    "DeployableDeployment": {
+      "type": "object",
+      "properties": {
+        "user_email": {
+          "type": "string",
+          "description": "Identity of the user that triggered this deployment."
+        },
+        "deploy_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Beginning of the lifetime of this deployment."
+        },
+        "undeploy_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "End of the lifetime of this deployment."
+        },
+        "config": {
+          "type": "string",
+          "description": "Configuration used to create this deployment."
+        },
+        "address": {
+          "type": "string",
+          "description": "Address of the runtime element hosting this deployment."
+        },
+        "resource_uri": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Output only. Resource URI for the artifact being deployed taken from the\ndeployable field with the same name."
+        },
+        "platform": {
+          "$ref": "#/definitions/DeploymentPlatform",
+          "description": "Platform hosting this deployment."
+        }
+      },
+      "description": "The period during which some deployable was active in a runtime."
+    },
+    "DeploymentPlatform": {
+      "type": "string",
+      "enum": [
+        "PLATFORM_UNSPECIFIED",
+        "GKE",
+        "FLEX",
+        "CUSTOM"
+      ],
+      "default": "PLATFORM_UNSPECIFIED",
+      "description": "Types of platforms.\n\n - PLATFORM_UNSPECIFIED: Unknown\n - GKE: Google Container Engine\n - FLEX: Google App Engine: Flexible Environment\n - CUSTOM: Custom user-defined platform"
+    },
+    "DiscoveryDiscovered": {
+      "type": "object",
+      "properties": {
+        "operation": {
+          "$ref": "#/definitions/longrunningOperation",
+          "description": "Output only. An operation that indicates the status of the current scan."
+        }
+      },
+      "description": "Provides information about the scan status of a discovered resource."
+    },
+    "DockerImageBasis": {
+      "type": "object",
+      "properties": {
+        "resource_url": {
+          "type": "string",
+          "description": "The resource_url for the resource representing the basis of\nassociated occurrence images."
+        },
+        "fingerprint": {
+          "$ref": "#/definitions/DockerImageFingerprint",
+          "title": "The fingerprint of the base image"
+        }
+      },
+      "description": "Basis describes the base image portion (Note) of the DockerImage\nrelationship.  Linked occurrences are derived from this or an\nequivalent image via:\n  FROM \u003cBasis.resource_url\u003e\nOr an equivalent reference, e.g. a tag of the resource_url."
+    },
+    "DockerImageDerived": {
+      "type": "object",
+      "properties": {
+        "fingerprint": {
+          "$ref": "#/definitions/DockerImageFingerprint",
+          "title": "The fingerprint of the derived image"
+        },
+        "distance": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Output only. The number of layers by which this image differs from\nthe associated image basis."
+        },
+        "layer_info": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DockerImageLayer"
+          },
+          "description": "This contains layer-specific metadata, if populated it\nhas length \"distance\" and is ordered with [distance] being the\nlayer immediately following the base image and [1]\nbeing the final layer."
+        },
+        "base_resource_url": {
+          "type": "string",
+          "title": "Output only.This contains the base image url for the derived image\nOccurrence"
+        }
+      },
+      "description": "Derived describes the derived image portion (Occurrence) of the\nDockerImage relationship.  This image would be produced from a Dockerfile\nwith FROM \u003cDockerImage.Basis in attached Note\u003e."
+    },
+    "DockerImageFingerprint": {
+      "type": "object",
+      "properties": {
+        "v1_name": {
+          "type": "string",
+          "description": "The layer-id of the final layer in the Docker image's v1\nrepresentation.\nThis field can be used as a filter in list requests."
+        },
+        "v2_blob": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The ordered list of v2 blobs that represent a given image."
+        },
+        "v2_name": {
+          "type": "string",
+          "description": "Output only. The name of the image's v2 blobs computed via:\n  [bottom] := v2_blob[bottom]\n  [N] := sha256(v2_blob[N] + \" \" + v2_name[N+1])\nOnly the name of the final blob is kept.\nThis field can be used as a filter in list requests."
+        }
+      },
+      "description": "A set of properties that uniquely identify a given Docker image."
+    },
+    "DockerImageLayer": {
+      "type": "object",
+      "properties": {
+        "directive": {
+          "$ref": "#/definitions/LayerDirective",
+          "description": "The recovered Dockerfile directive used to construct this layer."
+        },
+        "arguments": {
+          "type": "string",
+          "description": "The recovered arguments to the Dockerfile directive."
+        }
+      },
+      "description": "Layer holds metadata specific to a layer of a Docker image."
+    },
+    "HashHashType": {
+      "type": "string",
+      "enum": [
+        "NONE",
+        "SHA256"
+      ],
+      "default": "NONE",
+      "description": "Specifies the hash algorithm, if any.\n\n - NONE: No hash requested.\n - SHA256: A sha256 hash."
+    },
+    "LayerDirective": {
+      "type": "string",
+      "enum": [
+        "DIRECTIVE_UNSPECIFIED",
+        "MAINTAINER",
+        "RUN",
+        "CMD",
+        "LABEL",
+        "EXPOSE",
+        "ENV",
+        "ADD",
+        "COPY",
+        "ENTRYPOINT",
+        "VOLUME",
+        "USER",
+        "WORKDIR",
+        "ARG",
+        "ONBUILD",
+        "STOPSIGNAL",
+        "HEALTHCHECK",
+        "SHELL"
+      ],
+      "default": "DIRECTIVE_UNSPECIFIED",
+      "description": "- DIRECTIVE_UNSPECIFIED: Default value for unsupported/missing directive\n - MAINTAINER: https://docs.docker.com/reference/builder/#maintainer\n - RUN: https://docs.docker.com/reference/builder/#run\n - CMD: https://docs.docker.com/reference/builder/#cmd\n - LABEL: https://docs.docker.com/reference/builder/#label\n - EXPOSE: https://docs.docker.com/reference/builder/#expose\n - ENV: https://docs.docker.com/reference/builder/#env\n - ADD: https://docs.docker.com/reference/builder/#add\n - COPY: https://docs.docker.com/reference/builder/#copy\n - ENTRYPOINT: https://docs.docker.com/reference/builder/#entrypoint\n - VOLUME: https://docs.docker.com/reference/builder/#volume\n - USER: https://docs.docker.com/reference/builder/#user\n - WORKDIR: https://docs.docker.com/reference/builder/#workdir\n - ARG: https://docs.docker.com/reference/builder/#arg\n - ONBUILD: https://docs.docker.com/reference/builder/#onbuild\n - STOPSIGNAL: https://docs.docker.com/reference/builder/#stopsignal\n - HEALTHCHECK: https://docs.docker.com/reference/builder/#healthcheck\n - SHELL: https://docs.docker.com/reference/builder/#shell",
+      "title": "Instructions from dockerfile"
+    },
+    "NoteRelatedUrl": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "title": "Specific URL to associate with the note"
+        },
+        "label": {
+          "type": "string",
+          "title": "Label to describe usage of the URL"
+        }
+      },
+      "title": "Metadata for any related URL information"
+    },
+    "PackageManagerArchitecture": {
+      "type": "string",
+      "enum": [
+        "ARCHITECTURE_UNSPECIFIED",
+        "X86",
+        "X64"
+      ],
+      "default": "ARCHITECTURE_UNSPECIFIED",
+      "description": "Instruction set architectures supported by various package managers.\n\n - ARCHITECTURE_UNSPECIFIED: Unknown architecture\n - X86: X86 architecture\n - X64: X64 architecture"
+    },
+    "PackageManagerDistribution": {
+      "type": "object",
+      "properties": {
+        "cpe_uri": {
+          "type": "string",
+          "description": "The cpe_uri in [cpe format](https://cpe.mitre.org/specification/)\ndenoting the package manager version distributing a package."
+        },
+        "architecture": {
+          "$ref": "#/definitions/PackageManagerArchitecture",
+          "title": "The CPU architecture for which packages in this distribution\nchannel were built"
+        },
+        "latest_version": {
+          "$ref": "#/definitions/VulnerabilityTypeVersion",
+          "description": "The latest available version of this package in\nthis distribution channel."
+        },
+        "maintainer": {
+          "type": "string",
+          "description": "A freeform string denoting the maintainer of this package."
+        },
+        "url": {
+          "type": "string",
+          "description": "The distribution channel-specific homepage for this package."
+        },
+        "description": {
+          "type": "string",
+          "description": "The distribution channel-specific description of this package."
+        }
+      },
+      "title": "This represents a particular channel of distribution for a given package.\ne.g. Debian's jessie-backports dpkg mirror"
+    },
+    "PackageManagerInstallation": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Output only. The name of the installed package."
+        },
+        "location": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiPackageManagerLocation"
+          },
+          "description": "All of the places within the filesystem versions of this package\nhave been found."
+        }
+      },
+      "description": "This represents how a particular software package may be installed on\na system."
+    },
+    "PackageManagerPackage": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the package."
+        },
+        "distribution": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PackageManagerDistribution"
+          },
+          "description": "The various channels by which a package is distributed."
+        }
+      },
+      "description": "This represents a particular package that is distributed over\nvarious channels.\ne.g. glibc (aka libc6) is distributed by many, at various versions."
+    },
+    "VersionVersionKind": {
+      "type": "string",
+      "enum": [
+        "NORMAL",
+        "MINIMUM",
+        "MAXIMUM"
+      ],
+      "default": "NORMAL",
+      "description": "Whether this is an ordinary package version or a\nsentinel MIN/MAX version.\n\n - NORMAL: A standard package version, defined by the other fields.\n - MINIMUM: A special version representing negative infinity,\nother fields are ignored.\n - MAXIMUM: A special version representing positive infinity,\nother fields are ignored."
+    },
+    "VulnerabilityTypeDetail": {
+      "type": "object",
+      "properties": {
+        "cpe_uri": {
+          "type": "string",
+          "description": "The cpe_uri in [cpe format] (https://cpe.mitre.org/specification/) in\nwhich the vulnerability manifests.  Examples include distro or storage\nlocation for vulnerable jar.\nThis field can be used as a filter in list requests."
+        },
+        "package": {
+          "type": "string",
+          "description": "The name of the package where the vulnerability was found.\nThis field can be used as a filter in list requests."
+        },
+        "min_affected_version": {
+          "$ref": "#/definitions/VulnerabilityTypeVersion",
+          "description": "The min version of the package in which the vulnerability exists."
+        },
+        "max_affected_version": {
+          "$ref": "#/definitions/VulnerabilityTypeVersion",
+          "description": "The max version of the package in which the vulnerability exists.\nThis field can be used as a filter in list requests."
+        },
+        "severity_name": {
+          "type": "string",
+          "description": "The severity (eg: distro assigned severity) for this vulnerability."
+        },
+        "description": {
+          "type": "string",
+          "description": "A vendor-specific description of this note."
+        },
+        "fixed_location": {
+          "$ref": "#/definitions/VulnerabilityTypeVulnerabilityLocation",
+          "description": "The fix for this specific package version."
+        },
+        "package_type": {
+          "type": "string",
+          "title": "The type of package; whether native or non native(ruby gems,\nnode.js packages etc)"
+        }
+      },
+      "title": "Identifies all occurrences of this vulnerability in the package for a\nspecific distro/location\nFor example: glibc in cpe:/o:debian:debian_linux:8 for versions 2.1 - 2.2"
+    },
+    "VulnerabilityTypePackageIssue": {
+      "type": "object",
+      "properties": {
+        "affected_location": {
+          "$ref": "#/definitions/VulnerabilityTypeVulnerabilityLocation",
+          "description": "The location of the vulnerability."
+        },
+        "fixed_location": {
+          "$ref": "#/definitions/VulnerabilityTypeVulnerabilityLocation",
+          "description": "The location of the available fix for vulnerability."
+        },
+        "severity_name": {
+          "type": "string",
+          "description": "The severity (eg: distro assigned severity) for this vulnerability."
+        }
+      },
+      "description": "This message wraps a location affected by a vulnerability and its\nassociated fix (if one is available)."
+    },
+    "VulnerabilityTypeSeverity": {
+      "type": "string",
+      "enum": [
+        "SEVERITY_UNSPECIFIED",
+        "MINIMAL",
+        "LOW",
+        "MEDIUM",
+        "HIGH",
+        "CRITICAL"
+      ],
+      "default": "SEVERITY_UNSPECIFIED",
+      "description": "- SEVERITY_UNSPECIFIED: Unknown Impact\n - MINIMAL: Minimal Impact\n - LOW: Low Impact\n - MEDIUM: Medium Impact\n - HIGH: High Impact\n - CRITICAL: Critical Impact",
+      "title": "Note provider-assigned severity/impact ranking"
+    },
+    "VulnerabilityTypeVersion": {
+      "type": "object",
+      "properties": {
+        "epoch": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Used to correct mistakes in the version numbering scheme."
+        },
+        "name": {
+          "type": "string",
+          "description": "The main part of the version name."
+        },
+        "revision": {
+          "type": "string",
+          "description": "The iteration of the package build from the above version."
+        },
+        "kind": {
+          "$ref": "#/definitions/VersionVersionKind",
+          "description": "Distinguish between sentinel MIN/MAX versions and normal versions.\nIf kind is not NORMAL, then the other fields are ignored."
+        }
+      },
+      "title": "Version contains structured information about the version of the package.\nFor a discussion of this in Debian/Ubuntu:\nhttp://serverfault.com/questions/604541/debian-packages-version-convention\nFor a discussion of this in Redhat/Fedora/Centos:\nhttp://blog.jasonantman.com/2014/07/how-yum-and-rpm-compare-versions/"
+    },
+    "VulnerabilityTypeVulnerabilityDetails": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "title": "The type of package; whether native or non native(ruby gems,\nnode.js packages etc)"
+        },
+        "severity": {
+          "$ref": "#/definitions/VulnerabilityTypeSeverity",
+          "description": "Output only. The note provider assigned Severity of the vulnerability."
+        },
+        "cvss_score": {
+          "type": "number",
+          "format": "float",
+          "description": "Output only. The CVSS score of this vulnerability. CVSS score is on a\nscale of 0-10 where 0 indicates low severity and 10 indicates high\nseverity."
+        },
+        "package_issue": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VulnerabilityTypePackageIssue"
+          },
+          "description": "The set of affected locations and their fixes (if available) within\nthe associated resource."
+        }
+      },
+      "description": "Used by Occurrence to point to where the vulnerability exists and how\nto fix it."
+    },
+    "VulnerabilityTypeVulnerabilityLocation": {
+      "type": "object",
+      "properties": {
+        "cpe_uri": {
+          "type": "string",
+          "description": "The cpe_uri in [cpe format] (https://cpe.mitre.org/specification/)\nformat. Examples include distro or storage location for vulnerable jar.\nThis field can be used as a filter in list requests."
+        },
+        "package": {
+          "type": "string",
+          "description": "The package being described."
+        },
+        "version": {
+          "$ref": "#/definitions/VulnerabilityTypeVersion",
+          "description": "The version of the package being described.\nThis field can be used as a filter in list requests."
+        }
+      },
+      "title": "The location of the vulnerability"
+    },
+    "apiAliasContext": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/definitions/apiAliasContextKind",
+          "description": "The alias kind."
+        },
+        "name": {
+          "type": "string",
+          "description": "The alias name."
+        }
+      },
+      "description": "An alias to a repo revision."
+    },
+    "apiAliasContextKind": {
+      "type": "string",
+      "enum": [
+        "KIND_UNSPECIFIED",
+        "FIXED",
+        "MOVABLE",
+        "OTHER"
+      ],
+      "default": "KIND_UNSPECIFIED",
+      "description": "The type of an alias.\n\n - KIND_UNSPECIFIED: Unknown.\n - FIXED: Git tag.\n - MOVABLE: Git branch.\n - OTHER: Used to specify non-standard aliases. For example, if a Git repo has a\nref named \"refs/foo/bar\"."
+    },
+    "apiArtifact": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the artifact. This may be the path to a binary or jar file, or in\nthe case of a container build, the name used to push the container image to\nGoogle Container Registry, as presented to `docker push`.\n\nThis field is deprecated in favor of the plural `names` field; it continues\nto exist here to allow existing BuildProvenance serialized to json in\ngoogle.devtools.containeranalysis.v1alpha1.BuildDetails.provenance_bytes to\ndeserialize back into proto."
+        },
+        "checksum": {
+          "type": "string",
+          "description": "Hash or checksum value of a binary, or Docker Registry 2.0 digest of a\ncontainer."
+        },
+        "id": {
+          "type": "string",
+          "title": "Artifact ID, if any; for container images, this will be a URL by digest\nlike gcr.io/projectID/imagename@sha256:123456"
+        },
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Related artifact names. This may be the path to a binary or jar file, or in\nthe case of a container build, the name used to push the container image to\nGoogle Container Registry, as presented to `docker push`. Note that a\nsingle Artifact ID can have multiple names, for example if two tags are\napplied to one image."
+        }
+      },
+      "description": "Artifact describes a build product."
+    },
+    "apiBuildDetails": {
+      "type": "object",
+      "properties": {
+        "provenance": {
+          "$ref": "#/definitions/apiBuildProvenance",
+          "title": "The actual provenance"
+        },
+        "provenance_bytes": {
+          "type": "string",
+          "description": "Serialized JSON representation of the provenance, used in generating the\n`BuildSignature` in the corresponding Result. After verifying the\nsignature, `provenance_bytes` can be unmarshalled and compared to the\nprovenance to confirm that it is unchanged. A base64-encoded string\nrepresentation of the provenance bytes is used for the signature in order\nto interoperate with openssl which expects this format for signature\nverification.\n\nThe serialized form is captured both to avoid ambiguity in how the\nprovenance is marshalled to json as well to prevent incompatibilities with\nfuture changes."
+        }
+      },
+      "description": "Message encapsulating build provenance details."
+    },
+    "apiBuildProvenance": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the build."
+        },
+        "project_id": {
+          "type": "string",
+          "description": "ID of the project."
+        },
+        "commands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiCommand"
+          },
+          "description": "Commands requested by the build."
+        },
+        "built_artifacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiArtifact"
+          },
+          "description": "Output of the build."
+        },
+        "create_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Time at which the build was created."
+        },
+        "start_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Time at which execution of the build was started."
+        },
+        "finish_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Time at which execution of the build was finished."
+        },
+        "creator": {
+          "type": "string",
+          "description": "E-mail address of the user who initiated this build. Note that this was the\nuser's e-mail address at the time the build was initiated; this address may\nnot represent the same end-user for all time."
+        },
+        "logs_bucket": {
+          "type": "string",
+          "description": "Google Cloud Storage bucket where logs were written."
+        },
+        "source_provenance": {
+          "$ref": "#/definitions/apiSource",
+          "description": "Details of the Source input to the build."
+        },
+        "trigger_id": {
+          "type": "string",
+          "description": "Trigger identifier if the build was triggered automatically; empty if not."
+        },
+        "build_options": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Special options applied to this build. This is a catch-all field where\nbuild providers can enter any desired additional details."
+        },
+        "builder_version": {
+          "type": "string",
+          "description": "Version string of the builder at the time this build was executed."
+        }
+      },
+      "description": "Provenance of a build. Contains all information needed to verify the full\ndetails about the build from source to completion."
+    },
+    "apiBuildSignature": {
+      "type": "object",
+      "properties": {
+        "public_key": {
+          "type": "string",
+          "description": "Public key of the builder which can be used to verify that the related\nfindings are valid and unchanged. If `key_type` is empty, this defaults\nto PEM encoded public keys.\n\nThis field may be empty if `key_id` references an external key.\n\nFor Cloud Container Builder based signatures, this is a PEM encoded public\nkey. To verify the Cloud Container Builder signature, place the contents of\nthis field into a file (public.pem). The signature field is base64-decoded\ninto its binary representation in signature.bin, and the provenance bytes\nfrom `BuildDetails` are base64-decoded into a binary representation in\nsigned.bin. OpenSSL can then verify the signature:\n`openssl sha256 -verify public.pem -signature signature.bin signed.bin`"
+        },
+        "signature": {
+          "type": "string",
+          "description": "Signature of the related `BuildProvenance`, encoded in a base64 string."
+        },
+        "key_id": {
+          "type": "string",
+          "description": "An Id for the key used to sign. This could be either an Id for the key\nstored in `public_key` (such as the Id or fingerprint for a PGP key, or the\nCN for a cert), or a reference to an external key (such as a reference to a\nkey in Cloud Key Management Service)."
+        },
+        "key_type": {
+          "$ref": "#/definitions/BuildSignatureKeyType",
+          "title": "The type of the key, either stored in `public_key` or referenced in\n`key_id`"
+        }
+      },
+      "description": "Message encapsulating the signature of the verified build."
+    },
+    "apiBuildType": {
+      "type": "object",
+      "properties": {
+        "builder_version": {
+          "type": "string",
+          "description": "Version of the builder which produced this Note."
+        },
+        "signature": {
+          "$ref": "#/definitions/apiBuildSignature",
+          "description": "Signature of the build in Occurrences pointing to the Note containing this\n`BuilderDetails`."
+        }
+      },
+      "description": "Note holding the version of the provider's builder and the signature of\nthe provenance message in linked BuildDetails."
+    },
+    "apiCloudRepoSourceContext": {
+      "type": "object",
+      "properties": {
+        "repo_id": {
+          "$ref": "#/definitions/apiRepoId",
+          "description": "The ID of the repo."
+        },
+        "revision_id": {
+          "type": "string",
+          "description": "A revision ID."
+        },
+        "alias_context": {
+          "$ref": "#/definitions/apiAliasContext",
+          "description": "An alias, which may be a branch or tag."
+        }
+      },
+      "description": "A CloudRepoSourceContext denotes a particular revision in a Google Cloud\nSource Repo."
+    },
+    "apiCommand": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the command, as presented on the command line, or if the command is\npackaged as a Docker container, as presented to `docker pull`."
+        },
+        "env": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Environment variables set before running this Command."
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Command-line arguments used when executing this Command."
+        },
+        "dir": {
+          "type": "string",
+          "description": "Working directory (relative to project source root) used when running\nthis Command."
+        },
+        "id": {
+          "type": "string",
+          "description": "Optional unique identifier for this Command, used in wait_for to reference\nthis Command as a dependency."
+        },
+        "wait_for": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The ID(s) of the Command(s) that this Command depends on."
+        }
+      },
+      "description": "Command describes a step performed as part of the build pipeline."
+    },
+    "apiCreateOperationRequest": {
+      "type": "object",
+      "properties": {
+        "parent": {
+          "type": "string",
+          "description": "The projectId that this operation should be created under."
+        },
+        "operation_id": {
+          "type": "string",
+          "description": "The ID to use for this operation."
+        },
+        "operation": {
+          "$ref": "#/definitions/longrunningOperation",
+          "description": "The operation to create."
+        }
+      },
+      "title": "Request for creating an operation"
+    },
+    "apiDeployable": {
+      "type": "object",
+      "properties": {
+        "resource_uri": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Resource URI for the artifact being deployed."
+        }
+      },
+      "description": "An artifact that can be deployed in some runtime."
+    },
+    "apiDiscovery": {
+      "type": "object",
+      "properties": {
+        "analysis_kind": {
+          "$ref": "#/definitions/apiNoteKind",
+          "description": "The kind of analysis that is handled by this discovery."
+        }
+      },
+      "description": "A note that indicates a type of analysis a provider would perform. This note\nexists in a provider's project. A `Discovery` occurrence is created in a\nconsumer's project at the start of analysis. The occurrence's operation will\nindicate the status of the analysis. Absence of an occurrence linked to this\nnote for a resource indicates that analysis hasn't started."
+    },
+    "apiFileHashes": {
+      "type": "object",
+      "properties": {
+        "file_hash": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiHash"
+          },
+          "description": "Collection of file hashes."
+        }
+      },
+      "description": "Container message for hashes of byte content of files, used in Source\nmessages to verify integrity of source input to the build."
+    },
+    "apiGerritSourceContext": {
+      "type": "object",
+      "properties": {
+        "host_uri": {
+          "type": "string",
+          "description": "The URI of a running Gerrit instance."
+        },
+        "gerrit_project": {
+          "type": "string",
+          "description": "The full project name within the host. Projects may be nested, so\n\"project/subproject\" is a valid project name. The \"repo name\" is\nthe hostURI/project."
+        },
+        "revision_id": {
+          "type": "string",
+          "description": "A revision (commit) ID."
+        },
+        "alias_context": {
+          "$ref": "#/definitions/apiAliasContext",
+          "description": "An alias, which may be a branch or tag."
+        }
+      },
+      "description": "A SourceContext referring to a Gerrit project."
+    },
+    "apiGitSourceContext": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "Git repository URL."
+        },
+        "revision_id": {
+          "type": "string",
+          "description": "Required.\nGit commit hash."
+        }
+      },
+      "description": "A GitSourceContext denotes a particular revision in a third party Git\nrepository (e.g., GitHub)."
+    },
+    "apiHash": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/HashHashType",
+          "description": "The type of hash that was performed."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "The hash value."
+        }
+      },
+      "description": "Container message for hash values."
+    },
+    "apiListNoteOccurrencesResponse": {
+      "type": "object",
+      "properties": {
+        "occurrences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiOccurrence"
+          },
+          "description": "The occurrences attached to the specified note."
+        },
+        "next_page_token": {
+          "type": "string",
+          "description": "Token to receive the next page of notes."
+        }
+      },
+      "description": "Response including listed occurrences for a note."
+    },
+    "apiListNotesResponse": {
+      "type": "object",
+      "properties": {
+        "notes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiNote"
+          },
+          "title": "The occurrences requested"
+        },
+        "next_page_token": {
+          "type": "string",
+          "description": "The next pagination token in the list response. It should be used as\npage_token for the following request. An empty value means no more result."
+        }
+      },
+      "description": "Response including listed notes."
+    },
+    "apiListOccurrencesResponse": {
+      "type": "object",
+      "properties": {
+        "occurrences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiOccurrence"
+          },
+          "description": "The occurrences requested."
+        },
+        "next_page_token": {
+          "type": "string",
+          "description": "The next pagination token in the list response. It should be used as\n`page_token` for the following request. An empty value means no more\nresults."
+        }
+      },
+      "description": "Response including listed active occurrences."
+    },
+    "apiListProjectsResponse": {
+      "type": "object",
+      "properties": {
+        "projects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiProject"
+          },
+          "description": "The projects requested."
+        },
+        "next_page_token": {
+          "type": "string",
+          "description": "The next pagination token in the list response. It should be used as\n`page_token` for the following request. An empty value means no more\nresults."
+        }
+      },
+      "title": "Response including listed projects"
+    },
+    "apiNote": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "The name of the note in the form\n\"providers/{provider_id}/notes/{NOTE_ID}\""
+        },
+        "short_description": {
+          "type": "string",
+          "description": "A one sentence description of this `Note`."
+        },
+        "long_description": {
+          "type": "string",
+          "description": "A detailed description of this `Note`."
+        },
+        "kind": {
+          "$ref": "#/definitions/apiNoteKind",
+          "description": "Output only. This explicitly denotes which kind of note is specified. This\nfield can be used as a filter in list requests."
+        },
+        "vulnerability_type": {
+          "$ref": "#/definitions/apiVulnerabilityType",
+          "description": "A package vulnerability type of note."
+        },
+        "build_type": {
+          "$ref": "#/definitions/apiBuildType",
+          "description": "Build provenance type for a verifiable build."
+        },
+        "base_image": {
+          "$ref": "#/definitions/DockerImageBasis",
+          "description": "A note describing a base image."
+        },
+        "package": {
+          "$ref": "#/definitions/PackageManagerPackage",
+          "description": "A note describing a package hosted by various package managers."
+        },
+        "deployable": {
+          "$ref": "#/definitions/apiDeployable",
+          "description": "A note describing something that can be deployed."
+        },
+        "discovery": {
+          "$ref": "#/definitions/apiDiscovery",
+          "description": "A note describing a provider/analysis type."
+        },
+        "related_url": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/NoteRelatedUrl"
+          },
+          "title": "URLs associated with this note"
+        },
+        "expiration_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Time of expiration for this note, null if note does not expire."
+        },
+        "create_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Output only. The time this note was created. This field can be used as a\nfilter in list requests."
+        },
+        "update_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Output only. The time this note was last updated. This field can be used as\na filter in list requests."
+        }
+      },
+      "description": "Provides a detailed description of a `Note`."
+    },
+    "apiNoteKind": {
+      "type": "string",
+      "enum": [
+        "KIND_UNSPECIFIED",
+        "PACKAGE_VULNERABILITY",
+        "BUILD_DETAILS",
+        "IMAGE_BASIS",
+        "PACKAGE_MANAGER",
+        "DEPLOYABLE",
+        "DISCOVERY"
+      ],
+      "default": "KIND_UNSPECIFIED",
+      "description": "This must be 1:1 with members of our oneofs, it can be used for filtering\nNote and Occurrence on their kind.\n\n - KIND_UNSPECIFIED: Unknown\n - PACKAGE_VULNERABILITY: The note and occurrence represent a package vulnerability.\n - BUILD_DETAILS: The note and occurrence assert build provenance.\n - IMAGE_BASIS: This represents an image basis relationship.\n - PACKAGE_MANAGER: This represents a package installed via a package manager.\n - DEPLOYABLE: The note and occurrence track deployment events.\n - DISCOVERY: The note and occurrence track the initial discovery status of a resource."
+    },
+    "apiOccurrence": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "Output only. The name of the `Occurrence` in the form\n\"projects/{project_id}/occurrences/{OCCURRENCE_ID}\""
+        },
+        "resource_url": {
+          "type": "string",
+          "description": "The unique URL of the image or the container for which the `Occurrence`\napplies. For example, https://gcr.io/project/image@sha256:foo This field\ncan be used as a filter in list requests."
+        },
+        "note_name": {
+          "type": "string",
+          "description": "An analysis note associated with this image, in the form\n\"providers/{provider_id}/notes/{NOTE_ID}\"\nThis field can be used as a filter in list requests."
+        },
+        "kind": {
+          "$ref": "#/definitions/apiNoteKind",
+          "description": "Output only. This explicitly denotes which of the `Occurrence` details are\nspecified. This field can be used as a filter in list requests."
+        },
+        "vulnerability_details": {
+          "$ref": "#/definitions/VulnerabilityTypeVulnerabilityDetails",
+          "description": "Details of a security vulnerability note."
+        },
+        "build_details": {
+          "$ref": "#/definitions/apiBuildDetails",
+          "description": "Build details for a verifiable build."
+        },
+        "derived_image": {
+          "$ref": "#/definitions/DockerImageDerived",
+          "description": "Describes how this resource derives from the basis\nin the associated note."
+        },
+        "installation": {
+          "$ref": "#/definitions/PackageManagerInstallation",
+          "description": "Describes the installation of a package on the linked resource."
+        },
+        "deployment": {
+          "$ref": "#/definitions/DeployableDeployment",
+          "description": "Describes the deployment of an artifact on a runtime."
+        },
+        "discovered": {
+          "$ref": "#/definitions/DiscoveryDiscovered",
+          "description": "Describes the initial scan status for this resource."
+        },
+        "remediation": {
+          "type": "string",
+          "title": "A description of actions that can be taken to remedy the `Note`"
+        },
+        "create_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Output only. The time this `Occurrence` was created."
+        },
+        "update_time": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Output only. The time this `Occurrence` was last updated."
+        }
+      },
+      "description": "`Occurrence` includes information about analysis occurrences for an image."
+    },
+    "apiPackageManagerLocation": {
+      "type": "object",
+      "properties": {
+        "cpe_uri": {
+          "type": "string",
+          "description": "The cpe_uri in [cpe format](https://cpe.mitre.org/specification/)\ndenoting the package manager version distributing a package."
+        },
+        "version": {
+          "$ref": "#/definitions/VulnerabilityTypeVersion",
+          "description": "The version installed at this location."
+        },
+        "path": {
+          "type": "string",
+          "description": "The path from which we gathered that this package/version is installed."
+        }
+      },
+      "title": "An occurrence of a particular package installation found within a\nsystem's filesystem.\ne.g. glibc was found in /var/lib/dpkg/status"
+    },
+    "apiProject": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "The name of the project of the form\n\"projects/{project_id}\""
+        }
+      },
+      "description": "Provides detailed description of a `Project`."
+    },
+    "apiProjectRepoId": {
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "type": "string",
+          "description": "The ID of the project."
+        },
+        "repo_name": {
+          "type": "string",
+          "description": "The name of the repo. Leave empty for the default repo."
+        }
+      },
+      "description": "Selects a repo using a Google Cloud Platform project ID (e.g.,\nwinged-cargo-31) and a repo name within that project."
+    },
+    "apiRepoId": {
+      "type": "object",
+      "properties": {
+        "project_repo_id": {
+          "$ref": "#/definitions/apiProjectRepoId",
+          "description": "A combination of a project ID and a repo name."
+        },
+        "uid": {
+          "type": "string",
+          "description": "A server-assigned, globally unique identifier."
+        }
+      },
+      "description": "A unique identifier for a Cloud Repo."
+    },
+    "apiRepoSource": {
+      "type": "object",
+      "properties": {
+        "project_id": {
+          "type": "string",
+          "description": "ID of the project that owns the repo."
+        },
+        "repo_name": {
+          "type": "string",
+          "description": "Name of the repo."
+        },
+        "branch_name": {
+          "type": "string",
+          "description": "Name of the branch to build."
+        },
+        "tag_name": {
+          "type": "string",
+          "description": "Name of the tag to build."
+        },
+        "commit_sha": {
+          "type": "string",
+          "description": "Explicit commit SHA to build."
+        }
+      },
+      "description": "RepoSource describes the location of the source in a Google Cloud Source\nRepository."
+    },
+    "apiSource": {
+      "type": "object",
+      "properties": {
+        "storage_source": {
+          "$ref": "#/definitions/apiStorageSource",
+          "description": "If provided, get the source from this location in in Google Cloud\nStorage."
+        },
+        "repo_source": {
+          "$ref": "#/definitions/apiRepoSource",
+          "description": "If provided, get source from this location in a Cloud Repo."
+        },
+        "artifact_storage_source": {
+          "$ref": "#/definitions/apiStorageSource",
+          "description": "If provided, the input binary artifacts for the build came from this\nlocation."
+        },
+        "file_hashes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/apiFileHashes"
+          },
+          "description": "Hash(es) of the build source, which can be used to verify that the original\nsource integrity was maintained in the build.\n\nThe keys to this map are file paths used as build source and the values\ncontain the hash values for those files.\n\nIf the build source came in a single package such as a gzipped tarfile\n(.tar.gz), the FileHash will be for the single path to that file."
+        },
+        "context": {
+          "$ref": "#/definitions/apiSourceContext",
+          "description": "If provided, the source code used for the build came from this location."
+        },
+        "additional_contexts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiSourceContext"
+          },
+          "description": "If provided, some of the source code used for the build may be found in\nthese locations, in the case where the source repository had multiple\nremotes or submodules. This list will not include the context specified in\nthe context field."
+        }
+      },
+      "description": "Source describes the location of the source used for the build."
+    },
+    "apiSourceContext": {
+      "type": "object",
+      "properties": {
+        "cloud_repo": {
+          "$ref": "#/definitions/apiCloudRepoSourceContext",
+          "description": "A SourceContext referring to a revision in a Google Cloud Source Repo."
+        },
+        "gerrit": {
+          "$ref": "#/definitions/apiGerritSourceContext",
+          "description": "A SourceContext referring to a Gerrit project."
+        },
+        "git": {
+          "$ref": "#/definitions/apiGitSourceContext",
+          "description": "A SourceContext referring to any third party Git repo (e.g., GitHub)."
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Labels with user defined metadata."
+        }
+      },
+      "description": "A SourceContext is a reference to a tree of files. A SourceContext together\nwith a path point to a unique revision of a single file or directory."
+    },
+    "apiStorageSource": {
+      "type": "object",
+      "properties": {
+        "bucket": {
+          "type": "string",
+          "description": "Google Cloud Storage bucket containing source (see [Bucket Name\nRequirements]\n(https://cloud.google.com/storage/docs/bucket-naming#requirements))."
+        },
+        "object": {
+          "type": "string",
+          "description": "Google Cloud Storage object containing source."
+        },
+        "generation": {
+          "type": "string",
+          "format": "int64",
+          "description": "Google Cloud Storage generation for the object."
+        }
+      },
+      "description": "StorageSource describes the location of the source in an archive file in\nGoogle Cloud Storage."
+    },
+    "apiUpdateOperationRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the Operation.\nShould be of the form \"projects/{provider_id}/operations/{operation_id}\"."
+        },
+        "operation": {
+          "$ref": "#/definitions/longrunningOperation",
+          "description": "The operation to create."
+        }
+      },
+      "title": "Request for updating an existing operation"
+    },
+    "apiVulnerabilityType": {
+      "type": "object",
+      "properties": {
+        "cvss_score": {
+          "type": "number",
+          "format": "float",
+          "description": "The CVSS score for this Vulnerability."
+        },
+        "severity": {
+          "$ref": "#/definitions/VulnerabilityTypeSeverity",
+          "title": "Note provider assigned impact of the vulnerability"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VulnerabilityTypeDetail"
+          },
+          "description": "All information about the package to specifically identify this\nvulnerability. One entry per (version range and cpe_uri) the\npackage vulnerability has manifested in."
+        }
+      },
+      "description": "VulnerabilityType provides metadata about a security vulnerability."
+    },
+    "longrunningOperation": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The server-assigned name, which is only unique within the same service that\noriginally returns it. If you use the default HTTP mapping, the\n`name` should have the format of `operations/some/unique/name`."
+        },
+        "metadata": {
+          "$ref": "#/definitions/protobufAny",
+          "description": "Service-specific metadata associated with the operation.  It typically\ncontains progress information and common metadata such as create time.\nSome services might not provide such metadata.  Any method that returns a\nlong-running operation should document the metadata type, if any."
+        },
+        "done": {
+          "type": "boolean",
+          "format": "boolean",
+          "description": "If the value is `false`, it means the operation is still in progress.\nIf true, the operation is completed, and either `error` or `response` is\navailable."
+        },
+        "error": {
+          "$ref": "#/definitions/rpcStatus",
+          "description": "The error result of the operation in case of failure or cancellation."
+        },
+        "response": {
+          "$ref": "#/definitions/protobufAny",
+          "description": "The normal response of the operation in case of success.  If the original\nmethod returns no data on success, such as `Delete`, the response is\n`google.protobuf.Empty`.  If the original method is standard\n`Get`/`Create`/`Update`, the response should be the resource.  For other\nmethods, the response should have the type `XxxResponse`, where `Xxx`\nis the original method name.  For example, if the original method name\nis `TakeSnapshot()`, the inferred response type is\n`TakeSnapshotResponse`."
+        }
+      },
+      "description": "This resource represents a long-running operation that is the result of a\nnetwork API call."
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string",
+          "description": "A URL/resource name whose content describes the type of the\nserialized protocol buffer message.\n\nFor URLs which use the scheme `http`, `https`, or no scheme, the\nfollowing restrictions and interpretations apply:\n\n* If no scheme is provided, `https` is assumed.\n* The last segment of the URL's path must represent the fully\n  qualified name of the type (as in `path/google.protobuf.Duration`).\n  The name should be in a canonical form (e.g., leading \".\" is\n  not accepted).\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+        },
+        "value": {
+          "type": "string",
+          "format": "byte",
+          "description": "Must be a valid serialized protocol buffer of the above specified type."
+        }
+      },
+      "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(\u0026foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := \u0026pb.Foo{...}\n     any, err := ptypes.MarshalAny(foo)\n     ...\n     foo := \u0026pb.Foo{}\n     if err := ptypes.UnmarshalAny(any, foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": \u003cstring\u003e,\n      \"lastName\": \u003cstring\u003e\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+    },
+    "protobufEmpty": {
+      "type": "object",
+      "description": "service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe JSON representation for `Empty` is empty JSON object `{}`.",
+      "title": "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:"
+    },
+    "protobufFieldMask": {
+      "type": "object",
+      "properties": {
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The set of field mask paths."
+        }
+      },
+      "description": "paths: \"f.a\"\n    paths: \"f.b.d\"\n\nHere `f` represents a field in some root message, `a` and `b`\nfields in the message found in `f`, and `d` a field found in the\nmessage in `f.b`.\n\nField masks are used to specify a subset of fields that should be\nreturned by a get operation or modified by an update operation.\nField masks also have a custom JSON encoding (see below).\n\n# Field Masks in Projections\n\nWhen used in the context of a projection, a response message or\nsub-message is filtered by the API to only contain those fields as\nspecified in the mask. For example, if the mask in the previous\nexample is applied to a response message as follows:\n\n    f {\n      a : 22\n      b {\n        d : 1\n        x : 2\n      }\n      y : 13\n    }\n    z: 8\n\nThe result will not contain specific values for fields x,y and z\n(their value will be set to the default, and omitted in proto text\noutput):\n\n\n    f {\n      a : 22\n      b {\n        d : 1\n      }\n    }\n\nA repeated field is not allowed except at the last position of a\npaths string.\n\nIf a FieldMask object is not present in a get operation, the\noperation applies to all fields (as if a FieldMask of all fields\nhad been specified).\n\nNote that a field mask does not necessarily apply to the\ntop-level response message. In case of a REST get operation, the\nfield mask applies directly to the response, but in case of a REST\nlist operation, the mask instead applies to each individual message\nin the returned resource list. In case of a REST custom method,\nother definitions may be used. Where the mask applies will be\nclearly documented together with its declaration in the API.  In\nany case, the effect on the returned resource/resources is required\nbehavior for APIs.\n\n# Field Masks in Update Operations\n\nA field mask in update operations specifies which fields of the\ntargeted resource are going to be updated. The API is required\nto only change the values of the fields as specified in the mask\nand leave the others untouched. If a resource is passed in to\ndescribe the updated values, the API ignores the values of all\nfields not covered by the mask.\n\nIf a repeated field is specified for an update operation, the existing\nrepeated values in the target resource will be overwritten by the new values.\nNote that a repeated field is only allowed in the last position of a `paths`\nstring.\n\nIf a sub-message is specified in the last position of the field mask for an\nupdate operation, then the existing sub-message in the target resource is\noverwritten. Given the target message:\n\n    f {\n      b {\n        d : 1\n        x : 2\n      }\n      c : 1\n    }\n\nAnd an update message:\n\n    f {\n      b {\n        d : 10\n      }\n    }\n\nthen if the field mask is:\n\n paths: \"f.b\"\n\nthen the result will be:\n\n    f {\n      b {\n        d : 10\n      }\n      c : 1\n    }\n\nHowever, if the update mask was:\n\n paths: \"f.b.d\"\n\nthen the result would be:\n\n    f {\n      b {\n        d : 10\n        x : 2\n      }\n      c : 1\n    }\n\nIn order to reset a field's value to the default, the field must\nbe in the mask and set to the default value in the provided resource.\nHence, in order to reset all fields of a resource, provide a default\ninstance of the resource and set all fields in the mask, or do\nnot provide a mask as described below.\n\nIf a field mask is not present on update, the operation applies to\nall fields (as if a field mask of all fields has been specified).\nNote that in the presence of schema evolution, this may mean that\nfields the client does not know and has therefore not filled into\nthe request will be reset to their default. If this is unwanted\nbehavior, a specific service may require a client to always specify\na field mask, producing an error if not.\n\nAs with get operations, the location of the resource which\ndescribes the updated values in the request message depends on the\noperation kind. In any case, the effect of the field mask is\nrequired to be honored by the API.\n\n## Considerations for HTTP REST\n\nThe HTTP kind of an update operation which uses a field mask must\nbe set to PATCH instead of PUT in order to satisfy HTTP semantics\n(PUT must only be used for full updates).\n\n# JSON Encoding of Field Masks\n\nIn JSON, a field mask is encoded as a single string where paths are\nseparated by a comma. Fields name in each path are converted\nto/from lower-camel naming conventions.\n\nAs an example, consider the following message declarations:\n\n    message Profile {\n      User user = 1;\n      Photo photo = 2;\n    }\n    message User {\n      string display_name = 1;\n      string address = 2;\n    }\n\nIn proto a field mask for `Profile` may look as such:\n\n    mask {\n      paths: \"user.display_name\"\n      paths: \"photo\"\n    }\n\nIn JSON, the same mask is represented as below:\n\n    {\n      mask: \"user.displayName,photo\"\n    }\n\n# Field Masks and Oneof Fields\n\nField masks treat fields in oneofs just as regular fields. Consider the\nfollowing message:\n\n    message SampleMessage {\n      oneof test_oneof {\n        string name = 4;\n        SubMessage sub_message = 9;\n      }\n    }\n\nThe field mask can be:\n\n    mask {\n      paths: \"name\"\n    }\n\nOr:\n\n    mask {\n      paths: \"sub_message\"\n    }\n\nNote that oneof type names (\"test_oneof\" in this case) cannot be used in\npaths.\n\n## Field Mask Verification\n\nThe implementation of the all the API methods, which have any FieldMask type\nfield in the request, should verify the included field paths, and return\n`INVALID_ARGUMENT` error if any path is duplicated or unmappable.",
+      "title": "`FieldMask` represents a set of symbolic field paths, for example:"
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32",
+          "description": "The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code]."
+        },
+        "message": {
+          "type": "string",
+          "description": "A developer-facing error message, which should be in English. Any\nuser-facing error message should be localized and sent in the\n[google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client."
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          },
+          "description": "A list of messages that carry the error details.  There is a common set of\nmessage types for APIs to use."
+        }
+      },
+      "description": "- Simple to use and understand for most users\n- Flexible enough to meet unexpected needs\n\n# Overview\n\nThe `Status` message contains three pieces of data: error code, error message,\nand error details. The error code should be an enum value of\n[google.rpc.Code][google.rpc.Code], but it may accept additional error codes if needed.  The\nerror message should be a developer-facing English message that helps\ndevelopers *understand* and *resolve* the error. If a localized user-facing\nerror message is needed, put the localized message in the error details or\nlocalize it in the client. The optional error details may contain arbitrary\ninformation about the error. There is a predefined set of error detail types\nin the package `google.rpc` that can be used for common error conditions.\n\n# Language mapping\n\nThe `Status` message is the logical representation of the error model, but it\nis not necessarily the actual wire format. When the `Status` message is\nexposed in different client libraries and different wire protocols, it can be\nmapped differently. For example, it will likely be mapped to some exceptions\nin Java, but more likely mapped to some error codes in C.\n\n# Other uses\n\nThe error model and the `Status` message can be used in a variety of\nenvironments, either with or without APIs, to provide a\nconsistent developer experience across different environments.\n\nExample uses of this error model include:\n\n- Partial errors. If a service needs to return partial errors to the client,\n    it may embed the `Status` in the normal response to indicate the partial\n    errors.\n\n- Workflow errors. A typical workflow has multiple steps. Each step may\n    have a `Status` message for error reporting.\n\n- Batch operations. If a client uses batch request and batch response, the\n    `Status` message should be used directly inside batch response, one for\n    each error sub-response.\n\n- Asynchronous operations. If an API call embeds asynchronous operation\n    results in its response, the status of those operations should be\n    represented directly using the `Status` message.\n\n- Logging. If some API errors are stored in logs, the message `Status` could\n    be used directly after any stripping needed for security/privacy reasons.",
+      "title": "The `Status` type defines a logical error model that is suitable for different\nprogramming environments, including REST APIs and RPC APIs. It is used by\n[gRPC](https://github.com/grpc). The error model is designed to be:"
+    }
+  }
+}

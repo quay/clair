@@ -1,5 +1,5 @@
-hash: b5b9ebebad30becd361736196a015af23b1d9a616a375c7fc13823121fd17226
-updated: 2017-06-05T16:11:29.019891941-04:00
+hash: d9cd9bf3ab1048a80f5ad90e05a7ea4c7614c30c561199b71147609de600a524
+updated: 2018-01-17T13:29:36.176987+01:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -23,9 +23,19 @@ imports:
   - jsonpb
   - proto
   - protoc-gen-go/descriptor
+  - ptypes
   - ptypes/any
+  - ptypes/duration
   - ptypes/empty
   - ptypes/struct
+  - ptypes/timestamp
+- name: github.com/grafeas/grafeas
+  version: 73210e9cadcba64b5b211a0ec64a9f4c2d4841b5
+  repo: https://github.com/Grafeas/Grafeas.git
+  vcs: git
+  subpackages:
+  - samples/server/go-server/api/server/name
+  - v1alpha1/proto
 - name: github.com/grpc-ecosystem/go-grpc-prometheus
   version: 2500245aa6110c562d17020fb31a2c133d737799
 - name: github.com/grpc-ecosystem/grpc-gateway

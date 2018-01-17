@@ -1,0 +1,1454 @@
+// Copyright 2017 The Grafeas Authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+import "google/longrunning/operations.proto";
+
+package grafeas.v1alpha1.api;
+option go_package = "grafeas";
+
+// Request to insert a new Project.
+message CreateProjectRequest {
+  // The name of the project of the form
+  // "projects/{project_id}"
+  string name = 1;
+}
+
+// Request to get a Project.
+message GetProjectRequest {
+  // The name of the project of the form
+  // "projects/{project_id}"
+  string name = 1;
+}
+
+// Request to list projects.
+message ListProjectsRequest {
+  // The filter expression.
+  string filter = 1;
+
+  // Number of projects to return in the list.
+  int32 page_size = 2;
+
+  // Token to provide to skip to a particular spot in the list.
+  string page_token = 3;
+}
+
+// Request to delete a project
+message DeleteProjectRequest {
+  // The name of the project of the form
+  // "projects/{project_id}"
+  string name = 1;
+}
+
+// Request to get a Occurrenceg.
+message GetOccurrenceRequest {
+  // The name of the occurrence of the form
+  // "projects/{project_id}/occurrences/{OCCURRENCE_ID}"
+  string name = 1;
+}
+
+// Request to list occurrences.
+message ListOccurrencesRequest {
+  // This contains the project Id for example: projects/{project_id}.
+  string parent = 5;
+
+  // The filter expression.
+  string filter = 2;
+
+  // Number of occurrences to return in the list.
+  int32 page_size = 3;
+
+  // Token to provide to skip to a particular spot in the list.
+  string page_token = 4;
+}
+
+// Request to delete a occurrence
+message DeleteOccurrenceRequest {
+  // The name of the occurrence in the form of
+  // "projects/{project_id}/occurrences/{OCCURRENCE_ID}"
+  string name = 1;
+}
+
+// Request to insert a new occurrence.
+message CreateOccurrenceRequest {
+  // This field contains the project Id for example: "projects/{project_id}"
+  string parent = 3;
+
+  // The occurrence to be inserted
+  Occurrence occurrence = 2;
+}
+
+// Request to update an existing occurrence
+message UpdateOccurrenceRequest {
+  // The name of the occurrence.
+  // Should be of the form "projects/{project_id}/occurrences/{OCCURRENCE_ID}".
+  string name = 1;
+
+  // The updated occurrence.
+  Occurrence occurrence = 2;
+
+  // The fields to update.
+  google.protobuf.FieldMask update_mask = 3;
+}
+
+// Request to get a Note.
+message GetNoteRequest {
+  // The name of the note in the form of
+  // "providers/{provider_id}/notes/{NOTE_ID}"
+  string name = 1;
+}
+
+// Request to get the note to which this occurrence is attached.
+message GetOccurrenceNoteRequest {
+  // The name of the occurrence in the form
+  // "projects/{project_id}/occurrences/{OCCURRENCE_ID}"
+  string name = 1;
+}
+
+// Request to list notes.
+message ListNotesRequest {
+  // This field contains the project ID for example: "projects/{project_id}".
+  string parent = 5;
+
+  // The filter expression.
+  string filter = 2;
+
+  // Number of notes to return in the list.
+  int32 page_size = 3;
+
+  // Token to provide to skip to a particular spot in the list.
+  string page_token = 4;
+}
+
+// Request to delete a note
+message DeleteNoteRequest {
+  // The name of the note in the form of
+  // "providers/{provider_id}/notes/{NOTE_ID}"
+  string name = 1;
+}
+
+// Request to insert a new note
+message CreateNoteRequest {
+  // This field contains the project Id for example:
+  // "project/{project_id}
+  string parent = 4;
+
+  // The ID to use for this note.
+  string note_id = 2;
+
+  // The Note to be inserted
+  Note note = 3;
+}
+
+// Request to update an existing note
+message UpdateNoteRequest {
+  // The name of the note.
+  // Should be of the form "projects/{provider_id}/notes/{note_id}".
+  string name = 1;
+
+  // The updated note.
+  Note note = 2;
+
+  // The fields to update.
+  google.protobuf.FieldMask update_mask = 3;
+}
+
+// Request to list occurrences.
+message ListNoteOccurrencesRequest {
+  // The name field will contain the note name for example:
+  //   "provider/{provider_id}/notes/{note_id}"
+  string name = 1;
+
+  // The filter expression.
+  string filter = 2;
+
+  // Number of notes to return in the list.
+  int32 page_size = 3;
+
+  // Token to provide to skip to a particular spot in the list.
+  string page_token = 4;
+}
+
+// Response including listed projects
+message ListProjectsResponse {
+  // The projects requested.
+  repeated Project projects = 1;
+
+  // The next pagination token in the list response. It should be used as
+  // `page_token` for the following request. An empty value means no more
+  // results.
+  string next_page_token = 2;
+}
+
+// Response including listed occurrences for a note.
+message ListNoteOccurrencesResponse {
+  // The occurrences attached to the specified note.
+  repeated Occurrence occurrences = 1;
+
+  // Token to receive the next page of notes.
+  string next_page_token = 2;
+}
+
+// Response including listed notes.
+message ListNotesResponse {
+  // The occurrences requested
+  repeated Note notes = 1;
+
+  // The next pagination token in the list response. It should be used as
+  // page_token for the following request. An empty value means no more result.
+  string next_page_token = 2;
+}
+
+// Response including listed active occurrences.
+message ListOccurrencesResponse {
+  // The occurrences requested.
+  repeated Occurrence occurrences = 1;
+
+  // The next pagination token in the list response. It should be used as
+  // `page_token` for the following request. An empty value means no more
+  // results.
+  string next_page_token = 2;
+}
+
+// Response including listed operations.
+message ListOperationsResponse {
+  // The next pagination token in the List response. It should be used as
+  // page_token for the following request. An empty value means no more results.
+  string nextPageToken = 1;
+  // The operations requested.
+  repeated google.longrunning.Operation operations = 2;
+}
+
+// Request for updating an existing operation
+message UpdateOperationRequest {
+  // The name of the Operation.
+  // Should be of the form "projects/{provider_id}/operations/{operation_id}".
+  string name = 1;
+  // The operation to create.
+  google.longrunning.Operation operation = 3;
+}
+
+// Request for creating an operation
+message CreateOperationRequest {
+  // The projectId that this operation should be created under.
+  string parent = 1;
+  // The ID to use for this operation.
+  string operation_id = 2;
+  // The operation to create.
+  google.longrunning.Operation operation = 3;
+}
+
+// Provides detailed description of a `Project`.
+message Project {
+  // The name of the project of the form
+  // "projects/{project_id}"
+  string name = 1;
+}
+
+// Metadata for all operations used and required for all operations
+// that created by Container Analysis Providers
+message OperationMetadata {
+  // Output only. The time this operation was created.
+  google.protobuf.Timestamp create_time = 1;
+
+  // Output only. The time that this operation was marked completed or failed.
+  google.protobuf.Timestamp end_time = 2;
+}
+
+// Artifact describes a build product.
+message Artifact {
+  // Name of the artifact. This may be the path to a binary or jar file, or in
+  // the case of a container build, the name used to push the container image to
+  // Google Container Registry, as presented to `docker push`.
+  //
+  // This field is deprecated in favor of the plural `names` field; it continues
+  // to exist here to allow existing BuildProvenance serialized to json in
+  // google.devtools.containeranalysis.v1alpha1.BuildDetails.provenance_bytes to
+  // deserialize back into proto.
+  string name = 1;
+
+  // Hash or checksum value of a binary, or Docker Registry 2.0 digest of a
+  // container.
+  string checksum = 2;
+
+  // Artifact ID, if any; for container images, this will be a URL by digest
+  // like gcr.io/projectID/imagename@sha256:123456
+  string id = 3;
+
+  // Related artifact names. This may be the path to a binary or jar file, or in
+  // the case of a container build, the name used to push the container image to
+  // Google Container Registry, as presented to `docker push`. Note that a
+  // single Artifact ID can have multiple names, for example if two tags are
+  // applied to one image.
+  repeated string names = 4;
+}
+
+// Note kind that represents a logical attestation "role" or "authority".  For
+// example, an organization might have one AttestationAuthority for "QA" and one
+// for "build".  This Note is intended to act strictly as a grouping mechanism
+// for the attached Occurrences (Attestations).  This grouping mechanism also
+// provides a security boundary and provides a single point of lookup to find
+// all attached Attestation Occurrences, even if they don't all live in the same
+// project.
+message AttestationAuthority {
+  AttestationAuthorityHint hint = 1;
+
+  message AttestationAuthorityHint {
+    // The human readable name of this Attestation Authority, e.g. "qa".
+    string human_readable_name = 1;
+  }
+  message Attestation {
+    // The signature, generally over the `resource_url`, that verifies this
+    // attestation.  The semantics of the signature veracity are ultimately
+    // determined by the verification engine.
+    oneof signature {
+      PgpSignedAttestation pgp_signed_attestation = 1;
+    }
+  }
+}
+
+// Message encapsulating build provenance details.
+message BuildDetails {
+  // The actual provenance
+  BuildProvenance provenance = 1;
+
+  // Serialized JSON representation of the provenance, used in generating the
+  // `BuildSignature` in the corresponding Result. After verifying the
+  // signature, `provenance_bytes` can be unmarshalled and compared to the
+  // provenance to confirm that it is unchanged. A base64-encoded string
+  // representation of the provenance bytes is used for the signature in order
+  // to interoperate with openssl which expects this format for signature
+  // verification.
+  //
+  // The serialized form is captured both to avoid ambiguity in how the
+  // provenance is marshalled to json as well to prevent incompatibilities with
+  // future changes.
+  string provenance_bytes = 2;
+}
+
+// Provenance of a build. Contains all information needed to verify the full
+// details about the build from source to completion.
+message BuildProvenance {
+  // Unique identifier of the build.
+  string id = 1;
+
+  // ID of the project.
+  string project_id = 2;
+
+  // Commands requested by the build.
+  repeated Command commands = 5;
+
+  // Output of the build.
+  repeated Artifact built_artifacts = 6;
+
+  // Time at which the build was created.
+  google.protobuf.Timestamp create_time = 7;
+
+  // Time at which execution of the build was started.
+  google.protobuf.Timestamp start_time = 8;
+
+  // Time at which execution of the build was finished.
+  google.protobuf.Timestamp finish_time = 9;
+
+  // E-mail address of the user who initiated this build. Note that this was the
+  // user's e-mail address at the time the build was initiated; this address may
+  // not represent the same end-user for all time.
+  string creator = 11;
+
+  // Google Cloud Storage bucket where logs were written.
+  string logs_bucket = 13;
+
+  // Details of the Source input to the build.
+  Source source_provenance = 14;
+
+  // Trigger identifier if the build was triggered automatically; empty if not.
+  string trigger_id = 15;
+
+  // Special options applied to this build. This is a catch-all field where
+  // build providers can enter any desired additional details.
+  map<string, string> build_options = 16;
+
+  // Version string of the builder at the time this build was executed.
+  string builder_version = 17;
+}
+
+// Message encapsulating the signature of the verified build.
+message BuildSignature {
+  // Public key formats
+  enum KeyType {
+    // `KeyType` is not set.
+    KEY_TYPE_UNSPECIFIED = 0;
+
+    // `PGP ASCII Armored` public key.
+    PGP_ASCII_ARMORED = 1;
+
+    // `PKIX PEM` public key.
+    PKIX_PEM = 2;
+  }
+
+  // Public key of the builder which can be used to verify that the related
+  // findings are valid and unchanged. If `key_type` is empty, this defaults
+  // to PEM encoded public keys.
+  //
+  // This field may be empty if `key_id` references an external key.
+  //
+  // For Cloud Container Builder based signatures, this is a PEM encoded public
+  // key. To verify the Cloud Container Builder signature, place the contents of
+  // this field into a file (public.pem). The signature field is base64-decoded
+  // into its binary representation in signature.bin, and the provenance bytes
+  // from `BuildDetails` are base64-decoded into a binary representation in
+  // signed.bin. OpenSSL can then verify the signature:
+  // `openssl sha256 -verify public.pem -signature signature.bin signed.bin`
+  string public_key = 1;
+
+  // Signature of the related `BuildProvenance`, encoded in a base64 string.
+  string signature = 2;
+
+  // An Id for the key used to sign. This could be either an Id for the key
+  // stored in `public_key` (such as the Id or fingerprint for a PGP key, or the
+  // CN for a cert), or a reference to an external key (such as a reference to a
+  // key in Cloud Key Management Service).
+  string key_id = 3;
+
+  // The type of the key, either stored in `public_key` or referenced in
+  // `key_id`
+  KeyType key_type = 4;
+}
+
+// Note holding the version of the provider's builder and the signature of
+// the provenance message in linked BuildDetails.
+message BuildType {
+  // Version of the builder which produced this Note.
+  string builder_version = 1;
+
+  // Signature of the build in Occurrences pointing to the Note containing this
+  // `BuilderDetails`.
+  BuildSignature signature = 2;
+}
+
+// Command describes a step performed as part of the build pipeline.
+message Command {
+  // Name of the command, as presented on the command line, or if the command is
+  // packaged as a Docker container, as presented to `docker pull`.
+  string name = 1;
+
+  // Environment variables set before running this Command.
+  repeated string env = 2;
+
+  // Command-line arguments used when executing this Command.
+  repeated string args = 3;
+
+  // Working directory (relative to project source root) used when running
+  // this Command.
+  string dir = 4;
+
+  // Optional unique identifier for this Command, used in wait_for to reference
+  // this Command as a dependency.
+  string id = 5;
+
+  // The ID(s) of the Command(s) that this Command depends on.
+  repeated string wait_for = 6;
+}
+
+// An artifact that can be deployed in some runtime.
+message Deployable {
+  // The period during which some deployable was active in a runtime.
+  message Deployment {
+    // Types of platforms.
+    enum Platform {
+      // Unknown
+      PLATFORM_UNSPECIFIED = 0;
+
+      // Google Container Engine
+      GKE = 1;
+
+      // Google App Engine: Flexible Environment
+      FLEX = 2;
+
+      // Custom user-defined platform
+      CUSTOM = 3;
+    }
+
+    // Identity of the user that triggered this deployment.
+    string user_email = 1;
+
+    // Beginning of the lifetime of this deployment.
+    google.protobuf.Timestamp deploy_time = 2;
+
+    // End of the lifetime of this deployment.
+    google.protobuf.Timestamp undeploy_time = 3;
+
+    // Configuration used to create this deployment.
+    string config = 8;
+
+    // Address of the runtime element hosting this deployment.
+    string address = 5;
+
+    // Output only. Resource URI for the artifact being deployed taken from the
+    // deployable field with the same name.
+    repeated string resource_uri = 6;
+
+    // Platform hosting this deployment.
+    Platform platform = 7;
+  }
+
+  // Resource URI for the artifact being deployed.
+  repeated string resource_uri = 1;
+}
+
+// DockerImage holds types defining base image notes
+// and derived image occurrences.
+message DockerImage {
+  // Layer holds metadata specific to a layer of a Docker image.
+  message Layer {
+    // Instructions from dockerfile
+    enum Directive {
+      // Default value for unsupported/missing directive
+      DIRECTIVE_UNSPECIFIED = 0;
+
+      // https://docs.docker.com/reference/builder/#maintainer
+      MAINTAINER = 1;
+
+      // https://docs.docker.com/reference/builder/#run
+      RUN = 2;
+
+      // https://docs.docker.com/reference/builder/#cmd
+      CMD = 3;
+
+      // https://docs.docker.com/reference/builder/#label
+      LABEL = 4;
+
+      // https://docs.docker.com/reference/builder/#expose
+      EXPOSE = 5;
+
+      // https://docs.docker.com/reference/builder/#env
+      ENV = 6;
+
+      // https://docs.docker.com/reference/builder/#add
+      ADD = 7;
+
+      // https://docs.docker.com/reference/builder/#copy
+      COPY = 8;
+
+      // https://docs.docker.com/reference/builder/#entrypoint
+      ENTRYPOINT = 9;
+
+      // https://docs.docker.com/reference/builder/#volume
+      VOLUME = 10;
+
+      // https://docs.docker.com/reference/builder/#user
+      USER = 11;
+
+      // https://docs.docker.com/reference/builder/#workdir
+      WORKDIR = 12;
+
+      // https://docs.docker.com/reference/builder/#arg
+      ARG = 13;
+
+      // https://docs.docker.com/reference/builder/#onbuild
+      ONBUILD = 14;
+
+      // https://docs.docker.com/reference/builder/#stopsignal
+      STOPSIGNAL = 15;
+
+      // https://docs.docker.com/reference/builder/#healthcheck
+      HEALTHCHECK = 16;
+
+      // https://docs.docker.com/reference/builder/#shell
+      SHELL = 17;
+    }
+
+    // The recovered Dockerfile directive used to construct this layer.
+    Directive directive = 1;
+
+    // The recovered arguments to the Dockerfile directive.
+    string arguments = 2;
+  }
+
+  // A set of properties that uniquely identify a given Docker image.
+  message Fingerprint {
+    // The layer-id of the final layer in the Docker image's v1
+    // representation.
+    // This field can be used as a filter in list requests.
+    string v1_name = 1;
+
+    // The ordered list of v2 blobs that represent a given image.
+    repeated string v2_blob = 2;
+
+    // Output only. The name of the image's v2 blobs computed via:
+    //   [bottom] := v2_blob[bottom]
+    //   [N] := sha256(v2_blob[N] + " " + v2_name[N+1])
+    // Only the name of the final blob is kept.
+    // This field can be used as a filter in list requests.
+    string v2_name = 3;
+  }
+
+  // Basis describes the base image portion (Note) of the DockerImage
+  // relationship.  Linked occurrences are derived from this or an
+  // equivalent image via:
+  //   FROM <Basis.resource_url>
+  // Or an equivalent reference, e.g. a tag of the resource_url.
+  message Basis {
+    // The resource_url for the resource representing the basis of
+    // associated occurrence images.
+    string resource_url = 1;
+
+    // The fingerprint of the base image
+    Fingerprint fingerprint = 2;
+  }
+
+  // Derived describes the derived image portion (Occurrence) of the
+  // DockerImage relationship.  This image would be produced from a Dockerfile
+  // with FROM <DockerImage.Basis in attached Note>.
+  message Derived {
+    // The fingerprint of the derived image
+    Fingerprint fingerprint = 1;
+
+    // Output only. The number of layers by which this image differs from
+    // the associated image basis.
+    uint32 distance = 2;
+
+    // This contains layer-specific metadata, if populated it
+    // has length "distance" and is ordered with [distance] being the
+    // layer immediately following the base image and [1]
+    // being the final layer.
+    repeated Layer layer_info = 3;
+
+    // Output only.This contains the base image url for the derived image
+    // Occurrence
+    string base_resource_url = 4;
+  }
+}
+
+// A note that indicates a type of analysis a provider would perform. This note
+// exists in a provider's project. A `Discovery` occurrence is created in a
+// consumer's project at the start of analysis. The occurrence's operation will
+// indicate the status of the analysis. Absence of an occurrence linked to this
+// note for a resource indicates that analysis hasn't started.
+message Discovery {
+  // Provides information about the scan status of a discovered resource.
+  message Discovered {
+    // Output only. An operation that indicates the status of the current scan.
+    google.longrunning.Operation operation = 1;
+  }
+
+  // The kind of analysis that is handled by this discovery.
+  Note.Kind analysis_kind = 1;
+}
+
+// Container message for hashes of byte content of files, used in Source
+// messages to verify integrity of source input to the build.
+message FileHashes {
+  // Collection of file hashes.
+  repeated Hash file_hash = 1;
+}
+
+// Container message for hash values.
+message Hash {
+  // Specifies the hash algorithm, if any.
+  enum HashType {
+    // No hash requested.
+    NONE = 0;
+
+    // A sha256 hash.
+    SHA256 = 1;
+  }
+
+  // The type of hash that was performed.
+  HashType type = 1;
+
+  // The hash value.
+  bytes value = 2;
+}
+
+// Provides a detailed description of a `Note`.
+message Note {
+  // Metadata for any related URL information
+  message RelatedUrl {
+    // Specific URL to associate with the note
+    string url = 1;
+
+    // Label to describe usage of the URL
+    string label = 2;
+  }
+
+  // This must be 1:1 with members of our oneofs, it can be used for filtering
+  // Note and Occurrence on their kind.
+  enum Kind {
+    // Unknown
+    KIND_UNSPECIFIED = 0;
+
+    // The note and occurrence represent a package vulnerability.
+    PACKAGE_VULNERABILITY = 2;
+
+    // The note and occurrence assert build provenance.
+    BUILD_DETAILS = 3;
+
+    // This represents an image basis relationship.
+    IMAGE_BASIS = 4;
+
+    // This represents a package installed via a package manager.
+    PACKAGE_MANAGER = 5;
+
+    // The note and occurrence track deployment events.
+    DEPLOYABLE = 6;
+
+    // The note and occurrence track the initial discovery status of a resource.
+    DISCOVERY = 7;
+  }
+
+  // The name of the note in the form
+  // "providers/{provider_id}/notes/{NOTE_ID}"
+  string name = 1;
+
+  // A one sentence description of this `Note`.
+  string short_description = 3;
+
+  // A detailed description of this `Note`.
+  string long_description = 4;
+
+  // Output only. This explicitly denotes which kind of note is specified. This
+  // field can be used as a filter in list requests.
+  Kind kind = 9;
+
+  // The type of note.
+  oneof note_type {
+    // A package vulnerability type of note.
+    VulnerabilityType vulnerability_type = 6;
+
+    // Build provenance type for a verifiable build.
+    BuildType build_type = 8;
+
+    // A note describing a base image.
+    DockerImage.Basis base_image = 13;
+
+    // A note describing a package hosted by various package managers.
+    PackageManager.Package package = 14;
+
+    // A note describing something that can be deployed.
+    Deployable deployable = 17;
+
+    // A note describing a provider/analysis type.
+    Discovery discovery = 18;
+  }
+
+  // URLs associated with this note
+  repeated RelatedUrl related_url = 7;
+
+  // Time of expiration for this note, null if note does not expire.
+  google.protobuf.Timestamp expiration_time = 10;
+
+  // Output only. The time this note was created. This field can be used as a
+  // filter in list requests.
+  google.protobuf.Timestamp create_time = 11;
+
+  // Output only. The time this note was last updated. This field can be used as
+  // a filter in list requests.
+  google.protobuf.Timestamp update_time = 12;
+}
+
+// `Occurrence` includes information about analysis occurrences for an image.
+message Occurrence {
+  // Output only. The name of the `Occurrence` in the form
+  // "projects/{project_id}/occurrences/{OCCURRENCE_ID}"
+  string name = 1;
+
+  // The unique URL of the image or the container for which the `Occurrence`
+  // applies. For example, https://gcr.io/project/image@sha256:foo This field
+  // can be used as a filter in list requests.
+  string resource_url = 2;
+
+  // An analysis note associated with this image, in the form
+  // "providers/{provider_id}/notes/{NOTE_ID}"
+  // This field can be used as a filter in list requests.
+  string note_name = 3;
+
+  // Output only. This explicitly denotes which of the `Occurrence` details are
+  // specified. This field can be used as a filter in list requests.
+  Note.Kind kind = 6;
+
+  // Describes the details of the vulnerability `Note` found in this resource.
+  oneof details {
+    // Details of a security vulnerability note.
+    VulnerabilityType.VulnerabilityDetails vulnerability_details = 8;
+
+    // Build details for a verifiable build.
+    BuildDetails build_details = 7;
+
+    // Describes how this resource derives from the basis
+    // in the associated note.
+    DockerImage.Derived derived_image = 11;
+
+    // Describes the installation of a package on the linked resource.
+    PackageManager.Installation installation = 12;
+
+    // Describes the deployment of an artifact on a runtime.
+    Deployable.Deployment deployment = 14;
+
+    // Describes the initial scan status for this resource.
+    Discovery.Discovered discovered = 15;
+  }
+
+  // A description of actions that can be taken to remedy the `Note`
+  string remediation = 5;
+
+  // Output only. The time this `Occurrence` was created.
+  google.protobuf.Timestamp create_time = 9;
+
+  // Output only. The time this `Occurrence` was last updated.
+  google.protobuf.Timestamp update_time = 10;
+}
+
+// PackageManager provides metadata about available / installed packages.
+message PackageManager {
+  // This represents a particular channel of distribution for a given package.
+  // e.g. Debian's jessie-backports dpkg mirror
+  message Distribution {
+    // The cpe_uri in [cpe format](https://cpe.mitre.org/specification/)
+    // denoting the package manager version distributing a package.
+    string cpe_uri = 1;
+
+    // The CPU architecture for which packages in this distribution
+    // channel were built
+    Architecture architecture = 2;
+
+    // The latest available version of this package in
+    // this distribution channel.
+    VulnerabilityType.Version latest_version = 3;
+
+    // A freeform string denoting the maintainer of this package.
+    string maintainer = 4;
+
+    // The distribution channel-specific homepage for this package.
+    string url = 6;
+
+    // The distribution channel-specific description of this package.
+    string description = 7;
+  }
+
+  // An occurrence of a particular package installation found within a
+  // system's filesystem.
+  // e.g. glibc was found in /var/lib/dpkg/status
+  message Location {
+    // The cpe_uri in [cpe format](https://cpe.mitre.org/specification/)
+    // denoting the package manager version distributing a package.
+    string cpe_uri = 1;
+
+    // The version installed at this location.
+    VulnerabilityType.Version version = 2;
+
+    // The path from which we gathered that this package/version is installed.
+    string path = 3;
+  }
+
+  // This represents a particular package that is distributed over
+  // various channels.
+  // e.g. glibc (aka libc6) is distributed by many, at various versions.
+  message Package {
+    // The name of the package.
+    string name = 1;
+
+    // The various channels by which a package is distributed.
+    repeated Distribution distribution = 10;
+  }
+
+  // This represents how a particular software package may be installed on
+  // a system.
+  message Installation {
+    // Output only. The name of the installed package.
+    string name = 1;
+
+    // All of the places within the filesystem versions of this package
+    // have been found.
+    repeated Location location = 2;
+  }
+
+  // Instruction set architectures supported by various package managers.
+  enum Architecture {
+    // Unknown architecture
+    ARCHITECTURE_UNSPECIFIED = 0;
+
+    // X86 architecture
+    X86 = 1;
+
+    // X64 architecture
+    X64 = 2;
+  }
+}
+
+// An attestation wrapper with a PGP-compatible signature.
+// This message only supports ATTACHED signatures, where the payload that is
+// signed is included alongside the signature itself in the same file.
+message PgpSignedAttestation {
+  // The raw content of the signature, as output by gpg or equivalent.  Since
+  // this message only supports attached signatures, the payload that was signed
+  // must be attached. While the signature format supported is dependent on the
+  // verification implementation, currently only ASCII-armored (`--armor` to
+  // gpg), non-clearsigned (`--sign` rather than `--clearsign` to gpg) are
+  // supported.
+  // Concretely, `gpg --sign --armor --output=signature.gpg payload.json` will
+  // create the signature content expected in this field in `signature.gpg` for
+  // the `payload.json` attestation payload.
+  string signature = 1;
+
+  // Type (e.g. schema) of the attestation payload that was signed.
+  enum ContentType {
+    // ContentType is not set.
+    CONTENT_TYPE_UNSPECIFIED = 0;
+    // Atomic format attestation signature. See
+    // https://github.com/containers/image/blob/8a5d2f82a6e3263290c8e0276c3e0f64e77723e7/docs/atomic-signature.md
+    // The payload extracted from `signature` is a JSON blob conforming to the
+    // linked schema.
+    SIMPLE_SIGNING_JSON = 1;
+  }
+
+  // Type (e.g. schema) of the attestation payload that was signed.
+  // The verifier must ensure that the provided type is one that the verifier
+  // supports, and that the attestation payload is a valid instantiation of that
+  // type (e.g. by validating a JSON schema).
+  ContentType content_type = 3;
+
+  // This field is used by verifiers to select the public key used to validate
+  // the signature.  Note that the policy of the verifier ultimately determines
+  // which public keys verify a signature based on the context of the
+  // verification.  There is no guarantee validation will succeed if the
+  // verifier has no key matching this ID, even if it has a key under a
+  // different ID that would verify the signature. Note that this ID should also
+  // be present in the signature content above, but that is not expected to be
+  // used by the verifier.
+  oneof key_id {
+    // The ID of the key, as output by `gpg --list-keys`.  This should be 8
+    // hexidecimal digits, capitalized.  e.g.
+    // $ gpg --list-keys pub
+    // 2048R/A663AEEA 2017-08-01 uid                  Fake Name
+    // <example-attesting-user@google.com>
+    // In the above example, the `key_id` is "A663AEEA".
+    // Note that in practice this ID is the last 64 bits of the key fingerprint.
+    string pgp_key_id = 2;
+  }
+}
+
+// Source describes the location of the source used for the build.
+message Source {
+  // Source location information.
+  oneof source {
+    // If provided, get the source from this location in in Google Cloud
+    // Storage.
+    StorageSource storage_source = 1;
+
+    // If provided, get source from this location in a Cloud Repo.
+    RepoSource repo_source = 2;
+  }
+
+  // If provided, the input binary artifacts for the build came from this
+  // location.
+  StorageSource artifact_storage_source = 4;
+
+  // Hash(es) of the build source, which can be used to verify that the original
+  // source integrity was maintained in the build.
+  //
+  // The keys to this map are file paths used as build source and the values
+  // contain the hash values for those files.
+  //
+  // If the build source came in a single package such as a gzipped tarfile
+  // (.tar.gz), the FileHash will be for the single path to that file.
+  map<string, FileHashes> file_hashes = 3;
+
+  // If provided, the source code used for the build came from this location.
+  SourceContext context = 7;
+
+  // If provided, some of the source code used for the build may be found in
+  // these locations, in the case where the source repository had multiple
+  // remotes or submodules. This list will not include the context specified in
+  // the context field.
+  repeated SourceContext additional_contexts = 8;
+}
+
+// RepoSource describes the location of the source in a Google Cloud Source
+// Repository.
+message RepoSource {
+  // ID of the project that owns the repo.
+  string project_id = 1;
+
+  // Name of the repo.
+  string repo_name = 2;
+
+  // A revision within the source repository must be specified in
+  // one of these ways.
+  oneof revision {
+    // Name of the branch to build.
+    string branch_name = 3;
+
+    // Name of the tag to build.
+    string tag_name = 4;
+
+    // Explicit commit SHA to build.
+    string commit_sha = 5;
+  }
+}
+
+// StorageSource describes the location of the source in an archive file in
+// Google Cloud Storage.
+message StorageSource {
+  // Google Cloud Storage bucket containing source (see [Bucket Name
+  // Requirements]
+  // (https://cloud.google.com/storage/docs/bucket-naming#requirements)).
+  string bucket = 1;
+
+  // Google Cloud Storage object containing source.
+  string object = 2;
+
+  // Google Cloud Storage generation for the object.
+  int64 generation = 3;
+}
+
+// VulnerabilityType provides metadata about a security vulnerability.
+message VulnerabilityType {
+  // Version contains structured information about the version of the package.
+  // For a discussion of this in Debian/Ubuntu:
+  // http://serverfault.com/questions/604541/debian-packages-version-convention
+  // For a discussion of this in Redhat/Fedora/Centos:
+  // http://blog.jasonantman.com/2014/07/how-yum-and-rpm-compare-versions/
+  message Version {
+    // Whether this is an ordinary package version or a
+    // sentinel MIN/MAX version.
+    enum VersionKind {
+      // A standard package version, defined by the other fields.
+      NORMAL = 0;
+
+      // A special version representing negative infinity,
+      // other fields are ignored.
+      MINIMUM = 1;
+
+      // A special version representing positive infinity,
+      // other fields are ignored.
+      MAXIMUM = 2;
+    }
+
+    // Used to correct mistakes in the version numbering scheme.
+    int32 epoch = 1;
+
+    // The main part of the version name.
+    string name = 2;
+
+    // The iteration of the package build from the above version.
+    string revision = 3;
+
+    // Distinguish between sentinel MIN/MAX versions and normal versions.
+    // If kind is not NORMAL, then the other fields are ignored.
+    VersionKind kind = 5;
+  }
+
+  // Identifies all occurrences of this vulnerability in the package for a
+  // specific distro/location
+  // For example: glibc in cpe:/o:debian:debian_linux:8 for versions 2.1 - 2.2
+  message Detail {
+    // The cpe_uri in [cpe format] (https://cpe.mitre.org/specification/) in
+    // which the vulnerability manifests.  Examples include distro or storage
+    // location for vulnerable jar.
+    // This field can be used as a filter in list requests.
+    string cpe_uri = 1;
+
+    // The name of the package where the vulnerability was found.
+    // This field can be used as a filter in list requests.
+    string package = 8;
+
+    // The min version of the package in which the vulnerability exists.
+    Version min_affected_version = 6;
+
+    // The max version of the package in which the vulnerability exists.
+    // This field can be used as a filter in list requests.
+    Version max_affected_version = 7;
+
+    // The severity (eg: distro assigned severity) for this vulnerability.
+    string severity_name = 4;
+
+    // A vendor-specific description of this note.
+    string description = 9;
+
+    // The fix for this specific package version.
+    VulnerabilityLocation fixed_location = 5;
+
+    // The type of package; whether native or non native(ruby gems,
+    // node.js packages etc)
+    string package_type = 10;
+  }
+
+  // Used by Occurrence to point to where the vulnerability exists and how
+  // to fix it.
+  message VulnerabilityDetails {
+    // The type of package; whether native or non native(ruby gems,
+    // node.js packages etc)
+    string type = 3;
+
+    // Output only. The note provider assigned Severity of the vulnerability.
+    Severity severity = 4;
+
+    // Output only. The CVSS score of this vulnerability. CVSS score is on a
+    // scale of 0-10 where 0 indicates low severity and 10 indicates high
+    // severity.
+    float cvss_score = 5;
+
+    // The set of affected locations and their fixes (if available) within
+    // the associated resource.
+    repeated PackageIssue package_issue = 6;
+  }
+
+  // This message wraps a location affected by a vulnerability and its
+  // associated fix (if one is available).
+  message PackageIssue {
+    // The location of the vulnerability.
+    VulnerabilityLocation affected_location = 1;
+
+    // The location of the available fix for vulnerability.
+    VulnerabilityLocation fixed_location = 2;
+
+    // The severity (eg: distro assigned severity) for this vulnerability.
+    string severity_name = 3;
+  }
+
+  // The location of the vulnerability
+  message VulnerabilityLocation {
+    // The cpe_uri in [cpe format] (https://cpe.mitre.org/specification/)
+    // format. Examples include distro or storage location for vulnerable jar.
+    // This field can be used as a filter in list requests.
+    string cpe_uri = 1;
+
+    // The package being described.
+    string package = 2;
+
+    // The version of the package being described.
+    // This field can be used as a filter in list requests.
+    Version version = 4;
+  }
+
+  // Note provider-assigned severity/impact ranking
+  enum Severity {
+    // Unknown Impact
+    SEVERITY_UNSPECIFIED = 0;
+
+    // Minimal Impact
+    MINIMAL = 1;
+
+    // Low Impact
+    LOW = 2;
+
+    // Medium Impact
+    MEDIUM = 3;
+
+    // High Impact
+    HIGH = 4;
+
+    // Critical Impact
+    CRITICAL = 5;
+  }
+
+  // The CVSS score for this Vulnerability.
+  float cvss_score = 2;
+
+  // Note provider assigned impact of the vulnerability
+  Severity severity = 3;
+
+  // All information about the package to specifically identify this
+  // vulnerability. One entry per (version range and cpe_uri) the
+  // package vulnerability has manifested in.
+  repeated Detail details = 4;
+}
+
+// A SourceContext is a reference to a tree of files. A SourceContext together
+// with a path point to a unique revision of a single file or directory.
+message SourceContext {
+  // A SourceContext can refer any one of the following types of repositories.
+  oneof context {
+    // A SourceContext referring to a revision in a Google Cloud Source Repo.
+    CloudRepoSourceContext cloud_repo = 1;
+
+    // A SourceContext referring to a Gerrit project.
+    GerritSourceContext gerrit = 2;
+
+    // A SourceContext referring to any third party Git repo (e.g., GitHub).
+    GitSourceContext git = 3;
+  }
+
+  // Labels with user defined metadata.
+  map<string, string> labels = 4;
+}
+
+// An alias to a repo revision.
+message AliasContext {
+  // The type of an alias.
+  enum Kind {
+    // Unknown.
+    KIND_UNSPECIFIED = 0;
+
+    // Git tag.
+    FIXED = 1;
+
+    // Git branch.
+    MOVABLE = 2;
+
+    // Used to specify non-standard aliases. For example, if a Git repo has a
+    // ref named "refs/foo/bar".
+    OTHER = 4;
+  }
+
+  // The alias kind.
+  Kind kind = 1;
+
+  // The alias name.
+  string name = 2;
+}
+
+// A CloudRepoSourceContext denotes a particular revision in a Google Cloud
+// Source Repo.
+message CloudRepoSourceContext {
+  // The ID of the repo.
+  RepoId repo_id = 1;
+
+  // A revision in a Cloud Repo can be identified by either its revision ID or
+  // its alias.
+  oneof revision {
+    // A revision ID.
+    string revision_id = 2;
+
+    // An alias, which may be a branch or tag.
+    AliasContext alias_context = 3;
+  }
+}
+
+// A SourceContext referring to a Gerrit project.
+message GerritSourceContext {
+  // The URI of a running Gerrit instance.
+  string host_uri = 1;
+
+  // The full project name within the host. Projects may be nested, so
+  // "project/subproject" is a valid project name. The "repo name" is
+  // the hostURI/project.
+  string gerrit_project = 2;
+
+  // A revision in a Gerrit project can be identified by either its revision ID
+  // or its alias.
+  oneof revision {
+    // A revision (commit) ID.
+    string revision_id = 3;
+
+    // An alias, which may be a branch or tag.
+    AliasContext alias_context = 4;
+  }
+}
+
+// A GitSourceContext denotes a particular revision in a third party Git
+// repository (e.g., GitHub).
+message GitSourceContext {
+  // Git repository URL.
+  string url = 1;
+
+  // Required.
+  // Git commit hash.
+  string revision_id = 2;
+}
+
+// A unique identifier for a Cloud Repo.
+message RepoId {
+  // A cloud repo can be identified by either its project ID and repository name
+  // combination, or its globally unique identifier.
+  oneof id {
+    // A combination of a project ID and a repo name.
+    ProjectRepoId project_repo_id = 1;
+
+    // A server-assigned, globally unique identifier.
+    string uid = 2;
+  }
+}
+
+// Selects a repo using a Google Cloud Platform project ID (e.g.,
+// winged-cargo-31) and a repo name within that project.
+message ProjectRepoId {
+  // The ID of the project.
+  string project_id = 1;
+
+  // The name of the repo. Leave empty for the default repo.
+  string repo_name = 2;
+}
+
+// [Grafeas](grafeas.io) API.
+//
+// Retrieves the results of vulnerability scanning of cloud components such as
+// container images.
+//
+// The vulnerability results are stored as a series of Occurrences.
+// An `Occurrence` contains information about a specific vulnerability in a
+// resource. An `Occurrence` references a `Note`. A `Note` contains details
+// about the vulnerability and is stored in a stored in a separate project.
+// Multiple `Occurrences` can reference the same `Note`. For example, an SSL
+// vulnerability could affect multiple packages in an image. In this case,
+// there would be one `Note` for the vulnerability and an `Occurrence` for
+// each package with the vulnerability referencing that `Note`.
+service Grafeas {
+  // Returns the requested `Occurrence`.
+  rpc GetOccurrence(GetOccurrenceRequest) returns (Occurrence) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=projects/*/occurrences/*}"
+    };
+  }
+
+  // Lists active `Occurrences` for a given project matching the filters.
+  rpc ListOccurrences(ListOccurrencesRequest)
+      returns (ListOccurrencesResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{parent=projects/*}/occurrences"
+    };
+  }
+
+  // Deletes the given `Occurrence` from the system. Use this when
+  // an `Occurrence` is no longer applicable for the given resource.
+  rpc DeleteOccurrence(DeleteOccurrenceRequest)
+      returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=projects/*/occurrences/*}"
+    };
+  }
+
+  // Creates a new `Occurrence`. Use this method to create `Occurrences`
+  // for a resource.
+  rpc CreateOccurrence(CreateOccurrenceRequest) returns (Occurrence) {
+    option (google.api.http) = {
+      post: "/v1alpha1/{parent=projects/*}/occurrences"
+      body: "occurrence"
+    };
+  }
+
+  // Updates an existing occurrence.
+  rpc UpdateOccurrence(UpdateOccurrenceRequest) returns (Occurrence) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{name=projects/*/occurrences/*}"
+      body: "occurrence"
+    };
+  }
+
+  // Gets the `Note` attached to the given `Occurrence`.
+  rpc GetOccurrenceNote(GetOccurrenceNoteRequest) returns (Note) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=projects/*/occurrences/*}/notes"
+    };
+  }
+
+  // Creates a new `Operation`.
+  rpc CreateOperation(CreateOperationRequest)
+  returns (google.longrunning.Operation) {
+    option (google.api.http) = {
+      post: "/v1alpha1/{parent=projects/*}/operations"
+      body: "*"
+    };
+  };
+
+  // Updates an existing operation returns an error if operation
+  //  does not exist. The only valid operations are to update mark the done bit
+  // change the result.
+  rpc UpdateOperation(UpdateOperationRequest)
+  returns (google.longrunning.Operation) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{name=projects/*/operations/*}"
+      body: "*"
+    };
+  };
+
+  // Returns the requested `Note`.
+  rpc GetNote(GetNoteRequest) returns (Note) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=projects/*/notes/*}"
+    };
+  }
+
+  // Lists all `Notes` for a given project.
+  rpc ListNotes(ListNotesRequest) returns (ListNotesResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{parent=projects/*}/notes"
+    };
+  }
+
+  // Deletes the given `Note` from the system.
+  rpc DeleteNote(DeleteNoteRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=projects/*/notes/*}"
+    };
+  }
+
+  // Creates a new `Note`.
+  rpc CreateNote(CreateNoteRequest) returns (Note) {
+    option (google.api.http) = {
+      post: "/v1alpha1/{parent=projects/*}/notes"
+      body: "note"
+    };
+  }
+
+  // Updates an existing `Note`.
+  rpc UpdateNote(UpdateNoteRequest) returns (Note) {
+    option (google.api.http) = {
+      patch: "/v1alpha1/{name=projects/*/notes/*}"
+      body: "note"
+    };
+  }
+
+  // Lists `Occurrences` referencing the specified `Note`. Use this method to
+  // get all occurrences referencing your `Note` across all your customer
+  // projects.
+  rpc ListNoteOccurrences(ListNoteOccurrencesRequest)
+      returns (ListNoteOccurrencesResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=projects/*/notes/*}/occurrences"
+    };
+  }
+}
+
+// [GrafeasProjects](grafeas.io) API.
+//
+// Manages Grafeas `Projects`. `Projects` contain sets of other Grafeas
+// entities such as `Notes`, `Occurrences` and `Operations`.
+service GrafeasProjects {
+  // Creates a new `Project`.
+  rpc CreateProject(CreateProjectRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post:  "/v1alpha1/{name=projects/*}"
+    };
+  }
+
+  // Returns the requested `Project`.
+  rpc GetProject(GetProjectRequest) returns (Project) {
+    option (google.api.http) = {
+      get: "/v1alpha1/{name=projects/*}"
+    };
+  }
+
+  // Lists `Projects`
+  rpc ListProjects(ListProjectsRequest)
+      returns (ListProjectsResponse) {
+    option (google.api.http) = {
+      get: "/v1alpha1/projects"
+    };
+  }
+
+  // Deletes the given `Project` from the system.
+  rpc DeleteProject(DeleteProjectRequest)
+      returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1alpha1/{name=projects/*}"
+    };
+  }
+}
