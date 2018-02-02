@@ -44,7 +44,7 @@ A [PostgreSQL 9.4+] database instance is required for all instructions.
 #### Kubernetes (Helm)
 
 If you don't have a local Kubernetes cluster already, check out [minikube].
-This assumes you've already ran `helm init` and you have access to a currently running instance of Tiller.
+This assumes you've already ran `helm init`, you have access to a currently running instance of Tiller and that you are running the latest version of helm.
 
 [minikube]: https://github.com/kubernetes/minikube
 
@@ -53,6 +53,7 @@ git clone https://github.com/coreos/clair
 cd clair/contrib/helm
 cp clair/values.yaml ~/my_custom_values.yaml
 vi ~/my_custom_values.yaml
+helm dependency update clair
 helm install clair -f ~/my_custom_values.yaml
 ```
 
