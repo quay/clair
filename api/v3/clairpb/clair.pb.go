@@ -158,9 +158,11 @@ func (m *ClairStatus) GetLastUpdateTime() *google_protobuf2.Timestamp {
 }
 
 type Feature struct {
-	Name            string           `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
-	NamespaceName   string           `protobuf:"bytes,2,opt,name=namespace_name,json=namespaceName" json:"namespace_name,omitempty"`
-	Version         string           `protobuf:"bytes,3,opt,name=version" json:"version,omitempty"`
+	Name          string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	NamespaceName string `protobuf:"bytes,2,opt,name=namespace_name,json=namespaceName" json:"namespace_name,omitempty"`
+	Version       string `protobuf:"bytes,3,opt,name=version" json:"version,omitempty"`
+	// version_format is the format used by installer package manager to store
+	// package versions.
 	VersionFormat   string           `protobuf:"bytes,4,opt,name=version_format,json=versionFormat" json:"version_format,omitempty"`
 	Vulnerabilities []*Vulnerability `protobuf:"bytes,5,rep,name=vulnerabilities" json:"vulnerabilities,omitempty"`
 }

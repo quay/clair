@@ -45,6 +45,9 @@ message Feature{
 	string name = 1;
 	string namespace_name = 2;
 	string version = 3;
+
+	// version_format is the format used by installer package manager to store
+	// package versions.
 	string version_format = 4;
 	repeated Vulnerability vulnerabilities = 5;
 }

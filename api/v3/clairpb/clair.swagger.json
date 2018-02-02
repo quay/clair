@@ -232,7 +232,8 @@
           "type": "string"
         },
         "version_format": {
-          "type": "string"
+          "type": "string",
+          "description": "version_format is the format used by installer package manager to store\npackage versions."
         },
         "vulnerabilities": {
           "type": "array",
