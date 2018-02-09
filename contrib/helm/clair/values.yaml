@@ -34,7 +34,7 @@ resources:
     memory: 1Gi
   requests:
     cpu: 100m
-    memory: 128Mi
+    memory: 500Mi
 config:
   # postgresURI: "postgres://user:password@host:5432/postgres?sslmode=disable"
   paginationKey: "XxoPtCUzrUv4JV5dS+yQ+MdW7yLEJnRMwigVY/bpgtQ="
@@ -59,6 +59,9 @@ config:
 # Configuration values for the postgresql dependency.
 # ref: https://github.com/kubernetes/charts/blob/master/stable/postgresql/README.md
 postgresql:
+# The dependant Postgres chart can be disabled, to connect to
+# an existing database by defining config.postgresURI
+  enabled: true
   cpu: 1000m
   memory: 1Gi
 # These values are hardcoded until Helm supports secrets.
