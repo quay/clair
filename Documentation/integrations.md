@@ -10,6 +10,8 @@ This document tracks projects that integrate with Clair. [Join the community](ht
 
 [Yair](https://github.com/yfoelling/yair): a lightweight command-line for working with clair with many different outputs. Mainly designed for usage in a CI Job.
 
+[Paclair](https://github.com/yebinama/paclair): a Python3 CLI tool to interact with Clair (easily configurable to access private registries).
+
 [Clairctl](https://github.com/jgsqware/clairctl): a lightweight command-line tool for working locally with Clair and generate HTML report.
 
 [Clair-SQS](https://github.com/zalando-incubator/clair-sqs): a container containing Clair and additional processes that integrate Clair with [Amazon SQS][sqs].
