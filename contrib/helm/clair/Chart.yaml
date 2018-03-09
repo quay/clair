@@ -8,4 +8,4 @@ sources:
   - https://github.com/coreos/clair
 maintainers:
   - name: Jimmy Zelinskie
-  - email: jimmy.zelinskie@coreos.com
+    email: jimmy.zelinskie@coreos.com
