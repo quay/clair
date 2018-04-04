@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "clair.proto",
+    "title": "api/v3/clairpb/clair.proto",
     "version": "version not set"
   },
   "schemes": [
