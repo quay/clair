@@ -9,19 +9,16 @@ It is generated from these files:
 
 It has these top-level messages:
 	Vulnerability
-	ClairStatus
 	Feature
-	Ancestry
 	Layer
-	Notification
-	IndexedAncestryName
-	PagedVulnerableAncestries
-	PostAncestryRequest
-	PostAncestryResponse
+	ClairStatus
 	GetAncestryRequest
 	GetAncestryResponse
+	PostAncestryRequest
+	PostAncestryResponse
 	GetNotificationRequest
 	GetNotificationResponse
+	PagedVulnerableAncestries
 	MarkNotificationAsReadRequest
 */
 package clairpb
@@ -50,15 +47,23 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type Vulnerability struct {
-	Name          string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	// The name of the vulnerability.
+	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	// The name of the namespace in which the vulnerability was detected.
 	NamespaceName string `protobuf:"bytes,2,opt,name=namespace_name,json=namespaceName" json:"namespace_name,omitempty"`
-	Description   string `protobuf:"bytes,3,opt,name=description" json:"description,omitempty"`
-	Link          string `protobuf:"bytes,4,opt,name=link" json:"link,omitempty"`
-	Severity      string `protobuf:"bytes,5,opt,name=severity" json:"severity,omitempty"`
-	Metadata      string `protobuf:"bytes,6,opt,name=metadata" json:"metadata,omitempty"`
-	// fixed_by exists when vulnerability is under feature.
+	// A description of the vulnerability according to the source for the namespace.
+	Description string `protobuf:"bytes,3,opt,name=description" json:"description,omitempty"`
+	// A link to the vulnerability according to the source for the namespace.
+	Link string `protobuf:"bytes,4,opt,name=link" json:"link,omitempty"`
+	// How dangerous the vulnerability is.
+	Severity string `protobuf:"bytes,5,opt,name=severity" json:"severity,omitempty"`
+	// Namespace agnostic metadata about the vulnerability.
+	Metadata string `protobuf:"bytes,6,opt,name=metadata" json:"metadata,omitempty"`
+	// The feature that fixes this vulnerability.
+	// This field only exists when a vulnerability is a part of a Feature.
 	FixedBy string `protobuf:"bytes,7,opt,name=fixed_by,json=fixedBy" json:"fixed_by,omitempty"`
-	// affected_versions exists when vulnerability is under notification.
+	// The Features that are affected by the vulnerability.
+	// This field only exists when a vulnerability is a part of a Notification.
 	AffectedVersions []*Feature `protobuf:"bytes,8,rep,name=affected_versions,json=affectedVersions" json:"affected_versions,omitempty"`
 }
 
@@ -123,54 +128,23 @@ func (m *Vulnerability) GetAffectedVersions() []*Feature {
 	return nil
 }
 
-type ClairStatus struct {
-	// listers and detectors are processors implemented in this Clair and used to
-	// scan ancestries
-	Listers        []string                    `protobuf:"bytes,1,rep,name=listers" json:"listers,omitempty"`
-	Detectors      []string                    `protobuf:"bytes,2,rep,name=detectors" json:"detectors,omitempty"`
-	LastUpdateTime *google_protobuf2.Timestamp `protobuf:"bytes,3,opt,name=last_update_time,json=lastUpdateTime" json:"last_update_time,omitempty"`
-}
-
-func (m *ClairStatus) Reset()                    { *m = ClairStatus{} }
-func (m *ClairStatus) String() string            { return proto.CompactTextString(m) }
-func (*ClairStatus) ProtoMessage()               {}
-func (*ClairStatus) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
-
-func (m *ClairStatus) GetListers() []string {
-	if m != nil {
-		return m.Listers
-	}
-	return nil
-}
-
-func (m *ClairStatus) GetDetectors() []string {
-	if m != nil {
-		return m.Detectors
-	}
-	return nil
-}
-
-func (m *ClairStatus) GetLastUpdateTime() *google_protobuf2.Timestamp {
-	if m != nil {
-		return m.LastUpdateTime
-	}
-	return nil
-}
-
 type Feature struct {
-	Name          string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	// The name of the feature.
+	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	// The name of the namespace in which the feature is detected.
 	NamespaceName string `protobuf:"bytes,2,opt,name=namespace_name,json=namespaceName" json:"namespace_name,omitempty"`
-	Version       string `protobuf:"bytes,3,opt,name=version" json:"version,omitempty"`
-	// version_format is the format used by installer package manager to store
-	// package versions.
-	VersionFormat   string           `protobuf:"bytes,4,opt,name=version_format,json=versionFormat" json:"version_format,omitempty"`
+	// The specific version of this feature.
+	Version string `protobuf:"bytes,3,opt,name=version" json:"version,omitempty"`
+	// The format used to parse version numbers for the feature.
+	VersionFormat string `protobuf:"bytes,4,opt,name=version_format,json=versionFormat" json:"version_format,omitempty"`
+	// The list of vulnerabilities that affect the feature.
 	Vulnerabilities []*Vulnerability `protobuf:"bytes,5,rep,name=vulnerabilities" json:"vulnerabilities,omitempty"`
 }
 
 func (m *Feature) Reset()                    { *m = Feature{} }
 func (m *Feature) String() string            { return proto.CompactTextString(m) }
 func (*Feature) ProtoMessage()               {}
-func (*Feature) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+func (*Feature) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
 func (m *Feature) GetName() string {
 	if m != nil {
@@ -207,65 +181,15 @@ func (m *Feature) GetVulnerabilities() []*Vulnerability {
 	return nil
 }
 
-type Ancestry struct {
-	Name     string     `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
-	Features []*Feature `protobuf:"bytes,2,rep,name=features" json:"features,omitempty"`
-	Layers   []*Layer   `protobuf:"bytes,3,rep,name=layers" json:"layers,omitempty"`
-	// scanned_listers and scanned_detectors are used to scan this ancestry, it
-	// may be different from listers and detectors in ClairStatus since the
-	// ancestry could be scanned by previous version of Clair.
-	ScannedListers   []string `protobuf:"bytes,4,rep,name=scanned_listers,json=scannedListers" json:"scanned_listers,omitempty"`
-	ScannedDetectors []string `protobuf:"bytes,5,rep,name=scanned_detectors,json=scannedDetectors" json:"scanned_detectors,omitempty"`
-}
-
-func (m *Ancestry) Reset()                    { *m = Ancestry{} }
-func (m *Ancestry) String() string            { return proto.CompactTextString(m) }
-func (*Ancestry) ProtoMessage()               {}
-func (*Ancestry) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
-
-func (m *Ancestry) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-func (m *Ancestry) GetFeatures() []*Feature {
-	if m != nil {
-		return m.Features
-	}
-	return nil
-}
-
-func (m *Ancestry) GetLayers() []*Layer {
-	if m != nil {
-		return m.Layers
-	}
-	return nil
-}
-
-func (m *Ancestry) GetScannedListers() []string {
-	if m != nil {
-		return m.ScannedListers
-	}
-	return nil
-}
-
-func (m *Ancestry) GetScannedDetectors() []string {
-	if m != nil {
-		return m.ScannedDetectors
-	}
-	return nil
-}
-
 type Layer struct {
+	// The sha256 tarsum for the layer.
 	Hash string `protobuf:"bytes,1,opt,name=hash" json:"hash,omitempty"`
 }
 
 func (m *Layer) Reset()                    { *m = Layer{} }
 func (m *Layer) String() string            { return proto.CompactTextString(m) }
 func (*Layer) ProtoMessage()               {}
-func (*Layer) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+func (*Layer) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
 func (m *Layer) GetHash() string {
 	if m != nil {
@@ -274,147 +198,170 @@ func (m *Layer) GetHash() string {
 	return ""
 }
 
-type Notification struct {
-	Name     string                     `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
-	Created  string                     `protobuf:"bytes,2,opt,name=created" json:"created,omitempty"`
-	Notified string                     `protobuf:"bytes,3,opt,name=notified" json:"notified,omitempty"`
-	Deleted  string                     `protobuf:"bytes,4,opt,name=deleted" json:"deleted,omitempty"`
-	Old      *PagedVulnerableAncestries `protobuf:"bytes,5,opt,name=old" json:"old,omitempty"`
-	New      *PagedVulnerableAncestries `protobuf:"bytes,6,opt,name=new" json:"new,omitempty"`
+type ClairStatus struct {
+	// The configured list of feature listers used to scan an ancestry.
+	Listers []string `protobuf:"bytes,1,rep,name=listers" json:"listers,omitempty"`
+	// The configured list of namespace detectors used to scan an ancestry.
+	Detectors []string `protobuf:"bytes,2,rep,name=detectors" json:"detectors,omitempty"`
+	// The time at which the updater last ran.
+	LastUpdateTime *google_protobuf2.Timestamp `protobuf:"bytes,3,opt,name=last_update_time,json=lastUpdateTime" json:"last_update_time,omitempty"`
 }
 
-func (m *Notification) Reset()                    { *m = Notification{} }
-func (m *Notification) String() string            { return proto.CompactTextString(m) }
-func (*Notification) ProtoMessage()               {}
-func (*Notification) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+func (m *ClairStatus) Reset()                    { *m = ClairStatus{} }
+func (m *ClairStatus) String() string            { return proto.CompactTextString(m) }
+func (*ClairStatus) ProtoMessage()               {}
+func (*ClairStatus) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
 
-func (m *Notification) GetName() string {
+func (m *ClairStatus) GetListers() []string {
+	if m != nil {
+		return m.Listers
+	}
+	return nil
+}
+
+func (m *ClairStatus) GetDetectors() []string {
+	if m != nil {
+		return m.Detectors
+	}
+	return nil
+}
+
+func (m *ClairStatus) GetLastUpdateTime() *google_protobuf2.Timestamp {
+	if m != nil {
+		return m.LastUpdateTime
+	}
+	return nil
+}
+
+type GetAncestryRequest struct {
+	// The name of the desired ancestry.
+	AncestryName string `protobuf:"bytes,1,opt,name=ancestry_name,json=ancestryName" json:"ancestry_name,omitempty"`
+	// Whether to include vulnerabilities or not in the response.
+	WithVulnerabilities bool `protobuf:"varint,2,opt,name=with_vulnerabilities,json=withVulnerabilities" json:"with_vulnerabilities,omitempty"`
+	// Whether to include features or not in the response.
+	WithFeatures bool `protobuf:"varint,3,opt,name=with_features,json=withFeatures" json:"with_features,omitempty"`
+}
+
+func (m *GetAncestryRequest) Reset()                    { *m = GetAncestryRequest{} }
+func (m *GetAncestryRequest) String() string            { return proto.CompactTextString(m) }
+func (*GetAncestryRequest) ProtoMessage()               {}
+func (*GetAncestryRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+
+func (m *GetAncestryRequest) GetAncestryName() string {
+	if m != nil {
+		return m.AncestryName
+	}
+	return ""
+}
+
+func (m *GetAncestryRequest) GetWithVulnerabilities() bool {
+	if m != nil {
+		return m.WithVulnerabilities
+	}
+	return false
+}
+
+func (m *GetAncestryRequest) GetWithFeatures() bool {
+	if m != nil {
+		return m.WithFeatures
+	}
+	return false
+}
+
+type GetAncestryResponse struct {
+	// The ancestry requested.
+	Ancestry *GetAncestryResponse_Ancestry `protobuf:"bytes,1,opt,name=ancestry" json:"ancestry,omitempty"`
+	// The status of Clair at the time of the request.
+	Status *ClairStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
+}
+
+func (m *GetAncestryResponse) Reset()                    { *m = GetAncestryResponse{} }
+func (m *GetAncestryResponse) String() string            { return proto.CompactTextString(m) }
+func (*GetAncestryResponse) ProtoMessage()               {}
+func (*GetAncestryResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+
+func (m *GetAncestryResponse) GetAncestry() *GetAncestryResponse_Ancestry {
+	if m != nil {
+		return m.Ancestry
+	}
+	return nil
+}
+
+func (m *GetAncestryResponse) GetStatus() *ClairStatus {
+	if m != nil {
+		return m.Status
+	}
+	return nil
+}
+
+type GetAncestryResponse_Ancestry struct {
+	// The name of the desired ancestry.
+	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	// The list of features present in the ancestry.
+	// This will only be provided if requested.
+	Features []*Feature `protobuf:"bytes,2,rep,name=features" json:"features,omitempty"`
+	// The layers present in the ancestry.
+	Layers []*Layer `protobuf:"bytes,3,rep,name=layers" json:"layers,omitempty"`
+	// The configured list of feature listers used to scan this ancestry.
+	ScannedListers []string `protobuf:"bytes,4,rep,name=scanned_listers,json=scannedListers" json:"scanned_listers,omitempty"`
+	// The configured list of namespace detectors used to scan an ancestry.
+	ScannedDetectors []string `protobuf:"bytes,5,rep,name=scanned_detectors,json=scannedDetectors" json:"scanned_detectors,omitempty"`
+}
+
+func (m *GetAncestryResponse_Ancestry) Reset()                    { *m = GetAncestryResponse_Ancestry{} }
+func (m *GetAncestryResponse_Ancestry) String() string            { return proto.CompactTextString(m) }
+func (*GetAncestryResponse_Ancestry) ProtoMessage()               {}
+func (*GetAncestryResponse_Ancestry) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5, 0} }
+
+func (m *GetAncestryResponse_Ancestry) GetName() string {
 	if m != nil {
 		return m.Name
 	}
 	return ""
 }
 
-func (m *Notification) GetCreated() string {
+func (m *GetAncestryResponse_Ancestry) GetFeatures() []*Feature {
 	if m != nil {
-		return m.Created
-	}
-	return ""
-}
-
-func (m *Notification) GetNotified() string {
-	if m != nil {
-		return m.Notified
-	}
-	return ""
-}
-
-func (m *Notification) GetDeleted() string {
-	if m != nil {
-		return m.Deleted
-	}
-	return ""
-}
-
-func (m *Notification) GetOld() *PagedVulnerableAncestries {
-	if m != nil {
-		return m.Old
+		return m.Features
 	}
 	return nil
 }
 
-func (m *Notification) GetNew() *PagedVulnerableAncestries {
+func (m *GetAncestryResponse_Ancestry) GetLayers() []*Layer {
 	if m != nil {
-		return m.New
+		return m.Layers
 	}
 	return nil
 }
 
-type IndexedAncestryName struct {
-	// index is unique to name in all streams simultaneously streamed, increasing
-	// and larger than all indexes in previous page in same stream.
-	Index int32  `protobuf:"varint,1,opt,name=index" json:"index,omitempty"`
-	Name  string `protobuf:"bytes,2,opt,name=name" json:"name,omitempty"`
-}
-
-func (m *IndexedAncestryName) Reset()                    { *m = IndexedAncestryName{} }
-func (m *IndexedAncestryName) String() string            { return proto.CompactTextString(m) }
-func (*IndexedAncestryName) ProtoMessage()               {}
-func (*IndexedAncestryName) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
-
-func (m *IndexedAncestryName) GetIndex() int32 {
+func (m *GetAncestryResponse_Ancestry) GetScannedListers() []string {
 	if m != nil {
-		return m.Index
-	}
-	return 0
-}
-
-func (m *IndexedAncestryName) GetName() string {
-	if m != nil {
-		return m.Name
-	}
-	return ""
-}
-
-type PagedVulnerableAncestries struct {
-	CurrentPage string `protobuf:"bytes,1,opt,name=current_page,json=currentPage" json:"current_page,omitempty"`
-	// if next_page is empty, it signals the end of all pages.
-	NextPage      string                 `protobuf:"bytes,2,opt,name=next_page,json=nextPage" json:"next_page,omitempty"`
-	Limit         int32                  `protobuf:"varint,3,opt,name=limit" json:"limit,omitempty"`
-	Vulnerability *Vulnerability         `protobuf:"bytes,4,opt,name=vulnerability" json:"vulnerability,omitempty"`
-	Ancestries    []*IndexedAncestryName `protobuf:"bytes,5,rep,name=ancestries" json:"ancestries,omitempty"`
-}
-
-func (m *PagedVulnerableAncestries) Reset()                    { *m = PagedVulnerableAncestries{} }
-func (m *PagedVulnerableAncestries) String() string            { return proto.CompactTextString(m) }
-func (*PagedVulnerableAncestries) ProtoMessage()               {}
-func (*PagedVulnerableAncestries) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
-
-func (m *PagedVulnerableAncestries) GetCurrentPage() string {
-	if m != nil {
-		return m.CurrentPage
-	}
-	return ""
-}
-
-func (m *PagedVulnerableAncestries) GetNextPage() string {
-	if m != nil {
-		return m.NextPage
-	}
-	return ""
-}
-
-func (m *PagedVulnerableAncestries) GetLimit() int32 {
-	if m != nil {
-		return m.Limit
-	}
-	return 0
-}
-
-func (m *PagedVulnerableAncestries) GetVulnerability() *Vulnerability {
-	if m != nil {
-		return m.Vulnerability
+		return m.ScannedListers
 	}
 	return nil
 }
 
-func (m *PagedVulnerableAncestries) GetAncestries() []*IndexedAncestryName {
+func (m *GetAncestryResponse_Ancestry) GetScannedDetectors() []string {
 	if m != nil {
-		return m.Ancestries
+		return m.ScannedDetectors
 	}
 	return nil
 }
 
 type PostAncestryRequest struct {
-	AncestryName string                           `protobuf:"bytes,1,opt,name=ancestry_name,json=ancestryName" json:"ancestry_name,omitempty"`
-	Format       string                           `protobuf:"bytes,2,opt,name=format" json:"format,omitempty"`
-	Layers       []*PostAncestryRequest_PostLayer `protobuf:"bytes,3,rep,name=layers" json:"layers,omitempty"`
+	// The name of the ancestry being scanned.
+	// If scanning OCI images, this should be the hash of the manifest.
+	AncestryName string `protobuf:"bytes,1,opt,name=ancestry_name,json=ancestryName" json:"ancestry_name,omitempty"`
+	// The format of the image being uploaded.
+	Format string `protobuf:"bytes,2,opt,name=format" json:"format,omitempty"`
+	// The layers to be scanned for this particular ancestry.
+	Layers []*PostAncestryRequest_PostLayer `protobuf:"bytes,3,rep,name=layers" json:"layers,omitempty"`
 }
 
 func (m *PostAncestryRequest) Reset()                    { *m = PostAncestryRequest{} }
 func (m *PostAncestryRequest) String() string            { return proto.CompactTextString(m) }
 func (*PostAncestryRequest) ProtoMessage()               {}
-func (*PostAncestryRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+func (*PostAncestryRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
 
 func (m *PostAncestryRequest) GetAncestryName() string {
 	if m != nil {
@@ -438,8 +385,11 @@ func (m *PostAncestryRequest) GetLayers() []*PostAncestryRequest_PostLayer {
 }
 
 type PostAncestryRequest_PostLayer struct {
-	Hash    string            `protobuf:"bytes,1,opt,name=hash" json:"hash,omitempty"`
-	Path    string            `protobuf:"bytes,2,opt,name=path" json:"path,omitempty"`
+	// The hash of the layer.
+	Hash string `protobuf:"bytes,1,opt,name=hash" json:"hash,omitempty"`
+	// The location of the layer (URL or filepath).
+	Path string `protobuf:"bytes,2,opt,name=path" json:"path,omitempty"`
+	// Any HTTP Headers that need to be used if requesting a layer over HTTP(S).
 	Headers map[string]string `protobuf:"bytes,3,rep,name=headers" json:"headers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
@@ -447,7 +397,7 @@ func (m *PostAncestryRequest_PostLayer) Reset()         { *m = PostAncestryReque
 func (m *PostAncestryRequest_PostLayer) String() string { return proto.CompactTextString(m) }
 func (*PostAncestryRequest_PostLayer) ProtoMessage()    {}
 func (*PostAncestryRequest_PostLayer) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{8, 0}
+	return fileDescriptor0, []int{6, 0}
 }
 
 func (m *PostAncestryRequest_PostLayer) GetHash() string {
@@ -472,13 +422,14 @@ func (m *PostAncestryRequest_PostLayer) GetHeaders() map[string]string {
 }
 
 type PostAncestryResponse struct {
+	// The status of Clair at the time of the request.
 	Status *ClairStatus `protobuf:"bytes,1,opt,name=status" json:"status,omitempty"`
 }
 
 func (m *PostAncestryResponse) Reset()                    { *m = PostAncestryResponse{} }
 func (m *PostAncestryResponse) String() string            { return proto.CompactTextString(m) }
 func (*PostAncestryResponse) ProtoMessage()               {}
-func (*PostAncestryResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+func (*PostAncestryResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
 
 func (m *PostAncestryResponse) GetStatus() *ClairStatus {
 	if m != nil {
@@ -487,74 +438,23 @@ func (m *PostAncestryResponse) GetStatus() *ClairStatus {
 	return nil
 }
 
-type GetAncestryRequest struct {
-	AncestryName        string `protobuf:"bytes,1,opt,name=ancestry_name,json=ancestryName" json:"ancestry_name,omitempty"`
-	WithVulnerabilities bool   `protobuf:"varint,2,opt,name=with_vulnerabilities,json=withVulnerabilities" json:"with_vulnerabilities,omitempty"`
-	WithFeatures        bool   `protobuf:"varint,3,opt,name=with_features,json=withFeatures" json:"with_features,omitempty"`
-}
-
-func (m *GetAncestryRequest) Reset()                    { *m = GetAncestryRequest{} }
-func (m *GetAncestryRequest) String() string            { return proto.CompactTextString(m) }
-func (*GetAncestryRequest) ProtoMessage()               {}
-func (*GetAncestryRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
-
-func (m *GetAncestryRequest) GetAncestryName() string {
-	if m != nil {
-		return m.AncestryName
-	}
-	return ""
-}
-
-func (m *GetAncestryRequest) GetWithVulnerabilities() bool {
-	if m != nil {
-		return m.WithVulnerabilities
-	}
-	return false
-}
-
-func (m *GetAncestryRequest) GetWithFeatures() bool {
-	if m != nil {
-		return m.WithFeatures
-	}
-	return false
-}
-
-type GetAncestryResponse struct {
-	Ancestry *Ancestry    `protobuf:"bytes,1,opt,name=ancestry" json:"ancestry,omitempty"`
-	Status   *ClairStatus `protobuf:"bytes,2,opt,name=status" json:"status,omitempty"`
-}
-
-func (m *GetAncestryResponse) Reset()                    { *m = GetAncestryResponse{} }
-func (m *GetAncestryResponse) String() string            { return proto.CompactTextString(m) }
-func (*GetAncestryResponse) ProtoMessage()               {}
-func (*GetAncestryResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
-
-func (m *GetAncestryResponse) GetAncestry() *Ancestry {
-	if m != nil {
-		return m.Ancestry
-	}
-	return nil
-}
-
-func (m *GetAncestryResponse) GetStatus() *ClairStatus {
-	if m != nil {
-		return m.Status
-	}
-	return nil
-}
-
 type GetNotificationRequest struct {
-	// if the vulnerability_page is empty, it implies the first page.
+	// The current page of previous vulnerabilities for the ancestry.
+	// This will be empty when it is the first page.
 	OldVulnerabilityPage string `protobuf:"bytes,1,opt,name=old_vulnerability_page,json=oldVulnerabilityPage" json:"old_vulnerability_page,omitempty"`
+	// The current page of vulnerabilities for the ancestry.
+	// This will be empty when it is the first page.
 	NewVulnerabilityPage string `protobuf:"bytes,2,opt,name=new_vulnerability_page,json=newVulnerabilityPage" json:"new_vulnerability_page,omitempty"`
-	Limit                int32  `protobuf:"varint,3,opt,name=limit" json:"limit,omitempty"`
-	Name                 string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
+	// The requested maximum number of results per page.
+	Limit int32 `protobuf:"varint,3,opt,name=limit" json:"limit,omitempty"`
+	// The name of the notification being requested.
+	Name string `protobuf:"bytes,4,opt,name=name" json:"name,omitempty"`
 }
 
 func (m *GetNotificationRequest) Reset()                    { *m = GetNotificationRequest{} }
 func (m *GetNotificationRequest) String() string            { return proto.CompactTextString(m) }
 func (*GetNotificationRequest) ProtoMessage()               {}
-func (*GetNotificationRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+func (*GetNotificationRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
 
 func (m *GetNotificationRequest) GetOldVulnerabilityPage() string {
 	if m != nil {
@@ -585,29 +485,182 @@ func (m *GetNotificationRequest) GetName() string {
 }
 
 type GetNotificationResponse struct {
-	Notification *Notification `protobuf:"bytes,1,opt,name=notification" json:"notification,omitempty"`
+	// The notification as requested.
+	Notification *GetNotificationResponse_Notification `protobuf:"bytes,1,opt,name=notification" json:"notification,omitempty"`
 }
 
 func (m *GetNotificationResponse) Reset()                    { *m = GetNotificationResponse{} }
 func (m *GetNotificationResponse) String() string            { return proto.CompactTextString(m) }
 func (*GetNotificationResponse) ProtoMessage()               {}
-func (*GetNotificationResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
+func (*GetNotificationResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
 
-func (m *GetNotificationResponse) GetNotification() *Notification {
+func (m *GetNotificationResponse) GetNotification() *GetNotificationResponse_Notification {
 	if m != nil {
 		return m.Notification
 	}
 	return nil
 }
 
+type GetNotificationResponse_Notification struct {
+	// The name of the requested notification.
+	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	// The time at which the notification was created.
+	Created string `protobuf:"bytes,2,opt,name=created" json:"created,omitempty"`
+	// The time at which the notification was last sent out.
+	Notified string `protobuf:"bytes,3,opt,name=notified" json:"notified,omitempty"`
+	// The time at which a notification has been deleted.
+	Deleted string `protobuf:"bytes,4,opt,name=deleted" json:"deleted,omitempty"`
+	// The previous vulnerability and a paginated view of the ancestries it affects.
+	Old *PagedVulnerableAncestries `protobuf:"bytes,5,opt,name=old" json:"old,omitempty"`
+	// The newly updated vulnerability and a paginated view of the ancestries it affects.
+	New *PagedVulnerableAncestries `protobuf:"bytes,6,opt,name=new" json:"new,omitempty"`
+}
+
+func (m *GetNotificationResponse_Notification) Reset()         { *m = GetNotificationResponse_Notification{} }
+func (m *GetNotificationResponse_Notification) String() string { return proto.CompactTextString(m) }
+func (*GetNotificationResponse_Notification) ProtoMessage()    {}
+func (*GetNotificationResponse_Notification) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{9, 0}
+}
+
+func (m *GetNotificationResponse_Notification) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *GetNotificationResponse_Notification) GetCreated() string {
+	if m != nil {
+		return m.Created
+	}
+	return ""
+}
+
+func (m *GetNotificationResponse_Notification) GetNotified() string {
+	if m != nil {
+		return m.Notified
+	}
+	return ""
+}
+
+func (m *GetNotificationResponse_Notification) GetDeleted() string {
+	if m != nil {
+		return m.Deleted
+	}
+	return ""
+}
+
+func (m *GetNotificationResponse_Notification) GetOld() *PagedVulnerableAncestries {
+	if m != nil {
+		return m.Old
+	}
+	return nil
+}
+
+func (m *GetNotificationResponse_Notification) GetNew() *PagedVulnerableAncestries {
+	if m != nil {
+		return m.New
+	}
+	return nil
+}
+
+type PagedVulnerableAncestries struct {
+	// The identifier for the current page.
+	CurrentPage string `protobuf:"bytes,1,opt,name=current_page,json=currentPage" json:"current_page,omitempty"`
+	// The token used to request the next page.
+	// This will be empty when there are no more pages.
+	NextPage string `protobuf:"bytes,2,opt,name=next_page,json=nextPage" json:"next_page,omitempty"`
+	// The requested maximum number of results per page.
+	Limit int32 `protobuf:"varint,3,opt,name=limit" json:"limit,omitempty"`
+	// The vulnerability that affects a given set of ancestries.
+	Vulnerability *Vulnerability `protobuf:"bytes,4,opt,name=vulnerability" json:"vulnerability,omitempty"`
+	// The ancestries affected by a vulnerability.
+	Ancestries []*PagedVulnerableAncestries_IndexedAncestryName `protobuf:"bytes,5,rep,name=ancestries" json:"ancestries,omitempty"`
+}
+
+func (m *PagedVulnerableAncestries) Reset()                    { *m = PagedVulnerableAncestries{} }
+func (m *PagedVulnerableAncestries) String() string            { return proto.CompactTextString(m) }
+func (*PagedVulnerableAncestries) ProtoMessage()               {}
+func (*PagedVulnerableAncestries) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+
+func (m *PagedVulnerableAncestries) GetCurrentPage() string {
+	if m != nil {
+		return m.CurrentPage
+	}
+	return ""
+}
+
+func (m *PagedVulnerableAncestries) GetNextPage() string {
+	if m != nil {
+		return m.NextPage
+	}
+	return ""
+}
+
+func (m *PagedVulnerableAncestries) GetLimit() int32 {
+	if m != nil {
+		return m.Limit
+	}
+	return 0
+}
+
+func (m *PagedVulnerableAncestries) GetVulnerability() *Vulnerability {
+	if m != nil {
+		return m.Vulnerability
+	}
+	return nil
+}
+
+func (m *PagedVulnerableAncestries) GetAncestries() []*PagedVulnerableAncestries_IndexedAncestryName {
+	if m != nil {
+		return m.Ancestries
+	}
+	return nil
+}
+
+type PagedVulnerableAncestries_IndexedAncestryName struct {
+	// The index is an ever increasing number associated with the particular ancestry.
+	// This is useful if you're processing notifications, and need to keep track of the progress of paginating the results.
+	Index int32 `protobuf:"varint,1,opt,name=index" json:"index,omitempty"`
+	// The name of the ancestry.
+	Name string `protobuf:"bytes,2,opt,name=name" json:"name,omitempty"`
+}
+
+func (m *PagedVulnerableAncestries_IndexedAncestryName) Reset() {
+	*m = PagedVulnerableAncestries_IndexedAncestryName{}
+}
+func (m *PagedVulnerableAncestries_IndexedAncestryName) String() string {
+	return proto.CompactTextString(m)
+}
+func (*PagedVulnerableAncestries_IndexedAncestryName) ProtoMessage() {}
+func (*PagedVulnerableAncestries_IndexedAncestryName) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{10, 0}
+}
+
+func (m *PagedVulnerableAncestries_IndexedAncestryName) GetIndex() int32 {
+	if m != nil {
+		return m.Index
+	}
+	return 0
+}
+
+func (m *PagedVulnerableAncestries_IndexedAncestryName) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
 type MarkNotificationAsReadRequest struct {
+	// The name of the Notification that has been processed.
 	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
 }
 
 func (m *MarkNotificationAsReadRequest) Reset()                    { *m = MarkNotificationAsReadRequest{} }
 func (m *MarkNotificationAsReadRequest) String() string            { return proto.CompactTextString(m) }
 func (*MarkNotificationAsReadRequest) ProtoMessage()               {}
-func (*MarkNotificationAsReadRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
+func (*MarkNotificationAsReadRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
 
 func (m *MarkNotificationAsReadRequest) GetName() string {
 	if m != nil {
@@ -618,20 +671,20 @@ func (m *MarkNotificationAsReadRequest) GetName() string {
 
 func init() {
 	proto.RegisterType((*Vulnerability)(nil), "clairpb.Vulnerability")
-	proto.RegisterType((*ClairStatus)(nil), "clairpb.ClairStatus")
 	proto.RegisterType((*Feature)(nil), "clairpb.Feature")
-	proto.RegisterType((*Ancestry)(nil), "clairpb.Ancestry")
 	proto.RegisterType((*Layer)(nil), "clairpb.Layer")
-	proto.RegisterType((*Notification)(nil), "clairpb.Notification")
-	proto.RegisterType((*IndexedAncestryName)(nil), "clairpb.IndexedAncestryName")
-	proto.RegisterType((*PagedVulnerableAncestries)(nil), "clairpb.PagedVulnerableAncestries")
+	proto.RegisterType((*ClairStatus)(nil), "clairpb.ClairStatus")
+	proto.RegisterType((*GetAncestryRequest)(nil), "clairpb.GetAncestryRequest")
+	proto.RegisterType((*GetAncestryResponse)(nil), "clairpb.GetAncestryResponse")
+	proto.RegisterType((*GetAncestryResponse_Ancestry)(nil), "clairpb.GetAncestryResponse.Ancestry")
 	proto.RegisterType((*PostAncestryRequest)(nil), "clairpb.PostAncestryRequest")
 	proto.RegisterType((*PostAncestryRequest_PostLayer)(nil), "clairpb.PostAncestryRequest.PostLayer")
 	proto.RegisterType((*PostAncestryResponse)(nil), "clairpb.PostAncestryResponse")
-	proto.RegisterType((*GetAncestryRequest)(nil), "clairpb.GetAncestryRequest")
-	proto.RegisterType((*GetAncestryResponse)(nil), "clairpb.GetAncestryResponse")
 	proto.RegisterType((*GetNotificationRequest)(nil), "clairpb.GetNotificationRequest")
 	proto.RegisterType((*GetNotificationResponse)(nil), "clairpb.GetNotificationResponse")
+	proto.RegisterType((*GetNotificationResponse_Notification)(nil), "clairpb.GetNotificationResponse.Notification")
+	proto.RegisterType((*PagedVulnerableAncestries)(nil), "clairpb.PagedVulnerableAncestries")
+	proto.RegisterType((*PagedVulnerableAncestries_IndexedAncestryName)(nil), "clairpb.PagedVulnerableAncestries.IndexedAncestryName")
 	proto.RegisterType((*MarkNotificationAsReadRequest)(nil), "clairpb.MarkNotificationAsReadRequest")
 }
 
@@ -646,8 +699,10 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for AncestryService service
 
 type AncestryServiceClient interface {
-	PostAncestry(ctx context.Context, in *PostAncestryRequest, opts ...grpc.CallOption) (*PostAncestryResponse, error)
+	// The RPC used to read the results of scanning for a particular ancestry.
 	GetAncestry(ctx context.Context, in *GetAncestryRequest, opts ...grpc.CallOption) (*GetAncestryResponse, error)
+	// The RPC used to create a new scan of an ancestry.
+	PostAncestry(ctx context.Context, in *PostAncestryRequest, opts ...grpc.CallOption) (*PostAncestryResponse, error)
 }
 
 type ancestryServiceClient struct {
@@ -656,15 +711,6 @@ type ancestryServiceClient struct {
 
 func NewAncestryServiceClient(cc *grpc.ClientConn) AncestryServiceClient {
 	return &ancestryServiceClient{cc}
-}
-
-func (c *ancestryServiceClient) PostAncestry(ctx context.Context, in *PostAncestryRequest, opts ...grpc.CallOption) (*PostAncestryResponse, error) {
-	out := new(PostAncestryResponse)
-	err := grpc.Invoke(ctx, "/clairpb.AncestryService/PostAncestry", in, out, c.cc, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *ancestryServiceClient) GetAncestry(ctx context.Context, in *GetAncestryRequest, opts ...grpc.CallOption) (*GetAncestryResponse, error) {
@@ -676,33 +722,26 @@ func (c *ancestryServiceClient) GetAncestry(ctx context.Context, in *GetAncestry
 	return out, nil
 }
 
+func (c *ancestryServiceClient) PostAncestry(ctx context.Context, in *PostAncestryRequest, opts ...grpc.CallOption) (*PostAncestryResponse, error) {
+	out := new(PostAncestryResponse)
+	err := grpc.Invoke(ctx, "/clairpb.AncestryService/PostAncestry", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for AncestryService service
 
 type AncestryServiceServer interface {
-	PostAncestry(context.Context, *PostAncestryRequest) (*PostAncestryResponse, error)
+	// The RPC used to read the results of scanning for a particular ancestry.
 	GetAncestry(context.Context, *GetAncestryRequest) (*GetAncestryResponse, error)
+	// The RPC used to create a new scan of an ancestry.
+	PostAncestry(context.Context, *PostAncestryRequest) (*PostAncestryResponse, error)
 }
 
 func RegisterAncestryServiceServer(s *grpc.Server, srv AncestryServiceServer) {
 	s.RegisterService(&_AncestryService_serviceDesc, srv)
-}
-
-func _AncestryService_PostAncestry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PostAncestryRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AncestryServiceServer).PostAncestry(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/clairpb.AncestryService/PostAncestry",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AncestryServiceServer).PostAncestry(ctx, req.(*PostAncestryRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _AncestryService_GetAncestry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -723,17 +762,35 @@ func _AncestryService_GetAncestry_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AncestryService_PostAncestry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PostAncestryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AncestryServiceServer).PostAncestry(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/clairpb.AncestryService/PostAncestry",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AncestryServiceServer).PostAncestry(ctx, req.(*PostAncestryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _AncestryService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "clairpb.AncestryService",
 	HandlerType: (*AncestryServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "PostAncestry",
-			Handler:    _AncestryService_PostAncestry_Handler,
-		},
-		{
 			MethodName: "GetAncestry",
 			Handler:    _AncestryService_GetAncestry_Handler,
+		},
+		{
+			MethodName: "PostAncestry",
+			Handler:    _AncestryService_PostAncestry_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -743,7 +800,9 @@ var _AncestryService_serviceDesc = grpc.ServiceDesc{
 // Client API for NotificationService service
 
 type NotificationServiceClient interface {
+	// The RPC used to get a particularly Notification.
 	GetNotification(ctx context.Context, in *GetNotificationRequest, opts ...grpc.CallOption) (*GetNotificationResponse, error)
+	// The RPC used to mark a Notification as read after it has been processed.
 	MarkNotificationAsRead(ctx context.Context, in *MarkNotificationAsReadRequest, opts ...grpc.CallOption) (*google_protobuf1.Empty, error)
 }
 
@@ -776,7 +835,9 @@ func (c *notificationServiceClient) MarkNotificationAsRead(ctx context.Context, 
 // Server API for NotificationService service
 
 type NotificationServiceServer interface {
+	// The RPC used to get a particularly Notification.
 	GetNotification(context.Context, *GetNotificationRequest) (*GetNotificationResponse, error)
+	// The RPC used to mark a Notification as read after it has been processed.
 	MarkNotificationAsRead(context.Context, *MarkNotificationAsReadRequest) (*google_protobuf1.Empty, error)
 }
 
@@ -840,78 +901,78 @@ var _NotificationService_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("api/v3/clairpb/clair.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 1162 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x56, 0x4d, 0x6f, 0xdb, 0x46,
-	0x13, 0x06, 0x25, 0xcb, 0x92, 0x46, 0xf2, 0xd7, 0x5a, 0x51, 0x68, 0xd9, 0x46, 0x1c, 0xbe, 0x78,
-	0xd3, 0x20, 0x6d, 0x25, 0x54, 0xf6, 0xa1, 0x35, 0xd2, 0x8f, 0xa4, 0x4e, 0xd2, 0x02, 0x49, 0x10,
-	0x30, 0xa9, 0x0f, 0xbd, 0x08, 0x6b, 0x72, 0x64, 0x13, 0xa6, 0x48, 0x96, 0xbb, 0x92, 0x2c, 0x04,
-	0xbd, 0xb4, 0xc7, 0x9e, 0xda, 0xfe, 0x8f, 0xfe, 0x84, 0x5e, 0x0b, 0xf4, 0x9a, 0x7b, 0x81, 0x02,
-	0xbd, 0xf6, 0x3f, 0x14, 0xbb, 0xdc, 0xa5, 0x48, 0x8b, 0x0e, 0x8c, 0xf6, 0x24, 0xce, 0xcc, 0x33,
-	0xbb, 0x33, 0xcf, 0x33, 0x3b, 0x10, 0x74, 0x68, 0xe4, 0xf5, 0x26, 0xfb, 0x3d, 0xc7, 0xa7, 0x5e,
-	0x1c, 0x9d, 0x24, 0xbf, 0xdd, 0x28, 0x0e, 0x79, 0x48, 0xaa, 0xca, 0xd9, 0xd9, 0x39, 0x0d, 0xc3,
-	0x53, 0x1f, 0x7b, 0x02, 0x4b, 0x83, 0x20, 0xe4, 0x94, 0x7b, 0x61, 0xc0, 0x12, 0x58, 0x67, 0x5b,
-	0x45, 0xa5, 0x75, 0x32, 0x1e, 0xf6, 0x70, 0x14, 0xf1, 0x99, 0x0a, 0xde, 0xba, 0x1c, 0xe4, 0xde,
-	0x08, 0x19, 0xa7, 0xa3, 0x28, 0x01, 0x58, 0x3f, 0x95, 0x60, 0xe5, 0x78, 0xec, 0x07, 0x18, 0xd3,
-	0x13, 0xcf, 0xf7, 0xf8, 0x8c, 0x10, 0x58, 0x0a, 0xe8, 0x08, 0x4d, 0x63, 0xcf, 0xb8, 0x5b, 0xb7,
-	0xe5, 0x37, 0xf9, 0x3f, 0xac, 0x8a, 0x5f, 0x16, 0x51, 0x07, 0x07, 0x32, 0x5a, 0x92, 0xd1, 0x95,
-	0xd4, 0xfb, 0x5c, 0xc0, 0xf6, 0xa0, 0xe1, 0x22, 0x73, 0x62, 0x2f, 0x12, 0x05, 0x9a, 0x65, 0x89,
-	0xc9, 0xba, 0xc4, 0xe1, 0xbe, 0x17, 0x9c, 0x9b, 0x4b, 0xc9, 0xe1, 0xe2, 0x9b, 0x74, 0xa0, 0xc6,
-	0x70, 0x82, 0xb1, 0xc7, 0x67, 0x66, 0x45, 0xfa, 0x53, 0x5b, 0xc4, 0x46, 0xc8, 0xa9, 0x4b, 0x39,
-	0x35, 0x97, 0x93, 0x98, 0xb6, 0xc9, 0x16, 0xd4, 0x86, 0xde, 0x05, 0xba, 0x83, 0x93, 0x99, 0x59,
-	0x95, 0xb1, 0xaa, 0xb4, 0x1f, 0xce, 0xc8, 0xc7, 0xb0, 0x41, 0x87, 0x43, 0x74, 0x38, 0xba, 0x83,
-	0x09, 0xc6, 0x4c, 0xd0, 0x65, 0xd6, 0xf6, 0xca, 0x77, 0x1b, 0xfd, 0xf5, 0xae, 0xa2, 0xb5, 0xfb,
-	0x18, 0x29, 0x1f, 0xc7, 0x68, 0xaf, 0x6b, 0xe8, 0xb1, 0x42, 0x5a, 0x3f, 0x18, 0xd0, 0xf8, 0x5c,
-	0xa0, 0x5e, 0x72, 0xca, 0xc7, 0x8c, 0x98, 0x50, 0xf5, 0x3d, 0xc6, 0x31, 0x66, 0xa6, 0xb1, 0x57,
-	0x16, 0x17, 0x29, 0x93, 0xec, 0x40, 0xdd, 0x45, 0x8e, 0x0e, 0x0f, 0x63, 0x66, 0x96, 0x64, 0x6c,
-	0xee, 0x20, 0x47, 0xb0, 0xee, 0x53, 0xc6, 0x07, 0xe3, 0xc8, 0xa5, 0x1c, 0x07, 0x82, 0x7b, 0x49,
-	0x4a, 0xa3, 0xdf, 0xe9, 0x26, 0xc2, 0x74, 0xb5, 0x30, 0xdd, 0x57, 0x5a, 0x18, 0x7b, 0x55, 0xe4,
-	0x7c, 0x25, 0x53, 0x84, 0xd3, 0xfa, 0xcd, 0x80, 0xaa, 0xaa, 0xf5, 0xbf, 0x88, 0x63, 0x42, 0x55,
-	0x51, 0xa1, 0x84, 0xd1, 0xa6, 0x38, 0x40, 0x7d, 0x0e, 0x86, 0x61, 0x3c, 0xa2, 0x5c, 0xc9, 0xb3,
-	0xa2, 0xbc, 0x8f, 0xa5, 0x93, 0x7c, 0x06, 0x6b, 0x93, 0xcc, 0xa4, 0x78, 0xc8, 0xcc, 0x8a, 0xa4,
-	0xb4, 0x9d, 0x52, 0x9a, 0x9b, 0x24, 0xfb, 0x32, 0xdc, 0xfa, 0xdd, 0x80, 0xda, 0x83, 0xc0, 0x41,
-	0xc6, 0xe3, 0xe2, 0x39, 0x7b, 0x0f, 0x6a, 0xc3, 0xa4, 0xd3, 0x84, 0xcd, 0x22, 0xb9, 0x52, 0x04,
-	0xb9, 0x03, 0xcb, 0x3e, 0x9d, 0x09, 0x55, 0xca, 0x12, 0xbb, 0x9a, 0x62, 0x9f, 0x0a, 0xb7, 0xad,
-	0xa2, 0xe4, 0x1d, 0x58, 0x63, 0x0e, 0x0d, 0x02, 0x74, 0x07, 0x5a, 0xc6, 0x25, 0x29, 0xd5, 0xaa,
-	0x72, 0x3f, 0x55, 0x6a, 0xbe, 0x0b, 0x1b, 0x1a, 0x38, 0x57, 0xb5, 0x22, 0xa1, 0xeb, 0x2a, 0x70,
-	0xa4, 0xfd, 0xd6, 0x36, 0x54, 0xe4, 0x35, 0xa2, 0x91, 0x33, 0xca, 0xce, 0x74, 0x23, 0xe2, 0xdb,
-	0xfa, 0xc3, 0x80, 0xe6, 0xf3, 0x90, 0x7b, 0x43, 0xcf, 0xa1, 0x7a, 0xf0, 0x17, 0xba, 0x35, 0xa1,
-	0xea, 0xc4, 0x48, 0x39, 0xba, 0x4a, 0x31, 0x6d, 0x8a, 0xb1, 0x0f, 0x64, 0x36, 0xba, 0x4a, 0xac,
-	0xd4, 0x16, 0x59, 0x2e, 0xfa, 0x28, 0xb2, 0x12, 0x99, 0xb4, 0x49, 0x0e, 0xa0, 0x1c, 0xfa, 0xae,
-	0x7c, 0x43, 0x8d, 0xbe, 0x95, 0x92, 0xf1, 0x82, 0x9e, 0xa2, 0xab, 0x95, 0xf1, 0x51, 0x09, 0xe0,
-	0x21, 0xb3, 0x05, 0x5c, 0x64, 0x05, 0x38, 0x95, 0xaf, 0xeb, 0x9a, 0x59, 0x01, 0x4e, 0xad, 0x4f,
-	0x61, 0xf3, 0xcb, 0xc0, 0xc5, 0x0b, 0x74, 0xb5, 0xa0, 0x72, 0xc8, 0x5a, 0x50, 0xf1, 0x84, 0x5b,
-	0xf6, 0x59, 0xb1, 0x13, 0x23, 0x6d, 0xbe, 0x34, 0x6f, 0xde, 0xfa, 0xdb, 0x80, 0xad, 0x2b, 0xef,
-	0x20, 0xb7, 0xa1, 0xe9, 0x8c, 0xe3, 0x18, 0x03, 0x3e, 0x88, 0xe8, 0xa9, 0xa6, 0xad, 0xa1, 0x7c,
-	0x22, 0x8f, 0x6c, 0x43, 0x3d, 0xc0, 0x0b, 0x15, 0x2f, 0x29, 0x92, 0xf0, 0x22, 0x09, 0xb6, 0xa0,
-	0xe2, 0x7b, 0x23, 0x8f, 0x4b, 0xf6, 0x2a, 0x76, 0x62, 0x90, 0xfb, 0xb0, 0x92, 0x1d, 0xc9, 0x99,
-	0x24, 0xf0, 0xea, 0xf9, 0xcd, 0x83, 0xc9, 0x7d, 0x00, 0x9a, 0x56, 0xa8, 0x46, 0x7f, 0x27, 0x4d,
-	0x2d, 0x60, 0xc3, 0xce, 0xe0, 0xad, 0x37, 0x25, 0xd8, 0x7c, 0x11, 0x32, 0xae, 0x01, 0x36, 0x7e,
-	0x33, 0x46, 0xc6, 0xc9, 0xff, 0x60, 0x45, 0xa1, 0x66, 0x83, 0xcc, 0x84, 0x34, 0x69, 0x96, 0xd6,
-	0x36, 0x2c, 0xab, 0x97, 0x99, 0x34, 0xaa, 0x2c, 0xf2, 0xc9, 0xa5, 0x17, 0x70, 0x67, 0x2e, 0xdf,
-	0xe2, 0x55, 0xd2, 0x97, 0x7b, 0x19, 0x9d, 0x5f, 0x0d, 0xa8, 0xa7, 0xde, 0xa2, 0x41, 0x16, 0xbe,
-	0x88, 0xf2, 0x33, 0x2d, 0x9d, 0xf8, 0x26, 0xcf, 0xa0, 0x7a, 0x86, 0xd4, 0x9d, 0x5f, 0xbb, 0x7f,
-	0xbd, 0x6b, 0xbb, 0x5f, 0x24, 0x59, 0x8f, 0x02, 0x11, 0xd5, 0x67, 0x74, 0x0e, 0xa1, 0x99, 0x0d,
-	0x90, 0x75, 0x28, 0x9f, 0xe3, 0x4c, 0x55, 0x21, 0x3e, 0x85, 0x9a, 0x13, 0xea, 0x8f, 0xb5, 0xcc,
-	0x89, 0x71, 0x58, 0xfa, 0xd0, 0xb0, 0x8e, 0xa0, 0x95, 0xbf, 0x92, 0x45, 0x61, 0xc0, 0xc4, 0x22,
-	0x59, 0x66, 0x72, 0x77, 0xcb, 0x63, 0x1a, 0xfd, 0x56, 0x5a, 0x61, 0x66, 0xaf, 0xdb, 0x0a, 0x63,
-	0xfd, 0x68, 0x00, 0x79, 0x82, 0xff, 0x4e, 0x9a, 0x0f, 0xa0, 0x35, 0xf5, 0xf8, 0xd9, 0xe0, 0xf2,
-	0x6a, 0x14, 0xa5, 0xd6, 0xec, 0x4d, 0x11, 0x3b, 0xce, 0x87, 0xc4, 0xb9, 0x32, 0x25, 0x5d, 0x75,
-	0x65, 0x89, 0x6d, 0x0a, 0xa7, 0xda, 0x72, 0xcc, 0x8a, 0x61, 0x33, 0x57, 0x92, 0x6a, 0xec, 0x7d,
-	0xa8, 0xe9, 0xeb, 0x55, 0x6b, 0x1b, 0x69, 0x6b, 0x29, 0x38, 0x85, 0x64, 0x78, 0x28, 0x5d, 0x83,
-	0x87, 0x5f, 0x0c, 0x68, 0x3f, 0x41, 0x9e, 0x5d, 0x5c, 0x9a, 0x8b, 0x03, 0x68, 0x87, 0xbe, 0x9b,
-	0xeb, 0x72, 0x96, 0x7d, 0x9a, 0xad, 0xd0, 0x77, 0x73, 0xaf, 0x47, 0x3e, 0xc3, 0x03, 0x68, 0x07,
-	0x38, 0x2d, 0xca, 0x4a, 0x94, 0x6c, 0x05, 0x38, 0x5d, 0xcc, 0x2a, 0x7e, 0xbc, 0x7a, 0x89, 0x2c,
-	0x65, 0x96, 0xc8, 0x2b, 0xb8, 0xb9, 0x50, 0xaf, 0x22, 0xea, 0x23, 0x68, 0x06, 0x19, 0xbf, 0x22,
-	0xeb, 0x46, 0xda, 0x7f, 0x2e, 0x29, 0x07, 0xb5, 0xf6, 0x61, 0xf7, 0x19, 0x8d, 0xcf, 0xb3, 0x88,
-	0x07, 0xcc, 0x46, 0xea, 0x6a, 0x32, 0x0a, 0x96, 0x79, 0xff, 0x4f, 0x03, 0xd6, 0xb4, 0x00, 0x2f,
-	0x31, 0x9e, 0x78, 0x0e, 0x12, 0x0a, 0xcd, 0xec, 0x74, 0x92, 0x9d, 0xb7, 0xbd, 0x93, 0xce, 0xee,
-	0x15, 0xd1, 0xa4, 0x21, 0xab, 0xf5, 0xdd, 0x9b, 0xbf, 0x7e, 0x2e, 0xad, 0x5a, 0xf5, 0x9e, 0x56,
-	0xf7, 0xd0, 0xb8, 0x47, 0xce, 0xa1, 0x91, 0x19, 0x13, 0xb2, 0x9d, 0x9e, 0xb1, 0x38, 0xcf, 0x9d,
-	0x9d, 0xe2, 0xa0, 0x3a, 0xff, 0xb6, 0x3c, 0x7f, 0x9b, 0x6c, 0xa5, 0xe7, 0xf7, 0x5e, 0xe7, 0xc6,
-	0xff, 0xdb, 0xfe, 0xf7, 0x25, 0xd8, 0xcc, 0xb2, 0xa2, 0xfb, 0x64, 0xb0, 0x76, 0x49, 0x06, 0x72,
-	0x2b, 0x7b, 0x57, 0xc1, 0x40, 0x75, 0xf6, 0xae, 0x06, 0xa8, 0x82, 0x76, 0x65, 0x41, 0x37, 0xc9,
-	0x8d, 0x5e, 0x56, 0x1d, 0xd6, 0x7b, 0x2d, 0x8b, 0x21, 0x53, 0x68, 0x17, 0xab, 0x44, 0xe6, 0x5b,
-	0xf0, 0xad, 0x32, 0x76, 0xda, 0x0b, 0x7f, 0xc2, 0x1e, 0x89, 0xbf, 0xce, 0xfa, 0xe2, 0x7b, 0xc5,
-	0x17, 0x3f, 0xac, 0x7f, 0xad, 0xff, 0x99, 0x9f, 0x2c, 0xcb, 0xcc, 0xfd, 0x7f, 0x02, 0x00, 0x00,
-	0xff, 0xff, 0x51, 0xb7, 0x75, 0x58, 0xc7, 0x0b, 0x00, 0x00,
+	// 1166 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x56, 0xdd, 0x6f, 0xdb, 0x54,
+	0x14, 0x97, 0xd3, 0xa6, 0x49, 0x4e, 0xd2, 0x8f, 0xdd, 0x86, 0xcc, 0x73, 0x3b, 0xad, 0x33, 0xda,
+	0x98, 0xc6, 0x48, 0x44, 0x3a, 0x21, 0x54, 0xf1, 0xd5, 0xd1, 0x6d, 0x20, 0x6d, 0xd3, 0xf0, 0xa0,
+	0x0f, 0xbc, 0x44, 0xb7, 0xf6, 0x49, 0x6b, 0xd5, 0xb1, 0x8d, 0xef, 0x4d, 0xd2, 0x68, 0xe2, 0x05,
+	0x1e, 0x79, 0x02, 0xfe, 0x0f, 0xfe, 0x04, 0x5e, 0x41, 0x48, 0x3c, 0xed, 0x1d, 0x09, 0x89, 0x3f,
+	0x04, 0xdd, 0xeb, 0x7b, 0x1d, 0xbb, 0x75, 0xdb, 0x09, 0x9e, 0xe2, 0xf3, 0xfd, 0xf5, 0x3b, 0xf7,
+	0x04, 0x2c, 0x1a, 0xfb, 0xbd, 0xc9, 0x76, 0xcf, 0x0d, 0xa8, 0x9f, 0xc4, 0x07, 0xe9, 0x6f, 0x37,
+	0x4e, 0x22, 0x1e, 0x91, 0x9a, 0x62, 0x5a, 0x9b, 0x87, 0x51, 0x74, 0x18, 0x60, 0x4f, 0xe8, 0xd2,
+	0x30, 0x8c, 0x38, 0xe5, 0x7e, 0x14, 0xb2, 0x54, 0xcd, 0xda, 0x50, 0x52, 0x49, 0x1d, 0x8c, 0x87,
+	0x3d, 0x1c, 0xc5, 0x7c, 0xa6, 0x84, 0x37, 0x4e, 0x0b, 0xb9, 0x3f, 0x42, 0xc6, 0xe9, 0x28, 0x4e,
+	0x15, 0xec, 0x9f, 0x2a, 0xb0, 0xbc, 0x3f, 0x0e, 0x42, 0x4c, 0xe8, 0x81, 0x1f, 0xf8, 0x7c, 0x46,
+	0x08, 0x2c, 0x86, 0x74, 0x84, 0xa6, 0xb1, 0x65, 0xdc, 0x69, 0x38, 0xf2, 0x9b, 0xdc, 0x82, 0x15,
+	0xf1, 0xcb, 0x62, 0xea, 0xe2, 0x40, 0x4a, 0x2b, 0x52, 0xba, 0x9c, 0x71, 0x9f, 0x09, 0xb5, 0x2d,
+	0x68, 0x7a, 0xc8, 0xdc, 0xc4, 0x8f, 0x45, 0x82, 0xe6, 0x82, 0xd4, 0xc9, 0xb3, 0x84, 0xf3, 0xc0,
+	0x0f, 0x8f, 0xcd, 0xc5, 0xd4, 0xb9, 0xf8, 0x26, 0x16, 0xd4, 0x19, 0x4e, 0x30, 0xf1, 0xf9, 0xcc,
+	0xac, 0x4a, 0x7e, 0x46, 0x0b, 0xd9, 0x08, 0x39, 0xf5, 0x28, 0xa7, 0xe6, 0x52, 0x2a, 0xd3, 0x34,
+	0xb9, 0x06, 0xf5, 0xa1, 0x7f, 0x82, 0xde, 0xe0, 0x60, 0x66, 0xd6, 0xa4, 0xac, 0x26, 0xe9, 0x07,
+	0x33, 0xf2, 0x21, 0x5c, 0xa1, 0xc3, 0x21, 0xba, 0x1c, 0xbd, 0xc1, 0x04, 0x13, 0x26, 0xda, 0x65,
+	0xd6, 0xb7, 0x16, 0xee, 0x34, 0xfb, 0x6b, 0x5d, 0xd5, 0xd6, 0xee, 0x23, 0xa4, 0x7c, 0x9c, 0xa0,
+	0xb3, 0xa6, 0x55, 0xf7, 0x95, 0xa6, 0xfd, 0x9b, 0x01, 0x35, 0x25, 0xfd, 0x3f, 0xed, 0x30, 0xa1,
+	0xa6, 0x82, 0xab, 0x56, 0x68, 0x52, 0x38, 0x50, 0x9f, 0x83, 0x61, 0x94, 0x8c, 0x28, 0x57, 0x0d,
+	0x59, 0x56, 0xdc, 0x47, 0x92, 0x49, 0x3e, 0x81, 0xd5, 0x49, 0x6e, 0x36, 0x3e, 0x32, 0xb3, 0x2a,
+	0x8b, 0xe8, 0x64, 0x45, 0x14, 0x66, 0xe7, 0x9c, 0x56, 0xb7, 0x37, 0xa0, 0xfa, 0x84, 0xce, 0x30,
+	0x11, 0x65, 0x1c, 0x51, 0x76, 0xa4, 0xcb, 0x10, 0xdf, 0xf6, 0x0f, 0x06, 0x34, 0x3f, 0x15, 0x7e,
+	0x5e, 0x70, 0xca, 0xc7, 0x4c, 0xe4, 0x1b, 0xf8, 0x8c, 0x63, 0xc2, 0x4c, 0x63, 0x6b, 0x41, 0xe4,
+	0xab, 0x48, 0xb2, 0x09, 0x0d, 0x0f, 0x39, 0xba, 0x3c, 0x4a, 0x98, 0x59, 0x91, 0xb2, 0x39, 0x83,
+	0xec, 0xc1, 0x5a, 0x40, 0x19, 0x1f, 0x8c, 0x63, 0x8f, 0x72, 0x1c, 0x08, 0x88, 0xc9, 0x82, 0x9b,
+	0x7d, 0xab, 0x9b, 0xe2, 0xaf, 0xab, 0xf1, 0xd7, 0xfd, 0x52, 0xe3, 0xcf, 0x59, 0x11, 0x36, 0x5f,
+	0x49, 0x13, 0xc1, 0xb4, 0x7f, 0x34, 0x80, 0x3c, 0x46, 0xbe, 0x1b, 0xba, 0xc8, 0x78, 0x32, 0x73,
+	0xf0, 0x9b, 0x31, 0x32, 0x4e, 0xde, 0x84, 0x65, 0xaa, 0x58, 0x83, 0xdc, 0x20, 0x5a, 0x9a, 0x29,
+	0x3b, 0xfd, 0x2e, 0xb4, 0xa7, 0x3e, 0x3f, 0x1a, 0x9c, 0xee, 0x96, 0x18, 0x4b, 0xdd, 0x59, 0x17,
+	0xb2, 0xfd, 0xa2, 0x48, 0xf8, 0x95, 0x26, 0xc3, 0x74, 0xce, 0x4c, 0x66, 0x5c, 0x77, 0x5a, 0x82,
+	0xa9, 0x66, 0xcf, 0xec, 0x57, 0x15, 0x58, 0x2f, 0xe4, 0xc4, 0xe2, 0x28, 0x64, 0x48, 0x76, 0xa1,
+	0xae, 0xe3, 0xcb, 0x7c, 0x9a, 0xfd, 0x5b, 0xd9, 0x44, 0x4a, 0xf4, 0xbb, 0x19, 0x23, 0x33, 0x23,
+	0xf7, 0x60, 0x89, 0xc9, 0xb6, 0xcb, 0x24, 0x9b, 0xfd, 0x76, 0xe6, 0x20, 0x37, 0x12, 0x47, 0xe9,
+	0x58, 0x7f, 0x18, 0x50, 0xd7, 0x4e, 0x4a, 0x21, 0x79, 0x0f, 0xea, 0x59, 0x25, 0x95, 0x73, 0x80,
+	0x9e, 0x69, 0x90, 0xdb, 0xb0, 0x14, 0x08, 0x58, 0x88, 0xaa, 0x85, 0xee, 0x4a, 0xa6, 0x2b, 0xd1,
+	0xe2, 0x28, 0x29, 0x79, 0x0b, 0x56, 0x99, 0x4b, 0xc3, 0x10, 0xbd, 0x81, 0x46, 0xc6, 0xa2, 0x9c,
+	0xfe, 0x8a, 0x62, 0x3f, 0x51, 0x00, 0x79, 0x1b, 0xae, 0x68, 0xc5, 0x39, 0x50, 0xaa, 0x52, 0x75,
+	0x4d, 0x09, 0xf6, 0x34, 0x5f, 0x76, 0xf5, 0x79, 0xc4, 0xfe, 0xdb, 0xa8, 0x3b, 0xb0, 0xa4, 0x56,
+	0x26, 0xdd, 0x39, 0x45, 0x91, 0x8f, 0x4e, 0x95, 0x74, 0x3b, 0x2b, 0xa9, 0x24, 0x94, 0xe4, 0x15,
+	0x4a, 0xb5, 0x7e, 0x35, 0xa0, 0x91, 0x71, 0xcb, 0xd6, 0x45, 0xf0, 0x62, 0xca, 0x8f, 0x54, 0x5c,
+	0xf9, 0x4d, 0x9e, 0x42, 0xed, 0x08, 0xa9, 0x37, 0x0f, 0xbb, 0xfd, 0x7a, 0x61, 0xbb, 0x9f, 0xa5,
+	0x56, 0x0f, 0x43, 0x21, 0xd5, 0x3e, 0xac, 0x1d, 0x68, 0xe5, 0x05, 0x64, 0x0d, 0x16, 0x8e, 0x71,
+	0xa6, 0xb2, 0x10, 0x9f, 0xa4, 0x0d, 0xd5, 0x09, 0x0d, 0xc6, 0xfa, 0xc5, 0x49, 0x89, 0x9d, 0xca,
+	0xfb, 0x86, 0xbd, 0x07, 0xed, 0x62, 0x48, 0x85, 0xd5, 0x39, 0xd0, 0x8c, 0xcb, 0x81, 0x66, 0xff,
+	0x62, 0x40, 0xe7, 0x31, 0xf2, 0x67, 0x11, 0xf7, 0x87, 0xbe, 0x2b, 0x0f, 0x8d, 0x1e, 0xcf, 0x7d,
+	0xe8, 0x44, 0x81, 0x57, 0xd8, 0xb1, 0xd9, 0x20, 0xa6, 0x87, 0x7a, 0x4e, 0xed, 0x28, 0xf0, 0x0a,
+	0xcf, 0xd1, 0x73, 0x7a, 0x88, 0xc2, 0x2a, 0xc4, 0x69, 0x99, 0x55, 0x5a, 0x41, 0x3b, 0xc4, 0xe9,
+	0x59, 0xab, 0x36, 0x54, 0x03, 0x7f, 0xe4, 0x73, 0xb9, 0x95, 0x55, 0x27, 0x25, 0x32, 0xe0, 0x2f,
+	0xce, 0x81, 0x6f, 0xff, 0x59, 0x81, 0xab, 0x67, 0x12, 0x56, 0xa5, 0x7f, 0x01, 0xad, 0x30, 0xc7,
+	0x57, 0x0d, 0x78, 0x27, 0xbf, 0xaa, 0x65, 0x76, 0xdd, 0x02, 0xb3, 0xe0, 0xc2, 0xfa, 0xcb, 0x80,
+	0x56, 0x5e, 0x5c, 0xba, 0x8c, 0x26, 0xd4, 0xdc, 0x04, 0x29, 0x47, 0x4f, 0x15, 0xa9, 0x49, 0x71,
+	0xcf, 0x52, 0x77, 0xe8, 0xa9, 0x9b, 0x90, 0xd1, 0xc2, 0xca, 0xc3, 0x00, 0x85, 0x55, 0x5a, 0xa0,
+	0x26, 0xc9, 0x7d, 0x58, 0x88, 0x02, 0x4f, 0x1e, 0xc7, 0x66, 0xdf, 0x9e, 0x23, 0x8c, 0x1e, 0x62,
+	0xd6, 0xf1, 0x00, 0xd5, 0xe4, 0x7d, 0x64, 0x8e, 0x50, 0x17, 0x56, 0x21, 0x4e, 0xe5, 0xd9, 0x7c,
+	0x4d, 0xab, 0x10, 0xa7, 0xf6, 0xef, 0x15, 0xb8, 0x76, 0xae, 0x0a, 0xb9, 0x09, 0x2d, 0x77, 0x9c,
+	0x24, 0x18, 0xf2, 0xfc, 0xe4, 0x9b, 0x8a, 0x27, 0x47, 0xb7, 0x01, 0x8d, 0x10, 0x4f, 0x78, 0x7e,
+	0xc6, 0x75, 0xc1, 0xb8, 0x60, 0xae, 0x1f, 0xc0, 0x72, 0x01, 0x1f, 0xb2, 0xfe, 0xf3, 0xaf, 0x5c,
+	0x51, 0x99, 0xec, 0x03, 0xd0, 0x2c, 0x43, 0x75, 0x20, 0xdf, 0xbb, 0xbc, 0xdc, 0xee, 0xe7, 0xa1,
+	0x87, 0x27, 0xe8, 0xed, 0xe6, 0x5e, 0x17, 0x27, 0xe7, 0xc9, 0xfa, 0x18, 0xd6, 0x4b, 0x54, 0x44,
+	0x09, 0xbe, 0x60, 0xcb, 0xda, 0xab, 0x4e, 0x4a, 0x64, 0x30, 0xa8, 0xe4, 0xa0, 0xb9, 0x0d, 0xd7,
+	0x9f, 0xd2, 0xe4, 0x38, 0x0f, 0x97, 0x5d, 0xe6, 0x20, 0xf5, 0xf4, 0x46, 0x95, 0x60, 0xa7, 0xff,
+	0xb7, 0x01, 0xab, 0x3a, 0xde, 0x0b, 0x4c, 0x26, 0xbe, 0x8b, 0xe4, 0x18, 0x9a, 0xb9, 0xab, 0x42,
+	0x36, 0xca, 0x6f, 0x8d, 0xf4, 0x69, 0x6d, 0x5e, 0x74, 0x88, 0xec, 0x9b, 0xdf, 0xbd, 0xfa, 0xe7,
+	0xe7, 0xca, 0x06, 0xb9, 0xd6, 0xd3, 0x8f, 0x6a, 0xef, 0x65, 0xe1, 0xcd, 0xfd, 0x96, 0x50, 0x68,
+	0xe5, 0xdf, 0x11, 0xb2, 0x79, 0xd1, 0x8b, 0x66, 0x5d, 0x3f, 0x47, 0xaa, 0xe2, 0xb5, 0x65, 0xbc,
+	0x15, 0xbb, 0x91, 0xc5, 0xdb, 0x31, 0xee, 0xf6, 0xbf, 0xaf, 0xc0, 0x7a, 0xbe, 0x2b, 0xba, 0x4e,
+	0x06, 0xab, 0xa7, 0x56, 0x92, 0xdc, 0x38, 0x7f, 0x59, 0xd3, 0x04, 0xb6, 0x2e, 0xdb, 0x66, 0xfb,
+	0xba, 0xcc, 0xe1, 0x2a, 0x79, 0xa3, 0x97, 0xdf, 0x64, 0xd6, 0x7b, 0x99, 0xd6, 0x3b, 0x85, 0x4e,
+	0xf9, 0x94, 0xc8, 0xfc, 0x84, 0x5c, 0x38, 0x46, 0xab, 0x73, 0xe6, 0x5f, 0xce, 0x43, 0xf1, 0x17,
+	0x5c, 0x07, 0xbe, 0x5b, 0x1e, 0xf8, 0x41, 0xe3, 0x6b, 0xfd, 0x0f, 0xff, 0x60, 0x49, 0x5a, 0x6e,
+	0xff, 0x1b, 0x00, 0x00, 0xff, 0xff, 0xbb, 0xee, 0xb6, 0xdc, 0x0f, 0x0c, 0x00, 0x00,
 }
