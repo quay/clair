@@ -42,6 +42,7 @@ import (
 	_ "github.com/coreos/clair/database/pgsql"
 
 	// Register extensions.
+	_ "github.com/coreos/clair/ext/featurefmt/alpm"
 	_ "github.com/coreos/clair/ext/featurefmt/apk"
 	_ "github.com/coreos/clair/ext/featurefmt/dpkg"
 	_ "github.com/coreos/clair/ext/featurefmt/rpm"
@@ -55,6 +56,7 @@ import (
 	_ "github.com/coreos/clair/ext/notification/webhook"
 	_ "github.com/coreos/clair/ext/vulnmdsrc/nvd"
 	_ "github.com/coreos/clair/ext/vulnsrc/alpine"
+	_ "github.com/coreos/clair/ext/vulnsrc/arch"
 	_ "github.com/coreos/clair/ext/vulnsrc/debian"
 	_ "github.com/coreos/clair/ext/vulnsrc/oracle"
 	_ "github.com/coreos/clair/ext/vulnsrc/rhel"
