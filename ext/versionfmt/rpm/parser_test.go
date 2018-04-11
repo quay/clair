@@ -184,3 +184,27 @@ func TestParseAndCompare(t *testing.T) {
 		assert.Equal(t, -c.expected, cmp, "%s vs. %s, = %d, expected %d", c.v2, c.v1, cmp, -c.expected)
 	}
 }
+
+func TestInRange(t *testing.T) {
+	cases := []struct {
+		v1       string
+		expected bool
+		v2       string
+	}{
+		{"5.4.2-1", true, "5.4.2-1"},
+		{"2.7.6-1", true, "2.7.6-2"},
+		{"1.1.0-3", true, "1.1.1-1"},
+		{"20101121", true, "20101122"},
+		{"2", false, "xyz.4"},
+		{"10.0039", false, "10.0001"},
+		{"1.0~rc1", false, "1.0~rc1~git123"},
+		{"5.0", false, "4.999.9"},
+	}
+
+	var p parser
+	for _, c := range cases {
+		b, err := p.InRange(c.v1, c.v2)
+		assert.Nil(t, err)
+		assert.Equal(t, c.expected, b, "%s vs. %s, = %d, expected %d", c.v1, c.v2, b, c.expected)
+	}
+}

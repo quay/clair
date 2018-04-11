@@ -126,6 +126,8 @@ func (p parser) InRange(versionA, rangeB string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
+	// FIXME: Fails when version and range are the same
+	//return cmp <= 0, nil
 	return cmp < 0, nil
 }
 
