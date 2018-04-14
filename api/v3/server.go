@@ -124,6 +124,9 @@ func newGrpcGatewayServer(ctx context.Context, listenerAddr string, tlsConfig *t
 	jsonOpt := runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{EmitDefaults: true})
 	gwmux := runtime.NewServeMux(jsonOpt)
 
+	// workaround for https://github.com/golang/go/issues/18806
+	listenerAddr = strings.TrimPrefix(listenerAddr, "[::]")
+
 	conn, err := grpc.DialContext(ctx, listenerAddr, gwOpts...)
 	if err != nil {
 		log.WithError(err).Fatal("could not initialize grpc gateway connection")
