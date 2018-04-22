@@ -13,37 +13,33 @@
 // limitations under the License.
 
 syntax = "proto3";
-option go_package = "clairpb";
 
-package clairpb;
-
-import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
+
+import "google/api/annotations.proto";
+
+package coreos.clair;
+
+option go_package = "clairpb";
+option java_package = "com.coreos.clair.pb";
 
 message Vulnerability {
   // The name of the vulnerability.
   string name = 1;
-
   // The name of the namespace in which the vulnerability was detected.
   string namespace_name = 2;
-
   // A description of the vulnerability according to the source for the namespace.
   string description = 3;
-
   // A link to the vulnerability according to the source for the namespace.
   string link = 4;
-
   // How dangerous the vulnerability is.
   string severity = 5;
-
   // Namespace agnostic metadata about the vulnerability.
   string metadata = 6;
-
   // The feature that fixes this vulnerability.
   // This field only exists when a vulnerability is a part of a Feature.
   string fixed_by = 7;
-
   // The Features that are affected by the vulnerability.
   // This field only exists when a vulnerability is a part of a Notification.
   repeated Feature affected_versions = 8;
@@ -52,21 +48,17 @@ message Vulnerability {
 message Feature {
   // The name of the feature.
   string name = 1;
-
   // The name of the namespace in which the feature is detected.
   string namespace_name = 2;
-
   // The specific version of this feature.
   string version = 3;
-
   // The format used to parse version numbers for the feature.
   string version_format = 4;
-
   // The list of vulnerabilities that affect the feature.
   repeated Vulnerability vulnerabilities = 5;
 }
 
-message Layer { 
+message Layer {
   // The sha256 tarsum for the layer.
   string hash = 1;
 }
@@ -74,11 +66,8 @@ message Layer {
 service AncestryService {
   // The RPC used to read the results of scanning for a particular ancestry.
   rpc GetAncestry(GetAncestryRequest) returns (GetAncestryResponse) {
-    option (google.api.http) = {
-      get: "/ancestry/{ancestry_name}"
-    };
+    option (google.api.http) = { get: "/ancestry/{ancestry_name}" };
   }
-
   // The RPC used to create a new scan of an ancestry.
   rpc PostAncestry(PostAncestryRequest) returns (PostAncestryResponse) {
     option (google.api.http) = {
@@ -91,10 +80,8 @@ service AncestryService {
 message ClairStatus {
   // The configured list of feature listers used to scan an ancestry.
   repeated string listers = 1;
-
   // The configured list of namespace detectors used to scan an ancestry.
   repeated string detectors = 2;
-
   // The time at which the updater last ran.
   google.protobuf.Timestamp last_update_time = 3;
 }
@@ -102,10 +89,8 @@ message ClairStatus {
 message GetAncestryRequest {
   // The name of the desired ancestry.
   string ancestry_name = 1;
-
   // Whether to include vulnerabilities or not in the response.
   bool with_vulnerabilities = 2;
-
   // Whether to include features or not in the response.
   bool with_features = 3;
 }
@@ -114,69 +99,53 @@ message GetAncestryResponse {
   message Ancestry {
     // The name of the desired ancestry.
     string name = 1;
-
     // The list of features present in the ancestry.
     // This will only be provided if requested.
     repeated Feature features = 2;
-
     // The layers present in the ancestry.
     repeated Layer layers = 3;
-
     // The configured list of feature listers used to scan this ancestry.
     repeated string scanned_listers = 4;
-
     // The configured list of namespace detectors used to scan an ancestry.
     repeated string scanned_detectors = 5;
   }
-
   // The ancestry requested.
   Ancestry ancestry = 1;
-
   // The status of Clair at the time of the request.
-  ClairStatus status = 2; 
+  ClairStatus status = 2;
 }
 
 message PostAncestryRequest {
   message PostLayer {
     // The hash of the layer.
     string hash = 1;
-
     // The location of the layer (URL or filepath).
     string path = 2;
-
-   // Any HTTP Headers that need to be used if requesting a layer over HTTP(S).
-   map<string, string> headers = 3;
- }
-
+    // Any HTTP Headers that need to be used if requesting a layer over HTTP(S).
+    map<string, string> headers = 3;
+  }
   // The name of the ancestry being scanned.
   // If scanning OCI images, this should be the hash of the manifest.
   string ancestry_name = 1;
-
   // The format of the image being uploaded.
   string format = 2;
-
   // The layers to be scanned for this particular ancestry.
   repeated PostLayer layers = 3;
 }
 
 message PostAncestryResponse {
   // The status of Clair at the time of the request.
-  ClairStatus status = 1; 
+  ClairStatus status = 1;
 }
 
 service NotificationService {
   // The RPC used to get a particularly Notification.
   rpc GetNotification(GetNotificationRequest) returns (GetNotificationResponse) {
-    option (google.api.http) = {
-      get: "/notifications/{name}"
-    };
+    option (google.api.http) = { get: "/notifications/{name}" };
   }
-
   // The RPC used to mark a Notification as read after it has been processed.
   rpc MarkNotificationAsRead(MarkNotificationAsReadRequest) returns (google.protobuf.Empty) {
-    option (google.api.http) = {
-      delete: "/notifications/{name}"
-    };
+    option (google.api.http) = { delete: "/notifications/{name}" };
   }
 }
 
@@ -184,14 +153,11 @@ message GetNotificationRequest {
   // The current page of previous vulnerabilities for the ancestry.
   // This will be empty when it is the first page.
   string old_vulnerability_page = 1;
-
   // The current page of vulnerabilities for the ancestry.
   // This will be empty when it is the first page.
   string new_vulnerability_page = 2;
-
   // The requested maximum number of results per page.
   int32 limit = 3;
-
   // The name of the notification being requested.
   string name = 4;
 }
@@ -200,23 +166,17 @@ message GetNotificationResponse {
   message Notification {
     // The name of the requested notification.
     string name = 1;
-
     // The time at which the notification was created.
     string created = 2;
-
     // The time at which the notification was last sent out.
     string notified = 3;
-
     // The time at which a notification has been deleted.
-    string deleted = 4; 
-
+    string deleted = 4;
     // The previous vulnerability and a paginated view of the ancestries it affects.
     PagedVulnerableAncestries old = 5;
-
     // The newly updated vulnerability and a paginated view of the ancestries it affects.
     PagedVulnerableAncestries new = 6;
   }
-
   // The notification as requested.
   Notification notification = 1;
 }
@@ -226,24 +186,18 @@ message PagedVulnerableAncestries {
     // The index is an ever increasing number associated with the particular ancestry.
     // This is useful if you're processing notifications, and need to keep track of the progress of paginating the results.
     int32 index = 1;
-
     // The name of the ancestry.
     string name = 2;
   }
-
   // The identifier for the current page.
   string current_page = 1;
-
   // The token used to request the next page.
   // This will be empty when there are no more pages.
   string next_page = 2;
-
   // The requested maximum number of results per page.
-  int32 limit = 3;  
-
+  int32 limit = 3;
   // The vulnerability that affects a given set of ancestries.
   Vulnerability vulnerability = 4;
-
   // The ancestries affected by a vulnerability.
   repeated IndexedAncestryName ancestries = 5;
 }
