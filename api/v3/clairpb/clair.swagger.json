@@ -136,7 +136,7 @@
           "200": {
             "description": "",
             "schema": {
-              "$ref": "#/definitions/protobufEmpty"
+              "$ref": "#/definitions/clairMarkNotificationAsReadResponse"
             }
           }
         },
@@ -338,6 +338,9 @@
         }
       }
     },
+    "clairMarkNotificationAsReadResponse": {
+      "type": "object"
+    },
     "clairPagedVulnerableAncestries": {
       "type": "object",
       "properties": {
@@ -435,11 +438,6 @@
           "description": "The Features that are affected by the vulnerability.\nThis field only exists when a vulnerability is a part of a Notification."
         }
       }
-    },
-    "protobufEmpty": {
-      "type": "object",
-      "description": "service Foo {\n      rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);\n    }\n\nThe JSON representation for `Empty` is empty JSON object `{}`.",
-      "title": "A generic empty message that you can re-use to avoid defining duplicated\nempty messages in your APIs. A typical example is to use it as the request\nor the response type of an API method. For instance:"
     }
   }
 }

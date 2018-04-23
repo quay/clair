@@ -14,7 +14,6 @@
 
 syntax = "proto3";
 
-import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
 import "google/api/annotations.proto";
@@ -144,7 +143,7 @@ service NotificationService {
     option (google.api.http) = { get: "/notifications/{name}" };
   }
   // The RPC used to mark a Notification as read after it has been processed.
-  rpc MarkNotificationAsRead(MarkNotificationAsReadRequest) returns (google.protobuf.Empty) {
+  rpc MarkNotificationAsRead(MarkNotificationAsReadRequest) returns (MarkNotificationAsReadResponse) {
     option (google.api.http) = { delete: "/notifications/{name}" };
   }
 }
@@ -206,3 +205,5 @@ message MarkNotificationAsReadRequest {
   // The name of the Notification that has been processed.
   string name = 1;
 }
+
+message MarkNotificationAsReadResponse {}
