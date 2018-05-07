@@ -45,4 +45,5 @@ var UbuntuReleasesMapping = map[string]string{
 	"yakkety": "16.10",
 	"zesty":   "17.04",
 	"artful":  "17.10",
+	"bionic":  "18.04",
 }
