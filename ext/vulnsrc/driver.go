@@ -50,6 +50,9 @@ type Updater interface {
 	// Clean deletes any allocated resources.
 	// It is invoked when Clair stops.
 	Clean()
+
+	// Sets the source of vulnerability data to be used by the updater
+	SetSourceUrl(string)
 }
 
 // RegisterUpdater makes an Updater available by the provided name.

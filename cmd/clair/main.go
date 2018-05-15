@@ -126,6 +126,8 @@ func configClairVersion(config *Config) {
 	}
 
 	clair.EnabledUpdaters = strutil.CompareStringListsInBoth(config.Updater.EnabledUpdaters, updaters)
+
+	clair.SourceURLs = config.Updater.SourceURLs
 }
 
 // Boot starts Clair instance with the provided config.

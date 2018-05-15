@@ -34,8 +34,9 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
+var secdbGitURL = "https://git.alpinelinux.org/cgit/alpine-secdb"
+
 const (
-	secdbGitURL  = "https://git.alpinelinux.org/cgit/alpine-secdb"
 	updaterFlag  = "alpine-secdbUpdater"
 	nvdURLPrefix = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
 )
@@ -113,6 +114,10 @@ func (u *updater) Clean() {
 	if u.repositoryLocalPath != "" {
 		os.RemoveAll(u.repositoryLocalPath)
 	}
+}
+
+func (u *updater) SetSourceUrl(sourceURL string) {
+	secdbGitURL = sourceURL
 }
 
 type lsFilter int
