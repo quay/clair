@@ -130,7 +130,10 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 					}
 				}
 
-				g.Export(datastore)
+				err = g.Export(datastore)
+				if err != nil {
+					log.WithError(err).Error("vulnerability export to grafeas server failed")
+				}
 
 				// Unlock the updater.
 				unlock(datastore, updaterLockName, whoAmI)
