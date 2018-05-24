@@ -1,0 +1,63 @@
+fờö
+==================================================
+expr: <
+  id: 2
+  call_expr: <
+    function: "_global_"
+    args: <
+      id: 1
+      ident_expr: <
+        name: "f\341\273\235\303\266"
+      >
+    >
+  >
+>
+source_info: <
+  location: "unicode[0]"
+  line_offsets: 7
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 0
+  >
+>
+
+answer:Да!
+==================================================
+expr: <
+  id: 3
+  call_expr: <
+    function: "_:_"
+    args: <
+      id: 1
+      ident_expr: <
+        name: "answer"
+      >
+    >
+    args: <
+      id: 2
+      ident_expr: <
+        name: "\320\224\320\260!"
+      >
+    >
+  >
+>
+source_info: <
+  location: "unicode[1]"
+  line_offsets: 13
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 7
+  >
+  positions: <
+    key: 3
+    value: 6
+  >
+>

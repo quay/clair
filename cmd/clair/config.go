@@ -31,6 +31,7 @@ import (
 	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/ext/notification"
 	"github.com/coreos/clair/ext/vulnsrc"
+	"github.com/coreos/clair/grafeas"
 )
 
 // ErrDatasourceNotLoaded is returned when the datasource variable in the
@@ -50,6 +51,7 @@ type Config struct {
 	Worker   *clair.WorkerConfig
 	Notifier *notification.Config
 	API      *api.Config
+	Grafeas  *grafeas.Config
 }
 
 // DefaultConfig is a configuration that can be used as a fallback value.
@@ -74,6 +76,11 @@ func DefaultConfig() Config {
 		Notifier: &notification.Config{
 			Attempts:         5,
 			RenotifyInterval: 2 * time.Hour,
+		},
+		Grafeas: &grafeas.Config{
+			Enabled:   false,
+			Addr:      "0.0.0.0:8080",
+			ProjectId: "vuln-scanner",
 		},
 	}
 }

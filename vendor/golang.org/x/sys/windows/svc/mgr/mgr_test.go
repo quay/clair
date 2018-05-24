@@ -1,4 +1,4 @@
-// Copyright 2012 The Go Authors.  All rights reserved.
+// Copyright 2012 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
@@ -149,6 +149,21 @@ func TestMyService(t *testing.T) {
 	}
 
 	testConfig(t, s, c)
+
+	svcnames, err := m.ListServices()
+	if err != nil {
+		t.Fatalf("ListServices failed: %v", err)
+	}
+	var myserviceIsInstalled bool
+	for _, sn := range svcnames {
+		if sn == name {
+			myserviceIsInstalled = true
+			break
+		}
+	}
+	if !myserviceIsInstalled {
+		t.Errorf("ListServices failed to find %q service", name)
+	}
 
 	remove(t, s)
 }

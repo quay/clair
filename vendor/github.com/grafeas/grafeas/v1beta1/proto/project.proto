@@ -1,0 +1,107 @@
+// Copyright 2018 The Grafeas Authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package grafeas.v1beta1.project;
+
+option java_multiple_files = true;
+option java_package = "io.grafeas.v1beta1.project";
+option objc_class_prefix = "GRA";
+option py_api_version = 2;
+
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+
+// [Projects](grafeas.io) API.
+//
+// Manages Grafeas `Projects`. Projects contain sets of other Grafeas entities
+// such as `Notes`, `Occurrences`, and `Operations`.
+service Projects {
+  // Creates a new project.
+  rpc CreateProject(CreateProjectRequest) returns (Project) {
+    option (google.api.http) = {
+      post: "/v1beta1/projects"
+      body: "project"
+    };
+  }
+
+  // Gets the specified project.
+  rpc GetProject(GetProjectRequest) returns (Project) {
+    option (google.api.http) = {
+      get: "/v1beta1/{name=projects/*}"
+    };
+  }
+
+  // Lists projects.
+  rpc ListProjects(ListProjectsRequest) returns (ListProjectsResponse) {
+    option (google.api.http) = {
+      get: "/v1beta1/projects"
+    };
+  }
+
+  // Deletes the specified project.
+  rpc DeleteProject(DeleteProjectRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1beta1/{name=projects/*}"
+    };
+  }
+}
+
+// Request to create a new project.
+message CreateProjectRequest {
+  // The project to create.
+  Project project = 1;
+}
+
+// Request to get a project.
+message GetProjectRequest {
+  // The name of the project in the form of `projects/{PROJECT_ID}`.
+  string name = 1;
+}
+
+// Request to list projects.
+message ListProjectsRequest {
+  // The filter expression.
+  string filter = 1;
+
+  // Number of projects to return in the list.
+  int32 page_size = 2;
+
+  // Token to provide to skip to a particular spot in the list.
+  string page_token = 3;
+}
+
+// Request to delete a project.
+message DeleteProjectRequest {
+  // The name of the project in the form of `projects/{PROJECT_ID}`.
+  string name = 1;
+}
+
+// Response for listing projects.
+message ListProjectsResponse {
+  // The projects requested.
+  repeated Project projects = 1;
+
+  // The next pagination token in the list response. It should be used as
+  // `page_token` for the following request. An empty value means no more
+  // results.
+  string next_page_token = 2;
+}
+
+// Describes a Grafeas project.
+message Project {
+  // The name of the project in the form of `projects/{PROJECT_ID}`.
+  string name = 1;
+}

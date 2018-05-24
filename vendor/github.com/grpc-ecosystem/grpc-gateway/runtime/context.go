@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/net/context"
+	"context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/metadata"
@@ -61,10 +61,8 @@ func AnnotateContext(ctx context.Context, mux *ServeMux, req *http.Request) (con
 			if strings.ToLower(key) == "authorization" {
 				pairs = append(pairs, "authorization", val)
 			}
-			if mux.incomingHeaderMatcher != nil {
-				if h, ok := mux.incomingHeaderMatcher(key); ok {
-					pairs = append(pairs, h, val)
-				}
+			if h, ok := mux.incomingHeaderMatcher(key); ok {
+				pairs = append(pairs, h, val)
 			}
 		}
 	}
@@ -93,8 +91,8 @@ func AnnotateContext(ctx context.Context, mux *ServeMux, req *http.Request) (con
 		return ctx, nil
 	}
 	md := metadata.Pairs(pairs...)
-	if mux.metadataAnnotator != nil {
-		md = metadata.Join(md, mux.metadataAnnotator(ctx, req))
+	for _, mda := range mux.metadataAnnotators {
+		md = metadata.Join(md, mda(ctx, req))
 	}
 	return metadata.NewOutgoingContext(ctx, md), nil
 }

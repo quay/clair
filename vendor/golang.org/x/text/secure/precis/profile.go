@@ -60,25 +60,43 @@ func (p *Profile) NewTransformer() *Transformer {
 	// These transforms are applied in the order defined in
 	// https://tools.ietf.org/html/rfc7564#section-7
 
-	if p.options.foldWidth {
-		ts = append(ts, width.Fold)
+	// RFC 8266 §2.1:
+	//
+	//     Implementation experience has shown that applying the rules for the
+	//     Nickname profile is not an idempotent procedure for all code points.
+	//     Therefore, an implementation SHOULD apply the rules repeatedly until
+	//     the output string is stable; if the output string does not stabilize
+	//     after reapplying the rules three (3) additional times after the first
+	//     application, the implementation SHOULD terminate application of the
+	//     rules and reject the input string as invalid.
+	//
+	// There is no known string that will change indefinitely, so repeat 4 times
+	// and rely on the Span method to keep things relatively performant.
+	r := 1
+	if p.options.repeat {
+		r = 4
 	}
+	for ; r > 0; r-- {
+		if p.options.foldWidth {
+			ts = append(ts, width.Fold)
+		}
 
-	for _, f := range p.options.additional {
-		ts = append(ts, f())
+		for _, f := range p.options.additional {
+			ts = append(ts, f())
+		}
+
+		if p.options.cases != nil {
+			ts = append(ts, p.options.cases)
+		}
+
+		ts = append(ts, p.options.norm)
+
+		if p.options.bidiRule {
+			ts = append(ts, bidirule.New())
+		}
+
+		ts = append(ts, &checker{p: p, allowed: p.Allowed()})
 	}
-
-	if p.options.cases != nil {
-		ts = append(ts, p.options.cases)
-	}
-
-	ts = append(ts, p.options.norm)
-
-	if p.options.bidiRule {
-		ts = append(ts, bidirule.New())
-	}
-
-	ts = append(ts, &checker{p: p, allowed: p.Allowed()})
 
 	// TODO: Add the disallow empty rule with a dummy transformer?
 
@@ -162,42 +180,48 @@ func (b *buffers) enforce(p *Profile, src []byte, comparing bool) (str []byte, e
 	}
 
 	// These transforms are applied in the order defined in
-	// https://tools.ietf.org/html/rfc7564#section-7
+	// https://tools.ietf.org/html/rfc8264#section-7
 
-	// TODO: allow different width transforms options.
-	if p.options.foldWidth || (p.options.ignorecase && comparing) {
-		b.apply(foldWidthT)
+	r := 1
+	if p.options.repeat {
+		r = 4
 	}
-	for _, f := range p.options.additional {
-		if err = b.apply(f()); err != nil {
+	for ; r > 0; r-- {
+		// TODO: allow different width transforms options.
+		if p.options.foldWidth || (p.options.ignorecase && comparing) {
+			b.apply(foldWidthT)
+		}
+		for _, f := range p.options.additional {
+			if err = b.apply(f()); err != nil {
+				return nil, err
+			}
+		}
+		if p.options.cases != nil {
+			b.apply(p.options.cases)
+		}
+		if comparing && p.options.ignorecase {
+			b.apply(lowerCaseT)
+		}
+		b.apply(p.norm)
+		if p.options.bidiRule && !bidirule.Valid(b.src) {
+			return nil, bidirule.ErrInvalid
+		}
+		c := checker{p: p}
+		if _, err := c.span(b.src, true); err != nil {
 			return nil, err
 		}
-	}
-	if p.options.cases != nil {
-		b.apply(p.options.cases)
-	}
-	if comparing && p.options.ignorecase {
-		b.apply(lowerCaseT)
-	}
-	b.apply(p.norm)
-	if p.options.bidiRule && !bidirule.Valid(b.src) {
-		return nil, bidirule.ErrInvalid
-	}
-	c := checker{p: p}
-	if _, err := c.span(b.src, true); err != nil {
-		return nil, err
-	}
-	if p.disallow != nil {
-		for i := 0; i < len(b.src); {
-			r, size := utf8.DecodeRune(b.src[i:])
-			if p.disallow.Contains(r) {
-				return nil, errDisallowedRune
+		if p.disallow != nil {
+			for i := 0; i < len(b.src); {
+				r, size := utf8.DecodeRune(b.src[i:])
+				if p.disallow.Contains(r) {
+					return nil, errDisallowedRune
+				}
+				i += size
 			}
-			i += size
 		}
-	}
-	if p.options.disallowEmpty && len(b.src) == 0 {
-		return nil, errEmptyString
+		if p.options.disallowEmpty && len(b.src) == 0 {
+			return nil, errEmptyString
+		}
 	}
 	return b.src, nil
 }
@@ -322,33 +346,35 @@ func (c *checker) span(src []byte, atEOF bool) (n int, err error) {
 			}
 			return n, errDisallowedRune
 		}
+		doLookAhead := false
 		if property(e) < c.p.class.validFrom {
 			if d.rule == nil {
 				return n, errDisallowedRune
 			}
-			doLookAhead, err := d.rule(c.beforeBits)
+			doLookAhead, err = d.rule(c.beforeBits)
 			if err != nil {
 				return n, err
-			}
-			if doLookAhead {
-				c.beforeBits &= d.keep
-				c.beforeBits |= d.set
-				// We may still have a lookahead rule which we will require to
-				// complete (by checking termBits == 0) before setting the new
-				// bits.
-				if c.termBits != 0 && (!c.checkLookahead() || c.termBits == 0) {
-					return n, err
-				}
-				c.termBits = d.term
-				c.acceptBits = d.accept
-				n += sz
-				continue
 			}
 		}
 		c.beforeBits &= d.keep
 		c.beforeBits |= d.set
-		if c.termBits != 0 && !c.checkLookahead() {
-			return n, errContext
+		if c.termBits != 0 {
+			// We are currently in an unterminated lookahead.
+			if c.beforeBits&c.termBits != 0 {
+				c.termBits = 0
+				c.acceptBits = 0
+			} else if c.beforeBits&c.acceptBits == 0 {
+				// Invalid continuation of the unterminated lookahead sequence.
+				return n, errContext
+			}
+		}
+		if doLookAhead {
+			if c.termBits != 0 {
+				// A previous lookahead run has not been terminated yet.
+				return n, errContext
+			}
+			c.termBits = d.term
+			c.acceptBits = d.accept
 		}
 		n += sz
 	}
@@ -356,18 +382,6 @@ func (c *checker) span(src []byte, atEOF bool) (n int, err error) {
 		err = errContext
 	}
 	return n, err
-}
-
-func (c *checker) checkLookahead() bool {
-	switch {
-	case c.beforeBits&c.termBits != 0:
-		c.termBits = 0
-		c.acceptBits = 0
-	case c.beforeBits&c.acceptBits != 0:
-	default:
-		return false
-	}
-	return true
 }
 
 // TODO: we may get rid of this transform if transform.Chain understands

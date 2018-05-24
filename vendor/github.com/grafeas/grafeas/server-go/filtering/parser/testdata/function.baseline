@@ -1,0 +1,174 @@
+!@#$%^&*()
+==================================================
+expr: <
+  id: 2
+  call_expr: <
+    function: "_global_"
+    args: <
+      id: 1
+      call_expr: <
+        function: "!@#$%^&*"
+      >
+    >
+  >
+>
+source_info: <
+  location: "function[0]"
+  line_offsets: 11
+  positions: <
+    key: 1
+    value: 8
+  >
+  positions: <
+    key: 2
+    value: 0
+  >
+>
+
+!@#$%^&*(arg)
+==================================================
+expr: <
+  id: 3
+  call_expr: <
+    function: "_global_"
+    args: <
+      id: 2
+      call_expr: <
+        function: "!@#$%^&*"
+        args: <
+          id: 1
+          ident_expr: <
+            name: "arg"
+          >
+        >
+      >
+    >
+  >
+>
+source_info: <
+  location: "function[1]"
+  line_offsets: 14
+  positions: <
+    key: 1
+    value: 9
+  >
+  positions: <
+    key: 2
+    value: 8
+  >
+  positions: <
+    key: 3
+    value: 0
+  >
+>
+
+foo()
+==================================================
+expr: <
+  id: 2
+  call_expr: <
+    function: "_global_"
+    args: <
+      id: 1
+      call_expr: <
+        function: "foo"
+      >
+    >
+  >
+>
+source_info: <
+  location: "function[2]"
+  line_offsets: 6
+  positions: <
+    key: 1
+    value: 3
+  >
+  positions: <
+    key: 2
+    value: 0
+  >
+>
+
+a > foo()
+==================================================
+expr: <
+  id: 3
+  call_expr: <
+    function: "_>_"
+    args: <
+      id: 1
+      ident_expr: <
+        name: "a"
+      >
+    >
+    args: <
+      id: 2
+      call_expr: <
+        function: "foo"
+      >
+    >
+  >
+>
+source_info: <
+  location: "function[3]"
+  line_offsets: 10
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 7
+  >
+  positions: <
+    key: 3
+    value: 2
+  >
+>
+
+b < foo(3)
+==================================================
+expr: <
+  id: 4
+  call_expr: <
+    function: "_<_"
+    args: <
+      id: 1
+      ident_expr: <
+        name: "b"
+      >
+    >
+    args: <
+      id: 3
+      call_expr: <
+        function: "foo"
+        args: <
+          id: 2
+          const_expr: <
+            int64_value: 3
+          >
+        >
+      >
+    >
+  >
+>
+source_info: <
+  location: "function[4]"
+  line_offsets: 11
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 8
+  >
+  positions: <
+    key: 3
+    value: 7
+  >
+  positions: <
+    key: 4
+    value: 2
+  >
+>

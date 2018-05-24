@@ -1,12 +1,13 @@
 package runtime
 
 import (
+	"fmt"
 	"net/http"
 	"net/textproto"
 	"strings"
 
+	"context"
 	"github.com/golang/protobuf/proto"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -24,7 +25,7 @@ type ServeMux struct {
 	marshalers             marshalerRegistry
 	incomingHeaderMatcher  HeaderMatcherFunc
 	outgoingHeaderMatcher  HeaderMatcherFunc
-	metadataAnnotator      func(context.Context, *http.Request) metadata.MD
+	metadataAnnotators     []func(context.Context, *http.Request) metadata.MD
 	protoErrorHandler      ProtoErrorHandlerFunc
 }
 
@@ -86,7 +87,7 @@ func WithOutgoingHeaderMatcher(fn HeaderMatcherFunc) ServeMuxOption {
 // is reading token from cookie and adding it in gRPC context.
 func WithMetadata(annotator func(context.Context, *http.Request) metadata.MD) ServeMuxOption {
 	return func(serveMux *ServeMux) {
-		serveMux.metadataAnnotator = annotator
+		serveMux.metadataAnnotators = append(serveMux.metadataAnnotators, annotator)
 	}
 }
 
@@ -107,7 +108,6 @@ func NewServeMux(opts ...ServeMuxOption) *ServeMux {
 		handlers:               make(map[string][]handler),
 		forwardResponseOptions: make([]func(context.Context, http.ResponseWriter, proto.Message) error, 0),
 		marshalers:             makeMarshalerMIMERegistry(),
-		incomingHeaderMatcher:  DefaultHeaderMatcher,
 	}
 
 	for _, opt := range opts {
@@ -126,6 +126,16 @@ func NewServeMux(opts ...ServeMuxOption) *ServeMux {
 		}
 	}
 
+	if serveMux.incomingHeaderMatcher == nil {
+		serveMux.incomingHeaderMatcher = DefaultHeaderMatcher
+	}
+
+	if serveMux.outgoingHeaderMatcher == nil {
+		serveMux.outgoingHeaderMatcher = func(key string) (string, bool) {
+			return fmt.Sprintf("%s%s", MetadataHeaderPrefix, key), true
+		}
+	}
+
 	return serveMux
 }
 
@@ -136,8 +146,7 @@ func (s *ServeMux) Handle(meth string, pat Pattern, h HandlerFunc) {
 
 // ServeHTTP dispatches the request to the first handler whose pattern matches to r.Method and r.Path.
 func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// TODO: use r.Context for go 1.7+
-	ctx := context.Background()
+	ctx := r.Context()
 
 	path := r.URL.Path
 	if !strings.HasPrefix(path, "/") {

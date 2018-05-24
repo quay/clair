@@ -1,8 +1,27 @@
+/*
+ *
+ * Copyright 2017 gRPC authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+
 package mock_routeguide_test
 
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/golang/mock/gomock"
 	"github.com/golang/protobuf/proto"
@@ -11,12 +30,10 @@ import (
 	rgpb "google.golang.org/grpc/examples/route_guide/routeguide"
 )
 
-var (
-	msg = &rgpb.RouteNote{
-		Location: &rgpb.Point{Latitude: 17, Longitude: 29},
-		Message:  "Taxi-cab",
-	}
-)
+var msg = &rgpb.RouteNote{
+	Location: &rgpb.Point{Latitude: 17, Longitude: 29},
+	Message:  "Taxi-cab",
+}
 
 func TestRouteChat(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -43,7 +60,9 @@ func TestRouteChat(t *testing.T) {
 }
 
 func testRouteChat(client rgpb.RouteGuideClient) error {
-	stream, err := client.RouteChat(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	stream, err := client.RouteChat(ctx)
 	if err != nil {
 		return err
 	}

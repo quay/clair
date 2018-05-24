@@ -148,6 +148,7 @@ type Session interface {
 	// already in the database.
 	InsertVulnerabilities([]VulnerabilityWithAffected) error
 
+	ListVulnerabilities() ([]NullableVulnerability, error)
 	// FindVulnerability retrieves a set of Vulnerabilities with affected
 	// features.
 	FindVulnerabilities([]VulnerabilityID) ([]NullableVulnerability, error)

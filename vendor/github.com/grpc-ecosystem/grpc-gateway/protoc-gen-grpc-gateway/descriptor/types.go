@@ -9,6 +9,12 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway/httprule"
 )
 
+// IsWellKnownType returns true if the provided fully qualified type name is considered 'well-known'.
+func IsWellKnownType(typeName string) bool {
+	_, ok := wellKnownTypeConv[typeName]
+	return ok
+}
+
 // GoPackage represents a golang package
 type GoPackage struct {
 	// Path is the package path to the package.
@@ -195,6 +201,9 @@ func (p Parameter) ConvertFuncExpr() (string, error) {
 	typ := p.Target.GetType()
 	conv, ok := tbl[typ]
 	if !ok {
+		conv, ok = wellKnownTypeConv[p.Target.GetTypeName()]
+	}
+	if !ok {
 		return "", fmt.Errorf("unsupported field type %s of parameter %s in %s.%s", typ, p.FieldPath, p.Method.Service.GetName(), p.Method.GetName())
 	}
 	return conv, nil
@@ -207,10 +216,10 @@ type Body struct {
 	FieldPath FieldPath
 }
 
-// RHS returns a right-hand-side expression in go to be used to initialize method request object.
+// AssignableExpr returns an assignable expression in Go to be used to initialize method request object.
 // It starts with "msgExpr", which is the go expression of the method request object.
-func (b Body) RHS(msgExpr string) string {
-	return b.FieldPath.RHS(msgExpr)
+func (b Body) AssignableExpr(msgExpr string) string {
+	return b.FieldPath.AssignableExpr(msgExpr)
 }
 
 // FieldPath is a path to a field from a request message.
@@ -233,9 +242,9 @@ func (p FieldPath) IsNestedProto3() bool {
 	return false
 }
 
-// RHS is a right-hand-side expression in go to be used to assign a value to the target field.
+// AssignableExpr is an assignable expression in Go to be used to assign a value to the target field.
 // It starts with "msgExpr", which is the go expression of the method request object.
-func (p FieldPath) RHS(msgExpr string) string {
+func (p FieldPath) AssignableExpr(msgExpr string) string {
 	l := len(p)
 	if l == 0 {
 		return msgExpr
@@ -243,10 +252,10 @@ func (p FieldPath) RHS(msgExpr string) string {
 	components := []string{msgExpr}
 	for i, c := range p {
 		if i == l-1 {
-			components = append(components, c.RHS())
+			components = append(components, c.AssignableExpr())
 			continue
 		}
-		components = append(components, c.LHS())
+		components = append(components, c.ValueExpr())
 	}
 	return strings.Join(components, ".")
 }
@@ -260,13 +269,13 @@ type FieldPathComponent struct {
 	Target *Field
 }
 
-// RHS returns a right-hand-side expression in go for this field.
-func (c FieldPathComponent) RHS() string {
+// AssignableExpr returns an assignable expression in go for this field.
+func (c FieldPathComponent) AssignableExpr() string {
 	return gogen.CamelCase(c.Name)
 }
 
-// LHS returns a left-hand-side expression in go for this field.
-func (c FieldPathComponent) LHS() string {
+// ValueExpr returns an expression in go for this field.
+func (c FieldPathComponent) ValueExpr() string {
 	if c.Target.Message.File.proto2() {
 		return fmt.Sprintf("Get%s()", gogen.CamelCase(c.Name))
 	}
@@ -286,8 +295,7 @@ var (
 		descriptor.FieldDescriptorProto_TYPE_STRING:  "runtime.String",
 		// FieldDescriptorProto_TYPE_GROUP
 		// FieldDescriptorProto_TYPE_MESSAGE
-		// FieldDescriptorProto_TYPE_BYTES
-		// TODO(yugui) Handle bytes
+		descriptor.FieldDescriptorProto_TYPE_BYTES:  "runtime.Bytes",
 		descriptor.FieldDescriptorProto_TYPE_UINT32: "runtime.Uint32",
 		// FieldDescriptorProto_TYPE_ENUM
 		// TODO(yugui) Handle Enum
@@ -318,5 +326,10 @@ var (
 		descriptor.FieldDescriptorProto_TYPE_SFIXED64: "runtime.Int64P",
 		descriptor.FieldDescriptorProto_TYPE_SINT32:   "runtime.Int32P",
 		descriptor.FieldDescriptorProto_TYPE_SINT64:   "runtime.Int64P",
+	}
+
+	wellKnownTypeConv = map[string]string{
+		".google.protobuf.Timestamp": "runtime.Timestamp",
+		".google.protobuf.Duration":  "runtime.Duration",
 	}
 )

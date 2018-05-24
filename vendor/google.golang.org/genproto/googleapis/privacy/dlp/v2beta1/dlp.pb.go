@@ -10,14 +10,20 @@ It is generated from these files:
 
 It has these top-level messages:
 	InspectConfig
+	OperationConfig
 	ContentItem
+	Table
 	InspectResult
 	Finding
 	Location
+	TableLocation
 	Range
 	ImageLocation
 	RedactContentRequest
+	Color
 	RedactContentResponse
+	DeidentifyContentRequest
+	DeidentifyContentResponse
 	InspectContentRequest
 	InspectContentResponse
 	CreateInspectOperationRequest
@@ -33,7 +39,37 @@ It has these top-level messages:
 	CategoryDescription
 	ListRootCategoriesRequest
 	ListRootCategoriesResponse
+	AnalyzeDataSourceRiskRequest
+	PrivacyMetric
+	RiskAnalysisOperationMetadata
+	RiskAnalysisOperationResult
+	ValueFrequency
+	Value
+	DeidentifyConfig
+	PrimitiveTransformation
+	TimePartConfig
+	CryptoHashConfig
+	ReplaceValueConfig
+	ReplaceWithInfoTypeConfig
+	RedactConfig
+	CharsToIgnore
+	CharacterMaskConfig
+	FixedSizeBucketingConfig
+	BucketingConfig
+	CryptoReplaceFfxFpeConfig
+	CryptoKey
+	TransientCryptoKey
+	UnwrappedCryptoKey
+	KmsWrappedCryptoKey
+	InfoTypeTransformations
+	FieldTransformation
+	RecordTransformations
+	RecordSuppression
+	RecordCondition
+	DeidentificationSummary
+	TransformationSummary
 	InfoType
+	CustomInfoType
 	FieldId
 	PartitionId
 	KindExpression
@@ -42,11 +78,14 @@ It has these top-level messages:
 	DatastoreOptions
 	CloudStorageOptions
 	CloudStoragePath
+	BigQueryOptions
 	StorageConfig
 	CloudStorageKey
 	DatastoreKey
 	Key
 	RecordKey
+	BigQueryTable
+	EntityId
 */
 package dlp
 
@@ -55,7 +94,10 @@ import fmt "fmt"
 import math "math"
 import _ "google.golang.org/genproto/googleapis/api/annotations"
 import google_longrunning "google.golang.org/genproto/googleapis/longrunning"
+import _ "github.com/golang/protobuf/ptypes/empty"
 import google_protobuf3 "github.com/golang/protobuf/ptypes/timestamp"
+import google_type "google.golang.org/genproto/googleapis/type/date"
+import google_type1 "google.golang.org/genproto/googleapis/type/timeofday"
 
 import (
 	context "golang.org/x/net/context"
@@ -78,7 +120,7 @@ const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 type Likelihood int32
 
 const (
-	// Default value; information with all likelihoods will be included.
+	// Default value; information with all likelihoods is included.
 	Likelihood_LIKELIHOOD_UNSPECIFIED Likelihood = 0
 	// Few matching elements.
 	Likelihood_VERY_UNLIKELY Likelihood = 1
@@ -112,23 +154,245 @@ func (x Likelihood) String() string {
 }
 func (Likelihood) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
+// Operators available for comparing the value of fields.
+type RelationalOperator int32
+
+const (
+	RelationalOperator_RELATIONAL_OPERATOR_UNSPECIFIED RelationalOperator = 0
+	// Equal.
+	RelationalOperator_EQUAL_TO RelationalOperator = 1
+	// Not equal to.
+	RelationalOperator_NOT_EQUAL_TO RelationalOperator = 2
+	// Greater than.
+	RelationalOperator_GREATER_THAN RelationalOperator = 3
+	// Less than.
+	RelationalOperator_LESS_THAN RelationalOperator = 4
+	// Greater than or equals.
+	RelationalOperator_GREATER_THAN_OR_EQUALS RelationalOperator = 5
+	// Less than or equals.
+	RelationalOperator_LESS_THAN_OR_EQUALS RelationalOperator = 6
+	// Exists
+	RelationalOperator_EXISTS RelationalOperator = 7
+)
+
+var RelationalOperator_name = map[int32]string{
+	0: "RELATIONAL_OPERATOR_UNSPECIFIED",
+	1: "EQUAL_TO",
+	2: "NOT_EQUAL_TO",
+	3: "GREATER_THAN",
+	4: "LESS_THAN",
+	5: "GREATER_THAN_OR_EQUALS",
+	6: "LESS_THAN_OR_EQUALS",
+	7: "EXISTS",
+}
+var RelationalOperator_value = map[string]int32{
+	"RELATIONAL_OPERATOR_UNSPECIFIED": 0,
+	"EQUAL_TO":                        1,
+	"NOT_EQUAL_TO":                    2,
+	"GREATER_THAN":                    3,
+	"LESS_THAN":                       4,
+	"GREATER_THAN_OR_EQUALS":          5,
+	"LESS_THAN_OR_EQUALS":             6,
+	"EXISTS":                          7,
+}
+
+func (x RelationalOperator) String() string {
+	return proto.EnumName(RelationalOperator_name, int32(x))
+}
+func (RelationalOperator) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+type TimePartConfig_TimePart int32
+
+const (
+	TimePartConfig_TIME_PART_UNSPECIFIED TimePartConfig_TimePart = 0
+	// [000-9999]
+	TimePartConfig_YEAR TimePartConfig_TimePart = 1
+	// [1-12]
+	TimePartConfig_MONTH TimePartConfig_TimePart = 2
+	// [1-31]
+	TimePartConfig_DAY_OF_MONTH TimePartConfig_TimePart = 3
+	// [1-7]
+	TimePartConfig_DAY_OF_WEEK TimePartConfig_TimePart = 4
+	// [1-52]
+	TimePartConfig_WEEK_OF_YEAR TimePartConfig_TimePart = 5
+	// [0-24]
+	TimePartConfig_HOUR_OF_DAY TimePartConfig_TimePart = 6
+)
+
+var TimePartConfig_TimePart_name = map[int32]string{
+	0: "TIME_PART_UNSPECIFIED",
+	1: "YEAR",
+	2: "MONTH",
+	3: "DAY_OF_MONTH",
+	4: "DAY_OF_WEEK",
+	5: "WEEK_OF_YEAR",
+	6: "HOUR_OF_DAY",
+}
+var TimePartConfig_TimePart_value = map[string]int32{
+	"TIME_PART_UNSPECIFIED": 0,
+	"YEAR":                  1,
+	"MONTH":                 2,
+	"DAY_OF_MONTH":          3,
+	"DAY_OF_WEEK":           4,
+	"WEEK_OF_YEAR":          5,
+	"HOUR_OF_DAY":           6,
+}
+
+func (x TimePartConfig_TimePart) String() string {
+	return proto.EnumName(TimePartConfig_TimePart_name, int32(x))
+}
+func (TimePartConfig_TimePart) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{38, 0} }
+
+type CharsToIgnore_CharacterGroup int32
+
+const (
+	CharsToIgnore_CHARACTER_GROUP_UNSPECIFIED CharsToIgnore_CharacterGroup = 0
+	// 0-9
+	CharsToIgnore_NUMERIC CharsToIgnore_CharacterGroup = 1
+	// A-Z
+	CharsToIgnore_ALPHA_UPPER_CASE CharsToIgnore_CharacterGroup = 2
+	// a-z
+	CharsToIgnore_ALPHA_LOWER_CASE CharsToIgnore_CharacterGroup = 3
+	// US Punctuation, one of !"#$%&'()*+,-./:;<=>?@[\]^_`{|}~
+	CharsToIgnore_PUNCTUATION CharsToIgnore_CharacterGroup = 4
+	// Whitespace character, one of [ \t\n\x0B\f\r]
+	CharsToIgnore_WHITESPACE CharsToIgnore_CharacterGroup = 5
+)
+
+var CharsToIgnore_CharacterGroup_name = map[int32]string{
+	0: "CHARACTER_GROUP_UNSPECIFIED",
+	1: "NUMERIC",
+	2: "ALPHA_UPPER_CASE",
+	3: "ALPHA_LOWER_CASE",
+	4: "PUNCTUATION",
+	5: "WHITESPACE",
+}
+var CharsToIgnore_CharacterGroup_value = map[string]int32{
+	"CHARACTER_GROUP_UNSPECIFIED": 0,
+	"NUMERIC":                     1,
+	"ALPHA_UPPER_CASE":            2,
+	"ALPHA_LOWER_CASE":            3,
+	"PUNCTUATION":                 4,
+	"WHITESPACE":                  5,
+}
+
+func (x CharsToIgnore_CharacterGroup) String() string {
+	return proto.EnumName(CharsToIgnore_CharacterGroup_name, int32(x))
+}
+func (CharsToIgnore_CharacterGroup) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{43, 0}
+}
+
+// These are commonly used subsets of the alphabet that the FFX mode
+// natively supports. In the algorithm, the alphabet is selected using
+// the "radix". Therefore each corresponds to particular radix.
+type CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet int32
+
+const (
+	CryptoReplaceFfxFpeConfig_FFX_COMMON_NATIVE_ALPHABET_UNSPECIFIED CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet = 0
+	// [0-9] (radix of 10)
+	CryptoReplaceFfxFpeConfig_NUMERIC CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet = 1
+	// [0-9A-F] (radix of 16)
+	CryptoReplaceFfxFpeConfig_HEXADECIMAL CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet = 2
+	// [0-9A-Z] (radix of 36)
+	CryptoReplaceFfxFpeConfig_UPPER_CASE_ALPHA_NUMERIC CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet = 3
+	// [0-9A-Za-z] (radix of 62)
+	CryptoReplaceFfxFpeConfig_ALPHA_NUMERIC CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet = 4
+)
+
+var CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet_name = map[int32]string{
+	0: "FFX_COMMON_NATIVE_ALPHABET_UNSPECIFIED",
+	1: "NUMERIC",
+	2: "HEXADECIMAL",
+	3: "UPPER_CASE_ALPHA_NUMERIC",
+	4: "ALPHA_NUMERIC",
+}
+var CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet_value = map[string]int32{
+	"FFX_COMMON_NATIVE_ALPHABET_UNSPECIFIED": 0,
+	"NUMERIC":                  1,
+	"HEXADECIMAL":              2,
+	"UPPER_CASE_ALPHA_NUMERIC": 3,
+	"ALPHA_NUMERIC":            4,
+}
+
+func (x CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet) String() string {
+	return proto.EnumName(CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet_name, int32(x))
+}
+func (CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{47, 0}
+}
+
+type RecordCondition_Expressions_LogicalOperator int32
+
+const (
+	RecordCondition_Expressions_LOGICAL_OPERATOR_UNSPECIFIED RecordCondition_Expressions_LogicalOperator = 0
+	RecordCondition_Expressions_AND                          RecordCondition_Expressions_LogicalOperator = 1
+)
+
+var RecordCondition_Expressions_LogicalOperator_name = map[int32]string{
+	0: "LOGICAL_OPERATOR_UNSPECIFIED",
+	1: "AND",
+}
+var RecordCondition_Expressions_LogicalOperator_value = map[string]int32{
+	"LOGICAL_OPERATOR_UNSPECIFIED": 0,
+	"AND": 1,
+}
+
+func (x RecordCondition_Expressions_LogicalOperator) String() string {
+	return proto.EnumName(RecordCondition_Expressions_LogicalOperator_name, int32(x))
+}
+func (RecordCondition_Expressions_LogicalOperator) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{56, 2, 0}
+}
+
+// Possible outcomes of transformations.
+type TransformationSummary_TransformationResultCode int32
+
+const (
+	TransformationSummary_TRANSFORMATION_RESULT_CODE_UNSPECIFIED TransformationSummary_TransformationResultCode = 0
+	TransformationSummary_SUCCESS                                TransformationSummary_TransformationResultCode = 1
+	TransformationSummary_ERROR                                  TransformationSummary_TransformationResultCode = 2
+)
+
+var TransformationSummary_TransformationResultCode_name = map[int32]string{
+	0: "TRANSFORMATION_RESULT_CODE_UNSPECIFIED",
+	1: "SUCCESS",
+	2: "ERROR",
+}
+var TransformationSummary_TransformationResultCode_value = map[string]int32{
+	"TRANSFORMATION_RESULT_CODE_UNSPECIFIED": 0,
+	"SUCCESS": 1,
+	"ERROR":   2,
+}
+
+func (x TransformationSummary_TransformationResultCode) String() string {
+	return proto.EnumName(TransformationSummary_TransformationResultCode_name, int32(x))
+}
+func (TransformationSummary_TransformationResultCode) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{58, 0}
+}
+
 // Configuration description of the scanning process.
 // When used with redactContent only info_types and min_likelihood are currently
 // used.
 type InspectConfig struct {
-	// Restrict what info_types to look for. The values must correspond to
+	// Restricts what info_types to look for. The values must correspond to
 	// InfoType values returned by ListInfoTypes or found in documentation.
 	// Empty info_types runs all enabled detectors.
 	InfoTypes []*InfoType `protobuf:"bytes,1,rep,name=info_types,json=infoTypes" json:"info_types,omitempty"`
-	// Only return findings equal or above this threshold.
+	// Only returns findings equal or above this threshold.
 	MinLikelihood Likelihood `protobuf:"varint,2,opt,name=min_likelihood,json=minLikelihood,enum=google.privacy.dlp.v2beta1.Likelihood" json:"min_likelihood,omitempty"`
-	// Limit the number of findings per content item.
+	// Limits the number of findings per content item or long running operation.
 	MaxFindings int32 `protobuf:"varint,3,opt,name=max_findings,json=maxFindings" json:"max_findings,omitempty"`
-	// When true, a contextual quote from the data that triggered a finding will
-	// be included in the response; see Finding.quote.
+	// When true, a contextual quote from the data that triggered a finding is
+	// included in the response; see Finding.quote.
 	IncludeQuote bool `protobuf:"varint,4,opt,name=include_quote,json=includeQuote" json:"include_quote,omitempty"`
-	// When true, exclude type information of the findings.
+	// When true, excludes type information of the findings.
 	ExcludeTypes bool `protobuf:"varint,6,opt,name=exclude_types,json=excludeTypes" json:"exclude_types,omitempty"`
+	// Configuration of findings limit given for specified info types.
+	InfoTypeLimits []*InspectConfig_InfoTypeLimit `protobuf:"bytes,7,rep,name=info_type_limits,json=infoTypeLimits" json:"info_type_limits,omitempty"`
+	// Custom info types provided by the user.
+	CustomInfoTypes []*CustomInfoType `protobuf:"bytes,8,rep,name=custom_info_types,json=customInfoTypes" json:"custom_info_types,omitempty"`
 }
 
 func (m *InspectConfig) Reset()                    { *m = InspectConfig{} }
@@ -171,6 +435,69 @@ func (m *InspectConfig) GetExcludeTypes() bool {
 	return false
 }
 
+func (m *InspectConfig) GetInfoTypeLimits() []*InspectConfig_InfoTypeLimit {
+	if m != nil {
+		return m.InfoTypeLimits
+	}
+	return nil
+}
+
+func (m *InspectConfig) GetCustomInfoTypes() []*CustomInfoType {
+	if m != nil {
+		return m.CustomInfoTypes
+	}
+	return nil
+}
+
+// Max findings configuration per info type, per content item or long running
+// operation.
+type InspectConfig_InfoTypeLimit struct {
+	// Type of information the findings limit applies to. Only one limit per
+	// info_type should be provided. If InfoTypeLimit does not have an
+	// info_type, the DLP API applies the limit against all info_types that are
+	// found but not specified in another InfoTypeLimit.
+	InfoType *InfoType `protobuf:"bytes,1,opt,name=info_type,json=infoType" json:"info_type,omitempty"`
+	// Max findings limit for the given infoType.
+	MaxFindings int32 `protobuf:"varint,2,opt,name=max_findings,json=maxFindings" json:"max_findings,omitempty"`
+}
+
+func (m *InspectConfig_InfoTypeLimit) Reset()                    { *m = InspectConfig_InfoTypeLimit{} }
+func (m *InspectConfig_InfoTypeLimit) String() string            { return proto.CompactTextString(m) }
+func (*InspectConfig_InfoTypeLimit) ProtoMessage()               {}
+func (*InspectConfig_InfoTypeLimit) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0, 0} }
+
+func (m *InspectConfig_InfoTypeLimit) GetInfoType() *InfoType {
+	if m != nil {
+		return m.InfoType
+	}
+	return nil
+}
+
+func (m *InspectConfig_InfoTypeLimit) GetMaxFindings() int32 {
+	if m != nil {
+		return m.MaxFindings
+	}
+	return 0
+}
+
+// Additional configuration for inspect long running operations.
+type OperationConfig struct {
+	// Max number of findings per file, Datastore entity, or database row.
+	MaxItemFindings int64 `protobuf:"varint,1,opt,name=max_item_findings,json=maxItemFindings" json:"max_item_findings,omitempty"`
+}
+
+func (m *OperationConfig) Reset()                    { *m = OperationConfig{} }
+func (m *OperationConfig) String() string            { return proto.CompactTextString(m) }
+func (*OperationConfig) ProtoMessage()               {}
+func (*OperationConfig) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+func (m *OperationConfig) GetMaxItemFindings() int64 {
+	if m != nil {
+		return m.MaxItemFindings
+	}
+	return 0
+}
+
 // Container structure for the content to inspect.
 type ContentItem struct {
 	// Type of the content, as defined in Content-Type HTTP header.
@@ -182,13 +509,14 @@ type ContentItem struct {
 	// Types that are valid to be assigned to DataItem:
 	//	*ContentItem_Data
 	//	*ContentItem_Value
+	//	*ContentItem_Table
 	DataItem isContentItem_DataItem `protobuf_oneof:"data_item"`
 }
 
 func (m *ContentItem) Reset()                    { *m = ContentItem{} }
 func (m *ContentItem) String() string            { return proto.CompactTextString(m) }
 func (*ContentItem) ProtoMessage()               {}
-func (*ContentItem) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+func (*ContentItem) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
 type isContentItem_DataItem interface {
 	isContentItem_DataItem()
@@ -200,9 +528,13 @@ type ContentItem_Data struct {
 type ContentItem_Value struct {
 	Value string `protobuf:"bytes,3,opt,name=value,oneof"`
 }
+type ContentItem_Table struct {
+	Table *Table `protobuf:"bytes,4,opt,name=table,oneof"`
+}
 
 func (*ContentItem_Data) isContentItem_DataItem()  {}
 func (*ContentItem_Value) isContentItem_DataItem() {}
+func (*ContentItem_Table) isContentItem_DataItem() {}
 
 func (m *ContentItem) GetDataItem() isContentItem_DataItem {
 	if m != nil {
@@ -232,11 +564,19 @@ func (m *ContentItem) GetValue() string {
 	return ""
 }
 
+func (m *ContentItem) GetTable() *Table {
+	if x, ok := m.GetDataItem().(*ContentItem_Table); ok {
+		return x.Table
+	}
+	return nil
+}
+
 // XXX_OneofFuncs is for the internal use of the proto package.
 func (*ContentItem) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
 	return _ContentItem_OneofMarshaler, _ContentItem_OneofUnmarshaler, _ContentItem_OneofSizer, []interface{}{
 		(*ContentItem_Data)(nil),
 		(*ContentItem_Value)(nil),
+		(*ContentItem_Table)(nil),
 	}
 }
 
@@ -250,6 +590,11 @@ func _ContentItem_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
 	case *ContentItem_Value:
 		b.EncodeVarint(3<<3 | proto.WireBytes)
 		b.EncodeStringBytes(x.Value)
+	case *ContentItem_Table:
+		b.EncodeVarint(4<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Table); err != nil {
+			return err
+		}
 	case nil:
 	default:
 		return fmt.Errorf("ContentItem.DataItem has unexpected type %T", x)
@@ -274,6 +619,14 @@ func _ContentItem_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Bu
 		x, err := b.DecodeStringBytes()
 		m.DataItem = &ContentItem_Value{x}
 		return true, err
+	case 4: // data_item.table
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(Table)
+		err := b.DecodeMessage(msg)
+		m.DataItem = &ContentItem_Table{msg}
+		return true, err
 	default:
 		return false, nil
 	}
@@ -291,11 +644,57 @@ func _ContentItem_OneofSizer(msg proto.Message) (n int) {
 		n += proto.SizeVarint(3<<3 | proto.WireBytes)
 		n += proto.SizeVarint(uint64(len(x.Value)))
 		n += len(x.Value)
+	case *ContentItem_Table:
+		s := proto.Size(x.Table)
+		n += proto.SizeVarint(4<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
 	case nil:
 	default:
 		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
 	}
 	return n
+}
+
+// Structured content to inspect. Up to 50,000 `Value`s per request allowed.
+type Table struct {
+	Headers []*FieldId   `protobuf:"bytes,1,rep,name=headers" json:"headers,omitempty"`
+	Rows    []*Table_Row `protobuf:"bytes,2,rep,name=rows" json:"rows,omitempty"`
+}
+
+func (m *Table) Reset()                    { *m = Table{} }
+func (m *Table) String() string            { return proto.CompactTextString(m) }
+func (*Table) ProtoMessage()               {}
+func (*Table) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+func (m *Table) GetHeaders() []*FieldId {
+	if m != nil {
+		return m.Headers
+	}
+	return nil
+}
+
+func (m *Table) GetRows() []*Table_Row {
+	if m != nil {
+		return m.Rows
+	}
+	return nil
+}
+
+type Table_Row struct {
+	Values []*Value `protobuf:"bytes,1,rep,name=values" json:"values,omitempty"`
+}
+
+func (m *Table_Row) Reset()                    { *m = Table_Row{} }
+func (m *Table_Row) String() string            { return proto.CompactTextString(m) }
+func (*Table_Row) ProtoMessage()               {}
+func (*Table_Row) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3, 0} }
+
+func (m *Table_Row) GetValues() []*Value {
+	if m != nil {
+		return m.Values
+	}
+	return nil
 }
 
 // All the findings for a single scanned item.
@@ -314,7 +713,7 @@ type InspectResult struct {
 func (m *InspectResult) Reset()                    { *m = InspectResult{} }
 func (m *InspectResult) String() string            { return proto.CompactTextString(m) }
 func (*InspectResult) ProtoMessage()               {}
-func (*InspectResult) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+func (*InspectResult) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
 
 func (m *InspectResult) GetFindings() []*Finding {
 	if m != nil {
@@ -347,7 +746,7 @@ type Finding struct {
 func (m *Finding) Reset()                    { *m = Finding{} }
 func (m *Finding) String() string            { return proto.CompactTextString(m) }
 func (*Finding) ProtoMessage()               {}
-func (*Finding) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+func (*Finding) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
 
 func (m *Finding) GetQuote() string {
 	if m != nil {
@@ -397,12 +796,14 @@ type Location struct {
 	RecordKey *RecordKey `protobuf:"bytes,4,opt,name=record_key,json=recordKey" json:"record_key,omitempty"`
 	// Field id of the field containing the finding.
 	FieldId *FieldId `protobuf:"bytes,5,opt,name=field_id,json=fieldId" json:"field_id,omitempty"`
+	// Location within a `ContentItem.Table`.
+	TableLocation *TableLocation `protobuf:"bytes,6,opt,name=table_location,json=tableLocation" json:"table_location,omitempty"`
 }
 
 func (m *Location) Reset()                    { *m = Location{} }
 func (m *Location) String() string            { return proto.CompactTextString(m) }
 func (*Location) ProtoMessage()               {}
-func (*Location) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+func (*Location) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
 
 func (m *Location) GetByteRange() *Range {
 	if m != nil {
@@ -439,6 +840,31 @@ func (m *Location) GetFieldId() *FieldId {
 	return nil
 }
 
+func (m *Location) GetTableLocation() *TableLocation {
+	if m != nil {
+		return m.TableLocation
+	}
+	return nil
+}
+
+// Location of a finding within a `ContentItem.Table`.
+type TableLocation struct {
+	// The zero-based index of the row where the finding is located.
+	RowIndex int64 `protobuf:"varint,1,opt,name=row_index,json=rowIndex" json:"row_index,omitempty"`
+}
+
+func (m *TableLocation) Reset()                    { *m = TableLocation{} }
+func (m *TableLocation) String() string            { return proto.CompactTextString(m) }
+func (*TableLocation) ProtoMessage()               {}
+func (*TableLocation) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+
+func (m *TableLocation) GetRowIndex() int64 {
+	if m != nil {
+		return m.RowIndex
+	}
+	return 0
+}
+
 // Generic half-open interval [start, end)
 type Range struct {
 	// Index of the first character of the range (inclusive).
@@ -450,7 +876,7 @@ type Range struct {
 func (m *Range) Reset()                    { *m = Range{} }
 func (m *Range) String() string            { return proto.CompactTextString(m) }
 func (*Range) ProtoMessage()               {}
-func (*Range) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+func (*Range) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
 
 func (m *Range) GetStart() int64 {
 	if m != nil {
@@ -481,7 +907,7 @@ type ImageLocation struct {
 func (m *ImageLocation) Reset()                    { *m = ImageLocation{} }
 func (m *ImageLocation) String() string            { return proto.CompactTextString(m) }
 func (*ImageLocation) ProtoMessage()               {}
-func (*ImageLocation) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+func (*ImageLocation) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
 
 func (m *ImageLocation) GetTop() int32 {
 	if m != nil {
@@ -518,14 +944,17 @@ type RedactContentRequest struct {
 	InspectConfig *InspectConfig `protobuf:"bytes,1,opt,name=inspect_config,json=inspectConfig" json:"inspect_config,omitempty"`
 	// The list of items to inspect. Up to 100 are allowed per request.
 	Items []*ContentItem `protobuf:"bytes,2,rep,name=items" json:"items,omitempty"`
-	// The strings to replace findings with. Must specify at least one.
+	// The strings to replace findings text findings with. Must specify at least
+	// one of these or one ImageRedactionConfig if redacting images.
 	ReplaceConfigs []*RedactContentRequest_ReplaceConfig `protobuf:"bytes,3,rep,name=replace_configs,json=replaceConfigs" json:"replace_configs,omitempty"`
+	// The configuration for specifying what content to redact from images.
+	ImageRedactionConfigs []*RedactContentRequest_ImageRedactionConfig `protobuf:"bytes,4,rep,name=image_redaction_configs,json=imageRedactionConfigs" json:"image_redaction_configs,omitempty"`
 }
 
 func (m *RedactContentRequest) Reset()                    { *m = RedactContentRequest{} }
 func (m *RedactContentRequest) String() string            { return proto.CompactTextString(m) }
 func (*RedactContentRequest) ProtoMessage()               {}
-func (*RedactContentRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+func (*RedactContentRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
 
 func (m *RedactContentRequest) GetInspectConfig() *InspectConfig {
 	if m != nil {
@@ -548,10 +977,17 @@ func (m *RedactContentRequest) GetReplaceConfigs() []*RedactContentRequest_Repla
 	return nil
 }
 
+func (m *RedactContentRequest) GetImageRedactionConfigs() []*RedactContentRequest_ImageRedactionConfig {
+	if m != nil {
+		return m.ImageRedactionConfigs
+	}
+	return nil
+}
+
 type RedactContentRequest_ReplaceConfig struct {
 	// Type of information to replace. Only one ReplaceConfig per info_type
-	// should be provided. If ReplaceConfig does not have an info_type, we'll
-	// match it against all info_types that are found but not specified in
+	// should be provided. If ReplaceConfig does not have an info_type, the DLP
+	// API matches it against all info_types that are found but not specified in
 	// another ReplaceConfig.
 	InfoType *InfoType `protobuf:"bytes,1,opt,name=info_type,json=infoType" json:"info_type,omitempty"`
 	// Content replacing sensitive information of given type. Max 256 chars.
@@ -562,7 +998,7 @@ func (m *RedactContentRequest_ReplaceConfig) Reset()         { *m = RedactConten
 func (m *RedactContentRequest_ReplaceConfig) String() string { return proto.CompactTextString(m) }
 func (*RedactContentRequest_ReplaceConfig) ProtoMessage()    {}
 func (*RedactContentRequest_ReplaceConfig) Descriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{7, 0}
+	return fileDescriptor0, []int{10, 0}
 }
 
 func (m *RedactContentRequest_ReplaceConfig) GetInfoType() *InfoType {
@@ -579,7 +1015,182 @@ func (m *RedactContentRequest_ReplaceConfig) GetReplaceWith() string {
 	return ""
 }
 
-// Results of deidentifying a list of items.
+// Configuration for determining how redaction of images should occur.
+type RedactContentRequest_ImageRedactionConfig struct {
+	// Type of information to redact from images.
+	//
+	// Types that are valid to be assigned to Target:
+	//	*RedactContentRequest_ImageRedactionConfig_InfoType
+	//	*RedactContentRequest_ImageRedactionConfig_RedactAllText
+	Target isRedactContentRequest_ImageRedactionConfig_Target `protobuf_oneof:"target"`
+	// The color to use when redacting content from an image. If not specified,
+	// the default is black.
+	RedactionColor *Color `protobuf:"bytes,3,opt,name=redaction_color,json=redactionColor" json:"redaction_color,omitempty"`
+}
+
+func (m *RedactContentRequest_ImageRedactionConfig) Reset() {
+	*m = RedactContentRequest_ImageRedactionConfig{}
+}
+func (m *RedactContentRequest_ImageRedactionConfig) String() string { return proto.CompactTextString(m) }
+func (*RedactContentRequest_ImageRedactionConfig) ProtoMessage()    {}
+func (*RedactContentRequest_ImageRedactionConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{10, 1}
+}
+
+type isRedactContentRequest_ImageRedactionConfig_Target interface {
+	isRedactContentRequest_ImageRedactionConfig_Target()
+}
+
+type RedactContentRequest_ImageRedactionConfig_InfoType struct {
+	InfoType *InfoType `protobuf:"bytes,1,opt,name=info_type,json=infoType,oneof"`
+}
+type RedactContentRequest_ImageRedactionConfig_RedactAllText struct {
+	RedactAllText bool `protobuf:"varint,2,opt,name=redact_all_text,json=redactAllText,oneof"`
+}
+
+func (*RedactContentRequest_ImageRedactionConfig_InfoType) isRedactContentRequest_ImageRedactionConfig_Target() {
+}
+func (*RedactContentRequest_ImageRedactionConfig_RedactAllText) isRedactContentRequest_ImageRedactionConfig_Target() {
+}
+
+func (m *RedactContentRequest_ImageRedactionConfig) GetTarget() isRedactContentRequest_ImageRedactionConfig_Target {
+	if m != nil {
+		return m.Target
+	}
+	return nil
+}
+
+func (m *RedactContentRequest_ImageRedactionConfig) GetInfoType() *InfoType {
+	if x, ok := m.GetTarget().(*RedactContentRequest_ImageRedactionConfig_InfoType); ok {
+		return x.InfoType
+	}
+	return nil
+}
+
+func (m *RedactContentRequest_ImageRedactionConfig) GetRedactAllText() bool {
+	if x, ok := m.GetTarget().(*RedactContentRequest_ImageRedactionConfig_RedactAllText); ok {
+		return x.RedactAllText
+	}
+	return false
+}
+
+func (m *RedactContentRequest_ImageRedactionConfig) GetRedactionColor() *Color {
+	if m != nil {
+		return m.RedactionColor
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*RedactContentRequest_ImageRedactionConfig) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _RedactContentRequest_ImageRedactionConfig_OneofMarshaler, _RedactContentRequest_ImageRedactionConfig_OneofUnmarshaler, _RedactContentRequest_ImageRedactionConfig_OneofSizer, []interface{}{
+		(*RedactContentRequest_ImageRedactionConfig_InfoType)(nil),
+		(*RedactContentRequest_ImageRedactionConfig_RedactAllText)(nil),
+	}
+}
+
+func _RedactContentRequest_ImageRedactionConfig_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*RedactContentRequest_ImageRedactionConfig)
+	// target
+	switch x := m.Target.(type) {
+	case *RedactContentRequest_ImageRedactionConfig_InfoType:
+		b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.InfoType); err != nil {
+			return err
+		}
+	case *RedactContentRequest_ImageRedactionConfig_RedactAllText:
+		t := uint64(0)
+		if x.RedactAllText {
+			t = 1
+		}
+		b.EncodeVarint(2<<3 | proto.WireVarint)
+		b.EncodeVarint(t)
+	case nil:
+	default:
+		return fmt.Errorf("RedactContentRequest_ImageRedactionConfig.Target has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _RedactContentRequest_ImageRedactionConfig_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*RedactContentRequest_ImageRedactionConfig)
+	switch tag {
+	case 1: // target.info_type
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(InfoType)
+		err := b.DecodeMessage(msg)
+		m.Target = &RedactContentRequest_ImageRedactionConfig_InfoType{msg}
+		return true, err
+	case 2: // target.redact_all_text
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.Target = &RedactContentRequest_ImageRedactionConfig_RedactAllText{x != 0}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _RedactContentRequest_ImageRedactionConfig_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*RedactContentRequest_ImageRedactionConfig)
+	// target
+	switch x := m.Target.(type) {
+	case *RedactContentRequest_ImageRedactionConfig_InfoType:
+		s := proto.Size(x.InfoType)
+		n += proto.SizeVarint(1<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *RedactContentRequest_ImageRedactionConfig_RedactAllText:
+		n += proto.SizeVarint(2<<3 | proto.WireVarint)
+		n += 1
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// Represents a color in the RGB color space.
+type Color struct {
+	// The amount of red in the color as a value in the interval [0, 1].
+	Red float32 `protobuf:"fixed32,1,opt,name=red" json:"red,omitempty"`
+	// The amount of green in the color as a value in the interval [0, 1].
+	Green float32 `protobuf:"fixed32,2,opt,name=green" json:"green,omitempty"`
+	// The amount of blue in the color as a value in the interval [0, 1].
+	Blue float32 `protobuf:"fixed32,3,opt,name=blue" json:"blue,omitempty"`
+}
+
+func (m *Color) Reset()                    { *m = Color{} }
+func (m *Color) String() string            { return proto.CompactTextString(m) }
+func (*Color) ProtoMessage()               {}
+func (*Color) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+
+func (m *Color) GetRed() float32 {
+	if m != nil {
+		return m.Red
+	}
+	return 0
+}
+
+func (m *Color) GetGreen() float32 {
+	if m != nil {
+		return m.Green
+	}
+	return 0
+}
+
+func (m *Color) GetBlue() float32 {
+	if m != nil {
+		return m.Blue
+	}
+	return 0
+}
+
+// Results of redacting a list of items.
 type RedactContentResponse struct {
 	// The redacted content.
 	Items []*ContentItem `protobuf:"bytes,1,rep,name=items" json:"items,omitempty"`
@@ -588,11 +1199,74 @@ type RedactContentResponse struct {
 func (m *RedactContentResponse) Reset()                    { *m = RedactContentResponse{} }
 func (m *RedactContentResponse) String() string            { return proto.CompactTextString(m) }
 func (*RedactContentResponse) ProtoMessage()               {}
-func (*RedactContentResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+func (*RedactContentResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
 
 func (m *RedactContentResponse) GetItems() []*ContentItem {
 	if m != nil {
 		return m.Items
+	}
+	return nil
+}
+
+// Request to de-identify a list of items.
+type DeidentifyContentRequest struct {
+	// Configuration for the de-identification of the list of content items.
+	DeidentifyConfig *DeidentifyConfig `protobuf:"bytes,1,opt,name=deidentify_config,json=deidentifyConfig" json:"deidentify_config,omitempty"`
+	// Configuration for the inspector.
+	InspectConfig *InspectConfig `protobuf:"bytes,2,opt,name=inspect_config,json=inspectConfig" json:"inspect_config,omitempty"`
+	// The list of items to inspect. Up to 100 are allowed per request.
+	// All items will be treated as text/*.
+	Items []*ContentItem `protobuf:"bytes,3,rep,name=items" json:"items,omitempty"`
+}
+
+func (m *DeidentifyContentRequest) Reset()                    { *m = DeidentifyContentRequest{} }
+func (m *DeidentifyContentRequest) String() string            { return proto.CompactTextString(m) }
+func (*DeidentifyContentRequest) ProtoMessage()               {}
+func (*DeidentifyContentRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
+
+func (m *DeidentifyContentRequest) GetDeidentifyConfig() *DeidentifyConfig {
+	if m != nil {
+		return m.DeidentifyConfig
+	}
+	return nil
+}
+
+func (m *DeidentifyContentRequest) GetInspectConfig() *InspectConfig {
+	if m != nil {
+		return m.InspectConfig
+	}
+	return nil
+}
+
+func (m *DeidentifyContentRequest) GetItems() []*ContentItem {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+// Results of de-identifying a list of items.
+type DeidentifyContentResponse struct {
+	Items []*ContentItem `protobuf:"bytes,1,rep,name=items" json:"items,omitempty"`
+	// A review of the transformations that took place for each item.
+	Summaries []*DeidentificationSummary `protobuf:"bytes,2,rep,name=summaries" json:"summaries,omitempty"`
+}
+
+func (m *DeidentifyContentResponse) Reset()                    { *m = DeidentifyContentResponse{} }
+func (m *DeidentifyContentResponse) String() string            { return proto.CompactTextString(m) }
+func (*DeidentifyContentResponse) ProtoMessage()               {}
+func (*DeidentifyContentResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
+
+func (m *DeidentifyContentResponse) GetItems() []*ContentItem {
+	if m != nil {
+		return m.Items
+	}
+	return nil
+}
+
+func (m *DeidentifyContentResponse) GetSummaries() []*DeidentificationSummary {
+	if m != nil {
+		return m.Summaries
 	}
 	return nil
 }
@@ -610,7 +1284,7 @@ type InspectContentRequest struct {
 func (m *InspectContentRequest) Reset()                    { *m = InspectContentRequest{} }
 func (m *InspectContentRequest) String() string            { return proto.CompactTextString(m) }
 func (*InspectContentRequest) ProtoMessage()               {}
-func (*InspectContentRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+func (*InspectContentRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
 
 func (m *InspectContentRequest) GetInspectConfig() *InspectConfig {
 	if m != nil {
@@ -628,7 +1302,7 @@ func (m *InspectContentRequest) GetItems() []*ContentItem {
 
 // Results of inspecting a list of items.
 type InspectContentResponse struct {
-	// Each content_item from the request will have a result in this list, in the
+	// Each content_item from the request has a result in this list, in the
 	// same order as the request.
 	Results []*InspectResult `protobuf:"bytes,1,rep,name=results" json:"results,omitempty"`
 }
@@ -636,7 +1310,7 @@ type InspectContentResponse struct {
 func (m *InspectContentResponse) Reset()                    { *m = InspectContentResponse{} }
 func (m *InspectContentResponse) String() string            { return proto.CompactTextString(m) }
 func (*InspectContentResponse) ProtoMessage()               {}
-func (*InspectContentResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+func (*InspectContentResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{16} }
 
 func (m *InspectContentResponse) GetResults() []*InspectResult {
 	if m != nil {
@@ -652,25 +1326,16 @@ type CreateInspectOperationRequest struct {
 	InspectConfig *InspectConfig `protobuf:"bytes,1,opt,name=inspect_config,json=inspectConfig" json:"inspect_config,omitempty"`
 	// Specification of the data set to process.
 	StorageConfig *StorageConfig `protobuf:"bytes,2,opt,name=storage_config,json=storageConfig" json:"storage_config,omitempty"`
-	// Optional location to store findings. The bucket must already exist and
-	// the Google APIs service account for DLP must have write permission to
-	// write to the given bucket.
-	// Results will be split over multiple csv files with each file name matching
-	// the pattern "[operation_id] + [count].csv".
-	// The operation_id will match the identifier for the Operation,
-	// and the [count] is a counter used for tracking the number of files written.
-	// The CSV file(s) contain the following columns regardless of storage type
-	// scanned: id, info_type, likelihood, byte size of finding, quote, time_stamp
-	// For cloud storage the next two columns are: file_path, start_offset
-	// For datastore the next two columns are: project_id, namespace_id, path,
-	//     column_name, offset.
+	// Optional location to store findings.
 	OutputConfig *OutputStorageConfig `protobuf:"bytes,3,opt,name=output_config,json=outputConfig" json:"output_config,omitempty"`
+	// Additional configuration settings for long running operations.
+	OperationConfig *OperationConfig `protobuf:"bytes,5,opt,name=operation_config,json=operationConfig" json:"operation_config,omitempty"`
 }
 
 func (m *CreateInspectOperationRequest) Reset()                    { *m = CreateInspectOperationRequest{} }
 func (m *CreateInspectOperationRequest) String() string            { return proto.CompactTextString(m) }
 func (*CreateInspectOperationRequest) ProtoMessage()               {}
-func (*CreateInspectOperationRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+func (*CreateInspectOperationRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{17} }
 
 func (m *CreateInspectOperationRequest) GetInspectConfig() *InspectConfig {
 	if m != nil {
@@ -693,9 +1358,17 @@ func (m *CreateInspectOperationRequest) GetOutputConfig() *OutputStorageConfig {
 	return nil
 }
 
+func (m *CreateInspectOperationRequest) GetOperationConfig() *OperationConfig {
+	if m != nil {
+		return m.OperationConfig
+	}
+	return nil
+}
+
 // Cloud repository for storing output.
 type OutputStorageConfig struct {
 	// Types that are valid to be assigned to Type:
+	//	*OutputStorageConfig_Table
 	//	*OutputStorageConfig_StoragePath
 	Type isOutputStorageConfig_Type `protobuf_oneof:"type"`
 }
@@ -703,21 +1376,32 @@ type OutputStorageConfig struct {
 func (m *OutputStorageConfig) Reset()                    { *m = OutputStorageConfig{} }
 func (m *OutputStorageConfig) String() string            { return proto.CompactTextString(m) }
 func (*OutputStorageConfig) ProtoMessage()               {}
-func (*OutputStorageConfig) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+func (*OutputStorageConfig) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{18} }
 
 type isOutputStorageConfig_Type interface {
 	isOutputStorageConfig_Type()
 }
 
+type OutputStorageConfig_Table struct {
+	Table *BigQueryTable `protobuf:"bytes,1,opt,name=table,oneof"`
+}
 type OutputStorageConfig_StoragePath struct {
 	StoragePath *CloudStoragePath `protobuf:"bytes,2,opt,name=storage_path,json=storagePath,oneof"`
 }
 
+func (*OutputStorageConfig_Table) isOutputStorageConfig_Type()       {}
 func (*OutputStorageConfig_StoragePath) isOutputStorageConfig_Type() {}
 
 func (m *OutputStorageConfig) GetType() isOutputStorageConfig_Type {
 	if m != nil {
 		return m.Type
+	}
+	return nil
+}
+
+func (m *OutputStorageConfig) GetTable() *BigQueryTable {
+	if x, ok := m.GetType().(*OutputStorageConfig_Table); ok {
+		return x.Table
 	}
 	return nil
 }
@@ -732,6 +1416,7 @@ func (m *OutputStorageConfig) GetStoragePath() *CloudStoragePath {
 // XXX_OneofFuncs is for the internal use of the proto package.
 func (*OutputStorageConfig) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
 	return _OutputStorageConfig_OneofMarshaler, _OutputStorageConfig_OneofUnmarshaler, _OutputStorageConfig_OneofSizer, []interface{}{
+		(*OutputStorageConfig_Table)(nil),
 		(*OutputStorageConfig_StoragePath)(nil),
 	}
 }
@@ -740,6 +1425,11 @@ func _OutputStorageConfig_OneofMarshaler(msg proto.Message, b *proto.Buffer) err
 	m := msg.(*OutputStorageConfig)
 	// type
 	switch x := m.Type.(type) {
+	case *OutputStorageConfig_Table:
+		b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Table); err != nil {
+			return err
+		}
 	case *OutputStorageConfig_StoragePath:
 		b.EncodeVarint(2<<3 | proto.WireBytes)
 		if err := b.EncodeMessage(x.StoragePath); err != nil {
@@ -755,6 +1445,14 @@ func _OutputStorageConfig_OneofMarshaler(msg proto.Message, b *proto.Buffer) err
 func _OutputStorageConfig_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
 	m := msg.(*OutputStorageConfig)
 	switch tag {
+	case 1: // type.table
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(BigQueryTable)
+		err := b.DecodeMessage(msg)
+		m.Type = &OutputStorageConfig_Table{msg}
+		return true, err
 	case 2: // type.storage_path
 		if wire != proto.WireBytes {
 			return true, proto.ErrInternalBadWireType
@@ -772,6 +1470,11 @@ func _OutputStorageConfig_OneofSizer(msg proto.Message) (n int) {
 	m := msg.(*OutputStorageConfig)
 	// type
 	switch x := m.Type.(type) {
+	case *OutputStorageConfig_Table:
+		s := proto.Size(x.Table)
+		n += proto.SizeVarint(1<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
 	case *OutputStorageConfig_StoragePath:
 		s := proto.Size(x.StoragePath)
 		n += proto.SizeVarint(2<<3 | proto.WireBytes)
@@ -784,7 +1487,7 @@ func _OutputStorageConfig_OneofSizer(msg proto.Message) (n int) {
 	return n
 }
 
-// Stats regarding a specific InfoType.
+// Statistics regarding a specific InfoType.
 type InfoTypeStatistics struct {
 	// The type of finding this stat is for.
 	InfoType *InfoType `protobuf:"bytes,1,opt,name=info_type,json=infoType" json:"info_type,omitempty"`
@@ -795,7 +1498,7 @@ type InfoTypeStatistics struct {
 func (m *InfoTypeStatistics) Reset()                    { *m = InfoTypeStatistics{} }
 func (m *InfoTypeStatistics) String() string            { return proto.CompactTextString(m) }
 func (*InfoTypeStatistics) ProtoMessage()               {}
-func (*InfoTypeStatistics) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
+func (*InfoTypeStatistics) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{19} }
 
 func (m *InfoTypeStatistics) GetInfoType() *InfoType {
 	if m != nil {
@@ -831,7 +1534,7 @@ type InspectOperationMetadata struct {
 func (m *InspectOperationMetadata) Reset()                    { *m = InspectOperationMetadata{} }
 func (m *InspectOperationMetadata) String() string            { return proto.CompactTextString(m) }
 func (*InspectOperationMetadata) ProtoMessage()               {}
-func (*InspectOperationMetadata) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
+func (*InspectOperationMetadata) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{20} }
 
 func (m *InspectOperationMetadata) GetProcessedBytes() int64 {
 	if m != nil {
@@ -893,7 +1596,7 @@ type InspectOperationResult struct {
 func (m *InspectOperationResult) Reset()                    { *m = InspectOperationResult{} }
 func (m *InspectOperationResult) String() string            { return proto.CompactTextString(m) }
 func (*InspectOperationResult) ProtoMessage()               {}
-func (*InspectOperationResult) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
+func (*InspectOperationResult) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{21} }
 
 func (m *InspectOperationResult) GetName() string {
 	if m != nil {
@@ -905,22 +1608,32 @@ func (m *InspectOperationResult) GetName() string {
 // Request for the list of results in a given inspect operation.
 type ListInspectFindingsRequest struct {
 	// Identifier of the results set returned as metadata of
-	// the longrunning operation created by a call to CreateInspectOperation.
-	// Should be in the format of `inspect/results/{id}.
+	// the longrunning operation created by a call to InspectDataSource.
+	// Should be in the format of `inspect/results/{id}`.
 	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
 	// Maximum number of results to return.
-	// If 0, the implementation will select a reasonable value.
+	// If 0, the implementation selects a reasonable value.
 	PageSize int32 `protobuf:"varint,2,opt,name=page_size,json=pageSize" json:"page_size,omitempty"`
 	// The value returned by the last `ListInspectFindingsResponse`; indicates
 	// that this is a continuation of a prior `ListInspectFindings` call, and that
 	// the system should return the next page of data.
 	PageToken string `protobuf:"bytes,3,opt,name=page_token,json=pageToken" json:"page_token,omitempty"`
+	// Restricts findings to items that match. Supports info_type and likelihood.
+	//
+	// Examples:
+	//
+	// - info_type=EMAIL_ADDRESS
+	// - info_type=PHONE_NUMBER,EMAIL_ADDRESS
+	// - likelihood=VERY_LIKELY
+	// - likelihood=VERY_LIKELY,LIKELY
+	// - info_type=EMAIL_ADDRESS,likelihood=VERY_LIKELY,LIKELY
+	Filter string `protobuf:"bytes,4,opt,name=filter" json:"filter,omitempty"`
 }
 
 func (m *ListInspectFindingsRequest) Reset()                    { *m = ListInspectFindingsRequest{} }
 func (m *ListInspectFindingsRequest) String() string            { return proto.CompactTextString(m) }
 func (*ListInspectFindingsRequest) ProtoMessage()               {}
-func (*ListInspectFindingsRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{16} }
+func (*ListInspectFindingsRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{22} }
 
 func (m *ListInspectFindingsRequest) GetName() string {
 	if m != nil {
@@ -943,6 +1656,13 @@ func (m *ListInspectFindingsRequest) GetPageToken() string {
 	return ""
 }
 
+func (m *ListInspectFindingsRequest) GetFilter() string {
+	if m != nil {
+		return m.Filter
+	}
+	return ""
+}
+
 // Response to the ListInspectFindings request.
 type ListInspectFindingsResponse struct {
 	// The results.
@@ -955,7 +1675,7 @@ type ListInspectFindingsResponse struct {
 func (m *ListInspectFindingsResponse) Reset()                    { *m = ListInspectFindingsResponse{} }
 func (m *ListInspectFindingsResponse) String() string            { return proto.CompactTextString(m) }
 func (*ListInspectFindingsResponse) ProtoMessage()               {}
-func (*ListInspectFindingsResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{17} }
+func (*ListInspectFindingsResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{23} }
 
 func (m *ListInspectFindingsResponse) GetResult() *InspectResult {
 	if m != nil {
@@ -971,20 +1691,20 @@ func (m *ListInspectFindingsResponse) GetNextPageToken() string {
 	return ""
 }
 
-// Info type description.
+// Description of the information type (infoType).
 type InfoTypeDescription struct {
-	// Internal name of the info type.
+	// Internal name of the infoType.
 	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
-	// Human readable form of the info type name.
+	// Human readable form of the infoType name.
 	DisplayName string `protobuf:"bytes,2,opt,name=display_name,json=displayName" json:"display_name,omitempty"`
-	// List of categories this info type belongs to.
+	// List of categories this infoType belongs to.
 	Categories []*CategoryDescription `protobuf:"bytes,3,rep,name=categories" json:"categories,omitempty"`
 }
 
 func (m *InfoTypeDescription) Reset()                    { *m = InfoTypeDescription{} }
 func (m *InfoTypeDescription) String() string            { return proto.CompactTextString(m) }
 func (*InfoTypeDescription) ProtoMessage()               {}
-func (*InfoTypeDescription) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{18} }
+func (*InfoTypeDescription) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{24} }
 
 func (m *InfoTypeDescription) GetName() string {
 	if m != nil {
@@ -1021,7 +1741,7 @@ type ListInfoTypesRequest struct {
 func (m *ListInfoTypesRequest) Reset()                    { *m = ListInfoTypesRequest{} }
 func (m *ListInfoTypesRequest) String() string            { return proto.CompactTextString(m) }
 func (*ListInfoTypesRequest) ProtoMessage()               {}
-func (*ListInfoTypesRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{19} }
+func (*ListInfoTypesRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{25} }
 
 func (m *ListInfoTypesRequest) GetCategory() string {
 	if m != nil {
@@ -1046,7 +1766,7 @@ type ListInfoTypesResponse struct {
 func (m *ListInfoTypesResponse) Reset()                    { *m = ListInfoTypesResponse{} }
 func (m *ListInfoTypesResponse) String() string            { return proto.CompactTextString(m) }
 func (*ListInfoTypesResponse) ProtoMessage()               {}
-func (*ListInfoTypesResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{20} }
+func (*ListInfoTypesResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{26} }
 
 func (m *ListInfoTypesResponse) GetInfoTypes() []*InfoTypeDescription {
 	if m != nil {
@@ -1066,7 +1786,7 @@ type CategoryDescription struct {
 func (m *CategoryDescription) Reset()                    { *m = CategoryDescription{} }
 func (m *CategoryDescription) String() string            { return proto.CompactTextString(m) }
 func (*CategoryDescription) ProtoMessage()               {}
-func (*CategoryDescription) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{21} }
+func (*CategoryDescription) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{27} }
 
 func (m *CategoryDescription) GetName() string {
 	if m != nil {
@@ -1094,7 +1814,7 @@ type ListRootCategoriesRequest struct {
 func (m *ListRootCategoriesRequest) Reset()                    { *m = ListRootCategoriesRequest{} }
 func (m *ListRootCategoriesRequest) String() string            { return proto.CompactTextString(m) }
 func (*ListRootCategoriesRequest) ProtoMessage()               {}
-func (*ListRootCategoriesRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{22} }
+func (*ListRootCategoriesRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{28} }
 
 func (m *ListRootCategoriesRequest) GetLanguageCode() string {
 	if m != nil {
@@ -1112,7 +1832,7 @@ type ListRootCategoriesResponse struct {
 func (m *ListRootCategoriesResponse) Reset()                    { *m = ListRootCategoriesResponse{} }
 func (m *ListRootCategoriesResponse) String() string            { return proto.CompactTextString(m) }
 func (*ListRootCategoriesResponse) ProtoMessage()               {}
-func (*ListRootCategoriesResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{23} }
+func (*ListRootCategoriesResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{29} }
 
 func (m *ListRootCategoriesResponse) GetCategories() []*CategoryDescription {
 	if m != nil {
@@ -1121,17 +1841,3042 @@ func (m *ListRootCategoriesResponse) GetCategories() []*CategoryDescription {
 	return nil
 }
 
+// Request for creating a risk analysis operation.
+type AnalyzeDataSourceRiskRequest struct {
+	// Privacy metric to compute.
+	PrivacyMetric *PrivacyMetric `protobuf:"bytes,1,opt,name=privacy_metric,json=privacyMetric" json:"privacy_metric,omitempty"`
+	// Input dataset to compute metrics over.
+	SourceTable *BigQueryTable `protobuf:"bytes,3,opt,name=source_table,json=sourceTable" json:"source_table,omitempty"`
+}
+
+func (m *AnalyzeDataSourceRiskRequest) Reset()                    { *m = AnalyzeDataSourceRiskRequest{} }
+func (m *AnalyzeDataSourceRiskRequest) String() string            { return proto.CompactTextString(m) }
+func (*AnalyzeDataSourceRiskRequest) ProtoMessage()               {}
+func (*AnalyzeDataSourceRiskRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{30} }
+
+func (m *AnalyzeDataSourceRiskRequest) GetPrivacyMetric() *PrivacyMetric {
+	if m != nil {
+		return m.PrivacyMetric
+	}
+	return nil
+}
+
+func (m *AnalyzeDataSourceRiskRequest) GetSourceTable() *BigQueryTable {
+	if m != nil {
+		return m.SourceTable
+	}
+	return nil
+}
+
+// Privacy metric to compute for reidentification risk analysis.
+type PrivacyMetric struct {
+	// Types that are valid to be assigned to Type:
+	//	*PrivacyMetric_NumericalStatsConfig_
+	//	*PrivacyMetric_CategoricalStatsConfig_
+	//	*PrivacyMetric_KAnonymityConfig_
+	//	*PrivacyMetric_LDiversityConfig_
+	Type isPrivacyMetric_Type `protobuf_oneof:"type"`
+}
+
+func (m *PrivacyMetric) Reset()                    { *m = PrivacyMetric{} }
+func (m *PrivacyMetric) String() string            { return proto.CompactTextString(m) }
+func (*PrivacyMetric) ProtoMessage()               {}
+func (*PrivacyMetric) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{31} }
+
+type isPrivacyMetric_Type interface {
+	isPrivacyMetric_Type()
+}
+
+type PrivacyMetric_NumericalStatsConfig_ struct {
+	NumericalStatsConfig *PrivacyMetric_NumericalStatsConfig `protobuf:"bytes,1,opt,name=numerical_stats_config,json=numericalStatsConfig,oneof"`
+}
+type PrivacyMetric_CategoricalStatsConfig_ struct {
+	CategoricalStatsConfig *PrivacyMetric_CategoricalStatsConfig `protobuf:"bytes,2,opt,name=categorical_stats_config,json=categoricalStatsConfig,oneof"`
+}
+type PrivacyMetric_KAnonymityConfig_ struct {
+	KAnonymityConfig *PrivacyMetric_KAnonymityConfig `protobuf:"bytes,3,opt,name=k_anonymity_config,json=kAnonymityConfig,oneof"`
+}
+type PrivacyMetric_LDiversityConfig_ struct {
+	LDiversityConfig *PrivacyMetric_LDiversityConfig `protobuf:"bytes,4,opt,name=l_diversity_config,json=lDiversityConfig,oneof"`
+}
+
+func (*PrivacyMetric_NumericalStatsConfig_) isPrivacyMetric_Type()   {}
+func (*PrivacyMetric_CategoricalStatsConfig_) isPrivacyMetric_Type() {}
+func (*PrivacyMetric_KAnonymityConfig_) isPrivacyMetric_Type()       {}
+func (*PrivacyMetric_LDiversityConfig_) isPrivacyMetric_Type()       {}
+
+func (m *PrivacyMetric) GetType() isPrivacyMetric_Type {
+	if m != nil {
+		return m.Type
+	}
+	return nil
+}
+
+func (m *PrivacyMetric) GetNumericalStatsConfig() *PrivacyMetric_NumericalStatsConfig {
+	if x, ok := m.GetType().(*PrivacyMetric_NumericalStatsConfig_); ok {
+		return x.NumericalStatsConfig
+	}
+	return nil
+}
+
+func (m *PrivacyMetric) GetCategoricalStatsConfig() *PrivacyMetric_CategoricalStatsConfig {
+	if x, ok := m.GetType().(*PrivacyMetric_CategoricalStatsConfig_); ok {
+		return x.CategoricalStatsConfig
+	}
+	return nil
+}
+
+func (m *PrivacyMetric) GetKAnonymityConfig() *PrivacyMetric_KAnonymityConfig {
+	if x, ok := m.GetType().(*PrivacyMetric_KAnonymityConfig_); ok {
+		return x.KAnonymityConfig
+	}
+	return nil
+}
+
+func (m *PrivacyMetric) GetLDiversityConfig() *PrivacyMetric_LDiversityConfig {
+	if x, ok := m.GetType().(*PrivacyMetric_LDiversityConfig_); ok {
+		return x.LDiversityConfig
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*PrivacyMetric) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _PrivacyMetric_OneofMarshaler, _PrivacyMetric_OneofUnmarshaler, _PrivacyMetric_OneofSizer, []interface{}{
+		(*PrivacyMetric_NumericalStatsConfig_)(nil),
+		(*PrivacyMetric_CategoricalStatsConfig_)(nil),
+		(*PrivacyMetric_KAnonymityConfig_)(nil),
+		(*PrivacyMetric_LDiversityConfig_)(nil),
+	}
+}
+
+func _PrivacyMetric_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*PrivacyMetric)
+	// type
+	switch x := m.Type.(type) {
+	case *PrivacyMetric_NumericalStatsConfig_:
+		b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.NumericalStatsConfig); err != nil {
+			return err
+		}
+	case *PrivacyMetric_CategoricalStatsConfig_:
+		b.EncodeVarint(2<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.CategoricalStatsConfig); err != nil {
+			return err
+		}
+	case *PrivacyMetric_KAnonymityConfig_:
+		b.EncodeVarint(3<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.KAnonymityConfig); err != nil {
+			return err
+		}
+	case *PrivacyMetric_LDiversityConfig_:
+		b.EncodeVarint(4<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.LDiversityConfig); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("PrivacyMetric.Type has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _PrivacyMetric_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*PrivacyMetric)
+	switch tag {
+	case 1: // type.numerical_stats_config
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(PrivacyMetric_NumericalStatsConfig)
+		err := b.DecodeMessage(msg)
+		m.Type = &PrivacyMetric_NumericalStatsConfig_{msg}
+		return true, err
+	case 2: // type.categorical_stats_config
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(PrivacyMetric_CategoricalStatsConfig)
+		err := b.DecodeMessage(msg)
+		m.Type = &PrivacyMetric_CategoricalStatsConfig_{msg}
+		return true, err
+	case 3: // type.k_anonymity_config
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(PrivacyMetric_KAnonymityConfig)
+		err := b.DecodeMessage(msg)
+		m.Type = &PrivacyMetric_KAnonymityConfig_{msg}
+		return true, err
+	case 4: // type.l_diversity_config
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(PrivacyMetric_LDiversityConfig)
+		err := b.DecodeMessage(msg)
+		m.Type = &PrivacyMetric_LDiversityConfig_{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _PrivacyMetric_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*PrivacyMetric)
+	// type
+	switch x := m.Type.(type) {
+	case *PrivacyMetric_NumericalStatsConfig_:
+		s := proto.Size(x.NumericalStatsConfig)
+		n += proto.SizeVarint(1<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *PrivacyMetric_CategoricalStatsConfig_:
+		s := proto.Size(x.CategoricalStatsConfig)
+		n += proto.SizeVarint(2<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *PrivacyMetric_KAnonymityConfig_:
+		s := proto.Size(x.KAnonymityConfig)
+		n += proto.SizeVarint(3<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *PrivacyMetric_LDiversityConfig_:
+		s := proto.Size(x.LDiversityConfig)
+		n += proto.SizeVarint(4<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// Compute numerical stats over an individual column, including
+// min, max, and quantiles.
+type PrivacyMetric_NumericalStatsConfig struct {
+	// Field to compute numerical stats on. Supported types are
+	// integer, float, date, datetime, timestamp, time.
+	Field *FieldId `protobuf:"bytes,1,opt,name=field" json:"field,omitempty"`
+}
+
+func (m *PrivacyMetric_NumericalStatsConfig) Reset()         { *m = PrivacyMetric_NumericalStatsConfig{} }
+func (m *PrivacyMetric_NumericalStatsConfig) String() string { return proto.CompactTextString(m) }
+func (*PrivacyMetric_NumericalStatsConfig) ProtoMessage()    {}
+func (*PrivacyMetric_NumericalStatsConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{31, 0}
+}
+
+func (m *PrivacyMetric_NumericalStatsConfig) GetField() *FieldId {
+	if m != nil {
+		return m.Field
+	}
+	return nil
+}
+
+// Compute numerical stats over an individual column, including
+// number of distinct values and value count distribution.
+type PrivacyMetric_CategoricalStatsConfig struct {
+	// Field to compute categorical stats on. All column types are
+	// supported except for arrays and structs. However, it may be more
+	// informative to use NumericalStats when the field type is supported,
+	// depending on the data.
+	Field *FieldId `protobuf:"bytes,1,opt,name=field" json:"field,omitempty"`
+}
+
+func (m *PrivacyMetric_CategoricalStatsConfig) Reset()         { *m = PrivacyMetric_CategoricalStatsConfig{} }
+func (m *PrivacyMetric_CategoricalStatsConfig) String() string { return proto.CompactTextString(m) }
+func (*PrivacyMetric_CategoricalStatsConfig) ProtoMessage()    {}
+func (*PrivacyMetric_CategoricalStatsConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{31, 1}
+}
+
+func (m *PrivacyMetric_CategoricalStatsConfig) GetField() *FieldId {
+	if m != nil {
+		return m.Field
+	}
+	return nil
+}
+
+// k-anonymity metric, used for analysis of reidentification risk.
+type PrivacyMetric_KAnonymityConfig struct {
+	// Set of fields to compute k-anonymity over. When multiple fields are
+	// specified, they are considered a single composite key. Structs and
+	// repeated data types are not supported; however, nested fields are
+	// supported so long as they are not structs themselves or nested within
+	// a repeated field.
+	QuasiIds []*FieldId `protobuf:"bytes,1,rep,name=quasi_ids,json=quasiIds" json:"quasi_ids,omitempty"`
+	// Optional message indicating that each distinct `EntityId` should not
+	// contribute to the k-anonymity count more than once per equivalence class.
+	EntityId *EntityId `protobuf:"bytes,2,opt,name=entity_id,json=entityId" json:"entity_id,omitempty"`
+}
+
+func (m *PrivacyMetric_KAnonymityConfig) Reset()         { *m = PrivacyMetric_KAnonymityConfig{} }
+func (m *PrivacyMetric_KAnonymityConfig) String() string { return proto.CompactTextString(m) }
+func (*PrivacyMetric_KAnonymityConfig) ProtoMessage()    {}
+func (*PrivacyMetric_KAnonymityConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{31, 2}
+}
+
+func (m *PrivacyMetric_KAnonymityConfig) GetQuasiIds() []*FieldId {
+	if m != nil {
+		return m.QuasiIds
+	}
+	return nil
+}
+
+func (m *PrivacyMetric_KAnonymityConfig) GetEntityId() *EntityId {
+	if m != nil {
+		return m.EntityId
+	}
+	return nil
+}
+
+// l-diversity metric, used for analysis of reidentification risk.
+type PrivacyMetric_LDiversityConfig struct {
+	// Set of quasi-identifiers indicating how equivalence classes are
+	// defined for the l-diversity computation. When multiple fields are
+	// specified, they are considered a single composite key.
+	QuasiIds []*FieldId `protobuf:"bytes,1,rep,name=quasi_ids,json=quasiIds" json:"quasi_ids,omitempty"`
+	// Sensitive field for computing the l-value.
+	SensitiveAttribute *FieldId `protobuf:"bytes,2,opt,name=sensitive_attribute,json=sensitiveAttribute" json:"sensitive_attribute,omitempty"`
+}
+
+func (m *PrivacyMetric_LDiversityConfig) Reset()         { *m = PrivacyMetric_LDiversityConfig{} }
+func (m *PrivacyMetric_LDiversityConfig) String() string { return proto.CompactTextString(m) }
+func (*PrivacyMetric_LDiversityConfig) ProtoMessage()    {}
+func (*PrivacyMetric_LDiversityConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{31, 3}
+}
+
+func (m *PrivacyMetric_LDiversityConfig) GetQuasiIds() []*FieldId {
+	if m != nil {
+		return m.QuasiIds
+	}
+	return nil
+}
+
+func (m *PrivacyMetric_LDiversityConfig) GetSensitiveAttribute() *FieldId {
+	if m != nil {
+		return m.SensitiveAttribute
+	}
+	return nil
+}
+
+// Metadata returned within the
+// [`riskAnalysis.operations.get`](/dlp/docs/reference/rest/v2beta1/riskAnalysis.operations/get)
+// for risk analysis.
+type RiskAnalysisOperationMetadata struct {
+	// The time which this request was started.
+	CreateTime *google_protobuf3.Timestamp `protobuf:"bytes,1,opt,name=create_time,json=createTime" json:"create_time,omitempty"`
+	// Privacy metric to compute.
+	RequestedPrivacyMetric *PrivacyMetric `protobuf:"bytes,2,opt,name=requested_privacy_metric,json=requestedPrivacyMetric" json:"requested_privacy_metric,omitempty"`
+	// Input dataset to compute metrics over.
+	RequestedSourceTable *BigQueryTable `protobuf:"bytes,3,opt,name=requested_source_table,json=requestedSourceTable" json:"requested_source_table,omitempty"`
+}
+
+func (m *RiskAnalysisOperationMetadata) Reset()                    { *m = RiskAnalysisOperationMetadata{} }
+func (m *RiskAnalysisOperationMetadata) String() string            { return proto.CompactTextString(m) }
+func (*RiskAnalysisOperationMetadata) ProtoMessage()               {}
+func (*RiskAnalysisOperationMetadata) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{32} }
+
+func (m *RiskAnalysisOperationMetadata) GetCreateTime() *google_protobuf3.Timestamp {
+	if m != nil {
+		return m.CreateTime
+	}
+	return nil
+}
+
+func (m *RiskAnalysisOperationMetadata) GetRequestedPrivacyMetric() *PrivacyMetric {
+	if m != nil {
+		return m.RequestedPrivacyMetric
+	}
+	return nil
+}
+
+func (m *RiskAnalysisOperationMetadata) GetRequestedSourceTable() *BigQueryTable {
+	if m != nil {
+		return m.RequestedSourceTable
+	}
+	return nil
+}
+
+// Result of a risk analysis
+// [`Operation`](/dlp/docs/reference/rest/v2beta1/inspect.operations)
+// request.
+type RiskAnalysisOperationResult struct {
+	// Values associated with this metric.
+	//
+	// Types that are valid to be assigned to Result:
+	//	*RiskAnalysisOperationResult_NumericalStatsResult_
+	//	*RiskAnalysisOperationResult_CategoricalStatsResult_
+	//	*RiskAnalysisOperationResult_KAnonymityResult_
+	//	*RiskAnalysisOperationResult_LDiversityResult_
+	Result isRiskAnalysisOperationResult_Result `protobuf_oneof:"result"`
+}
+
+func (m *RiskAnalysisOperationResult) Reset()                    { *m = RiskAnalysisOperationResult{} }
+func (m *RiskAnalysisOperationResult) String() string            { return proto.CompactTextString(m) }
+func (*RiskAnalysisOperationResult) ProtoMessage()               {}
+func (*RiskAnalysisOperationResult) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{33} }
+
+type isRiskAnalysisOperationResult_Result interface {
+	isRiskAnalysisOperationResult_Result()
+}
+
+type RiskAnalysisOperationResult_NumericalStatsResult_ struct {
+	NumericalStatsResult *RiskAnalysisOperationResult_NumericalStatsResult `protobuf:"bytes,3,opt,name=numerical_stats_result,json=numericalStatsResult,oneof"`
+}
+type RiskAnalysisOperationResult_CategoricalStatsResult_ struct {
+	CategoricalStatsResult *RiskAnalysisOperationResult_CategoricalStatsResult `protobuf:"bytes,4,opt,name=categorical_stats_result,json=categoricalStatsResult,oneof"`
+}
+type RiskAnalysisOperationResult_KAnonymityResult_ struct {
+	KAnonymityResult *RiskAnalysisOperationResult_KAnonymityResult `protobuf:"bytes,5,opt,name=k_anonymity_result,json=kAnonymityResult,oneof"`
+}
+type RiskAnalysisOperationResult_LDiversityResult_ struct {
+	LDiversityResult *RiskAnalysisOperationResult_LDiversityResult `protobuf:"bytes,6,opt,name=l_diversity_result,json=lDiversityResult,oneof"`
+}
+
+func (*RiskAnalysisOperationResult_NumericalStatsResult_) isRiskAnalysisOperationResult_Result()   {}
+func (*RiskAnalysisOperationResult_CategoricalStatsResult_) isRiskAnalysisOperationResult_Result() {}
+func (*RiskAnalysisOperationResult_KAnonymityResult_) isRiskAnalysisOperationResult_Result()       {}
+func (*RiskAnalysisOperationResult_LDiversityResult_) isRiskAnalysisOperationResult_Result()       {}
+
+func (m *RiskAnalysisOperationResult) GetResult() isRiskAnalysisOperationResult_Result {
+	if m != nil {
+		return m.Result
+	}
+	return nil
+}
+
+func (m *RiskAnalysisOperationResult) GetNumericalStatsResult() *RiskAnalysisOperationResult_NumericalStatsResult {
+	if x, ok := m.GetResult().(*RiskAnalysisOperationResult_NumericalStatsResult_); ok {
+		return x.NumericalStatsResult
+	}
+	return nil
+}
+
+func (m *RiskAnalysisOperationResult) GetCategoricalStatsResult() *RiskAnalysisOperationResult_CategoricalStatsResult {
+	if x, ok := m.GetResult().(*RiskAnalysisOperationResult_CategoricalStatsResult_); ok {
+		return x.CategoricalStatsResult
+	}
+	return nil
+}
+
+func (m *RiskAnalysisOperationResult) GetKAnonymityResult() *RiskAnalysisOperationResult_KAnonymityResult {
+	if x, ok := m.GetResult().(*RiskAnalysisOperationResult_KAnonymityResult_); ok {
+		return x.KAnonymityResult
+	}
+	return nil
+}
+
+func (m *RiskAnalysisOperationResult) GetLDiversityResult() *RiskAnalysisOperationResult_LDiversityResult {
+	if x, ok := m.GetResult().(*RiskAnalysisOperationResult_LDiversityResult_); ok {
+		return x.LDiversityResult
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*RiskAnalysisOperationResult) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _RiskAnalysisOperationResult_OneofMarshaler, _RiskAnalysisOperationResult_OneofUnmarshaler, _RiskAnalysisOperationResult_OneofSizer, []interface{}{
+		(*RiskAnalysisOperationResult_NumericalStatsResult_)(nil),
+		(*RiskAnalysisOperationResult_CategoricalStatsResult_)(nil),
+		(*RiskAnalysisOperationResult_KAnonymityResult_)(nil),
+		(*RiskAnalysisOperationResult_LDiversityResult_)(nil),
+	}
+}
+
+func _RiskAnalysisOperationResult_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*RiskAnalysisOperationResult)
+	// result
+	switch x := m.Result.(type) {
+	case *RiskAnalysisOperationResult_NumericalStatsResult_:
+		b.EncodeVarint(3<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.NumericalStatsResult); err != nil {
+			return err
+		}
+	case *RiskAnalysisOperationResult_CategoricalStatsResult_:
+		b.EncodeVarint(4<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.CategoricalStatsResult); err != nil {
+			return err
+		}
+	case *RiskAnalysisOperationResult_KAnonymityResult_:
+		b.EncodeVarint(5<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.KAnonymityResult); err != nil {
+			return err
+		}
+	case *RiskAnalysisOperationResult_LDiversityResult_:
+		b.EncodeVarint(6<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.LDiversityResult); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("RiskAnalysisOperationResult.Result has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _RiskAnalysisOperationResult_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*RiskAnalysisOperationResult)
+	switch tag {
+	case 3: // result.numerical_stats_result
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(RiskAnalysisOperationResult_NumericalStatsResult)
+		err := b.DecodeMessage(msg)
+		m.Result = &RiskAnalysisOperationResult_NumericalStatsResult_{msg}
+		return true, err
+	case 4: // result.categorical_stats_result
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(RiskAnalysisOperationResult_CategoricalStatsResult)
+		err := b.DecodeMessage(msg)
+		m.Result = &RiskAnalysisOperationResult_CategoricalStatsResult_{msg}
+		return true, err
+	case 5: // result.k_anonymity_result
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(RiskAnalysisOperationResult_KAnonymityResult)
+		err := b.DecodeMessage(msg)
+		m.Result = &RiskAnalysisOperationResult_KAnonymityResult_{msg}
+		return true, err
+	case 6: // result.l_diversity_result
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(RiskAnalysisOperationResult_LDiversityResult)
+		err := b.DecodeMessage(msg)
+		m.Result = &RiskAnalysisOperationResult_LDiversityResult_{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _RiskAnalysisOperationResult_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*RiskAnalysisOperationResult)
+	// result
+	switch x := m.Result.(type) {
+	case *RiskAnalysisOperationResult_NumericalStatsResult_:
+		s := proto.Size(x.NumericalStatsResult)
+		n += proto.SizeVarint(3<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *RiskAnalysisOperationResult_CategoricalStatsResult_:
+		s := proto.Size(x.CategoricalStatsResult)
+		n += proto.SizeVarint(4<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *RiskAnalysisOperationResult_KAnonymityResult_:
+		s := proto.Size(x.KAnonymityResult)
+		n += proto.SizeVarint(5<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *RiskAnalysisOperationResult_LDiversityResult_:
+		s := proto.Size(x.LDiversityResult)
+		n += proto.SizeVarint(6<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// Result of the numerical stats computation.
+type RiskAnalysisOperationResult_NumericalStatsResult struct {
+	// Minimum value appearing in the column.
+	MinValue *Value `protobuf:"bytes,1,opt,name=min_value,json=minValue" json:"min_value,omitempty"`
+	// Maximum value appearing in the column.
+	MaxValue *Value `protobuf:"bytes,2,opt,name=max_value,json=maxValue" json:"max_value,omitempty"`
+	// List of 99 values that partition the set of field values into 100 equal
+	// sized buckets.
+	QuantileValues []*Value `protobuf:"bytes,4,rep,name=quantile_values,json=quantileValues" json:"quantile_values,omitempty"`
+}
+
+func (m *RiskAnalysisOperationResult_NumericalStatsResult) Reset() {
+	*m = RiskAnalysisOperationResult_NumericalStatsResult{}
+}
+func (m *RiskAnalysisOperationResult_NumericalStatsResult) String() string {
+	return proto.CompactTextString(m)
+}
+func (*RiskAnalysisOperationResult_NumericalStatsResult) ProtoMessage() {}
+func (*RiskAnalysisOperationResult_NumericalStatsResult) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{33, 0}
+}
+
+func (m *RiskAnalysisOperationResult_NumericalStatsResult) GetMinValue() *Value {
+	if m != nil {
+		return m.MinValue
+	}
+	return nil
+}
+
+func (m *RiskAnalysisOperationResult_NumericalStatsResult) GetMaxValue() *Value {
+	if m != nil {
+		return m.MaxValue
+	}
+	return nil
+}
+
+func (m *RiskAnalysisOperationResult_NumericalStatsResult) GetQuantileValues() []*Value {
+	if m != nil {
+		return m.QuantileValues
+	}
+	return nil
+}
+
+// Result of the categorical stats computation.
+type RiskAnalysisOperationResult_CategoricalStatsResult struct {
+	// Histogram of value frequencies in the column.
+	ValueFrequencyHistogramBuckets []*RiskAnalysisOperationResult_CategoricalStatsResult_CategoricalStatsHistogramBucket `protobuf:"bytes,5,rep,name=value_frequency_histogram_buckets,json=valueFrequencyHistogramBuckets" json:"value_frequency_histogram_buckets,omitempty"`
+}
+
+func (m *RiskAnalysisOperationResult_CategoricalStatsResult) Reset() {
+	*m = RiskAnalysisOperationResult_CategoricalStatsResult{}
+}
+func (m *RiskAnalysisOperationResult_CategoricalStatsResult) String() string {
+	return proto.CompactTextString(m)
+}
+func (*RiskAnalysisOperationResult_CategoricalStatsResult) ProtoMessage() {}
+func (*RiskAnalysisOperationResult_CategoricalStatsResult) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{33, 1}
+}
+
+func (m *RiskAnalysisOperationResult_CategoricalStatsResult) GetValueFrequencyHistogramBuckets() []*RiskAnalysisOperationResult_CategoricalStatsResult_CategoricalStatsHistogramBucket {
+	if m != nil {
+		return m.ValueFrequencyHistogramBuckets
+	}
+	return nil
+}
+
+// Histogram bucket of value frequencies in the column.
+type RiskAnalysisOperationResult_CategoricalStatsResult_CategoricalStatsHistogramBucket struct {
+	// Lower bound on the value frequency of the values in this bucket.
+	ValueFrequencyLowerBound int64 `protobuf:"varint,1,opt,name=value_frequency_lower_bound,json=valueFrequencyLowerBound" json:"value_frequency_lower_bound,omitempty"`
+	// Upper bound on the value frequency of the values in this bucket.
+	ValueFrequencyUpperBound int64 `protobuf:"varint,2,opt,name=value_frequency_upper_bound,json=valueFrequencyUpperBound" json:"value_frequency_upper_bound,omitempty"`
+	// Total number of records in this bucket.
+	BucketSize int64 `protobuf:"varint,3,opt,name=bucket_size,json=bucketSize" json:"bucket_size,omitempty"`
+	// Sample of value frequencies in this bucket. The total number of
+	// values returned per bucket is capped at 20.
+	BucketValues []*ValueFrequency `protobuf:"bytes,4,rep,name=bucket_values,json=bucketValues" json:"bucket_values,omitempty"`
+}
+
+func (m *RiskAnalysisOperationResult_CategoricalStatsResult_CategoricalStatsHistogramBucket) Reset() {
+	*m = RiskAnalysisOperationResult_CategoricalStatsResult_CategoricalStatsHistogramBucket{}
+}
+func (m *RiskAnalysisOperationResult_CategoricalStatsResult_CategoricalStatsHistogramBucket) String() string {
+	return proto.CompactTextString(m)
+}
+func (*RiskAnalysisOperationResult_CategoricalStatsResult_CategoricalStatsHistogramBucket) ProtoMessage() {
+}
+func (*RiskAnalysisOperationResult_CategoricalStatsResult_CategoricalStatsHistogramBucket) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{33, 1, 0}
+}
+
+func (m *RiskAnalysisOperationResult_CategoricalStatsResult_CategoricalStatsHistogramBucket) GetValueFrequencyLowerBound() int64 {
+	if m != nil {
+		return m.ValueFrequencyLowerBound
+	}
+	return 0
+}
+
+func (m *RiskAnalysisOperationResult_CategoricalStatsResult_CategoricalStatsHistogramBucket) GetValueFrequencyUpperBound() int64 {
+	if m != nil {
+		return m.ValueFrequencyUpperBound
+	}
+	return 0
+}
+
+func (m *RiskAnalysisOperationResult_CategoricalStatsResult_CategoricalStatsHistogramBucket) GetBucketSize() int64 {
+	if m != nil {
+		return m.BucketSize
+	}
+	return 0
+}
+
+func (m *RiskAnalysisOperationResult_CategoricalStatsResult_CategoricalStatsHistogramBucket) GetBucketValues() []*ValueFrequency {
+	if m != nil {
+		return m.BucketValues
+	}
+	return nil
+}
+
+// Result of the k-anonymity computation.
+type RiskAnalysisOperationResult_KAnonymityResult struct {
+	// Histogram of k-anonymity equivalence classes.
+	EquivalenceClassHistogramBuckets []*RiskAnalysisOperationResult_KAnonymityResult_KAnonymityHistogramBucket `protobuf:"bytes,5,rep,name=equivalence_class_histogram_buckets,json=equivalenceClassHistogramBuckets" json:"equivalence_class_histogram_buckets,omitempty"`
+}
+
+func (m *RiskAnalysisOperationResult_KAnonymityResult) Reset() {
+	*m = RiskAnalysisOperationResult_KAnonymityResult{}
+}
+func (m *RiskAnalysisOperationResult_KAnonymityResult) String() string {
+	return proto.CompactTextString(m)
+}
+func (*RiskAnalysisOperationResult_KAnonymityResult) ProtoMessage() {}
+func (*RiskAnalysisOperationResult_KAnonymityResult) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{33, 2}
+}
+
+func (m *RiskAnalysisOperationResult_KAnonymityResult) GetEquivalenceClassHistogramBuckets() []*RiskAnalysisOperationResult_KAnonymityResult_KAnonymityHistogramBucket {
+	if m != nil {
+		return m.EquivalenceClassHistogramBuckets
+	}
+	return nil
+}
+
+// The set of columns' values that share the same k-anonymity value.
+type RiskAnalysisOperationResult_KAnonymityResult_KAnonymityEquivalenceClass struct {
+	// Set of values defining the equivalence class. One value per
+	// quasi-identifier column in the original KAnonymity metric message.
+	// The order is always the same as the original request.
+	QuasiIdsValues []*Value `protobuf:"bytes,1,rep,name=quasi_ids_values,json=quasiIdsValues" json:"quasi_ids_values,omitempty"`
+	// Size of the equivalence class, for example number of rows with the
+	// above set of values.
+	EquivalenceClassSize int64 `protobuf:"varint,2,opt,name=equivalence_class_size,json=equivalenceClassSize" json:"equivalence_class_size,omitempty"`
+}
+
+func (m *RiskAnalysisOperationResult_KAnonymityResult_KAnonymityEquivalenceClass) Reset() {
+	*m = RiskAnalysisOperationResult_KAnonymityResult_KAnonymityEquivalenceClass{}
+}
+func (m *RiskAnalysisOperationResult_KAnonymityResult_KAnonymityEquivalenceClass) String() string {
+	return proto.CompactTextString(m)
+}
+func (*RiskAnalysisOperationResult_KAnonymityResult_KAnonymityEquivalenceClass) ProtoMessage() {}
+func (*RiskAnalysisOperationResult_KAnonymityResult_KAnonymityEquivalenceClass) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{33, 2, 0}
+}
+
+func (m *RiskAnalysisOperationResult_KAnonymityResult_KAnonymityEquivalenceClass) GetQuasiIdsValues() []*Value {
+	if m != nil {
+		return m.QuasiIdsValues
+	}
+	return nil
+}
+
+func (m *RiskAnalysisOperationResult_KAnonymityResult_KAnonymityEquivalenceClass) GetEquivalenceClassSize() int64 {
+	if m != nil {
+		return m.EquivalenceClassSize
+	}
+	return 0
+}
+
+// Histogram bucket of equivalence class sizes in the table.
+type RiskAnalysisOperationResult_KAnonymityResult_KAnonymityHistogramBucket struct {
+	// Lower bound on the size of the equivalence classes in this bucket.
+	EquivalenceClassSizeLowerBound int64 `protobuf:"varint,1,opt,name=equivalence_class_size_lower_bound,json=equivalenceClassSizeLowerBound" json:"equivalence_class_size_lower_bound,omitempty"`
+	// Upper bound on the size of the equivalence classes in this bucket.
+	EquivalenceClassSizeUpperBound int64 `protobuf:"varint,2,opt,name=equivalence_class_size_upper_bound,json=equivalenceClassSizeUpperBound" json:"equivalence_class_size_upper_bound,omitempty"`
+	// Total number of records in this bucket.
+	BucketSize int64 `protobuf:"varint,3,opt,name=bucket_size,json=bucketSize" json:"bucket_size,omitempty"`
+	// Sample of equivalence classes in this bucket. The total number of
+	// classes returned per bucket is capped at 20.
+	BucketValues []*RiskAnalysisOperationResult_KAnonymityResult_KAnonymityEquivalenceClass `protobuf:"bytes,4,rep,name=bucket_values,json=bucketValues" json:"bucket_values,omitempty"`
+}
+
+func (m *RiskAnalysisOperationResult_KAnonymityResult_KAnonymityHistogramBucket) Reset() {
+	*m = RiskAnalysisOperationResult_KAnonymityResult_KAnonymityHistogramBucket{}
+}
+func (m *RiskAnalysisOperationResult_KAnonymityResult_KAnonymityHistogramBucket) String() string {
+	return proto.CompactTextString(m)
+}
+func (*RiskAnalysisOperationResult_KAnonymityResult_KAnonymityHistogramBucket) ProtoMessage() {}
+func (*RiskAnalysisOperationResult_KAnonymityResult_KAnonymityHistogramBucket) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{33, 2, 1}
+}
+
+func (m *RiskAnalysisOperationResult_KAnonymityResult_KAnonymityHistogramBucket) GetEquivalenceClassSizeLowerBound() int64 {
+	if m != nil {
+		return m.EquivalenceClassSizeLowerBound
+	}
+	return 0
+}
+
+func (m *RiskAnalysisOperationResult_KAnonymityResult_KAnonymityHistogramBucket) GetEquivalenceClassSizeUpperBound() int64 {
+	if m != nil {
+		return m.EquivalenceClassSizeUpperBound
+	}
+	return 0
+}
+
+func (m *RiskAnalysisOperationResult_KAnonymityResult_KAnonymityHistogramBucket) GetBucketSize() int64 {
+	if m != nil {
+		return m.BucketSize
+	}
+	return 0
+}
+
+func (m *RiskAnalysisOperationResult_KAnonymityResult_KAnonymityHistogramBucket) GetBucketValues() []*RiskAnalysisOperationResult_KAnonymityResult_KAnonymityEquivalenceClass {
+	if m != nil {
+		return m.BucketValues
+	}
+	return nil
+}
+
+// Result of the l-diversity computation.
+type RiskAnalysisOperationResult_LDiversityResult struct {
+	// Histogram of l-diversity equivalence class sensitive value frequencies.
+	SensitiveValueFrequencyHistogramBuckets []*RiskAnalysisOperationResult_LDiversityResult_LDiversityHistogramBucket `protobuf:"bytes,5,rep,name=sensitive_value_frequency_histogram_buckets,json=sensitiveValueFrequencyHistogramBuckets" json:"sensitive_value_frequency_histogram_buckets,omitempty"`
+}
+
+func (m *RiskAnalysisOperationResult_LDiversityResult) Reset() {
+	*m = RiskAnalysisOperationResult_LDiversityResult{}
+}
+func (m *RiskAnalysisOperationResult_LDiversityResult) String() string {
+	return proto.CompactTextString(m)
+}
+func (*RiskAnalysisOperationResult_LDiversityResult) ProtoMessage() {}
+func (*RiskAnalysisOperationResult_LDiversityResult) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{33, 3}
+}
+
+func (m *RiskAnalysisOperationResult_LDiversityResult) GetSensitiveValueFrequencyHistogramBuckets() []*RiskAnalysisOperationResult_LDiversityResult_LDiversityHistogramBucket {
+	if m != nil {
+		return m.SensitiveValueFrequencyHistogramBuckets
+	}
+	return nil
+}
+
+// The set of columns' values that share the same l-diversity value.
+type RiskAnalysisOperationResult_LDiversityResult_LDiversityEquivalenceClass struct {
+	// Quasi-identifier values defining the k-anonymity equivalence
+	// class. The order is always the same as the original request.
+	QuasiIdsValues []*Value `protobuf:"bytes,1,rep,name=quasi_ids_values,json=quasiIdsValues" json:"quasi_ids_values,omitempty"`
+	// Size of the k-anonymity equivalence class.
+	EquivalenceClassSize int64 `protobuf:"varint,2,opt,name=equivalence_class_size,json=equivalenceClassSize" json:"equivalence_class_size,omitempty"`
+	// Number of distinct sensitive values in this equivalence class.
+	NumDistinctSensitiveValues int64 `protobuf:"varint,3,opt,name=num_distinct_sensitive_values,json=numDistinctSensitiveValues" json:"num_distinct_sensitive_values,omitempty"`
+	// Estimated frequencies of top sensitive values.
+	TopSensitiveValues []*ValueFrequency `protobuf:"bytes,4,rep,name=top_sensitive_values,json=topSensitiveValues" json:"top_sensitive_values,omitempty"`
+}
+
+func (m *RiskAnalysisOperationResult_LDiversityResult_LDiversityEquivalenceClass) Reset() {
+	*m = RiskAnalysisOperationResult_LDiversityResult_LDiversityEquivalenceClass{}
+}
+func (m *RiskAnalysisOperationResult_LDiversityResult_LDiversityEquivalenceClass) String() string {
+	return proto.CompactTextString(m)
+}
+func (*RiskAnalysisOperationResult_LDiversityResult_LDiversityEquivalenceClass) ProtoMessage() {}
+func (*RiskAnalysisOperationResult_LDiversityResult_LDiversityEquivalenceClass) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{33, 3, 0}
+}
+
+func (m *RiskAnalysisOperationResult_LDiversityResult_LDiversityEquivalenceClass) GetQuasiIdsValues() []*Value {
+	if m != nil {
+		return m.QuasiIdsValues
+	}
+	return nil
+}
+
+func (m *RiskAnalysisOperationResult_LDiversityResult_LDiversityEquivalenceClass) GetEquivalenceClassSize() int64 {
+	if m != nil {
+		return m.EquivalenceClassSize
+	}
+	return 0
+}
+
+func (m *RiskAnalysisOperationResult_LDiversityResult_LDiversityEquivalenceClass) GetNumDistinctSensitiveValues() int64 {
+	if m != nil {
+		return m.NumDistinctSensitiveValues
+	}
+	return 0
+}
+
+func (m *RiskAnalysisOperationResult_LDiversityResult_LDiversityEquivalenceClass) GetTopSensitiveValues() []*ValueFrequency {
+	if m != nil {
+		return m.TopSensitiveValues
+	}
+	return nil
+}
+
+// Histogram bucket of sensitive value frequencies in the table.
+type RiskAnalysisOperationResult_LDiversityResult_LDiversityHistogramBucket struct {
+	// Lower bound on the sensitive value frequencies of the equivalence
+	// classes in this bucket.
+	SensitiveValueFrequencyLowerBound int64 `protobuf:"varint,1,opt,name=sensitive_value_frequency_lower_bound,json=sensitiveValueFrequencyLowerBound" json:"sensitive_value_frequency_lower_bound,omitempty"`
+	// Upper bound on the sensitive value frequencies of the equivalence
+	// classes in this bucket.
+	SensitiveValueFrequencyUpperBound int64 `protobuf:"varint,2,opt,name=sensitive_value_frequency_upper_bound,json=sensitiveValueFrequencyUpperBound" json:"sensitive_value_frequency_upper_bound,omitempty"`
+	// Total number of records in this bucket.
+	BucketSize int64 `protobuf:"varint,3,opt,name=bucket_size,json=bucketSize" json:"bucket_size,omitempty"`
+	// Sample of equivalence classes in this bucket. The total number of
+	// classes returned per bucket is capped at 20.
+	BucketValues []*RiskAnalysisOperationResult_LDiversityResult_LDiversityEquivalenceClass `protobuf:"bytes,4,rep,name=bucket_values,json=bucketValues" json:"bucket_values,omitempty"`
+}
+
+func (m *RiskAnalysisOperationResult_LDiversityResult_LDiversityHistogramBucket) Reset() {
+	*m = RiskAnalysisOperationResult_LDiversityResult_LDiversityHistogramBucket{}
+}
+func (m *RiskAnalysisOperationResult_LDiversityResult_LDiversityHistogramBucket) String() string {
+	return proto.CompactTextString(m)
+}
+func (*RiskAnalysisOperationResult_LDiversityResult_LDiversityHistogramBucket) ProtoMessage() {}
+func (*RiskAnalysisOperationResult_LDiversityResult_LDiversityHistogramBucket) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{33, 3, 1}
+}
+
+func (m *RiskAnalysisOperationResult_LDiversityResult_LDiversityHistogramBucket) GetSensitiveValueFrequencyLowerBound() int64 {
+	if m != nil {
+		return m.SensitiveValueFrequencyLowerBound
+	}
+	return 0
+}
+
+func (m *RiskAnalysisOperationResult_LDiversityResult_LDiversityHistogramBucket) GetSensitiveValueFrequencyUpperBound() int64 {
+	if m != nil {
+		return m.SensitiveValueFrequencyUpperBound
+	}
+	return 0
+}
+
+func (m *RiskAnalysisOperationResult_LDiversityResult_LDiversityHistogramBucket) GetBucketSize() int64 {
+	if m != nil {
+		return m.BucketSize
+	}
+	return 0
+}
+
+func (m *RiskAnalysisOperationResult_LDiversityResult_LDiversityHistogramBucket) GetBucketValues() []*RiskAnalysisOperationResult_LDiversityResult_LDiversityEquivalenceClass {
+	if m != nil {
+		return m.BucketValues
+	}
+	return nil
+}
+
+// A value of a field, including its frequency.
+type ValueFrequency struct {
+	// A value contained in the field in question.
+	Value *Value `protobuf:"bytes,1,opt,name=value" json:"value,omitempty"`
+	// How many times the value is contained in the field.
+	Count int64 `protobuf:"varint,2,opt,name=count" json:"count,omitempty"`
+}
+
+func (m *ValueFrequency) Reset()                    { *m = ValueFrequency{} }
+func (m *ValueFrequency) String() string            { return proto.CompactTextString(m) }
+func (*ValueFrequency) ProtoMessage()               {}
+func (*ValueFrequency) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{34} }
+
+func (m *ValueFrequency) GetValue() *Value {
+	if m != nil {
+		return m.Value
+	}
+	return nil
+}
+
+func (m *ValueFrequency) GetCount() int64 {
+	if m != nil {
+		return m.Count
+	}
+	return 0
+}
+
+// Set of primitive values supported by the system.
+type Value struct {
+	// Types that are valid to be assigned to Type:
+	//	*Value_IntegerValue
+	//	*Value_FloatValue
+	//	*Value_StringValue
+	//	*Value_BooleanValue
+	//	*Value_TimestampValue
+	//	*Value_TimeValue
+	//	*Value_DateValue
+	Type isValue_Type `protobuf_oneof:"type"`
+}
+
+func (m *Value) Reset()                    { *m = Value{} }
+func (m *Value) String() string            { return proto.CompactTextString(m) }
+func (*Value) ProtoMessage()               {}
+func (*Value) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{35} }
+
+type isValue_Type interface {
+	isValue_Type()
+}
+
+type Value_IntegerValue struct {
+	IntegerValue int64 `protobuf:"varint,1,opt,name=integer_value,json=integerValue,oneof"`
+}
+type Value_FloatValue struct {
+	FloatValue float64 `protobuf:"fixed64,2,opt,name=float_value,json=floatValue,oneof"`
+}
+type Value_StringValue struct {
+	StringValue string `protobuf:"bytes,3,opt,name=string_value,json=stringValue,oneof"`
+}
+type Value_BooleanValue struct {
+	BooleanValue bool `protobuf:"varint,4,opt,name=boolean_value,json=booleanValue,oneof"`
+}
+type Value_TimestampValue struct {
+	TimestampValue *google_protobuf3.Timestamp `protobuf:"bytes,5,opt,name=timestamp_value,json=timestampValue,oneof"`
+}
+type Value_TimeValue struct {
+	TimeValue *google_type1.TimeOfDay `protobuf:"bytes,6,opt,name=time_value,json=timeValue,oneof"`
+}
+type Value_DateValue struct {
+	DateValue *google_type.Date `protobuf:"bytes,7,opt,name=date_value,json=dateValue,oneof"`
+}
+
+func (*Value_IntegerValue) isValue_Type()   {}
+func (*Value_FloatValue) isValue_Type()     {}
+func (*Value_StringValue) isValue_Type()    {}
+func (*Value_BooleanValue) isValue_Type()   {}
+func (*Value_TimestampValue) isValue_Type() {}
+func (*Value_TimeValue) isValue_Type()      {}
+func (*Value_DateValue) isValue_Type()      {}
+
+func (m *Value) GetType() isValue_Type {
+	if m != nil {
+		return m.Type
+	}
+	return nil
+}
+
+func (m *Value) GetIntegerValue() int64 {
+	if x, ok := m.GetType().(*Value_IntegerValue); ok {
+		return x.IntegerValue
+	}
+	return 0
+}
+
+func (m *Value) GetFloatValue() float64 {
+	if x, ok := m.GetType().(*Value_FloatValue); ok {
+		return x.FloatValue
+	}
+	return 0
+}
+
+func (m *Value) GetStringValue() string {
+	if x, ok := m.GetType().(*Value_StringValue); ok {
+		return x.StringValue
+	}
+	return ""
+}
+
+func (m *Value) GetBooleanValue() bool {
+	if x, ok := m.GetType().(*Value_BooleanValue); ok {
+		return x.BooleanValue
+	}
+	return false
+}
+
+func (m *Value) GetTimestampValue() *google_protobuf3.Timestamp {
+	if x, ok := m.GetType().(*Value_TimestampValue); ok {
+		return x.TimestampValue
+	}
+	return nil
+}
+
+func (m *Value) GetTimeValue() *google_type1.TimeOfDay {
+	if x, ok := m.GetType().(*Value_TimeValue); ok {
+		return x.TimeValue
+	}
+	return nil
+}
+
+func (m *Value) GetDateValue() *google_type.Date {
+	if x, ok := m.GetType().(*Value_DateValue); ok {
+		return x.DateValue
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*Value) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _Value_OneofMarshaler, _Value_OneofUnmarshaler, _Value_OneofSizer, []interface{}{
+		(*Value_IntegerValue)(nil),
+		(*Value_FloatValue)(nil),
+		(*Value_StringValue)(nil),
+		(*Value_BooleanValue)(nil),
+		(*Value_TimestampValue)(nil),
+		(*Value_TimeValue)(nil),
+		(*Value_DateValue)(nil),
+	}
+}
+
+func _Value_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*Value)
+	// type
+	switch x := m.Type.(type) {
+	case *Value_IntegerValue:
+		b.EncodeVarint(1<<3 | proto.WireVarint)
+		b.EncodeVarint(uint64(x.IntegerValue))
+	case *Value_FloatValue:
+		b.EncodeVarint(2<<3 | proto.WireFixed64)
+		b.EncodeFixed64(math.Float64bits(x.FloatValue))
+	case *Value_StringValue:
+		b.EncodeVarint(3<<3 | proto.WireBytes)
+		b.EncodeStringBytes(x.StringValue)
+	case *Value_BooleanValue:
+		t := uint64(0)
+		if x.BooleanValue {
+			t = 1
+		}
+		b.EncodeVarint(4<<3 | proto.WireVarint)
+		b.EncodeVarint(t)
+	case *Value_TimestampValue:
+		b.EncodeVarint(5<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.TimestampValue); err != nil {
+			return err
+		}
+	case *Value_TimeValue:
+		b.EncodeVarint(6<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.TimeValue); err != nil {
+			return err
+		}
+	case *Value_DateValue:
+		b.EncodeVarint(7<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.DateValue); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("Value.Type has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _Value_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*Value)
+	switch tag {
+	case 1: // type.integer_value
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.Type = &Value_IntegerValue{int64(x)}
+		return true, err
+	case 2: // type.float_value
+		if wire != proto.WireFixed64 {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeFixed64()
+		m.Type = &Value_FloatValue{math.Float64frombits(x)}
+		return true, err
+	case 3: // type.string_value
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeStringBytes()
+		m.Type = &Value_StringValue{x}
+		return true, err
+	case 4: // type.boolean_value
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.Type = &Value_BooleanValue{x != 0}
+		return true, err
+	case 5: // type.timestamp_value
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(google_protobuf3.Timestamp)
+		err := b.DecodeMessage(msg)
+		m.Type = &Value_TimestampValue{msg}
+		return true, err
+	case 6: // type.time_value
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(google_type1.TimeOfDay)
+		err := b.DecodeMessage(msg)
+		m.Type = &Value_TimeValue{msg}
+		return true, err
+	case 7: // type.date_value
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(google_type.Date)
+		err := b.DecodeMessage(msg)
+		m.Type = &Value_DateValue{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _Value_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*Value)
+	// type
+	switch x := m.Type.(type) {
+	case *Value_IntegerValue:
+		n += proto.SizeVarint(1<<3 | proto.WireVarint)
+		n += proto.SizeVarint(uint64(x.IntegerValue))
+	case *Value_FloatValue:
+		n += proto.SizeVarint(2<<3 | proto.WireFixed64)
+		n += 8
+	case *Value_StringValue:
+		n += proto.SizeVarint(3<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(len(x.StringValue)))
+		n += len(x.StringValue)
+	case *Value_BooleanValue:
+		n += proto.SizeVarint(4<<3 | proto.WireVarint)
+		n += 1
+	case *Value_TimestampValue:
+		s := proto.Size(x.TimestampValue)
+		n += proto.SizeVarint(5<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *Value_TimeValue:
+		s := proto.Size(x.TimeValue)
+		n += proto.SizeVarint(6<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *Value_DateValue:
+		s := proto.Size(x.DateValue)
+		n += proto.SizeVarint(7<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// The configuration that controls how the data will change.
+type DeidentifyConfig struct {
+	// Types that are valid to be assigned to Transformation:
+	//	*DeidentifyConfig_InfoTypeTransformations
+	//	*DeidentifyConfig_RecordTransformations
+	Transformation isDeidentifyConfig_Transformation `protobuf_oneof:"transformation"`
+}
+
+func (m *DeidentifyConfig) Reset()                    { *m = DeidentifyConfig{} }
+func (m *DeidentifyConfig) String() string            { return proto.CompactTextString(m) }
+func (*DeidentifyConfig) ProtoMessage()               {}
+func (*DeidentifyConfig) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{36} }
+
+type isDeidentifyConfig_Transformation interface {
+	isDeidentifyConfig_Transformation()
+}
+
+type DeidentifyConfig_InfoTypeTransformations struct {
+	InfoTypeTransformations *InfoTypeTransformations `protobuf:"bytes,1,opt,name=info_type_transformations,json=infoTypeTransformations,oneof"`
+}
+type DeidentifyConfig_RecordTransformations struct {
+	RecordTransformations *RecordTransformations `protobuf:"bytes,2,opt,name=record_transformations,json=recordTransformations,oneof"`
+}
+
+func (*DeidentifyConfig_InfoTypeTransformations) isDeidentifyConfig_Transformation() {}
+func (*DeidentifyConfig_RecordTransformations) isDeidentifyConfig_Transformation()   {}
+
+func (m *DeidentifyConfig) GetTransformation() isDeidentifyConfig_Transformation {
+	if m != nil {
+		return m.Transformation
+	}
+	return nil
+}
+
+func (m *DeidentifyConfig) GetInfoTypeTransformations() *InfoTypeTransformations {
+	if x, ok := m.GetTransformation().(*DeidentifyConfig_InfoTypeTransformations); ok {
+		return x.InfoTypeTransformations
+	}
+	return nil
+}
+
+func (m *DeidentifyConfig) GetRecordTransformations() *RecordTransformations {
+	if x, ok := m.GetTransformation().(*DeidentifyConfig_RecordTransformations); ok {
+		return x.RecordTransformations
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*DeidentifyConfig) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _DeidentifyConfig_OneofMarshaler, _DeidentifyConfig_OneofUnmarshaler, _DeidentifyConfig_OneofSizer, []interface{}{
+		(*DeidentifyConfig_InfoTypeTransformations)(nil),
+		(*DeidentifyConfig_RecordTransformations)(nil),
+	}
+}
+
+func _DeidentifyConfig_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*DeidentifyConfig)
+	// transformation
+	switch x := m.Transformation.(type) {
+	case *DeidentifyConfig_InfoTypeTransformations:
+		b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.InfoTypeTransformations); err != nil {
+			return err
+		}
+	case *DeidentifyConfig_RecordTransformations:
+		b.EncodeVarint(2<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.RecordTransformations); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("DeidentifyConfig.Transformation has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _DeidentifyConfig_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*DeidentifyConfig)
+	switch tag {
+	case 1: // transformation.info_type_transformations
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(InfoTypeTransformations)
+		err := b.DecodeMessage(msg)
+		m.Transformation = &DeidentifyConfig_InfoTypeTransformations{msg}
+		return true, err
+	case 2: // transformation.record_transformations
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(RecordTransformations)
+		err := b.DecodeMessage(msg)
+		m.Transformation = &DeidentifyConfig_RecordTransformations{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _DeidentifyConfig_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*DeidentifyConfig)
+	// transformation
+	switch x := m.Transformation.(type) {
+	case *DeidentifyConfig_InfoTypeTransformations:
+		s := proto.Size(x.InfoTypeTransformations)
+		n += proto.SizeVarint(1<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *DeidentifyConfig_RecordTransformations:
+		s := proto.Size(x.RecordTransformations)
+		n += proto.SizeVarint(2<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// A rule for transforming a value.
+type PrimitiveTransformation struct {
+	// Types that are valid to be assigned to Transformation:
+	//	*PrimitiveTransformation_ReplaceConfig
+	//	*PrimitiveTransformation_RedactConfig
+	//	*PrimitiveTransformation_CharacterMaskConfig
+	//	*PrimitiveTransformation_CryptoReplaceFfxFpeConfig
+	//	*PrimitiveTransformation_FixedSizeBucketingConfig
+	//	*PrimitiveTransformation_BucketingConfig
+	//	*PrimitiveTransformation_ReplaceWithInfoTypeConfig
+	//	*PrimitiveTransformation_TimePartConfig
+	//	*PrimitiveTransformation_CryptoHashConfig
+	Transformation isPrimitiveTransformation_Transformation `protobuf_oneof:"transformation"`
+}
+
+func (m *PrimitiveTransformation) Reset()                    { *m = PrimitiveTransformation{} }
+func (m *PrimitiveTransformation) String() string            { return proto.CompactTextString(m) }
+func (*PrimitiveTransformation) ProtoMessage()               {}
+func (*PrimitiveTransformation) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{37} }
+
+type isPrimitiveTransformation_Transformation interface {
+	isPrimitiveTransformation_Transformation()
+}
+
+type PrimitiveTransformation_ReplaceConfig struct {
+	ReplaceConfig *ReplaceValueConfig `protobuf:"bytes,1,opt,name=replace_config,json=replaceConfig,oneof"`
+}
+type PrimitiveTransformation_RedactConfig struct {
+	RedactConfig *RedactConfig `protobuf:"bytes,2,opt,name=redact_config,json=redactConfig,oneof"`
+}
+type PrimitiveTransformation_CharacterMaskConfig struct {
+	CharacterMaskConfig *CharacterMaskConfig `protobuf:"bytes,3,opt,name=character_mask_config,json=characterMaskConfig,oneof"`
+}
+type PrimitiveTransformation_CryptoReplaceFfxFpeConfig struct {
+	CryptoReplaceFfxFpeConfig *CryptoReplaceFfxFpeConfig `protobuf:"bytes,4,opt,name=crypto_replace_ffx_fpe_config,json=cryptoReplaceFfxFpeConfig,oneof"`
+}
+type PrimitiveTransformation_FixedSizeBucketingConfig struct {
+	FixedSizeBucketingConfig *FixedSizeBucketingConfig `protobuf:"bytes,5,opt,name=fixed_size_bucketing_config,json=fixedSizeBucketingConfig,oneof"`
+}
+type PrimitiveTransformation_BucketingConfig struct {
+	BucketingConfig *BucketingConfig `protobuf:"bytes,6,opt,name=bucketing_config,json=bucketingConfig,oneof"`
+}
+type PrimitiveTransformation_ReplaceWithInfoTypeConfig struct {
+	ReplaceWithInfoTypeConfig *ReplaceWithInfoTypeConfig `protobuf:"bytes,7,opt,name=replace_with_info_type_config,json=replaceWithInfoTypeConfig,oneof"`
+}
+type PrimitiveTransformation_TimePartConfig struct {
+	TimePartConfig *TimePartConfig `protobuf:"bytes,8,opt,name=time_part_config,json=timePartConfig,oneof"`
+}
+type PrimitiveTransformation_CryptoHashConfig struct {
+	CryptoHashConfig *CryptoHashConfig `protobuf:"bytes,9,opt,name=crypto_hash_config,json=cryptoHashConfig,oneof"`
+}
+
+func (*PrimitiveTransformation_ReplaceConfig) isPrimitiveTransformation_Transformation()             {}
+func (*PrimitiveTransformation_RedactConfig) isPrimitiveTransformation_Transformation()              {}
+func (*PrimitiveTransformation_CharacterMaskConfig) isPrimitiveTransformation_Transformation()       {}
+func (*PrimitiveTransformation_CryptoReplaceFfxFpeConfig) isPrimitiveTransformation_Transformation() {}
+func (*PrimitiveTransformation_FixedSizeBucketingConfig) isPrimitiveTransformation_Transformation()  {}
+func (*PrimitiveTransformation_BucketingConfig) isPrimitiveTransformation_Transformation()           {}
+func (*PrimitiveTransformation_ReplaceWithInfoTypeConfig) isPrimitiveTransformation_Transformation() {}
+func (*PrimitiveTransformation_TimePartConfig) isPrimitiveTransformation_Transformation()            {}
+func (*PrimitiveTransformation_CryptoHashConfig) isPrimitiveTransformation_Transformation()          {}
+
+func (m *PrimitiveTransformation) GetTransformation() isPrimitiveTransformation_Transformation {
+	if m != nil {
+		return m.Transformation
+	}
+	return nil
+}
+
+func (m *PrimitiveTransformation) GetReplaceConfig() *ReplaceValueConfig {
+	if x, ok := m.GetTransformation().(*PrimitiveTransformation_ReplaceConfig); ok {
+		return x.ReplaceConfig
+	}
+	return nil
+}
+
+func (m *PrimitiveTransformation) GetRedactConfig() *RedactConfig {
+	if x, ok := m.GetTransformation().(*PrimitiveTransformation_RedactConfig); ok {
+		return x.RedactConfig
+	}
+	return nil
+}
+
+func (m *PrimitiveTransformation) GetCharacterMaskConfig() *CharacterMaskConfig {
+	if x, ok := m.GetTransformation().(*PrimitiveTransformation_CharacterMaskConfig); ok {
+		return x.CharacterMaskConfig
+	}
+	return nil
+}
+
+func (m *PrimitiveTransformation) GetCryptoReplaceFfxFpeConfig() *CryptoReplaceFfxFpeConfig {
+	if x, ok := m.GetTransformation().(*PrimitiveTransformation_CryptoReplaceFfxFpeConfig); ok {
+		return x.CryptoReplaceFfxFpeConfig
+	}
+	return nil
+}
+
+func (m *PrimitiveTransformation) GetFixedSizeBucketingConfig() *FixedSizeBucketingConfig {
+	if x, ok := m.GetTransformation().(*PrimitiveTransformation_FixedSizeBucketingConfig); ok {
+		return x.FixedSizeBucketingConfig
+	}
+	return nil
+}
+
+func (m *PrimitiveTransformation) GetBucketingConfig() *BucketingConfig {
+	if x, ok := m.GetTransformation().(*PrimitiveTransformation_BucketingConfig); ok {
+		return x.BucketingConfig
+	}
+	return nil
+}
+
+func (m *PrimitiveTransformation) GetReplaceWithInfoTypeConfig() *ReplaceWithInfoTypeConfig {
+	if x, ok := m.GetTransformation().(*PrimitiveTransformation_ReplaceWithInfoTypeConfig); ok {
+		return x.ReplaceWithInfoTypeConfig
+	}
+	return nil
+}
+
+func (m *PrimitiveTransformation) GetTimePartConfig() *TimePartConfig {
+	if x, ok := m.GetTransformation().(*PrimitiveTransformation_TimePartConfig); ok {
+		return x.TimePartConfig
+	}
+	return nil
+}
+
+func (m *PrimitiveTransformation) GetCryptoHashConfig() *CryptoHashConfig {
+	if x, ok := m.GetTransformation().(*PrimitiveTransformation_CryptoHashConfig); ok {
+		return x.CryptoHashConfig
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*PrimitiveTransformation) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _PrimitiveTransformation_OneofMarshaler, _PrimitiveTransformation_OneofUnmarshaler, _PrimitiveTransformation_OneofSizer, []interface{}{
+		(*PrimitiveTransformation_ReplaceConfig)(nil),
+		(*PrimitiveTransformation_RedactConfig)(nil),
+		(*PrimitiveTransformation_CharacterMaskConfig)(nil),
+		(*PrimitiveTransformation_CryptoReplaceFfxFpeConfig)(nil),
+		(*PrimitiveTransformation_FixedSizeBucketingConfig)(nil),
+		(*PrimitiveTransformation_BucketingConfig)(nil),
+		(*PrimitiveTransformation_ReplaceWithInfoTypeConfig)(nil),
+		(*PrimitiveTransformation_TimePartConfig)(nil),
+		(*PrimitiveTransformation_CryptoHashConfig)(nil),
+	}
+}
+
+func _PrimitiveTransformation_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*PrimitiveTransformation)
+	// transformation
+	switch x := m.Transformation.(type) {
+	case *PrimitiveTransformation_ReplaceConfig:
+		b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.ReplaceConfig); err != nil {
+			return err
+		}
+	case *PrimitiveTransformation_RedactConfig:
+		b.EncodeVarint(2<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.RedactConfig); err != nil {
+			return err
+		}
+	case *PrimitiveTransformation_CharacterMaskConfig:
+		b.EncodeVarint(3<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.CharacterMaskConfig); err != nil {
+			return err
+		}
+	case *PrimitiveTransformation_CryptoReplaceFfxFpeConfig:
+		b.EncodeVarint(4<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.CryptoReplaceFfxFpeConfig); err != nil {
+			return err
+		}
+	case *PrimitiveTransformation_FixedSizeBucketingConfig:
+		b.EncodeVarint(5<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.FixedSizeBucketingConfig); err != nil {
+			return err
+		}
+	case *PrimitiveTransformation_BucketingConfig:
+		b.EncodeVarint(6<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.BucketingConfig); err != nil {
+			return err
+		}
+	case *PrimitiveTransformation_ReplaceWithInfoTypeConfig:
+		b.EncodeVarint(7<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.ReplaceWithInfoTypeConfig); err != nil {
+			return err
+		}
+	case *PrimitiveTransformation_TimePartConfig:
+		b.EncodeVarint(8<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.TimePartConfig); err != nil {
+			return err
+		}
+	case *PrimitiveTransformation_CryptoHashConfig:
+		b.EncodeVarint(9<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.CryptoHashConfig); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("PrimitiveTransformation.Transformation has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _PrimitiveTransformation_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*PrimitiveTransformation)
+	switch tag {
+	case 1: // transformation.replace_config
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(ReplaceValueConfig)
+		err := b.DecodeMessage(msg)
+		m.Transformation = &PrimitiveTransformation_ReplaceConfig{msg}
+		return true, err
+	case 2: // transformation.redact_config
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(RedactConfig)
+		err := b.DecodeMessage(msg)
+		m.Transformation = &PrimitiveTransformation_RedactConfig{msg}
+		return true, err
+	case 3: // transformation.character_mask_config
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(CharacterMaskConfig)
+		err := b.DecodeMessage(msg)
+		m.Transformation = &PrimitiveTransformation_CharacterMaskConfig{msg}
+		return true, err
+	case 4: // transformation.crypto_replace_ffx_fpe_config
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(CryptoReplaceFfxFpeConfig)
+		err := b.DecodeMessage(msg)
+		m.Transformation = &PrimitiveTransformation_CryptoReplaceFfxFpeConfig{msg}
+		return true, err
+	case 5: // transformation.fixed_size_bucketing_config
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(FixedSizeBucketingConfig)
+		err := b.DecodeMessage(msg)
+		m.Transformation = &PrimitiveTransformation_FixedSizeBucketingConfig{msg}
+		return true, err
+	case 6: // transformation.bucketing_config
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(BucketingConfig)
+		err := b.DecodeMessage(msg)
+		m.Transformation = &PrimitiveTransformation_BucketingConfig{msg}
+		return true, err
+	case 7: // transformation.replace_with_info_type_config
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(ReplaceWithInfoTypeConfig)
+		err := b.DecodeMessage(msg)
+		m.Transformation = &PrimitiveTransformation_ReplaceWithInfoTypeConfig{msg}
+		return true, err
+	case 8: // transformation.time_part_config
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(TimePartConfig)
+		err := b.DecodeMessage(msg)
+		m.Transformation = &PrimitiveTransformation_TimePartConfig{msg}
+		return true, err
+	case 9: // transformation.crypto_hash_config
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(CryptoHashConfig)
+		err := b.DecodeMessage(msg)
+		m.Transformation = &PrimitiveTransformation_CryptoHashConfig{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _PrimitiveTransformation_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*PrimitiveTransformation)
+	// transformation
+	switch x := m.Transformation.(type) {
+	case *PrimitiveTransformation_ReplaceConfig:
+		s := proto.Size(x.ReplaceConfig)
+		n += proto.SizeVarint(1<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *PrimitiveTransformation_RedactConfig:
+		s := proto.Size(x.RedactConfig)
+		n += proto.SizeVarint(2<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *PrimitiveTransformation_CharacterMaskConfig:
+		s := proto.Size(x.CharacterMaskConfig)
+		n += proto.SizeVarint(3<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *PrimitiveTransformation_CryptoReplaceFfxFpeConfig:
+		s := proto.Size(x.CryptoReplaceFfxFpeConfig)
+		n += proto.SizeVarint(4<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *PrimitiveTransformation_FixedSizeBucketingConfig:
+		s := proto.Size(x.FixedSizeBucketingConfig)
+		n += proto.SizeVarint(5<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *PrimitiveTransformation_BucketingConfig:
+		s := proto.Size(x.BucketingConfig)
+		n += proto.SizeVarint(6<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *PrimitiveTransformation_ReplaceWithInfoTypeConfig:
+		s := proto.Size(x.ReplaceWithInfoTypeConfig)
+		n += proto.SizeVarint(7<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *PrimitiveTransformation_TimePartConfig:
+		s := proto.Size(x.TimePartConfig)
+		n += proto.SizeVarint(8<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *PrimitiveTransformation_CryptoHashConfig:
+		s := proto.Size(x.CryptoHashConfig)
+		n += proto.SizeVarint(9<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// For use with `Date`, `Timestamp`, and `TimeOfDay`, extract or preserve a
+// portion of the value.
+type TimePartConfig struct {
+	PartToExtract TimePartConfig_TimePart `protobuf:"varint,1,opt,name=part_to_extract,json=partToExtract,enum=google.privacy.dlp.v2beta1.TimePartConfig_TimePart" json:"part_to_extract,omitempty"`
+}
+
+func (m *TimePartConfig) Reset()                    { *m = TimePartConfig{} }
+func (m *TimePartConfig) String() string            { return proto.CompactTextString(m) }
+func (*TimePartConfig) ProtoMessage()               {}
+func (*TimePartConfig) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{38} }
+
+func (m *TimePartConfig) GetPartToExtract() TimePartConfig_TimePart {
+	if m != nil {
+		return m.PartToExtract
+	}
+	return TimePartConfig_TIME_PART_UNSPECIFIED
+}
+
+// Pseudonymization method that generates surrogates via cryptographic hashing.
+// Uses SHA-256.
+// Outputs a 32 byte digest as an uppercase hex string
+// (for example, 41D1567F7F99F1DC2A5FAB886DEE5BEE).
+// Currently, only string and integer values can be hashed.
+type CryptoHashConfig struct {
+	// The key used by the hash function.
+	CryptoKey *CryptoKey `protobuf:"bytes,1,opt,name=crypto_key,json=cryptoKey" json:"crypto_key,omitempty"`
+}
+
+func (m *CryptoHashConfig) Reset()                    { *m = CryptoHashConfig{} }
+func (m *CryptoHashConfig) String() string            { return proto.CompactTextString(m) }
+func (*CryptoHashConfig) ProtoMessage()               {}
+func (*CryptoHashConfig) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{39} }
+
+func (m *CryptoHashConfig) GetCryptoKey() *CryptoKey {
+	if m != nil {
+		return m.CryptoKey
+	}
+	return nil
+}
+
+// Replace each input value with a given `Value`.
+type ReplaceValueConfig struct {
+	// Value to replace it with.
+	NewValue *Value `protobuf:"bytes,1,opt,name=new_value,json=newValue" json:"new_value,omitempty"`
+}
+
+func (m *ReplaceValueConfig) Reset()                    { *m = ReplaceValueConfig{} }
+func (m *ReplaceValueConfig) String() string            { return proto.CompactTextString(m) }
+func (*ReplaceValueConfig) ProtoMessage()               {}
+func (*ReplaceValueConfig) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{40} }
+
+func (m *ReplaceValueConfig) GetNewValue() *Value {
+	if m != nil {
+		return m.NewValue
+	}
+	return nil
+}
+
+// Replace each matching finding with the name of the info_type.
+type ReplaceWithInfoTypeConfig struct {
+}
+
+func (m *ReplaceWithInfoTypeConfig) Reset()                    { *m = ReplaceWithInfoTypeConfig{} }
+func (m *ReplaceWithInfoTypeConfig) String() string            { return proto.CompactTextString(m) }
+func (*ReplaceWithInfoTypeConfig) ProtoMessage()               {}
+func (*ReplaceWithInfoTypeConfig) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{41} }
+
+// Redact a given value. For example, if used with an `InfoTypeTransformation`
+// transforming PHONE_NUMBER, and input 'My phone number is 206-555-0123', the
+// output would be 'My phone number is '.
+type RedactConfig struct {
+}
+
+func (m *RedactConfig) Reset()                    { *m = RedactConfig{} }
+func (m *RedactConfig) String() string            { return proto.CompactTextString(m) }
+func (*RedactConfig) ProtoMessage()               {}
+func (*RedactConfig) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{42} }
+
+// Characters to skip when doing deidentification of a value. These will be left
+// alone and skipped.
+type CharsToIgnore struct {
+	// Types that are valid to be assigned to Characters:
+	//	*CharsToIgnore_CharactersToSkip
+	//	*CharsToIgnore_CommonCharactersToIgnore
+	Characters isCharsToIgnore_Characters `protobuf_oneof:"characters"`
+}
+
+func (m *CharsToIgnore) Reset()                    { *m = CharsToIgnore{} }
+func (m *CharsToIgnore) String() string            { return proto.CompactTextString(m) }
+func (*CharsToIgnore) ProtoMessage()               {}
+func (*CharsToIgnore) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{43} }
+
+type isCharsToIgnore_Characters interface {
+	isCharsToIgnore_Characters()
+}
+
+type CharsToIgnore_CharactersToSkip struct {
+	CharactersToSkip string `protobuf:"bytes,1,opt,name=characters_to_skip,json=charactersToSkip,oneof"`
+}
+type CharsToIgnore_CommonCharactersToIgnore struct {
+	CommonCharactersToIgnore CharsToIgnore_CharacterGroup `protobuf:"varint,2,opt,name=common_characters_to_ignore,json=commonCharactersToIgnore,enum=google.privacy.dlp.v2beta1.CharsToIgnore_CharacterGroup,oneof"`
+}
+
+func (*CharsToIgnore_CharactersToSkip) isCharsToIgnore_Characters()         {}
+func (*CharsToIgnore_CommonCharactersToIgnore) isCharsToIgnore_Characters() {}
+
+func (m *CharsToIgnore) GetCharacters() isCharsToIgnore_Characters {
+	if m != nil {
+		return m.Characters
+	}
+	return nil
+}
+
+func (m *CharsToIgnore) GetCharactersToSkip() string {
+	if x, ok := m.GetCharacters().(*CharsToIgnore_CharactersToSkip); ok {
+		return x.CharactersToSkip
+	}
+	return ""
+}
+
+func (m *CharsToIgnore) GetCommonCharactersToIgnore() CharsToIgnore_CharacterGroup {
+	if x, ok := m.GetCharacters().(*CharsToIgnore_CommonCharactersToIgnore); ok {
+		return x.CommonCharactersToIgnore
+	}
+	return CharsToIgnore_CHARACTER_GROUP_UNSPECIFIED
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*CharsToIgnore) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _CharsToIgnore_OneofMarshaler, _CharsToIgnore_OneofUnmarshaler, _CharsToIgnore_OneofSizer, []interface{}{
+		(*CharsToIgnore_CharactersToSkip)(nil),
+		(*CharsToIgnore_CommonCharactersToIgnore)(nil),
+	}
+}
+
+func _CharsToIgnore_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*CharsToIgnore)
+	// characters
+	switch x := m.Characters.(type) {
+	case *CharsToIgnore_CharactersToSkip:
+		b.EncodeVarint(1<<3 | proto.WireBytes)
+		b.EncodeStringBytes(x.CharactersToSkip)
+	case *CharsToIgnore_CommonCharactersToIgnore:
+		b.EncodeVarint(2<<3 | proto.WireVarint)
+		b.EncodeVarint(uint64(x.CommonCharactersToIgnore))
+	case nil:
+	default:
+		return fmt.Errorf("CharsToIgnore.Characters has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _CharsToIgnore_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*CharsToIgnore)
+	switch tag {
+	case 1: // characters.characters_to_skip
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeStringBytes()
+		m.Characters = &CharsToIgnore_CharactersToSkip{x}
+		return true, err
+	case 2: // characters.common_characters_to_ignore
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.Characters = &CharsToIgnore_CommonCharactersToIgnore{CharsToIgnore_CharacterGroup(x)}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _CharsToIgnore_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*CharsToIgnore)
+	// characters
+	switch x := m.Characters.(type) {
+	case *CharsToIgnore_CharactersToSkip:
+		n += proto.SizeVarint(1<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(len(x.CharactersToSkip)))
+		n += len(x.CharactersToSkip)
+	case *CharsToIgnore_CommonCharactersToIgnore:
+		n += proto.SizeVarint(2<<3 | proto.WireVarint)
+		n += proto.SizeVarint(uint64(x.CommonCharactersToIgnore))
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// Partially mask a string by replacing a given number of characters with a
+// fixed character. Masking can start from the beginning or end of the string.
+// This can be used on data of any type (numbers, longs, and so on) and when
+// de-identifying structured data we'll attempt to preserve the original data's
+// type. (This allows you to take a long like 123 and modify it to a string like
+// **3.
+type CharacterMaskConfig struct {
+	// Character to mask the sensitive values&mdash;for example, "*" for an
+	// alphabetic string such as name, or "0" for a numeric string such as ZIP
+	// code or credit card number. String must have length 1. If not supplied, we
+	// will default to "*" for strings, 0 for digits.
+	MaskingCharacter string `protobuf:"bytes,1,opt,name=masking_character,json=maskingCharacter" json:"masking_character,omitempty"`
+	// Number of characters to mask. If not set, all matching chars will be
+	// masked. Skipped characters do not count towards this tally.
+	NumberToMask int32 `protobuf:"varint,2,opt,name=number_to_mask,json=numberToMask" json:"number_to_mask,omitempty"`
+	// Mask characters in reverse order. For example, if `masking_character` is
+	// '0', number_to_mask is 14, and `reverse_order` is false, then
+	// 1234-5678-9012-3456 -> 00000000000000-3456
+	// If `masking_character` is '*', `number_to_mask` is 3, and `reverse_order`
+	// is true, then 12345 -> 12***
+	ReverseOrder bool `protobuf:"varint,3,opt,name=reverse_order,json=reverseOrder" json:"reverse_order,omitempty"`
+	// When masking a string, items in this list will be skipped when replacing.
+	// For example, if your string is 555-555-5555 and you ask us to skip `-` and
+	// mask 5 chars with * we would produce ***-*55-5555.
+	CharactersToIgnore []*CharsToIgnore `protobuf:"bytes,4,rep,name=characters_to_ignore,json=charactersToIgnore" json:"characters_to_ignore,omitempty"`
+}
+
+func (m *CharacterMaskConfig) Reset()                    { *m = CharacterMaskConfig{} }
+func (m *CharacterMaskConfig) String() string            { return proto.CompactTextString(m) }
+func (*CharacterMaskConfig) ProtoMessage()               {}
+func (*CharacterMaskConfig) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{44} }
+
+func (m *CharacterMaskConfig) GetMaskingCharacter() string {
+	if m != nil {
+		return m.MaskingCharacter
+	}
+	return ""
+}
+
+func (m *CharacterMaskConfig) GetNumberToMask() int32 {
+	if m != nil {
+		return m.NumberToMask
+	}
+	return 0
+}
+
+func (m *CharacterMaskConfig) GetReverseOrder() bool {
+	if m != nil {
+		return m.ReverseOrder
+	}
+	return false
+}
+
+func (m *CharacterMaskConfig) GetCharactersToIgnore() []*CharsToIgnore {
+	if m != nil {
+		return m.CharactersToIgnore
+	}
+	return nil
+}
+
+// Buckets values based on fixed size ranges. The
+// Bucketing transformation can provide all of this functionality,
+// but requires more configuration. This message is provided as a convenience to
+// the user for simple bucketing strategies.
+// The resulting value will be a hyphenated string of
+// lower_bound-upper_bound.
+// This can be used on data of type: double, long.
+// If the bound Value type differs from the type of data
+// being transformed, we will first attempt converting the type of the data to
+// be transformed to match the type of the bound before comparing.
+type FixedSizeBucketingConfig struct {
+	// Lower bound value of buckets. All values less than `lower_bound` are
+	// grouped together into a single bucket; for example if `lower_bound` = 10,
+	// then all values less than 10 are replaced with the value “-10”. [Required].
+	LowerBound *Value `protobuf:"bytes,1,opt,name=lower_bound,json=lowerBound" json:"lower_bound,omitempty"`
+	// Upper bound value of buckets. All values greater than upper_bound are
+	// grouped together into a single bucket; for example if `upper_bound` = 89,
+	// then all values greater than 89 are replaced with the value “89+”.
+	// [Required].
+	UpperBound *Value `protobuf:"bytes,2,opt,name=upper_bound,json=upperBound" json:"upper_bound,omitempty"`
+	// Size of each bucket (except for minimum and maximum buckets). So if
+	// `lower_bound` = 10, `upper_bound` = 89, and `bucket_size` = 10, then the
+	// following buckets would be used: -10, 10-20, 20-30, 30-40, 40-50, 50-60,
+	// 60-70, 70-80, 80-89, 89+. Precision up to 2 decimals works. [Required].
+	BucketSize float64 `protobuf:"fixed64,3,opt,name=bucket_size,json=bucketSize" json:"bucket_size,omitempty"`
+}
+
+func (m *FixedSizeBucketingConfig) Reset()                    { *m = FixedSizeBucketingConfig{} }
+func (m *FixedSizeBucketingConfig) String() string            { return proto.CompactTextString(m) }
+func (*FixedSizeBucketingConfig) ProtoMessage()               {}
+func (*FixedSizeBucketingConfig) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{45} }
+
+func (m *FixedSizeBucketingConfig) GetLowerBound() *Value {
+	if m != nil {
+		return m.LowerBound
+	}
+	return nil
+}
+
+func (m *FixedSizeBucketingConfig) GetUpperBound() *Value {
+	if m != nil {
+		return m.UpperBound
+	}
+	return nil
+}
+
+func (m *FixedSizeBucketingConfig) GetBucketSize() float64 {
+	if m != nil {
+		return m.BucketSize
+	}
+	return 0
+}
+
+// Generalization function that buckets values based on ranges. The ranges and
+// replacement values are dynamically provided by the user for custom behavior,
+// such as 1-30 -> LOW 31-65 -> MEDIUM 66-100 -> HIGH
+// This can be used on
+// data of type: number, long, string, timestamp.
+// If the bound `Value` type differs from the type of data being transformed, we
+// will first attempt converting the type of the data to be transformed to match
+// the type of the bound before comparing.
+type BucketingConfig struct {
+	Buckets []*BucketingConfig_Bucket `protobuf:"bytes,1,rep,name=buckets" json:"buckets,omitempty"`
+}
+
+func (m *BucketingConfig) Reset()                    { *m = BucketingConfig{} }
+func (m *BucketingConfig) String() string            { return proto.CompactTextString(m) }
+func (*BucketingConfig) ProtoMessage()               {}
+func (*BucketingConfig) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{46} }
+
+func (m *BucketingConfig) GetBuckets() []*BucketingConfig_Bucket {
+	if m != nil {
+		return m.Buckets
+	}
+	return nil
+}
+
+// Buckets represented as ranges, along with replacement values. Ranges must
+// be non-overlapping.
+type BucketingConfig_Bucket struct {
+	// Lower bound of the range, inclusive. Type should be the same as max if
+	// used.
+	Min *Value `protobuf:"bytes,1,opt,name=min" json:"min,omitempty"`
+	// Upper bound of the range, exclusive; type must match min.
+	Max *Value `protobuf:"bytes,2,opt,name=max" json:"max,omitempty"`
+	// Replacement value for this bucket. If not provided
+	// the default behavior will be to hyphenate the min-max range.
+	ReplacementValue *Value `protobuf:"bytes,3,opt,name=replacement_value,json=replacementValue" json:"replacement_value,omitempty"`
+}
+
+func (m *BucketingConfig_Bucket) Reset()                    { *m = BucketingConfig_Bucket{} }
+func (m *BucketingConfig_Bucket) String() string            { return proto.CompactTextString(m) }
+func (*BucketingConfig_Bucket) ProtoMessage()               {}
+func (*BucketingConfig_Bucket) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{46, 0} }
+
+func (m *BucketingConfig_Bucket) GetMin() *Value {
+	if m != nil {
+		return m.Min
+	}
+	return nil
+}
+
+func (m *BucketingConfig_Bucket) GetMax() *Value {
+	if m != nil {
+		return m.Max
+	}
+	return nil
+}
+
+func (m *BucketingConfig_Bucket) GetReplacementValue() *Value {
+	if m != nil {
+		return m.ReplacementValue
+	}
+	return nil
+}
+
+// Replaces an identifier with a surrogate using FPE with the FFX
+// mode of operation.
+// The identifier must be representable by the US-ASCII character set.
+// For a given crypto key and context, the same identifier will be
+// replaced with the same surrogate.
+// Identifiers must be at least two characters long.
+// In the case that the identifier is the empty string, it will be skipped.
+type CryptoReplaceFfxFpeConfig struct {
+	// The key used by the encryption algorithm. [required]
+	CryptoKey *CryptoKey `protobuf:"bytes,1,opt,name=crypto_key,json=cryptoKey" json:"crypto_key,omitempty"`
+	// A context may be used for higher security since the same
+	// identifier in two different contexts likely will be given a distinct
+	// surrogate. The principle is that the likeliness is inversely related
+	// to the ratio of the number of distinct identifiers per context over the
+	// number of possible surrogates: As long as this ratio is small, the
+	// likehood is large.
+	//
+	// If the context is not set, a default tweak will be used.
+	// If the context is set but:
+	//
+	// 1. there is no record present when transforming a given value or
+	// 1. the field is not present when transforming a given value,
+	//
+	// a default tweak will be used.
+	//
+	// Note that case (1) is expected when an `InfoTypeTransformation` is
+	// applied to both structured and non-structured `ContentItem`s.
+	// Currently, the referenced field may be of value type integer or string.
+	//
+	// The tweak is constructed as a sequence of bytes in big endian byte order
+	// such that:
+	//
+	// - a 64 bit integer is encoded followed by a single byte of value 1
+	// - a string is encoded in UTF-8 format followed by a single byte of value 2
+	//
+	// This is also known as the 'tweak', as in tweakable encryption.
+	Context *FieldId `protobuf:"bytes,2,opt,name=context" json:"context,omitempty"`
+	// Types that are valid to be assigned to Alphabet:
+	//	*CryptoReplaceFfxFpeConfig_CommonAlphabet
+	//	*CryptoReplaceFfxFpeConfig_CustomAlphabet
+	//	*CryptoReplaceFfxFpeConfig_Radix
+	Alphabet isCryptoReplaceFfxFpeConfig_Alphabet `protobuf_oneof:"alphabet"`
+}
+
+func (m *CryptoReplaceFfxFpeConfig) Reset()                    { *m = CryptoReplaceFfxFpeConfig{} }
+func (m *CryptoReplaceFfxFpeConfig) String() string            { return proto.CompactTextString(m) }
+func (*CryptoReplaceFfxFpeConfig) ProtoMessage()               {}
+func (*CryptoReplaceFfxFpeConfig) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{47} }
+
+type isCryptoReplaceFfxFpeConfig_Alphabet interface {
+	isCryptoReplaceFfxFpeConfig_Alphabet()
+}
+
+type CryptoReplaceFfxFpeConfig_CommonAlphabet struct {
+	CommonAlphabet CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet `protobuf:"varint,4,opt,name=common_alphabet,json=commonAlphabet,enum=google.privacy.dlp.v2beta1.CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet,oneof"`
+}
+type CryptoReplaceFfxFpeConfig_CustomAlphabet struct {
+	CustomAlphabet string `protobuf:"bytes,5,opt,name=custom_alphabet,json=customAlphabet,oneof"`
+}
+type CryptoReplaceFfxFpeConfig_Radix struct {
+	Radix int32 `protobuf:"varint,6,opt,name=radix,oneof"`
+}
+
+func (*CryptoReplaceFfxFpeConfig_CommonAlphabet) isCryptoReplaceFfxFpeConfig_Alphabet() {}
+func (*CryptoReplaceFfxFpeConfig_CustomAlphabet) isCryptoReplaceFfxFpeConfig_Alphabet() {}
+func (*CryptoReplaceFfxFpeConfig_Radix) isCryptoReplaceFfxFpeConfig_Alphabet()          {}
+
+func (m *CryptoReplaceFfxFpeConfig) GetAlphabet() isCryptoReplaceFfxFpeConfig_Alphabet {
+	if m != nil {
+		return m.Alphabet
+	}
+	return nil
+}
+
+func (m *CryptoReplaceFfxFpeConfig) GetCryptoKey() *CryptoKey {
+	if m != nil {
+		return m.CryptoKey
+	}
+	return nil
+}
+
+func (m *CryptoReplaceFfxFpeConfig) GetContext() *FieldId {
+	if m != nil {
+		return m.Context
+	}
+	return nil
+}
+
+func (m *CryptoReplaceFfxFpeConfig) GetCommonAlphabet() CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet {
+	if x, ok := m.GetAlphabet().(*CryptoReplaceFfxFpeConfig_CommonAlphabet); ok {
+		return x.CommonAlphabet
+	}
+	return CryptoReplaceFfxFpeConfig_FFX_COMMON_NATIVE_ALPHABET_UNSPECIFIED
+}
+
+func (m *CryptoReplaceFfxFpeConfig) GetCustomAlphabet() string {
+	if x, ok := m.GetAlphabet().(*CryptoReplaceFfxFpeConfig_CustomAlphabet); ok {
+		return x.CustomAlphabet
+	}
+	return ""
+}
+
+func (m *CryptoReplaceFfxFpeConfig) GetRadix() int32 {
+	if x, ok := m.GetAlphabet().(*CryptoReplaceFfxFpeConfig_Radix); ok {
+		return x.Radix
+	}
+	return 0
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*CryptoReplaceFfxFpeConfig) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _CryptoReplaceFfxFpeConfig_OneofMarshaler, _CryptoReplaceFfxFpeConfig_OneofUnmarshaler, _CryptoReplaceFfxFpeConfig_OneofSizer, []interface{}{
+		(*CryptoReplaceFfxFpeConfig_CommonAlphabet)(nil),
+		(*CryptoReplaceFfxFpeConfig_CustomAlphabet)(nil),
+		(*CryptoReplaceFfxFpeConfig_Radix)(nil),
+	}
+}
+
+func _CryptoReplaceFfxFpeConfig_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*CryptoReplaceFfxFpeConfig)
+	// alphabet
+	switch x := m.Alphabet.(type) {
+	case *CryptoReplaceFfxFpeConfig_CommonAlphabet:
+		b.EncodeVarint(4<<3 | proto.WireVarint)
+		b.EncodeVarint(uint64(x.CommonAlphabet))
+	case *CryptoReplaceFfxFpeConfig_CustomAlphabet:
+		b.EncodeVarint(5<<3 | proto.WireBytes)
+		b.EncodeStringBytes(x.CustomAlphabet)
+	case *CryptoReplaceFfxFpeConfig_Radix:
+		b.EncodeVarint(6<<3 | proto.WireVarint)
+		b.EncodeVarint(uint64(x.Radix))
+	case nil:
+	default:
+		return fmt.Errorf("CryptoReplaceFfxFpeConfig.Alphabet has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _CryptoReplaceFfxFpeConfig_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*CryptoReplaceFfxFpeConfig)
+	switch tag {
+	case 4: // alphabet.common_alphabet
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.Alphabet = &CryptoReplaceFfxFpeConfig_CommonAlphabet{CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet(x)}
+		return true, err
+	case 5: // alphabet.custom_alphabet
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeStringBytes()
+		m.Alphabet = &CryptoReplaceFfxFpeConfig_CustomAlphabet{x}
+		return true, err
+	case 6: // alphabet.radix
+		if wire != proto.WireVarint {
+			return true, proto.ErrInternalBadWireType
+		}
+		x, err := b.DecodeVarint()
+		m.Alphabet = &CryptoReplaceFfxFpeConfig_Radix{int32(x)}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _CryptoReplaceFfxFpeConfig_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*CryptoReplaceFfxFpeConfig)
+	// alphabet
+	switch x := m.Alphabet.(type) {
+	case *CryptoReplaceFfxFpeConfig_CommonAlphabet:
+		n += proto.SizeVarint(4<<3 | proto.WireVarint)
+		n += proto.SizeVarint(uint64(x.CommonAlphabet))
+	case *CryptoReplaceFfxFpeConfig_CustomAlphabet:
+		n += proto.SizeVarint(5<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(len(x.CustomAlphabet)))
+		n += len(x.CustomAlphabet)
+	case *CryptoReplaceFfxFpeConfig_Radix:
+		n += proto.SizeVarint(6<<3 | proto.WireVarint)
+		n += proto.SizeVarint(uint64(x.Radix))
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// This is a data encryption key (DEK) (as opposed to
+// a key encryption key (KEK) stored by KMS).
+// When using KMS to wrap/unwrap DEKs, be sure to set an appropriate
+// IAM policy on the KMS CryptoKey (KEK) to ensure an attacker cannot
+// unwrap the data crypto key.
+type CryptoKey struct {
+	// Types that are valid to be assigned to Source:
+	//	*CryptoKey_Transient
+	//	*CryptoKey_Unwrapped
+	//	*CryptoKey_KmsWrapped
+	Source isCryptoKey_Source `protobuf_oneof:"source"`
+}
+
+func (m *CryptoKey) Reset()                    { *m = CryptoKey{} }
+func (m *CryptoKey) String() string            { return proto.CompactTextString(m) }
+func (*CryptoKey) ProtoMessage()               {}
+func (*CryptoKey) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{48} }
+
+type isCryptoKey_Source interface {
+	isCryptoKey_Source()
+}
+
+type CryptoKey_Transient struct {
+	Transient *TransientCryptoKey `protobuf:"bytes,1,opt,name=transient,oneof"`
+}
+type CryptoKey_Unwrapped struct {
+	Unwrapped *UnwrappedCryptoKey `protobuf:"bytes,2,opt,name=unwrapped,oneof"`
+}
+type CryptoKey_KmsWrapped struct {
+	KmsWrapped *KmsWrappedCryptoKey `protobuf:"bytes,3,opt,name=kms_wrapped,json=kmsWrapped,oneof"`
+}
+
+func (*CryptoKey_Transient) isCryptoKey_Source()  {}
+func (*CryptoKey_Unwrapped) isCryptoKey_Source()  {}
+func (*CryptoKey_KmsWrapped) isCryptoKey_Source() {}
+
+func (m *CryptoKey) GetSource() isCryptoKey_Source {
+	if m != nil {
+		return m.Source
+	}
+	return nil
+}
+
+func (m *CryptoKey) GetTransient() *TransientCryptoKey {
+	if x, ok := m.GetSource().(*CryptoKey_Transient); ok {
+		return x.Transient
+	}
+	return nil
+}
+
+func (m *CryptoKey) GetUnwrapped() *UnwrappedCryptoKey {
+	if x, ok := m.GetSource().(*CryptoKey_Unwrapped); ok {
+		return x.Unwrapped
+	}
+	return nil
+}
+
+func (m *CryptoKey) GetKmsWrapped() *KmsWrappedCryptoKey {
+	if x, ok := m.GetSource().(*CryptoKey_KmsWrapped); ok {
+		return x.KmsWrapped
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*CryptoKey) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _CryptoKey_OneofMarshaler, _CryptoKey_OneofUnmarshaler, _CryptoKey_OneofSizer, []interface{}{
+		(*CryptoKey_Transient)(nil),
+		(*CryptoKey_Unwrapped)(nil),
+		(*CryptoKey_KmsWrapped)(nil),
+	}
+}
+
+func _CryptoKey_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*CryptoKey)
+	// source
+	switch x := m.Source.(type) {
+	case *CryptoKey_Transient:
+		b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Transient); err != nil {
+			return err
+		}
+	case *CryptoKey_Unwrapped:
+		b.EncodeVarint(2<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Unwrapped); err != nil {
+			return err
+		}
+	case *CryptoKey_KmsWrapped:
+		b.EncodeVarint(3<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.KmsWrapped); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("CryptoKey.Source has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _CryptoKey_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*CryptoKey)
+	switch tag {
+	case 1: // source.transient
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(TransientCryptoKey)
+		err := b.DecodeMessage(msg)
+		m.Source = &CryptoKey_Transient{msg}
+		return true, err
+	case 2: // source.unwrapped
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(UnwrappedCryptoKey)
+		err := b.DecodeMessage(msg)
+		m.Source = &CryptoKey_Unwrapped{msg}
+		return true, err
+	case 3: // source.kms_wrapped
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(KmsWrappedCryptoKey)
+		err := b.DecodeMessage(msg)
+		m.Source = &CryptoKey_KmsWrapped{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _CryptoKey_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*CryptoKey)
+	// source
+	switch x := m.Source.(type) {
+	case *CryptoKey_Transient:
+		s := proto.Size(x.Transient)
+		n += proto.SizeVarint(1<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *CryptoKey_Unwrapped:
+		s := proto.Size(x.Unwrapped)
+		n += proto.SizeVarint(2<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *CryptoKey_KmsWrapped:
+		s := proto.Size(x.KmsWrapped)
+		n += proto.SizeVarint(3<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// Use this to have a random data crypto key generated.
+// It will be discarded after the operation/request finishes.
+type TransientCryptoKey struct {
+	// Name of the key. [required]
+	// This is an arbitrary string used to differentiate different keys.
+	// A unique key is generated per name: two separate `TransientCryptoKey`
+	// protos share the same generated key if their names are the same.
+	// When the data crypto key is generated, this name is not used in any way
+	// (repeating the api call will result in a different key being generated).
+	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+}
+
+func (m *TransientCryptoKey) Reset()                    { *m = TransientCryptoKey{} }
+func (m *TransientCryptoKey) String() string            { return proto.CompactTextString(m) }
+func (*TransientCryptoKey) ProtoMessage()               {}
+func (*TransientCryptoKey) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{49} }
+
+func (m *TransientCryptoKey) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+// Using raw keys is prone to security risks due to accidentally
+// leaking the key. Choose another type of key if possible.
+type UnwrappedCryptoKey struct {
+	// The AES 128/192/256 bit key. [required]
+	Key []byte `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+}
+
+func (m *UnwrappedCryptoKey) Reset()                    { *m = UnwrappedCryptoKey{} }
+func (m *UnwrappedCryptoKey) String() string            { return proto.CompactTextString(m) }
+func (*UnwrappedCryptoKey) ProtoMessage()               {}
+func (*UnwrappedCryptoKey) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{50} }
+
+func (m *UnwrappedCryptoKey) GetKey() []byte {
+	if m != nil {
+		return m.Key
+	}
+	return nil
+}
+
+// Include to use an existing data crypto key wrapped by KMS.
+// Authorization requires the following IAM permissions when sending a request
+// to perform a crypto transformation using a kms-wrapped crypto key:
+// dlp.kms.encrypt
+type KmsWrappedCryptoKey struct {
+	// The wrapped data crypto key. [required]
+	WrappedKey []byte `protobuf:"bytes,1,opt,name=wrapped_key,json=wrappedKey,proto3" json:"wrapped_key,omitempty"`
+	// The resource name of the KMS CryptoKey to use for unwrapping. [required]
+	CryptoKeyName string `protobuf:"bytes,2,opt,name=crypto_key_name,json=cryptoKeyName" json:"crypto_key_name,omitempty"`
+}
+
+func (m *KmsWrappedCryptoKey) Reset()                    { *m = KmsWrappedCryptoKey{} }
+func (m *KmsWrappedCryptoKey) String() string            { return proto.CompactTextString(m) }
+func (*KmsWrappedCryptoKey) ProtoMessage()               {}
+func (*KmsWrappedCryptoKey) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{51} }
+
+func (m *KmsWrappedCryptoKey) GetWrappedKey() []byte {
+	if m != nil {
+		return m.WrappedKey
+	}
+	return nil
+}
+
+func (m *KmsWrappedCryptoKey) GetCryptoKeyName() string {
+	if m != nil {
+		return m.CryptoKeyName
+	}
+	return ""
+}
+
+// A type of transformation that will scan unstructured text and
+// apply various `PrimitiveTransformation`s to each finding, where the
+// transformation is applied to only values that were identified as a specific
+// info_type.
+type InfoTypeTransformations struct {
+	// Transformation for each info type. Cannot specify more than one
+	// for a given info type. [required]
+	Transformations []*InfoTypeTransformations_InfoTypeTransformation `protobuf:"bytes,1,rep,name=transformations" json:"transformations,omitempty"`
+}
+
+func (m *InfoTypeTransformations) Reset()                    { *m = InfoTypeTransformations{} }
+func (m *InfoTypeTransformations) String() string            { return proto.CompactTextString(m) }
+func (*InfoTypeTransformations) ProtoMessage()               {}
+func (*InfoTypeTransformations) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{52} }
+
+func (m *InfoTypeTransformations) GetTransformations() []*InfoTypeTransformations_InfoTypeTransformation {
+	if m != nil {
+		return m.Transformations
+	}
+	return nil
+}
+
+// A transformation to apply to text that is identified as a specific
+// info_type.
+type InfoTypeTransformations_InfoTypeTransformation struct {
+	// Info types to apply the transformation to. Empty list will match all
+	// available info types for this transformation.
+	InfoTypes []*InfoType `protobuf:"bytes,1,rep,name=info_types,json=infoTypes" json:"info_types,omitempty"`
+	// Primitive transformation to apply to the info type. [required]
+	PrimitiveTransformation *PrimitiveTransformation `protobuf:"bytes,2,opt,name=primitive_transformation,json=primitiveTransformation" json:"primitive_transformation,omitempty"`
+}
+
+func (m *InfoTypeTransformations_InfoTypeTransformation) Reset() {
+	*m = InfoTypeTransformations_InfoTypeTransformation{}
+}
+func (m *InfoTypeTransformations_InfoTypeTransformation) String() string {
+	return proto.CompactTextString(m)
+}
+func (*InfoTypeTransformations_InfoTypeTransformation) ProtoMessage() {}
+func (*InfoTypeTransformations_InfoTypeTransformation) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{52, 0}
+}
+
+func (m *InfoTypeTransformations_InfoTypeTransformation) GetInfoTypes() []*InfoType {
+	if m != nil {
+		return m.InfoTypes
+	}
+	return nil
+}
+
+func (m *InfoTypeTransformations_InfoTypeTransformation) GetPrimitiveTransformation() *PrimitiveTransformation {
+	if m != nil {
+		return m.PrimitiveTransformation
+	}
+	return nil
+}
+
+// The transformation to apply to the field.
+type FieldTransformation struct {
+	// Input field(s) to apply the transformation to. [required]
+	Fields []*FieldId `protobuf:"bytes,1,rep,name=fields" json:"fields,omitempty"`
+	// Only apply the transformation if the condition evaluates to true for the
+	// given `RecordCondition`. The conditions are allowed to reference fields
+	// that are not used in the actual transformation. [optional]
+	//
+	// Example Use Cases:
+	//
+	// - Apply a different bucket transformation to an age column if the zip code
+	// column for the same record is within a specific range.
+	// - Redact a field if the date of birth field is greater than 85.
+	Condition *RecordCondition `protobuf:"bytes,3,opt,name=condition" json:"condition,omitempty"`
+	// Transformation to apply. [required]
+	//
+	// Types that are valid to be assigned to Transformation:
+	//	*FieldTransformation_PrimitiveTransformation
+	//	*FieldTransformation_InfoTypeTransformations
+	Transformation isFieldTransformation_Transformation `protobuf_oneof:"transformation"`
+}
+
+func (m *FieldTransformation) Reset()                    { *m = FieldTransformation{} }
+func (m *FieldTransformation) String() string            { return proto.CompactTextString(m) }
+func (*FieldTransformation) ProtoMessage()               {}
+func (*FieldTransformation) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{53} }
+
+type isFieldTransformation_Transformation interface {
+	isFieldTransformation_Transformation()
+}
+
+type FieldTransformation_PrimitiveTransformation struct {
+	PrimitiveTransformation *PrimitiveTransformation `protobuf:"bytes,4,opt,name=primitive_transformation,json=primitiveTransformation,oneof"`
+}
+type FieldTransformation_InfoTypeTransformations struct {
+	InfoTypeTransformations *InfoTypeTransformations `protobuf:"bytes,5,opt,name=info_type_transformations,json=infoTypeTransformations,oneof"`
+}
+
+func (*FieldTransformation_PrimitiveTransformation) isFieldTransformation_Transformation() {}
+func (*FieldTransformation_InfoTypeTransformations) isFieldTransformation_Transformation() {}
+
+func (m *FieldTransformation) GetTransformation() isFieldTransformation_Transformation {
+	if m != nil {
+		return m.Transformation
+	}
+	return nil
+}
+
+func (m *FieldTransformation) GetFields() []*FieldId {
+	if m != nil {
+		return m.Fields
+	}
+	return nil
+}
+
+func (m *FieldTransformation) GetCondition() *RecordCondition {
+	if m != nil {
+		return m.Condition
+	}
+	return nil
+}
+
+func (m *FieldTransformation) GetPrimitiveTransformation() *PrimitiveTransformation {
+	if x, ok := m.GetTransformation().(*FieldTransformation_PrimitiveTransformation); ok {
+		return x.PrimitiveTransformation
+	}
+	return nil
+}
+
+func (m *FieldTransformation) GetInfoTypeTransformations() *InfoTypeTransformations {
+	if x, ok := m.GetTransformation().(*FieldTransformation_InfoTypeTransformations); ok {
+		return x.InfoTypeTransformations
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*FieldTransformation) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _FieldTransformation_OneofMarshaler, _FieldTransformation_OneofUnmarshaler, _FieldTransformation_OneofSizer, []interface{}{
+		(*FieldTransformation_PrimitiveTransformation)(nil),
+		(*FieldTransformation_InfoTypeTransformations)(nil),
+	}
+}
+
+func _FieldTransformation_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*FieldTransformation)
+	// transformation
+	switch x := m.Transformation.(type) {
+	case *FieldTransformation_PrimitiveTransformation:
+		b.EncodeVarint(4<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.PrimitiveTransformation); err != nil {
+			return err
+		}
+	case *FieldTransformation_InfoTypeTransformations:
+		b.EncodeVarint(5<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.InfoTypeTransformations); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("FieldTransformation.Transformation has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _FieldTransformation_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*FieldTransformation)
+	switch tag {
+	case 4: // transformation.primitive_transformation
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(PrimitiveTransformation)
+		err := b.DecodeMessage(msg)
+		m.Transformation = &FieldTransformation_PrimitiveTransformation{msg}
+		return true, err
+	case 5: // transformation.info_type_transformations
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(InfoTypeTransformations)
+		err := b.DecodeMessage(msg)
+		m.Transformation = &FieldTransformation_InfoTypeTransformations{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _FieldTransformation_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*FieldTransformation)
+	// transformation
+	switch x := m.Transformation.(type) {
+	case *FieldTransformation_PrimitiveTransformation:
+		s := proto.Size(x.PrimitiveTransformation)
+		n += proto.SizeVarint(4<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *FieldTransformation_InfoTypeTransformations:
+		s := proto.Size(x.InfoTypeTransformations)
+		n += proto.SizeVarint(5<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// A type of transformation that is applied over structured data such as a
+// table.
+type RecordTransformations struct {
+	// Transform the record by applying various field transformations.
+	FieldTransformations []*FieldTransformation `protobuf:"bytes,1,rep,name=field_transformations,json=fieldTransformations" json:"field_transformations,omitempty"`
+	// Configuration defining which records get suppressed entirely. Records that
+	// match any suppression rule are omitted from the output [optional].
+	RecordSuppressions []*RecordSuppression `protobuf:"bytes,2,rep,name=record_suppressions,json=recordSuppressions" json:"record_suppressions,omitempty"`
+}
+
+func (m *RecordTransformations) Reset()                    { *m = RecordTransformations{} }
+func (m *RecordTransformations) String() string            { return proto.CompactTextString(m) }
+func (*RecordTransformations) ProtoMessage()               {}
+func (*RecordTransformations) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{54} }
+
+func (m *RecordTransformations) GetFieldTransformations() []*FieldTransformation {
+	if m != nil {
+		return m.FieldTransformations
+	}
+	return nil
+}
+
+func (m *RecordTransformations) GetRecordSuppressions() []*RecordSuppression {
+	if m != nil {
+		return m.RecordSuppressions
+	}
+	return nil
+}
+
+// Configuration to suppress records whose suppression conditions evaluate to
+// true.
+type RecordSuppression struct {
+	Condition *RecordCondition `protobuf:"bytes,1,opt,name=condition" json:"condition,omitempty"`
+}
+
+func (m *RecordSuppression) Reset()                    { *m = RecordSuppression{} }
+func (m *RecordSuppression) String() string            { return proto.CompactTextString(m) }
+func (*RecordSuppression) ProtoMessage()               {}
+func (*RecordSuppression) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{55} }
+
+func (m *RecordSuppression) GetCondition() *RecordCondition {
+	if m != nil {
+		return m.Condition
+	}
+	return nil
+}
+
+// A condition for determining whether a transformation should be applied to
+// a field.
+type RecordCondition struct {
+	Expressions *RecordCondition_Expressions `protobuf:"bytes,3,opt,name=expressions" json:"expressions,omitempty"`
+}
+
+func (m *RecordCondition) Reset()                    { *m = RecordCondition{} }
+func (m *RecordCondition) String() string            { return proto.CompactTextString(m) }
+func (*RecordCondition) ProtoMessage()               {}
+func (*RecordCondition) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{56} }
+
+func (m *RecordCondition) GetExpressions() *RecordCondition_Expressions {
+	if m != nil {
+		return m.Expressions
+	}
+	return nil
+}
+
+// The field type of `value` and `field` do not need to match to be
+// considered equal, but not all comparisons are possible.
+//
+// A `value` of type:
+//
+// - `string` can be compared against all other types
+// - `boolean` can only be compared against other booleans
+// - `integer` can be compared against doubles or a string if the string value
+// can be parsed as an integer.
+// - `double` can be compared against integers or a string if the string can
+// be parsed as a double.
+// - `Timestamp` can be compared against strings in RFC 3339 date string
+// format.
+// - `TimeOfDay` can be compared against timestamps and strings in the format
+// of 'HH:mm:ss'.
+//
+// If we fail to compare do to type mismatch, a warning will be given and
+// the condition will evaluate to false.
+type RecordCondition_Condition struct {
+	// Field within the record this condition is evaluated against. [required]
+	Field *FieldId `protobuf:"bytes,1,opt,name=field" json:"field,omitempty"`
+	// Operator used to compare the field or info type to the value. [required]
+	Operator RelationalOperator `protobuf:"varint,3,opt,name=operator,enum=google.privacy.dlp.v2beta1.RelationalOperator" json:"operator,omitempty"`
+	// Value to compare against. [Required, except for `EXISTS` tests.]
+	Value *Value `protobuf:"bytes,4,opt,name=value" json:"value,omitempty"`
+}
+
+func (m *RecordCondition_Condition) Reset()                    { *m = RecordCondition_Condition{} }
+func (m *RecordCondition_Condition) String() string            { return proto.CompactTextString(m) }
+func (*RecordCondition_Condition) ProtoMessage()               {}
+func (*RecordCondition_Condition) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{56, 0} }
+
+func (m *RecordCondition_Condition) GetField() *FieldId {
+	if m != nil {
+		return m.Field
+	}
+	return nil
+}
+
+func (m *RecordCondition_Condition) GetOperator() RelationalOperator {
+	if m != nil {
+		return m.Operator
+	}
+	return RelationalOperator_RELATIONAL_OPERATOR_UNSPECIFIED
+}
+
+func (m *RecordCondition_Condition) GetValue() *Value {
+	if m != nil {
+		return m.Value
+	}
+	return nil
+}
+
+type RecordCondition_Conditions struct {
+	Conditions []*RecordCondition_Condition `protobuf:"bytes,1,rep,name=conditions" json:"conditions,omitempty"`
+}
+
+func (m *RecordCondition_Conditions) Reset()                    { *m = RecordCondition_Conditions{} }
+func (m *RecordCondition_Conditions) String() string            { return proto.CompactTextString(m) }
+func (*RecordCondition_Conditions) ProtoMessage()               {}
+func (*RecordCondition_Conditions) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{56, 1} }
+
+func (m *RecordCondition_Conditions) GetConditions() []*RecordCondition_Condition {
+	if m != nil {
+		return m.Conditions
+	}
+	return nil
+}
+
+// A collection of expressions
+type RecordCondition_Expressions struct {
+	// The operator to apply to the result of conditions. Default and currently
+	// only supported value is `AND`.
+	LogicalOperator RecordCondition_Expressions_LogicalOperator `protobuf:"varint,1,opt,name=logical_operator,json=logicalOperator,enum=google.privacy.dlp.v2beta1.RecordCondition_Expressions_LogicalOperator" json:"logical_operator,omitempty"`
+	// Types that are valid to be assigned to Type:
+	//	*RecordCondition_Expressions_Conditions
+	Type isRecordCondition_Expressions_Type `protobuf_oneof:"type"`
+}
+
+func (m *RecordCondition_Expressions) Reset()                    { *m = RecordCondition_Expressions{} }
+func (m *RecordCondition_Expressions) String() string            { return proto.CompactTextString(m) }
+func (*RecordCondition_Expressions) ProtoMessage()               {}
+func (*RecordCondition_Expressions) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{56, 2} }
+
+type isRecordCondition_Expressions_Type interface {
+	isRecordCondition_Expressions_Type()
+}
+
+type RecordCondition_Expressions_Conditions struct {
+	Conditions *RecordCondition_Conditions `protobuf:"bytes,3,opt,name=conditions,oneof"`
+}
+
+func (*RecordCondition_Expressions_Conditions) isRecordCondition_Expressions_Type() {}
+
+func (m *RecordCondition_Expressions) GetType() isRecordCondition_Expressions_Type {
+	if m != nil {
+		return m.Type
+	}
+	return nil
+}
+
+func (m *RecordCondition_Expressions) GetLogicalOperator() RecordCondition_Expressions_LogicalOperator {
+	if m != nil {
+		return m.LogicalOperator
+	}
+	return RecordCondition_Expressions_LOGICAL_OPERATOR_UNSPECIFIED
+}
+
+func (m *RecordCondition_Expressions) GetConditions() *RecordCondition_Conditions {
+	if x, ok := m.GetType().(*RecordCondition_Expressions_Conditions); ok {
+		return x.Conditions
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*RecordCondition_Expressions) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _RecordCondition_Expressions_OneofMarshaler, _RecordCondition_Expressions_OneofUnmarshaler, _RecordCondition_Expressions_OneofSizer, []interface{}{
+		(*RecordCondition_Expressions_Conditions)(nil),
+	}
+}
+
+func _RecordCondition_Expressions_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*RecordCondition_Expressions)
+	// type
+	switch x := m.Type.(type) {
+	case *RecordCondition_Expressions_Conditions:
+		b.EncodeVarint(3<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Conditions); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("RecordCondition_Expressions.Type has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _RecordCondition_Expressions_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*RecordCondition_Expressions)
+	switch tag {
+	case 3: // type.conditions
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(RecordCondition_Conditions)
+		err := b.DecodeMessage(msg)
+		m.Type = &RecordCondition_Expressions_Conditions{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _RecordCondition_Expressions_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*RecordCondition_Expressions)
+	// type
+	switch x := m.Type.(type) {
+	case *RecordCondition_Expressions_Conditions:
+		s := proto.Size(x.Conditions)
+		n += proto.SizeVarint(3<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// High level summary of deidentification.
+type DeidentificationSummary struct {
+	// Total size in bytes that were transformed in some way.
+	TransformedBytes int64 `protobuf:"varint,2,opt,name=transformed_bytes,json=transformedBytes" json:"transformed_bytes,omitempty"`
+	// Transformations applied to the dataset.
+	TransformationSummaries []*TransformationSummary `protobuf:"bytes,3,rep,name=transformation_summaries,json=transformationSummaries" json:"transformation_summaries,omitempty"`
+}
+
+func (m *DeidentificationSummary) Reset()                    { *m = DeidentificationSummary{} }
+func (m *DeidentificationSummary) String() string            { return proto.CompactTextString(m) }
+func (*DeidentificationSummary) ProtoMessage()               {}
+func (*DeidentificationSummary) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{57} }
+
+func (m *DeidentificationSummary) GetTransformedBytes() int64 {
+	if m != nil {
+		return m.TransformedBytes
+	}
+	return 0
+}
+
+func (m *DeidentificationSummary) GetTransformationSummaries() []*TransformationSummary {
+	if m != nil {
+		return m.TransformationSummaries
+	}
+	return nil
+}
+
+// Summary of a single tranformation.
+type TransformationSummary struct {
+	// Set if the transformation was limited to a specific info_type.
+	InfoType *InfoType `protobuf:"bytes,1,opt,name=info_type,json=infoType" json:"info_type,omitempty"`
+	// Set if the transformation was limited to a specific FieldId.
+	Field *FieldId `protobuf:"bytes,2,opt,name=field" json:"field,omitempty"`
+	// The specific transformation these stats apply to.
+	Transformation *PrimitiveTransformation `protobuf:"bytes,3,opt,name=transformation" json:"transformation,omitempty"`
+	// The field transformation that was applied. This list will contain
+	// multiple only in the case of errors.
+	FieldTransformations []*FieldTransformation `protobuf:"bytes,5,rep,name=field_transformations,json=fieldTransformations" json:"field_transformations,omitempty"`
+	// The specific suppression option these stats apply to.
+	RecordSuppress *RecordSuppression                     `protobuf:"bytes,6,opt,name=record_suppress,json=recordSuppress" json:"record_suppress,omitempty"`
+	Results        []*TransformationSummary_SummaryResult `protobuf:"bytes,4,rep,name=results" json:"results,omitempty"`
+}
+
+func (m *TransformationSummary) Reset()                    { *m = TransformationSummary{} }
+func (m *TransformationSummary) String() string            { return proto.CompactTextString(m) }
+func (*TransformationSummary) ProtoMessage()               {}
+func (*TransformationSummary) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{58} }
+
+func (m *TransformationSummary) GetInfoType() *InfoType {
+	if m != nil {
+		return m.InfoType
+	}
+	return nil
+}
+
+func (m *TransformationSummary) GetField() *FieldId {
+	if m != nil {
+		return m.Field
+	}
+	return nil
+}
+
+func (m *TransformationSummary) GetTransformation() *PrimitiveTransformation {
+	if m != nil {
+		return m.Transformation
+	}
+	return nil
+}
+
+func (m *TransformationSummary) GetFieldTransformations() []*FieldTransformation {
+	if m != nil {
+		return m.FieldTransformations
+	}
+	return nil
+}
+
+func (m *TransformationSummary) GetRecordSuppress() *RecordSuppression {
+	if m != nil {
+		return m.RecordSuppress
+	}
+	return nil
+}
+
+func (m *TransformationSummary) GetResults() []*TransformationSummary_SummaryResult {
+	if m != nil {
+		return m.Results
+	}
+	return nil
+}
+
+// A collection that informs the user the number of times a particular
+// `TransformationResultCode` and error details occurred.
+type TransformationSummary_SummaryResult struct {
+	Count int64                                          `protobuf:"varint,1,opt,name=count" json:"count,omitempty"`
+	Code  TransformationSummary_TransformationResultCode `protobuf:"varint,2,opt,name=code,enum=google.privacy.dlp.v2beta1.TransformationSummary_TransformationResultCode" json:"code,omitempty"`
+	// A place for warnings or errors to show up if a transformation didn't
+	// work as expected.
+	Details string `protobuf:"bytes,3,opt,name=details" json:"details,omitempty"`
+}
+
+func (m *TransformationSummary_SummaryResult) Reset()         { *m = TransformationSummary_SummaryResult{} }
+func (m *TransformationSummary_SummaryResult) String() string { return proto.CompactTextString(m) }
+func (*TransformationSummary_SummaryResult) ProtoMessage()    {}
+func (*TransformationSummary_SummaryResult) Descriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{58, 0}
+}
+
+func (m *TransformationSummary_SummaryResult) GetCount() int64 {
+	if m != nil {
+		return m.Count
+	}
+	return 0
+}
+
+func (m *TransformationSummary_SummaryResult) GetCode() TransformationSummary_TransformationResultCode {
+	if m != nil {
+		return m.Code
+	}
+	return TransformationSummary_TRANSFORMATION_RESULT_CODE_UNSPECIFIED
+}
+
+func (m *TransformationSummary_SummaryResult) GetDetails() string {
+	if m != nil {
+		return m.Details
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*InspectConfig)(nil), "google.privacy.dlp.v2beta1.InspectConfig")
+	proto.RegisterType((*InspectConfig_InfoTypeLimit)(nil), "google.privacy.dlp.v2beta1.InspectConfig.InfoTypeLimit")
+	proto.RegisterType((*OperationConfig)(nil), "google.privacy.dlp.v2beta1.OperationConfig")
 	proto.RegisterType((*ContentItem)(nil), "google.privacy.dlp.v2beta1.ContentItem")
+	proto.RegisterType((*Table)(nil), "google.privacy.dlp.v2beta1.Table")
+	proto.RegisterType((*Table_Row)(nil), "google.privacy.dlp.v2beta1.Table.Row")
 	proto.RegisterType((*InspectResult)(nil), "google.privacy.dlp.v2beta1.InspectResult")
 	proto.RegisterType((*Finding)(nil), "google.privacy.dlp.v2beta1.Finding")
 	proto.RegisterType((*Location)(nil), "google.privacy.dlp.v2beta1.Location")
+	proto.RegisterType((*TableLocation)(nil), "google.privacy.dlp.v2beta1.TableLocation")
 	proto.RegisterType((*Range)(nil), "google.privacy.dlp.v2beta1.Range")
 	proto.RegisterType((*ImageLocation)(nil), "google.privacy.dlp.v2beta1.ImageLocation")
 	proto.RegisterType((*RedactContentRequest)(nil), "google.privacy.dlp.v2beta1.RedactContentRequest")
 	proto.RegisterType((*RedactContentRequest_ReplaceConfig)(nil), "google.privacy.dlp.v2beta1.RedactContentRequest.ReplaceConfig")
+	proto.RegisterType((*RedactContentRequest_ImageRedactionConfig)(nil), "google.privacy.dlp.v2beta1.RedactContentRequest.ImageRedactionConfig")
+	proto.RegisterType((*Color)(nil), "google.privacy.dlp.v2beta1.Color")
 	proto.RegisterType((*RedactContentResponse)(nil), "google.privacy.dlp.v2beta1.RedactContentResponse")
+	proto.RegisterType((*DeidentifyContentRequest)(nil), "google.privacy.dlp.v2beta1.DeidentifyContentRequest")
+	proto.RegisterType((*DeidentifyContentResponse)(nil), "google.privacy.dlp.v2beta1.DeidentifyContentResponse")
 	proto.RegisterType((*InspectContentRequest)(nil), "google.privacy.dlp.v2beta1.InspectContentRequest")
 	proto.RegisterType((*InspectContentResponse)(nil), "google.privacy.dlp.v2beta1.InspectContentResponse")
 	proto.RegisterType((*CreateInspectOperationRequest)(nil), "google.privacy.dlp.v2beta1.CreateInspectOperationRequest")
@@ -1147,7 +4892,61 @@ func init() {
 	proto.RegisterType((*CategoryDescription)(nil), "google.privacy.dlp.v2beta1.CategoryDescription")
 	proto.RegisterType((*ListRootCategoriesRequest)(nil), "google.privacy.dlp.v2beta1.ListRootCategoriesRequest")
 	proto.RegisterType((*ListRootCategoriesResponse)(nil), "google.privacy.dlp.v2beta1.ListRootCategoriesResponse")
+	proto.RegisterType((*AnalyzeDataSourceRiskRequest)(nil), "google.privacy.dlp.v2beta1.AnalyzeDataSourceRiskRequest")
+	proto.RegisterType((*PrivacyMetric)(nil), "google.privacy.dlp.v2beta1.PrivacyMetric")
+	proto.RegisterType((*PrivacyMetric_NumericalStatsConfig)(nil), "google.privacy.dlp.v2beta1.PrivacyMetric.NumericalStatsConfig")
+	proto.RegisterType((*PrivacyMetric_CategoricalStatsConfig)(nil), "google.privacy.dlp.v2beta1.PrivacyMetric.CategoricalStatsConfig")
+	proto.RegisterType((*PrivacyMetric_KAnonymityConfig)(nil), "google.privacy.dlp.v2beta1.PrivacyMetric.KAnonymityConfig")
+	proto.RegisterType((*PrivacyMetric_LDiversityConfig)(nil), "google.privacy.dlp.v2beta1.PrivacyMetric.LDiversityConfig")
+	proto.RegisterType((*RiskAnalysisOperationMetadata)(nil), "google.privacy.dlp.v2beta1.RiskAnalysisOperationMetadata")
+	proto.RegisterType((*RiskAnalysisOperationResult)(nil), "google.privacy.dlp.v2beta1.RiskAnalysisOperationResult")
+	proto.RegisterType((*RiskAnalysisOperationResult_NumericalStatsResult)(nil), "google.privacy.dlp.v2beta1.RiskAnalysisOperationResult.NumericalStatsResult")
+	proto.RegisterType((*RiskAnalysisOperationResult_CategoricalStatsResult)(nil), "google.privacy.dlp.v2beta1.RiskAnalysisOperationResult.CategoricalStatsResult")
+	proto.RegisterType((*RiskAnalysisOperationResult_CategoricalStatsResult_CategoricalStatsHistogramBucket)(nil), "google.privacy.dlp.v2beta1.RiskAnalysisOperationResult.CategoricalStatsResult.CategoricalStatsHistogramBucket")
+	proto.RegisterType((*RiskAnalysisOperationResult_KAnonymityResult)(nil), "google.privacy.dlp.v2beta1.RiskAnalysisOperationResult.KAnonymityResult")
+	proto.RegisterType((*RiskAnalysisOperationResult_KAnonymityResult_KAnonymityEquivalenceClass)(nil), "google.privacy.dlp.v2beta1.RiskAnalysisOperationResult.KAnonymityResult.KAnonymityEquivalenceClass")
+	proto.RegisterType((*RiskAnalysisOperationResult_KAnonymityResult_KAnonymityHistogramBucket)(nil), "google.privacy.dlp.v2beta1.RiskAnalysisOperationResult.KAnonymityResult.KAnonymityHistogramBucket")
+	proto.RegisterType((*RiskAnalysisOperationResult_LDiversityResult)(nil), "google.privacy.dlp.v2beta1.RiskAnalysisOperationResult.LDiversityResult")
+	proto.RegisterType((*RiskAnalysisOperationResult_LDiversityResult_LDiversityEquivalenceClass)(nil), "google.privacy.dlp.v2beta1.RiskAnalysisOperationResult.LDiversityResult.LDiversityEquivalenceClass")
+	proto.RegisterType((*RiskAnalysisOperationResult_LDiversityResult_LDiversityHistogramBucket)(nil), "google.privacy.dlp.v2beta1.RiskAnalysisOperationResult.LDiversityResult.LDiversityHistogramBucket")
+	proto.RegisterType((*ValueFrequency)(nil), "google.privacy.dlp.v2beta1.ValueFrequency")
+	proto.RegisterType((*Value)(nil), "google.privacy.dlp.v2beta1.Value")
+	proto.RegisterType((*DeidentifyConfig)(nil), "google.privacy.dlp.v2beta1.DeidentifyConfig")
+	proto.RegisterType((*PrimitiveTransformation)(nil), "google.privacy.dlp.v2beta1.PrimitiveTransformation")
+	proto.RegisterType((*TimePartConfig)(nil), "google.privacy.dlp.v2beta1.TimePartConfig")
+	proto.RegisterType((*CryptoHashConfig)(nil), "google.privacy.dlp.v2beta1.CryptoHashConfig")
+	proto.RegisterType((*ReplaceValueConfig)(nil), "google.privacy.dlp.v2beta1.ReplaceValueConfig")
+	proto.RegisterType((*ReplaceWithInfoTypeConfig)(nil), "google.privacy.dlp.v2beta1.ReplaceWithInfoTypeConfig")
+	proto.RegisterType((*RedactConfig)(nil), "google.privacy.dlp.v2beta1.RedactConfig")
+	proto.RegisterType((*CharsToIgnore)(nil), "google.privacy.dlp.v2beta1.CharsToIgnore")
+	proto.RegisterType((*CharacterMaskConfig)(nil), "google.privacy.dlp.v2beta1.CharacterMaskConfig")
+	proto.RegisterType((*FixedSizeBucketingConfig)(nil), "google.privacy.dlp.v2beta1.FixedSizeBucketingConfig")
+	proto.RegisterType((*BucketingConfig)(nil), "google.privacy.dlp.v2beta1.BucketingConfig")
+	proto.RegisterType((*BucketingConfig_Bucket)(nil), "google.privacy.dlp.v2beta1.BucketingConfig.Bucket")
+	proto.RegisterType((*CryptoReplaceFfxFpeConfig)(nil), "google.privacy.dlp.v2beta1.CryptoReplaceFfxFpeConfig")
+	proto.RegisterType((*CryptoKey)(nil), "google.privacy.dlp.v2beta1.CryptoKey")
+	proto.RegisterType((*TransientCryptoKey)(nil), "google.privacy.dlp.v2beta1.TransientCryptoKey")
+	proto.RegisterType((*UnwrappedCryptoKey)(nil), "google.privacy.dlp.v2beta1.UnwrappedCryptoKey")
+	proto.RegisterType((*KmsWrappedCryptoKey)(nil), "google.privacy.dlp.v2beta1.KmsWrappedCryptoKey")
+	proto.RegisterType((*InfoTypeTransformations)(nil), "google.privacy.dlp.v2beta1.InfoTypeTransformations")
+	proto.RegisterType((*InfoTypeTransformations_InfoTypeTransformation)(nil), "google.privacy.dlp.v2beta1.InfoTypeTransformations.InfoTypeTransformation")
+	proto.RegisterType((*FieldTransformation)(nil), "google.privacy.dlp.v2beta1.FieldTransformation")
+	proto.RegisterType((*RecordTransformations)(nil), "google.privacy.dlp.v2beta1.RecordTransformations")
+	proto.RegisterType((*RecordSuppression)(nil), "google.privacy.dlp.v2beta1.RecordSuppression")
+	proto.RegisterType((*RecordCondition)(nil), "google.privacy.dlp.v2beta1.RecordCondition")
+	proto.RegisterType((*RecordCondition_Condition)(nil), "google.privacy.dlp.v2beta1.RecordCondition.Condition")
+	proto.RegisterType((*RecordCondition_Conditions)(nil), "google.privacy.dlp.v2beta1.RecordCondition.Conditions")
+	proto.RegisterType((*RecordCondition_Expressions)(nil), "google.privacy.dlp.v2beta1.RecordCondition.Expressions")
+	proto.RegisterType((*DeidentificationSummary)(nil), "google.privacy.dlp.v2beta1.DeidentificationSummary")
+	proto.RegisterType((*TransformationSummary)(nil), "google.privacy.dlp.v2beta1.TransformationSummary")
+	proto.RegisterType((*TransformationSummary_SummaryResult)(nil), "google.privacy.dlp.v2beta1.TransformationSummary.SummaryResult")
 	proto.RegisterEnum("google.privacy.dlp.v2beta1.Likelihood", Likelihood_name, Likelihood_value)
+	proto.RegisterEnum("google.privacy.dlp.v2beta1.RelationalOperator", RelationalOperator_name, RelationalOperator_value)
+	proto.RegisterEnum("google.privacy.dlp.v2beta1.TimePartConfig_TimePart", TimePartConfig_TimePart_name, TimePartConfig_TimePart_value)
+	proto.RegisterEnum("google.privacy.dlp.v2beta1.CharsToIgnore_CharacterGroup", CharsToIgnore_CharacterGroup_name, CharsToIgnore_CharacterGroup_value)
+	proto.RegisterEnum("google.privacy.dlp.v2beta1.CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet", CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet_name, CryptoReplaceFfxFpeConfig_FfxCommonNativeAlphabet_value)
+	proto.RegisterEnum("google.privacy.dlp.v2beta1.RecordCondition_Expressions_LogicalOperator", RecordCondition_Expressions_LogicalOperator_name, RecordCondition_Expressions_LogicalOperator_value)
+	proto.RegisterEnum("google.privacy.dlp.v2beta1.TransformationSummary_TransformationResultCode", TransformationSummary_TransformationResultCode_name, TransformationSummary_TransformationResultCode_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1161,14 +4960,21 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for DlpService service
 
 type DlpServiceClient interface {
-	// Find potentially sensitive info in a list of strings.
+	// Finds potentially sensitive info in a list of strings.
 	// This method has limits on input size, processing time, and output size.
 	InspectContent(ctx context.Context, in *InspectContentRequest, opts ...grpc.CallOption) (*InspectContentResponse, error)
-	// Redact potentially sensitive info from a list of strings.
+	// Redacts potentially sensitive info from a list of strings.
 	// This method has limits on input size, processing time, and output size.
 	RedactContent(ctx context.Context, in *RedactContentRequest, opts ...grpc.CallOption) (*RedactContentResponse, error)
-	// Schedule a job scanning content in a Google Cloud Platform data repository.
+	// De-identifies potentially sensitive info from a list of strings.
+	// This method has limits on input size and output size.
+	DeidentifyContent(ctx context.Context, in *DeidentifyContentRequest, opts ...grpc.CallOption) (*DeidentifyContentResponse, error)
+	// Schedules a job scanning content in a Google Cloud Platform data
+	// repository.
 	CreateInspectOperation(ctx context.Context, in *CreateInspectOperationRequest, opts ...grpc.CallOption) (*google_longrunning.Operation, error)
+	// Schedules a job to compute risk analysis metrics over content in a Google
+	// Cloud Platform repository.
+	AnalyzeDataSourceRisk(ctx context.Context, in *AnalyzeDataSourceRiskRequest, opts ...grpc.CallOption) (*google_longrunning.Operation, error)
 	// Returns list of results for given inspect operation result set id.
 	ListInspectFindings(ctx context.Context, in *ListInspectFindingsRequest, opts ...grpc.CallOption) (*ListInspectFindingsResponse, error)
 	// Returns sensitive information types for given category.
@@ -1203,9 +5009,27 @@ func (c *dlpServiceClient) RedactContent(ctx context.Context, in *RedactContentR
 	return out, nil
 }
 
+func (c *dlpServiceClient) DeidentifyContent(ctx context.Context, in *DeidentifyContentRequest, opts ...grpc.CallOption) (*DeidentifyContentResponse, error) {
+	out := new(DeidentifyContentResponse)
+	err := grpc.Invoke(ctx, "/google.privacy.dlp.v2beta1.DlpService/DeidentifyContent", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *dlpServiceClient) CreateInspectOperation(ctx context.Context, in *CreateInspectOperationRequest, opts ...grpc.CallOption) (*google_longrunning.Operation, error) {
 	out := new(google_longrunning.Operation)
 	err := grpc.Invoke(ctx, "/google.privacy.dlp.v2beta1.DlpService/CreateInspectOperation", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *dlpServiceClient) AnalyzeDataSourceRisk(ctx context.Context, in *AnalyzeDataSourceRiskRequest, opts ...grpc.CallOption) (*google_longrunning.Operation, error) {
+	out := new(google_longrunning.Operation)
+	err := grpc.Invoke(ctx, "/google.privacy.dlp.v2beta1.DlpService/AnalyzeDataSourceRisk", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1242,14 +5066,21 @@ func (c *dlpServiceClient) ListRootCategories(ctx context.Context, in *ListRootC
 // Server API for DlpService service
 
 type DlpServiceServer interface {
-	// Find potentially sensitive info in a list of strings.
+	// Finds potentially sensitive info in a list of strings.
 	// This method has limits on input size, processing time, and output size.
 	InspectContent(context.Context, *InspectContentRequest) (*InspectContentResponse, error)
-	// Redact potentially sensitive info from a list of strings.
+	// Redacts potentially sensitive info from a list of strings.
 	// This method has limits on input size, processing time, and output size.
 	RedactContent(context.Context, *RedactContentRequest) (*RedactContentResponse, error)
-	// Schedule a job scanning content in a Google Cloud Platform data repository.
+	// De-identifies potentially sensitive info from a list of strings.
+	// This method has limits on input size and output size.
+	DeidentifyContent(context.Context, *DeidentifyContentRequest) (*DeidentifyContentResponse, error)
+	// Schedules a job scanning content in a Google Cloud Platform data
+	// repository.
 	CreateInspectOperation(context.Context, *CreateInspectOperationRequest) (*google_longrunning.Operation, error)
+	// Schedules a job to compute risk analysis metrics over content in a Google
+	// Cloud Platform repository.
+	AnalyzeDataSourceRisk(context.Context, *AnalyzeDataSourceRiskRequest) (*google_longrunning.Operation, error)
 	// Returns list of results for given inspect operation result set id.
 	ListInspectFindings(context.Context, *ListInspectFindingsRequest) (*ListInspectFindingsResponse, error)
 	// Returns sensitive information types for given category.
@@ -1298,6 +5129,24 @@ func _DlpService_RedactContent_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DlpService_DeidentifyContent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeidentifyContentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DlpServiceServer).DeidentifyContent(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/google.privacy.dlp.v2beta1.DlpService/DeidentifyContent",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DlpServiceServer).DeidentifyContent(ctx, req.(*DeidentifyContentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _DlpService_CreateInspectOperation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateInspectOperationRequest)
 	if err := dec(in); err != nil {
@@ -1312,6 +5161,24 @@ func _DlpService_CreateInspectOperation_Handler(srv interface{}, ctx context.Con
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(DlpServiceServer).CreateInspectOperation(ctx, req.(*CreateInspectOperationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _DlpService_AnalyzeDataSourceRisk_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AnalyzeDataSourceRiskRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(DlpServiceServer).AnalyzeDataSourceRisk(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/google.privacy.dlp.v2beta1.DlpService/AnalyzeDataSourceRisk",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(DlpServiceServer).AnalyzeDataSourceRisk(ctx, req.(*AnalyzeDataSourceRiskRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1383,8 +5250,16 @@ var _DlpService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _DlpService_RedactContent_Handler,
 		},
 		{
+			MethodName: "DeidentifyContent",
+			Handler:    _DlpService_DeidentifyContent_Handler,
+		},
+		{
 			MethodName: "CreateInspectOperation",
 			Handler:    _DlpService_CreateInspectOperation_Handler,
+		},
+		{
+			MethodName: "AnalyzeDataSourceRisk",
+			Handler:    _DlpService_AnalyzeDataSourceRisk_Handler,
 		},
 		{
 			MethodName: "ListInspectFindings",
@@ -1406,115 +5281,330 @@ var _DlpService_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("google/privacy/dlp/v2beta1/dlp.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 1759 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xdd, 0x6f, 0xdb, 0xd6,
-	0x15, 0x0f, 0x25, 0xcb, 0x96, 0x8e, 0x3e, 0x9c, 0x5e, 0x7f, 0x54, 0x55, 0x9a, 0xd5, 0x61, 0xba,
-	0xd4, 0x33, 0x32, 0xa9, 0xd1, 0xb0, 0x0c, 0x6b, 0x91, 0x2e, 0xb5, 0xec, 0x20, 0x5a, 0xdd, 0x58,
-	0xbd, 0x76, 0x53, 0x74, 0xd8, 0x40, 0xd0, 0xe4, 0x35, 0x7d, 0x11, 0x8a, 0x97, 0x25, 0xaf, 0x52,
-	0xab, 0x45, 0x30, 0x60, 0x2f, 0xdb, 0xe3, 0x80, 0xbd, 0x6c, 0xc3, 0xf6, 0xb6, 0x87, 0x0d, 0xd8,
-	0xdb, 0xde, 0xf6, 0x6f, 0xec, 0x5f, 0xd8, 0xd3, 0xfe, 0x80, 0x3d, 0x0f, 0xf7, 0x83, 0x14, 0xa5,
-	0x28, 0xb4, 0xe5, 0x6d, 0x40, 0xdf, 0xee, 0xc7, 0x39, 0x87, 0xbf, 0xf3, 0xf5, 0xe3, 0x21, 0xe1,
-	0x6d, 0x8f, 0x31, 0xcf, 0x27, 0x9d, 0x30, 0xa2, 0xcf, 0x6d, 0x67, 0xdc, 0x71, 0xfd, 0xb0, 0xf3,
-	0xbc, 0x7b, 0x42, 0xb8, 0x7d, 0x4f, 0xac, 0xdb, 0x61, 0xc4, 0x38, 0x43, 0x2d, 0x25, 0xd5, 0xd6,
-	0x52, 0x6d, 0x71, 0xa3, 0xa5, 0x5a, 0x6f, 0x6a, 0x0b, 0x76, 0x48, 0x3b, 0x76, 0x10, 0x30, 0x6e,
-	0x73, 0xca, 0x82, 0x58, 0x69, 0xb6, 0x6e, 0xeb, 0x5b, 0x9f, 0x05, 0x5e, 0x34, 0x0a, 0x02, 0x1a,
-	0x78, 0x1d, 0x16, 0x92, 0x68, 0x4a, 0x68, 0x3b, 0x07, 0x44, 0xcc, 0x59, 0x64, 0x7b, 0x44, 0x4b,
-	0xbe, 0x95, 0x4a, 0x32, 0xce, 0x4e, 0x46, 0xa7, 0x1d, 0x4e, 0x87, 0x24, 0xe6, 0xf6, 0x50, 0x23,
-	0x35, 0x7f, 0x5d, 0x80, 0x7a, 0x3f, 0x88, 0x43, 0xe2, 0xf0, 0x1e, 0x0b, 0x4e, 0xa9, 0x87, 0x7a,
-	0x00, 0x34, 0x38, 0x65, 0x16, 0x1f, 0x87, 0x24, 0x6e, 0x1a, 0x5b, 0xc5, 0xed, 0x6a, 0xf7, 0xed,
-	0xf6, 0xab, 0x1d, 0x6a, 0xf7, 0x83, 0x53, 0x76, 0x3c, 0x0e, 0x09, 0xae, 0x50, 0xbd, 0x8a, 0xd1,
-	0xc7, 0xd0, 0x18, 0xd2, 0xc0, 0xf2, 0xe9, 0x33, 0xe2, 0xd3, 0x33, 0xc6, 0xdc, 0x66, 0x61, 0xcb,
-	0xd8, 0x6e, 0x74, 0xef, 0xe4, 0x19, 0x3a, 0x48, 0xa5, 0x71, 0x7d, 0x48, 0x83, 0xc9, 0x16, 0xdd,
-	0x82, 0xda, 0xd0, 0x3e, 0xb7, 0x4e, 0x69, 0xe0, 0xd2, 0xc0, 0x8b, 0x9b, 0xc5, 0x2d, 0x63, 0xbb,
-	0x84, 0xab, 0x43, 0xfb, 0xfc, 0x91, 0x3e, 0x42, 0xb7, 0xa1, 0x4e, 0x03, 0xc7, 0x1f, 0xb9, 0xc4,
-	0xfa, 0x62, 0xc4, 0x38, 0x69, 0x2e, 0x6d, 0x19, 0xdb, 0x65, 0x5c, 0xd3, 0x87, 0x9f, 0x88, 0x33,
-	0x21, 0x44, 0xce, 0x95, 0x90, 0x72, 0x6f, 0x59, 0x09, 0xe9, 0x43, 0x89, 0xdd, 0xfc, 0x29, 0x54,
-	0x7b, 0x2c, 0xe0, 0x24, 0xe0, 0x7d, 0x4e, 0x86, 0x08, 0xc1, 0x92, 0x90, 0x6d, 0x1a, 0x5b, 0xc6,
-	0x76, 0x05, 0xcb, 0x35, 0x5a, 0x87, 0x25, 0xd7, 0xe6, 0xb6, 0x74, 0xaa, 0xf6, 0xf8, 0x1a, 0x96,
-	0x3b, 0xb4, 0x09, 0xa5, 0xe7, 0xb6, 0x3f, 0x22, 0x12, 0x5e, 0xe5, 0xf1, 0x35, 0xac, 0xb6, 0xbb,
-	0x55, 0xa8, 0x88, 0x7b, 0x8b, 0x72, 0x32, 0x34, 0x7f, 0x9e, 0xc6, 0x1b, 0x93, 0x78, 0xe4, 0x73,
-	0xf4, 0x23, 0x28, 0xa7, 0x7e, 0xa9, 0x68, 0xdf, 0xce, 0x0b, 0x92, 0x76, 0x18, 0xa7, 0x4a, 0xe8,
-	0xbb, 0x80, 0x92, 0xb5, 0xc5, 0xa3, 0x51, 0xe0, 0xd8, 0x9c, 0xa8, 0x78, 0x97, 0xf1, 0x6b, 0xc9,
-	0xcd, 0x71, 0x72, 0x61, 0xfe, 0xa5, 0x00, 0x2b, 0xda, 0x08, 0x5a, 0x87, 0x92, 0x0a, 0x96, 0x72,
-	0x4e, 0x6d, 0xd0, 0x87, 0x50, 0x49, 0x2b, 0x40, 0xda, 0xb9, 0x6c, 0x01, 0x94, 0x93, 0x02, 0x40,
-	0x8f, 0x00, 0x32, 0xb9, 0x2f, 0x2e, 0x94, 0xfb, 0x8c, 0x26, 0x7a, 0x08, 0x65, 0x9f, 0x39, 0xb2,
-	0xf8, 0x65, 0x42, 0x2f, 0x40, 0x72, 0xa0, 0x65, 0x71, 0xaa, 0x85, 0xde, 0x87, 0xaa, 0x13, 0x11,
-	0x9b, 0x13, 0x4b, 0x94, 0xbe, 0x4c, 0x78, 0xb5, 0xdb, 0x9a, 0x18, 0x51, 0x7d, 0xd1, 0x3e, 0x4e,
-	0xfa, 0x02, 0x83, 0x12, 0x17, 0x07, 0xe6, 0xbf, 0x0a, 0x50, 0x4e, 0x6c, 0xa2, 0x87, 0x00, 0x27,
-	0x63, 0x4e, 0xac, 0xc8, 0x0e, 0x3c, 0x15, 0xb1, 0x6a, 0xf7, 0x56, 0x1e, 0x1a, 0x2c, 0x04, 0x71,
-	0x45, 0x28, 0xc9, 0x25, 0xfa, 0x31, 0xac, 0x3a, 0xcc, 0x25, 0x21, 0xa3, 0x01, 0xd7, 0x66, 0x0a,
-	0x97, 0x35, 0xd3, 0x48, 0x35, 0x13, 0x5b, 0x55, 0x3a, 0xb4, 0x3d, 0x62, 0x9d, 0xb0, 0x73, 0x22,
-	0x3a, 0x42, 0x54, 0xce, 0x77, 0x72, 0xd3, 0x24, 0xc4, 0xd3, 0x08, 0x81, 0xd4, 0xde, 0x15, 0xca,
-	0x68, 0x0f, 0x20, 0x22, 0x0e, 0x8b, 0x5c, 0xeb, 0x19, 0x19, 0xeb, 0x38, 0x7f, 0x3b, 0x17, 0x92,
-	0x94, 0xfe, 0x88, 0x8c, 0x71, 0x25, 0x4a, 0x96, 0xe8, 0x03, 0x51, 0xc8, 0xc4, 0x77, 0x2d, 0xea,
-	0x36, 0x4b, 0xd2, 0xc6, 0x05, 0x85, 0x4c, 0x7c, 0xb7, 0xef, 0xe2, 0x95, 0x53, 0xb5, 0x30, 0x3b,
-	0x50, 0x52, 0xae, 0xad, 0x43, 0x29, 0xe6, 0x76, 0xc4, 0x65, 0x8c, 0x8b, 0x58, 0x6d, 0xd0, 0x75,
-	0x28, 0x92, 0x40, 0xd5, 0x75, 0x11, 0x8b, 0xa5, 0xe9, 0x40, 0x7d, 0xca, 0x27, 0x21, 0xc2, 0x59,
-	0x28, 0xd5, 0x4a, 0x58, 0x2c, 0x45, 0xf3, 0xfa, 0xe4, 0x94, 0x4b, 0xad, 0x12, 0x96, 0x6b, 0x61,
-	0xfe, 0x4b, 0xea, 0xf2, 0x33, 0xcd, 0x22, 0x6a, 0x83, 0x36, 0x61, 0xf9, 0x8c, 0x50, 0xef, 0x8c,
-	0x4b, 0xff, 0x4b, 0x58, 0xef, 0xcc, 0x5f, 0x16, 0x61, 0x1d, 0x13, 0xd7, 0x96, 0xfc, 0x28, 0x48,
-	0x01, 0x93, 0x2f, 0x46, 0x24, 0xe6, 0x68, 0x00, 0x0d, 0xaa, 0x1a, 0xd9, 0x72, 0x24, 0x73, 0xea,
-	0x92, 0xc8, 0xcf, 0x41, 0x96, 0x6a, 0x71, 0x9d, 0x4e, 0x31, 0xef, 0x03, 0x28, 0x09, 0x8a, 0x88,
-	0x9b, 0x05, 0x99, 0xcc, 0x77, 0xf2, 0x0c, 0x65, 0x18, 0x0a, 0x2b, 0x2d, 0xe4, 0xc1, 0x6a, 0x44,
-	0x42, 0xdf, 0x76, 0x88, 0x06, 0x94, 0x54, 0xc5, 0x07, 0xf9, 0xa9, 0x7c, 0xd9, 0xb7, 0x36, 0x56,
-	0x76, 0x34, 0xcc, 0x46, 0x94, 0xdd, 0xc6, 0xad, 0x11, 0xd4, 0xa7, 0x04, 0xa6, 0x09, 0xc3, 0xb8,
-	0x12, 0x61, 0xdc, 0x82, 0x5a, 0x02, 0xfe, 0x4b, 0xca, 0xcf, 0x64, 0xc2, 0x2a, 0xb8, 0xaa, 0xcf,
-	0x3e, 0xa3, 0xfc, 0xcc, 0x7c, 0x0a, 0x1b, 0x33, 0x60, 0xe3, 0x90, 0x05, 0x31, 0x99, 0xc4, 0xcd,
-	0xb8, 0x4a, 0xdc, 0xcc, 0x3f, 0x1b, 0xb0, 0x31, 0xc9, 0xcb, 0x37, 0x39, 0xc5, 0xe6, 0xcf, 0x60,
-	0x73, 0x16, 0xa9, 0x8e, 0x41, 0x0f, 0x56, 0x22, 0xf9, 0x3e, 0x49, 0xa2, 0x70, 0x19, 0x8c, 0xea,
-	0x0d, 0x84, 0x13, 0x4d, 0xf3, 0x77, 0x05, 0xb8, 0xd9, 0x93, 0xec, 0xa7, 0x05, 0x0e, 0x93, 0xc9,
-	0xe3, 0xff, 0x17, 0x91, 0x01, 0x34, 0xf4, 0xc8, 0x92, 0x58, 0x2c, 0x5c, 0x6c, 0xf1, 0x48, 0x69,
-	0x24, 0x16, 0xe3, 0xec, 0x16, 0x1d, 0x43, 0x9d, 0x8d, 0x78, 0x38, 0x4a, 0x21, 0x16, 0xa5, 0xc1,
-	0x4e, 0x9e, 0xc1, 0x43, 0xa9, 0x30, 0x6d, 0xb6, 0xa6, 0xac, 0xa8, 0x9d, 0x19, 0xc2, 0xda, 0x1c,
-	0x21, 0xf4, 0x09, 0xd4, 0x12, 0xf8, 0xa1, 0xad, 0xeb, 0xb6, 0xda, 0xbd, 0x9b, 0x9b, 0x57, 0x9f,
-	0x8d, 0x5c, 0x6d, 0x65, 0x60, 0xf3, 0xb3, 0xc7, 0xd7, 0x70, 0x35, 0x9e, 0x6c, 0x77, 0x97, 0xd5,
-	0xc0, 0x61, 0x0e, 0x01, 0x25, 0x8d, 0x72, 0x24, 0x86, 0xc4, 0x98, 0x53, 0x27, 0xfe, 0x5f, 0xf4,
-	0xda, 0x3a, 0x94, 0x1c, 0x36, 0x0a, 0xb8, 0xe6, 0x52, 0xb5, 0x31, 0xff, 0xb6, 0x04, 0xcd, 0xd9,
-	0xb4, 0x7f, 0x4c, 0xb8, 0x2d, 0x47, 0x9b, 0x77, 0x60, 0x35, 0x8c, 0x98, 0x43, 0xe2, 0x98, 0xb8,
-	0x96, 0x78, 0xa1, 0xc5, 0x9a, 0x9c, 0x1b, 0xe9, 0xf1, 0xae, 0x38, 0x45, 0x5d, 0xd8, 0xe0, 0x8c,
-	0xdb, 0xbe, 0x45, 0x62, 0x4e, 0x87, 0x62, 0xe0, 0xd0, 0xe2, 0x4b, 0x52, 0x7c, 0x4d, 0x5e, 0xee,
-	0x27, 0x77, 0x4a, 0xe7, 0x29, 0xac, 0xa6, 0x2e, 0x59, 0x31, 0xb7, 0x79, 0xd2, 0x1e, 0xed, 0xcb,
-	0x38, 0x36, 0x89, 0x8d, 0x28, 0xad, 0xc9, 0x59, 0x3c, 0xfb, 0xea, 0x2f, 0x2e, 0xf2, 0xea, 0x47,
-	0x16, 0x6c, 0x46, 0xaa, 0xe8, 0xad, 0x99, 0x8a, 0x2f, 0x2d, 0x5a, 0xf1, 0xeb, 0xda, 0xd0, 0xf4,
-	0x9c, 0x9d, 0x79, 0xc0, 0x4c, 0x03, 0x2c, 0x2f, 0xda, 0x00, 0xc9, 0x03, 0xa6, 0x4b, 0xd3, 0x81,
-	0x8d, 0xe4, 0x01, 0xd3, 0xfd, 0xb0, 0x72, 0xb5, 0x7e, 0x58, 0xd3, 0xd6, 0x0e, 0xb3, 0x6d, 0x71,
-	0x37, 0x65, 0xa4, 0x0c, 0x57, 0xc8, 0xb9, 0x16, 0xc1, 0x52, 0x60, 0x0f, 0xd3, 0xb9, 0x59, 0xac,
-	0x4d, 0x1f, 0x5a, 0x07, 0x34, 0x0d, 0x44, 0x32, 0xbb, 0x27, 0xe4, 0x32, 0x47, 0x03, 0xdd, 0x80,
-	0x4a, 0x28, 0x42, 0x13, 0xd3, 0xaf, 0x88, 0x7e, 0x8b, 0x97, 0xc5, 0xc1, 0x11, 0xfd, 0x8a, 0xa0,
-	0x9b, 0x00, 0xf2, 0x92, 0xb3, 0x67, 0x24, 0x50, 0x53, 0x37, 0x96, 0xe2, 0xc7, 0xe2, 0xc0, 0xfc,
-	0x95, 0x01, 0x37, 0xe6, 0x3e, 0x4e, 0x73, 0xe6, 0x87, 0xb0, 0xac, 0x98, 0x6f, 0x01, 0x12, 0xd3,
-	0x94, 0xa9, 0x15, 0xd1, 0x1d, 0x58, 0x0d, 0xc8, 0x39, 0xb7, 0x32, 0x30, 0xd4, 0x9b, 0xab, 0x2e,
-	0x8e, 0x07, 0x29, 0x94, 0x3f, 0x1a, 0xb0, 0x96, 0x14, 0xec, 0x1e, 0x89, 0x9d, 0x88, 0x86, 0x72,
-	0x62, 0x99, 0xe7, 0xf2, 0x2d, 0xa8, 0xb9, 0x34, 0x0e, 0x7d, 0x7b, 0x6c, 0xc9, 0x3b, 0xfd, 0x2a,
-	0xd4, 0x67, 0x4f, 0x84, 0xc8, 0x21, 0x80, 0x18, 0xe6, 0x3d, 0x16, 0xd1, 0x74, 0xf6, 0xcb, 0xcd,
-	0x67, 0x4f, 0x49, 0x8f, 0x33, 0xcf, 0xc6, 0x19, 0x13, 0xe6, 0x67, 0xb0, 0xae, 0x22, 0xa5, 0x3f,
-	0xe0, 0x92, 0x94, 0xb4, 0xa0, 0xac, 0xa5, 0xc6, 0x1a, 0x63, 0xba, 0x17, 0x1f, 0x53, 0xbe, 0x1d,
-	0x78, 0x23, 0x55, 0xb9, 0x6e, 0x02, 0xb4, 0x96, 0x1c, 0xf6, 0x98, 0x4b, 0x4c, 0x0f, 0x36, 0x66,
-	0x0c, 0xeb, 0xe0, 0x3f, 0x99, 0xf3, 0x99, 0xd9, 0xb9, 0x4c, 0xbf, 0x67, 0x5d, 0x98, 0x7c, 0x71,
-	0x9a, 0x07, 0xb0, 0x36, 0xc7, 0xc9, 0x2b, 0x06, 0xd8, 0x7c, 0x08, 0x6f, 0x08, 0xd8, 0x98, 0x31,
-	0xde, 0x4b, 0xa3, 0x94, 0x04, 0xe5, 0x25, 0xc7, 0x8d, 0x39, 0x8e, 0x0f, 0x55, 0xa9, 0xcf, 0x5a,
-	0xd0, 0xde, 0x4f, 0x27, 0xd0, 0xf8, 0xaf, 0x13, 0xb8, 0xc3, 0x01, 0x32, 0xdf, 0xcb, 0x2d, 0xd8,
-	0x3c, 0xe8, 0x7f, 0xb4, 0x7f, 0xd0, 0x7f, 0x7c, 0x78, 0xb8, 0x67, 0x7d, 0xfa, 0xe4, 0x68, 0xb0,
-	0xdf, 0xeb, 0x3f, 0xea, 0xef, 0xef, 0x5d, 0xbf, 0x86, 0x5e, 0x83, 0xfa, 0xd3, 0x7d, 0xfc, 0xb9,
-	0xf5, 0xe9, 0x13, 0x29, 0xf2, 0xf9, 0x75, 0x03, 0xd5, 0xa0, 0x9c, 0xee, 0x0a, 0x62, 0x37, 0x38,
-	0x3c, 0x3a, 0xea, 0xef, 0x1e, 0xec, 0x5f, 0x2f, 0x22, 0x80, 0x65, 0x7d, 0xb3, 0x84, 0x56, 0xa1,
-	0x2a, 0x55, 0xf5, 0x41, 0xa9, 0xfb, 0xef, 0x15, 0x80, 0x3d, 0x3f, 0x3c, 0x22, 0xd1, 0x73, 0xea,
-	0x10, 0xf4, 0x07, 0x03, 0x1a, 0xd3, 0xf3, 0x09, 0xba, 0x77, 0x39, 0x9a, 0xcc, 0x4c, 0x5d, 0xad,
-	0xee, 0x22, 0x2a, 0x2a, 0x9e, 0xe6, 0xed, 0x5f, 0xfc, 0xe3, 0x9f, 0xbf, 0x29, 0xdc, 0x34, 0x9b,
-	0xe9, 0x7f, 0x10, 0x47, 0x49, 0xbc, 0xa7, 0xc9, 0xfb, 0x3d, 0x63, 0x07, 0xfd, 0xd6, 0x10, 0x83,
-	0x6b, 0x66, 0x82, 0x44, 0xef, 0x2e, 0x3a, 0x19, 0xb7, 0xee, 0x2d, 0xa0, 0xa1, 0xb1, 0x99, 0x12,
-	0xdb, 0x9b, 0xe6, 0xeb, 0x2f, 0x61, 0x8b, 0xa4, 0xbc, 0x80, 0xf6, 0x7b, 0x03, 0x36, 0xe7, 0x4f,
-	0x5e, 0xe8, 0x87, 0xb9, 0x65, 0x91, 0x37, 0xad, 0xb5, 0x6e, 0x26, 0xaa, 0x99, 0xbf, 0x49, 0xed,
-	0x54, 0xca, 0xbc, 0x23, 0x81, 0x6d, 0x99, 0x37, 0x52, 0x60, 0x3a, 0x58, 0x99, 0x3f, 0x4e, 0x02,
-	0xdc, 0xdf, 0x0d, 0x58, 0x9b, 0xc3, 0xa3, 0xe8, 0x7e, 0xfe, 0x07, 0xfd, 0xab, 0x78, 0xbe, 0xf5,
-	0x83, 0x85, 0xf5, 0x74, 0x24, 0xbb, 0x12, 0xf0, 0x5d, 0xb4, 0x93, 0x02, 0xfe, 0x5a, 0x34, 0xf0,
-	0x83, 0x04, 0xb6, 0x9e, 0x63, 0x3b, 0x3b, 0x2f, 0x3a, 0xe9, 0xdf, 0x91, 0xbf, 0x1a, 0x50, 0x9f,
-	0x62, 0xa0, 0xfc, 0xa4, 0xcf, 0x63, 0xc1, 0xfc, 0xa4, 0xcf, 0xa5, 0x37, 0xf3, 0xbe, 0x84, 0xfa,
-	0x2e, 0x6a, 0xa7, 0x50, 0xa3, 0x29, 0x26, 0xe8, 0x7c, 0x9d, 0xf0, 0xe8, 0x83, 0x9d, 0x17, 0x9d,
-	0xc9, 0x8f, 0xb3, 0x3f, 0x19, 0x80, 0x5e, 0xe6, 0x0d, 0xf4, 0xfd, 0x8b, 0x10, 0xcc, 0x65, 0xaa,
-	0xd6, 0xfd, 0x45, 0xd5, 0x34, 0xfa, 0xb7, 0x24, 0xfa, 0x37, 0xd0, 0xeb, 0xaf, 0x40, 0xbf, 0xfb,
-	0x0c, 0xbe, 0xe5, 0xb0, 0x61, 0x8e, 0xf5, 0xdd, 0xf2, 0x9e, 0x1f, 0x0e, 0xc4, 0x88, 0x35, 0x30,
-	0x7e, 0xf2, 0x40, 0xcb, 0x79, 0x4c, 0x50, 0x64, 0x9b, 0x45, 0x5e, 0xc7, 0x23, 0x81, 0x1c, 0xc0,
-	0x3a, 0xea, 0xca, 0x0e, 0x69, 0x3c, 0xef, 0x77, 0xe6, 0xfb, 0xae, 0x1f, 0x9e, 0x2c, 0x4b, 0xc9,
-	0xef, 0xfd, 0x27, 0x00, 0x00, 0xff, 0xff, 0x5c, 0x0a, 0xe5, 0x73, 0x7c, 0x15, 0x00, 0x00,
+	// 5192 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x3c, 0x5d, 0x6f, 0x1b, 0xd9,
+	0x75, 0x1a, 0x7e, 0x48, 0xe4, 0x91, 0x48, 0xd1, 0x57, 0x1f, 0xa6, 0xe9, 0x75, 0x6c, 0x8f, 0x77,
+	0xbd, 0x5e, 0xef, 0x46, 0xca, 0x6a, 0xbf, 0xba, 0xbb, 0xf5, 0xc6, 0x14, 0x45, 0x99, 0x5a, 0x53,
+	0xa2, 0x3c, 0xa4, 0x64, 0xbb, 0xbb, 0xdd, 0xc1, 0x88, 0xbc, 0xa2, 0x26, 0x1a, 0xce, 0xd0, 0x33,
+	0x43, 0x5b, 0xdc, 0x74, 0xd1, 0xa0, 0x0d, 0x82, 0xb4, 0x45, 0x1f, 0x8a, 0x06, 0x48, 0x51, 0xb4,
+	0x08, 0x52, 0xe4, 0x21, 0x0d, 0xda, 0x87, 0x22, 0x7d, 0x49, 0x1b, 0x14, 0x41, 0xf6, 0x2d, 0x45,
+	0x9f, 0xfa, 0x01, 0x14, 0x45, 0x11, 0xa0, 0xc8, 0x43, 0xd1, 0xbe, 0xb4, 0xff, 0xa0, 0xb8, 0x1f,
+	0xf3, 0xc9, 0x21, 0x45, 0x6a, 0xb5, 0x68, 0xde, 0x78, 0xcf, 0x3d, 0x5f, 0xf7, 0xdc, 0x73, 0xce,
+	0x3d, 0xf7, 0xce, 0xbd, 0x84, 0xe7, 0xdb, 0x86, 0xd1, 0xd6, 0xf0, 0x6a, 0xd7, 0x54, 0x9f, 0x2a,
+	0xcd, 0xfe, 0x6a, 0x4b, 0xeb, 0xae, 0x3e, 0x5d, 0x3b, 0xc0, 0xb6, 0xf2, 0x2a, 0xf9, 0xbd, 0xd2,
+	0x35, 0x0d, 0xdb, 0x40, 0x05, 0x86, 0xb5, 0xc2, 0xb1, 0x56, 0x48, 0x0f, 0xc7, 0x2a, 0x3c, 0xc7,
+	0x39, 0x28, 0x5d, 0x75, 0x55, 0xd1, 0x75, 0xc3, 0x56, 0x6c, 0xd5, 0xd0, 0x2d, 0x46, 0x59, 0xb8,
+	0xc1, 0x7b, 0x35, 0x43, 0x6f, 0x9b, 0x3d, 0x5d, 0x57, 0xf5, 0xf6, 0xaa, 0xd1, 0xc5, 0x66, 0x00,
+	0xe9, 0xd6, 0x08, 0x25, 0x2c, 0xdb, 0x30, 0x95, 0x36, 0xe6, 0x98, 0x97, 0x5d, 0x4c, 0xc3, 0x36,
+	0x0e, 0x7a, 0x87, 0xab, 0xb8, 0xd3, 0xb5, 0xfb, 0xbc, 0xf3, 0x6a, 0xb8, 0xd3, 0x56, 0x3b, 0xd8,
+	0xb2, 0x95, 0x0e, 0x1f, 0x46, 0x61, 0x99, 0x23, 0xd8, 0xfd, 0x2e, 0x5e, 0x6d, 0x29, 0x76, 0x98,
+	0x2b, 0x85, 0x13, 0x22, 0xe3, 0xb0, 0xa5, 0x70, 0xae, 0xe2, 0x4f, 0x13, 0x90, 0xd9, 0xd2, 0xad,
+	0x2e, 0x6e, 0xda, 0x25, 0x43, 0x3f, 0x54, 0xdb, 0xa8, 0x04, 0xa0, 0xea, 0x87, 0x86, 0x4c, 0xd0,
+	0xad, 0xbc, 0x70, 0x2d, 0x7e, 0x6b, 0x76, 0xed, 0xf9, 0x95, 0xe1, 0x26, 0x5a, 0xd9, 0xd2, 0x0f,
+	0x8d, 0x46, 0xbf, 0x8b, 0xa5, 0xb4, 0xca, 0x7f, 0x59, 0x68, 0x1b, 0xb2, 0x1d, 0x55, 0x97, 0x35,
+	0xf5, 0x18, 0x6b, 0xea, 0x91, 0x61, 0xb4, 0xf2, 0xb1, 0x6b, 0xc2, 0xad, 0xec, 0xda, 0xcd, 0x51,
+	0x8c, 0xaa, 0x2e, 0xb6, 0x94, 0xe9, 0xa8, 0xba, 0xd7, 0x44, 0xd7, 0x61, 0xae, 0xa3, 0x9c, 0xc8,
+	0x87, 0xaa, 0xde, 0x52, 0xf5, 0xb6, 0x95, 0x8f, 0x5f, 0x13, 0x6e, 0x25, 0xa5, 0xd9, 0x8e, 0x72,
+	0xb2, 0xc9, 0x41, 0xe8, 0x06, 0x64, 0x54, 0xbd, 0xa9, 0xf5, 0x5a, 0x58, 0x7e, 0xd2, 0x33, 0x6c,
+	0x9c, 0x4f, 0x5c, 0x13, 0x6e, 0xa5, 0xa4, 0x39, 0x0e, 0x7c, 0x40, 0x60, 0x04, 0x09, 0x9f, 0x30,
+	0x24, 0x36, 0xbc, 0x69, 0x86, 0xc4, 0x81, 0x4c, 0x77, 0x05, 0x72, 0xae, 0x01, 0x64, 0x4d, 0xed,
+	0xa8, 0xb6, 0x95, 0x9f, 0xa1, 0x66, 0x78, 0x6b, 0xb4, 0x19, 0x7c, 0x56, 0x74, 0x8d, 0x52, 0x25,
+	0xf4, 0x52, 0x56, 0xf5, 0x37, 0x2d, 0xb4, 0x0f, 0x17, 0x9a, 0x3d, 0xcb, 0x36, 0x3a, 0xb2, 0xcf,
+	0xd4, 0x29, 0x2a, 0xe3, 0xf6, 0x28, 0x19, 0x25, 0x4a, 0xe4, 0x1a, 0x7c, 0xbe, 0x19, 0x68, 0x5b,
+	0x85, 0x1e, 0x99, 0x4c, 0x9f, 0x24, 0x54, 0x84, 0xb4, 0x2b, 0x21, 0x2f, 0x5c, 0x13, 0xc6, 0x9e,
+	0xcb, 0x94, 0xa3, 0xf1, 0x80, 0xed, 0x63, 0x03, 0xb6, 0x17, 0xef, 0xc0, 0x7c, 0xcd, 0xf1, 0x7a,
+	0xee, 0x45, 0xb7, 0xe1, 0x02, 0xa1, 0x52, 0x6d, 0xdc, 0xf1, 0x48, 0x89, 0x02, 0x71, 0x69, 0xbe,
+	0xa3, 0x9c, 0x6c, 0xd9, 0xb8, 0xe3, 0x92, 0x7f, 0x5b, 0x80, 0xd9, 0x92, 0xa1, 0xdb, 0x58, 0xb7,
+	0x09, 0x1c, 0x21, 0x48, 0xb8, 0xfa, 0xa6, 0x25, 0xfa, 0x1b, 0x2d, 0x42, 0xa2, 0xa5, 0xd8, 0x0a,
+	0x95, 0x3e, 0x57, 0x99, 0x92, 0x68, 0x0b, 0x2d, 0x43, 0xf2, 0xa9, 0xa2, 0xf5, 0x30, 0x75, 0x88,
+	0x74, 0x65, 0x4a, 0x62, 0x4d, 0xf4, 0x36, 0x24, 0x6d, 0xe5, 0x40, 0x63, 0x4e, 0x30, 0xbb, 0x76,
+	0x7d, 0xd4, 0x90, 0x1b, 0x04, 0x91, 0x90, 0x52, 0x8a, 0xf5, 0x59, 0x48, 0x13, 0xd6, 0x54, 0x73,
+	0xf1, 0x53, 0x01, 0x92, 0xb4, 0x1f, 0xdd, 0x81, 0x99, 0x23, 0xac, 0xb4, 0xb0, 0xe9, 0x84, 0xc4,
+	0x8d, 0x51, 0x3c, 0x37, 0x55, 0xac, 0xb5, 0xb6, 0x5a, 0x92, 0x43, 0x83, 0xde, 0x86, 0x84, 0x69,
+	0x3c, 0x23, 0xc6, 0x23, 0xb4, 0x2f, 0x9c, 0xaa, 0xcf, 0x8a, 0x64, 0x3c, 0x93, 0x28, 0x49, 0xe1,
+	0x2e, 0xc4, 0x25, 0xe3, 0x19, 0x7a, 0x1b, 0xa6, 0xe9, 0xd8, 0x1c, 0xf9, 0x23, 0xc7, 0xb4, 0x4f,
+	0x30, 0x25, 0x4e, 0x20, 0xfe, 0xa6, 0x1b, 0xe2, 0x12, 0xb6, 0x7a, 0x9a, 0x8d, 0xbe, 0x0c, 0x29,
+	0xdf, 0x9c, 0x8c, 0x31, 0x1a, 0x8a, 0x2b, 0xb9, 0x44, 0xe8, 0x8b, 0x80, 0x9c, 0xdf, 0xb2, 0x6d,
+	0xf6, 0xf4, 0xa6, 0x62, 0x63, 0x16, 0xe2, 0x29, 0xe9, 0x82, 0xd3, 0xd3, 0x70, 0x3a, 0xc4, 0x3f,
+	0x8f, 0xc1, 0x0c, 0x67, 0x82, 0x16, 0x21, 0xc9, 0xe2, 0x93, 0xcd, 0x2e, 0x6b, 0x04, 0xfd, 0x34,
+	0x76, 0x26, 0x3f, 0xdd, 0x04, 0xf0, 0xa5, 0x9b, 0xf8, 0x44, 0xe9, 0xc6, 0x47, 0x89, 0xee, 0x42,
+	0x4a, 0x33, 0x9a, 0xd4, 0x97, 0xb9, 0xfb, 0x8c, 0xd4, 0xa4, 0xca, 0x71, 0x25, 0x97, 0x0a, 0xbd,
+	0x0b, 0xb3, 0x4d, 0x13, 0x2b, 0x36, 0x96, 0x49, 0xb6, 0xa5, 0x39, 0x66, 0x76, 0xad, 0xe0, 0x31,
+	0x61, 0xf9, 0x7b, 0xa5, 0xe1, 0xe4, 0x6f, 0x09, 0x18, 0x3a, 0x01, 0x88, 0x3f, 0x8e, 0x43, 0xca,
+	0xe1, 0x89, 0xee, 0x02, 0x1c, 0xf4, 0x6d, 0x2c, 0x9b, 0x8a, 0xde, 0x76, 0xe2, 0x77, 0xe4, 0xc4,
+	0x4b, 0x04, 0x51, 0x4a, 0x13, 0x22, 0xfa, 0x13, 0xbd, 0x0f, 0xf3, 0x4d, 0xa3, 0x85, 0xbb, 0x86,
+	0xaa, 0xdb, 0x9c, 0x4d, 0x6c, 0x5c, 0x36, 0x59, 0x97, 0xd2, 0xe1, 0x35, 0xab, 0x76, 0x94, 0x36,
+	0x96, 0x0f, 0x8c, 0x13, 0x4c, 0x92, 0x30, 0xf1, 0x9c, 0x97, 0x46, 0x4e, 0x13, 0x41, 0x77, 0x2d,
+	0x04, 0x94, 0x7a, 0x9d, 0x10, 0xa3, 0x0d, 0x00, 0x13, 0x37, 0x0d, 0xb3, 0x25, 0x1f, 0xe3, 0x3e,
+	0xb7, 0xf3, 0xc8, 0xb0, 0x90, 0x28, 0xf6, 0x7d, 0xdc, 0x97, 0xd2, 0xa6, 0xf3, 0x13, 0xbd, 0x47,
+	0x1c, 0x19, 0x6b, 0x2d, 0x59, 0x6d, 0xe5, 0x93, 0x94, 0xc7, 0x78, 0x61, 0x79, 0xc8, 0x7e, 0xa0,
+	0x5d, 0xc8, 0xd2, 0xa8, 0x97, 0xdd, 0x19, 0x67, 0x93, 0xf5, 0xd2, 0xa9, 0x01, 0xea, 0x0e, 0x2a,
+	0x63, 0xfb, 0x9b, 0xe2, 0x2b, 0x90, 0x09, 0xf4, 0xa3, 0xcb, 0x90, 0x36, 0x8d, 0x67, 0xb2, 0xaa,
+	0xb7, 0xf0, 0x09, 0x4f, 0x80, 0x29, 0xd3, 0x78, 0xb6, 0x45, 0xda, 0xe2, 0x2a, 0x24, 0x99, 0x69,
+	0x17, 0x21, 0x69, 0xd9, 0x8a, 0x69, 0x73, 0x0c, 0xd6, 0x40, 0x39, 0x88, 0x63, 0x9d, 0xc5, 0x55,
+	0x5c, 0x22, 0x3f, 0xc5, 0x26, 0x64, 0x02, 0x36, 0x25, 0x28, 0xb6, 0xd1, 0xa5, 0x64, 0x49, 0x89,
+	0xfc, 0x24, 0xd9, 0x53, 0xc3, 0x87, 0x36, 0xcf, 0xd3, 0xf4, 0x37, 0x61, 0xff, 0x4c, 0x6d, 0xd9,
+	0x47, 0x7c, 0xe1, 0x64, 0x0d, 0xb4, 0x0c, 0xd3, 0x47, 0x58, 0x6d, 0x1f, 0xd9, 0xd4, 0xfe, 0x49,
+	0x89, 0xb7, 0xc4, 0x5f, 0x24, 0x61, 0x51, 0xc2, 0x2d, 0x85, 0x2e, 0x66, 0x24, 0x2b, 0x4b, 0xf8,
+	0x49, 0x0f, 0x5b, 0x36, 0x31, 0x97, 0xca, 0x12, 0x89, 0xdc, 0xa4, 0x69, 0x9e, 0xbb, 0xe4, 0x4b,
+	0x63, 0xaf, 0x8b, 0x52, 0x46, 0x0d, 0x14, 0x1b, 0x77, 0x20, 0x49, 0x12, 0xad, 0x93, 0x18, 0x5f,
+	0x1c, 0xb9, 0xf8, 0x79, 0x4b, 0x84, 0xc4, 0xa8, 0x50, 0x1b, 0xe6, 0x4d, 0xdc, 0xd5, 0x94, 0x26,
+	0xe6, 0x0a, 0x39, 0x5e, 0xf9, 0xde, 0x68, 0x57, 0x1a, 0x1c, 0xdb, 0x8a, 0xc4, 0xf8, 0x70, 0x35,
+	0xb3, 0xa6, 0xbf, 0x69, 0xa1, 0x4f, 0xe0, 0x22, 0x73, 0x7d, 0x93, 0xd2, 0xaa, 0x86, 0xee, 0x0a,
+	0x4c, 0x50, 0x81, 0xe5, 0x89, 0x05, 0xd2, 0x79, 0x94, 0x1c, 0x76, 0x5c, 0xee, 0x92, 0x1a, 0x01,
+	0xa5, 0xeb, 0x7a, 0x40, 0xbf, 0x73, 0x5a, 0xd7, 0x1d, 0xdb, 0x3d, 0x53, 0xed, 0x23, 0xea, 0x2f,
+	0x69, 0x69, 0x96, 0xc3, 0x1e, 0xaa, 0xf6, 0x51, 0xe1, 0xdf, 0x04, 0x58, 0x8c, 0x52, 0x13, 0x95,
+	0xce, 0x28, 0xbe, 0x32, 0xe5, 0x53, 0xe0, 0x16, 0x99, 0x3c, 0xc2, 0x57, 0x56, 0x34, 0x4d, 0xb6,
+	0xf1, 0x09, 0xf3, 0xd9, 0x54, 0x65, 0x4a, 0xca, 0xb0, 0x8e, 0xa2, 0xa6, 0x35, 0xf0, 0x89, 0x4d,
+	0x92, 0x98, 0xdf, 0xee, 0x9a, 0x61, 0x52, 0x47, 0x3e, 0x25, 0x89, 0x95, 0x08, 0x22, 0x99, 0x49,
+	0x57, 0x77, 0xcd, 0x30, 0xd7, 0x53, 0x30, 0x6d, 0x2b, 0x66, 0x1b, 0xdb, 0x62, 0x09, 0x92, 0x14,
+	0x44, 0x62, 0xc8, 0xc4, 0x2d, 0x3a, 0x8e, 0x98, 0x44, 0x7e, 0x92, 0x78, 0x69, 0x9b, 0x18, 0xeb,
+	0x54, 0xa1, 0x98, 0xc4, 0x1a, 0x24, 0xb2, 0x0e, 0x9c, 0x62, 0x23, 0x26, 0xd1, 0xdf, 0xe2, 0x3e,
+	0x2c, 0x85, 0x66, 0xd7, 0xea, 0x1a, 0xba, 0x85, 0x3d, 0xcf, 0x16, 0xce, 0xe2, 0xd9, 0xe2, 0x37,
+	0x62, 0x90, 0xdf, 0xc0, 0x6a, 0x0b, 0xeb, 0xb6, 0x7a, 0xd8, 0x0f, 0xc5, 0xe1, 0x63, 0xb8, 0xd0,
+	0x72, 0xfb, 0x82, 0xa1, 0xf8, 0xca, 0x28, 0x39, 0x01, 0x86, 0xc4, 0xdd, 0x72, 0xad, 0x10, 0x24,
+	0x22, 0xc4, 0x63, 0xe7, 0x15, 0xe2, 0xf1, 0x33, 0x19, 0xe2, 0x2f, 0x05, 0xb8, 0x14, 0x61, 0x88,
+	0x73, 0xb1, 0x32, 0x7a, 0x00, 0x69, 0xab, 0xd7, 0xe9, 0x28, 0xa6, 0x8a, 0x9d, 0x14, 0xf4, 0xda,
+	0x58, 0x06, 0x54, 0x59, 0xfa, 0xad, 0x53, 0xe2, 0xbe, 0xe4, 0x71, 0x11, 0xbf, 0x2f, 0xc0, 0x92,
+	0x67, 0x8f, 0x5f, 0xe6, 0xec, 0x29, 0xfe, 0x3a, 0x2c, 0x87, 0x35, 0xe5, 0x66, 0x2d, 0xc1, 0x8c,
+	0x49, 0x4b, 0x45, 0xc7, 0xb0, 0xe3, 0xe8, 0xc8, 0x8a, 0x4b, 0xc9, 0xa1, 0x14, 0xff, 0x37, 0x06,
+	0x57, 0x4a, 0xb4, 0xb0, 0xe1, 0x08, 0xee, 0x1e, 0xe1, 0xf3, 0xb3, 0xc8, 0x2e, 0x64, 0xf9, 0x96,
+	0x7a, 0x02, 0xf7, 0xad, 0x33, 0x0a, 0x87, 0xa3, 0xe5, 0x6f, 0xa2, 0x06, 0x64, 0x8c, 0x9e, 0xdd,
+	0xed, 0xb9, 0x2a, 0xb2, 0xcc, 0xb3, 0x3a, 0x8a, 0x61, 0x8d, 0x12, 0x04, 0xd9, 0xce, 0x31, 0x2e,
+	0x9c, 0xeb, 0x3e, 0xe4, 0xdc, 0x73, 0x02, 0x87, 0x31, 0x2b, 0x60, 0x5e, 0x1e, 0xc9, 0x38, 0xb8,
+	0xcb, 0x92, 0xe6, 0x8d, 0x20, 0x40, 0xfc, 0xa1, 0x00, 0x0b, 0x11, 0xd2, 0x51, 0xd1, 0xd9, 0x10,
+	0x8d, 0x61, 0xe0, 0x75, 0xb5, 0xfd, 0xa0, 0x87, 0xcd, 0x7e, 0x70, 0x63, 0x84, 0x1e, 0xc0, 0x9c,
+	0x63, 0xda, 0xae, 0xc2, 0xd7, 0x8b, 0x53, 0xf2, 0x4d, 0x49, 0x33, 0x7a, 0x2d, 0xae, 0xc8, 0xae,
+	0x62, 0x1f, 0x55, 0xa6, 0xa4, 0x59, 0xcb, 0x6b, 0xae, 0x4f, 0xb3, 0x8d, 0x9e, 0xd8, 0x01, 0xe4,
+	0xac, 0x10, 0x75, 0x5b, 0xb1, 0x55, 0xcb, 0x56, 0x9b, 0xd6, 0x79, 0xac, 0x71, 0x8b, 0x90, 0x6c,
+	0x1a, 0x3d, 0xdd, 0xe6, 0x25, 0x14, 0x6b, 0x88, 0x3f, 0x4c, 0x40, 0x3e, 0xec, 0x92, 0xdb, 0xd8,
+	0x56, 0xe8, 0x96, 0xf2, 0x45, 0x98, 0xef, 0x9a, 0x46, 0x13, 0x5b, 0x16, 0x6e, 0xc9, 0xa4, 0x8e,
+	0x76, 0xb6, 0xad, 0x59, 0x17, 0xbc, 0x4e, 0xa0, 0x68, 0x0d, 0x96, 0x6c, 0xc3, 0x56, 0x34, 0x19,
+	0x5b, 0xb6, 0xda, 0x21, 0xfb, 0x1c, 0x8e, 0x9e, 0xa0, 0xe8, 0x0b, 0xb4, 0xb3, 0xec, 0xf4, 0x31,
+	0x9a, 0x7d, 0x98, 0xf7, 0x8e, 0x16, 0x2c, 0x5b, 0xb1, 0x9d, 0xd0, 0x5d, 0x19, 0x67, 0x60, 0x9e,
+	0x6d, 0x88, 0xdb, 0x7b, 0x30, 0x2b, 0xbc, 0xe3, 0x88, 0x4f, 0xb2, 0xe3, 0x40, 0x32, 0x2c, 0x9b,
+	0x2c, 0x20, 0xe5, 0x50, 0x34, 0x26, 0x27, 0x8d, 0xc6, 0x45, 0xce, 0x28, 0x78, 0xa2, 0xe4, 0x13,
+	0x10, 0x0a, 0xce, 0xe9, 0x49, 0x83, 0xd3, 0x11, 0x10, 0xf4, 0xee, 0x26, 0x2c, 0x39, 0x02, 0x82,
+	0xb1, 0x3a, 0x73, 0xb6, 0x58, 0x5d, 0xe0, 0xdc, 0x6a, 0xbe, 0x90, 0x15, 0x5f, 0x71, 0xb3, 0xa5,
+	0x2f, 0x8f, 0xd1, 0xed, 0x34, 0x82, 0x84, 0xae, 0x74, 0xdc, 0xf3, 0x0a, 0xf2, 0x5b, 0xfc, 0xba,
+	0x00, 0x85, 0xaa, 0xea, 0x5a, 0xc2, 0x39, 0xeb, 0x70, 0x32, 0x5f, 0x04, 0x09, 0xd9, 0x29, 0x74,
+	0x89, 0x6d, 0x2c, 0xf5, 0x63, 0xcc, 0xab, 0xf7, 0x14, 0x01, 0xd4, 0xd5, 0x8f, 0x31, 0xba, 0x02,
+	0x40, 0x3b, 0x6d, 0xe3, 0x18, 0xeb, 0xec, 0xb8, 0x43, 0xa2, 0xe8, 0x0d, 0x02, 0x20, 0xa5, 0xfc,
+	0xa1, 0xaa, 0xd9, 0xd8, 0xa4, 0xde, 0x97, 0x96, 0x78, 0x4b, 0xfc, 0xa6, 0x00, 0x97, 0x23, 0xd5,
+	0xe0, 0x89, 0xbe, 0x08, 0xd3, 0x2c, 0x5d, 0x4f, 0x90, 0x79, 0x79, 0x9e, 0xe7, 0x84, 0xe8, 0x26,
+	0xcc, 0xeb, 0xf8, 0xc4, 0x96, 0x7d, 0xea, 0xb1, 0x52, 0x32, 0x43, 0xc0, 0xbb, 0x8e, 0x8a, 0xe2,
+	0x9f, 0x0a, 0xb0, 0xe0, 0x78, 0xf2, 0x06, 0xb6, 0x9a, 0xa6, 0xda, 0xa5, 0x3b, 0x98, 0x28, 0x53,
+	0x5c, 0x87, 0xb9, 0x96, 0x6a, 0x75, 0x35, 0xa5, 0x2f, 0xd3, 0x3e, 0x5e, 0x9b, 0x72, 0xd8, 0x0e,
+	0x41, 0xa9, 0x01, 0x34, 0x15, 0x1b, 0xb7, 0x0d, 0xba, 0x76, 0xb3, 0xda, 0x62, 0xe4, 0x44, 0x97,
+	0x18, 0x76, 0xdf, 0x27, 0x5b, 0xf2, 0xb1, 0x10, 0x1f, 0xc2, 0x22, 0xb3, 0x14, 0x3f, 0x4c, 0x73,
+	0xa6, 0xaa, 0x00, 0x29, 0x8e, 0xd5, 0xe7, 0x3a, 0xba, 0x6d, 0x74, 0x03, 0x32, 0x9a, 0xa2, 0xb7,
+	0x7b, 0xcc, 0xa5, 0x5b, 0x8e, 0xa2, 0x73, 0x0e, 0xb0, 0x64, 0xb4, 0xb0, 0xd8, 0x86, 0xa5, 0x10,
+	0x63, 0x6e, 0xfc, 0x9d, 0x88, 0x93, 0xd6, 0xd5, 0x71, 0x12, 0x81, 0x7f, 0x08, 0xde, 0xa1, 0xab,
+	0x58, 0x85, 0x85, 0x88, 0x41, 0x9e, 0xd1, 0xc0, 0xe2, 0x5d, 0xb8, 0x44, 0xd4, 0x96, 0x0c, 0xc3,
+	0x2e, 0xb9, 0x56, 0x72, 0x8c, 0x32, 0x30, 0x70, 0x21, 0x62, 0xe0, 0x1d, 0x16, 0x02, 0x61, 0x0e,
+	0x7c, 0xf4, 0xc1, 0x09, 0x14, 0x3e, 0xfb, 0x04, 0xfe, 0x9d, 0x00, 0xcf, 0x15, 0x75, 0x45, 0xeb,
+	0x7f, 0x8c, 0x37, 0x14, 0x5b, 0xa9, 0x1b, 0x3d, 0xb3, 0x89, 0x25, 0xd5, 0x3a, 0xf6, 0x95, 0x1b,
+	0x9c, 0xaf, 0xdc, 0xc1, 0xb6, 0xa9, 0x36, 0xc7, 0x71, 0xfa, 0x5d, 0x06, 0xdb, 0xa6, 0x04, 0x52,
+	0xa6, 0xeb, 0x6f, 0xa2, 0x2a, 0xcc, 0x59, 0x54, 0x8c, 0xcc, 0x56, 0xd7, 0xf8, 0x84, 0xab, 0xab,
+	0x34, 0xcb, 0xc8, 0x69, 0x43, 0xfc, 0xa7, 0x19, 0xc8, 0x04, 0xc4, 0xa1, 0xa7, 0xb0, 0xac, 0xf7,
+	0x3a, 0xd8, 0x54, 0x9b, 0x8a, 0xc6, 0xd6, 0x8b, 0x60, 0xa1, 0xf4, 0xde, 0xd8, 0x9a, 0xaf, 0xec,
+	0x38, 0x7c, 0xe8, 0x8a, 0xc1, 0x72, 0x5a, 0x65, 0x4a, 0x5a, 0xd4, 0x23, 0xe0, 0xe8, 0x37, 0x20,
+	0xef, 0x18, 0x76, 0x40, 0x32, 0x5b, 0xf7, 0xef, 0x8e, 0x2f, 0xb9, 0xe4, 0x71, 0x0a, 0xca, 0x5e,
+	0x6e, 0x46, 0xf6, 0xa0, 0xaf, 0x00, 0x3a, 0x96, 0x15, 0xdd, 0xd0, 0xfb, 0x1d, 0xd5, 0xee, 0x07,
+	0xeb, 0xae, 0x77, 0xc6, 0x97, 0x7b, 0xbf, 0xe8, 0xb0, 0x70, 0x25, 0xe6, 0x8e, 0x43, 0x30, 0x22,
+	0x4b, 0x93, 0x5b, 0xea, 0x53, 0x6c, 0x5a, 0x3e, 0x59, 0x89, 0x49, 0x65, 0x55, 0x37, 0x1c, 0x16,
+	0x9e, 0x2c, 0x2d, 0x04, 0x2b, 0x3c, 0x80, 0xc5, 0xa8, 0x59, 0x40, 0x6f, 0x43, 0x92, 0x1e, 0x48,
+	0xf1, 0x49, 0x1d, 0xeb, 0x08, 0x8b, 0x51, 0x14, 0xea, 0xb0, 0x1c, 0x6d, 0xde, 0xcf, 0xc2, 0xf4,
+	0xdb, 0x02, 0xe4, 0xc2, 0xc6, 0x43, 0x77, 0x21, 0xfd, 0xa4, 0xa7, 0x58, 0xaa, 0xac, 0xb6, 0x26,
+	0x3a, 0x02, 0x4f, 0x51, 0xaa, 0xad, 0x16, 0xad, 0xe7, 0xc8, 0xde, 0xc9, 0xee, 0xcb, 0x6a, 0x6b,
+	0x9c, 0x33, 0xde, 0x32, 0x45, 0x26, 0x2c, 0x30, 0xff, 0x55, 0xf8, 0x81, 0x00, 0xb9, 0xb0, 0xa9,
+	0xcf, 0x41, 0xb3, 0x06, 0x2c, 0x58, 0x58, 0xb7, 0x54, 0x5b, 0x7d, 0x8a, 0x65, 0xc5, 0xb6, 0x4d,
+	0xf5, 0xa0, 0x67, 0x3b, 0x07, 0xa5, 0x63, 0xf1, 0x42, 0x2e, 0x7d, 0xd1, 0x21, 0x77, 0xab, 0xdb,
+	0x3f, 0x8b, 0xc1, 0x15, 0x92, 0x86, 0x68, 0x6e, 0xb2, 0x54, 0x6b, 0xb0, 0xe6, 0x0c, 0x95, 0x6f,
+	0xc2, 0x44, 0xe5, 0x5b, 0x13, 0xf2, 0xbc, 0x5c, 0xc1, 0x2d, 0x39, 0x94, 0xdf, 0x62, 0x93, 0xe6,
+	0xb7, 0x65, 0x97, 0x55, 0x30, 0x11, 0x79, 0x25, 0x1c, 0x6e, 0xc9, 0x9f, 0x2d, 0xe5, 0x2d, 0xba,
+	0x8c, 0xea, 0xbe, 0xdc, 0xf7, 0xcf, 0xcb, 0x70, 0x39, 0xd2, 0x48, 0xbc, 0xc6, 0xfa, 0xba, 0x30,
+	0x98, 0x0a, 0x79, 0xe5, 0xc2, 0x34, 0xa8, 0x8e, 0x3c, 0x80, 0x1b, 0xce, 0x39, 0x94, 0x18, 0x19,
+	0x70, 0x30, 0x31, 0x72, 0x35, 0x7e, 0x57, 0x88, 0xca, 0x8c, 0x5c, 0x11, 0x96, 0x35, 0x76, 0xce,
+	0xaa, 0x48, 0x38, 0x90, 0x5d, 0x55, 0x06, 0xf2, 0x24, 0x57, 0xe6, 0x24, 0x98, 0x27, 0xb9, 0x16,
+	0xac, 0x68, 0xaf, 0x9c, 0x55, 0x0b, 0x2f, 0xf0, 0x5d, 0xf9, 0xbe, 0xac, 0xe9, 0x49, 0xf6, 0x67,
+	0x4d, 0x2e, 0x79, 0xfa, 0xb3, 0x49, 0xf6, 0x02, 0xdb, 0x93, 0xac, 0x85, 0x60, 0x85, 0xff, 0x10,
+	0xc2, 0x49, 0x94, 0xab, 0xf4, 0x1e, 0xa4, 0x3b, 0xaa, 0x2e, 0xb3, 0xcf, 0x81, 0x63, 0x7c, 0x29,
+	0x61, 0x9f, 0xc8, 0x52, 0x1d, 0x55, 0xa7, 0xbf, 0x28, 0xbd, 0x72, 0xc2, 0xe9, 0x63, 0xe3, 0xd3,
+	0x2b, 0x27, 0x8c, 0xfe, 0x7d, 0x98, 0x7f, 0xd2, 0x53, 0x74, 0x5b, 0xd5, 0xb0, 0xcc, 0x3f, 0xd4,
+	0x25, 0xc6, 0xfd, 0x50, 0x97, 0x75, 0x28, 0x69, 0xd3, 0x2a, 0xfc, 0x67, 0x7c, 0x30, 0xad, 0xf3,
+	0x61, 0xfe, 0x48, 0x80, 0xeb, 0x94, 0xbd, 0x7c, 0x48, 0xe3, 0x48, 0x6f, 0xf6, 0xe5, 0x23, 0xd5,
+	0xb2, 0x8d, 0xb6, 0xa9, 0x74, 0xe4, 0x83, 0x5e, 0xf3, 0x18, 0xdb, 0x56, 0x3e, 0x49, 0x25, 0xeb,
+	0xe7, 0xeb, 0x89, 0x03, 0xe0, 0x8a, 0x23, 0x77, 0x9d, 0x8a, 0x95, 0xbe, 0x40, 0x15, 0xdb, 0x74,
+	0xf4, 0x0a, 0x75, 0x5b, 0x85, 0x3f, 0x88, 0xc1, 0xd5, 0x53, 0x78, 0xa0, 0x3b, 0x70, 0x39, 0x3c,
+	0x3c, 0xcd, 0x78, 0x86, 0x4d, 0xf9, 0xc0, 0xe8, 0xe9, 0x2d, 0xbe, 0x15, 0xcf, 0x07, 0x05, 0x55,
+	0x09, 0xc2, 0x3a, 0xe9, 0x8f, 0x22, 0xef, 0x75, 0xbb, 0x2e, 0x79, 0x2c, 0x8a, 0x7c, 0x8f, 0x20,
+	0x30, 0xf2, 0xab, 0x30, 0xcb, 0x4c, 0xc8, 0x36, 0x61, 0x71, 0x8a, 0x0e, 0x0c, 0x44, 0xb7, 0x61,
+	0x35, 0xc8, 0x70, 0x84, 0xc0, 0x1c, 0xdf, 0x3e, 0x75, 0x8e, 0x5d, 0x69, 0xd2, 0x1c, 0x63, 0xc0,
+	0xa7, 0xfa, 0x67, 0x49, 0xff, 0x5a, 0xcb, 0x27, 0xf9, 0xaf, 0x04, 0xb8, 0x81, 0x9f, 0xf4, 0xd4,
+	0xa7, 0x8a, 0x86, 0xf5, 0x26, 0x96, 0x9b, 0x9a, 0x62, 0x59, 0x43, 0xa7, 0xf9, 0xe0, 0xbc, 0x42,
+	0xdd, 0x07, 0x08, 0x4f, 0xed, 0x35, 0x9f, 0x3a, 0x25, 0xa2, 0xcd, 0xc0, 0xe4, 0x7e, 0x47, 0x80,
+	0x82, 0x47, 0x5f, 0x0e, 0xa1, 0xa3, 0xfb, 0x90, 0x73, 0x17, 0x69, 0x79, 0xd2, 0x0f, 0xd9, 0x59,
+	0x67, 0xa5, 0x66, 0x46, 0x43, 0xaf, 0xc3, 0xf2, 0xa0, 0x79, 0xdc, 0x6d, 0x73, 0x5c, 0x5a, 0x0c,
+	0x6b, 0x4b, 0xe6, 0xae, 0xf0, 0xf3, 0x18, 0x5c, 0x1a, 0x3a, 0x42, 0xf4, 0x3e, 0x88, 0xd1, 0x3c,
+	0x23, 0xfc, 0xef, 0x0b, 0x51, 0xfc, 0x7d, 0x5e, 0x38, 0x9c, 0xd7, 0xa0, 0x33, 0x46, 0xf2, 0x9a,
+	0xc4, 0x25, 0xbf, 0x29, 0x44, 0xfb, 0x64, 0xf3, 0x73, 0x70, 0x8b, 0xf0, 0xb4, 0x86, 0x9c, 0xf9,
+	0x1b, 0x33, 0xfe, 0xf2, 0x8c, 0x3b, 0xf3, 0x4f, 0x04, 0x78, 0xd9, 0xab, 0xae, 0xc6, 0xcd, 0x5d,
+	0x07, 0xe7, 0xb5, 0x8a, 0xf8, 0x00, 0x61, 0xa7, 0x7e, 0xd1, 0x55, 0x6b, 0x7f, 0x74, 0xe2, 0xfa,
+	0x49, 0x0c, 0x0a, 0x1e, 0x9b, 0x5f, 0x42, 0xdf, 0x46, 0x45, 0xb8, 0xa2, 0xf7, 0x3a, 0x72, 0x4b,
+	0xb5, 0x6c, 0x55, 0x6f, 0xda, 0x72, 0xc8, 0xe0, 0x16, 0xf7, 0x9b, 0x82, 0xde, 0xeb, 0x6c, 0x70,
+	0x9c, 0x7a, 0x60, 0xf0, 0x16, 0xfa, 0x10, 0x16, 0x6d, 0xa3, 0x3b, 0x48, 0x39, 0x79, 0x86, 0x43,
+	0xb6, 0xd1, 0x0d, 0x71, 0x2f, 0xfc, 0x77, 0x0c, 0x2e, 0x0d, 0x9d, 0x09, 0xb4, 0x0b, 0x2f, 0x0c,
+	0x77, 0x91, 0xc1, 0xf8, 0xbb, 0x3e, 0x64, 0xe2, 0x7c, 0x21, 0x38, 0x92, 0xe3, 0x60, 0x14, 0x0e,
+	0xe3, 0xf8, 0xff, 0x1a, 0x88, 0x23, 0x5c, 0x79, 0x74, 0x20, 0xae, 0xa7, 0x9c, 0x63, 0x3d, 0x51,
+	0x86, 0x6c, 0x70, 0x44, 0xe8, 0x2d, 0xe7, 0xce, 0xd4, 0xd8, 0x45, 0x12, 0xbf, 0x54, 0x15, 0x7d,
+	0x98, 0xfe, 0xaf, 0x31, 0x48, 0xb2, 0x0a, 0xe8, 0x05, 0xc8, 0xa8, 0xba, 0x8d, 0xdb, 0xd8, 0xf4,
+	0x55, 0x61, 0xf1, 0xca, 0x94, 0x34, 0xc7, 0xc1, 0x0c, 0xed, 0x3a, 0xcc, 0x1e, 0x6a, 0x86, 0x62,
+	0xfb, 0x4a, 0x2d, 0xa1, 0x32, 0x25, 0x01, 0x05, 0x32, 0x94, 0x1b, 0x30, 0x67, 0xd9, 0xa6, 0xaa,
+	0xb7, 0xe5, 0xe0, 0xed, 0xae, 0x59, 0x06, 0x75, 0xc5, 0x1d, 0x18, 0x86, 0x86, 0x15, 0xa7, 0xe8,
+	0x4b, 0xf0, 0x8f, 0xc7, 0x73, 0x1c, 0xcc, 0xd0, 0xca, 0x30, 0xef, 0x5e, 0x94, 0xe4, 0x88, 0xc9,
+	0xd3, 0xf6, 0x57, 0x95, 0x29, 0x29, 0xeb, 0x12, 0x31, 0x36, 0x6f, 0x01, 0x10, 0x08, 0xe7, 0xc0,
+	0x2a, 0xdd, 0x65, 0x87, 0x03, 0xd9, 0xe6, 0x51, 0xea, 0xda, 0xe1, 0x86, 0xd2, 0xaf, 0x4c, 0x49,
+	0x69, 0x82, 0xcb, 0x08, 0xd7, 0x00, 0x5a, 0x64, 0x67, 0xc7, 0x08, 0xd9, 0x81, 0xf4, 0x85, 0x00,
+	0xe1, 0x86, 0x62, 0x63, 0x42, 0x43, 0xd0, 0x28, 0x8d, 0xbb, 0x73, 0xfc, 0xed, 0x18, 0xe4, 0xc2,
+	0xdf, 0x6c, 0xd1, 0x13, 0xb8, 0xe4, 0x7d, 0x43, 0xb0, 0x4d, 0x45, 0xb7, 0x0e, 0x0d, 0xb3, 0xc3,
+	0x6e, 0x9c, 0xf2, 0x39, 0x7d, 0x6d, 0x9c, 0x43, 0xc4, 0x46, 0x90, 0xb4, 0x32, 0x25, 0x5d, 0x54,
+	0xa3, 0xbb, 0xd0, 0x57, 0xc8, 0xee, 0x8f, 0x5e, 0xd6, 0x09, 0xcb, 0x63, 0x85, 0xf2, 0xab, 0xa7,
+	0x5f, 0xdc, 0x19, 0x94, 0xb6, 0x64, 0x46, 0x75, 0xac, 0xe7, 0x20, 0x1b, 0x14, 0x22, 0xfe, 0x68,
+	0x06, 0x2e, 0xee, 0x9a, 0x6a, 0x87, 0x86, 0x67, 0x10, 0x1d, 0x3d, 0x84, 0x6c, 0xf0, 0x02, 0x08,
+	0xb7, 0xc0, 0xca, 0x68, 0x8d, 0x28, 0x05, 0xb5, 0xb5, 0x7b, 0x5c, 0x93, 0x09, 0xdc, 0xf8, 0x20,
+	0x85, 0x1e, 0xbf, 0x9c, 0x10, 0x38, 0xf6, 0xba, 0x35, 0xd6, 0x35, 0x0f, 0xc6, 0x71, 0xce, 0xf4,
+	0xb5, 0x11, 0x86, 0xa5, 0xe6, 0x91, 0x62, 0x2a, 0x4d, 0x1b, 0x9b, 0x72, 0x47, 0xb1, 0x8e, 0x27,
+	0xf8, 0x9e, 0x58, 0x72, 0x08, 0xb7, 0x15, 0xeb, 0xd8, 0xe5, 0xbf, 0xd0, 0x1c, 0x04, 0xa3, 0x3e,
+	0x5c, 0x69, 0x9a, 0xfd, 0xae, 0x6d, 0xc8, 0x8e, 0x5d, 0x0e, 0x0f, 0x4f, 0xe4, 0xc3, 0x2e, 0x0e,
+	0x1e, 0x6d, 0xbd, 0x31, 0x52, 0x1c, 0x65, 0xc0, 0xad, 0xb4, 0x79, 0x78, 0xb2, 0xd9, 0xf5, 0xcc,
+	0x74, 0xa9, 0x39, 0xac, 0x13, 0xf5, 0xe0, 0xf2, 0xa1, 0x7a, 0x82, 0x5b, 0xac, 0xd2, 0x61, 0xf9,
+	0x88, 0xc4, 0x70, 0xe0, 0x63, 0xd2, 0xeb, 0xa3, 0x4f, 0x53, 0x4e, 0x70, 0x8b, 0xe4, 0xd2, 0x75,
+	0x87, 0xd8, 0x95, 0x9b, 0x3f, 0x1c, 0xd2, 0x87, 0x1e, 0x41, 0x6e, 0x40, 0xd6, 0xf4, 0xe9, 0x9f,
+	0x52, 0x07, 0x45, 0xcc, 0x1f, 0x84, 0x38, 0xf7, 0xe1, 0x8a, 0xff, 0x86, 0x8c, 0x77, 0x57, 0x37,
+	0xf8, 0x79, 0xe9, 0x8d, 0x31, 0x7c, 0xed, 0xa1, 0x6a, 0x1f, 0x39, 0x81, 0xe7, 0xd9, 0xd2, 0x1c,
+	0xd6, 0x89, 0xf6, 0x21, 0x47, 0xd3, 0x4d, 0x57, 0x31, 0x5d, 0x0f, 0x4c, 0x51, 0x69, 0x23, 0x17,
+	0x62, 0x92, 0x83, 0x76, 0x15, 0xd3, 0xf3, 0x41, 0x9a, 0xc6, 0x3c, 0x08, 0xfa, 0x10, 0x10, 0x77,
+	0x8f, 0x23, 0xc5, 0x3a, 0x72, 0x38, 0xa7, 0xc7, 0xf8, 0x94, 0x4b, 0xa9, 0x2a, 0x8a, 0x75, 0xe4,
+	0x1d, 0x70, 0x36, 0x43, 0xb0, 0x88, 0xd8, 0xfd, 0x1f, 0x01, 0xb2, 0x41, 0xa5, 0xd0, 0x07, 0x30,
+	0x4f, 0x47, 0x65, 0x1b, 0x32, 0x3e, 0xb1, 0x89, 0x03, 0xd3, 0x98, 0xcd, 0x8e, 0xce, 0x5a, 0x41,
+	0x26, 0x6e, 0x53, 0xca, 0x10, 0x5e, 0x0d, 0xa3, 0xcc, 0x38, 0x89, 0x5f, 0x13, 0x20, 0xe5, 0xf4,
+	0xa1, 0x4b, 0xb0, 0xd4, 0xd8, 0xda, 0x2e, 0xcb, 0xbb, 0x45, 0xa9, 0x21, 0xef, 0xed, 0xd4, 0x77,
+	0xcb, 0xa5, 0xad, 0xcd, 0xad, 0xf2, 0x46, 0x6e, 0x0a, 0xa5, 0x20, 0xf1, 0xb8, 0x5c, 0x94, 0x72,
+	0x02, 0x4a, 0x43, 0x72, 0xbb, 0xb6, 0xd3, 0xa8, 0xe4, 0x62, 0x28, 0x07, 0x73, 0x1b, 0xc5, 0xc7,
+	0x72, 0x6d, 0x53, 0x66, 0x90, 0x38, 0x9a, 0x87, 0x59, 0x0e, 0x79, 0x58, 0x2e, 0xdf, 0xcf, 0x25,
+	0x08, 0x0a, 0xf9, 0x45, 0x20, 0x94, 0x3e, 0x49, 0x50, 0x2a, 0xb5, 0x3d, 0x89, 0x40, 0x36, 0x8a,
+	0x8f, 0x73, 0xd3, 0xe2, 0x23, 0xc8, 0x85, 0x8d, 0x85, 0x36, 0x00, 0xb8, 0xd9, 0x8f, 0x71, 0x9f,
+	0xa7, 0xa8, 0x17, 0x4e, 0x37, 0x37, 0xbd, 0xed, 0xd8, 0x74, 0x7e, 0x8a, 0x0d, 0x40, 0x83, 0xa9,
+	0x0b, 0xbd, 0x07, 0x69, 0x1d, 0x3f, 0x9b, 0xf8, 0xe0, 0x43, 0xc7, 0xcf, 0xe8, 0x2f, 0xf1, 0x32,
+	0x5c, 0x1a, 0xea, 0xa4, 0x62, 0x16, 0xe6, 0xfc, 0x59, 0x4d, 0xfc, 0x97, 0x18, 0x64, 0x48, 0x36,
+	0xb2, 0x1a, 0xc6, 0x56, 0x5b, 0x37, 0x4c, 0x8c, 0x56, 0x00, 0xb9, 0x79, 0xc8, 0x22, 0x93, 0x6a,
+	0x1d, 0xab, 0xec, 0x3e, 0x62, 0x9a, 0xfa, 0x88, 0xdb, 0xd7, 0x30, 0xea, 0xc7, 0x6a, 0x17, 0xf5,
+	0xe1, 0x72, 0xd3, 0xe8, 0x74, 0x0c, 0x5d, 0x0e, 0x92, 0xa9, 0x94, 0x1d, 0x7f, 0x26, 0xf0, 0x2b,
+	0xa7, 0x65, 0x43, 0x57, 0xbe, 0x97, 0x1b, 0xef, 0x99, 0x46, 0x8f, 0xac, 0xdc, 0x79, 0xc6, 0xbe,
+	0xe4, 0x13, 0xcc, 0x50, 0xc5, 0xdf, 0x13, 0x20, 0x1b, 0x44, 0x47, 0x57, 0xe1, 0x72, 0xa9, 0x52,
+	0x94, 0x8a, 0xa5, 0x46, 0x59, 0x92, 0xef, 0x49, 0xb5, 0xbd, 0xdd, 0x90, 0xa3, 0xcc, 0xc2, 0xcc,
+	0xce, 0xde, 0x76, 0x59, 0xda, 0x2a, 0xe5, 0x04, 0xb4, 0x08, 0xb9, 0x62, 0x75, 0xb7, 0x52, 0x94,
+	0xf7, 0x76, 0x77, 0xcb, 0x92, 0x5c, 0x2a, 0xd6, 0xcb, 0xb9, 0x98, 0x07, 0xad, 0xd6, 0x1e, 0x3a,
+	0x50, 0xea, 0x3a, 0xbb, 0x7b, 0x3b, 0xa5, 0xc6, 0x5e, 0xb1, 0xb1, 0x55, 0xdb, 0xc9, 0x25, 0x50,
+	0x16, 0xe0, 0x61, 0x65, 0xab, 0x51, 0xae, 0xef, 0x16, 0x4b, 0xe5, 0x5c, 0x72, 0x7d, 0x0e, 0xc0,
+	0xb3, 0x80, 0xf8, 0x5f, 0x02, 0x2c, 0x44, 0xa4, 0x79, 0xf4, 0x32, 0x5c, 0x20, 0x8b, 0x05, 0xcd,
+	0x6d, 0x4e, 0x37, 0xff, 0xd8, 0x96, 0xe3, 0x1d, 0x2e, 0x19, 0x7a, 0x1e, 0xb2, 0x7a, 0xaf, 0x73,
+	0x80, 0x4d, 0x62, 0x50, 0xd2, 0xcb, 0x3f, 0x23, 0xcf, 0x31, 0x68, 0xc3, 0x20, 0x8c, 0xd1, 0x0d,
+	0xb2, 0xb4, 0x91, 0x3a, 0x12, 0xcb, 0x86, 0xd9, 0xc2, 0xec, 0x2e, 0x5d, 0x8a, 0x2c, 0x57, 0x14,
+	0x58, 0x23, 0x30, 0xf4, 0x01, 0x2c, 0x46, 0xce, 0x4f, 0xe2, 0xf4, 0xeb, 0x40, 0x81, 0xf9, 0x91,
+	0x50, 0x73, 0x70, 0x22, 0x3e, 0x15, 0x20, 0x3f, 0x2c, 0xd7, 0xa3, 0x75, 0x98, 0x0d, 0x57, 0xfc,
+	0x63, 0x79, 0x34, 0x68, 0x5e, 0xf5, 0xbf, 0x0e, 0xb3, 0xe1, 0x1a, 0x7f, 0x3c, 0x1e, 0xbd, 0x91,
+	0xf5, 0xbe, 0xe0, 0xaf, 0xf7, 0xc5, 0xef, 0xc5, 0x60, 0x3e, 0xac, 0x7c, 0x15, 0x66, 0x9c, 0x7d,
+	0x2c, 0xdb, 0x01, 0xae, 0x4d, 0xb0, 0x06, 0xf1, 0xb6, 0xe4, 0xb0, 0x28, 0xfc, 0x54, 0x80, 0x69,
+	0xbe, 0x43, 0x7a, 0x0d, 0xe2, 0x1d, 0x55, 0x1f, 0xdf, 0x1a, 0x04, 0x9b, 0x12, 0x29, 0x27, 0xe3,
+	0x0f, 0x9f, 0x60, 0xa3, 0x1d, 0xb8, 0xc0, 0xd7, 0xa5, 0x0e, 0xd6, 0x6d, 0x5f, 0x05, 0x3e, 0x16,
+	0x8b, 0x9c, 0x8f, 0x96, 0xe5, 0x97, 0xaf, 0x25, 0xe0, 0xd2, 0xd0, 0x8a, 0xe2, 0x7c, 0x32, 0x23,
+	0xba, 0x03, 0x33, 0x4d, 0x43, 0x77, 0xaf, 0x90, 0x8e, 0x7b, 0x0d, 0x9c, 0xd3, 0xa0, 0x13, 0x98,
+	0xe7, 0x39, 0x49, 0xd1, 0xba, 0x47, 0xca, 0x01, 0x66, 0x67, 0xf9, 0xd9, 0xb5, 0xed, 0x33, 0x95,
+	0x49, 0x2b, 0x9b, 0x87, 0x27, 0x25, 0xca, 0x6f, 0x47, 0xa1, 0x9f, 0x84, 0x38, 0x53, 0xb2, 0x1e,
+	0x33, 0x39, 0x0e, 0x04, 0xbd, 0x04, 0xfc, 0x0d, 0x8f, 0x27, 0x39, 0xc9, 0x53, 0x67, 0x96, 0x75,
+	0xb8, 0xa8, 0xcb, 0x90, 0x34, 0x95, 0x96, 0x7a, 0x42, 0x8b, 0x9b, 0x64, 0x65, 0x4a, 0x62, 0x4d,
+	0xf1, 0x5b, 0x02, 0x5c, 0x1c, 0x22, 0x10, 0xdd, 0x86, 0x9b, 0x9b, 0x9b, 0x8f, 0xe4, 0x52, 0x6d,
+	0x7b, 0xbb, 0xb6, 0x23, 0xef, 0x14, 0x1b, 0x5b, 0xfb, 0x65, 0x99, 0x26, 0xab, 0xf5, 0x72, 0x63,
+	0x54, 0xa6, 0x23, 0xab, 0x5a, 0xf9, 0x51, 0x71, 0xa3, 0x5c, 0xda, 0xda, 0x2e, 0x56, 0x73, 0x31,
+	0xf4, 0x1c, 0xe4, 0xbd, 0xa4, 0xc7, 0x58, 0xc8, 0x0e, 0x7a, 0x1c, 0x5d, 0x80, 0x4c, 0x10, 0x94,
+	0x58, 0x07, 0x48, 0x39, 0x43, 0x12, 0x7f, 0x27, 0x06, 0x69, 0x77, 0xde, 0xd0, 0x0e, 0xa4, 0x69,
+	0x95, 0xa0, 0x62, 0xdd, 0x1e, 0xa7, 0x5c, 0x6f, 0x38, 0xc8, 0x2e, 0x0b, 0xba, 0xc3, 0x72, 0xa0,
+	0x84, 0x5f, 0x4f, 0x7f, 0x66, 0x2a, 0xdd, 0x2e, 0x76, 0x42, 0x7d, 0x24, 0xbf, 0x3d, 0x07, 0x39,
+	0xc0, 0xcf, 0x65, 0x81, 0x24, 0x98, 0x3d, 0xee, 0x58, 0xb2, 0xc3, 0x71, 0x8c, 0xfa, 0xfc, 0x7e,
+	0xc7, 0x7a, 0x38, 0xc8, 0x12, 0x8e, 0x5d, 0x30, 0xd9, 0x90, 0xb3, 0xaf, 0x66, 0xe2, 0x2d, 0x40,
+	0x83, 0x03, 0x8a, 0xbc, 0x42, 0x74, 0x13, 0xd0, 0xa0, 0xaa, 0x28, 0x07, 0x71, 0x27, 0x52, 0xe6,
+	0x24, 0xf2, 0x53, 0xfc, 0x08, 0x16, 0x22, 0x14, 0x20, 0xf9, 0x8b, 0x13, 0xcb, 0x1e, 0x01, 0x70,
+	0x10, 0x41, 0xb8, 0x09, 0xf3, 0x5e, 0xe8, 0xf9, 0xaf, 0x81, 0x64, 0xdc, 0xc0, 0xa2, 0x17, 0x41,
+	0x7e, 0x1e, 0x83, 0x8b, 0x43, 0x36, 0x8d, 0xc8, 0x86, 0xf9, 0xc1, 0x2d, 0x28, 0xc9, 0x7b, 0xef,
+	0x9f, 0x61, 0x0b, 0x3a, 0x04, 0x2e, 0x85, 0x45, 0x14, 0xfe, 0x41, 0x80, 0xe5, 0x68, 0xdc, 0xf3,
+	0x79, 0xbd, 0xa8, 0x43, 0xbe, 0xeb, 0x6c, 0x38, 0x43, 0x5b, 0x5e, 0xee, 0x60, 0xaf, 0x9d, 0xf2,
+	0x49, 0x35, 0x6a, 0xb3, 0x2a, 0x5d, 0xec, 0x46, 0x77, 0x88, 0xdf, 0x8a, 0xc3, 0x02, 0x4d, 0x4a,
+	0xa1, 0xc1, 0xbc, 0x0b, 0xd3, 0xf4, 0x8b, 0xfc, 0x44, 0x9f, 0xb5, 0x39, 0x09, 0xda, 0x82, 0x74,
+	0xd3, 0xd0, 0x5b, 0x2a, 0xd5, 0x3a, 0x7e, 0xfa, 0x86, 0x88, 0xed, 0xd3, 0x4b, 0x0e, 0x89, 0xe4,
+	0x51, 0xa3, 0xee, 0x08, 0x7b, 0x24, 0xce, 0x6c, 0x8f, 0xca, 0xd4, 0x50, 0x8b, 0x8c, 0x3e, 0xe4,
+	0x48, 0x7e, 0x1e, 0x87, 0x1c, 0x11, 0x9b, 0x97, 0x7f, 0x17, 0x60, 0x29, 0xf2, 0xf4, 0x02, 0xb5,
+	0x60, 0x89, 0xbd, 0x3b, 0x8a, 0x76, 0xfe, 0xd5, 0x53, 0xe7, 0x29, 0xe4, 0x19, 0x8b, 0x87, 0x83,
+	0x40, 0x0b, 0x7d, 0x04, 0x0b, 0xfc, 0xd8, 0xc5, 0xea, 0x75, 0xbb, 0x26, 0xb6, 0x2c, 0x7e, 0xe6,
+	0x42, 0x64, 0x7c, 0xf1, 0xf4, 0xb9, 0xac, 0x7b, 0x54, 0x12, 0x32, 0xc3, 0x20, 0x4b, 0xfc, 0x08,
+	0x2e, 0x0c, 0x20, 0x06, 0xdd, 0x46, 0xf8, 0x2c, 0x6e, 0x23, 0x7e, 0x9a, 0x84, 0xf9, 0x50, 0x37,
+	0x7a, 0x0c, 0xb3, 0xf8, 0xc4, 0x1b, 0x0b, 0xf3, 0xcb, 0xb7, 0x26, 0x10, 0xb0, 0x52, 0xf6, 0xc8,
+	0x25, 0x3f, 0xaf, 0xc2, 0xdf, 0x0b, 0x90, 0xf6, 0x04, 0x9d, 0xfd, 0xfe, 0x0b, 0x7a, 0x1f, 0x52,
+	0xec, 0x5e, 0x35, 0x7f, 0x67, 0x92, 0x3d, 0xed, 0x38, 0x49, 0xa3, 0x13, 0xa6, 0x68, 0x35, 0x4e,
+	0x25, 0xb9, 0xf4, 0xde, 0x69, 0x6b, 0x62, 0xb2, 0xd3, 0xd6, 0x42, 0x13, 0xc0, 0x1d, 0x8c, 0x85,
+	0xf6, 0x00, 0x5c, 0xbb, 0x3a, 0x5e, 0xf6, 0xc6, 0x24, 0x56, 0xf3, 0x26, 0xc8, 0xc7, 0xa8, 0xf0,
+	0xdd, 0x18, 0xcc, 0xfa, 0xec, 0x89, 0x4c, 0xc8, 0x69, 0x46, 0x9b, 0xde, 0x6c, 0x70, 0x2d, 0xc0,
+	0x36, 0xe7, 0xf7, 0xce, 0x38, 0x45, 0x2b, 0x55, 0xc6, 0xcf, 0x35, 0xcd, 0xbc, 0x16, 0x04, 0xa0,
+	0x47, 0x81, 0xa1, 0x31, 0x87, 0x78, 0xf3, 0x4c, 0x43, 0x23, 0xe1, 0xed, 0xe3, 0x25, 0xfe, 0x2a,
+	0xcc, 0x87, 0xa4, 0xa3, 0x6b, 0xf0, 0x5c, 0xb5, 0x76, 0x6f, 0xab, 0x54, 0xac, 0xca, 0xb5, 0xdd,
+	0xb2, 0x54, 0x6c, 0xd4, 0xa4, 0x50, 0x19, 0x34, 0x03, 0xf1, 0xe2, 0xce, 0x46, 0x4e, 0x70, 0x0f,
+	0x61, 0xff, 0x5a, 0x80, 0x8b, 0x43, 0xde, 0x7d, 0x90, 0xdd, 0x99, 0x9b, 0x01, 0xdc, 0xfb, 0xdf,
+	0xec, 0x78, 0x3c, 0xe7, 0xeb, 0x60, 0x97, 0xbf, 0x35, 0xc8, 0x07, 0xd3, 0x85, 0xec, 0xbd, 0x3d,
+	0x61, 0xf7, 0x57, 0x5f, 0x3d, 0xb5, 0x0c, 0x72, 0x69, 0x9d, 0x97, 0x27, 0x17, 0xed, 0x08, 0xb0,
+	0x8a, 0x2d, 0xf1, 0xf7, 0xa7, 0x61, 0x29, 0x92, 0xe4, 0x3c, 0xee, 0xd5, 0xbb, 0xc1, 0x15, 0x9b,
+	0x38, 0xb8, 0x3e, 0x08, 0xa7, 0x59, 0x3e, 0xe5, 0x67, 0x5a, 0x51, 0x43, 0xac, 0x86, 0xe7, 0xe5,
+	0xe4, 0x79, 0xe6, 0xe5, 0x7d, 0x98, 0x0f, 0xe5, 0x65, 0x7e, 0xe0, 0x38, 0x61, 0x4e, 0xce, 0x06,
+	0x73, 0x32, 0x7a, 0xec, 0xbd, 0xba, 0x61, 0xdb, 0xec, 0x2f, 0x4f, 0xec, 0x0f, 0x2b, 0x8e, 0x5f,
+	0x04, 0xdf, 0xe2, 0x14, 0xbe, 0x23, 0x40, 0x26, 0xd0, 0xe5, 0x7d, 0xcd, 0x11, 0x7c, 0x5f, 0x73,
+	0xd0, 0x47, 0x90, 0x70, 0xef, 0x31, 0x67, 0x47, 0x17, 0x71, 0xd1, 0xf2, 0x43, 0x06, 0xa4, 0xb2,
+	0x4a, 0x46, 0x0b, 0x4b, 0x94, 0x2f, 0xca, 0xc3, 0x4c, 0x0b, 0xdb, 0x8a, 0xaa, 0x59, 0xfc, 0x0e,
+	0xbb, 0xd3, 0x14, 0x3f, 0x82, 0xfc, 0x30, 0x5a, 0xb2, 0x8d, 0x69, 0x48, 0xc5, 0x9d, 0xfa, 0x66,
+	0x4d, 0xda, 0xa6, 0xc7, 0x29, 0xb2, 0x54, 0xae, 0xef, 0x55, 0x1b, 0x72, 0xa9, 0xb6, 0x51, 0x1e,
+	0xdc, 0xc6, 0xd4, 0xf7, 0x4a, 0xa5, 0x72, 0xbd, 0xce, 0x0e, 0xf7, 0xca, 0x92, 0x54, 0x93, 0x72,
+	0xb1, 0xdb, 0x36, 0x80, 0xef, 0x0f, 0x25, 0x0a, 0xb0, 0x5c, 0xdd, 0xba, 0x5f, 0xae, 0x6e, 0x55,
+	0x6a, 0xb5, 0x8d, 0x10, 0x87, 0x0b, 0x90, 0xd9, 0x2f, 0x4b, 0x8f, 0xe5, 0xbd, 0x1d, 0x8a, 0xf2,
+	0x38, 0x27, 0xa0, 0x39, 0x48, 0xb9, 0xad, 0x18, 0x69, 0xed, 0xd6, 0xea, 0xf5, 0xad, 0xf5, 0x6a,
+	0x39, 0x17, 0x47, 0x00, 0xd3, 0xbc, 0x27, 0x41, 0xb6, 0x4d, 0x94, 0x94, 0x03, 0x92, 0xb7, 0xff,
+	0x56, 0x00, 0x34, 0xb8, 0x3e, 0xa0, 0x1b, 0x70, 0x55, 0x2a, 0x57, 0xe9, 0x50, 0x86, 0x67, 0xa2,
+	0x39, 0x48, 0x95, 0x1f, 0xec, 0x15, 0xab, 0x72, 0xa3, 0x96, 0x13, 0x50, 0x0e, 0xe6, 0x76, 0x6a,
+	0x0d, 0xd9, 0x85, 0xd0, 0xe3, 0xca, 0x7b, 0x52, 0xb9, 0xd8, 0x28, 0x4b, 0x72, 0xa3, 0x52, 0xdc,
+	0xc9, 0xc5, 0x51, 0x06, 0xd2, 0xd5, 0x72, 0xbd, 0xce, 0x9a, 0x09, 0x32, 0x48, 0x3f, 0x82, 0x5c,
+	0x93, 0x18, 0x79, 0x3d, 0x97, 0x44, 0x17, 0x61, 0xc1, 0x45, 0xf5, 0x75, 0x4c, 0x93, 0xe1, 0x94,
+	0x1f, 0x6d, 0xd5, 0x1b, 0xf5, 0xdc, 0xcc, 0xda, 0x8f, 0x01, 0x60, 0x43, 0xeb, 0xd6, 0xb1, 0xf9,
+	0x54, 0x6d, 0x62, 0xf4, 0x27, 0x02, 0x64, 0x83, 0x0f, 0xc6, 0xd0, 0xab, 0xe3, 0xbd, 0x0d, 0xf1,
+	0x3d, 0x83, 0x2b, 0xac, 0x4d, 0x42, 0xc2, 0xee, 0x8a, 0x8b, 0x37, 0x7e, 0xeb, 0x1f, 0x7f, 0xf1,
+	0x87, 0xb1, 0x2b, 0x62, 0xde, 0xfd, 0xe3, 0x94, 0x26, 0xc3, 0x78, 0x87, 0xbf, 0x58, 0x79, 0x47,
+	0xb8, 0x8d, 0xfe, 0x48, 0x80, 0x4c, 0xe0, 0x2d, 0x26, 0xfa, 0xd2, 0xa4, 0x8f, 0x72, 0x0b, 0xaf,
+	0x4e, 0x40, 0xc1, 0x75, 0x13, 0xa9, 0x6e, 0xcf, 0x89, 0x17, 0x07, 0x74, 0x63, 0xdf, 0x7f, 0x88,
+	0x6a, 0xdf, 0x17, 0xe0, 0xc2, 0xc0, 0x23, 0x46, 0xf4, 0xfa, 0xd8, 0x6f, 0x35, 0xfd, 0x2a, 0xbe,
+	0x31, 0x21, 0x15, 0x57, 0xf3, 0x26, 0x55, 0xf3, 0x9a, 0x78, 0x79, 0x40, 0x4d, 0xef, 0x0d, 0x28,
+	0x51, 0xf5, 0x8f, 0x05, 0x58, 0x8e, 0x7e, 0xb5, 0x87, 0xde, 0x1e, 0x7d, 0x1a, 0x32, 0xe2, 0xa5,
+	0x5f, 0xe1, 0x8a, 0x43, 0xea, 0xfb, 0xa7, 0x1c, 0xef, 0x35, 0x5b, 0x84, 0x72, 0x7c, 0x5e, 0x7d,
+	0xff, 0xa6, 0xc3, 0xa7, 0x78, 0x29, 0xf2, 0x8a, 0x3f, 0x1a, 0x79, 0x62, 0x3c, 0xea, 0x55, 0xc0,
+	0xe4, 0xaa, 0xb5, 0x5c, 0x36, 0xef, 0x28, 0x8c, 0x31, 0x51, 0xed, 0x6f, 0x04, 0x58, 0x88, 0x78,
+	0x69, 0x83, 0xde, 0x1c, 0xfd, 0x17, 0x14, 0xc3, 0x5e, 0x08, 0x15, 0xde, 0x9a, 0x98, 0x8e, 0x4f,
+	0xf4, 0x1a, 0x55, 0xf8, 0x15, 0x74, 0xdb, 0x55, 0xf8, 0xab, 0x64, 0x6f, 0x7f, 0xc7, 0xb1, 0x28,
+	0x5f, 0x12, 0x56, 0x6f, 0x7f, 0xb2, 0xea, 0xfe, 0x9f, 0xc7, 0x5f, 0x08, 0x90, 0x09, 0xbc, 0x51,
+	0x19, 0x1d, 0x3a, 0x51, 0xef, 0x64, 0x46, 0x87, 0x4e, 0xe4, 0x03, 0x18, 0xf1, 0x4d, 0xaa, 0xea,
+	0x97, 0xd0, 0x8a, 0xab, 0xaa, 0x19, 0x78, 0x2b, 0xb2, 0xfa, 0x55, 0xe7, 0xa5, 0xcd, 0x9d, 0xdb,
+	0x9f, 0xac, 0x7a, 0xfb, 0xf3, 0xef, 0x09, 0x80, 0x06, 0x5f, 0x96, 0xa0, 0x37, 0x4e, 0xd3, 0x20,
+	0xf2, 0x2d, 0x4b, 0xe1, 0xcd, 0x49, 0xc9, 0xb8, 0xf6, 0x57, 0xa9, 0xf6, 0x97, 0xd0, 0xc5, 0x21,
+	0xda, 0xaf, 0x7f, 0x57, 0x80, 0x2f, 0x34, 0x8d, 0xce, 0x08, 0xf6, 0xeb, 0xa9, 0x0d, 0xad, 0xbb,
+	0x6b, 0x1a, 0xb6, 0xb1, 0x2b, 0xfc, 0xda, 0x1d, 0x8e, 0xd7, 0x36, 0x34, 0x45, 0x6f, 0xaf, 0x18,
+	0x66, 0x7b, 0xb5, 0x8d, 0x75, 0x7a, 0x3b, 0x61, 0x95, 0x75, 0x29, 0x5d, 0xd5, 0x8a, 0xfa, 0x1b,
+	0xa9, 0x77, 0x5b, 0x5a, 0xf7, 0x07, 0xb1, 0xfc, 0x3d, 0x46, 0x4f, 0x5f, 0x5d, 0xae, 0x6c, 0x68,
+	0xdd, 0x95, 0xfd, 0xb5, 0x75, 0xd2, 0xfd, 0x33, 0xa7, 0xeb, 0x43, 0xda, 0xf5, 0xe1, 0x86, 0xd6,
+	0xfd, 0x70, 0x9f, 0x51, 0x1e, 0x4c, 0x53, 0xfe, 0xaf, 0xfd, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff,
+	0xac, 0x11, 0x04, 0x57, 0x2a, 0x4b, 0x00, 0x00,
 }

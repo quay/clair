@@ -12,12 +12,19 @@ import (
 	"io"
 
 	pb_testproto "github.com/grpc-ecosystem/go-grpc-prometheus/examples/testproto"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
+
+var (
+	// client metrics must satisfy the Collector interface
+	_ prometheus.Collector = NewClientMetrics()
 )
 
 func TestClientInterceptorSuite(t *testing.T) {
@@ -152,10 +159,11 @@ func (s *ClientInterceptorTestSuite) TestStreamingIncrementsHistograms() {
 
 	before = sumCountersForMetricAndLabels(s.T(), "grpc_client_handling_seconds_count", "PingList", "server_stream")
 	ss, err := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
-	require.NoError(s.T(), err, "PingList must not fail immedietely")
+	require.NoError(s.T(), err, "PingList must not fail immediately")
 	// Do a read, just to progate errors.
 	_, err = ss.Recv()
-	require.Equal(s.T(), codes.FailedPrecondition, grpc.Code(err), "Recv must return FailedPrecondition, otherwise the test is wrong")
+	st, _ := status.FromError(err)
+	require.Equal(s.T(), codes.FailedPrecondition, st.Code(), "Recv must return FailedPrecondition, otherwise the test is wrong")
 
 	after = sumCountersForMetricAndLabels(s.T(), "grpc_client_handling_seconds_count", "PingList", "server_stream")
 	assert.EqualValues(s.T(), before+1, after, "grpc_client_handling_seconds_count should be incremented for PingList FailedPrecondition")
@@ -180,10 +188,11 @@ func (s *ClientInterceptorTestSuite) TestStreamingIncrementsHandled() {
 
 	before = sumCountersForMetricAndLabels(s.T(), "grpc_client_handled_total", "PingList", "server_stream", "FailedPrecondition")
 	ss, err := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
-	require.NoError(s.T(), err, "PingList must not fail immedietely")
+	require.NoError(s.T(), err, "PingList must not fail immediately")
 	// Do a read, just to progate errors.
 	_, err = ss.Recv()
-	require.Equal(s.T(), codes.FailedPrecondition, grpc.Code(err), "Recv must return FailedPrecondition, otherwise the test is wrong")
+	st, _ := status.FromError(err)
+	require.Equal(s.T(), codes.FailedPrecondition, st.Code(), "Recv must return FailedPrecondition, otherwise the test is wrong")
 
 	after = sumCountersForMetricAndLabels(s.T(), "grpc_client_handled_total", "PingList", "server_stream", "FailedPrecondition")
 	assert.EqualValues(s.T(), before+1, after, "grpc_client_handled_total should be incremented for PingList FailedPrecondition")
@@ -201,7 +210,7 @@ func (s *ClientInterceptorTestSuite) TestStreamingIncrementsMessageCounts() {
 			break
 		}
 		require.NoError(s.T(), err, "reading pingList shouldn't fail")
-		count += 1
+		count++
 	}
 	require.EqualValues(s.T(), countListResponses, count, "Number of received msg on the wire must match")
 	afterSent := sumCountersForMetricAndLabels(s.T(), "grpc_client_msg_sent_total", "PingList", "server_stream")

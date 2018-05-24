@@ -100,6 +100,13 @@ const (
 	removeLockExpired = `DELETE FROM LOCK WHERE until < CURRENT_TIMESTAMP`
 
 	// vulnerability.go
+	listVulnerabilities = `
+		SELECT v.id, v.name, v.description, v.link, v.severity, v.metadata, n.name, n.version_format
+		FROM vulnerability AS v, namespace AS n
+		WHERE v.namespace_id = n.id
+		AND v.deleted_at IS NULL
+		`
+
 	searchVulnerability = `
 		SELECT v.id, v.description, v.link, v.severity, v.metadata, n.version_format 
 		FROM vulnerability AS v, namespace AS n

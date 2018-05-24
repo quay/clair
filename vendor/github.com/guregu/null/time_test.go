@@ -159,6 +159,19 @@ func TestTimeScanValue(t *testing.T) {
 	assertNullTime(t, wrong, "scanned wrong")
 }
 
+func TestTimeValueOrZero(t *testing.T) {
+	valid := TimeFrom(timeValue)
+	if valid.ValueOrZero() != valid.Time || valid.ValueOrZero().IsZero() {
+		t.Error("unexpected ValueOrZero", valid.ValueOrZero())
+	}
+
+	invalid := valid
+	invalid.Valid = false
+	if !invalid.ValueOrZero().IsZero() {
+		t.Error("unexpected ValueOrZero", invalid.ValueOrZero())
+	}
+}
+
 func assertTime(t *testing.T, ti Time, from string) {
 	if ti.Time != timeValue {
 		t.Errorf("bad %v time: %v ≠ %v\n", from, ti.Time, timeValue)

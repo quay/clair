@@ -22,6 +22,12 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
+
+var (
+	// server metrics must satisfy the Collector interface
+	_ prometheus.Collector = NewServerMetrics()
 )
 
 const (
@@ -88,7 +94,7 @@ func (s *ServerInterceptorTestSuite) TearDownSuite() {
 }
 
 func (s *ServerInterceptorTestSuite) TestRegisterPresetsStuff() {
-	for testId, testCase := range []struct {
+	for testID, testCase := range []struct {
 		metricName     string
 		existingLabels []string
 	}{
@@ -104,7 +110,7 @@ func (s *ServerInterceptorTestSuite) TestRegisterPresetsStuff() {
 		{"grpc_server_handled_total", []string{"mwitkow.testproto.TestService", "PingEmpty", "unary", "ResourceExhausted"}},
 	} {
 		lineCount := len(fetchPrometheusLines(s.T(), testCase.metricName, testCase.existingLabels...))
-		assert.NotEqual(s.T(), 0, lineCount, "metrics must exist for test case %d", testId)
+		assert.NotEqual(s.T(), 0, lineCount, "metrics must exist for test case %d", testID)
 	}
 }
 
@@ -182,7 +188,7 @@ func (s *ServerInterceptorTestSuite) TestStreamingIncrementsHistograms() {
 
 	before = sumCountersForMetricAndLabels(s.T(), "grpc_server_handling_seconds_count", "PingList", "server_stream")
 	_, err := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
-	require.NoError(s.T(), err, "PingList must not fail immedietely")
+	require.NoError(s.T(), err, "PingList must not fail immediately")
 
 	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_handling_seconds_count", "PingList", "server_stream")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_handling_seconds_count should be incremented for PingList FailedPrecondition")
@@ -207,7 +213,7 @@ func (s *ServerInterceptorTestSuite) TestStreamingIncrementsHandled() {
 
 	before = sumCountersForMetricAndLabels(s.T(), "grpc_server_handled_total", "PingList", "server_stream", "FailedPrecondition")
 	_, err := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
-	require.NoError(s.T(), err, "PingList must not fail immedietely")
+	require.NoError(s.T(), err, "PingList must not fail immediately")
 
 	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_handled_total", "PingList", "server_stream", "FailedPrecondition")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_handled_total should be incremented for PingList FailedPrecondition")
@@ -225,7 +231,7 @@ func (s *ServerInterceptorTestSuite) TestStreamingIncrementsMessageCounts() {
 			break
 		}
 		require.NoError(s.T(), err, "reading pingList shouldn't fail")
-		count += 1
+		count++
 	}
 	require.EqualValues(s.T(), countListResponses, count, "Number of received msg on the wire must match")
 	afterSent := sumCountersForMetricAndLabels(s.T(), "grpc_server_msg_sent_total", "PingList", "server_stream")
@@ -292,12 +298,12 @@ func (s *testService) Ping(ctx context.Context, ping *pb_testproto.PingRequest) 
 
 func (s *testService) PingError(ctx context.Context, ping *pb_testproto.PingRequest) (*pb_testproto.Empty, error) {
 	code := codes.Code(ping.ErrorCodeReturned)
-	return nil, grpc.Errorf(code, "Userspace error.")
+	return nil, status.Errorf(code, "Userspace error.")
 }
 
 func (s *testService) PingList(ping *pb_testproto.PingRequest, stream pb_testproto.TestService_PingListServer) error {
 	if ping.ErrorCodeReturned != 0 {
-		return grpc.Errorf(codes.Code(ping.ErrorCodeReturned), "foobar")
+		return status.Errorf(codes.Code(ping.ErrorCodeReturned), "foobar")
 	}
 	// Send user trailers and headers.
 	for i := 0; i < countListResponses; i++ {

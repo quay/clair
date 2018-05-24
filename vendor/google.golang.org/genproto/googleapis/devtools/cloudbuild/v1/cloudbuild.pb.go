@@ -8,17 +8,24 @@ It is generated from these files:
 	google/devtools/cloudbuild/v1/cloudbuild.proto
 
 It has these top-level messages:
+	RetryBuildRequest
+	RunBuildTriggerRequest
 	StorageSource
 	RepoSource
 	Source
 	BuiltImage
 	BuildStep
+	Volume
 	Results
+	ArtifactResult
 	Build
+	Artifacts
+	TimeSpan
 	BuildOperationMetadata
 	SourceProvenance
 	FileHashes
 	Hash
+	Secret
 	CreateBuildRequest
 	GetBuildRequest
 	ListBuildsRequest
@@ -39,10 +46,12 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "google.golang.org/genproto/googleapis/api/annotations"
+import _ "google.golang.org/genproto/googleapis/api/httpbody"
+import _ "google.golang.org/genproto/googleapis/cloud/audit"
 import google_longrunning "google.golang.org/genproto/googleapis/longrunning"
-import google_protobuf3 "github.com/golang/protobuf/ptypes/duration"
-import google_protobuf2 "github.com/golang/protobuf/ptypes/empty"
-import google_protobuf4 "github.com/golang/protobuf/ptypes/timestamp"
+import google_protobuf4 "github.com/golang/protobuf/ptypes/duration"
+import google_protobuf3 "github.com/golang/protobuf/ptypes/empty"
+import google_protobuf5 "github.com/golang/protobuf/ptypes/timestamp"
 
 import (
 	context "golang.org/x/net/context"
@@ -60,25 +69,25 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-// Possible status of a build.
+// Possible status of a build or build step.
 type Build_Status int32
 
 const (
 	// Status of the build is unknown.
 	Build_STATUS_UNKNOWN Build_Status = 0
-	// Build is queued; work has not yet begun.
+	// Build or step is queued; work has not yet begun.
 	Build_QUEUED Build_Status = 1
-	// Build is being executed.
+	// Build or step is being executed.
 	Build_WORKING Build_Status = 2
-	// Build finished successfully.
+	// Build or step finished successfully.
 	Build_SUCCESS Build_Status = 3
-	// Build failed to complete successfully.
+	// Build or step failed to complete successfully.
 	Build_FAILURE Build_Status = 4
-	// Build failed due to an internal cause.
+	// Build or step failed due to an internal cause.
 	Build_INTERNAL_ERROR Build_Status = 5
-	// Build took longer than was allowed.
+	// Build or step took longer than was allowed.
 	Build_TIMEOUT Build_Status = 6
-	// Build was canceled by a user.
+	// Build or step was canceled by a user.
 	Build_CANCELLED Build_Status = 7
 )
 
@@ -106,7 +115,7 @@ var Build_Status_value = map[string]int32{
 func (x Build_Status) String() string {
 	return proto.EnumName(Build_Status_name, int32(x))
 }
-func (Build_Status) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{6, 0} }
+func (Build_Status) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{10, 0} }
 
 // Specifies the hash algorithm, if any.
 type Hash_HashType int32
@@ -116,21 +125,25 @@ const (
 	Hash_NONE Hash_HashType = 0
 	// Use a sha256 hash.
 	Hash_SHA256 Hash_HashType = 1
+	// Use a md5 hash.
+	Hash_MD5 Hash_HashType = 2
 )
 
 var Hash_HashType_name = map[int32]string{
 	0: "NONE",
 	1: "SHA256",
+	2: "MD5",
 }
 var Hash_HashType_value = map[string]int32{
 	"NONE":   0,
 	"SHA256": 1,
+	"MD5":    2,
 }
 
 func (x Hash_HashType) String() string {
 	return proto.EnumName(Hash_HashType_name, int32(x))
 }
-func (Hash_HashType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{10, 0} }
+func (Hash_HashType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{16, 0} }
 
 // Specifies the manner in which the build should be verified, if at all.
 type BuildOptions_VerifyOption int32
@@ -155,19 +168,167 @@ func (x BuildOptions_VerifyOption) String() string {
 	return proto.EnumName(BuildOptions_VerifyOption_name, int32(x))
 }
 func (BuildOptions_VerifyOption) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor0, []int{23, 0}
+	return fileDescriptor0, []int{30, 0}
 }
 
-// StorageSource describes the location of the source in an archive file in
-// Google Cloud Storage.
+// Supported VM sizes.
+type BuildOptions_MachineType int32
+
+const (
+	// Standard machine type.
+	BuildOptions_UNSPECIFIED BuildOptions_MachineType = 0
+	// Highcpu machine with 8 CPUs.
+	BuildOptions_N1_HIGHCPU_8 BuildOptions_MachineType = 1
+	// Highcpu machine with 32 CPUs.
+	BuildOptions_N1_HIGHCPU_32 BuildOptions_MachineType = 2
+)
+
+var BuildOptions_MachineType_name = map[int32]string{
+	0: "UNSPECIFIED",
+	1: "N1_HIGHCPU_8",
+	2: "N1_HIGHCPU_32",
+}
+var BuildOptions_MachineType_value = map[string]int32{
+	"UNSPECIFIED":   0,
+	"N1_HIGHCPU_8":  1,
+	"N1_HIGHCPU_32": 2,
+}
+
+func (x BuildOptions_MachineType) String() string {
+	return proto.EnumName(BuildOptions_MachineType_name, int32(x))
+}
+func (BuildOptions_MachineType) EnumDescriptor() ([]byte, []int) { return fileDescriptor0, []int{30, 1} }
+
+// Specifies the behavior when there is an error in the substitution checks.
+type BuildOptions_SubstitutionOption int32
+
+const (
+	// Fails the build if error in substitutions checks, like missing
+	// a substitution in the template or in the map.
+	BuildOptions_MUST_MATCH BuildOptions_SubstitutionOption = 0
+	// Do not fail the build if error in substitutions checks.
+	BuildOptions_ALLOW_LOOSE BuildOptions_SubstitutionOption = 1
+)
+
+var BuildOptions_SubstitutionOption_name = map[int32]string{
+	0: "MUST_MATCH",
+	1: "ALLOW_LOOSE",
+}
+var BuildOptions_SubstitutionOption_value = map[string]int32{
+	"MUST_MATCH":  0,
+	"ALLOW_LOOSE": 1,
+}
+
+func (x BuildOptions_SubstitutionOption) String() string {
+	return proto.EnumName(BuildOptions_SubstitutionOption_name, int32(x))
+}
+func (BuildOptions_SubstitutionOption) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{30, 2}
+}
+
+// Specifies the behavior when writing build logs to Google Cloud Storage.
+type BuildOptions_LogStreamingOption int32
+
+const (
+	// Service may automatically determine build log streaming behavior.
+	BuildOptions_STREAM_DEFAULT BuildOptions_LogStreamingOption = 0
+	// Build logs should be streamed to Google Cloud Storage.
+	BuildOptions_STREAM_ON BuildOptions_LogStreamingOption = 1
+	// Build logs should not be streamed to Google Cloud Storage; they will be
+	// written when the build is completed.
+	BuildOptions_STREAM_OFF BuildOptions_LogStreamingOption = 2
+)
+
+var BuildOptions_LogStreamingOption_name = map[int32]string{
+	0: "STREAM_DEFAULT",
+	1: "STREAM_ON",
+	2: "STREAM_OFF",
+}
+var BuildOptions_LogStreamingOption_value = map[string]int32{
+	"STREAM_DEFAULT": 0,
+	"STREAM_ON":      1,
+	"STREAM_OFF":     2,
+}
+
+func (x BuildOptions_LogStreamingOption) String() string {
+	return proto.EnumName(BuildOptions_LogStreamingOption_name, int32(x))
+}
+func (BuildOptions_LogStreamingOption) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor0, []int{30, 3}
+}
+
+// Specifies a build to retry.
+type RetryBuildRequest struct {
+	// ID of the project.
+	ProjectId string `protobuf:"bytes,1,opt,name=project_id,json=projectId" json:"project_id,omitempty"`
+	// Build ID of the original build.
+	Id string `protobuf:"bytes,2,opt,name=id" json:"id,omitempty"`
+}
+
+func (m *RetryBuildRequest) Reset()                    { *m = RetryBuildRequest{} }
+func (m *RetryBuildRequest) String() string            { return proto.CompactTextString(m) }
+func (*RetryBuildRequest) ProtoMessage()               {}
+func (*RetryBuildRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+
+func (m *RetryBuildRequest) GetProjectId() string {
+	if m != nil {
+		return m.ProjectId
+	}
+	return ""
+}
+
+func (m *RetryBuildRequest) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+// Specifies a build trigger to run and the source to use.
+type RunBuildTriggerRequest struct {
+	// ID of the project.
+	ProjectId string `protobuf:"bytes,1,opt,name=project_id,json=projectId" json:"project_id,omitempty"`
+	// ID of the trigger.
+	TriggerId string `protobuf:"bytes,2,opt,name=trigger_id,json=triggerId" json:"trigger_id,omitempty"`
+	// Source to build against this trigger.
+	Source *RepoSource `protobuf:"bytes,3,opt,name=source" json:"source,omitempty"`
+}
+
+func (m *RunBuildTriggerRequest) Reset()                    { *m = RunBuildTriggerRequest{} }
+func (m *RunBuildTriggerRequest) String() string            { return proto.CompactTextString(m) }
+func (*RunBuildTriggerRequest) ProtoMessage()               {}
+func (*RunBuildTriggerRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+func (m *RunBuildTriggerRequest) GetProjectId() string {
+	if m != nil {
+		return m.ProjectId
+	}
+	return ""
+}
+
+func (m *RunBuildTriggerRequest) GetTriggerId() string {
+	if m != nil {
+		return m.TriggerId
+	}
+	return ""
+}
+
+func (m *RunBuildTriggerRequest) GetSource() *RepoSource {
+	if m != nil {
+		return m.Source
+	}
+	return nil
+}
+
+// Location of the source in an archive file in Google Cloud Storage.
 type StorageSource struct {
-	// Google Cloud Storage bucket containing source (see
+	// Google Cloud Storage bucket containing the source (see
 	// [Bucket Name
 	// Requirements](https://cloud.google.com/storage/docs/bucket-naming#requirements)).
 	Bucket string `protobuf:"bytes,1,opt,name=bucket" json:"bucket,omitempty"`
-	// Google Cloud Storage object containing source.
+	// Google Cloud Storage object containing the source.
 	//
-	// This object must be a gzipped archive file (.tar.gz) containing source to
+	// This object must be a gzipped archive file (`.tar.gz`) containing source to
 	// build.
 	Object string `protobuf:"bytes,2,opt,name=object" json:"object,omitempty"`
 	// Google Cloud Storage generation for the object. If the generation is
@@ -178,7 +339,7 @@ type StorageSource struct {
 func (m *StorageSource) Reset()                    { *m = StorageSource{} }
 func (m *StorageSource) String() string            { return proto.CompactTextString(m) }
 func (*StorageSource) ProtoMessage()               {}
-func (*StorageSource) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+func (*StorageSource) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
 func (m *StorageSource) GetBucket() string {
 	if m != nil {
@@ -201,15 +362,15 @@ func (m *StorageSource) GetGeneration() int64 {
 	return 0
 }
 
-// RepoSource describes the location of the source in a Google Cloud Source
-// Repository.
+// Location of the source in a Google Cloud Source Repository.
 type RepoSource struct {
-	// ID of the project that owns the repo. If omitted, the project ID requesting
-	// the build is assumed.
+	// ID of the project that owns the Cloud Source Repository. If omitted, the
+	// project ID requesting the build is assumed.
 	ProjectId string `protobuf:"bytes,1,opt,name=project_id,json=projectId" json:"project_id,omitempty"`
-	// Name of the repo. If omitted, the name "default" is assumed.
+	// Name of the Cloud Source Repository. If omitted, the name "default" is
+	// assumed.
 	RepoName string `protobuf:"bytes,2,opt,name=repo_name,json=repoName" json:"repo_name,omitempty"`
-	// A revision within the source repository must be specified in
+	// A revision within the Cloud Source Repository must be specified in
 	// one of these ways.
 	//
 	// Types that are valid to be assigned to Revision:
@@ -217,12 +378,17 @@ type RepoSource struct {
 	//	*RepoSource_TagName
 	//	*RepoSource_CommitSha
 	Revision isRepoSource_Revision `protobuf_oneof:"revision"`
+	// Directory, relative to the source root, in which to run the build.
+	//
+	// This must be a relative path. If a step's `dir` is specified and is an
+	// absolute path, this value is ignored for that step's execution.
+	Dir string `protobuf:"bytes,7,opt,name=dir" json:"dir,omitempty"`
 }
 
 func (m *RepoSource) Reset()                    { *m = RepoSource{} }
 func (m *RepoSource) String() string            { return proto.CompactTextString(m) }
 func (*RepoSource) ProtoMessage()               {}
-func (*RepoSource) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+func (*RepoSource) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
 
 type isRepoSource_Revision interface {
 	isRepoSource_Revision()
@@ -280,6 +446,13 @@ func (m *RepoSource) GetTagName() string {
 func (m *RepoSource) GetCommitSha() string {
 	if x, ok := m.GetRevision().(*RepoSource_CommitSha); ok {
 		return x.CommitSha
+	}
+	return ""
+}
+
+func (m *RepoSource) GetDir() string {
+	if m != nil {
+		return m.Dir
 	}
 	return ""
 }
@@ -365,10 +538,9 @@ func _RepoSource_OneofSizer(msg proto.Message) (n int) {
 	return n
 }
 
-// Source describes the location of the source in a supported storage
-// service.
+// Location of the source in a supported storage service.
 type Source struct {
-	// Describes location of source.
+	// Location of source.
 	//
 	// Types that are valid to be assigned to Source:
 	//	*Source_StorageSource
@@ -379,7 +551,7 @@ type Source struct {
 func (m *Source) Reset()                    { *m = Source{} }
 func (m *Source) String() string            { return proto.CompactTextString(m) }
 func (*Source) ProtoMessage()               {}
-func (*Source) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+func (*Source) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
 
 type isSource_Source interface {
 	isSource_Source()
@@ -490,19 +662,22 @@ func _Source_OneofSizer(msg proto.Message) (n int) {
 	return n
 }
 
-// BuiltImage describes an image built by the pipeline.
+// An image built by the pipeline.
 type BuiltImage struct {
 	// Name used to push the container image to Google Container Registry, as
 	// presented to `docker push`.
 	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
 	// Docker Registry 2.0 digest.
 	Digest string `protobuf:"bytes,3,opt,name=digest" json:"digest,omitempty"`
+	// Stores timing information for pushing the specified image.
+	// @OutputOnly
+	PushTiming *TimeSpan `protobuf:"bytes,4,opt,name=push_timing,json=pushTiming" json:"push_timing,omitempty"`
 }
 
 func (m *BuiltImage) Reset()                    { *m = BuiltImage{} }
 func (m *BuiltImage) String() string            { return proto.CompactTextString(m) }
 func (*BuiltImage) ProtoMessage()               {}
-func (*BuiltImage) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+func (*BuiltImage) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
 
 func (m *BuiltImage) GetName() string {
 	if m != nil {
@@ -518,20 +693,28 @@ func (m *BuiltImage) GetDigest() string {
 	return ""
 }
 
-// BuildStep describes a step to perform in the build pipeline.
+func (m *BuiltImage) GetPushTiming() *TimeSpan {
+	if m != nil {
+		return m.PushTiming
+	}
+	return nil
+}
+
+// A step in the build pipeline.
 type BuildStep struct {
-	// The name of the container image that will run this particular build step.
+	// Required. The name of the container image that will run this particular
+	// build step.
 	//
-	// If the image is already available in the host's Docker daemon's cache, it
+	// If the image is available in the host's Docker daemon's cache, it
 	// will be run directly. If not, the host will attempt to pull the image
 	// first, using the builder service account's credentials if necessary.
 	//
 	// The Docker daemon's cache will already have the latest versions of all of
 	// the officially supported build steps
-	// (https://github.com/GoogleCloudPlatform/cloud-builders). The Docker daemon
-	// will also have cached many of the layers for some popular images, like
-	// "ubuntu", "debian", but they will be refreshed at the time you attempt to
-	// use them.
+	// ([https://github.com/GoogleCloudPlatform/cloud-builders](https://github.com/GoogleCloudPlatform/cloud-builders)).
+	// The Docker daemon will also have cached many of the layers for some popular
+	// images, like "ubuntu", "debian", but they will be refreshed at the time you
+	// attempt to use them.
 	//
 	// If you built an image in a previous build step, it will be stored in the
 	// host's Docker daemon's cache and is available to use as the name for a
@@ -544,32 +727,65 @@ type BuildStep struct {
 	Env []string `protobuf:"bytes,2,rep,name=env" json:"env,omitempty"`
 	// A list of arguments that will be presented to the step when it is started.
 	//
-	// If the image used to run the step's container has an entrypoint, these args
-	// will be used as arguments to that entrypoint. If the image does not define
-	// an entrypoint, the first element in args will be used as the entrypoint,
+	// If the image used to run the step's container has an entrypoint, the `args`
+	// are used as arguments to that entrypoint. If the image does not define
+	// an entrypoint, the first element in args is used as the entrypoint,
 	// and the remainder will be used as arguments.
 	Args []string `protobuf:"bytes,3,rep,name=args" json:"args,omitempty"`
-	// Working directory (relative to project source root) to use when running
-	// this operation's container.
+	// Working directory to use when running this step's container.
+	//
+	// If this value is a relative path, it is relative to the build's working
+	// directory. If this value is absolute, it may be outside the build's working
+	// directory, in which case the contents of the path may not be persisted
+	// across build step executions, unless a `volume` for that path is specified.
+	//
+	// If the build specifies a `RepoSource` with `dir` and a step with a `dir`,
+	// which specifies an absolute path, the `RepoSource` `dir` is ignored for
+	// the step's execution.
 	Dir string `protobuf:"bytes,4,opt,name=dir" json:"dir,omitempty"`
-	// Optional unique identifier for this build step, used in wait_for to
+	// Unique identifier for this build step, used in `wait_for` to
 	// reference this build step as a dependency.
 	Id string `protobuf:"bytes,5,opt,name=id" json:"id,omitempty"`
 	// The ID(s) of the step(s) that this build step depends on.
-	// This build step will not start until all the build steps in wait_for
-	// have completed successfully. If wait_for is empty, this build step will
-	// start when all previous build steps in the Build.Steps list have completed
-	// successfully.
+	// This build step will not start until all the build steps in `wait_for`
+	// have completed successfully. If `wait_for` is empty, this build step will
+	// start when all previous build steps in the `Build.Steps` list have
+	// completed successfully.
 	WaitFor []string `protobuf:"bytes,6,rep,name=wait_for,json=waitFor" json:"wait_for,omitempty"`
-	// Optional entrypoint to be used instead of the build step image's default
-	// If unset, the image's default will be used.
+	// Entrypoint to be used instead of the build step image's default entrypoint.
+	// If unset, the image's default entrypoint is used.
 	Entrypoint string `protobuf:"bytes,7,opt,name=entrypoint" json:"entrypoint,omitempty"`
+	// A list of environment variables which are encrypted using a Cloud Key
+	// Management Service crypto key. These values must be specified in the
+	// build's `Secret`.
+	SecretEnv []string `protobuf:"bytes,8,rep,name=secret_env,json=secretEnv" json:"secret_env,omitempty"`
+	// List of volumes to mount into the build step.
+	//
+	// Each volume will be created as an empty volume prior to execution of the
+	// build step. Upon completion of the build, volumes and their contents will
+	// be discarded.
+	//
+	// Using a named volume in only one step is not valid as it is indicative
+	// of a mis-configured build request.
+	Volumes []*Volume `protobuf:"bytes,9,rep,name=volumes" json:"volumes,omitempty"`
+	// Stores timing information for executing this build step.
+	// @OutputOnly
+	Timing *TimeSpan `protobuf:"bytes,10,opt,name=timing" json:"timing,omitempty"`
+	// Time limit for executing this build step. If not defined, the step has no
+	// time limit and will be allowed to continue to run until either it completes
+	// or the build itself times out.
+	Timeout *google_protobuf4.Duration `protobuf:"bytes,11,opt,name=timeout" json:"timeout,omitempty"`
+	// Status of the build step. At this time, build step status is only updated
+	// on build completion; step status is not updated in real-time as the build
+	// progresses.
+	// @OutputOnly
+	Status Build_Status `protobuf:"varint,12,opt,name=status,enum=google.devtools.cloudbuild.v1.Build_Status" json:"status,omitempty"`
 }
 
 func (m *BuildStep) Reset()                    { *m = BuildStep{} }
 func (m *BuildStep) String() string            { return proto.CompactTextString(m) }
 func (*BuildStep) ProtoMessage()               {}
-func (*BuildStep) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+func (*BuildStep) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
 
 func (m *BuildStep) GetName() string {
 	if m != nil {
@@ -620,18 +836,92 @@ func (m *BuildStep) GetEntrypoint() string {
 	return ""
 }
 
-// Results describes the artifacts created by the build pipeline.
+func (m *BuildStep) GetSecretEnv() []string {
+	if m != nil {
+		return m.SecretEnv
+	}
+	return nil
+}
+
+func (m *BuildStep) GetVolumes() []*Volume {
+	if m != nil {
+		return m.Volumes
+	}
+	return nil
+}
+
+func (m *BuildStep) GetTiming() *TimeSpan {
+	if m != nil {
+		return m.Timing
+	}
+	return nil
+}
+
+func (m *BuildStep) GetTimeout() *google_protobuf4.Duration {
+	if m != nil {
+		return m.Timeout
+	}
+	return nil
+}
+
+func (m *BuildStep) GetStatus() Build_Status {
+	if m != nil {
+		return m.Status
+	}
+	return Build_STATUS_UNKNOWN
+}
+
+// Volume describes a Docker container volume which is mounted into build steps
+// in order to persist files across build step execution.
+type Volume struct {
+	// Name of the volume to mount.
+	//
+	// Volume names must be unique per build step and must be valid names for
+	// Docker volumes. Each named volume must be used by at least two build steps.
+	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
+	// Path at which to mount the volume.
+	//
+	// Paths must be absolute and cannot conflict with other volume paths on the
+	// same build step or with certain reserved volume paths.
+	Path string `protobuf:"bytes,2,opt,name=path" json:"path,omitempty"`
+}
+
+func (m *Volume) Reset()                    { *m = Volume{} }
+func (m *Volume) String() string            { return proto.CompactTextString(m) }
+func (*Volume) ProtoMessage()               {}
+func (*Volume) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+
+func (m *Volume) GetName() string {
+	if m != nil {
+		return m.Name
+	}
+	return ""
+}
+
+func (m *Volume) GetPath() string {
+	if m != nil {
+		return m.Path
+	}
+	return ""
+}
+
+// Artifacts created by the build pipeline.
 type Results struct {
-	// Images that were built as a part of the build.
+	// Container images that were built as a part of the build.
 	Images []*BuiltImage `protobuf:"bytes,2,rep,name=images" json:"images,omitempty"`
-	// List of build step digests, in order corresponding to build step indices.
+	// List of build step digests, in the order corresponding to build step
+	// indices.
 	BuildStepImages []string `protobuf:"bytes,3,rep,name=build_step_images,json=buildStepImages" json:"build_step_images,omitempty"`
+	// Path to the artifact manifest. Only populated when artifacts are uploaded.
+	ArtifactManifest string `protobuf:"bytes,4,opt,name=artifact_manifest,json=artifactManifest" json:"artifact_manifest,omitempty"`
+	// Number of artifacts uploaded. Only populated when artifacts are uploaded.
+	NumArtifacts int64 `protobuf:"varint,5,opt,name=num_artifacts,json=numArtifacts" json:"num_artifacts,omitempty"`
 }
 
 func (m *Results) Reset()                    { *m = Results{} }
 func (m *Results) String() string            { return proto.CompactTextString(m) }
 func (*Results) ProtoMessage()               {}
-func (*Results) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+func (*Results) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
 
 func (m *Results) GetImages() []*BuiltImage {
 	if m != nil {
@@ -647,13 +937,57 @@ func (m *Results) GetBuildStepImages() []string {
 	return nil
 }
 
+func (m *Results) GetArtifactManifest() string {
+	if m != nil {
+		return m.ArtifactManifest
+	}
+	return ""
+}
+
+func (m *Results) GetNumArtifacts() int64 {
+	if m != nil {
+		return m.NumArtifacts
+	}
+	return 0
+}
+
+// An artifact that was uploaded during a build. This
+// is a single record in the artifact manifest JSON file.
+type ArtifactResult struct {
+	// The path of an artifact in a Google Cloud Storage bucket, with the
+	// generation number. For example,
+	// `gs://mybucket/path/to/output.jar#generation`.
+	Location string `protobuf:"bytes,1,opt,name=location" json:"location,omitempty"`
+	// The file hash of the artifact.
+	FileHash []*FileHashes `protobuf:"bytes,2,rep,name=file_hash,json=fileHash" json:"file_hash,omitempty"`
+}
+
+func (m *ArtifactResult) Reset()                    { *m = ArtifactResult{} }
+func (m *ArtifactResult) String() string            { return proto.CompactTextString(m) }
+func (*ArtifactResult) ProtoMessage()               {}
+func (*ArtifactResult) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+
+func (m *ArtifactResult) GetLocation() string {
+	if m != nil {
+		return m.Location
+	}
+	return ""
+}
+
+func (m *ArtifactResult) GetFileHash() []*FileHashes {
+	if m != nil {
+		return m.FileHash
+	}
+	return nil
+}
+
 // A build resource in the Container Builder API.
 //
-// At a high level, a Build describes where to find source code, how to build
-// it (for example, the builder image to run on the source), and what tag to
-// apply to the built image when it is pushed to Google Container Registry.
+// At a high level, a `Build` describes where to find source code, how to build
+// it (for example, the builder image to run on the source), and where to store
+// the built artifacts.
 //
-// Fields can include the following variables which will be expanded when the
+// Fields can include the following variables, which will be expanded when the
 // build is created:
 //
 // - $PROJECT_ID: the project ID of the build.
@@ -663,6 +997,7 @@ func (m *Results) GetBuildStepImages() []string {
 // - $TAG_NAME: the tag name specified by RepoSource.
 // - $REVISION_ID or $COMMIT_SHA: the commit SHA specified by RepoSource or
 //   resolved from the specified branch or tag.
+// - $SHORT_SHA: first 7 characters of $REVISION_ID or $COMMIT_SHA.
 type Build struct {
 	// Unique identifier of the build.
 	// @OutputOnly
@@ -676,41 +1011,45 @@ type Build struct {
 	// Customer-readable message about the current status.
 	// @OutputOnly
 	StatusDetail string `protobuf:"bytes,24,opt,name=status_detail,json=statusDetail" json:"status_detail,omitempty"`
-	// Describes where to find the source files to build.
+	// The location of the source files to build.
 	Source *Source `protobuf:"bytes,3,opt,name=source" json:"source,omitempty"`
-	// Describes the operations to be performed on the workspace.
+	// Required. The operations to be performed on the workspace.
 	Steps []*BuildStep `protobuf:"bytes,11,rep,name=steps" json:"steps,omitempty"`
 	// Results of the build.
 	// @OutputOnly
 	Results *Results `protobuf:"bytes,10,opt,name=results" json:"results,omitempty"`
 	// Time at which the request to create the build was received.
 	// @OutputOnly
-	CreateTime *google_protobuf4.Timestamp `protobuf:"bytes,6,opt,name=create_time,json=createTime" json:"create_time,omitempty"`
+	CreateTime *google_protobuf5.Timestamp `protobuf:"bytes,6,opt,name=create_time,json=createTime" json:"create_time,omitempty"`
 	// Time at which execution of the build was started.
 	// @OutputOnly
-	StartTime *google_protobuf4.Timestamp `protobuf:"bytes,7,opt,name=start_time,json=startTime" json:"start_time,omitempty"`
+	StartTime *google_protobuf5.Timestamp `protobuf:"bytes,7,opt,name=start_time,json=startTime" json:"start_time,omitempty"`
 	// Time at which execution of the build was finished.
 	//
 	// The difference between finish_time and start_time is the duration of the
 	// build's execution.
 	// @OutputOnly
-	FinishTime *google_protobuf4.Timestamp `protobuf:"bytes,8,opt,name=finish_time,json=finishTime" json:"finish_time,omitempty"`
+	FinishTime *google_protobuf5.Timestamp `protobuf:"bytes,8,opt,name=finish_time,json=finishTime" json:"finish_time,omitempty"`
 	// Amount of time that this build should be allowed to run, to second
 	// granularity. If this amount of time elapses, work on the build will cease
-	// and the build status will be TIMEOUT.
+	// and the build status will be `TIMEOUT`.
 	//
 	// Default time is ten minutes.
-	Timeout *google_protobuf3.Duration `protobuf:"bytes,12,opt,name=timeout" json:"timeout,omitempty"`
+	Timeout *google_protobuf4.Duration `protobuf:"bytes,12,opt,name=timeout" json:"timeout,omitempty"`
 	// A list of images to be pushed upon the successful completion of all build
 	// steps.
 	//
-	// The images will be pushed using the builder service account's credentials.
+	// The images are pushed using the builder service account's credentials.
 	//
-	// The digests of the pushed images will be stored in the Build resource's
+	// The digests of the pushed images will be stored in the `Build` resource's
 	// results field.
 	//
-	// If any of the images fail to be pushed, the build is marked FAILURE.
+	// If any of the images fail to be pushed, the build status is marked
+	// `FAILURE`.
 	Images []string `protobuf:"bytes,13,rep,name=images" json:"images,omitempty"`
+	// Artifacts produced by the build that should be uploaded upon
+	// successful completion of all build steps.
+	Artifacts *Artifacts `protobuf:"bytes,37,opt,name=artifacts" json:"artifacts,omitempty"`
 	// Google Cloud Storage bucket where logs should be written (see
 	// [Bucket Name
 	// Requirements](https://cloud.google.com/storage/docs/bucket-naming#requirements)).
@@ -719,23 +1058,37 @@ type Build struct {
 	// A permanent fixed identifier for source.
 	// @OutputOnly
 	SourceProvenance *SourceProvenance `protobuf:"bytes,21,opt,name=source_provenance,json=sourceProvenance" json:"source_provenance,omitempty"`
-	// The ID of the BuildTrigger that triggered this build, if it was
+	// The ID of the `BuildTrigger` that triggered this build, if it was
 	// triggered automatically.
 	// @OutputOnly
 	BuildTriggerId string `protobuf:"bytes,22,opt,name=build_trigger_id,json=buildTriggerId" json:"build_trigger_id,omitempty"`
 	// Special options for this build.
 	Options *BuildOptions `protobuf:"bytes,23,opt,name=options" json:"options,omitempty"`
-	// URL to logs for this build in Google Cloud Logging.
+	// URL to logs for this build in Google Cloud Console.
 	// @OutputOnly
 	LogUrl string `protobuf:"bytes,25,opt,name=log_url,json=logUrl" json:"log_url,omitempty"`
-	// Substitutions data for Build resource.
+	// Substitutions data for `Build` resource.
 	Substitutions map[string]string `protobuf:"bytes,29,rep,name=substitutions" json:"substitutions,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	// Tags for annotation of a `Build`. These are not docker tags.
+	Tags []string `protobuf:"bytes,31,rep,name=tags" json:"tags,omitempty"`
+	// Secrets to decrypt using Cloud Key Management Service.
+	Secrets []*Secret `protobuf:"bytes,32,rep,name=secrets" json:"secrets,omitempty"`
+	// Stores timing information for phases of the build. Valid keys are:
+	//
+	// * BUILD: time to execute all build steps
+	// * PUSH: time to push all specified images.
+	// * FETCHSOURCE: time to fetch source.
+	//
+	// If the build does not specify source or images,
+	// these keys will not be included.
+	// @OutputOnly
+	Timing map[string]*TimeSpan `protobuf:"bytes,33,rep,name=timing" json:"timing,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *Build) Reset()                    { *m = Build{} }
 func (m *Build) String() string            { return proto.CompactTextString(m) }
 func (*Build) ProtoMessage()               {}
-func (*Build) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+func (*Build) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
 
 func (m *Build) GetId() string {
 	if m != nil {
@@ -786,28 +1139,28 @@ func (m *Build) GetResults() *Results {
 	return nil
 }
 
-func (m *Build) GetCreateTime() *google_protobuf4.Timestamp {
+func (m *Build) GetCreateTime() *google_protobuf5.Timestamp {
 	if m != nil {
 		return m.CreateTime
 	}
 	return nil
 }
 
-func (m *Build) GetStartTime() *google_protobuf4.Timestamp {
+func (m *Build) GetStartTime() *google_protobuf5.Timestamp {
 	if m != nil {
 		return m.StartTime
 	}
 	return nil
 }
 
-func (m *Build) GetFinishTime() *google_protobuf4.Timestamp {
+func (m *Build) GetFinishTime() *google_protobuf5.Timestamp {
 	if m != nil {
 		return m.FinishTime
 	}
 	return nil
 }
 
-func (m *Build) GetTimeout() *google_protobuf3.Duration {
+func (m *Build) GetTimeout() *google_protobuf4.Duration {
 	if m != nil {
 		return m.Timeout
 	}
@@ -817,6 +1170,13 @@ func (m *Build) GetTimeout() *google_protobuf3.Duration {
 func (m *Build) GetImages() []string {
 	if m != nil {
 		return m.Images
+	}
+	return nil
+}
+
+func (m *Build) GetArtifacts() *Artifacts {
+	if m != nil {
+		return m.Artifacts
 	}
 	return nil
 }
@@ -863,6 +1223,143 @@ func (m *Build) GetSubstitutions() map[string]string {
 	return nil
 }
 
+func (m *Build) GetTags() []string {
+	if m != nil {
+		return m.Tags
+	}
+	return nil
+}
+
+func (m *Build) GetSecrets() []*Secret {
+	if m != nil {
+		return m.Secrets
+	}
+	return nil
+}
+
+func (m *Build) GetTiming() map[string]*TimeSpan {
+	if m != nil {
+		return m.Timing
+	}
+	return nil
+}
+
+// Artifacts produced by a build that should be uploaded upon
+// successful completion of all build steps.
+type Artifacts struct {
+	// A list of images to be pushed upon the successful completion of all build
+	// steps.
+	//
+	// The images will be pushed using the builder service account's credentials.
+	//
+	// The digests of the pushed images will be stored in the Build resource's
+	// results field.
+	//
+	// If any of the images fail to be pushed, the build is marked FAILURE.
+	Images []string `protobuf:"bytes,1,rep,name=images" json:"images,omitempty"`
+	// A list of objects to be uploaded to Cloud Storage upon successful
+	// completion of all build steps.
+	//
+	// Files in the workspace matching specified paths globs will be uploaded to
+	// the specified Cloud Storage location using the builder service account's
+	// credentials.
+	//
+	// The location and generation of the uploaded objects will be stored in the
+	// Build resource's results field.
+	//
+	// If any objects fail to be pushed, the build is marked FAILURE.
+	Objects *Artifacts_ArtifactObjects `protobuf:"bytes,2,opt,name=objects" json:"objects,omitempty"`
+}
+
+func (m *Artifacts) Reset()                    { *m = Artifacts{} }
+func (m *Artifacts) String() string            { return proto.CompactTextString(m) }
+func (*Artifacts) ProtoMessage()               {}
+func (*Artifacts) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+
+func (m *Artifacts) GetImages() []string {
+	if m != nil {
+		return m.Images
+	}
+	return nil
+}
+
+func (m *Artifacts) GetObjects() *Artifacts_ArtifactObjects {
+	if m != nil {
+		return m.Objects
+	}
+	return nil
+}
+
+// Files in the workspace to upload to Cloud Storage upon successful
+// completion of all build steps.
+type Artifacts_ArtifactObjects struct {
+	// Cloud Storage bucket and optional object path, in the form
+	// "gs://bucket/path/to/somewhere/". (see [Bucket Name
+	// Requirements](https://cloud.google.com/storage/docs/bucket-naming#requirements)).
+	//
+	// Files in the workspace matching any path pattern will be uploaded to
+	// Cloud Storage with this location as a prefix.
+	Location string `protobuf:"bytes,1,opt,name=location" json:"location,omitempty"`
+	// Path globs used to match files in the build's workspace.
+	Paths []string `protobuf:"bytes,2,rep,name=paths" json:"paths,omitempty"`
+	// Stores timing information for pushing all artifact objects.
+	// @OutputOnly
+	Timing *TimeSpan `protobuf:"bytes,3,opt,name=timing" json:"timing,omitempty"`
+}
+
+func (m *Artifacts_ArtifactObjects) Reset()                    { *m = Artifacts_ArtifactObjects{} }
+func (m *Artifacts_ArtifactObjects) String() string            { return proto.CompactTextString(m) }
+func (*Artifacts_ArtifactObjects) ProtoMessage()               {}
+func (*Artifacts_ArtifactObjects) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11, 0} }
+
+func (m *Artifacts_ArtifactObjects) GetLocation() string {
+	if m != nil {
+		return m.Location
+	}
+	return ""
+}
+
+func (m *Artifacts_ArtifactObjects) GetPaths() []string {
+	if m != nil {
+		return m.Paths
+	}
+	return nil
+}
+
+func (m *Artifacts_ArtifactObjects) GetTiming() *TimeSpan {
+	if m != nil {
+		return m.Timing
+	}
+	return nil
+}
+
+// Start and end times for a build execution phase.
+type TimeSpan struct {
+	// Start of time span.
+	StartTime *google_protobuf5.Timestamp `protobuf:"bytes,1,opt,name=start_time,json=startTime" json:"start_time,omitempty"`
+	// End of time span.
+	EndTime *google_protobuf5.Timestamp `protobuf:"bytes,2,opt,name=end_time,json=endTime" json:"end_time,omitempty"`
+}
+
+func (m *TimeSpan) Reset()                    { *m = TimeSpan{} }
+func (m *TimeSpan) String() string            { return proto.CompactTextString(m) }
+func (*TimeSpan) ProtoMessage()               {}
+func (*TimeSpan) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+
+func (m *TimeSpan) GetStartTime() *google_protobuf5.Timestamp {
+	if m != nil {
+		return m.StartTime
+	}
+	return nil
+}
+
+func (m *TimeSpan) GetEndTime() *google_protobuf5.Timestamp {
+	if m != nil {
+		return m.EndTime
+	}
+	return nil
+}
+
 // Metadata for build operations.
 type BuildOperationMetadata struct {
 	// The build that the operation is tracking.
@@ -872,7 +1369,7 @@ type BuildOperationMetadata struct {
 func (m *BuildOperationMetadata) Reset()                    { *m = BuildOperationMetadata{} }
 func (m *BuildOperationMetadata) String() string            { return proto.CompactTextString(m) }
 func (*BuildOperationMetadata) ProtoMessage()               {}
-func (*BuildOperationMetadata) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+func (*BuildOperationMetadata) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
 
 func (m *BuildOperationMetadata) GetBuild() *Build {
 	if m != nil {
@@ -884,21 +1381,21 @@ func (m *BuildOperationMetadata) GetBuild() *Build {
 // Provenance of the source. Ways to find the original source, or verify that
 // some source was used for this build.
 type SourceProvenance struct {
-	// A copy of the build's source.storage_source, if exists, with any
+	// A copy of the build's `source.storage_source`, if exists, with any
 	// generations resolved.
 	ResolvedStorageSource *StorageSource `protobuf:"bytes,3,opt,name=resolved_storage_source,json=resolvedStorageSource" json:"resolved_storage_source,omitempty"`
-	// A copy of the build's source.repo_source, if exists, with any
+	// A copy of the build's `source.repo_source`, if exists, with any
 	// revisions resolved.
 	ResolvedRepoSource *RepoSource `protobuf:"bytes,6,opt,name=resolved_repo_source,json=resolvedRepoSource" json:"resolved_repo_source,omitempty"`
 	// Hash(es) of the build source, which can be used to verify that the original
-	// source integrity was maintained in the build. Note that FileHashes will
-	// only be populated if BuildOptions has requested a SourceProvenanceHash.
+	// source integrity was maintained in the build. Note that `FileHashes` will
+	// only be populated if `BuildOptions` has requested a `SourceProvenanceHash`.
 	//
 	// The keys to this map are file paths used as build source and the values
 	// contain the hash values for those files.
 	//
 	// If the build source came in a single package such as a gzipped tarfile
-	// (.tar.gz), the FileHash will be for the single path to that file.
+	// (`.tar.gz`), the `FileHash` will be for the single path to that file.
 	// @OutputOnly
 	FileHashes map[string]*FileHashes `protobuf:"bytes,4,rep,name=file_hashes,json=fileHashes" json:"file_hashes,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
@@ -906,7 +1403,7 @@ type SourceProvenance struct {
 func (m *SourceProvenance) Reset()                    { *m = SourceProvenance{} }
 func (m *SourceProvenance) String() string            { return proto.CompactTextString(m) }
 func (*SourceProvenance) ProtoMessage()               {}
-func (*SourceProvenance) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+func (*SourceProvenance) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
 
 func (m *SourceProvenance) GetResolvedStorageSource() *StorageSource {
 	if m != nil {
@@ -939,7 +1436,7 @@ type FileHashes struct {
 func (m *FileHashes) Reset()                    { *m = FileHashes{} }
 func (m *FileHashes) String() string            { return proto.CompactTextString(m) }
 func (*FileHashes) ProtoMessage()               {}
-func (*FileHashes) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+func (*FileHashes) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
 
 func (m *FileHashes) GetFileHash() []*Hash {
 	if m != nil {
@@ -959,7 +1456,7 @@ type Hash struct {
 func (m *Hash) Reset()                    { *m = Hash{} }
 func (m *Hash) String() string            { return proto.CompactTextString(m) }
 func (*Hash) ProtoMessage()               {}
-func (*Hash) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+func (*Hash) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{16} }
 
 func (m *Hash) GetType() Hash_HashType {
 	if m != nil {
@@ -975,6 +1472,39 @@ func (m *Hash) GetValue() []byte {
 	return nil
 }
 
+// Pairs a set of secret environment variables containing encrypted
+// values with the Cloud KMS key to use to decrypt the value.
+type Secret struct {
+	// Cloud KMS key name to use to decrypt these envs.
+	KmsKeyName string `protobuf:"bytes,1,opt,name=kms_key_name,json=kmsKeyName" json:"kms_key_name,omitempty"`
+	// Map of environment variable name to its encrypted value.
+	//
+	// Secret environment variables must be unique across all of a build's
+	// secrets, and must be used by at least one build step. Values can be at most
+	// 1 KB in size. There can be at most ten secret values across all of a
+	// build's secrets.
+	SecretEnv map[string][]byte `protobuf:"bytes,3,rep,name=secret_env,json=secretEnv" json:"secret_env,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value,proto3"`
+}
+
+func (m *Secret) Reset()                    { *m = Secret{} }
+func (m *Secret) String() string            { return proto.CompactTextString(m) }
+func (*Secret) ProtoMessage()               {}
+func (*Secret) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{17} }
+
+func (m *Secret) GetKmsKeyName() string {
+	if m != nil {
+		return m.KmsKeyName
+	}
+	return ""
+}
+
+func (m *Secret) GetSecretEnv() map[string][]byte {
+	if m != nil {
+		return m.SecretEnv
+	}
+	return nil
+}
+
 // Request to create a new build.
 type CreateBuildRequest struct {
 	// ID of the project.
@@ -986,7 +1516,7 @@ type CreateBuildRequest struct {
 func (m *CreateBuildRequest) Reset()                    { *m = CreateBuildRequest{} }
 func (m *CreateBuildRequest) String() string            { return proto.CompactTextString(m) }
 func (*CreateBuildRequest) ProtoMessage()               {}
-func (*CreateBuildRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+func (*CreateBuildRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{18} }
 
 func (m *CreateBuildRequest) GetProjectId() string {
 	if m != nil {
@@ -1013,7 +1543,7 @@ type GetBuildRequest struct {
 func (m *GetBuildRequest) Reset()                    { *m = GetBuildRequest{} }
 func (m *GetBuildRequest) String() string            { return proto.CompactTextString(m) }
 func (*GetBuildRequest) ProtoMessage()               {}
-func (*GetBuildRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+func (*GetBuildRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{19} }
 
 func (m *GetBuildRequest) GetProjectId() string {
 	if m != nil {
@@ -1044,7 +1574,7 @@ type ListBuildsRequest struct {
 func (m *ListBuildsRequest) Reset()                    { *m = ListBuildsRequest{} }
 func (m *ListBuildsRequest) String() string            { return proto.CompactTextString(m) }
 func (*ListBuildsRequest) ProtoMessage()               {}
-func (*ListBuildsRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
+func (*ListBuildsRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{20} }
 
 func (m *ListBuildsRequest) GetProjectId() string {
 	if m != nil {
@@ -1076,7 +1606,7 @@ func (m *ListBuildsRequest) GetFilter() string {
 
 // Response including listed builds.
 type ListBuildsResponse struct {
-	// Builds will be sorted by create_time, descending.
+	// Builds will be sorted by `create_time`, descending.
 	Builds []*Build `protobuf:"bytes,1,rep,name=builds" json:"builds,omitempty"`
 	// Token to receive the next page of results.
 	NextPageToken string `protobuf:"bytes,2,opt,name=next_page_token,json=nextPageToken" json:"next_page_token,omitempty"`
@@ -1085,7 +1615,7 @@ type ListBuildsResponse struct {
 func (m *ListBuildsResponse) Reset()                    { *m = ListBuildsResponse{} }
 func (m *ListBuildsResponse) String() string            { return proto.CompactTextString(m) }
 func (*ListBuildsResponse) ProtoMessage()               {}
-func (*ListBuildsResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
+func (*ListBuildsResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{21} }
 
 func (m *ListBuildsResponse) GetBuilds() []*Build {
 	if m != nil {
@@ -1112,7 +1642,7 @@ type CancelBuildRequest struct {
 func (m *CancelBuildRequest) Reset()                    { *m = CancelBuildRequest{} }
 func (m *CancelBuildRequest) String() string            { return proto.CompactTextString(m) }
 func (*CancelBuildRequest) ProtoMessage()               {}
-func (*CancelBuildRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
+func (*CancelBuildRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{22} }
 
 func (m *CancelBuildRequest) GetProjectId() string {
 	if m != nil {
@@ -1152,7 +1682,7 @@ type BuildTrigger struct {
 	// Time when the trigger was created.
 	//
 	// @OutputOnly
-	CreateTime *google_protobuf4.Timestamp `protobuf:"bytes,5,opt,name=create_time,json=createTime" json:"create_time,omitempty"`
+	CreateTime *google_protobuf5.Timestamp `protobuf:"bytes,5,opt,name=create_time,json=createTime" json:"create_time,omitempty"`
 	// If true, the trigger will never result in a build.
 	Disabled bool `protobuf:"varint,9,opt,name=disabled" json:"disabled,omitempty"`
 	// Substitutions data for Build resource.
@@ -1162,7 +1692,7 @@ type BuildTrigger struct {
 func (m *BuildTrigger) Reset()                    { *m = BuildTrigger{} }
 func (m *BuildTrigger) String() string            { return proto.CompactTextString(m) }
 func (*BuildTrigger) ProtoMessage()               {}
-func (*BuildTrigger) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{16} }
+func (*BuildTrigger) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{23} }
 
 type isBuildTrigger_BuildTemplate interface {
 	isBuildTrigger_BuildTemplate()
@@ -1220,7 +1750,7 @@ func (m *BuildTrigger) GetFilename() string {
 	return ""
 }
 
-func (m *BuildTrigger) GetCreateTime() *google_protobuf4.Timestamp {
+func (m *BuildTrigger) GetCreateTime() *google_protobuf5.Timestamp {
 	if m != nil {
 		return m.CreateTime
 	}
@@ -1311,18 +1841,18 @@ func _BuildTrigger_OneofSizer(msg proto.Message) (n int) {
 	return n
 }
 
-// Request to create a new BuildTrigger.
+// Request to create a new `BuildTrigger`.
 type CreateBuildTriggerRequest struct {
 	// ID of the project for which to configure automatic builds.
 	ProjectId string `protobuf:"bytes,1,opt,name=project_id,json=projectId" json:"project_id,omitempty"`
-	// BuildTrigger to create.
+	// `BuildTrigger` to create.
 	Trigger *BuildTrigger `protobuf:"bytes,2,opt,name=trigger" json:"trigger,omitempty"`
 }
 
 func (m *CreateBuildTriggerRequest) Reset()                    { *m = CreateBuildTriggerRequest{} }
 func (m *CreateBuildTriggerRequest) String() string            { return proto.CompactTextString(m) }
 func (*CreateBuildTriggerRequest) ProtoMessage()               {}
-func (*CreateBuildTriggerRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{17} }
+func (*CreateBuildTriggerRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{24} }
 
 func (m *CreateBuildTriggerRequest) GetProjectId() string {
 	if m != nil {
@@ -1338,18 +1868,18 @@ func (m *CreateBuildTriggerRequest) GetTrigger() *BuildTrigger {
 	return nil
 }
 
-// Returns the BuildTrigger with the specified ID.
+// Returns the `BuildTrigger` with the specified ID.
 type GetBuildTriggerRequest struct {
 	// ID of the project that owns the trigger.
 	ProjectId string `protobuf:"bytes,1,opt,name=project_id,json=projectId" json:"project_id,omitempty"`
-	// ID of the BuildTrigger to get.
+	// ID of the `BuildTrigger` to get.
 	TriggerId string `protobuf:"bytes,2,opt,name=trigger_id,json=triggerId" json:"trigger_id,omitempty"`
 }
 
 func (m *GetBuildTriggerRequest) Reset()                    { *m = GetBuildTriggerRequest{} }
 func (m *GetBuildTriggerRequest) String() string            { return proto.CompactTextString(m) }
 func (*GetBuildTriggerRequest) ProtoMessage()               {}
-func (*GetBuildTriggerRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{18} }
+func (*GetBuildTriggerRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{25} }
 
 func (m *GetBuildTriggerRequest) GetProjectId() string {
 	if m != nil {
@@ -1365,7 +1895,7 @@ func (m *GetBuildTriggerRequest) GetTriggerId() string {
 	return ""
 }
 
-// Request to list existing BuildTriggers.
+// Request to list existing `BuildTriggers`.
 type ListBuildTriggersRequest struct {
 	// ID of the project for which to list BuildTriggers.
 	ProjectId string `protobuf:"bytes,1,opt,name=project_id,json=projectId" json:"project_id,omitempty"`
@@ -1374,7 +1904,7 @@ type ListBuildTriggersRequest struct {
 func (m *ListBuildTriggersRequest) Reset()                    { *m = ListBuildTriggersRequest{} }
 func (m *ListBuildTriggersRequest) String() string            { return proto.CompactTextString(m) }
 func (*ListBuildTriggersRequest) ProtoMessage()               {}
-func (*ListBuildTriggersRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{19} }
+func (*ListBuildTriggersRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{26} }
 
 func (m *ListBuildTriggersRequest) GetProjectId() string {
 	if m != nil {
@@ -1383,16 +1913,16 @@ func (m *ListBuildTriggersRequest) GetProjectId() string {
 	return ""
 }
 
-// Response containing existing BuildTriggers.
+// Response containing existing `BuildTriggers`.
 type ListBuildTriggersResponse struct {
-	// BuildTriggers for the project, sorted by create_time descending.
+	// `BuildTriggers` for the project, sorted by `create_time` descending.
 	Triggers []*BuildTrigger `protobuf:"bytes,1,rep,name=triggers" json:"triggers,omitempty"`
 }
 
 func (m *ListBuildTriggersResponse) Reset()                    { *m = ListBuildTriggersResponse{} }
 func (m *ListBuildTriggersResponse) String() string            { return proto.CompactTextString(m) }
 func (*ListBuildTriggersResponse) ProtoMessage()               {}
-func (*ListBuildTriggersResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{20} }
+func (*ListBuildTriggersResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{27} }
 
 func (m *ListBuildTriggersResponse) GetTriggers() []*BuildTrigger {
 	if m != nil {
@@ -1401,18 +1931,18 @@ func (m *ListBuildTriggersResponse) GetTriggers() []*BuildTrigger {
 	return nil
 }
 
-// Request to delete a BuildTrigger.
+// Request to delete a `BuildTrigger`.
 type DeleteBuildTriggerRequest struct {
 	// ID of the project that owns the trigger.
 	ProjectId string `protobuf:"bytes,1,opt,name=project_id,json=projectId" json:"project_id,omitempty"`
-	// ID of the BuildTrigger to delete.
+	// ID of the `BuildTrigger` to delete.
 	TriggerId string `protobuf:"bytes,2,opt,name=trigger_id,json=triggerId" json:"trigger_id,omitempty"`
 }
 
 func (m *DeleteBuildTriggerRequest) Reset()                    { *m = DeleteBuildTriggerRequest{} }
 func (m *DeleteBuildTriggerRequest) String() string            { return proto.CompactTextString(m) }
 func (*DeleteBuildTriggerRequest) ProtoMessage()               {}
-func (*DeleteBuildTriggerRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{21} }
+func (*DeleteBuildTriggerRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{28} }
 
 func (m *DeleteBuildTriggerRequest) GetProjectId() string {
 	if m != nil {
@@ -1428,20 +1958,20 @@ func (m *DeleteBuildTriggerRequest) GetTriggerId() string {
 	return ""
 }
 
-// Request to update an existing BuildTrigger.
+// Request to update an existing `BuildTrigger`.
 type UpdateBuildTriggerRequest struct {
 	// ID of the project that owns the trigger.
 	ProjectId string `protobuf:"bytes,1,opt,name=project_id,json=projectId" json:"project_id,omitempty"`
-	// ID of the BuildTrigger to update.
+	// ID of the `BuildTrigger` to update.
 	TriggerId string `protobuf:"bytes,2,opt,name=trigger_id,json=triggerId" json:"trigger_id,omitempty"`
-	// BuildTrigger to update.
+	// `BuildTrigger` to update.
 	Trigger *BuildTrigger `protobuf:"bytes,3,opt,name=trigger" json:"trigger,omitempty"`
 }
 
 func (m *UpdateBuildTriggerRequest) Reset()                    { *m = UpdateBuildTriggerRequest{} }
 func (m *UpdateBuildTriggerRequest) String() string            { return proto.CompactTextString(m) }
 func (*UpdateBuildTriggerRequest) ProtoMessage()               {}
-func (*UpdateBuildTriggerRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{22} }
+func (*UpdateBuildTriggerRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{29} }
 
 func (m *UpdateBuildTriggerRequest) GetProjectId() string {
 	if m != nil {
@@ -1470,12 +2000,27 @@ type BuildOptions struct {
 	SourceProvenanceHash []Hash_HashType `protobuf:"varint,1,rep,packed,name=source_provenance_hash,json=sourceProvenanceHash,enum=google.devtools.cloudbuild.v1.Hash_HashType" json:"source_provenance_hash,omitempty"`
 	// Requested verifiability options.
 	RequestedVerifyOption BuildOptions_VerifyOption `protobuf:"varint,2,opt,name=requested_verify_option,json=requestedVerifyOption,enum=google.devtools.cloudbuild.v1.BuildOptions_VerifyOption" json:"requested_verify_option,omitempty"`
+	// Compute Engine machine type on which to run the build.
+	MachineType BuildOptions_MachineType `protobuf:"varint,3,opt,name=machine_type,json=machineType,enum=google.devtools.cloudbuild.v1.BuildOptions_MachineType" json:"machine_type,omitempty"`
+	// Requested disk size for the VM that runs the build. Note that this is *NOT*
+	// "disk free"; some of the space will be used by the operating system and
+	// build utilities. Also note that this is the minimum disk size that will be
+	// allocated for the build -- the build may run with a larger disk than
+	// requested. At present, the maximum disk size is 1000GB; builds that request
+	// more than the maximum are rejected with an error.
+	DiskSizeGb int64 `protobuf:"varint,6,opt,name=disk_size_gb,json=diskSizeGb" json:"disk_size_gb,omitempty"`
+	// Option to specify behavior when there is an error in the substitution
+	// checks.
+	SubstitutionOption BuildOptions_SubstitutionOption `protobuf:"varint,4,opt,name=substitution_option,json=substitutionOption,enum=google.devtools.cloudbuild.v1.BuildOptions_SubstitutionOption" json:"substitution_option,omitempty"`
+	// Option to define build log streaming behavior to Google Cloud
+	// Storage.
+	LogStreamingOption BuildOptions_LogStreamingOption `protobuf:"varint,5,opt,name=log_streaming_option,json=logStreamingOption,enum=google.devtools.cloudbuild.v1.BuildOptions_LogStreamingOption" json:"log_streaming_option,omitempty"`
 }
 
 func (m *BuildOptions) Reset()                    { *m = BuildOptions{} }
 func (m *BuildOptions) String() string            { return proto.CompactTextString(m) }
 func (*BuildOptions) ProtoMessage()               {}
-func (*BuildOptions) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{23} }
+func (*BuildOptions) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{30} }
 
 func (m *BuildOptions) GetSourceProvenanceHash() []Hash_HashType {
 	if m != nil {
@@ -1491,18 +2036,54 @@ func (m *BuildOptions) GetRequestedVerifyOption() BuildOptions_VerifyOption {
 	return BuildOptions_NOT_VERIFIED
 }
 
+func (m *BuildOptions) GetMachineType() BuildOptions_MachineType {
+	if m != nil {
+		return m.MachineType
+	}
+	return BuildOptions_UNSPECIFIED
+}
+
+func (m *BuildOptions) GetDiskSizeGb() int64 {
+	if m != nil {
+		return m.DiskSizeGb
+	}
+	return 0
+}
+
+func (m *BuildOptions) GetSubstitutionOption() BuildOptions_SubstitutionOption {
+	if m != nil {
+		return m.SubstitutionOption
+	}
+	return BuildOptions_MUST_MATCH
+}
+
+func (m *BuildOptions) GetLogStreamingOption() BuildOptions_LogStreamingOption {
+	if m != nil {
+		return m.LogStreamingOption
+	}
+	return BuildOptions_STREAM_DEFAULT
+}
+
 func init() {
+	proto.RegisterType((*RetryBuildRequest)(nil), "google.devtools.cloudbuild.v1.RetryBuildRequest")
+	proto.RegisterType((*RunBuildTriggerRequest)(nil), "google.devtools.cloudbuild.v1.RunBuildTriggerRequest")
 	proto.RegisterType((*StorageSource)(nil), "google.devtools.cloudbuild.v1.StorageSource")
 	proto.RegisterType((*RepoSource)(nil), "google.devtools.cloudbuild.v1.RepoSource")
 	proto.RegisterType((*Source)(nil), "google.devtools.cloudbuild.v1.Source")
 	proto.RegisterType((*BuiltImage)(nil), "google.devtools.cloudbuild.v1.BuiltImage")
 	proto.RegisterType((*BuildStep)(nil), "google.devtools.cloudbuild.v1.BuildStep")
+	proto.RegisterType((*Volume)(nil), "google.devtools.cloudbuild.v1.Volume")
 	proto.RegisterType((*Results)(nil), "google.devtools.cloudbuild.v1.Results")
+	proto.RegisterType((*ArtifactResult)(nil), "google.devtools.cloudbuild.v1.ArtifactResult")
 	proto.RegisterType((*Build)(nil), "google.devtools.cloudbuild.v1.Build")
+	proto.RegisterType((*Artifacts)(nil), "google.devtools.cloudbuild.v1.Artifacts")
+	proto.RegisterType((*Artifacts_ArtifactObjects)(nil), "google.devtools.cloudbuild.v1.Artifacts.ArtifactObjects")
+	proto.RegisterType((*TimeSpan)(nil), "google.devtools.cloudbuild.v1.TimeSpan")
 	proto.RegisterType((*BuildOperationMetadata)(nil), "google.devtools.cloudbuild.v1.BuildOperationMetadata")
 	proto.RegisterType((*SourceProvenance)(nil), "google.devtools.cloudbuild.v1.SourceProvenance")
 	proto.RegisterType((*FileHashes)(nil), "google.devtools.cloudbuild.v1.FileHashes")
 	proto.RegisterType((*Hash)(nil), "google.devtools.cloudbuild.v1.Hash")
+	proto.RegisterType((*Secret)(nil), "google.devtools.cloudbuild.v1.Secret")
 	proto.RegisterType((*CreateBuildRequest)(nil), "google.devtools.cloudbuild.v1.CreateBuildRequest")
 	proto.RegisterType((*GetBuildRequest)(nil), "google.devtools.cloudbuild.v1.GetBuildRequest")
 	proto.RegisterType((*ListBuildsRequest)(nil), "google.devtools.cloudbuild.v1.ListBuildsRequest")
@@ -1519,6 +2100,9 @@ func init() {
 	proto.RegisterEnum("google.devtools.cloudbuild.v1.Build_Status", Build_Status_name, Build_Status_value)
 	proto.RegisterEnum("google.devtools.cloudbuild.v1.Hash_HashType", Hash_HashType_name, Hash_HashType_value)
 	proto.RegisterEnum("google.devtools.cloudbuild.v1.BuildOptions_VerifyOption", BuildOptions_VerifyOption_name, BuildOptions_VerifyOption_value)
+	proto.RegisterEnum("google.devtools.cloudbuild.v1.BuildOptions_MachineType", BuildOptions_MachineType_name, BuildOptions_MachineType_value)
+	proto.RegisterEnum("google.devtools.cloudbuild.v1.BuildOptions_SubstitutionOption", BuildOptions_SubstitutionOption_name, BuildOptions_SubstitutionOption_value)
+	proto.RegisterEnum("google.devtools.cloudbuild.v1.BuildOptions_LogStreamingOption", BuildOptions_LogStreamingOption_name, BuildOptions_LogStreamingOption_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1534,42 +2118,72 @@ const _ = grpc.SupportPackageIsVersion4
 type CloudBuildClient interface {
 	// Starts a build with the specified configuration.
 	//
-	// The long-running Operation returned by this method will include the ID of
-	// the build, which can be passed to GetBuild to determine its status (e.g.,
-	// success or failure).
+	// This method returns a long-running `Operation`, which includes the build
+	// ID. Pass the build ID to `GetBuild` to determine the build status (such as
+	// `SUCCESS` or `FAILURE`).
 	CreateBuild(ctx context.Context, in *CreateBuildRequest, opts ...grpc.CallOption) (*google_longrunning.Operation, error)
 	// Returns information about a previously requested build.
 	//
-	// The Build that is returned includes its status (e.g., success or failure,
-	// or in-progress), and timing information.
+	// The `Build` that is returned includes its status (such as `SUCCESS`,
+	// `FAILURE`, or `WORKING`), and timing information.
 	GetBuild(ctx context.Context, in *GetBuildRequest, opts ...grpc.CallOption) (*Build, error)
 	// Lists previously requested builds.
 	//
 	// Previously requested builds may still be in-progress, or may have finished
 	// successfully or unsuccessfully.
 	ListBuilds(ctx context.Context, in *ListBuildsRequest, opts ...grpc.CallOption) (*ListBuildsResponse, error)
-	// Cancels a requested build in progress.
+	// Cancels a build in progress.
 	CancelBuild(ctx context.Context, in *CancelBuildRequest, opts ...grpc.CallOption) (*Build, error)
-	// Creates a new BuildTrigger.
+	// Creates a new build based on the specified build.
+	//
+	// This method creates a new build using the original build request, which may
+	// or may not result in an identical build.
+	//
+	// For triggered builds:
+	//
+	// * Triggered builds resolve to a precise revision; therefore a retry of a
+	// triggered build will result in a build that uses the same revision.
+	//
+	// For non-triggered builds that specify `RepoSource`:
+	//
+	// * If the original build built from the tip of a branch, the retried build
+	// will build from the tip of that branch, which may not be the same revision
+	// as the original build.
+	// * If the original build specified a commit sha or revision ID, the retried
+	// build will use the identical source.
+	//
+	// For builds that specify `StorageSource`:
+	//
+	// * If the original build pulled source from Google Cloud Storage without
+	// specifying the generation of the object, the new build will use the current
+	// object, which may be different from the original build source.
+	// * If the original build pulled source from Cloud Storage and specified the
+	// generation of the object, the new build will attempt to use the same
+	// object, which may or may not be available depending on the bucket's
+	// lifecycle management settings.
+	RetryBuild(ctx context.Context, in *RetryBuildRequest, opts ...grpc.CallOption) (*google_longrunning.Operation, error)
+	// Creates a new `BuildTrigger`.
 	//
 	// This API is experimental.
 	CreateBuildTrigger(ctx context.Context, in *CreateBuildTriggerRequest, opts ...grpc.CallOption) (*BuildTrigger, error)
-	// Gets information about a BuildTrigger.
+	// Returns information about a `BuildTrigger`.
 	//
 	// This API is experimental.
 	GetBuildTrigger(ctx context.Context, in *GetBuildTriggerRequest, opts ...grpc.CallOption) (*BuildTrigger, error)
-	// Lists existing BuildTrigger.
+	// Lists existing `BuildTrigger`s.
 	//
 	// This API is experimental.
 	ListBuildTriggers(ctx context.Context, in *ListBuildTriggersRequest, opts ...grpc.CallOption) (*ListBuildTriggersResponse, error)
-	// Deletes an BuildTrigger by its project ID and trigger ID.
+	// Deletes a `BuildTrigger` by its project ID and trigger ID.
 	//
 	// This API is experimental.
-	DeleteBuildTrigger(ctx context.Context, in *DeleteBuildTriggerRequest, opts ...grpc.CallOption) (*google_protobuf2.Empty, error)
-	// Updates an BuildTrigger by its project ID and trigger ID.
+	DeleteBuildTrigger(ctx context.Context, in *DeleteBuildTriggerRequest, opts ...grpc.CallOption) (*google_protobuf3.Empty, error)
+	// Updates a `BuildTrigger` by its project ID and trigger ID.
 	//
 	// This API is experimental.
 	UpdateBuildTrigger(ctx context.Context, in *UpdateBuildTriggerRequest, opts ...grpc.CallOption) (*BuildTrigger, error)
+	// Runs a `BuildTrigger` at a particular source revision.
+	RunBuildTrigger(ctx context.Context, in *RunBuildTriggerRequest, opts ...grpc.CallOption) (*google_longrunning.Operation, error)
 }
 
 type cloudBuildClient struct {
@@ -1616,6 +2230,15 @@ func (c *cloudBuildClient) CancelBuild(ctx context.Context, in *CancelBuildReque
 	return out, nil
 }
 
+func (c *cloudBuildClient) RetryBuild(ctx context.Context, in *RetryBuildRequest, opts ...grpc.CallOption) (*google_longrunning.Operation, error) {
+	out := new(google_longrunning.Operation)
+	err := grpc.Invoke(ctx, "/google.devtools.cloudbuild.v1.CloudBuild/RetryBuild", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *cloudBuildClient) CreateBuildTrigger(ctx context.Context, in *CreateBuildTriggerRequest, opts ...grpc.CallOption) (*BuildTrigger, error) {
 	out := new(BuildTrigger)
 	err := grpc.Invoke(ctx, "/google.devtools.cloudbuild.v1.CloudBuild/CreateBuildTrigger", in, out, c.cc, opts...)
@@ -1643,8 +2266,8 @@ func (c *cloudBuildClient) ListBuildTriggers(ctx context.Context, in *ListBuildT
 	return out, nil
 }
 
-func (c *cloudBuildClient) DeleteBuildTrigger(ctx context.Context, in *DeleteBuildTriggerRequest, opts ...grpc.CallOption) (*google_protobuf2.Empty, error) {
-	out := new(google_protobuf2.Empty)
+func (c *cloudBuildClient) DeleteBuildTrigger(ctx context.Context, in *DeleteBuildTriggerRequest, opts ...grpc.CallOption) (*google_protobuf3.Empty, error) {
+	out := new(google_protobuf3.Empty)
 	err := grpc.Invoke(ctx, "/google.devtools.cloudbuild.v1.CloudBuild/DeleteBuildTrigger", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -1661,47 +2284,86 @@ func (c *cloudBuildClient) UpdateBuildTrigger(ctx context.Context, in *UpdateBui
 	return out, nil
 }
 
+func (c *cloudBuildClient) RunBuildTrigger(ctx context.Context, in *RunBuildTriggerRequest, opts ...grpc.CallOption) (*google_longrunning.Operation, error) {
+	out := new(google_longrunning.Operation)
+	err := grpc.Invoke(ctx, "/google.devtools.cloudbuild.v1.CloudBuild/RunBuildTrigger", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Server API for CloudBuild service
 
 type CloudBuildServer interface {
 	// Starts a build with the specified configuration.
 	//
-	// The long-running Operation returned by this method will include the ID of
-	// the build, which can be passed to GetBuild to determine its status (e.g.,
-	// success or failure).
+	// This method returns a long-running `Operation`, which includes the build
+	// ID. Pass the build ID to `GetBuild` to determine the build status (such as
+	// `SUCCESS` or `FAILURE`).
 	CreateBuild(context.Context, *CreateBuildRequest) (*google_longrunning.Operation, error)
 	// Returns information about a previously requested build.
 	//
-	// The Build that is returned includes its status (e.g., success or failure,
-	// or in-progress), and timing information.
+	// The `Build` that is returned includes its status (such as `SUCCESS`,
+	// `FAILURE`, or `WORKING`), and timing information.
 	GetBuild(context.Context, *GetBuildRequest) (*Build, error)
 	// Lists previously requested builds.
 	//
 	// Previously requested builds may still be in-progress, or may have finished
 	// successfully or unsuccessfully.
 	ListBuilds(context.Context, *ListBuildsRequest) (*ListBuildsResponse, error)
-	// Cancels a requested build in progress.
+	// Cancels a build in progress.
 	CancelBuild(context.Context, *CancelBuildRequest) (*Build, error)
-	// Creates a new BuildTrigger.
+	// Creates a new build based on the specified build.
+	//
+	// This method creates a new build using the original build request, which may
+	// or may not result in an identical build.
+	//
+	// For triggered builds:
+	//
+	// * Triggered builds resolve to a precise revision; therefore a retry of a
+	// triggered build will result in a build that uses the same revision.
+	//
+	// For non-triggered builds that specify `RepoSource`:
+	//
+	// * If the original build built from the tip of a branch, the retried build
+	// will build from the tip of that branch, which may not be the same revision
+	// as the original build.
+	// * If the original build specified a commit sha or revision ID, the retried
+	// build will use the identical source.
+	//
+	// For builds that specify `StorageSource`:
+	//
+	// * If the original build pulled source from Google Cloud Storage without
+	// specifying the generation of the object, the new build will use the current
+	// object, which may be different from the original build source.
+	// * If the original build pulled source from Cloud Storage and specified the
+	// generation of the object, the new build will attempt to use the same
+	// object, which may or may not be available depending on the bucket's
+	// lifecycle management settings.
+	RetryBuild(context.Context, *RetryBuildRequest) (*google_longrunning.Operation, error)
+	// Creates a new `BuildTrigger`.
 	//
 	// This API is experimental.
 	CreateBuildTrigger(context.Context, *CreateBuildTriggerRequest) (*BuildTrigger, error)
-	// Gets information about a BuildTrigger.
+	// Returns information about a `BuildTrigger`.
 	//
 	// This API is experimental.
 	GetBuildTrigger(context.Context, *GetBuildTriggerRequest) (*BuildTrigger, error)
-	// Lists existing BuildTrigger.
+	// Lists existing `BuildTrigger`s.
 	//
 	// This API is experimental.
 	ListBuildTriggers(context.Context, *ListBuildTriggersRequest) (*ListBuildTriggersResponse, error)
-	// Deletes an BuildTrigger by its project ID and trigger ID.
+	// Deletes a `BuildTrigger` by its project ID and trigger ID.
 	//
 	// This API is experimental.
-	DeleteBuildTrigger(context.Context, *DeleteBuildTriggerRequest) (*google_protobuf2.Empty, error)
-	// Updates an BuildTrigger by its project ID and trigger ID.
+	DeleteBuildTrigger(context.Context, *DeleteBuildTriggerRequest) (*google_protobuf3.Empty, error)
+	// Updates a `BuildTrigger` by its project ID and trigger ID.
 	//
 	// This API is experimental.
 	UpdateBuildTrigger(context.Context, *UpdateBuildTriggerRequest) (*BuildTrigger, error)
+	// Runs a `BuildTrigger` at a particular source revision.
+	RunBuildTrigger(context.Context, *RunBuildTriggerRequest) (*google_longrunning.Operation, error)
 }
 
 func RegisterCloudBuildServer(s *grpc.Server, srv CloudBuildServer) {
@@ -1776,6 +2438,24 @@ func _CloudBuild_CancelBuild_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(CloudBuildServer).CancelBuild(ctx, req.(*CancelBuildRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CloudBuild_RetryBuild_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RetryBuildRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CloudBuildServer).RetryBuild(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/google.devtools.cloudbuild.v1.CloudBuild/RetryBuild",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CloudBuildServer).RetryBuild(ctx, req.(*RetryBuildRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1870,6 +2550,24 @@ func _CloudBuild_UpdateBuildTrigger_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _CloudBuild_RunBuildTrigger_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RunBuildTriggerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CloudBuildServer).RunBuildTrigger(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/google.devtools.cloudbuild.v1.CloudBuild/RunBuildTrigger",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CloudBuildServer).RunBuildTrigger(ctx, req.(*RunBuildTriggerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _CloudBuild_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "google.devtools.cloudbuild.v1.CloudBuild",
 	HandlerType: (*CloudBuildServer)(nil),
@@ -1891,6 +2589,10 @@ var _CloudBuild_serviceDesc = grpc.ServiceDesc{
 			Handler:    _CloudBuild_CancelBuild_Handler,
 		},
 		{
+			MethodName: "RetryBuild",
+			Handler:    _CloudBuild_RetryBuild_Handler,
+		},
+		{
 			MethodName: "CreateBuildTrigger",
 			Handler:    _CloudBuild_CreateBuildTrigger_Handler,
 		},
@@ -1910,6 +2612,10 @@ var _CloudBuild_serviceDesc = grpc.ServiceDesc{
 			MethodName: "UpdateBuildTrigger",
 			Handler:    _CloudBuild_UpdateBuildTrigger_Handler,
 		},
+		{
+			MethodName: "RunBuildTrigger",
+			Handler:    _CloudBuild_RunBuildTrigger_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "google/devtools/cloudbuild/v1/cloudbuild.proto",
@@ -1918,131 +2624,178 @@ var _CloudBuild_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("google/devtools/cloudbuild/v1/cloudbuild.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 2010 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x59, 0x5b, 0x73, 0xdb, 0xc6,
-	0xf5, 0x37, 0x48, 0x89, 0x97, 0x43, 0x5d, 0xe8, 0xfd, 0x3b, 0x32, 0x44, 0x47, 0xb1, 0xfe, 0x70,
-	0x92, 0x2a, 0x4e, 0x42, 0x56, 0xf2, 0xa4, 0x56, 0xe4, 0x34, 0x91, 0x44, 0xd1, 0x92, 0x26, 0x0a,
-	0xe5, 0x2e, 0x49, 0x67, 0x7a, 0x1b, 0x14, 0x24, 0x56, 0x10, 0x6a, 0x10, 0x40, 0x81, 0x25, 0x1b,
-	0xd9, 0xe3, 0xe9, 0x65, 0xa6, 0x7d, 0x6c, 0x3b, 0xd3, 0xbe, 0xf5, 0xa1, 0x6d, 0x3e, 0x40, 0xa7,
-	0xd3, 0x99, 0x4e, 0x9f, 0xfa, 0x29, 0xfa, 0x15, 0xfa, 0xd8, 0x0f, 0xd1, 0xd9, 0x0b, 0x48, 0x90,
-	0xb4, 0x0b, 0xb0, 0x9e, 0xf6, 0xc5, 0x83, 0x3d, 0x7b, 0x7e, 0x67, 0xcf, 0x9e, 0xfd, 0x9d, 0x0b,
-	0x2d, 0xa8, 0x5a, 0x9e, 0x67, 0x39, 0xa4, 0x66, 0x92, 0x21, 0xf5, 0x3c, 0x27, 0xac, 0xf5, 0x1c,
-	0x6f, 0x60, 0x76, 0x07, 0xb6, 0x63, 0xd6, 0x86, 0xdb, 0xb1, 0x55, 0xd5, 0x0f, 0x3c, 0xea, 0xa1,
-	0x0d, 0xa1, 0x5f, 0x8d, 0xf4, 0xab, 0x31, 0x8d, 0xe1, 0x76, 0xe5, 0x75, 0x69, 0xce, 0xf0, 0xed,
-	0x9a, 0xe1, 0xba, 0x1e, 0x35, 0xa8, 0xed, 0xb9, 0xa1, 0x00, 0x57, 0xee, 0xc8, 0x5d, 0xc7, 0x73,
-	0xad, 0x60, 0xe0, 0xba, 0xb6, 0x6b, 0xd5, 0x3c, 0x9f, 0x04, 0x13, 0x4a, 0x6f, 0x48, 0x25, 0xbe,
-	0xea, 0x0e, 0x2e, 0x6a, 0xe6, 0x40, 0x28, 0xc8, 0xfd, 0x5b, 0xd3, 0xfb, 0xa4, 0xef, 0xd3, 0x2b,
-	0xb9, 0x79, 0x7b, 0x7a, 0x93, 0xda, 0x7d, 0x12, 0x52, 0xa3, 0xef, 0x0b, 0x05, 0x4d, 0x87, 0xe5,
-	0x16, 0xf5, 0x02, 0xc3, 0x22, 0x2d, 0x6f, 0x10, 0xf4, 0x08, 0x5a, 0x83, 0x5c, 0x77, 0xd0, 0x7b,
-	0x42, 0xa8, 0xaa, 0x6c, 0x2a, 0x5b, 0x45, 0x2c, 0x57, 0x4c, 0xee, 0x75, 0xbf, 0x4f, 0x7a, 0x54,
-	0xcd, 0x08, 0xb9, 0x58, 0xa1, 0x37, 0x00, 0x2c, 0xe2, 0x4a, 0x9f, 0xd5, 0xec, 0xa6, 0xb2, 0x95,
-	0xc5, 0x31, 0x89, 0xf6, 0x17, 0x05, 0x00, 0x13, 0xdf, 0x93, 0xe6, 0x37, 0x00, 0xfc, 0xc0, 0x63,
-	0x48, 0xdd, 0x36, 0xe5, 0x11, 0x45, 0x29, 0x39, 0x35, 0xd1, 0x2d, 0x28, 0x06, 0xc4, 0xf7, 0x74,
-	0xd7, 0xe8, 0x13, 0x79, 0x50, 0x81, 0x09, 0x9a, 0x46, 0x9f, 0xa0, 0xff, 0x87, 0x52, 0x37, 0x30,
-	0xdc, 0xde, 0xa5, 0xd8, 0x66, 0x67, 0x15, 0x4f, 0xae, 0x61, 0x10, 0x42, 0xae, 0x72, 0x0b, 0x0a,
-	0xd4, 0xb0, 0xc4, 0xfe, 0x82, 0xdc, 0xcf, 0x53, 0xc3, 0xe2, 0x9b, 0xb7, 0x01, 0x7a, 0x5e, 0xbf,
-	0x6f, 0x53, 0x3d, 0xbc, 0x34, 0xd4, 0x45, 0xb9, 0x5d, 0x14, 0xb2, 0xd6, 0xa5, 0x71, 0x08, 0x50,
-	0x08, 0xc8, 0xd0, 0x0e, 0x99, 0xdf, 0x7f, 0x55, 0x20, 0x27, 0x7d, 0xee, 0xc0, 0x4a, 0x28, 0x62,
-	0xa4, 0x87, 0x5c, 0xc2, 0x3d, 0x2b, 0xed, 0xbc, 0x57, 0xfd, 0xb7, 0x8f, 0x5f, 0x9d, 0x08, 0xec,
-	0xc9, 0x35, 0xbc, 0x1c, 0x4e, 0x44, 0xfa, 0x0c, 0x4a, 0xfc, 0xae, 0xd2, 0x66, 0x96, 0xdb, 0x7c,
-	0x27, 0xc1, 0xe6, 0x38, 0x94, 0xec, 0xe6, 0xc1, 0x68, 0x75, 0x58, 0x80, 0x9c, 0x30, 0xa4, 0xed,
-	0x02, 0x1c, 0x0e, 0x6c, 0x87, 0x9e, 0xf6, 0x0d, 0x8b, 0x20, 0x04, 0x0b, 0x3c, 0x1a, 0x22, 0xd4,
-	0xfc, 0x9b, 0xbd, 0xa5, 0x69, 0x5b, 0x24, 0xa4, 0x22, 0x86, 0x58, 0xae, 0xb4, 0x2f, 0x15, 0x28,
-	0x32, 0xa8, 0xd9, 0xa2, 0xc4, 0x7f, 0x21, 0xb2, 0x0c, 0x59, 0xe2, 0x0e, 0xd5, 0xcc, 0x66, 0x76,
-	0xab, 0x88, 0xd9, 0x27, 0xd3, 0x32, 0x02, 0x2b, 0x54, 0xb3, 0x5c, 0xc4, 0xbf, 0x99, 0x96, 0x69,
-	0x07, 0xe2, 0x01, 0x30, 0xfb, 0x44, 0x2b, 0x90, 0xb1, 0x4d, 0x11, 0x72, 0x9c, 0xb1, 0x4d, 0xb4,
-	0x0e, 0x85, 0x1f, 0x1a, 0x36, 0xd5, 0x2f, 0xbc, 0x40, 0xcd, 0x71, 0x64, 0x9e, 0xad, 0x1f, 0x7a,
-	0x01, 0x23, 0x14, 0x71, 0x69, 0x70, 0xe5, 0x7b, 0xb6, 0x4b, 0xd5, 0x3c, 0x87, 0xc4, 0x24, 0xda,
-	0x17, 0x90, 0xc7, 0x24, 0x1c, 0x38, 0x34, 0x44, 0x07, 0x90, 0xb3, 0xd9, 0x25, 0x43, 0xee, 0x50,
-	0x72, 0xf0, 0xc6, 0x61, 0xc1, 0x12, 0x88, 0xee, 0xc2, 0x75, 0xbe, 0xad, 0x87, 0x94, 0xf8, 0xba,
-	0xb4, 0x26, 0xee, 0xb2, 0xda, 0x8d, 0x42, 0xc1, 0x21, 0xa1, 0xf6, 0x8b, 0x22, 0x2c, 0xf2, 0xf0,
-	0xc8, 0xeb, 0x28, 0xa3, 0xeb, 0x4c, 0xb2, 0xba, 0x3c, 0xcd, 0xea, 0x3a, 0xe4, 0x42, 0x6a, 0xd0,
-	0x41, 0xc8, 0x89, 0xb3, 0xb2, 0xf3, 0x6e, 0x0a, 0x3f, 0xcd, 0x6a, 0x8b, 0x43, 0xb0, 0x84, 0xa2,
-	0x3b, 0xb0, 0x2c, 0xbe, 0x74, 0x93, 0x50, 0xc3, 0x76, 0x54, 0x95, 0x1f, 0xb3, 0x24, 0x84, 0x47,
-	0x5c, 0x86, 0xbe, 0x1e, 0xb1, 0x40, 0xd2, 0xe9, 0xad, 0x24, 0x8a, 0x72, 0x65, 0x2c, 0x41, 0xe8,
-	0x63, 0x58, 0x64, 0x71, 0x08, 0xd5, 0x12, 0x8f, 0xe7, 0x56, 0x1a, 0x3f, 0x59, 0x80, 0xb0, 0x80,
-	0xa1, 0x7d, 0xc8, 0x07, 0xe2, 0x6d, 0x54, 0xe0, 0xe7, 0xbf, 0x9d, 0x48, 0x67, 0xae, 0x8d, 0x23,
-	0x18, 0x7a, 0x00, 0xa5, 0x5e, 0x40, 0x0c, 0x4a, 0x74, 0x56, 0xa9, 0xd4, 0x1c, 0xb7, 0x52, 0x89,
-	0xac, 0x44, 0x65, 0xac, 0xda, 0x8e, 0xca, 0x18, 0x06, 0xa1, 0xce, 0x04, 0xe8, 0x43, 0x80, 0x90,
-	0x1a, 0x01, 0x15, 0xd8, 0x7c, 0x22, 0xb6, 0xc8, 0xb5, 0x39, 0xf4, 0x01, 0x94, 0x2e, 0x6c, 0xd7,
-	0x0e, 0x2f, 0x05, 0xb6, 0x90, 0x7c, 0xae, 0x50, 0xe7, 0xe0, 0x7b, 0x90, 0x67, 0x28, 0x6f, 0x40,
-	0xd5, 0x25, 0x0e, 0x5c, 0x9f, 0x01, 0x1e, 0xc9, 0xa2, 0x8d, 0x23, 0x4d, 0x96, 0x84, 0x92, 0x6e,
-	0xcb, 0x9c, 0x6e, 0x11, 0x23, 0x6f, 0x43, 0xc9, 0xf1, 0xac, 0x50, 0x97, 0x55, 0xf8, 0xff, 0x44,
-	0x02, 0x30, 0xd1, 0xa1, 0xa8, 0xc4, 0xdf, 0x81, 0xeb, 0xe2, 0xb9, 0x74, 0x3f, 0xf0, 0x86, 0xc4,
-	0x35, 0xdc, 0x1e, 0x51, 0x5f, 0xe3, 0xe7, 0xd6, 0x52, 0x3d, 0xf7, 0xa3, 0x11, 0x0c, 0x97, 0xc3,
-	0x29, 0x09, 0xda, 0x82, 0xb2, 0x48, 0x08, 0x1a, 0xd8, 0x96, 0x45, 0x02, 0x46, 0xe8, 0x35, 0xee,
-	0xc3, 0x0a, 0x97, 0xb7, 0x85, 0xf8, 0xd4, 0x44, 0x0d, 0xc8, 0x7b, 0x3e, 0xef, 0x54, 0xea, 0x4d,
-	0x7e, 0x7a, 0x2a, 0x5a, 0x9f, 0x0b, 0x08, 0x8e, 0xb0, 0xe8, 0x26, 0xe4, 0x1d, 0xcf, 0xd2, 0x07,
-	0x81, 0xa3, 0xae, 0x8b, 0x6a, 0xe4, 0x78, 0x56, 0x27, 0x70, 0xd0, 0x77, 0x61, 0x39, 0x1c, 0x74,
-	0x43, 0x6a, 0xd3, 0x81, 0x38, 0x65, 0x83, 0x93, 0xf2, 0x7e, 0xba, 0xe4, 0x89, 0x23, 0x1b, 0xac,
-	0x7a, 0xe0, 0x49, 0x6b, 0x95, 0x7d, 0x40, 0xb3, 0x4a, 0xac, 0x74, 0x3d, 0x21, 0x57, 0x32, 0xb5,
-	0xd9, 0x27, 0xba, 0x01, 0x8b, 0x43, 0xc3, 0x19, 0x44, 0xed, 0x48, 0x2c, 0xf6, 0x32, 0xbb, 0x8a,
-	0xf6, 0x23, 0xc8, 0x89, 0x1c, 0x45, 0x08, 0x56, 0x5a, 0xed, 0x83, 0x76, 0xa7, 0xa5, 0x77, 0x9a,
-	0x9f, 0x36, 0xcf, 0x3f, 0x6f, 0x96, 0xaf, 0x21, 0x80, 0xdc, 0x37, 0x3a, 0x8d, 0x4e, 0xe3, 0xa8,
-	0xac, 0xa0, 0x12, 0xe4, 0x3f, 0x3f, 0xc7, 0x9f, 0x9e, 0x36, 0x8f, 0xcb, 0x19, 0xb6, 0x68, 0x75,
-	0xea, 0xf5, 0x46, 0xab, 0x55, 0xce, 0xb2, 0xc5, 0xc3, 0x83, 0xd3, 0xb3, 0x0e, 0x6e, 0x94, 0x17,
-	0x98, 0x99, 0xd3, 0x66, 0xbb, 0x81, 0x9b, 0x07, 0x67, 0x7a, 0x03, 0xe3, 0x73, 0x5c, 0x5e, 0x64,
-	0x0a, 0xed, 0xd3, 0xcf, 0x1a, 0xe7, 0x9d, 0x76, 0x39, 0x87, 0x96, 0xa1, 0x58, 0x3f, 0x68, 0xd6,
-	0x1b, 0x67, 0x67, 0x8d, 0xa3, 0x72, 0x5e, 0x6b, 0xc3, 0x9a, 0x8c, 0xa9, 0xec, 0xb6, 0x9f, 0x11,
-	0x6a, 0x98, 0x06, 0x35, 0xd0, 0x1e, 0x2c, 0xf2, 0x80, 0xf0, 0x8b, 0x94, 0x76, 0xde, 0x4c, 0x13,
-	0x33, 0x2c, 0x20, 0xda, 0x1f, 0xb2, 0x50, 0x9e, 0x26, 0x0a, 0x32, 0xe1, 0x66, 0x40, 0x42, 0xcf,
-	0x19, 0x12, 0x56, 0x2a, 0x27, 0x9a, 0x61, 0x76, 0xfe, 0x66, 0x88, 0x5f, 0x8b, 0x8c, 0x4d, 0x0e,
-	0x1f, 0xdf, 0x86, 0x1b, 0xa3, 0x53, 0xe2, 0xbd, 0x31, 0x37, 0x67, 0x6f, 0xc4, 0x28, 0x32, 0x13,
-	0x1b, 0x3d, 0xbe, 0xc7, 0x52, 0xdc, 0x21, 0xfa, 0xa5, 0x11, 0x5e, 0x92, 0x50, 0x5d, 0xe0, 0x6c,
-	0xfa, 0x64, 0xce, 0x8c, 0xa9, 0x3e, 0xb4, 0x1d, 0x72, 0xc2, 0x2d, 0x08, 0x56, 0xc1, 0xc5, 0x48,
-	0x50, 0xb9, 0x84, 0xd5, 0xa9, 0xed, 0x17, 0xf0, 0xe9, 0x93, 0x38, 0x9f, 0x92, 0x2f, 0x35, 0x36,
-	0x18, 0xa7, 0x5e, 0x13, 0x60, 0xbc, 0x81, 0xf6, 0xa1, 0x38, 0xba, 0x99, 0xaa, 0xf0, 0x7b, 0xdd,
-	0x49, 0x30, 0xcb, 0x90, 0xb8, 0x10, 0xf9, 0xae, 0xfd, 0x58, 0x81, 0x05, 0xf6, 0x81, 0xf6, 0x61,
-	0x81, 0x5e, 0xf9, 0xa2, 0xe9, 0xaf, 0x24, 0x3e, 0x2a, 0x83, 0xf0, 0x7f, 0xda, 0x57, 0x3e, 0xc1,
-	0x1c, 0x39, 0x99, 0x2f, 0x4b, 0xd2, 0x69, 0x6d, 0x13, 0x0a, 0x91, 0x1e, 0x2a, 0xc0, 0x42, 0xf3,
-	0xbc, 0xd9, 0x10, 0x39, 0xd2, 0x3a, 0x39, 0xd8, 0xf9, 0xe0, 0x6b, 0x65, 0x45, 0xf3, 0x00, 0xd5,
-	0x79, 0x29, 0x17, 0x64, 0x24, 0x3f, 0x18, 0x90, 0x90, 0x26, 0xcd, 0x8b, 0x23, 0x9e, 0x67, 0xe6,
-	0xe7, 0xf9, 0x3e, 0xac, 0x1e, 0x13, 0x3a, 0xcf, 0x69, 0xa2, 0xed, 0x67, 0xa2, 0xb6, 0xaf, 0xfd,
-	0x5c, 0x81, 0xeb, 0x67, 0x76, 0x28, 0x6c, 0x84, 0x29, 0x8d, 0xdc, 0x82, 0xa2, 0xcf, 0xb3, 0xc7,
-	0x7e, 0x2a, 0x62, 0xb4, 0x88, 0x0b, 0x4c, 0xd0, 0xb2, 0x9f, 0x8a, 0xf1, 0x98, 0x6d, 0x52, 0xef,
-	0x09, 0x71, 0xe5, 0x74, 0xc6, 0xd5, 0xdb, 0x4c, 0xc0, 0x7a, 0xc6, 0x85, 0xed, 0x50, 0x12, 0xf0,
-	0x06, 0x55, 0xc4, 0x72, 0xa5, 0x3d, 0x05, 0x14, 0xf7, 0x23, 0xf4, 0x3d, 0x37, 0x24, 0xe8, 0x23,
-	0x36, 0xca, 0x33, 0x89, 0xe4, 0x44, 0xba, 0xe8, 0x48, 0x0c, 0x7a, 0x1b, 0x56, 0x5d, 0xf2, 0x05,
-	0xd5, 0x63, 0xfe, 0x88, 0x9b, 0x2f, 0x33, 0xf1, 0xa3, 0xc8, 0x27, 0xad, 0x0e, 0xa8, 0xce, 0x32,
-	0xc3, 0x79, 0x95, 0x48, 0xfe, 0x6c, 0x01, 0x96, 0x0e, 0x63, 0xed, 0x65, 0x66, 0xc2, 0xda, 0x84,
-	0x92, 0x49, 0xc2, 0x5e, 0x60, 0xf3, 0xae, 0xc1, 0xa7, 0x8b, 0x22, 0x8e, 0x8b, 0x50, 0x1b, 0xca,
-	0x51, 0xcb, 0xa2, 0xa4, 0xef, 0x3b, 0x06, 0x8d, 0x46, 0x80, 0x39, 0xea, 0xc6, 0xaa, 0x34, 0xd1,
-	0x96, 0x16, 0xd0, 0x47, 0x11, 0xc1, 0x16, 0xd2, 0x13, 0xec, 0xe4, 0x9a, 0xa4, 0x18, 0x7a, 0x1d,
-	0x78, 0x8a, 0xf1, 0x31, 0xba, 0x20, 0x7f, 0x6f, 0x8c, 0x24, 0xd3, 0xb3, 0xce, 0xe2, 0x5c, 0xb3,
-	0x4e, 0x05, 0x0a, 0xa6, 0x1d, 0x1a, 0x5d, 0x87, 0x98, 0x6a, 0x71, 0x53, 0xd9, 0x2a, 0xe0, 0xd1,
-	0x1a, 0x99, 0xd3, 0x9d, 0x53, 0x8c, 0x73, 0x1f, 0xa7, 0x71, 0x5e, 0x3e, 0xc0, 0xff, 0xa2, 0x81,
-	0x1e, 0x96, 0x61, 0x45, 0xce, 0x1a, 0x32, 0xdc, 0xda, 0x4f, 0x14, 0x58, 0x8f, 0x55, 0x01, 0xe9,
-	0x4c, 0x4a, 0x52, 0x35, 0x20, 0x2f, 0x9f, 0x4f, 0x96, 0x83, 0x77, 0xe7, 0xb8, 0x30, 0x8e, 0xb0,
-	0xda, 0x63, 0x58, 0x8b, 0xea, 0xc2, 0x7c, 0xe7, 0x6f, 0x00, 0xc4, 0x86, 0x26, 0x71, 0xdb, 0x22,
-	0x8d, 0xe6, 0x25, 0xed, 0x43, 0x50, 0x47, 0x49, 0x2a, 0x0d, 0xa7, 0xac, 0x19, 0x9a, 0x09, 0xeb,
-	0x2f, 0x80, 0xca, 0x34, 0x3f, 0x86, 0x82, 0x3c, 0x24, 0x4a, 0xf4, 0xb9, 0xee, 0x3d, 0x02, 0x6b,
-	0xdf, 0x84, 0xf5, 0x23, 0xe2, 0x90, 0xff, 0x28, 0xf6, 0x09, 0x77, 0xff, 0xbd, 0x02, 0xeb, 0x1d,
-	0xdf, 0x34, 0xfe, 0x0b, 0xb6, 0xe3, 0xcf, 0x9e, 0x7d, 0x85, 0x67, 0xff, 0x4d, 0x46, 0x96, 0x20,
-	0x39, 0xa1, 0xa2, 0x2e, 0xac, 0xcd, 0xcc, 0xd9, 0xe3, 0x16, 0x3b, 0x6f, 0x73, 0xbc, 0x31, 0x3d,
-	0x69, 0xf3, 0x76, 0xeb, 0xb3, 0xb1, 0x8a, 0x07, 0x81, 0x98, 0xfa, 0x90, 0x04, 0xf6, 0xc5, 0x95,
-	0x2e, 0x06, 0x63, 0xf9, 0x53, 0x71, 0x77, 0x8e, 0x99, 0xba, 0xfa, 0x98, 0x1b, 0x10, 0x2b, 0x36,
-	0x62, 0x49, 0xc3, 0x71, 0xb1, 0x56, 0x85, 0xa5, 0xf8, 0x1a, 0x95, 0x61, 0xa9, 0x79, 0xde, 0xd6,
-	0x1f, 0x37, 0xf0, 0xe9, 0xc3, 0xd3, 0xc6, 0x51, 0xf9, 0x1a, 0x5a, 0x82, 0xc2, 0x68, 0xa5, 0xec,
-	0xfc, 0xb3, 0x04, 0x50, 0x67, 0x47, 0x8a, 0x5f, 0xbe, 0xbf, 0x52, 0xa0, 0x14, 0x4b, 0x50, 0xb4,
-	0x9d, 0xe0, 0xdf, 0x6c, 0x4b, 0xaf, 0x6c, 0x44, 0x90, 0xd8, 0x7f, 0x7b, 0x55, 0x47, 0x23, 0xac,
-	0x56, 0xfb, 0xe9, 0xdf, 0xff, 0xf1, 0xeb, 0xcc, 0x3b, 0xda, 0x66, 0x6d, 0xb8, 0x5d, 0x93, 0x24,
-	0x08, 0x6b, 0xcf, 0xc6, 0x04, 0x79, 0x5e, 0x13, 0x1d, 0x6a, 0x4f, 0x16, 0xd9, 0x5f, 0x2a, 0x50,
-	0x88, 0x12, 0x16, 0x55, 0x13, 0xfc, 0x99, 0xea, 0xf8, 0x95, 0x54, 0x05, 0x5d, 0x7b, 0x9f, 0xfb,
-	0xf4, 0x15, 0xf4, 0x56, 0x92, 0x4f, 0xb5, 0x67, 0xb6, 0xf9, 0x1c, 0xfd, 0x56, 0x01, 0x18, 0xf7,
-	0x63, 0xf4, 0xd5, 0x84, 0x33, 0x66, 0x46, 0x88, 0xca, 0xf6, 0x1c, 0x08, 0x51, 0x05, 0xb4, 0x2d,
-	0xee, 0xa2, 0x86, 0x12, 0xc3, 0x86, 0x7e, 0xc7, 0x9e, 0x70, 0xdc, 0xb1, 0x93, 0x9f, 0x70, 0xa6,
-	0xbb, 0xa7, 0x8c, 0xda, 0x7d, 0xee, 0xd2, 0xb6, 0xf6, 0x5e, 0xaa, 0xa8, 0xed, 0xf5, 0xf8, 0x39,
-	0x7b, 0xca, 0x5d, 0xf4, 0x27, 0x65, 0x62, 0x16, 0x8c, 0x66, 0x82, 0xdd, 0xf4, 0x5c, 0x9b, 0x2c,
-	0x30, 0x95, 0x79, 0x2a, 0x82, 0x76, 0x8f, 0xbb, 0xfd, 0xbe, 0xa6, 0xbd, 0xdc, 0xed, 0xa8, 0x64,
-	0xee, 0x45, 0xd5, 0x03, 0xfd, 0x51, 0x19, 0x4f, 0x93, 0x91, 0xbf, 0x1f, 0xa4, 0xe4, 0xe2, 0xab,
-	0x38, 0x2b, 0x63, 0x8c, 0x6a, 0xc9, 0xce, 0xd6, 0x9e, 0x8d, 0xab, 0xe8, 0x73, 0xf4, 0xe7, 0xf8,
-	0xec, 0x1a, 0xf5, 0x14, 0x74, 0x3f, 0x2d, 0xf1, 0xa6, 0x1a, 0x58, 0x65, 0x77, 0x7e, 0xa0, 0x24,
-	0xee, 0x5d, 0x7e, 0x83, 0x37, 0x51, 0x8a, 0x70, 0x33, 0xea, 0xa2, 0xd9, 0x16, 0x95, 0x48, 0x8c,
-	0x97, 0x76, 0xb5, 0xca, 0xda, 0xcc, 0xb4, 0xd5, 0xe8, 0xfb, 0xf4, 0x2a, 0x0a, 0xeb, 0xdd, 0xb9,
-	0xc3, 0xfa, 0x37, 0x05, 0xd0, 0x6c, 0xa3, 0x4b, 0xf4, 0xf0, 0xa5, 0xbd, 0x71, 0x3e, 0x36, 0xec,
-	0x73, 0xb7, 0xf7, 0x76, 0xe6, 0x75, 0x7b, 0xc4, 0xe3, 0xc3, 0x27, 0xa0, 0xf6, 0xbc, 0x7e, 0x74,
-	0xe6, 0xc4, 0x51, 0x8f, 0x94, 0x6f, 0x1d, 0x4b, 0xb9, 0xe5, 0x39, 0x86, 0x6b, 0x55, 0xbd, 0xc0,
-	0xaa, 0x59, 0xc4, 0xe5, 0xb1, 0xab, 0x89, 0x2d, 0xc3, 0xb7, 0xc3, 0x97, 0xfc, 0xf1, 0xe4, 0xc1,
-	0x78, 0xf5, 0x65, 0x26, 0x7b, 0x5c, 0x3f, 0xec, 0xe6, 0x38, 0xf2, 0xde, 0xbf, 0x02, 0x00, 0x00,
-	0xff, 0xff, 0xc6, 0xf0, 0xf0, 0x91, 0x75, 0x19, 0x00, 0x00,
+	// 2755 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x5a, 0xdb, 0x6f, 0x23, 0x57,
+	0x19, 0xdf, 0xb1, 0x13, 0x5f, 0x3e, 0xe7, 0x32, 0x7b, 0xba, 0x4d, 0x1d, 0x6f, 0xb7, 0x9b, 0x4e,
+	0x6f, 0xe9, 0x6e, 0x6b, 0x37, 0x59, 0xb6, 0xbb, 0x4d, 0x2f, 0xbb, 0x89, 0xe3, 0x5c, 0xd4, 0xc4,
+	0x59, 0xc6, 0xf6, 0x56, 0x14, 0xd0, 0x30, 0xf6, 0x9c, 0x38, 0x43, 0xc6, 0x33, 0xc3, 0x9c, 0x63,
+	0x43, 0x5a, 0x2a, 0x44, 0x05, 0x48, 0x3c, 0x81, 0x84, 0x78, 0x40, 0x3c, 0x70, 0x79, 0x46, 0x08,
+	0xc1, 0x03, 0x12, 0x52, 0x9f, 0x91, 0x78, 0xe5, 0x89, 0x77, 0xfe, 0x0e, 0x84, 0xce, 0x65, 0xec,
+	0xb1, 0xbd, 0xdb, 0xf1, 0xec, 0xc2, 0x4b, 0x32, 0xe7, 0x3b, 0xe7, 0xfb, 0xce, 0x77, 0xbe, 0xdb,
+	0xf9, 0x7d, 0x33, 0x86, 0x72, 0xd7, 0xf3, 0xba, 0x0e, 0xae, 0x58, 0x78, 0x40, 0x3d, 0xcf, 0x21,
+	0x95, 0x8e, 0xe3, 0xf5, 0xad, 0x76, 0xdf, 0x76, 0xac, 0xca, 0x60, 0x23, 0x32, 0x2a, 0xfb, 0x81,
+	0x47, 0x3d, 0x74, 0x4d, 0xac, 0x2f, 0x87, 0xeb, 0xcb, 0x91, 0x15, 0x83, 0x8d, 0xd2, 0xf3, 0x52,
+	0x9c, 0xe9, 0xdb, 0x15, 0xd3, 0x75, 0x3d, 0x6a, 0x52, 0xdb, 0x73, 0x89, 0x60, 0x2e, 0xad, 0x46,
+	0x66, 0xcf, 0x28, 0xf5, 0xdb, 0x9e, 0x75, 0x21, 0xa7, 0x34, 0x39, 0xc5, 0xc5, 0x55, 0xcc, 0xbe,
+	0x65, 0x53, 0xf1, 0xd7, 0x70, 0xbc, 0xae, 0x5c, 0xf3, 0x92, 0x5c, 0xe3, 0x78, 0x6e, 0x37, 0xe8,
+	0xbb, 0xae, 0xed, 0x76, 0x2b, 0x9e, 0x8f, 0x83, 0xb1, 0x3d, 0x5e, 0x90, 0x8b, 0xf8, 0xa8, 0xdd,
+	0x3f, 0xad, 0x58, 0x7d, 0xb1, 0x40, 0xce, 0x5f, 0x9d, 0x9c, 0xc7, 0x3d, 0x9f, 0x86, 0x5a, 0x5c,
+	0x9f, 0x9c, 0xa4, 0x76, 0x0f, 0x13, 0x6a, 0xf6, 0x7c, 0xb1, 0x40, 0xdb, 0x81, 0xcb, 0x3a, 0xa6,
+	0xc1, 0xc5, 0x0e, 0x3b, 0xb0, 0x8e, 0xbf, 0xd3, 0xc7, 0x84, 0xa2, 0x6b, 0x00, 0x7e, 0xe0, 0x7d,
+	0x1b, 0x77, 0xa8, 0x61, 0x5b, 0x45, 0x65, 0x4d, 0x59, 0xcf, 0xeb, 0x79, 0x49, 0x39, 0xb4, 0xd0,
+	0x12, 0xa4, 0x6c, 0xab, 0x98, 0xe2, 0xe4, 0x94, 0x6d, 0x69, 0xbf, 0x52, 0x60, 0x45, 0xef, 0xbb,
+	0x5c, 0x44, 0x33, 0xb0, 0xbb, 0x5d, 0x1c, 0xcc, 0x28, 0xe9, 0x1a, 0x00, 0x15, 0x0c, 0xc6, 0x50,
+	0x62, 0x5e, 0x52, 0x0e, 0x2d, 0xb4, 0x0d, 0x19, 0xe2, 0xf5, 0x83, 0x0e, 0x2e, 0xa6, 0xd7, 0x94,
+	0xf5, 0xc2, 0xe6, 0xeb, 0xe5, 0x2f, 0x75, 0x56, 0x59, 0xc7, 0xbe, 0xd7, 0xe0, 0x0c, 0xba, 0x64,
+	0xd4, 0x0c, 0x58, 0x6c, 0x50, 0x2f, 0x30, 0xbb, 0x58, 0x4c, 0xa0, 0x15, 0xc8, 0xb4, 0xfb, 0x9d,
+	0x73, 0x4c, 0xa5, 0x36, 0x72, 0xc4, 0xe8, 0x5e, 0x9b, 0xa9, 0x25, 0xd5, 0x90, 0x23, 0xf4, 0x02,
+	0x40, 0x17, 0xbb, 0xd2, 0x27, 0x5c, 0x8f, 0xb4, 0x1e, 0xa1, 0x68, 0x7f, 0x57, 0x00, 0x46, 0xfb,
+	0xc6, 0x1d, 0xf8, 0x2a, 0xe4, 0x03, 0xec, 0x7b, 0x86, 0x6b, 0xf6, 0xb0, 0xdc, 0x28, 0xc7, 0x08,
+	0x75, 0xb3, 0x87, 0xd1, 0x8b, 0x50, 0x68, 0x07, 0xa6, 0xdb, 0x39, 0x13, 0xd3, 0x6c, 0xaf, 0xfc,
+	0xc1, 0x25, 0x1d, 0x04, 0x91, 0x2f, 0xb9, 0x0a, 0x39, 0x6a, 0x76, 0xc5, 0xfc, 0x9c, 0x9c, 0xcf,
+	0x52, 0xb3, 0xcb, 0x27, 0xaf, 0x03, 0x74, 0xbc, 0x5e, 0xcf, 0xa6, 0x06, 0x39, 0x33, 0x8b, 0xf3,
+	0x72, 0x3a, 0x2f, 0x68, 0x8d, 0x33, 0x13, 0xa9, 0x90, 0xb6, 0xec, 0xa0, 0x98, 0xe5, 0xfb, 0xb2,
+	0xc7, 0x1d, 0x80, 0x5c, 0x80, 0x07, 0x36, 0x61, 0x27, 0xf9, 0xab, 0x02, 0x19, 0x79, 0x8a, 0x16,
+	0x2c, 0x11, 0x61, 0x35, 0x43, 0x3a, 0x20, 0xc5, 0x1d, 0xf0, 0x46, 0x8c, 0x03, 0xc6, 0x4c, 0x7d,
+	0x70, 0x49, 0x5f, 0x24, 0x63, 0xb6, 0x3f, 0x82, 0x02, 0x3f, 0xfd, 0x13, 0x3a, 0x95, 0xd9, 0x22,
+	0x18, 0x8e, 0x76, 0x72, 0x61, 0x74, 0x68, 0x9f, 0x2b, 0x00, 0x2c, 0xfa, 0xe8, 0x61, 0xcf, 0xec,
+	0x62, 0x84, 0x60, 0x8e, 0x1b, 0x48, 0x58, 0x9f, 0x3f, 0x33, 0xf7, 0x5a, 0x76, 0x17, 0x13, 0x2a,
+	0xcc, 0xaa, 0xcb, 0x11, 0x3a, 0x80, 0x82, 0xdf, 0x27, 0x67, 0x06, 0xb5, 0x7b, 0xb6, 0xdb, 0xe5,
+	0x36, 0x2d, 0x6c, 0xbe, 0x16, 0xa3, 0x52, 0xd3, 0xee, 0xe1, 0x86, 0x6f, 0xba, 0x3a, 0x30, 0xde,
+	0x26, 0x67, 0xd5, 0xbe, 0x48, 0x43, 0x9e, 0xa7, 0x40, 0x83, 0x62, 0xff, 0x91, 0x3a, 0xa8, 0x90,
+	0xc6, 0xee, 0xa0, 0x98, 0x5a, 0x4b, 0x33, 0xf3, 0x63, 0x77, 0xc0, 0x56, 0x99, 0x41, 0x97, 0x14,
+	0xd3, 0x9c, 0xc4, 0x9f, 0x43, 0x27, 0xcd, 0x0d, 0x9d, 0x24, 0xf3, 0x6d, 0x3e, 0xcc, 0x37, 0xb4,
+	0x0a, 0xb9, 0xef, 0x9a, 0x36, 0x35, 0x4e, 0xbd, 0xa0, 0x98, 0xe1, 0x9c, 0x59, 0x36, 0xde, 0xf3,
+	0x02, 0x16, 0xad, 0xd8, 0xa5, 0xc1, 0x85, 0xef, 0xd9, 0x2e, 0x95, 0x8e, 0x8e, 0x50, 0x58, 0x78,
+	0x12, 0xdc, 0x09, 0x30, 0x35, 0x98, 0x26, 0x39, 0xce, 0x9c, 0x17, 0x94, 0x9a, 0x3b, 0x40, 0xf7,
+	0x20, 0x3b, 0xf0, 0x9c, 0x7e, 0x0f, 0x93, 0x62, 0x7e, 0x2d, 0xbd, 0x5e, 0xd8, 0x7c, 0x25, 0xc6,
+	0x12, 0x0f, 0xf9, 0x6a, 0x3d, 0xe4, 0x42, 0xf7, 0x20, 0x23, 0x2d, 0x09, 0xc9, 0x2c, 0x29, 0xd9,
+	0xd0, 0x2d, 0xc8, 0xb2, 0x12, 0xe5, 0xf5, 0x69, 0xb1, 0xc0, 0x25, 0xac, 0x86, 0x12, 0xc2, 0x12,
+	0x56, 0xde, 0x95, 0xf5, 0x4f, 0x0f, 0x57, 0xa2, 0x2a, 0x64, 0x08, 0x35, 0x69, 0x9f, 0x14, 0x17,
+	0xd6, 0x94, 0xf5, 0xa5, 0xcd, 0x9b, 0x31, 0xbb, 0x72, 0x37, 0x95, 0x1b, 0x9c, 0x45, 0x97, 0xac,
+	0xda, 0x5b, 0x90, 0x11, 0xa7, 0x79, 0xa4, 0xef, 0x10, 0xcc, 0xf9, 0x26, 0x3d, 0x93, 0x39, 0xcb,
+	0x9f, 0xb5, 0x7f, 0x28, 0x90, 0xd5, 0x31, 0xe9, 0x3b, 0x94, 0xb0, 0x52, 0x65, 0xb3, 0xe0, 0x23,
+	0xdc, 0xbd, 0xf1, 0x51, 0x3d, 0x0a, 0x57, 0x5d, 0x32, 0xa2, 0x1b, 0x70, 0x99, 0x4f, 0x1b, 0x84,
+	0x62, 0xdf, 0x90, 0xd2, 0x44, 0x64, 0x2c, 0xb7, 0xc3, 0xc0, 0x3a, 0x14, 0x6b, 0x6f, 0xc2, 0x65,
+	0x33, 0xa0, 0xf6, 0xa9, 0xd9, 0xa1, 0x46, 0xcf, 0x74, 0xed, 0x53, 0x16, 0xd9, 0x22, 0x64, 0xd4,
+	0x70, 0xe2, 0x58, 0xd2, 0xd1, 0x4b, 0xb0, 0xe8, 0xf6, 0x7b, 0x46, 0x48, 0x27, 0x3c, 0x94, 0xd2,
+	0xfa, 0x82, 0xdb, 0xef, 0x6d, 0x87, 0x34, 0x8d, 0xc2, 0x52, 0x38, 0x10, 0x67, 0x42, 0x25, 0xc8,
+	0x39, 0x5e, 0x47, 0xd4, 0x3d, 0x61, 0x8a, 0xe1, 0x18, 0xed, 0x41, 0xfe, 0xd4, 0x76, 0xb0, 0x71,
+	0x66, 0x92, 0xb3, 0x19, 0x4f, 0xbc, 0x67, 0x3b, 0xf8, 0xc0, 0x24, 0x67, 0x98, 0xe8, 0xb9, 0x53,
+	0xf9, 0xac, 0xfd, 0xab, 0x00, 0xf3, 0xdc, 0x1b, 0x32, 0xc8, 0x95, 0x61, 0x90, 0x8f, 0x17, 0x52,
+	0x75, 0xb2, 0x90, 0x8e, 0x5c, 0x9e, 0x7a, 0x62, 0x97, 0x33, 0xc3, 0x88, 0x27, 0xc3, 0xc2, 0xd4,
+	0xb4, 0x9d, 0x62, 0x91, 0x6f, 0xb3, 0x20, 0x88, 0xbb, 0x9c, 0x86, 0xde, 0x9f, 0xb8, 0x84, 0xe2,
+	0x52, 0x62, 0xfc, 0x02, 0x42, 0x1f, 0xc0, 0x3c, 0xf3, 0x27, 0x29, 0x16, 0xb8, 0x95, 0xd6, 0x67,
+	0xd1, 0x93, 0x39, 0x5a, 0x17, 0x6c, 0xe8, 0x3e, 0x64, 0x03, 0x11, 0x63, 0x32, 0xa5, 0x5e, 0x8d,
+	0xad, 0x97, 0x7c, 0xb5, 0x1e, 0xb2, 0xa1, 0x77, 0xa1, 0xd0, 0x09, 0xb0, 0x49, 0x31, 0x2b, 0x72,
+	0xb8, 0x98, 0xe1, 0x52, 0x4a, 0x53, 0x69, 0xd5, 0x0c, 0x91, 0x81, 0x0e, 0x62, 0x39, 0x23, 0xa0,
+	0x77, 0x00, 0x08, 0x35, 0x03, 0x2a, 0x78, 0xb3, 0xb1, 0xbc, 0x79, 0xbe, 0x9a, 0xb3, 0xbe, 0x0b,
+	0x85, 0x53, 0xdb, 0xb5, 0x45, 0x71, 0xc5, 0xc5, 0x5c, 0xfc, 0xbe, 0x62, 0x39, 0x67, 0x8e, 0xd4,
+	0x81, 0x85, 0x99, 0xeb, 0xc0, 0xca, 0x30, 0x09, 0x17, 0x79, 0xda, 0x84, 0x99, 0xb5, 0x07, 0xf9,
+	0x51, 0xf0, 0xbf, 0xc2, 0xc5, 0xc5, 0xf9, 0x61, 0x98, 0x18, 0xfa, 0x88, 0x15, 0x5d, 0x87, 0x82,
+	0xe3, 0x75, 0x89, 0x21, 0x01, 0xc4, 0x33, 0xa2, 0xbc, 0x32, 0xd2, 0x8e, 0x00, 0x11, 0xdf, 0x80,
+	0xcb, 0xc2, 0xed, 0x86, 0x1f, 0x78, 0x03, 0xec, 0x9a, 0x6e, 0x07, 0x17, 0x9f, 0xe5, 0x1b, 0x56,
+	0x66, 0x0a, 0x9b, 0x07, 0x43, 0x36, 0x5d, 0x25, 0x13, 0x14, 0xb4, 0x0e, 0xaa, 0x28, 0x10, 0x11,
+	0xcc, 0xb4, 0xc2, 0x75, 0x58, 0x6a, 0x47, 0xb0, 0xd7, 0xa1, 0x85, 0x6a, 0x90, 0xf5, 0x7c, 0x0e,
+	0x22, 0x8b, 0xcf, 0xf1, 0xdd, 0x67, 0x4a, 0x8f, 0x13, 0xc1, 0xa2, 0x87, 0xbc, 0xe8, 0x39, 0xc8,
+	0x3a, 0x5e, 0xd7, 0xe8, 0x07, 0x4e, 0x71, 0x55, 0xdc, 0x9a, 0x8e, 0xd7, 0x6d, 0x05, 0x0e, 0xfa,
+	0x26, 0x2c, 0x92, 0x7e, 0x9b, 0x50, 0x9b, 0xf6, 0xc5, 0x2e, 0xd7, 0x78, 0x70, 0xdf, 0x99, 0x2d,
+	0x09, 0xa3, 0x9c, 0x35, 0x76, 0x37, 0xe9, 0xe3, 0xd2, 0x58, 0xb1, 0xa5, 0x66, 0x97, 0x14, 0xaf,
+	0x8b, 0x6b, 0x91, 0x3d, 0xb3, 0xab, 0x49, 0xdc, 0x53, 0xa4, 0xb8, 0x36, 0xd3, 0xd5, 0xd4, 0xe0,
+	0xab, 0xf5, 0x90, 0x0b, 0x1d, 0x0c, 0xaf, 0xa6, 0x17, 0x39, 0xff, 0x5b, 0x33, 0x29, 0x2b, 0x2e,
+	0x77, 0xa1, 0xa5, 0xe4, 0x2f, 0xdd, 0x07, 0x34, 0x7d, 0x06, 0x76, 0x6f, 0x9f, 0xe3, 0x0b, 0x59,
+	0xc1, 0xd8, 0x23, 0xba, 0x02, 0xf3, 0x03, 0xd3, 0xe9, 0x87, 0x40, 0x4f, 0x0c, 0xb6, 0x52, 0x77,
+	0x95, 0x52, 0x1b, 0x0a, 0x11, 0xc1, 0x8f, 0x60, 0x7d, 0x3f, 0xca, 0x9a, 0xe0, 0x1a, 0x1d, 0xed,
+	0xa1, 0xfd, 0x00, 0x32, 0xa2, 0xdc, 0x21, 0x04, 0x4b, 0x8d, 0xe6, 0x76, 0xb3, 0xd5, 0x30, 0x5a,
+	0xf5, 0x0f, 0xeb, 0x27, 0x1f, 0xd5, 0xd5, 0x4b, 0x08, 0x20, 0xf3, 0xd5, 0x56, 0xad, 0x55, 0xdb,
+	0x55, 0x15, 0x54, 0x80, 0xec, 0x47, 0x27, 0xfa, 0x87, 0x87, 0xf5, 0x7d, 0x35, 0xc5, 0x06, 0x8d,
+	0x56, 0xb5, 0x5a, 0x6b, 0x34, 0xd4, 0x34, 0x1b, 0xec, 0x6d, 0x1f, 0x1e, 0xb5, 0xf4, 0x9a, 0x3a,
+	0xc7, 0xc4, 0x1c, 0xd6, 0x9b, 0x35, 0xbd, 0xbe, 0x7d, 0x64, 0xd4, 0x74, 0xfd, 0x44, 0x57, 0xe7,
+	0xd9, 0x82, 0xe6, 0xe1, 0x71, 0xed, 0xa4, 0xd5, 0x54, 0x33, 0x68, 0x11, 0xf2, 0xd5, 0xed, 0x7a,
+	0xb5, 0x76, 0x74, 0x54, 0xdb, 0x55, 0xb3, 0xda, 0x7f, 0x14, 0xc8, 0x0f, 0xd3, 0x28, 0x92, 0x9b,
+	0xca, 0x58, 0x6e, 0xea, 0x90, 0x15, 0x48, 0x9b, 0xc8, 0xb3, 0xde, 0x9d, 0x35, 0x33, 0x87, 0x4f,
+	0x27, 0x82, 0x5f, 0x0f, 0x05, 0x95, 0x7e, 0xa4, 0xc0, 0xf2, 0xc4, 0xe4, 0x97, 0xde, 0x66, 0x57,
+	0x60, 0x9e, 0x5d, 0xe8, 0x44, 0x42, 0x33, 0x31, 0x88, 0x60, 0x99, 0xf4, 0x13, 0x61, 0x19, 0xed,
+	0xfb, 0x90, 0x0b, 0x69, 0x13, 0x75, 0x54, 0x49, 0x52, 0x47, 0x6f, 0x43, 0x0e, 0xbb, 0x96, 0x60,
+	0x4c, 0xc5, 0x32, 0x66, 0xb1, 0x6b, 0xb1, 0x91, 0xd6, 0x84, 0x15, 0x99, 0xd5, 0xb2, 0x55, 0x39,
+	0xc6, 0xd4, 0xb4, 0x4c, 0x6a, 0xa2, 0x2d, 0x98, 0xe7, 0x4a, 0x4b, 0x35, 0x5e, 0x9e, 0x25, 0x11,
+	0x74, 0xc1, 0xa2, 0xfd, 0x2e, 0x0d, 0xea, 0x64, 0xa9, 0x42, 0x16, 0x3c, 0x17, 0x60, 0xe2, 0x39,
+	0x03, 0xcc, 0xc0, 0xcb, 0x58, 0xdf, 0x90, 0x4e, 0xde, 0x37, 0xe8, 0xcf, 0x86, 0xc2, 0xc6, 0x3b,
+	0xb7, 0xaf, 0xc3, 0x95, 0xe1, 0x2e, 0xd1, 0x36, 0x22, 0x93, 0xb4, 0x37, 0x44, 0xa1, 0x98, 0x48,
+	0xdf, 0xf6, 0x2d, 0x76, 0x59, 0x49, 0x40, 0x83, 0x49, 0x71, 0x8e, 0x97, 0x88, 0x7b, 0x09, 0x6b,
+	0x76, 0x04, 0xe3, 0x88, 0x8a, 0x01, 0xa7, 0x43, 0x42, 0xe9, 0x0c, 0x96, 0x27, 0xa6, 0x1f, 0x91,
+	0xf7, 0xf7, 0xc6, 0xf3, 0x3e, 0x01, 0xa6, 0x8a, 0x64, 0x7e, 0x1d, 0x60, 0x34, 0x81, 0xee, 0x47,
+	0xa1, 0x9a, 0xc2, 0xcf, 0xf5, 0x52, 0x8c, 0x58, 0xc6, 0x19, 0x01, 0x69, 0x3f, 0x55, 0x60, 0x8e,
+	0x3d, 0xa0, 0xfb, 0x30, 0x47, 0x2f, 0x7c, 0x11, 0xbe, 0x4b, 0xb1, 0x4e, 0x65, 0x2c, 0xfc, 0x4f,
+	0xf3, 0xc2, 0xc7, 0x3a, 0xe7, 0x1c, 0x2f, 0x89, 0x0b, 0x52, 0x69, 0xed, 0x75, 0xc8, 0x85, 0xeb,
+	0x50, 0x0e, 0xe6, 0xea, 0x27, 0xf5, 0x9a, 0x28, 0x51, 0x8d, 0x83, 0xed, 0xcd, 0xdb, 0x6f, 0xab,
+	0x0a, 0xca, 0x42, 0xfa, 0x78, 0xf7, 0xb6, 0x9a, 0xd2, 0xbe, 0x60, 0x4d, 0x2a, 0xaf, 0xe8, 0x68,
+	0x0d, 0x16, 0xce, 0x7b, 0xc4, 0x38, 0xc7, 0x17, 0x46, 0x04, 0xae, 0xc3, 0x79, 0x8f, 0x7c, 0x88,
+	0x2f, 0x78, 0x43, 0xdc, 0x18, 0xeb, 0x76, 0xd2, 0xfc, 0xec, 0x5f, 0x99, 0xe9, 0xda, 0x90, 0xff,
+	0x6a, 0xee, 0x40, 0x38, 0x72, 0xd4, 0x23, 0x95, 0xde, 0x83, 0xa5, 0xf1, 0xc9, 0xb8, 0xca, 0xbf,
+	0x10, 0xf5, 0x8d, 0x07, 0xa8, 0xca, 0xd1, 0x55, 0x92, 0x17, 0x2e, 0xc3, 0x84, 0x4d, 0x25, 0x4f,
+	0xd8, 0xfb, 0xb0, 0xbc, 0x8f, 0xe9, 0xd3, 0xbc, 0xde, 0xf9, 0x89, 0x02, 0x97, 0x8f, 0x6c, 0x22,
+	0x64, 0x90, 0x19, 0x85, 0x5c, 0x85, 0xbc, 0xcf, 0xcb, 0x80, 0xfd, 0x89, 0xb0, 0xc2, 0xbc, 0x9e,
+	0x63, 0x84, 0x86, 0xfd, 0x89, 0x78, 0x49, 0xc2, 0x26, 0xa9, 0x77, 0x8e, 0x5d, 0xd9, 0x90, 0xf3,
+	0xe5, 0x4d, 0x46, 0x60, 0x57, 0xc5, 0xa9, 0xed, 0x50, 0x1c, 0x70, 0xcc, 0x98, 0xd7, 0xe5, 0x48,
+	0xfb, 0x04, 0x50, 0x54, 0x0f, 0xe2, 0x7b, 0x2e, 0xc1, 0xe8, 0x3d, 0xc8, 0xf0, 0x93, 0x12, 0x19,
+	0xdc, 0xb3, 0x59, 0x47, 0xf2, 0xa0, 0x57, 0x61, 0xd9, 0xc5, 0xdf, 0xa3, 0x46, 0x44, 0x1f, 0x71,
+	0xf2, 0x45, 0x46, 0x7e, 0x10, 0xea, 0xa4, 0x55, 0x01, 0x55, 0x59, 0x8a, 0x3b, 0x4f, 0x63, 0xc9,
+	0x1f, 0xcf, 0xc1, 0x42, 0xf4, 0x2d, 0xd9, 0x54, 0xd3, 0xb3, 0x06, 0x05, 0x0b, 0x93, 0x4e, 0x60,
+	0x73, 0x00, 0xc6, 0x01, 0x7f, 0x5e, 0x8f, 0x92, 0x50, 0x13, 0xd4, 0x10, 0xfd, 0x51, 0xdc, 0xf3,
+	0x1d, 0x93, 0x86, 0xa8, 0x3c, 0x41, 0x01, 0x5c, 0x96, 0x22, 0x9a, 0x52, 0x02, 0x7a, 0x2f, 0x0c,
+	0xb0, 0xb9, 0xd9, 0x03, 0xec, 0xe0, 0x92, 0x0c, 0x31, 0xf4, 0x3c, 0xf0, 0x5a, 0xc1, 0x93, 0x30,
+	0x27, 0xdf, 0x3a, 0x0d, 0x29, 0x93, 0xed, 0xc7, 0x7c, 0xa2, 0xf6, 0xa3, 0x04, 0x39, 0xcb, 0x26,
+	0x66, 0xdb, 0xc1, 0x56, 0x31, 0xbf, 0xa6, 0xac, 0xe7, 0xf4, 0xe1, 0x18, 0x59, 0x93, 0x20, 0x54,
+	0x74, 0x58, 0x1f, 0xcc, 0xa2, 0xbc, 0x74, 0x40, 0x3c, 0x16, 0x7d, 0x7a, 0xb0, 0xb7, 0xa3, 0xc2,
+	0x92, 0x84, 0xed, 0xd2, 0xdc, 0xda, 0x0f, 0x15, 0x58, 0x8d, 0x54, 0x81, 0x64, 0xef, 0x4c, 0x6b,
+	0x90, 0x95, 0xee, 0x93, 0xe5, 0xe0, 0x66, 0x82, 0x03, 0xeb, 0x21, 0xaf, 0xf6, 0x10, 0x56, 0xc2,
+	0xba, 0xf0, 0xbf, 0x7c, 0x67, 0xab, 0xbd, 0x03, 0xc5, 0x61, 0x92, 0x4a, 0xc1, 0x33, 0xd6, 0x0c,
+	0xcd, 0x82, 0xd5, 0x47, 0xb0, 0xca, 0x34, 0xdf, 0x87, 0x9c, 0xdc, 0x24, 0x4c, 0xf4, 0x44, 0xe7,
+	0x1e, 0x32, 0x6b, 0x5f, 0x83, 0xd5, 0x5d, 0xec, 0xe0, 0x27, 0xb2, 0x7d, 0xcc, 0xd9, 0x7f, 0xab,
+	0xc0, 0x6a, 0xcb, 0xb7, 0xcc, 0xff, 0x83, 0xec, 0xa8, 0xdb, 0xd3, 0x4f, 0xe1, 0xf6, 0xbf, 0x65,
+	0x64, 0x09, 0x92, 0xcd, 0x1e, 0x6a, 0xc3, 0xca, 0x54, 0xcb, 0x3a, 0xc2, 0x0a, 0x49, 0x6f, 0xf9,
+	0x2b, 0x93, 0x4d, 0x2b, 0xc7, 0x0d, 0x3e, 0xc3, 0x87, 0xdc, 0x08, 0xd8, 0x32, 0x06, 0x38, 0xb0,
+	0x4f, 0x2f, 0x0c, 0xd1, 0x63, 0xca, 0xb7, 0x37, 0x77, 0x13, 0xb4, 0xa7, 0xe5, 0x87, 0x5c, 0x80,
+	0x18, 0x31, 0xac, 0x28, 0x05, 0x47, 0xc9, 0xe8, 0x63, 0x58, 0xe8, 0x99, 0x9d, 0x33, 0xdb, 0xc5,
+	0x06, 0x47, 0x2c, 0x69, 0xbe, 0xcd, 0x9d, 0x24, 0xdb, 0x1c, 0x0b, 0x7e, 0x7e, 0xac, 0x42, 0x6f,
+	0x34, 0x60, 0xb8, 0xc3, 0xb2, 0xc9, 0x39, 0xbf, 0xda, 0x8c, 0x6e, 0x9b, 0xe3, 0xcf, 0xb4, 0x0e,
+	0x8c, 0xc6, 0x6e, 0xb7, 0xfd, 0x36, 0xf2, 0xe0, 0x99, 0x68, 0x11, 0x09, 0xcf, 0x3a, 0xc7, 0x95,
+	0xf8, 0x20, 0x89, 0x12, 0xd1, 0xd2, 0x23, 0x4f, 0x8c, 0xc8, 0x14, 0x0d, 0xf9, 0x70, 0x85, 0x35,
+	0xea, 0x84, 0x06, 0xd8, 0x64, 0xad, 0x47, 0xb8, 0xe3, 0x7c, 0xf2, 0x1d, 0x8f, 0xbc, 0x6e, 0x23,
+	0x14, 0x13, 0xee, 0xe8, 0x4c, 0xd1, 0xb4, 0x32, 0x2c, 0x8c, 0x19, 0x5c, 0x85, 0x85, 0xfa, 0x49,
+	0xd3, 0x78, 0x58, 0xd3, 0x0f, 0xf7, 0x0e, 0x6b, 0xbb, 0xea, 0x25, 0xb4, 0x00, 0xb9, 0xe1, 0x48,
+	0xd1, 0xaa, 0x50, 0x88, 0x18, 0x14, 0x2d, 0x43, 0xa1, 0x55, 0x6f, 0x3c, 0xa8, 0x55, 0xc3, 0xd5,
+	0x8c, 0x7f, 0xc3, 0x38, 0x38, 0xdc, 0x3f, 0xa8, 0x3e, 0x68, 0x19, 0x77, 0x55, 0x05, 0x5d, 0x86,
+	0xc5, 0x08, 0xe5, 0xd6, 0xa6, 0x9a, 0xd2, 0x6e, 0x8f, 0xd7, 0x62, 0xb9, 0xf5, 0x12, 0xc0, 0x71,
+	0xab, 0xd1, 0x34, 0x8e, 0xb7, 0x9b, 0xd5, 0x03, 0xf5, 0x12, 0x93, 0xbd, 0x7d, 0x74, 0x74, 0xf2,
+	0x91, 0x71, 0x74, 0x72, 0xd2, 0xa8, 0xa9, 0x8a, 0xb6, 0x0f, 0x68, 0xfa, 0x54, 0xa2, 0x2b, 0xd6,
+	0x6b, 0xdb, 0xc7, 0xc6, 0x6e, 0x6d, 0x6f, 0xbb, 0x75, 0xd4, 0x54, 0x2f, 0xb1, 0x0e, 0x56, 0xd2,
+	0x4e, 0xea, 0xaa, 0xc2, 0x24, 0x87, 0xc3, 0xbd, 0x3d, 0x35, 0xb5, 0xf9, 0x97, 0x25, 0x80, 0x2a,
+	0x33, 0x9d, 0x78, 0x65, 0xf9, 0x73, 0x05, 0x0a, 0x91, 0x32, 0x8e, 0x36, 0x62, 0xec, 0x3c, 0x0d,
+	0xfc, 0x4a, 0xd7, 0x42, 0x96, 0xc8, 0x27, 0xc0, 0xf2, 0xb0, 0x63, 0xd3, 0x2a, 0x9f, 0xff, 0xf3,
+	0xdf, 0xbf, 0x48, 0xbd, 0xae, 0xad, 0x55, 0x06, 0x1b, 0x15, 0x59, 0x2a, 0x48, 0xe5, 0xd3, 0x51,
+	0x19, 0xf9, 0xac, 0x22, 0x70, 0xcc, 0x96, 0xbc, 0x8a, 0x7f, 0xa6, 0x40, 0x2e, 0x2c, 0xeb, 0xa8,
+	0x1c, 0xa3, 0xcf, 0x04, 0x2e, 0x2c, 0xcd, 0x74, 0xed, 0x6b, 0x6f, 0x72, 0x9d, 0x5e, 0x43, 0xaf,
+	0xc4, 0xe9, 0x54, 0xf9, 0xd4, 0xb6, 0x3e, 0x43, 0xbf, 0x56, 0x00, 0x46, 0xa8, 0x0d, 0xc5, 0xbd,
+	0x75, 0x99, 0x02, 0x9a, 0xa5, 0x8d, 0x04, 0x1c, 0xe2, 0xae, 0xd0, 0xd6, 0xb9, 0x8a, 0x1a, 0x8a,
+	0x35, 0x1b, 0xfa, 0x0d, 0x73, 0xe1, 0x08, 0xd7, 0xc5, 0xbb, 0x70, 0x0a, 0x03, 0xce, 0x68, 0xb5,
+	0x3b, 0x5c, 0xa5, 0x0d, 0xed, 0x8d, 0x99, 0xac, 0xb6, 0xd5, 0xe1, 0xfb, 0x6c, 0x29, 0x37, 0xd0,
+	0x2f, 0xf9, 0xf7, 0xc5, 0xf0, 0x0b, 0x6d, 0xac, 0xfd, 0xa6, 0x3e, 0xe6, 0xc6, 0x85, 0xd8, 0xdb,
+	0x5c, 0xb1, 0xb7, 0xb4, 0x9b, 0xb3, 0x29, 0x16, 0x30, 0xf9, 0x4c, 0xaf, 0x3f, 0x29, 0x63, 0x9d,
+	0x4c, 0x88, 0x68, 0xef, 0xce, 0x9e, 0x03, 0xe3, 0xd7, 0x63, 0x29, 0xc9, 0x7d, 0xa6, 0xdd, 0xe2,
+	0x5a, 0xbf, 0xa9, 0x69, 0x8f, 0xd7, 0x3a, 0xbc, 0xf0, 0xb7, 0xc2, 0xbb, 0x0f, 0xfd, 0x51, 0x19,
+	0xf5, 0x42, 0xa1, 0xbe, 0xb7, 0x67, 0xcc, 0x91, 0xa7, 0x51, 0x56, 0xfa, 0x1e, 0x55, 0xe2, 0x95,
+	0xad, 0x7c, 0x3a, 0xc2, 0x00, 0x9f, 0xa1, 0x3f, 0x47, 0x3b, 0xaf, 0x10, 0x11, 0xa1, 0x3b, 0xb3,
+	0x26, 0xc4, 0x04, 0xfc, 0x2a, 0xdd, 0x4d, 0xce, 0x28, 0x13, 0xea, 0x06, 0x3f, 0xc1, 0xcb, 0x68,
+	0x06, 0x73, 0xb3, 0x94, 0x42, 0xd3, 0x00, 0x2b, 0x36, 0x30, 0x1e, 0x8b, 0xc9, 0x4a, 0x2b, 0x53,
+	0xbd, 0x42, 0xad, 0xe7, 0xd3, 0x8b, 0xd0, 0xac, 0x37, 0x12, 0x9b, 0xf5, 0x0b, 0x05, 0xd0, 0x34,
+	0x4c, 0x8b, 0xd5, 0xf0, 0xb1, 0xc8, 0x2e, 0x59, 0x34, 0xdc, 0xe7, 0x6a, 0x6f, 0x6d, 0x26, 0x55,
+	0x7b, 0x14, 0xc7, 0x7f, 0x50, 0x60, 0x79, 0xe2, 0xf7, 0x16, 0xb1, 0x71, 0xfc, 0xe8, 0xdf, 0x67,
+	0xc4, 0x15, 0x87, 0x2a, 0xd7, 0xf5, 0x7d, 0xed, 0x56, 0x52, 0x5d, 0x83, 0xbe, 0xbb, 0x25, 0xbf,
+	0x80, 0xed, 0x9c, 0x43, 0xb1, 0xe3, 0xf5, 0xc2, 0x8d, 0xc6, 0xd4, 0x7a, 0xa0, 0x7c, 0xbc, 0x2f,
+	0xe9, 0x5d, 0xcf, 0x31, 0xdd, 0x6e, 0xd9, 0x0b, 0xba, 0x95, 0x2e, 0x76, 0xb9, 0xab, 0x2b, 0x62,
+	0xca, 0xf4, 0x6d, 0xf2, 0x98, 0x9f, 0xf3, 0xbc, 0x3b, 0x1a, 0xfd, 0x3e, 0x95, 0xde, 0xaf, 0xee,
+	0xb4, 0x33, 0x9c, 0xf3, 0xd6, 0x7f, 0x03, 0x00, 0x00, 0xff, 0xff, 0x25, 0xf1, 0x0e, 0xc9, 0x07,
+	0x24, 0x00, 0x00,
 }

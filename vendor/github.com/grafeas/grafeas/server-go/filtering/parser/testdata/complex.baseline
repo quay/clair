@@ -1,0 +1,697 @@
+c.d="e" f.g.3>argument(h) AND getattr(i.map, arg(j)) < arg(10)
+==================================================
+expr: <
+  id: 20
+  call_expr: <
+    function: "_&&_"
+    args: <
+      id: 11
+      call_expr: <
+        function: "_sequence_"
+        args: <
+          id: 4
+          call_expr: <
+            function: "_==_"
+            args: <
+              id: 2
+              select_expr: <
+                operand: <
+                  id: 1
+                  ident_expr: <
+                    name: "c"
+                  >
+                >
+                field: "d"
+              >
+            >
+            args: <
+              id: 3
+              const_expr: <
+                string_value: "e"
+              >
+            >
+          >
+        >
+        args: <
+          id: 10
+          call_expr: <
+            function: "_>_"
+            args: <
+              id: 7
+              select_expr: <
+                operand: <
+                  id: 6
+                  select_expr: <
+                    operand: <
+                      id: 5
+                      ident_expr: <
+                        name: "f"
+                      >
+                    >
+                    field: "g"
+                  >
+                >
+                field: "3"
+              >
+            >
+            args: <
+              id: 9
+              call_expr: <
+                function: "argument"
+                args: <
+                  id: 8
+                  ident_expr: <
+                    name: "h"
+                  >
+                >
+              >
+            >
+          >
+        >
+      >
+    >
+    args: <
+      id: 19
+      call_expr: <
+        function: "_<_"
+        args: <
+          id: 16
+          call_expr: <
+            function: "getattr"
+            args: <
+              id: 13
+              select_expr: <
+                operand: <
+                  id: 12
+                  ident_expr: <
+                    name: "i"
+                  >
+                >
+                field: "map"
+              >
+            >
+            args: <
+              id: 15
+              call_expr: <
+                function: "arg"
+                args: <
+                  id: 14
+                  ident_expr: <
+                    name: "j"
+                  >
+                >
+              >
+            >
+          >
+        >
+        args: <
+          id: 18
+          call_expr: <
+            function: "arg"
+            args: <
+              id: 17
+              const_expr: <
+                int64_value: 10
+              >
+            >
+          >
+        >
+      >
+    >
+  >
+>
+source_info: <
+  location: "complex[0]"
+  line_offsets: 63
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 1
+  >
+  positions: <
+    key: 3
+    value: 4
+  >
+  positions: <
+    key: 4
+    value: 3
+  >
+  positions: <
+    key: 5
+    value: 8
+  >
+  positions: <
+    key: 6
+    value: 9
+  >
+  positions: <
+    key: 7
+    value: 11
+  >
+  positions: <
+    key: 8
+    value: 23
+  >
+  positions: <
+    key: 9
+    value: 22
+  >
+  positions: <
+    key: 10
+    value: 13
+  >
+  positions: <
+    key: 11
+    value: 0
+  >
+  positions: <
+    key: 12
+    value: 38
+  >
+  positions: <
+    key: 13
+    value: 39
+  >
+  positions: <
+    key: 14
+    value: 49
+  >
+  positions: <
+    key: 15
+    value: 48
+  >
+  positions: <
+    key: 16
+    value: 37
+  >
+  positions: <
+    key: 17
+    value: 59
+  >
+  positions: <
+    key: 18
+    value: 58
+  >
+  positions: <
+    key: 19
+    value: 53
+  >
+  positions: <
+    key: 20
+    value: 25
+  >
+>
+
+k.3 < 7.6 arg(name): (1 2 3)
+==================================================
+expr: <
+  id: 15
+  call_expr: <
+    function: "_sequence_"
+    args: <
+      id: 4
+      call_expr: <
+        function: "_<_"
+        args: <
+          id: 2
+          select_expr: <
+            operand: <
+              id: 1
+              ident_expr: <
+                name: "k"
+              >
+            >
+            field: "3"
+          >
+        >
+        args: <
+          id: 3
+          const_expr: <
+            double_value: 7.6
+          >
+        >
+      >
+    >
+    args: <
+      id: 14
+      call_expr: <
+        function: "_:_"
+        args: <
+          id: 6
+          call_expr: <
+            function: "arg"
+            args: <
+              id: 5
+              ident_expr: <
+                name: "name"
+              >
+            >
+          >
+        >
+        args: <
+          id: 13
+          call_expr: <
+            function: "_sequence_"
+            args: <
+              id: 8
+              call_expr: <
+                function: "_global_"
+                args: <
+                  id: 7
+                  const_expr: <
+                    int64_value: 1
+                  >
+                >
+              >
+            >
+            args: <
+              id: 10
+              call_expr: <
+                function: "_global_"
+                args: <
+                  id: 9
+                  const_expr: <
+                    int64_value: 2
+                  >
+                >
+              >
+            >
+            args: <
+              id: 12
+              call_expr: <
+                function: "_global_"
+                args: <
+                  id: 11
+                  const_expr: <
+                    int64_value: 3
+                  >
+                >
+              >
+            >
+          >
+        >
+      >
+    >
+  >
+>
+source_info: <
+  location: "complex[1]"
+  line_offsets: 29
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 1
+  >
+  positions: <
+    key: 3
+    value: 6
+  >
+  positions: <
+    key: 4
+    value: 4
+  >
+  positions: <
+    key: 5
+    value: 14
+  >
+  positions: <
+    key: 6
+    value: 13
+  >
+  positions: <
+    key: 7
+    value: 22
+  >
+  positions: <
+    key: 8
+    value: 22
+  >
+  positions: <
+    key: 9
+    value: 24
+  >
+  positions: <
+    key: 10
+    value: 24
+  >
+  positions: <
+    key: 11
+    value: 26
+  >
+  positions: <
+    key: 12
+    value: 26
+  >
+  positions: <
+    key: 13
+    value: 22
+  >
+  positions: <
+    key: 14
+    value: 19
+  >
+  positions: <
+    key: 15
+    value: 0
+  >
+>
+
+a:1 OR b=2 AND c OR NOT d.call(10, 11, 12)
+==================================================
+expr: <
+  id: 18
+  call_expr: <
+    function: "_&&_"
+    args: <
+      id: 7
+      call_expr: <
+        function: "_||_"
+        args: <
+          id: 3
+          call_expr: <
+            function: "_:_"
+            args: <
+              id: 1
+              ident_expr: <
+                name: "a"
+              >
+            >
+            args: <
+              id: 2
+              const_expr: <
+                int64_value: 1
+              >
+            >
+          >
+        >
+        args: <
+          id: 6
+          call_expr: <
+            function: "_==_"
+            args: <
+              id: 4
+              ident_expr: <
+                name: "b"
+              >
+            >
+            args: <
+              id: 5
+              const_expr: <
+                int64_value: 2
+              >
+            >
+          >
+        >
+      >
+    >
+    args: <
+      id: 17
+      call_expr: <
+        function: "_||_"
+        args: <
+          id: 9
+          call_expr: <
+            function: "_global_"
+            args: <
+              id: 8
+              ident_expr: <
+                name: "c"
+              >
+            >
+          >
+        >
+        args: <
+          id: 16
+          call_expr: <
+            function: "_!"
+            args: <
+              id: 15
+              call_expr: <
+                function: "_global_"
+                args: <
+                  id: 14
+                  call_expr: <
+                    target: <
+                      id: 10
+                      ident_expr: <
+                        name: "d"
+                      >
+                    >
+                    function: "call"
+                    args: <
+                      id: 11
+                      const_expr: <
+                        int64_value: 10
+                      >
+                    >
+                    args: <
+                      id: 12
+                      const_expr: <
+                        int64_value: 11
+                      >
+                    >
+                    args: <
+                      id: 13
+                      const_expr: <
+                        int64_value: 12
+                      >
+                    >
+                  >
+                >
+              >
+            >
+          >
+        >
+      >
+    >
+  >
+>
+source_info: <
+  location: "complex[2]"
+  line_offsets: 43
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 2
+  >
+  positions: <
+    key: 3
+    value: 1
+  >
+  positions: <
+    key: 4
+    value: 7
+  >
+  positions: <
+    key: 5
+    value: 9
+  >
+  positions: <
+    key: 6
+    value: 8
+  >
+  positions: <
+    key: 7
+    value: 3
+  >
+  positions: <
+    key: 8
+    value: 15
+  >
+  positions: <
+    key: 9
+    value: 15
+  >
+  positions: <
+    key: 10
+    value: 24
+  >
+  positions: <
+    key: 11
+    value: 31
+  >
+  positions: <
+    key: 12
+    value: 35
+  >
+  positions: <
+    key: 13
+    value: 39
+  >
+  positions: <
+    key: 14
+    value: 30
+  >
+  positions: <
+    key: 15
+    value: 20
+  >
+  positions: <
+    key: 16
+    value: 20
+  >
+  positions: <
+    key: 17
+    value: 16
+  >
+  positions: <
+    key: 18
+    value: 10
+  >
+>
+
+-a NOT a[b].call(arg)[0] > 0
+==================================================
+expr: <
+  id: 14
+  call_expr: <
+    function: "_sequence_"
+    args: <
+      id: 3
+      call_expr: <
+        function: "-_"
+        args: <
+          id: 2
+          call_expr: <
+            function: "_global_"
+            args: <
+              id: 1
+              ident_expr: <
+                name: "a"
+              >
+            >
+          >
+        >
+      >
+    >
+    args: <
+      id: 13
+      call_expr: <
+        function: "_!"
+        args: <
+          id: 12
+          call_expr: <
+            function: "_>_"
+            args: <
+              id: 10
+              call_expr: <
+                function: "_[_]"
+                args: <
+                  id: 8
+                  call_expr: <
+                    target: <
+                      id: 6
+                      call_expr: <
+                        function: "_[_]"
+                        args: <
+                          id: 4
+                          ident_expr: <
+                            name: "a"
+                          >
+                        >
+                        args: <
+                          id: 5
+                          ident_expr: <
+                            name: "b"
+                          >
+                        >
+                      >
+                    >
+                    function: "call"
+                    args: <
+                      id: 7
+                      ident_expr: <
+                        name: "arg"
+                      >
+                    >
+                  >
+                >
+                args: <
+                  id: 9
+                  const_expr: <
+                    int64_value: 0
+                  >
+                >
+              >
+            >
+            args: <
+              id: 11
+              const_expr: <
+                int64_value: 0
+              >
+            >
+          >
+        >
+      >
+    >
+  >
+>
+source_info: <
+  location: "complex[3]"
+  line_offsets: 29
+  positions: <
+    key: 1
+    value: 1
+  >
+  positions: <
+    key: 2
+    value: 0
+  >
+  positions: <
+    key: 3
+    value: 0
+  >
+  positions: <
+    key: 4
+    value: 7
+  >
+  positions: <
+    key: 5
+    value: 9
+  >
+  positions: <
+    key: 6
+    value: 8
+  >
+  positions: <
+    key: 7
+    value: 17
+  >
+  positions: <
+    key: 8
+    value: 16
+  >
+  positions: <
+    key: 9
+    value: 22
+  >
+  positions: <
+    key: 10
+    value: 21
+  >
+  positions: <
+    key: 11
+    value: 27
+  >
+  positions: <
+    key: 12
+    value: 25
+  >
+  positions: <
+    key: 13
+    value: 3
+  >
+  positions: <
+    key: 14
+    value: 0
+  >
+>

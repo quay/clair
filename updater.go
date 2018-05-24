@@ -28,6 +28,7 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/vulnmdsrc"
 	"github.com/coreos/clair/ext/vulnsrc"
+	"github.com/coreos/clair/grafeas"
 	"github.com/coreos/clair/pkg/stopper"
 )
 
@@ -78,7 +79,7 @@ type vulnerabilityChange struct {
 
 // RunUpdater begins a process that updates the vulnerability database at
 // regular intervals.
-func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper.Stopper) {
+func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper.Stopper, g grafeas.Grafeas) {
 	defer st.End()
 
 	// Do not run the updater if there is no config or if the interval is 0.
@@ -127,6 +128,11 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 					case <-st.Chan():
 						stop = true
 					}
+				}
+
+				err = g.Export(datastore)
+				if err != nil {
+					log.WithError(err).Error("vulnerability export to grafeas server failed")
 				}
 
 				// Unlock the updater.

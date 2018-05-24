@@ -1,35 +1,22 @@
 /*
  *
- * Copyright 2015, Google Inc.
- * All rights reserved.
+ * Copyright 2015 gRPC authors.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *     * Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above
- * copyright notice, this list of conditions and the following disclaimer
- * in the documentation and/or other materials provided with the
- * distribution.
- *     * Neither the name of Google Inc. nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  */
+
+//go:generate protoc -I ../routeguide --go_out=plugins=grpc:../routeguide ../routeguide/route_guide.proto
 
 // Package main implements a simple gRPC server that demonstrates how to use gRPC-Go libraries
 // to perform unary, client streaming, server streaming and full duplex RPCs.
@@ -43,15 +30,17 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"math"
 	"net"
+	"sync"
 	"time"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/grpclog"
+	"google.golang.org/grpc/testdata"
 
 	"github.com/golang/protobuf/proto"
 
@@ -60,15 +49,17 @@ import (
 
 var (
 	tls        = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
-	certFile   = flag.String("cert_file", "testdata/server1.pem", "The TLS cert file")
-	keyFile    = flag.String("key_file", "testdata/server1.key", "The TLS key file")
+	certFile   = flag.String("cert_file", "", "The TLS cert file")
+	keyFile    = flag.String("key_file", "", "The TLS key file")
 	jsonDBFile = flag.String("json_db_file", "testdata/route_guide_db.json", "A json file containing a list of features")
 	port       = flag.Int("port", 10000, "The server port")
 )
 
 type routeGuideServer struct {
-	savedFeatures []*pb.Feature
-	routeNotes    map[string][]*pb.RouteNote
+	savedFeatures []*pb.Feature // read-only after initialized
+
+	mu         sync.Mutex // protects routeNotes
+	routeNotes map[string][]*pb.RouteNote
 }
 
 // GetFeature returns the feature at the given point.
@@ -142,12 +133,17 @@ func (s *routeGuideServer) RouteChat(stream pb.RouteGuide_RouteChatServer) error
 			return err
 		}
 		key := serialize(in.Location)
-		if _, present := s.routeNotes[key]; !present {
-			s.routeNotes[key] = []*pb.RouteNote{in}
-		} else {
-			s.routeNotes[key] = append(s.routeNotes[key], in)
-		}
-		for _, note := range s.routeNotes[key] {
+
+		s.mu.Lock()
+		s.routeNotes[key] = append(s.routeNotes[key], in)
+		// Note: this copy prevents blocking other clients while serving this one.
+		// We don't need to do a deep copy, because elements in the slice are
+		// insert-only and never modified.
+		rn := make([]*pb.RouteNote, len(s.routeNotes[key]))
+		copy(rn, s.routeNotes[key])
+		s.mu.Unlock()
+
+		for _, note := range rn {
 			if err := stream.Send(note); err != nil {
 				return err
 			}
@@ -159,10 +155,10 @@ func (s *routeGuideServer) RouteChat(stream pb.RouteGuide_RouteChatServer) error
 func (s *routeGuideServer) loadFeatures(filePath string) {
 	file, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		grpclog.Fatalf("Failed to load default features: %v", err)
+		log.Fatalf("Failed to load default features: %v", err)
 	}
 	if err := json.Unmarshal(file, &s.savedFeatures); err != nil {
-		grpclog.Fatalf("Failed to load default features: %v", err)
+		log.Fatalf("Failed to load default features: %v", err)
 	}
 }
 
@@ -171,22 +167,20 @@ func toRadians(num float64) float64 {
 }
 
 // calcDistance calculates the distance between two points using the "haversine" formula.
-// This code was taken from http://www.movable-type.co.uk/scripts/latlong.html.
+// The formula is based on http://mathforum.org/library/drmath/view/51879.html.
 func calcDistance(p1 *pb.Point, p2 *pb.Point) int32 {
 	const CordFactor float64 = 1e7
-	const R float64 = float64(6371000) // metres
-	lat1 := float64(p1.Latitude) / CordFactor
-	lat2 := float64(p2.Latitude) / CordFactor
-	lng1 := float64(p1.Longitude) / CordFactor
-	lng2 := float64(p2.Longitude) / CordFactor
-	φ1 := toRadians(lat1)
-	φ2 := toRadians(lat2)
-	Δφ := toRadians(lat2 - lat1)
-	Δλ := toRadians(lng2 - lng1)
+	const R float64 = float64(6371000) // earth radius in metres
+	lat1 := toRadians(float64(p1.Latitude) / CordFactor)
+	lat2 := toRadians(float64(p2.Latitude) / CordFactor)
+	lng1 := toRadians(float64(p1.Longitude) / CordFactor)
+	lng2 := toRadians(float64(p2.Longitude) / CordFactor)
+	dlat := lat2 - lat1
+	dlng := lng2 - lng1
 
-	a := math.Sin(Δφ/2)*math.Sin(Δφ/2) +
-		math.Cos(φ1)*math.Cos(φ2)*
-			math.Sin(Δλ/2)*math.Sin(Δλ/2)
+	a := math.Sin(dlat/2)*math.Sin(dlat/2) +
+		math.Cos(lat1)*math.Cos(lat2)*
+			math.Sin(dlng/2)*math.Sin(dlng/2)
 	c := 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
 
 	distance := R * c
@@ -213,23 +207,28 @@ func serialize(point *pb.Point) string {
 }
 
 func newServer() *routeGuideServer {
-	s := new(routeGuideServer)
+	s := &routeGuideServer{routeNotes: make(map[string][]*pb.RouteNote)}
 	s.loadFeatures(*jsonDBFile)
-	s.routeNotes = make(map[string][]*pb.RouteNote)
 	return s
 }
 
 func main() {
 	flag.Parse()
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
 	if err != nil {
-		grpclog.Fatalf("failed to listen: %v", err)
+		log.Fatalf("failed to listen: %v", err)
 	}
 	var opts []grpc.ServerOption
 	if *tls {
+		if *certFile == "" {
+			*certFile = testdata.Path("server1.pem")
+		}
+		if *keyFile == "" {
+			*keyFile = testdata.Path("server1.key")
+		}
 		creds, err := credentials.NewServerTLSFromFile(*certFile, *keyFile)
 		if err != nil {
-			grpclog.Fatalf("Failed to generate credentials %v", err)
+			log.Fatalf("Failed to generate credentials %v", err)
 		}
 		opts = []grpc.ServerOption{grpc.Creds(creds)}
 	}
