@@ -3,7 +3,7 @@ Grafeas defines metadata API spec for computing components (e.g., VM images, con
 
 ## Running grafeas
 
-To run your own Grafeas instance just follow the [instructions](docs/running_greafeas.md).
+To run your own Grafeas instance just follow the [instructions](docs/running_grafeas.md).
 
 ## Definition of terms
 **Notes**: A note is an item or condition that can be found via an analysis or something that is used multiple times in a process. For example, a CVE could be the result of a vulnerability analysis of a Linux package. In a build process, we would store information about our builder in a note. 
@@ -38,7 +38,7 @@ Specifying a kind in our notes and occurrences makes Grafeas extensible. As new 
 
 ## Examples
 A vulnerability scanning provider would create a note under their project with the following json for CVE-2017-14159
-```
+```json
 {
   "name": "projects/security-scanner/notes/CVE-2017-14159",
   "shortDescription": "CVE-2017-14159",
@@ -163,7 +163,7 @@ A vulnerability scanning provider would create a note under their project with t
 
 On scanning and coming across this vulnerability, a security scanning provider would create the following in their customer’s project:
 
-```
+```json
 {
   "name": "projects/scanning-customer/occurrences/randomId1234",
   "resourceUrl": "https://gcr.io/scanning-customer/dockerimage@sha256:hash",
@@ -200,6 +200,7 @@ On scanning and coming across this vulnerability, a security scanning provider w
 ```
 
 ## Resource Urls
+
 Component resource Urls need to be unique per resource as well as immutable. This will mean that the metadata associated with a resourceUrl will always be associated with exactly one component, and what is pointed at should never change. Content addressable resource urls are preferred. In the case with resources that cannot be immutable, a timestamp should be appended.
 
 The following table provides examples one could use as resource urls for several component types:
@@ -214,3 +215,20 @@ Component Type|Identifier                                  |Example|
 |NuGet        |nuget://module:version                      |nuget://log4net:9.0.1|
 |Python       |pip://package:version                       |pip://raven:5.13.0|
 |RPM          |rpm://dist(optional):arch:name:version      |rpm://el6:i386:ImageMagick:6.7.2.7-4|
+
+
+## Protobuf API
+
+The authoritative API for grafeas is the protobuf files.
+[https://github.com/Grafeas/Grafeas/tree/master/v1alpha1/proto](https://github.com/Grafeas/Grafeas/tree/master/v1alpha1/proto)
+We're currently working from master, and have a versioned path as well.
+These paths will ideally make their way to "v1beta" and then "v1", once vetted.
+
+
+## Golang API
+
+[Documentation of `github.com/Grafeas/Grafeas/v1alpha1/proto`](https://godoc.org/github.com/Grafeas/Grafeas/v1alpha1/proto) is the golang package for the Protobuf API.
+
+## Swagger API
+
+To provide a JSON bridge to the Protobuf API, there is now a swagger/OpenAPI representation generated [here](https://raw.githubusercontent.com/Grafeas/Grafeas/master/v1alpha1/proto/grafeas.swagger.json).

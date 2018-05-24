@@ -27,7 +27,7 @@ func (r *Registry) loadServices(file *File) error {
 			glog.V(2).Infof("Processing %s.%s", sd.GetName(), md.GetName())
 			opts, err := extractAPIOptions(md)
 			if err != nil {
-				glog.Errorf("Failed to extract ApiMethodOptions from %s.%s: %v", svc.GetName(), md.GetName(), err)
+				glog.Errorf("Failed to extract HttpRule from %s.%s: %v", svc.GetName(), md.GetName(), err)
 				return err
 			}
 			if opts == nil {
@@ -75,7 +75,7 @@ func (r *Registry) newMethod(svc *Service, md *descriptor.MethodDescriptorProto,
 			httpMethod = "GET"
 			pathTemplate = opts.GetGet()
 			if opts.Body != "" {
-				return nil, fmt.Errorf("needs request body even though http method is GET: %s", md.GetName())
+				return nil, fmt.Errorf("must not set request body when http method is GET: %s", md.GetName())
 			}
 
 		case opts.GetPut() != "":
@@ -90,7 +90,7 @@ func (r *Registry) newMethod(svc *Service, md *descriptor.MethodDescriptorProto,
 			httpMethod = "DELETE"
 			pathTemplate = opts.GetDelete()
 			if opts.Body != "" && !r.allowDeleteBody {
-				return nil, fmt.Errorf("needs request body even though http method is DELETE: %s", md.GetName())
+				return nil, fmt.Errorf("must not set request body when http method is DELETE except allow_delete_body option is true: %s", md.GetName())
 			}
 
 		case opts.GetPatch() != "":
@@ -183,7 +183,7 @@ func extractAPIOptions(meth *descriptor.MethodDescriptorProto) (*options.HttpRul
 
 func (r *Registry) newParam(meth *Method, path string) (Parameter, error) {
 	msg := meth.RequestType
-	fields, err := r.resolveFiledPath(msg, path)
+	fields, err := r.resolveFieldPath(msg, path)
 	if err != nil {
 		return Parameter{}, err
 	}
@@ -194,7 +194,12 @@ func (r *Registry) newParam(meth *Method, path string) (Parameter, error) {
 	target := fields[l-1].Target
 	switch target.GetType() {
 	case descriptor.FieldDescriptorProto_TYPE_MESSAGE, descriptor.FieldDescriptorProto_TYPE_GROUP:
-		return Parameter{}, fmt.Errorf("aggregate type %s in parameter of %s.%s: %s", target.Type, meth.Service.GetName(), meth.GetName(), path)
+		glog.V(2).Infoln("found aggregate type:", target, target.TypeName)
+		if IsWellKnownType(*target.TypeName) {
+			glog.V(2).Infoln("found well known aggregate type:", target)
+		} else {
+			return Parameter{}, fmt.Errorf("aggregate type %s in parameter of %s.%s: %s", target.Type, meth.Service.GetName(), meth.GetName(), path)
+		}
 	}
 	return Parameter{
 		FieldPath: FieldPath(fields),
@@ -211,7 +216,7 @@ func (r *Registry) newBody(meth *Method, path string) (*Body, error) {
 	case "*":
 		return &Body{FieldPath: nil}, nil
 	}
-	fields, err := r.resolveFiledPath(msg, path)
+	fields, err := r.resolveFieldPath(msg, path)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +235,7 @@ func lookupField(msg *Message, name string) *Field {
 }
 
 // resolveFieldPath resolves "path" into a list of fieldDescriptor, starting from "msg".
-func (r *Registry) resolveFiledPath(msg *Message, path string) ([]FieldPathComponent, error) {
+func (r *Registry) resolveFieldPath(msg *Message, path string) ([]FieldPathComponent, error) {
 	if path == "" {
 		return nil, nil
 	}

@@ -1,0 +1,221 @@
+a!=b
+==================================================
+expr: <
+  id: 3
+  call_expr: <
+    function: "_!=_"
+    args: <
+      id: 1
+      ident_expr: <
+        name: "a"
+      >
+    >
+    args: <
+      id: 2
+      ident_expr: <
+        name: "b"
+      >
+    >
+  >
+>
+source_info: <
+  location: "equality[0]"
+  line_offsets: 5
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 3
+  >
+  positions: <
+    key: 3
+    value: 1
+  >
+>
+
+a != b
+==================================================
+expr: <
+  id: 3
+  call_expr: <
+    function: "_!=_"
+    args: <
+      id: 1
+      ident_expr: <
+        name: "a"
+      >
+    >
+    args: <
+      id: 2
+      ident_expr: <
+        name: "b"
+      >
+    >
+  >
+>
+source_info: <
+  location: "equality[1]"
+  line_offsets: 7
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 5
+  >
+  positions: <
+    key: 3
+    value: 2
+  >
+>
+
+a!= b
+==================================================
+expr: <
+  id: 3
+  call_expr: <
+    function: "_!=_"
+    args: <
+      id: 1
+      ident_expr: <
+        name: "a"
+      >
+    >
+    args: <
+      id: 2
+      ident_expr: <
+        name: "b"
+      >
+    >
+  >
+>
+source_info: <
+  location: "equality[2]"
+  line_offsets: 6
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 4
+  >
+  positions: <
+    key: 3
+    value: 1
+  >
+>
+
+a !=b
+==================================================
+expr: <
+  id: 3
+  call_expr: <
+    function: "_!=_"
+    args: <
+      id: 1
+      ident_expr: <
+        name: "a"
+      >
+    >
+    args: <
+      id: 2
+      ident_expr: <
+        name: "b"
+      >
+    >
+  >
+>
+source_info: <
+  location: "equality[3]"
+  line_offsets: 6
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 4
+  >
+  positions: <
+    key: 3
+    value: 2
+  >
+>
+
+a!b!=c
+==================================================
+expr: <
+  id: 3
+  call_expr: <
+    function: "_!=_"
+    args: <
+      id: 1
+      ident_expr: <
+        name: "a!b"
+      >
+    >
+    args: <
+      id: 2
+      ident_expr: <
+        name: "c"
+      >
+    >
+  >
+>
+source_info: <
+  location: "equality[4]"
+  line_offsets: 7
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 5
+  >
+  positions: <
+    key: 3
+    value: 3
+  >
+>
+
+a!=b!c
+==================================================
+expr: <
+  id: 3
+  call_expr: <
+    function: "_!=_"
+    args: <
+      id: 1
+      ident_expr: <
+        name: "a"
+      >
+    >
+    args: <
+      id: 2
+      ident_expr: <
+        name: "b!c"
+      >
+    >
+  >
+>
+source_info: <
+  location: "equality[5]"
+  line_offsets: 7
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 3
+  >
+  positions: <
+    key: 3
+    value: 1
+  >
+>

@@ -1,0 +1,207 @@
+a.b
+==================================================
+expr: <
+  id: 3
+  call_expr: <
+    function: "_global_"
+    args: <
+      id: 2
+      select_expr: <
+        operand: <
+          id: 1
+          ident_expr: <
+            name: "a"
+          >
+        >
+        field: "b"
+      >
+    >
+  >
+>
+source_info: <
+  location: "member[0]"
+  line_offsets: 4
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 1
+  >
+  positions: <
+    key: 3
+    value: 0
+  >
+>
+
+a[b]
+==================================================
+expr: <
+  id: 4
+  call_expr: <
+    function: "_global_"
+    args: <
+      id: 3
+      call_expr: <
+        function: "_[_]"
+        args: <
+          id: 1
+          ident_expr: <
+            name: "a"
+          >
+        >
+        args: <
+          id: 2
+          ident_expr: <
+            name: "b"
+          >
+        >
+      >
+    >
+  >
+>
+source_info: <
+  location: "member[1]"
+  line_offsets: 5
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 2
+  >
+  positions: <
+    key: 3
+    value: 1
+  >
+  positions: <
+    key: 4
+    value: 0
+  >
+>
+
+a.NOT.OR.AND:value
+==================================================
+expr: <
+  id: 6
+  call_expr: <
+    function: "_:_"
+    args: <
+      id: 4
+      select_expr: <
+        operand: <
+          id: 3
+          select_expr: <
+            operand: <
+              id: 2
+              select_expr: <
+                operand: <
+                  id: 1
+                  ident_expr: <
+                    name: "a"
+                  >
+                >
+                field: "NOT"
+              >
+            >
+            field: "OR"
+          >
+        >
+        field: "AND"
+      >
+    >
+    args: <
+      id: 5
+      ident_expr: <
+        name: "value"
+      >
+    >
+  >
+>
+source_info: <
+  location: "member[2]"
+  line_offsets: 19
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 1
+  >
+  positions: <
+    key: 3
+    value: 5
+  >
+  positions: <
+    key: 4
+    value: 8
+  >
+  positions: <
+    key: 5
+    value: 13
+  >
+  positions: <
+    key: 6
+    value: 12
+  >
+>
+
+a."string field" > id.call()
+==================================================
+expr: <
+  id: 5
+  call_expr: <
+    function: "_>_"
+    args: <
+      id: 2
+      select_expr: <
+        operand: <
+          id: 1
+          ident_expr: <
+            name: "a"
+          >
+        >
+        field: "string field"
+      >
+    >
+    args: <
+      id: 4
+      call_expr: <
+        target: <
+          id: 3
+          ident_expr: <
+            name: "id"
+          >
+        >
+        function: "call"
+      >
+    >
+  >
+>
+source_info: <
+  location: "member[3]"
+  line_offsets: 29
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 1
+  >
+  positions: <
+    key: 3
+    value: 19
+  >
+  positions: <
+    key: 4
+    value: 26
+  >
+  positions: <
+    key: 5
+    value: 17
+  >
+>

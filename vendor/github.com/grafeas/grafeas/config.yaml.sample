@@ -13,10 +13,33 @@
 # limitations under the License.
 
 grafeas:
-  server:
-    # Endpoint address, e.g. localhost:10000
-    address: localhost:10000
+  # Grafeas api server config
+  api:
+    # Endpoint address
+    address: "0.0.0.0:8080"
     # PKI configuration (optional)
     cafile:
     keyfile:
     certfile:
+    # CORS configuration (optional)
+    cors_allowed_origins:
+      # - "http://example.net"
+  # Supported storage types are "memstore" and "postgres"
+  storage_type: "memstore"
+  # Postgres options
+  postgres:
+    # Database host
+    host: "127.0.0.1:5432"
+    # Dabase name
+    dbname: "postgres"
+    # Database username
+    user: "postgres"
+    # Database password
+    password: "password"
+    # Valid sslmodes disable, allow, prefer, require, verify-ca, verify-full.
+    # See https://www.postgresql.org/docs/current/static/libpq-connect.html for details
+    sslmode: "require"
+    # 32-bit URL-safe base64 key used to encrypt pagination tokens
+    # If one is not provided, it will be generated.
+    # Multiple grafeas instances in the same cluster need the same value.
+    paginationkey:

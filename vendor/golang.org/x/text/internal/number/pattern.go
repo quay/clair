@@ -39,37 +39,112 @@ import (
 //
 // This type is only intended for internal use.
 type Pattern struct {
-	// TODO: this struct can be packed a lot better than it is now. Should be
-	// possible to make it 32 bytes.
+	RoundingContext
 
-	Affix     string // includes prefix and suffix. First byte is prefix length.
-	Offset    uint16 // Offset into Affix for prefix and suffix
-	NegOffset uint16 // Offset into Affix for negative prefix and suffix or 0.
-
-	Multiplier     uint32
-	RoundIncrement uint32 // Use Min*Digits to determine scale
-	PadRune        rune
-
+	Affix       string // includes prefix and suffix. First byte is prefix length.
+	Offset      uint16 // Offset into Affix for prefix and suffix
+	NegOffset   uint16 // Offset into Affix for negative prefix and suffix or 0.
+	PadRune     rune
 	FormatWidth uint16
 
 	GroupingSize [2]uint8
 	Flags        PatternFlag
-
-	// Number of digits.
-	MinIntegerDigits     uint8
-	MaxIntegerDigits     uint8
-	MinFractionDigits    uint8
-	MaxFractionDigits    uint8
-	MinSignificantDigits uint8
-	MaxSignificantDigits uint8
-	MinExponentDigits    uint8
 }
 
-// A PatternFlag is a bit mask for the flag field of a Format.
+// A RoundingContext indicates how a number should be converted to digits.
+// It contains all information needed to determine the "visible digits" as
+// required by the pluralization rules.
+type RoundingContext struct {
+	// TODO: unify these two fields so that there is a more unambiguous meaning
+	// of how precision is handled.
+	MaxSignificantDigits int16 // -1 is unlimited
+	MaxFractionDigits    int16 // -1 is unlimited
+
+	Increment      uint32
+	IncrementScale uint8 // May differ from printed scale.
+
+	Mode RoundingMode
+
+	DigitShift uint8 // Number of decimals to shift. Used for % and ‰.
+
+	// Number of digits.
+	MinIntegerDigits uint8
+
+	MaxIntegerDigits     uint8
+	MinFractionDigits    uint8
+	MinSignificantDigits uint8
+
+	MinExponentDigits uint8
+}
+
+// RoundSignificantDigits returns the number of significant digits an
+// implementation of Convert may round to or n < 0 if there is no maximum or
+// a maximum is not recommended.
+func (r *RoundingContext) RoundSignificantDigits() (n int) {
+	if r.MaxFractionDigits == 0 && r.MaxSignificantDigits > 0 {
+		return int(r.MaxSignificantDigits)
+	} else if r.isScientific() && r.MaxIntegerDigits == 1 {
+		if r.MaxSignificantDigits == 0 ||
+			int(r.MaxFractionDigits+1) == int(r.MaxSignificantDigits) {
+			// Note: don't add DigitShift: it is only used for decimals.
+			return int(r.MaxFractionDigits) + 1
+		}
+	}
+	return -1
+}
+
+// RoundFractionDigits returns the number of fraction digits an implementation
+// of Convert may round to or n < 0 if there is no maximum or a maximum is not
+// recommended.
+func (r *RoundingContext) RoundFractionDigits() (n int) {
+	if r.MinExponentDigits == 0 &&
+		r.MaxSignificantDigits == 0 &&
+		r.MaxFractionDigits >= 0 {
+		return int(r.MaxFractionDigits) + int(r.DigitShift)
+	}
+	return -1
+}
+
+// SetScale fixes the RoundingContext to a fixed number of fraction digits.
+func (r *RoundingContext) SetScale(scale int) {
+	r.MinFractionDigits = uint8(scale)
+	r.MaxFractionDigits = int16(scale)
+}
+
+func (r *RoundingContext) SetPrecision(prec int) {
+	r.MaxSignificantDigits = int16(prec)
+}
+
+func (r *RoundingContext) isScientific() bool {
+	return r.MinExponentDigits > 0
+}
+
+func (f *Pattern) needsSep(pos int) bool {
+	p := pos - 1
+	size := int(f.GroupingSize[0])
+	if size == 0 || p == 0 {
+		return false
+	}
+	if p == size {
+		return true
+	}
+	if p -= size; p < 0 {
+		return false
+	}
+	// TODO: make second groupingsize the same as first if 0 so that we can
+	// avoid this check.
+	if x := int(f.GroupingSize[1]); x != 0 {
+		size = x
+	}
+	return p%size == 0
+}
+
+// A PatternFlag is a bit mask for the flag field of a Pattern.
 type PatternFlag uint8
 
 const (
 	AlwaysSign PatternFlag = 1 << iota
+	ElideSign              // Use space instead of plus sign. AlwaysSign must be true.
 	AlwaysExpSign
 	AlwaysDecimalSeparator
 	ParenthesisForNegative // Common pattern. Saves space.
@@ -104,7 +179,8 @@ func (p *parser) setError(err error) {
 }
 
 func (p *parser) updateGrouping() {
-	if p.hasGroup && p.groupingCount < 255 {
+	if p.hasGroup &&
+		0 < p.groupingCount && p.groupingCount < 255 {
 		p.GroupingSize[1] = p.GroupingSize[0]
 		p.GroupingSize[0] = uint8(p.groupingCount)
 	}
@@ -154,6 +230,9 @@ func ParsePattern(s string) (f *Pattern, err error) {
 	} else {
 		p.Affix = affix
 	}
+	if p.Increment == 0 {
+		p.IncrementScale = 0
+	}
 	return p.Pattern, nil
 }
 
@@ -163,6 +242,7 @@ func (p *parser) parseSubPattern(s string) string {
 	s = p.parsePad(s, PadAfterPrefix)
 
 	s = p.parse(p.number, s)
+	p.updateGrouping()
 
 	s = p.parsePad(s, PadBeforeSuffix)
 	s = p.parseAffix(s)
@@ -225,26 +305,41 @@ func (p *parser) affix(r rune) state {
 		'#', '@', '.', '*', ',', ';':
 		return nil
 	case '\'':
-		return p.escape
+		p.FormatWidth--
+		return p.escapeFirst
 	case '%':
-		if p.Multiplier != 0 {
+		if p.DigitShift != 0 {
 			p.setError(errDuplicatePercentSign)
 		}
-		p.Multiplier = 100
+		p.DigitShift = 2
 	case '\u2030': // ‰ Per mille
-		if p.Multiplier != 0 {
+		if p.DigitShift != 0 {
 			p.setError(errDuplicatePermilleSign)
 		}
-		p.Multiplier = 1000
+		p.DigitShift = 3
 		// TODO: handle currency somehow: ¤, ¤¤, ¤¤¤, ¤¤¤¤
 	}
 	p.buf = append(p.buf, string(r)...)
 	return p.affix
 }
 
+func (p *parser) escapeFirst(r rune) state {
+	switch r {
+	case '\'':
+		p.buf = append(p.buf, "\\'"...)
+		return p.affix
+	default:
+		p.buf = append(p.buf, '\'')
+		p.buf = append(p.buf, string(r)...)
+	}
+	return p.escape
+}
+
 func (p *parser) escape(r rune) state {
 	switch r {
 	case '\'':
+		p.FormatWidth--
+		p.buf = append(p.buf, '\'')
 		return p.affix
 	default:
 		p.buf = append(p.buf, string(r)...)
@@ -263,6 +358,7 @@ func (p *parser) number(r rune) state {
 	case '@':
 		p.groupingCount++
 		p.leadingSharps = 0
+		p.MaxFractionDigits = -1
 		return p.sigDigits(r)
 	case ',':
 		if p.leadingSharps == 0 { // no leading commas
@@ -294,11 +390,13 @@ func (p *parser) integer(r rune) state {
 			next = p.exponent
 		case '.':
 			next = p.fraction
+		case ',':
+			next = p.integer
 		}
 		p.updateGrouping()
 		return next
 	}
-	p.RoundIncrement = p.RoundIncrement*10 + uint32(r-'0')
+	p.Increment = p.Increment*10 + uint32(r-'0')
 	p.groupingCount++
 	p.MinIntegerDigits++
 	return p.integer
@@ -348,7 +446,8 @@ func (p *parser) normalizeSigDigitsWithExponent() state {
 func (p *parser) fraction(r rune) state {
 	switch r {
 	case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9':
-		p.RoundIncrement = p.RoundIncrement*10 + uint32(r-'0')
+		p.Increment = p.Increment*10 + uint32(r-'0')
+		p.IncrementScale++
 		p.MinFractionDigits++
 		p.MaxFractionDigits++
 	case '#':

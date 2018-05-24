@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"database/sql"
 	"database/sql/driver"
+	"net"
 	"strings"
 	"testing"
 )
 
 func TestCopyInStmt(t *testing.T) {
-	var stmt string
-	stmt = CopyIn("table name")
+	stmt := CopyIn("table name")
 	if stmt != `COPY "table name" () FROM STDIN` {
 		t.Fatal(stmt)
 	}
@@ -27,8 +27,7 @@ func TestCopyInStmt(t *testing.T) {
 }
 
 func TestCopyInSchemaStmt(t *testing.T) {
-	var stmt string
-	stmt = CopyInSchema("schema name", "table name")
+	stmt := CopyInSchema("schema name", "table name")
 	if stmt != `COPY "schema name"."table name" () FROM STDIN` {
 		t.Fatal(stmt)
 	}
@@ -226,7 +225,7 @@ func TestCopyInTypes(t *testing.T) {
 	if text != "Héllö\n ☃!\r\t\\" {
 		t.Fatal("unexpected result", text)
 	}
-	if bytes.Compare(blob, []byte{0, 255, 9, 10, 13}) != 0 {
+	if !bytes.Equal(blob, []byte{0, 255, 9, 10, 13}) {
 		t.Fatal("unexpected result", blob)
 	}
 	if nothing.Valid {
@@ -402,15 +401,19 @@ func TestCopyRespLoopConnectionError(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected error")
 	}
-	pge, ok := err.(*Error)
-	if !ok {
+	switch pge := err.(type) {
+	case *Error:
+		if pge.Code.Name() != "admin_shutdown" {
+			t.Fatalf("expected admin_shutdown, got %s", pge.Code.Name())
+		}
+	case *net.OpError:
+		// ignore
+	default:
 		if err == driver.ErrBadConn {
 			// likely an EPIPE
 		} else {
-			t.Fatalf("expected *pq.Error or driver.ErrBadConn, got %+#v", err)
+			t.Fatalf("unexpected error, got %+#v", err)
 		}
-	} else if pge.Code.Name() != "admin_shutdown" {
-		t.Fatalf("expected admin_shutdown, got %s", pge.Code.Name())
 	}
 
 	_ = stmt.Close()

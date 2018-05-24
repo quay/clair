@@ -1,33 +1,20 @@
+// +build go1.7
+
 /*
  *
- * Copyright 2016, Google Inc.
- * All rights reserved.
+ * Copyright 2016 gRPC authors.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *     * Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above
- * copyright notice, this list of conditions and the following disclaimer
- * in the documentation and/or other materials provided with the
- * distribution.
- *     * Neither the name of Google Inc. nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  */
 
@@ -48,6 +35,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/stats"
 	testpb "google.golang.org/grpc/stats/grpc_testing"
+	"google.golang.org/grpc/status"
 )
 
 func init() {
@@ -78,10 +66,10 @@ func (s *testServer) UnaryCall(ctx context.Context, in *testpb.SimpleRequest) (*
 	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {
 		if err := grpc.SendHeader(ctx, md); err != nil {
-			return nil, grpc.Errorf(grpc.Code(err), "grpc.SendHeader(_, %v) = %v, want <nil>", md, err)
+			return nil, status.Errorf(status.Code(err), "grpc.SendHeader(_, %v) = %v, want <nil>", md, err)
 		}
 		if err := grpc.SetTrailer(ctx, testTrailerMetadata); err != nil {
-			return nil, grpc.Errorf(grpc.Code(err), "grpc.SetTrailer(_, %v) = %v, want <nil>", testTrailerMetadata, err)
+			return nil, status.Errorf(status.Code(err), "grpc.SetTrailer(_, %v) = %v, want <nil>", testTrailerMetadata, err)
 		}
 	}
 
@@ -96,7 +84,7 @@ func (s *testServer) FullDuplexCall(stream testpb.TestService_FullDuplexCallServ
 	md, ok := metadata.FromIncomingContext(stream.Context())
 	if ok {
 		if err := stream.SendHeader(md); err != nil {
-			return grpc.Errorf(grpc.Code(err), "%v.SendHeader(%v) = %v, want %v", stream, md, err, nil)
+			return status.Errorf(status.Code(err), "%v.SendHeader(%v) = %v, want %v", stream, md, err, nil)
 		}
 		stream.SetTrailer(testTrailerMetadata)
 	}
@@ -121,10 +109,10 @@ func (s *testServer) FullDuplexCall(stream testpb.TestService_FullDuplexCallServ
 }
 
 func (s *testServer) ClientStreamCall(stream testpb.TestService_ClientStreamCallServer) error {
-	md, ok := metadata.FromContext(stream.Context())
+	md, ok := metadata.FromIncomingContext(stream.Context())
 	if ok {
 		if err := stream.SendHeader(md); err != nil {
-			return grpc.Errorf(grpc.Code(err), "%v.SendHeader(%v) = %v, want %v", stream, md, err, nil)
+			return status.Errorf(status.Code(err), "%v.SendHeader(%v) = %v, want %v", stream, md, err, nil)
 		}
 		stream.SetTrailer(testTrailerMetadata)
 	}
@@ -145,10 +133,10 @@ func (s *testServer) ClientStreamCall(stream testpb.TestService_ClientStreamCall
 }
 
 func (s *testServer) ServerStreamCall(in *testpb.SimpleRequest, stream testpb.TestService_ServerStreamCallServer) error {
-	md, ok := metadata.FromContext(stream.Context())
+	md, ok := metadata.FromIncomingContext(stream.Context())
 	if ok {
 		if err := stream.SendHeader(md); err != nil {
-			return grpc.Errorf(grpc.Code(err), "%v.SendHeader(%v) = %v, want %v", stream, md, err, nil)
+			return status.Errorf(status.Code(err), "%v.SendHeader(%v) = %v, want %v", stream, md, err, nil)
 		}
 		stream.SetTrailer(testTrailerMetadata)
 	}
@@ -230,14 +218,9 @@ func (te *test) startServer(ts testpb.TestServiceServer) {
 	if te.testServer != nil {
 		testpb.RegisterTestServiceServer(s, te.testServer)
 	}
-	_, port, err := net.SplitHostPort(lis.Addr().String())
-	if err != nil {
-		te.t.Fatalf("Failed to parse listener address: %v", err)
-	}
-	addr := "127.0.0.1:" + port
 
 	go s.Serve(lis)
-	te.srvAddr = addr
+	te.srvAddr = lis.Addr().String()
 }
 
 func (te *test) clientConn() *grpc.ClientConn {
@@ -273,11 +256,10 @@ const (
 )
 
 type rpcConfig struct {
-	count      int  // Number of requests and responses for streaming RPCs.
-	success    bool // Whether the RPC should succeed or return error.
-	failfast   bool
-	callType   rpcType // Type of RPC.
-	noLastRecv bool    // Whether to call recv for io.EOF. When true, last recv won't be called. Only valid for streaming RPCs.
+	count    int  // Number of requests and responses for streaming RPCs.
+	success  bool // Whether the RPC should succeed or return error.
+	failfast bool
+	callType rpcType // Type of RPC.
 }
 
 func (te *test) doUnaryCall(c *rpcConfig) (*testpb.SimpleRequest, *testpb.SimpleResponse, error) {
@@ -330,14 +312,8 @@ func (te *test) doFullDuplexCallRoundtrip(c *rpcConfig) ([]*testpb.SimpleRequest
 	if err = stream.CloseSend(); err != nil && err != io.EOF {
 		return reqs, resps, err
 	}
-	if !c.noLastRecv {
-		if _, err = stream.Recv(); err != io.EOF {
-			return reqs, resps, err
-		}
-	} else {
-		// In the case of not calling the last recv, sleep to avoid
-		// returning too fast to miss the remaining stats (InTrailer and End).
-		time.Sleep(time.Second)
+	if _, err = stream.Recv(); err != io.EOF {
+		return reqs, resps, err
 	}
 
 	return reqs, resps, nil
@@ -350,7 +326,7 @@ func (te *test) doClientStreamCall(c *rpcConfig) ([]*testpb.SimpleRequest, *test
 		err  error
 	)
 	tc := testpb.NewTestServiceClient(te.clientConn())
-	stream, err := tc.ClientStreamCall(metadata.NewContext(context.Background(), testMetadata), grpc.FailFast(c.failfast))
+	stream, err := tc.ClientStreamCall(metadata.NewOutgoingContext(context.Background(), testMetadata), grpc.FailFast(c.failfast))
 	if err != nil {
 		return reqs, resp, err
 	}
@@ -385,7 +361,7 @@ func (te *test) doServerStreamCall(c *rpcConfig) (*testpb.SimpleRequest, []*test
 		startID = errorID
 	}
 	req = &testpb.SimpleRequest{Id: startID}
-	stream, err := tc.ServerStreamCall(metadata.NewContext(context.Background(), testMetadata), req, grpc.FailFast(c.failfast))
+	stream, err := tc.ServerStreamCall(metadata.NewOutgoingContext(context.Background(), testMetadata), req, grpc.FailFast(c.failfast))
 	if err != nil {
 		return req, resps, err
 	}
@@ -463,10 +439,6 @@ func checkInHeader(t *testing.T, d *gotData, e *expectedData) {
 	}
 	if d.ctx == nil {
 		t.Fatalf("d.ctx = nil, want <non-nil>")
-	}
-	// TODO check real length, not just > 0.
-	if st.WireLength <= 0 {
-		t.Fatalf("st.Lenght = 0, want > 0")
 	}
 	if !d.client {
 		if st.FullMethod != e.method {
@@ -550,17 +522,12 @@ func checkInPayload(t *testing.T, d *gotData, e *expectedData) {
 func checkInTrailer(t *testing.T, d *gotData, e *expectedData) {
 	var (
 		ok bool
-		st *stats.InTrailer
 	)
-	if st, ok = d.s.(*stats.InTrailer); !ok {
+	if _, ok = d.s.(*stats.InTrailer); !ok {
 		t.Fatalf("got %T, want InTrailer", d.s)
 	}
 	if d.ctx == nil {
 		t.Fatalf("d.ctx = nil, want <non-nil>")
-	}
-	// TODO check real length, not just > 0.
-	if st.WireLength <= 0 {
-		t.Fatalf("st.Lenght = 0, want > 0")
 	}
 }
 
@@ -574,10 +541,6 @@ func checkOutHeader(t *testing.T, d *gotData, e *expectedData) {
 	}
 	if d.ctx == nil {
 		t.Fatalf("d.ctx = nil, want <non-nil>")
-	}
-	// TODO check real length, not just > 0.
-	if st.WireLength <= 0 {
-		t.Fatalf("st.Lenght = 0, want > 0")
 	}
 	if d.client {
 		if st.FullMethod != e.method {
@@ -662,10 +625,6 @@ func checkOutTrailer(t *testing.T, d *gotData, e *expectedData) {
 	if st.Client {
 		t.Fatalf("st IsClient = true, want false")
 	}
-	// TODO check real length, not just > 0.
-	if st.WireLength <= 0 {
-		t.Fatalf("st.Lenght = 0, want > 0")
-	}
 }
 
 func checkEnd(t *testing.T, d *gotData, e *expectedData) {
@@ -679,10 +638,20 @@ func checkEnd(t *testing.T, d *gotData, e *expectedData) {
 	if d.ctx == nil {
 		t.Fatalf("d.ctx = nil, want <non-nil>")
 	}
+	if st.BeginTime.IsZero() {
+		t.Fatalf("st.BeginTime = %v, want <non-zero>", st.BeginTime)
+	}
 	if st.EndTime.IsZero() {
 		t.Fatalf("st.EndTime = %v, want <non-zero>", st.EndTime)
 	}
-	if grpc.Code(st.Error) != grpc.Code(e.err) || grpc.ErrorDesc(st.Error) != grpc.ErrorDesc(e.err) {
+
+	actual, ok := status.FromError(st.Error)
+	if !ok {
+		t.Fatalf("expected st.Error to be a statusError, got %v (type %T)", st.Error, st.Error)
+	}
+
+	expectedStatus, _ := status.FromError(e.err)
+	if actual.Code() != expectedStatus.Code() || actual.Message() != expectedStatus.Message() {
 		t.Fatalf("st.Error = %v, want %v", st.Error, e.err)
 	}
 }
@@ -850,7 +819,9 @@ func testServerStats(t *testing.T, tc *testConfig, cc *rpcConfig, checkFuncs []f
 		err:         err,
 	}
 
+	h.mu.Lock()
 	checkConnStats(t, h.gotConn)
+	h.mu.Unlock()
 	checkServerStats(t, h.gotRPC, expect, checkFuncs)
 }
 
@@ -1143,7 +1114,9 @@ func testClientStats(t *testing.T, tc *testConfig, cc *rpcConfig, checkFuncs map
 		err:         err,
 	}
 
+	h.mu.Lock()
 	checkConnStats(t, h.gotConn)
+	h.mu.Unlock()
 	checkClientStats(t, h.gotRPC, expect, checkFuncs)
 }
 
@@ -1245,16 +1218,40 @@ func TestClientStatsFullDuplexRPCError(t *testing.T) {
 	})
 }
 
-// If the user doesn't call the last recv() on clientStream.
-func TestClientStatsFullDuplexRPCNotCallingLastRecv(t *testing.T) {
-	count := 1
-	testClientStats(t, &testConfig{compress: "gzip"}, &rpcConfig{count: count, success: true, failfast: false, callType: fullDuplexStreamRPC, noLastRecv: true}, map[int]*checkFuncWithCount{
-		begin:      {checkBegin, 1},
-		outHeader:  {checkOutHeader, 1},
-		outPayload: {checkOutPayload, count},
-		inHeader:   {checkInHeader, 1},
-		inPayload:  {checkInPayload, count},
-		inTrailer:  {checkInTrailer, 1},
-		end:        {checkEnd, 1},
-	})
+func TestTags(t *testing.T) {
+	b := []byte{5, 2, 4, 3, 1}
+	ctx := stats.SetTags(context.Background(), b)
+	if tg := stats.OutgoingTags(ctx); !reflect.DeepEqual(tg, b) {
+		t.Errorf("OutgoingTags(%v) = %v; want %v", ctx, tg, b)
+	}
+	if tg := stats.Tags(ctx); tg != nil {
+		t.Errorf("Tags(%v) = %v; want nil", ctx, tg)
+	}
+
+	ctx = stats.SetIncomingTags(context.Background(), b)
+	if tg := stats.Tags(ctx); !reflect.DeepEqual(tg, b) {
+		t.Errorf("Tags(%v) = %v; want %v", ctx, tg, b)
+	}
+	if tg := stats.OutgoingTags(ctx); tg != nil {
+		t.Errorf("OutgoingTags(%v) = %v; want nil", ctx, tg)
+	}
+}
+
+func TestTrace(t *testing.T) {
+	b := []byte{5, 2, 4, 3, 1}
+	ctx := stats.SetTrace(context.Background(), b)
+	if tr := stats.OutgoingTrace(ctx); !reflect.DeepEqual(tr, b) {
+		t.Errorf("OutgoingTrace(%v) = %v; want %v", ctx, tr, b)
+	}
+	if tr := stats.Trace(ctx); tr != nil {
+		t.Errorf("Trace(%v) = %v; want nil", ctx, tr)
+	}
+
+	ctx = stats.SetIncomingTrace(context.Background(), b)
+	if tr := stats.Trace(ctx); !reflect.DeepEqual(tr, b) {
+		t.Errorf("Trace(%v) = %v; want %v", ctx, tr, b)
+	}
+	if tr := stats.OutgoingTrace(ctx); tr != nil {
+		t.Errorf("OutgoingTrace(%v) = %v; want nil", ctx, tr)
+	}
 }

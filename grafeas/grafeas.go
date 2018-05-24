@@ -61,7 +61,9 @@ func (g *Grafeas) Export(datastore database.Datastore) error {
 		log.Println("CreateProject")
 		_, err = pClient.CreateProject(context,
 			&pb.CreateProjectRequest{
-				Name: fmt.Sprintf("projects/%s", pID),
+				Project: &pb.Project{
+					Name: fmt.Sprintf("projects/%s", pID),
+				},
 			})
 		if err != nil {
 			// Failed to access API

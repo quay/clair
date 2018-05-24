@@ -7,6 +7,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "google.golang.org/genproto/googleapis/api/annotations"
+import _ "github.com/golang/protobuf/ptypes/timestamp"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -15,7 +16,7 @@ var _ = math.Inf
 
 // Type of information detected by the API.
 type InfoType struct {
-	// Name of the information type, provided by the API call ListInfoTypes.
+	// Name of the information type.
 	Name string `protobuf:"bytes,1,opt,name=name" json:"name,omitempty"`
 }
 
@@ -31,16 +32,249 @@ func (m *InfoType) GetName() string {
 	return ""
 }
 
+// Custom information type provided by the user. Used to find domain-specific
+// sensitive information configurable to the data in question.
+type CustomInfoType struct {
+	// Info type configuration. All custom info types must have configurations
+	// that do not conflict with built-in info types or other custom info types.
+	InfoType *InfoType `protobuf:"bytes,1,opt,name=info_type,json=infoType" json:"info_type,omitempty"`
+	// Types that are valid to be assigned to Type:
+	//	*CustomInfoType_Dictionary_
+	Type isCustomInfoType_Type `protobuf_oneof:"type"`
+}
+
+func (m *CustomInfoType) Reset()                    { *m = CustomInfoType{} }
+func (m *CustomInfoType) String() string            { return proto.CompactTextString(m) }
+func (*CustomInfoType) ProtoMessage()               {}
+func (*CustomInfoType) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{1} }
+
+type isCustomInfoType_Type interface {
+	isCustomInfoType_Type()
+}
+
+type CustomInfoType_Dictionary_ struct {
+	Dictionary *CustomInfoType_Dictionary `protobuf:"bytes,2,opt,name=dictionary,oneof"`
+}
+
+func (*CustomInfoType_Dictionary_) isCustomInfoType_Type() {}
+
+func (m *CustomInfoType) GetType() isCustomInfoType_Type {
+	if m != nil {
+		return m.Type
+	}
+	return nil
+}
+
+func (m *CustomInfoType) GetInfoType() *InfoType {
+	if m != nil {
+		return m.InfoType
+	}
+	return nil
+}
+
+func (m *CustomInfoType) GetDictionary() *CustomInfoType_Dictionary {
+	if x, ok := m.GetType().(*CustomInfoType_Dictionary_); ok {
+		return x.Dictionary
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*CustomInfoType) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _CustomInfoType_OneofMarshaler, _CustomInfoType_OneofUnmarshaler, _CustomInfoType_OneofSizer, []interface{}{
+		(*CustomInfoType_Dictionary_)(nil),
+	}
+}
+
+func _CustomInfoType_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*CustomInfoType)
+	// type
+	switch x := m.Type.(type) {
+	case *CustomInfoType_Dictionary_:
+		b.EncodeVarint(2<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.Dictionary); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("CustomInfoType.Type has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _CustomInfoType_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*CustomInfoType)
+	switch tag {
+	case 2: // type.dictionary
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(CustomInfoType_Dictionary)
+		err := b.DecodeMessage(msg)
+		m.Type = &CustomInfoType_Dictionary_{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _CustomInfoType_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*CustomInfoType)
+	// type
+	switch x := m.Type.(type) {
+	case *CustomInfoType_Dictionary_:
+		s := proto.Size(x.Dictionary)
+		n += proto.SizeVarint(2<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// Custom information type based on a dictionary of words or phrases. This can
+// be used to match sensitive information specific to the data, such as a list
+// of employee IDs or job titles.
+//
+// Dictionary words are case-insensitive and all characters other than letters
+// and digits in the unicode [Basic Multilingual
+// Plane](https://en.wikipedia.org/wiki/Plane_%28Unicode%29#Basic_Multilingual_Plane)
+// will be replaced with whitespace when scanning for matches, so the
+// dictionary phrase "Sam Johnson" will match all three phrases "sam johnson",
+// "Sam, Johnson", and "Sam (Johnson)". Additionally, the characters
+// surrounding any match must be of a different type than the adjacent
+// characters within the word, so letters must be next to non-letters and
+// digits next to non-digits. For example, the dictionary word "jen" will
+// match the first three letters of the text "jen123" but will return no
+// matches for "jennifer".
+//
+// Dictionary words containing a large number of characters that are not
+// letters or digits may result in unexpected findings because such characters
+// are treated as whitespace.
+type CustomInfoType_Dictionary struct {
+	// Types that are valid to be assigned to Source:
+	//	*CustomInfoType_Dictionary_WordList_
+	Source isCustomInfoType_Dictionary_Source `protobuf_oneof:"source"`
+}
+
+func (m *CustomInfoType_Dictionary) Reset()                    { *m = CustomInfoType_Dictionary{} }
+func (m *CustomInfoType_Dictionary) String() string            { return proto.CompactTextString(m) }
+func (*CustomInfoType_Dictionary) ProtoMessage()               {}
+func (*CustomInfoType_Dictionary) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{1, 0} }
+
+type isCustomInfoType_Dictionary_Source interface {
+	isCustomInfoType_Dictionary_Source()
+}
+
+type CustomInfoType_Dictionary_WordList_ struct {
+	WordList *CustomInfoType_Dictionary_WordList `protobuf:"bytes,1,opt,name=word_list,json=wordList,oneof"`
+}
+
+func (*CustomInfoType_Dictionary_WordList_) isCustomInfoType_Dictionary_Source() {}
+
+func (m *CustomInfoType_Dictionary) GetSource() isCustomInfoType_Dictionary_Source {
+	if m != nil {
+		return m.Source
+	}
+	return nil
+}
+
+func (m *CustomInfoType_Dictionary) GetWordList() *CustomInfoType_Dictionary_WordList {
+	if x, ok := m.GetSource().(*CustomInfoType_Dictionary_WordList_); ok {
+		return x.WordList
+	}
+	return nil
+}
+
+// XXX_OneofFuncs is for the internal use of the proto package.
+func (*CustomInfoType_Dictionary) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
+	return _CustomInfoType_Dictionary_OneofMarshaler, _CustomInfoType_Dictionary_OneofUnmarshaler, _CustomInfoType_Dictionary_OneofSizer, []interface{}{
+		(*CustomInfoType_Dictionary_WordList_)(nil),
+	}
+}
+
+func _CustomInfoType_Dictionary_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
+	m := msg.(*CustomInfoType_Dictionary)
+	// source
+	switch x := m.Source.(type) {
+	case *CustomInfoType_Dictionary_WordList_:
+		b.EncodeVarint(1<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.WordList); err != nil {
+			return err
+		}
+	case nil:
+	default:
+		return fmt.Errorf("CustomInfoType_Dictionary.Source has unexpected type %T", x)
+	}
+	return nil
+}
+
+func _CustomInfoType_Dictionary_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error) {
+	m := msg.(*CustomInfoType_Dictionary)
+	switch tag {
+	case 1: // source.word_list
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(CustomInfoType_Dictionary_WordList)
+		err := b.DecodeMessage(msg)
+		m.Source = &CustomInfoType_Dictionary_WordList_{msg}
+		return true, err
+	default:
+		return false, nil
+	}
+}
+
+func _CustomInfoType_Dictionary_OneofSizer(msg proto.Message) (n int) {
+	m := msg.(*CustomInfoType_Dictionary)
+	// source
+	switch x := m.Source.(type) {
+	case *CustomInfoType_Dictionary_WordList_:
+		s := proto.Size(x.WordList)
+		n += proto.SizeVarint(1<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case nil:
+	default:
+		panic(fmt.Sprintf("proto: unexpected type %T in oneof", x))
+	}
+	return n
+}
+
+// Message defining a list of words or phrases to search for in the data.
+type CustomInfoType_Dictionary_WordList struct {
+	// Words or phrases defining the dictionary. The dictionary must contain
+	// at least one phrase and every phrase must contain at least 2 characters
+	// that are letters or digits. [required]
+	Words []string `protobuf:"bytes,1,rep,name=words" json:"words,omitempty"`
+}
+
+func (m *CustomInfoType_Dictionary_WordList) Reset()         { *m = CustomInfoType_Dictionary_WordList{} }
+func (m *CustomInfoType_Dictionary_WordList) String() string { return proto.CompactTextString(m) }
+func (*CustomInfoType_Dictionary_WordList) ProtoMessage()    {}
+func (*CustomInfoType_Dictionary_WordList) Descriptor() ([]byte, []int) {
+	return fileDescriptor1, []int{1, 0, 0}
+}
+
+func (m *CustomInfoType_Dictionary_WordList) GetWords() []string {
+	if m != nil {
+		return m.Words
+	}
+	return nil
+}
+
 // General identifier of a data field in a storage service.
 type FieldId struct {
-	// Column name describing the field.
+	// Name describing the field.
 	ColumnName string `protobuf:"bytes,1,opt,name=column_name,json=columnName" json:"column_name,omitempty"`
 }
 
 func (m *FieldId) Reset()                    { *m = FieldId{} }
 func (m *FieldId) String() string            { return proto.CompactTextString(m) }
 func (*FieldId) ProtoMessage()               {}
-func (*FieldId) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{1} }
+func (*FieldId) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{2} }
 
 func (m *FieldId) GetColumnName() string {
 	if m != nil {
@@ -65,7 +299,7 @@ type PartitionId struct {
 func (m *PartitionId) Reset()                    { *m = PartitionId{} }
 func (m *PartitionId) String() string            { return proto.CompactTextString(m) }
 func (*PartitionId) ProtoMessage()               {}
-func (*PartitionId) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{2} }
+func (*PartitionId) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{3} }
 
 func (m *PartitionId) GetProjectId() string {
 	if m != nil {
@@ -90,7 +324,7 @@ type KindExpression struct {
 func (m *KindExpression) Reset()                    { *m = KindExpression{} }
 func (m *KindExpression) String() string            { return proto.CompactTextString(m) }
 func (*KindExpression) ProtoMessage()               {}
-func (*KindExpression) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{3} }
+func (*KindExpression) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{4} }
 
 func (m *KindExpression) GetName() string {
 	if m != nil {
@@ -109,7 +343,7 @@ type PropertyReference struct {
 func (m *PropertyReference) Reset()                    { *m = PropertyReference{} }
 func (m *PropertyReference) String() string            { return proto.CompactTextString(m) }
 func (*PropertyReference) ProtoMessage()               {}
-func (*PropertyReference) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{4} }
+func (*PropertyReference) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{5} }
 
 func (m *PropertyReference) GetName() string {
 	if m != nil {
@@ -127,7 +361,7 @@ type Projection struct {
 func (m *Projection) Reset()                    { *m = Projection{} }
 func (m *Projection) String() string            { return proto.CompactTextString(m) }
 func (*Projection) ProtoMessage()               {}
-func (*Projection) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{5} }
+func (*Projection) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{6} }
 
 func (m *Projection) GetProperty() *PropertyReference {
 	if m != nil {
@@ -151,7 +385,7 @@ type DatastoreOptions struct {
 func (m *DatastoreOptions) Reset()                    { *m = DatastoreOptions{} }
 func (m *DatastoreOptions) String() string            { return proto.CompactTextString(m) }
 func (*DatastoreOptions) ProtoMessage()               {}
-func (*DatastoreOptions) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{6} }
+func (*DatastoreOptions) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{7} }
 
 func (m *DatastoreOptions) GetPartitionId() *PartitionId {
 	if m != nil {
@@ -183,7 +417,7 @@ type CloudStorageOptions struct {
 func (m *CloudStorageOptions) Reset()                    { *m = CloudStorageOptions{} }
 func (m *CloudStorageOptions) String() string            { return proto.CompactTextString(m) }
 func (*CloudStorageOptions) ProtoMessage()               {}
-func (*CloudStorageOptions) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{7} }
+func (*CloudStorageOptions) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{8} }
 
 func (m *CloudStorageOptions) GetFileSet() *CloudStorageOptions_FileSet {
 	if m != nil {
@@ -194,7 +428,7 @@ func (m *CloudStorageOptions) GetFileSet() *CloudStorageOptions_FileSet {
 
 // Set of files to scan.
 type CloudStorageOptions_FileSet struct {
-	// The url, in the format gs://<bucket>/<path>. Trailing wildcard in the
+	// The url, in the format `gs://<bucket>/<path>`. Trailing wildcard in the
 	// path is allowed.
 	Url string `protobuf:"bytes,1,opt,name=url" json:"url,omitempty"`
 }
@@ -202,7 +436,7 @@ type CloudStorageOptions_FileSet struct {
 func (m *CloudStorageOptions_FileSet) Reset()                    { *m = CloudStorageOptions_FileSet{} }
 func (m *CloudStorageOptions_FileSet) String() string            { return proto.CompactTextString(m) }
 func (*CloudStorageOptions_FileSet) ProtoMessage()               {}
-func (*CloudStorageOptions_FileSet) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{7, 0} }
+func (*CloudStorageOptions_FileSet) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{8, 0} }
 
 func (m *CloudStorageOptions_FileSet) GetUrl() string {
 	if m != nil {
@@ -213,14 +447,14 @@ func (m *CloudStorageOptions_FileSet) GetUrl() string {
 
 // A location in Cloud Storage.
 type CloudStoragePath struct {
-	// The url, in the format of gs://bucket/<path>.
+	// The url, in the format of `gs://bucket/<path>`.
 	Path string `protobuf:"bytes,1,opt,name=path" json:"path,omitempty"`
 }
 
 func (m *CloudStoragePath) Reset()                    { *m = CloudStoragePath{} }
 func (m *CloudStoragePath) String() string            { return proto.CompactTextString(m) }
 func (*CloudStoragePath) ProtoMessage()               {}
-func (*CloudStoragePath) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{8} }
+func (*CloudStoragePath) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{9} }
 
 func (m *CloudStoragePath) GetPath() string {
 	if m != nil {
@@ -229,18 +463,47 @@ func (m *CloudStoragePath) GetPath() string {
 	return ""
 }
 
+// Options defining BigQuery table and row identifiers.
+type BigQueryOptions struct {
+	// Complete BigQuery table reference.
+	TableReference *BigQueryTable `protobuf:"bytes,1,opt,name=table_reference,json=tableReference" json:"table_reference,omitempty"`
+	// References to fields uniquely identifying rows within the table.
+	// Nested fields in the format, like `person.birthdate.year`, are allowed.
+	IdentifyingFields []*FieldId `protobuf:"bytes,2,rep,name=identifying_fields,json=identifyingFields" json:"identifying_fields,omitempty"`
+}
+
+func (m *BigQueryOptions) Reset()                    { *m = BigQueryOptions{} }
+func (m *BigQueryOptions) String() string            { return proto.CompactTextString(m) }
+func (*BigQueryOptions) ProtoMessage()               {}
+func (*BigQueryOptions) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{10} }
+
+func (m *BigQueryOptions) GetTableReference() *BigQueryTable {
+	if m != nil {
+		return m.TableReference
+	}
+	return nil
+}
+
+func (m *BigQueryOptions) GetIdentifyingFields() []*FieldId {
+	if m != nil {
+		return m.IdentifyingFields
+	}
+	return nil
+}
+
 // Shared message indicating Cloud storage type.
 type StorageConfig struct {
 	// Types that are valid to be assigned to Type:
 	//	*StorageConfig_DatastoreOptions
 	//	*StorageConfig_CloudStorageOptions
+	//	*StorageConfig_BigQueryOptions
 	Type isStorageConfig_Type `protobuf_oneof:"type"`
 }
 
 func (m *StorageConfig) Reset()                    { *m = StorageConfig{} }
 func (m *StorageConfig) String() string            { return proto.CompactTextString(m) }
 func (*StorageConfig) ProtoMessage()               {}
-func (*StorageConfig) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{9} }
+func (*StorageConfig) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{11} }
 
 type isStorageConfig_Type interface {
 	isStorageConfig_Type()
@@ -252,9 +515,13 @@ type StorageConfig_DatastoreOptions struct {
 type StorageConfig_CloudStorageOptions struct {
 	CloudStorageOptions *CloudStorageOptions `protobuf:"bytes,3,opt,name=cloud_storage_options,json=cloudStorageOptions,oneof"`
 }
+type StorageConfig_BigQueryOptions struct {
+	BigQueryOptions *BigQueryOptions `protobuf:"bytes,4,opt,name=big_query_options,json=bigQueryOptions,oneof"`
+}
 
 func (*StorageConfig_DatastoreOptions) isStorageConfig_Type()    {}
 func (*StorageConfig_CloudStorageOptions) isStorageConfig_Type() {}
+func (*StorageConfig_BigQueryOptions) isStorageConfig_Type()     {}
 
 func (m *StorageConfig) GetType() isStorageConfig_Type {
 	if m != nil {
@@ -277,11 +544,19 @@ func (m *StorageConfig) GetCloudStorageOptions() *CloudStorageOptions {
 	return nil
 }
 
+func (m *StorageConfig) GetBigQueryOptions() *BigQueryOptions {
+	if x, ok := m.GetType().(*StorageConfig_BigQueryOptions); ok {
+		return x.BigQueryOptions
+	}
+	return nil
+}
+
 // XXX_OneofFuncs is for the internal use of the proto package.
 func (*StorageConfig) XXX_OneofFuncs() (func(msg proto.Message, b *proto.Buffer) error, func(msg proto.Message, tag, wire int, b *proto.Buffer) (bool, error), func(msg proto.Message) (n int), []interface{}) {
 	return _StorageConfig_OneofMarshaler, _StorageConfig_OneofUnmarshaler, _StorageConfig_OneofSizer, []interface{}{
 		(*StorageConfig_DatastoreOptions)(nil),
 		(*StorageConfig_CloudStorageOptions)(nil),
+		(*StorageConfig_BigQueryOptions)(nil),
 	}
 }
 
@@ -297,6 +572,11 @@ func _StorageConfig_OneofMarshaler(msg proto.Message, b *proto.Buffer) error {
 	case *StorageConfig_CloudStorageOptions:
 		b.EncodeVarint(3<<3 | proto.WireBytes)
 		if err := b.EncodeMessage(x.CloudStorageOptions); err != nil {
+			return err
+		}
+	case *StorageConfig_BigQueryOptions:
+		b.EncodeVarint(4<<3 | proto.WireBytes)
+		if err := b.EncodeMessage(x.BigQueryOptions); err != nil {
 			return err
 		}
 	case nil:
@@ -325,6 +605,14 @@ func _StorageConfig_OneofUnmarshaler(msg proto.Message, tag, wire int, b *proto.
 		err := b.DecodeMessage(msg)
 		m.Type = &StorageConfig_CloudStorageOptions{msg}
 		return true, err
+	case 4: // type.big_query_options
+		if wire != proto.WireBytes {
+			return true, proto.ErrInternalBadWireType
+		}
+		msg := new(BigQueryOptions)
+		err := b.DecodeMessage(msg)
+		m.Type = &StorageConfig_BigQueryOptions{msg}
+		return true, err
 	default:
 		return false, nil
 	}
@@ -342,6 +630,11 @@ func _StorageConfig_OneofSizer(msg proto.Message) (n int) {
 	case *StorageConfig_CloudStorageOptions:
 		s := proto.Size(x.CloudStorageOptions)
 		n += proto.SizeVarint(3<<3 | proto.WireBytes)
+		n += proto.SizeVarint(uint64(s))
+		n += s
+	case *StorageConfig_BigQueryOptions:
+		s := proto.Size(x.BigQueryOptions)
+		n += proto.SizeVarint(4<<3 | proto.WireBytes)
 		n += proto.SizeVarint(uint64(s))
 		n += s
 	case nil:
@@ -362,7 +655,7 @@ type CloudStorageKey struct {
 func (m *CloudStorageKey) Reset()                    { *m = CloudStorageKey{} }
 func (m *CloudStorageKey) String() string            { return proto.CompactTextString(m) }
 func (*CloudStorageKey) ProtoMessage()               {}
-func (*CloudStorageKey) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{10} }
+func (*CloudStorageKey) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{12} }
 
 func (m *CloudStorageKey) GetFilePath() string {
 	if m != nil {
@@ -387,7 +680,7 @@ type DatastoreKey struct {
 func (m *DatastoreKey) Reset()                    { *m = DatastoreKey{} }
 func (m *DatastoreKey) String() string            { return proto.CompactTextString(m) }
 func (*DatastoreKey) ProtoMessage()               {}
-func (*DatastoreKey) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{11} }
+func (*DatastoreKey) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{13} }
 
 func (m *DatastoreKey) GetEntityKey() *Key {
 	if m != nil {
@@ -420,7 +713,7 @@ type Key struct {
 func (m *Key) Reset()                    { *m = Key{} }
 func (m *Key) String() string            { return proto.CompactTextString(m) }
 func (*Key) ProtoMessage()               {}
-func (*Key) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{12} }
+func (*Key) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{14} }
 
 func (m *Key) GetPartitionId() *PartitionId {
 	if m != nil {
@@ -457,7 +750,7 @@ type Key_PathElement struct {
 func (m *Key_PathElement) Reset()                    { *m = Key_PathElement{} }
 func (m *Key_PathElement) String() string            { return proto.CompactTextString(m) }
 func (*Key_PathElement) ProtoMessage()               {}
-func (*Key_PathElement) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{12, 0} }
+func (*Key_PathElement) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{14, 0} }
 
 type isKey_PathElement_IdType interface {
 	isKey_PathElement_IdType()
@@ -577,7 +870,7 @@ type RecordKey struct {
 func (m *RecordKey) Reset()                    { *m = RecordKey{} }
 func (m *RecordKey) String() string            { return proto.CompactTextString(m) }
 func (*RecordKey) ProtoMessage()               {}
-func (*RecordKey) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{13} }
+func (*RecordKey) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{15} }
 
 type isRecordKey_Type interface {
 	isRecordKey_Type()
@@ -688,8 +981,74 @@ func _RecordKey_OneofSizer(msg proto.Message) (n int) {
 	return n
 }
 
+// Message defining the location of a BigQuery table. A table is uniquely
+// identified  by its project_id, dataset_id, and table_name. Within a query
+// a table is often referenced with a string in the format of:
+// `<project_id>:<dataset_id>.<table_id>` or
+// `<project_id>.<dataset_id>.<table_id>`.
+type BigQueryTable struct {
+	// The Google Cloud Platform project ID of the project containing the table.
+	// If omitted, project ID is inferred from the API call.
+	ProjectId string `protobuf:"bytes,1,opt,name=project_id,json=projectId" json:"project_id,omitempty"`
+	// Dataset ID of the table.
+	DatasetId string `protobuf:"bytes,2,opt,name=dataset_id,json=datasetId" json:"dataset_id,omitempty"`
+	// Name of the table.
+	TableId string `protobuf:"bytes,3,opt,name=table_id,json=tableId" json:"table_id,omitempty"`
+}
+
+func (m *BigQueryTable) Reset()                    { *m = BigQueryTable{} }
+func (m *BigQueryTable) String() string            { return proto.CompactTextString(m) }
+func (*BigQueryTable) ProtoMessage()               {}
+func (*BigQueryTable) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{16} }
+
+func (m *BigQueryTable) GetProjectId() string {
+	if m != nil {
+		return m.ProjectId
+	}
+	return ""
+}
+
+func (m *BigQueryTable) GetDatasetId() string {
+	if m != nil {
+		return m.DatasetId
+	}
+	return ""
+}
+
+func (m *BigQueryTable) GetTableId() string {
+	if m != nil {
+		return m.TableId
+	}
+	return ""
+}
+
+// An entity in a dataset is a field or set of fields that correspond to a
+// single person. For example, in medical records the `EntityId` might be
+// a patient identifier, or for financial records it might be an account
+// identifier. This message is used when generalizations or analysis must be
+// consistent across multiple rows pertaining to the same entity.
+type EntityId struct {
+	// Composite key indicating which field contains the entity identifier.
+	Field *FieldId `protobuf:"bytes,1,opt,name=field" json:"field,omitempty"`
+}
+
+func (m *EntityId) Reset()                    { *m = EntityId{} }
+func (m *EntityId) String() string            { return proto.CompactTextString(m) }
+func (*EntityId) ProtoMessage()               {}
+func (*EntityId) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{17} }
+
+func (m *EntityId) GetField() *FieldId {
+	if m != nil {
+		return m.Field
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*InfoType)(nil), "google.privacy.dlp.v2beta1.InfoType")
+	proto.RegisterType((*CustomInfoType)(nil), "google.privacy.dlp.v2beta1.CustomInfoType")
+	proto.RegisterType((*CustomInfoType_Dictionary)(nil), "google.privacy.dlp.v2beta1.CustomInfoType.Dictionary")
+	proto.RegisterType((*CustomInfoType_Dictionary_WordList)(nil), "google.privacy.dlp.v2beta1.CustomInfoType.Dictionary.WordList")
 	proto.RegisterType((*FieldId)(nil), "google.privacy.dlp.v2beta1.FieldId")
 	proto.RegisterType((*PartitionId)(nil), "google.privacy.dlp.v2beta1.PartitionId")
 	proto.RegisterType((*KindExpression)(nil), "google.privacy.dlp.v2beta1.KindExpression")
@@ -699,63 +1058,86 @@ func init() {
 	proto.RegisterType((*CloudStorageOptions)(nil), "google.privacy.dlp.v2beta1.CloudStorageOptions")
 	proto.RegisterType((*CloudStorageOptions_FileSet)(nil), "google.privacy.dlp.v2beta1.CloudStorageOptions.FileSet")
 	proto.RegisterType((*CloudStoragePath)(nil), "google.privacy.dlp.v2beta1.CloudStoragePath")
+	proto.RegisterType((*BigQueryOptions)(nil), "google.privacy.dlp.v2beta1.BigQueryOptions")
 	proto.RegisterType((*StorageConfig)(nil), "google.privacy.dlp.v2beta1.StorageConfig")
 	proto.RegisterType((*CloudStorageKey)(nil), "google.privacy.dlp.v2beta1.CloudStorageKey")
 	proto.RegisterType((*DatastoreKey)(nil), "google.privacy.dlp.v2beta1.DatastoreKey")
 	proto.RegisterType((*Key)(nil), "google.privacy.dlp.v2beta1.Key")
 	proto.RegisterType((*Key_PathElement)(nil), "google.privacy.dlp.v2beta1.Key.PathElement")
 	proto.RegisterType((*RecordKey)(nil), "google.privacy.dlp.v2beta1.RecordKey")
+	proto.RegisterType((*BigQueryTable)(nil), "google.privacy.dlp.v2beta1.BigQueryTable")
+	proto.RegisterType((*EntityId)(nil), "google.privacy.dlp.v2beta1.EntityId")
 }
 
 func init() { proto.RegisterFile("google/privacy/dlp/v2beta1/storage.proto", fileDescriptor1) }
 
 var fileDescriptor1 = []byte{
-	// 740 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0xdd, 0x6e, 0xf3, 0x44,
-	0x10, 0x8d, 0x93, 0xa8, 0x6d, 0xc6, 0x29, 0x4d, 0x5d, 0x90, 0xaa, 0x14, 0xfa, 0x63, 0xa1, 0x36,
-	0x6a, 0xc1, 0x16, 0xe1, 0x82, 0x0b, 0x44, 0x91, 0xd2, 0x1f, 0x25, 0x44, 0x6a, 0x82, 0x5b, 0x09,
-	0x01, 0x17, 0xd6, 0xd6, 0xbb, 0x71, 0x97, 0x3a, 0xbb, 0x2b, 0x7b, 0x5b, 0xe1, 0x17, 0xe0, 0xb5,
-	0x78, 0x10, 0xee, 0x11, 0x8f, 0x81, 0x76, 0xbd, 0x49, 0xdc, 0x1f, 0xd2, 0x22, 0x7d, 0x77, 0x9b,
-	0xc9, 0x99, 0x33, 0x3b, 0x73, 0xce, 0xac, 0xa1, 0x13, 0x73, 0x1e, 0x27, 0xc4, 0x17, 0x29, 0x7d,
-	0x44, 0x51, 0xee, 0xe3, 0x44, 0xf8, 0x8f, 0xdd, 0x5b, 0x22, 0xd1, 0x57, 0x7e, 0x26, 0x79, 0x8a,
-	0x62, 0xe2, 0x89, 0x94, 0x4b, 0xee, 0xb4, 0x0b, 0xa4, 0x67, 0x90, 0x1e, 0x4e, 0x84, 0x67, 0x90,
-	0xed, 0x4f, 0x0d, 0x0b, 0x12, 0xd4, 0x47, 0x8c, 0x71, 0x89, 0x24, 0xe5, 0x2c, 0x2b, 0x32, 0xdd,
-	0x5d, 0x58, 0x1b, 0xb0, 0x09, 0xbf, 0xc9, 0x05, 0x71, 0x1c, 0xa8, 0x33, 0x34, 0x25, 0xdb, 0xd6,
-	0xbe, 0xd5, 0x69, 0x04, 0xfa, 0xec, 0x1e, 0xc3, 0xea, 0x25, 0x25, 0x09, 0x1e, 0x60, 0x67, 0x0f,
-	0xec, 0x88, 0x27, 0x0f, 0x53, 0x16, 0x96, 0x50, 0x50, 0x84, 0xae, 0x14, 0x76, 0x04, 0xf6, 0x18,
-	0xa5, 0x92, 0x2a, 0xfe, 0x01, 0x76, 0x3e, 0x03, 0x10, 0x29, 0xff, 0x8d, 0x44, 0x32, 0xa4, 0x78,
-	0xbb, 0xaa, 0xe1, 0x0d, 0x13, 0x19, 0x60, 0xe7, 0x00, 0x9a, 0x8a, 0x27, 0x13, 0x28, 0x22, 0x0a,
-	0x50, 0xd7, 0x00, 0x7b, 0x1e, 0x1b, 0x60, 0xf7, 0x73, 0xf8, 0x68, 0x48, 0x19, 0xbe, 0xf8, 0x5d,
-	0xa4, 0x24, 0xcb, 0x28, 0x67, 0xaf, 0x5e, 0xf1, 0x08, 0x36, 0xc7, 0x29, 0x17, 0x24, 0x95, 0x79,
-	0x40, 0x26, 0x24, 0x25, 0x2c, 0x5a, 0xf4, 0x52, 0x2d, 0x01, 0x7f, 0x02, 0x18, 0x17, 0xe5, 0x15,
-	0xd5, 0x00, 0xd6, 0x84, 0x49, 0xd3, 0x74, 0x76, 0xf7, 0x4b, 0xef, 0xbf, 0xc7, 0xe8, 0xbd, 0x28,
-	0x11, 0xcc, 0xd3, 0xdd, 0xbf, 0x2d, 0x68, 0x9d, 0x23, 0x89, 0x94, 0x28, 0x64, 0x24, 0xf4, 0x7c,
-	0x9d, 0x1f, 0xa0, 0x29, 0x66, 0xd3, 0x50, 0xfd, 0x15, 0x35, 0x8e, 0x96, 0xd6, 0x58, 0x4c, 0x2f,
-	0xb0, 0x45, 0x69, 0x94, 0xa7, 0x50, 0xbf, 0xa7, 0xac, 0x18, 0xa2, 0xdd, 0x3d, 0x5e, 0xc6, 0xf1,
-	0x74, 0x60, 0x81, 0xce, 0x73, 0x2e, 0xe7, 0x52, 0x50, 0xce, 0xb6, 0x6b, 0xfb, 0xb5, 0x8e, 0xdd,
-	0x3d, 0x7c, 0xa3, 0x5b, 0x83, 0x0e, 0x4a, 0x99, 0xee, 0x1f, 0x16, 0x6c, 0x9d, 0x25, 0xfc, 0x01,
-	0x5f, 0x17, 0xf6, 0x9b, 0xf5, 0x1a, 0xc0, 0xda, 0x84, 0x26, 0x24, 0xcc, 0x88, 0x34, 0x7d, 0x7e,
-	0xb3, 0x8c, 0xfd, 0x15, 0x0a, 0xef, 0x92, 0x26, 0xe4, 0x9a, 0xc8, 0x60, 0x75, 0x52, 0x1c, 0xda,
-	0x3b, 0xca, 0x79, 0xfa, 0xe8, 0xb4, 0xa0, 0xf6, 0x90, 0x26, 0x46, 0x74, 0x75, 0x74, 0x0f, 0xa1,
-	0x55, 0x26, 0x19, 0x23, 0x79, 0xa7, 0x24, 0x17, 0x48, 0xde, 0xcd, 0xbc, 0xa1, 0xce, 0xee, 0x5f,
-	0x16, 0xac, 0x1b, 0xcc, 0x19, 0x67, 0x13, 0x1a, 0x3b, 0xbf, 0xc2, 0x26, 0x9e, 0x49, 0x15, 0xf2,
-	0xa2, 0xb8, 0x99, 0xeb, 0x17, 0xcb, 0xee, 0xfc, 0x5c, 0xdf, 0x7e, 0x25, 0x68, 0xe1, 0xe7, 0x9a,
-	0x13, 0xf8, 0x24, 0x52, 0xd7, 0x0a, 0xcd, 0x7a, 0xce, 0x0b, 0xd4, 0x74, 0x01, 0xff, 0x7f, 0x0e,
-	0xa5, 0x5f, 0x09, 0xb6, 0xa2, 0x97, 0xe1, 0xde, 0x0a, 0xd4, 0x65, 0x2e, 0x88, 0xfb, 0x23, 0x6c,
-	0x94, 0xb3, 0x86, 0x24, 0x77, 0x76, 0xa0, 0xa1, 0x95, 0x28, 0x4d, 0x42, 0x4b, 0xa3, 0x27, 0x74,
-	0x00, 0xcd, 0x4c, 0xa2, 0x54, 0x86, 0x7c, 0x32, 0x51, 0x52, 0xa9, 0xb6, 0x6b, 0x81, 0xad, 0x63,
-	0x23, 0x1d, 0x72, 0xaf, 0xa0, 0x39, 0xef, 0x54, 0xf1, 0x9d, 0x02, 0x10, 0x26, 0xa9, 0xcc, 0xc3,
-	0x7b, 0x32, 0xdb, 0x93, 0xbd, 0xa5, 0xfe, 0x23, 0x79, 0xd0, 0x28, 0x52, 0x86, 0x24, 0x77, 0xff,
-	0xb1, 0xa0, 0xa6, 0x78, 0x3e, 0xe4, 0x36, 0x7c, 0x6f, 0x84, 0xae, 0x6a, 0x1f, 0x9f, 0xbc, 0x71,
-	0x1b, 0x4f, 0xb5, 0x7e, 0x91, 0x90, 0x29, 0x61, 0xb2, 0x70, 0x45, 0xfb, 0x46, 0x3d, 0x54, 0xf3,
-	0xa0, 0x32, 0x8e, 0xde, 0x2e, 0x63, 0x1c, 0xbd, 0x31, 0x2d, 0xa8, 0x9a, 0x47, 0xab, 0xd6, 0xaf,
-	0x04, 0x55, 0x8a, 0x9d, 0x8f, 0xcd, 0x8b, 0xa2, 0xa4, 0x6c, 0xf4, 0x2b, 0xc5, 0x9b, 0xd2, 0x6b,
-	0xc0, 0x2a, 0xc5, 0xa1, 0x56, 0xe3, 0x4f, 0x0b, 0x1a, 0x01, 0x89, 0x78, 0x8a, 0x55, 0xc3, 0x3f,
-	0xc3, 0xe6, 0x53, 0x2b, 0x2c, 0xe6, 0x77, 0xf2, 0x5e, 0x1b, 0x0c, 0x49, 0xde, 0xaf, 0x04, 0x1b,
-	0xd1, 0x33, 0x8d, 0x47, 0xb0, 0xbe, 0xb0, 0xb0, 0xa2, 0x2d, 0xec, 0xdb, 0x79, 0x97, 0x7d, 0x0b,
-	0xce, 0x26, 0x2e, 0xfd, 0x9e, 0xf9, 0xa9, 0x37, 0x85, 0xdd, 0x88, 0x4f, 0x97, 0xd0, 0xf4, 0xe0,
-	0x3c, 0x11, 0xb3, 0x9d, 0xb3, 0x7e, 0xf9, 0xce, 0x20, 0x63, 0x9e, 0x20, 0x16, 0x7b, 0x3c, 0x8d,
-	0xfd, 0x98, 0x30, 0xfd, 0x61, 0xf1, 0x8b, 0xbf, 0x90, 0xa0, 0xd9, 0x6b, 0xdf, 0xaf, 0x6f, 0x71,
-	0x22, 0x6e, 0x57, 0x34, 0xf2, 0xeb, 0x7f, 0x03, 0x00, 0x00, 0xff, 0xff, 0xd1, 0x60, 0x71, 0xcc,
-	0xe8, 0x06, 0x00, 0x00,
+	// 1068 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0xdd, 0x6e, 0xdc, 0xc4,
+	0x17, 0x5f, 0xef, 0xa6, 0xcd, 0xee, 0xd9, 0x7c, 0xba, 0xfd, 0x4b, 0xfb, 0xdf, 0xd2, 0x26, 0x35,
+	0x55, 0x1b, 0x1a, 0xf0, 0x8a, 0x20, 0x84, 0x10, 0x22, 0x88, 0xcd, 0x07, 0xbb, 0x04, 0x35, 0xe9,
+	0x34, 0x6a, 0x54, 0x08, 0xb2, 0xbc, 0x9e, 0xb1, 0x33, 0xd4, 0xeb, 0x19, 0xec, 0xd9, 0x16, 0xbf,
+	0x00, 0xaf, 0xc0, 0x03, 0x70, 0xc7, 0x03, 0x20, 0x71, 0xc5, 0x3d, 0x17, 0x3c, 0x06, 0xe2, 0x31,
+	0xd0, 0x7c, 0xd8, 0xeb, 0xa4, 0x61, 0x1b, 0x10, 0x77, 0xe3, 0x33, 0xe7, 0xfc, 0xce, 0x99, 0xdf,
+	0xfc, 0xce, 0x19, 0xc3, 0x46, 0xc4, 0x58, 0x14, 0x93, 0x1e, 0x4f, 0xe9, 0x0b, 0x3f, 0xc8, 0x7b,
+	0x38, 0xe6, 0xbd, 0x17, 0x5b, 0x23, 0x22, 0xfc, 0x77, 0x7b, 0x99, 0x60, 0xa9, 0x1f, 0x11, 0x97,
+	0xa7, 0x4c, 0x30, 0xbb, 0xab, 0x3d, 0x5d, 0xe3, 0xe9, 0xe2, 0x98, 0xbb, 0xc6, 0xb3, 0xfb, 0x86,
+	0x41, 0xf1, 0x39, 0xed, 0xf9, 0x49, 0xc2, 0x84, 0x2f, 0x28, 0x4b, 0x32, 0x1d, 0xd9, 0x5d, 0x2b,
+	0x73, 0x30, 0xc1, 0x46, 0x93, 0xb0, 0x27, 0xe8, 0x98, 0x64, 0xc2, 0x1f, 0x73, 0xed, 0xe0, 0xdc,
+	0x81, 0xe6, 0x30, 0x09, 0xd9, 0x71, 0xce, 0x89, 0x6d, 0xc3, 0x5c, 0xe2, 0x8f, 0x49, 0xc7, 0x5a,
+	0xb7, 0x36, 0x5a, 0x48, 0xad, 0x9d, 0xdf, 0xeb, 0xb0, 0xb4, 0x33, 0xc9, 0x04, 0x1b, 0x97, 0x6e,
+	0x9f, 0x42, 0x8b, 0x26, 0x21, 0xf3, 0x44, 0xce, 0xb5, 0x6f, 0x7b, 0xeb, 0x9e, 0xfb, 0xf7, 0x15,
+	0xba, 0x45, 0x20, 0x6a, 0xd2, 0x02, 0xe2, 0x04, 0x00, 0xd3, 0x40, 0x16, 0xea, 0xa7, 0x79, 0xa7,
+	0xae, 0x30, 0xde, 0x9f, 0x85, 0x71, 0xbe, 0x04, 0x77, 0xb7, 0x0c, 0x1e, 0xd4, 0x50, 0x05, 0xaa,
+	0xfb, 0x83, 0x05, 0x30, 0xdd, 0xb4, 0xbf, 0x86, 0xd6, 0x4b, 0x96, 0x62, 0x2f, 0xa6, 0x99, 0x30,
+	0xa5, 0x6e, 0xff, 0xab, 0x34, 0xee, 0x09, 0x4b, 0xf1, 0x17, 0x34, 0x13, 0x83, 0x1a, 0x6a, 0xbe,
+	0x34, 0xeb, 0xee, 0x3a, 0x34, 0x0b, 0xbb, 0x7d, 0x13, 0xae, 0x49, 0x7b, 0xd6, 0xb1, 0xd6, 0x1b,
+	0x1b, 0x2d, 0xa4, 0x3f, 0xfa, 0x4d, 0xb8, 0x9e, 0xb1, 0x49, 0x1a, 0x90, 0xfe, 0x75, 0x98, 0x93,
+	0x84, 0x39, 0x0f, 0x61, 0x7e, 0x9f, 0x92, 0x18, 0x0f, 0xb1, 0xbd, 0x06, 0xed, 0x80, 0xc5, 0x93,
+	0x71, 0xe2, 0x55, 0x68, 0x07, 0x6d, 0x7a, 0x24, 0xc9, 0x3f, 0x84, 0xf6, 0x91, 0x9f, 0x0a, 0x2a,
+	0x8b, 0x18, 0x62, 0xfb, 0x36, 0x00, 0x4f, 0xd9, 0x37, 0x24, 0x10, 0x1e, 0xc5, 0x8a, 0xb5, 0x16,
+	0x6a, 0x19, 0xcb, 0x10, 0xdb, 0x77, 0x61, 0x41, 0xe2, 0x64, 0xdc, 0x0f, 0x88, 0x74, 0x98, 0x53,
+	0x0e, 0xed, 0xd2, 0x36, 0xc4, 0xce, 0x3d, 0x58, 0x3a, 0xa0, 0x09, 0xde, 0xfb, 0x8e, 0xa7, 0x24,
+	0xcb, 0x28, 0x4b, 0x2e, 0xbd, 0xf3, 0x07, 0xb0, 0x7a, 0x94, 0x32, 0x4e, 0x52, 0x91, 0x23, 0x12,
+	0x92, 0x94, 0x24, 0xc1, 0x54, 0x1c, 0xf5, 0x8a, 0xe3, 0x09, 0xc0, 0x91, 0x4e, 0x2f, 0xa1, 0x86,
+	0xd0, 0xe4, 0x26, 0xcc, 0x70, 0xfd, 0xce, 0x2c, 0xae, 0x5f, 0x49, 0x81, 0xca, 0x70, 0xe7, 0x0f,
+	0x0b, 0x56, 0x76, 0x7d, 0xe1, 0xcb, 0x36, 0x20, 0x87, 0x5c, 0x29, 0xda, 0xfe, 0x1c, 0x16, 0x78,
+	0xc1, 0x86, 0x3c, 0x9f, 0xce, 0xf1, 0x60, 0x66, 0x8e, 0x29, 0x7b, 0xa8, 0xcd, 0x2b, 0x54, 0x6e,
+	0xc3, 0xdc, 0x73, 0x9a, 0x60, 0x23, 0xbd, 0x87, 0xb3, 0x30, 0xce, 0x13, 0x86, 0x54, 0x9c, 0xbd,
+	0x5f, 0x5e, 0x05, 0x65, 0x49, 0xa7, 0xb1, 0xde, 0xd8, 0x68, 0x6f, 0xdd, 0x7f, 0xcd, 0x69, 0x8d,
+	0x37, 0xaa, 0x44, 0x3a, 0xdf, 0x5b, 0x70, 0x63, 0x27, 0x66, 0x13, 0xfc, 0x44, 0x37, 0x7c, 0x71,
+	0x56, 0x04, 0xcd, 0x90, 0xc6, 0xc4, 0xcb, 0x48, 0xa1, 0xdb, 0x0f, 0x66, 0xea, 0xf6, 0x55, 0x08,
+	0x77, 0x9f, 0xc6, 0xe4, 0x09, 0x11, 0x68, 0x3e, 0xd4, 0x8b, 0xee, 0x2d, 0xa9, 0x3c, 0xb5, 0xb4,
+	0x57, 0xa0, 0x31, 0x49, 0x63, 0x73, 0xe9, 0x72, 0xe9, 0xdc, 0x87, 0x95, 0x2a, 0xc8, 0x91, 0x2f,
+	0xce, 0xe4, 0x95, 0x73, 0x5f, 0x9c, 0x15, 0xda, 0x90, 0x6b, 0xe7, 0x17, 0x0b, 0x96, 0xfb, 0x34,
+	0x7a, 0x3c, 0x21, 0x69, 0x3e, 0x2d, 0x76, 0x59, 0xf8, 0xa3, 0x98, 0x78, 0x69, 0x71, 0x95, 0xa6,
+	0xe6, 0xb7, 0x66, 0xd5, 0x5c, 0xa0, 0x1c, 0xcb, 0x50, 0xb4, 0xa4, 0x10, 0xa6, 0x72, 0x43, 0x60,
+	0x53, 0x4c, 0x12, 0x41, 0xc3, 0x9c, 0x26, 0x91, 0x17, 0xca, 0x96, 0xc9, 0x3a, 0x75, 0x45, 0xf4,
+	0x9b, 0xb3, 0x60, 0x4d, 0x73, 0xa1, 0xd5, 0x4a, 0xb8, 0xb2, 0x65, 0xce, 0xcf, 0x75, 0x58, 0x34,
+	0xe7, 0xdb, 0x61, 0x49, 0x48, 0x23, 0xfb, 0x2b, 0x58, 0xc5, 0x85, 0xcc, 0x3c, 0xa6, 0x8f, 0x63,
+	0x34, 0xf1, 0xf6, 0xac, 0x24, 0x17, 0xb5, 0x39, 0xa8, 0xa1, 0x15, 0x7c, 0x51, 0xaf, 0x04, 0xfe,
+	0x17, 0x48, 0x4a, 0x3d, 0x33, 0xcc, 0xcb, 0x04, 0x0d, 0x95, 0xa0, 0xf7, 0x0f, 0x2f, 0x74, 0x50,
+	0x43, 0x37, 0x82, 0x4b, 0xa4, 0xf2, 0x0c, 0x56, 0x47, 0x34, 0xf2, 0xbe, 0x95, 0x5c, 0x96, 0x29,
+	0xe6, 0x54, 0x8a, 0xcd, 0xab, 0xf0, 0x3f, 0x85, 0x5f, 0x1e, 0x9d, 0x37, 0x95, 0x33, 0xeb, 0x31,
+	0x2c, 0x57, 0x0b, 0x3a, 0x20, 0xb9, 0x7d, 0x0b, 0x5a, 0x4a, 0xa0, 0x15, 0x81, 0x28, 0xc5, 0x2a,
+	0xe1, 0xdc, 0x85, 0x85, 0x4c, 0xf8, 0xa9, 0xf0, 0x58, 0x18, 0x4a, 0x05, 0x4b, 0x46, 0x1b, 0xa8,
+	0xad, 0x6c, 0x87, 0xca, 0xe4, 0x3c, 0x82, 0x85, 0x92, 0x44, 0x89, 0xb7, 0x0d, 0x20, 0xaf, 0x4b,
+	0xe4, 0xde, 0x73, 0x52, 0x8c, 0x8f, 0xb5, 0x99, 0x6d, 0x49, 0x72, 0xd4, 0xd2, 0x21, 0x07, 0x24,
+	0x77, 0xfe, 0xb4, 0xa0, 0x21, 0x71, 0xfe, 0xcb, 0x21, 0xf1, 0x89, 0xd1, 0xbf, 0x56, 0xdd, 0xe6,
+	0x6b, 0xaa, 0x71, 0xe5, 0xd1, 0xf7, 0x62, 0x32, 0x26, 0x89, 0xd0, 0xcd, 0xd2, 0x3d, 0x96, 0xf3,
+	0xbb, 0x34, 0xca, 0x7e, 0x52, 0x43, 0xc7, 0xf4, 0x93, 0x1a, 0x24, 0x2b, 0x50, 0x37, 0xb3, 0xbc,
+	0x31, 0xa8, 0xa1, 0x3a, 0xc5, 0xf6, 0x4d, 0x33, 0x68, 0xa5, 0x4a, 0x5a, 0x83, 0x9a, 0x1e, 0xb5,
+	0xfd, 0x16, 0xcc, 0x53, 0xac, 0x9e, 0x5c, 0xe7, 0x57, 0x0b, 0x5a, 0x88, 0x04, 0x2c, 0xc5, 0xf2,
+	0xc0, 0xcf, 0x60, 0xf5, 0xbc, 0xca, 0xa6, 0xfc, 0x6d, 0x5e, 0x55, 0x61, 0x07, 0x44, 0xbe, 0xa3,
+	0xcb, 0xc1, 0x85, 0x3b, 0x3e, 0x84, 0xc5, 0x69, 0x77, 0x48, 0x58, 0xdd, 0x19, 0x1b, 0x57, 0xea,
+	0x0c, 0x8d, 0xb9, 0x80, 0x2b, 0xdf, 0xa5, 0x9e, 0xce, 0x60, 0xf1, 0x5c, 0xf7, 0x5f, 0x78, 0xd9,
+	0xac, 0x8b, 0x2f, 0xdb, 0x6d, 0x00, 0x85, 0x43, 0xaa, 0x0f, 0x9f, 0xb1, 0x0c, 0xb1, 0xfd, 0x7f,
+	0x68, 0xea, 0xf9, 0x43, 0xb1, 0x66, 0x0d, 0xcd, 0xab, 0xef, 0x21, 0x76, 0xf6, 0xa0, 0xb9, 0xa7,
+	0x34, 0x32, 0xc4, 0xf6, 0x87, 0x70, 0x4d, 0x8d, 0x11, 0xc3, 0xce, 0x95, 0xa6, 0x88, 0x8e, 0xe8,
+	0xff, 0x68, 0xc1, 0x9d, 0x80, 0x8d, 0x67, 0x44, 0xf4, 0x61, 0x37, 0xe6, 0xc5, 0xf0, 0xb4, 0xbe,
+	0xfc, 0xd8, 0x78, 0x46, 0x2c, 0xf6, 0x93, 0xc8, 0x65, 0x69, 0xd4, 0x8b, 0x48, 0xa2, 0x7e, 0xb9,
+	0x7a, 0x7a, 0xcb, 0xe7, 0x34, 0xbb, 0xec, 0xd7, 0xef, 0x23, 0x1c, 0xf3, 0x9f, 0xea, 0x9d, 0xcf,
+	0x74, 0xbc, 0xba, 0x25, 0x77, 0x37, 0xe6, 0xee, 0xd3, 0xad, 0xbe, 0xdc, 0xfe, 0xad, 0xd8, 0x3a,
+	0x55, 0x5b, 0xa7, 0xbb, 0x31, 0x3f, 0x7d, 0xaa, 0x23, 0x47, 0xd7, 0x15, 0xfe, 0x7b, 0x7f, 0x05,
+	0x00, 0x00, 0xff, 0xff, 0x05, 0x77, 0xdf, 0xed, 0x59, 0x0a, 0x00, 0x00,
 }

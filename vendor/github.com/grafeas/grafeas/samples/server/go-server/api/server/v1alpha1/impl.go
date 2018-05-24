@@ -37,10 +37,19 @@ type Grafeas struct {
 
 // CreateProject validates that a project is valid and then creates a project in the backing datastore.
 func (g *Grafeas) CreateProject(ctx context.Context, req *pb.CreateProjectRequest) (*empty.Empty, error) {
-	pID, err := name.ParseProject(req.Name)
+	p := req.Project
+	if req == nil {
+		log.Print("Project must not be empty.")
+		return nil, status.Error(codes.InvalidArgument, "Project must not be empty")
+	}
+	if p.Name == "" {
+		log.Printf("Project name must not be empty: %v", p.Name)
+		return nil, status.Error(codes.InvalidArgument, "Project name must not be empty")
+	}
+	pID, err := name.ParseProject(p.Name)
 	if err != nil {
-		log.Printf("Error parsing project name: %v", req.Name)
-		return nil, status.Error(codes.InvalidArgument, "Invalid Project name")
+		log.Printf("Invalid project name: %v", p.Name)
+		return nil, status.Error(codes.InvalidArgument, "Invalid project name")
 	}
 	return &empty.Empty{}, g.S.CreateProject(pID)
 }
@@ -66,7 +75,19 @@ func (g *Grafeas) CreateNote(ctx context.Context, req *pb.CreateNoteRequest) (*p
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("Project %v not found", pID))
 	}
 
-	// TODO: Validate that operation exists if it is specified when get methods are implmented
+	// Validate that operation exists if it is specified when get methods are implmented
+	if n.OperationName != "" {
+		pID, oID, err := name.ParseOperation(n.OperationName)
+		if err != nil {
+			log.Printf("Error parsing name: %v", n.OperationName)
+			return nil, status.Error(codes.InvalidArgument, "Invalid Operation name")
+
+		}
+		if _, err = g.S.GetOperation(pID, oID); err != nil {
+			log.Printf("Operation:%v for Note: %v not found in pID %v", oID, n.Name, pID)
+			return nil, status.Error(codes.NotFound, fmt.Sprintf("Operation:%v for Note: %v not found", oID, n.Name))
+		}
+	}
 	return n, g.S.CreateNote(n)
 }
 
@@ -98,7 +119,19 @@ func (g *Grafeas) CreateOccurrence(ctx context.Context, req *pb.CreateOccurrence
 		log.Printf("Unable to getnote %v, err: %v", n, err)
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("Note %v not found", o.NoteName))
 	}
-	// TODO: Validate that operation exists if it is specified
+	// Validate that operation exists if it is specified
+	if o.OperationName != "" {
+		pID, oID, err := name.ParseOperation(o.OperationName)
+		if err != nil {
+			log.Printf("Error parsing name: %v", o.OperationName)
+			return nil, status.Error(codes.InvalidArgument, "Invalid Operation name")
+
+		}
+		if _, err = g.S.GetOperation(pID, oID); err != nil {
+			log.Printf("Operation:%v for Occurrence: %v not found", oID, o.Name)
+			return nil, status.Error(codes.NotFound, fmt.Sprintf("Operation:%v for Occurrence: %v not found", oID, o.Name))
+		}
+	}
 	return o, g.S.CreateOccurrence(o)
 }
 
@@ -314,8 +347,17 @@ func (g *Grafeas) UpdateOperation(ctx context.Context, req *pb.UpdateOperationRe
 // ListProjects returns the project id for all projects in the backing datastore.
 func (g *Grafeas) ListProjects(ctx context.Context, req *pb.ListProjectsRequest) (*pb.ListProjectsResponse, error) {
 	// TODO: support filters
-	ns := g.S.ListProjects(req.Filter)
-	return &pb.ListProjectsResponse{Projects: ns}, nil
+	if req.PageSize == 0 {
+		req.PageSize = 100
+	}
+	ps, nextToken, err := g.S.ListProjects(req.Filter, int(req.PageSize), req.PageToken)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, "Failed to list projects")
+	}
+	return &pb.ListProjectsResponse{
+		Projects:      ps,
+		NextPageToken: nextToken,
+	}, nil
 }
 
 func (g *Grafeas) ListOperations(ctx context.Context, req *opspb.ListOperationsRequest) (*opspb.ListOperationsResponse, error) {
@@ -325,8 +367,17 @@ func (g *Grafeas) ListOperations(ctx context.Context, req *opspb.ListOperationsR
 		return nil, status.Error(codes.InvalidArgument, "Invalid Project name")
 	}
 	// TODO: support filters
-	ops := g.S.ListOperations(pID, req.Filter)
-	return &opspb.ListOperationsResponse{Operations: ops}, nil
+	if req.PageSize == 0 {
+		req.PageSize = 100
+	}
+	ops, nextToken, err := g.S.ListOperations(pID, req.Filter, int(req.PageSize), req.PageToken)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, "Failed to list operations")
+	}
+	return &opspb.ListOperationsResponse{
+		Operations:    ops,
+		NextPageToken: nextToken,
+	}, nil
 }
 
 func (g *Grafeas) ListNotes(ctx context.Context, req *pb.ListNotesRequest) (*pb.ListNotesResponse, error) {
@@ -335,11 +386,18 @@ func (g *Grafeas) ListNotes(ctx context.Context, req *pb.ListNotesRequest) (*pb.
 		log.Printf("Error parsing name: %v", req.Parent)
 		return nil, status.Error(codes.InvalidArgument, "Invalid Project name")
 	}
-
 	// TODO: support filters
-	ns := g.S.ListNotes(pID, req.Filter)
-	return &pb.ListNotesResponse{Notes: ns}, nil
-
+	if req.PageSize == 0 {
+		req.PageSize = 100
+	}
+	ns, nextToken, err := g.S.ListNotes(pID, req.Filter, int(req.PageSize), req.PageToken)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, "Failed to list notes")
+	}
+	return &pb.ListNotesResponse{
+		Notes:         ns,
+		NextPageToken: nextToken,
+	}, nil
 }
 
 func (g *Grafeas) ListOccurrences(ctx context.Context, req *pb.ListOccurrencesRequest) (*pb.ListOccurrencesResponse, error) {
@@ -348,10 +406,18 @@ func (g *Grafeas) ListOccurrences(ctx context.Context, req *pb.ListOccurrencesRe
 		log.Printf("Error parsing name: %v", req.Parent)
 		return nil, err
 	}
-
 	// TODO: support filters - prioritizing resource url
-	os := g.S.ListOccurrences(pID, req.Filter)
-	return &pb.ListOccurrencesResponse{Occurrences: os}, nil
+	if req.PageSize == 0 {
+		req.PageSize = 100
+	}
+	os, nextToken, err := g.S.ListOccurrences(pID, req.Filter, int(req.PageSize), req.PageToken)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, "Failed to list occurrences")
+	}
+	return &pb.ListOccurrencesResponse{
+		Occurrences:   os,
+		NextPageToken: nextToken,
+	}, nil
 }
 
 func (g *Grafeas) ListNoteOccurrences(ctx context.Context, req *pb.ListNoteOccurrencesRequest) (*pb.ListNoteOccurrencesResponse, error) {
@@ -361,11 +427,17 @@ func (g *Grafeas) ListNoteOccurrences(ctx context.Context, req *pb.ListNoteOccur
 		return nil, status.Error(codes.InvalidArgument, "Invalid note name")
 	}
 	// TODO: support filters - prioritizing resource url
-	os, gErr := g.S.ListNoteOccurrences(pID, nID, req.Filter)
+	if req.PageSize == 0 {
+		req.PageSize = 100
+	}
+	os, nextToken, gErr := g.S.ListNoteOccurrences(pID, nID, req.Filter, int(req.PageSize), req.PageToken)
 	if gErr != nil {
 		return nil, gErr
 	}
-	return &pb.ListNoteOccurrencesResponse{Occurrences: os}, nil
+	return &pb.ListNoteOccurrencesResponse{
+		Occurrences:   os,
+		NextPageToken: nextToken,
+	}, nil
 }
 
 func (g *Grafeas) CancelOperation(context.Context, *opspb.CancelOperationRequest) (*empty.Empty, error) {

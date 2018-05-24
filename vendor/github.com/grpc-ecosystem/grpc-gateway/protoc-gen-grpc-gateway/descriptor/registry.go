@@ -25,6 +25,9 @@ type Registry struct {
 	// prefix is a prefix to be inserted to golang package paths generated from proto package names.
 	prefix string
 
+	// importPath is used as the package if no input files declare go_package. If it contains slashes, everything up to the rightmost slash is ignored.
+	importPath string
+
 	// pkgMap is a user-specified mapping from file path to proto package.
 	pkgMap map[string]string
 
@@ -58,7 +61,7 @@ func (r *Registry) Load(req *plugin.CodeGeneratorRequest) error {
 		if target == nil {
 			return fmt.Errorf("no such file: %s", name)
 		}
-		name := packageIdentityName(target.FileDescriptorProto)
+		name := r.packageIdentityName(target.FileDescriptorProto)
 		if targetPkg == "" {
 			targetPkg = name
 		} else {
@@ -80,7 +83,7 @@ func (r *Registry) Load(req *plugin.CodeGeneratorRequest) error {
 func (r *Registry) loadFile(file *descriptor.FileDescriptorProto) {
 	pkg := GoPackage{
 		Path: r.goPackagePath(file),
-		Name: defaultGoPackageName(file),
+		Name: r.defaultGoPackageName(file),
 	}
 	if err := r.ReserveGoPackageAlias(pkg.Name, pkg.Path); err != nil {
 		for i := 0; ; i++ {
@@ -207,9 +210,16 @@ func (r *Registry) AddPkgMap(file, protoPkg string) {
 	r.pkgMap[file] = protoPkg
 }
 
-// SetPrefix registeres the perfix to be added to go package paths generated from proto package names.
+// SetPrefix registers the prefix to be added to go package paths generated from proto package names.
 func (r *Registry) SetPrefix(prefix string) {
 	r.prefix = prefix
+}
+
+// SetImportPath registers the importPath which is used as the package if no
+// input files declare go_package. If it contains slashes, everything up to the
+// rightmost slash is ignored.
+func (r *Registry) SetImportPath(importPath string) {
+	r.importPath = importPath
 }
 
 // ReserveGoPackageAlias reserves the unique alias of go package.
@@ -282,15 +292,15 @@ func sanitizePackageName(pkgName string) string {
 
 // defaultGoPackageName returns the default go package name to be used for go files generated from "f".
 // You might need to use an unique alias for the package when you import it.  Use ReserveGoPackageAlias to get a unique alias.
-func defaultGoPackageName(f *descriptor.FileDescriptorProto) string {
-	name := packageIdentityName(f)
+func (r *Registry) defaultGoPackageName(f *descriptor.FileDescriptorProto) string {
+	name := r.packageIdentityName(f)
 	return sanitizePackageName(name)
 }
 
 // packageIdentityName returns the identity of packages.
 // protoc-gen-grpc-gateway rejects CodeGenerationRequests which contains more than one packages
 // as protoc-gen-go does.
-func packageIdentityName(f *descriptor.FileDescriptorProto) string {
+func (r *Registry) packageIdentityName(f *descriptor.FileDescriptorProto) string {
 	if f.Options != nil && f.Options.GoPackage != nil {
 		gopkg := f.Options.GetGoPackage()
 		idx := strings.LastIndex(gopkg, "/")
@@ -307,6 +317,12 @@ func packageIdentityName(f *descriptor.FileDescriptorProto) string {
 
 		}
 		return sanitizePackageName(gopkg[sc+1:])
+	}
+	if p := r.importPath; len(p) != 0 {
+		if i := strings.LastIndex(p, "/"); i >= 0 {
+			p = p[i+1:]
+		}
+		return p
 	}
 
 	if f.Package == nil {

@@ -15,9 +15,13 @@
 package config
 
 import (
+	"errors"
 	"io/ioutil"
+	"log"
 
-	"github.com/grafeas/grafeas/samples/server/go-server/api/server/server"
+	fernet "github.com/fernet/fernet-go"
+	"github.com/grafeas/grafeas/samples/server/go-server/api/server/api"
+	"github.com/grafeas/grafeas/samples/server/go-server/api/server/storage"
 	"gopkg.in/yaml.v2"
 )
 
@@ -28,18 +32,22 @@ type file struct {
 
 // Config is the global configuration for an instance of Grafeas.
 type config struct {
-	Server *server.Config `yaml:"server"`
+	API         *api.Config          `yaml:"api"`
+	StorageType string               `yaml:"storage_type"` // Supported storage types are "memstore" and "postgres"
+	PgSQLConfig *storage.PgSQLConfig `yaml:"postgres"`
 }
 
 // DefaultConfig is a configuration that can be used as a fallback value.
 func defaultConfig() *config {
 	return &config{
-		&server.Config{
-			Address:  "localhost:10000",
+		API: &api.Config{
+			Address:  "localhost:8080",
 			CertFile: "",
 			KeyFile:  "",
 			CAFile:   "",
 		},
+		StorageType: "memstore",
+		PgSQLConfig: &storage.PgSQLConfig{},
 	}
 }
 
@@ -58,5 +66,24 @@ func LoadConfig(fileName string) (*config, error) {
 	if err != nil {
 		return nil, err
 	}
-	return configFile.Grafeas, nil
+	config := configFile.Grafeas
+
+	if config.StorageType == "postgres" {
+		// Generate a pagination key if none is provided.
+		if config.PgSQLConfig.PaginationKey == "" {
+			log.Println("pagination key is empty, generating...")
+			var key fernet.Key
+			if err = key.Generate(); err != nil {
+				return nil, err
+			}
+			config.PgSQLConfig.PaginationKey = key.Encode()
+		} else {
+			_, err = fernet.DecodeKey(config.PgSQLConfig.PaginationKey)
+			if err != nil {
+				err = errors.New("Invalid Pagination key; must be 32-bit URL-safe base64")
+				return nil, err
+			}
+		}
+	}
+	return config, nil
 }

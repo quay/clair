@@ -1,0 +1,46 @@
+a.c:b
+==================================================
+expr: <
+  id: 4
+  call_expr: <
+    function: "_:_"
+    args: <
+      id: 2
+      select_expr: <
+        operand: <
+          id: 1
+          ident_expr: <
+            name: "a"
+          >
+        >
+        field: "c"
+      >
+    >
+    args: <
+      id: 3
+      ident_expr: <
+        name: "b"
+      >
+    >
+  >
+>
+source_info: <
+  location: "expression[0]"
+  line_offsets: 6
+  positions: <
+    key: 1
+    value: 0
+  >
+  positions: <
+    key: 2
+    value: 1
+  >
+  positions: <
+    key: 3
+    value: 4
+  >
+  positions: <
+    key: 4
+    value: 3
+  >
+>

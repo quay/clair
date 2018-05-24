@@ -16,6 +16,8 @@ package storage
 
 import (
 	"fmt"
+	"sort"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -78,8 +80,9 @@ func (m *memStore) GetProject(pID string) (*pb.Project, error) {
 	return &pb.Project{Name: name.FormatProject(pID)}, nil
 }
 
-// ListProjects returns the project id for all projects from the mem store
-func (m *memStore) ListProjects(filters string) []*pb.Project {
+// ListProjects returns up to pageSize number of projects beginning at pageToken (or from
+// start if pageToken is the emtpy string).
+func (m *memStore) ListProjects(filter string, pageSize int, pageToken string) ([]*pb.Project, string, error) {
 	m.RLock()
 	defer m.RUnlock()
 	projects := make([]*pb.Project, len(m.projects))
@@ -88,7 +91,12 @@ func (m *memStore) ListProjects(filters string) []*pb.Project {
 		projects[i] = &pb.Project{Name: name.FormatProject(k)}
 		i++
 	}
-	return projects
+	sort.Slice(projects, func(i, j int) bool {
+		return projects[i].Name < projects[j].Name
+	})
+	startPos := parsePageToken(pageToken, 0)
+	endPos := min(startPos+pageSize, len(projects))
+	return projects[startPos:endPos], strconv.Itoa(endPos), nil
 }
 
 // CreateOccurrence adds the specified occurrence to the mem store
@@ -138,8 +146,9 @@ func (m *memStore) GetOccurrence(pID, oID string) (*pb.Occurrence, error) {
 	return o, nil
 }
 
-// ListOccurrences returns the occurrences for this project ID (pID)
-func (m *memStore) ListOccurrences(pID, filters string) []*pb.Occurrence {
+// ListOccurrences returns up to pageSize number of occurrences for this project (pID) beginning
+// at pageToken (or from start if pageToken is the emtpy string).
+func (m *memStore) ListOccurrences(pID, filters string, pageSize int, pageToken string) ([]*pb.Occurrence, string, error) {
 	os := []*pb.Occurrence{}
 	m.RLock()
 	defer m.RUnlock()
@@ -148,7 +157,12 @@ func (m *memStore) ListOccurrences(pID, filters string) []*pb.Occurrence {
 			os = append(os, o)
 		}
 	}
-	return os
+	sort.Slice(os, func(i, j int) bool {
+		return os[i].Name < os[j].Name
+	})
+	startPos := parsePageToken(pageToken, 0)
+	endPos := min(startPos+pageSize, len(os))
+	return os[startPos:endPos], strconv.Itoa(endPos), nil
 }
 
 // CreateNote adds the specified note to the mem store
@@ -214,8 +228,9 @@ func (m *memStore) GetNoteByOccurrence(pID, oID string) (*pb.Note, error) {
 	return n, nil
 }
 
-// ListNotes returns the notes for for this project (pID)
-func (m *memStore) ListNotes(pID, filters string) []*pb.Note {
+// ListNotes returns up to pageSize number of notes for this project (pID) beginning
+// at pageToken (or from start if pageToken is the emtpy string).
+func (m *memStore) ListNotes(pID, filters string, pageSize int, pageToken string) ([]*pb.Note, string, error) {
 	ns := []*pb.Note{}
 	m.RLock()
 	defer m.RUnlock()
@@ -224,17 +239,23 @@ func (m *memStore) ListNotes(pID, filters string) []*pb.Note {
 			ns = append(ns, n)
 		}
 	}
-	return ns
+	sort.Slice(ns, func(i, j int) bool {
+		return ns[i].Name < ns[j].Name
+	})
+	startPos := parsePageToken(pageToken, 0)
+	endPos := min(startPos+pageSize, len(ns))
+	return ns[startPos:endPos], strconv.Itoa(endPos), nil
 }
 
-// ListNoteOccurrences returns the occcurrences on the particular note (nID) for this project (pID)
-func (m *memStore) ListNoteOccurrences(pID, nID, filters string) ([]*pb.Occurrence, error) {
+// ListNoteOccurrences returns up to pageSize number of occcurrences on the particular note (nID)
+// for this project (pID) projects beginning at pageToken (or from start if pageToken is the emtpy string).
+func (m *memStore) ListNoteOccurrences(pID, nID, filters string, pageSize int, pageToken string) ([]*pb.Occurrence, string, error) {
 	// TODO: use filters
 	m.RLock()
 	defer m.RUnlock()
 	// Verify that note exists
 	if _, err := m.GetNote(pID, nID); err != nil {
-		return nil, err
+		return nil, "", err
 	}
 	nName := name.FormatNote(pID, nID)
 	os := []*pb.Occurrence{}
@@ -243,7 +264,12 @@ func (m *memStore) ListNoteOccurrences(pID, nID, filters string) ([]*pb.Occurren
 			os = append(os, o)
 		}
 	}
-	return os, nil
+	sort.Slice(os, func(i, j int) bool {
+		return os[i].Name < os[j].Name
+	})
+	startPos := parsePageToken(pageToken, 0)
+	endPos := min(startPos+pageSize, len(os))
+	return os[startPos:endPos], strconv.Itoa(endPos), nil
 }
 
 // GetOperation returns the operation with pID and oID
@@ -293,8 +319,9 @@ func (m *memStore) UpdateOperation(pID, opID string, op *opspb.Operation) error 
 	return nil
 }
 
-// ListOperations returns the operations for this project (pID)
-func (m *memStore) ListOperations(pID, filters string) []*opspb.Operation {
+// ListOperations returns up to pageSize number of operations for this project (pID) beginning
+// at pageToken (or from start if pageToken is the emtpy string).
+func (m *memStore) ListOperations(pID, filters string, pageSize int, pageToken string) ([]*opspb.Operation, string, error) {
 	ops := []*opspb.Operation{}
 	m.RLock()
 	defer m.RUnlock()
@@ -303,5 +330,31 @@ func (m *memStore) ListOperations(pID, filters string) []*opspb.Operation {
 			ops = append(ops, op)
 		}
 	}
-	return ops
+	sort.Slice(ops, func(i, j int) bool {
+		return ops[i].Name < ops[j].Name
+	})
+	startPos := parsePageToken(pageToken, 0)
+	endPos := min(startPos+pageSize, len(ops))
+	return ops[startPos:endPos], strconv.Itoa(endPos), nil
+}
+
+// Parses the page token to an int. Returns defaultValue if parsing fails
+func parsePageToken(pageToken string, defaultValue int) int {
+	if pageToken == "" {
+		return defaultValue
+	}
+	parsed, err := strconv.Atoi(pageToken)
+	if err != nil {
+		return defaultValue
+	}
+	return parsed
+}
+
+// Returns the smallest of a and b
+func min(a, b int) int {
+	if a < b {
+		return a
+	} else {
+		return b
+	}
 }

@@ -215,7 +215,7 @@ func (m *ConverseConfig) GetConverseState() *ConverseState {
 
 // Specifies how to process the `audio_in` data that will be provided in
 // subsequent requests. For recommended settings, see the Google Assistant SDK
-// [best practices](https://developers.google.com/assistant/best-practices).
+// [best practices](https://developers.google.com/assistant/sdk/develop/grpc/best-practices/audio).
 type AudioInConfig struct {
 	// *Required* Encoding of audio data sent in all `audio_in` messages.
 	Encoding AudioInConfig_Encoding `protobuf:"varint,1,opt,name=encoding,enum=google.assistant.embedded.v1alpha1.AudioInConfig_Encoding" json:"encoding,omitempty"`

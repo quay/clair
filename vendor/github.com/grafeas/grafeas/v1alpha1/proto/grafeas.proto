@@ -25,9 +25,8 @@ option go_package = "grafeas";
 
 // Request to insert a new Project.
 message CreateProjectRequest {
-  // The name of the project of the form
-  // "projects/{project_id}"
-  string name = 1;
+  // The project to be inserted
+  Project project = 1;
 }
 
 // Request to get a Project.
@@ -313,7 +312,7 @@ message AttestationAuthority {
     // The human readable name of this Attestation Authority, e.g. "qa".
     string human_readable_name = 1;
   }
-  message Attestation {
+  message AttestationDetails {
     // The signature, generally over the `resource_url`, that verifies this
     // attestation.  The semantics of the signature veracity are ultimately
     // determined by the verification engine.
@@ -469,7 +468,7 @@ message Command {
 // An artifact that can be deployed in some runtime.
 message Deployable {
   // The period during which some deployable was active in a runtime.
-  message Deployment {
+  message DeploymentDetails {
     // Types of platforms.
     enum Platform {
       // Unknown
@@ -616,7 +615,7 @@ message DockerImage {
   // Derived describes the derived image portion (Occurrence) of the
   // DockerImage relationship.  This image would be produced from a Dockerfile
   // with FROM <DockerImage.Basis in attached Note>.
-  message Derived {
+  message DerivedDetails {
     // The fingerprint of the derived image
     Fingerprint fingerprint = 1;
 
@@ -643,7 +642,7 @@ message DockerImage {
 // note for a resource indicates that analysis hasn't started.
 message Discovery {
   // Provides information about the scan status of a discovered resource.
-  message Discovered {
+  message DiscoveredDetails {
     // Output only. An operation that indicates the status of the current scan.
     google.longrunning.Operation operation = 1;
   }
@@ -711,6 +710,9 @@ message Note {
 
     // The note and occurrence track the initial discovery status of a resource.
     DISCOVERY = 7;
+
+    // This represents a logical "role" that can attest to artifacts.
+    ATTESTATION_AUTHORITY = 8;
   }
 
   // The name of the note in the form
@@ -761,6 +763,10 @@ message Note {
   // Output only. The time this note was last updated. This field can be used as
   // a filter in list requests.
   google.protobuf.Timestamp update_time = 12;
+
+  // The name of the `Operation` in the form
+  // "projects/{project_id}/operation/{OPERATION_ID}"
+  string operation_name = 19;
 }
 
 // `Occurrence` includes information about analysis occurrences for an image.
@@ -793,16 +799,19 @@ message Occurrence {
 
     // Describes how this resource derives from the basis
     // in the associated note.
-    DockerImage.Derived derived_image = 11;
+    DockerImage.DerivedDetails derived_image_details = 11;
 
     // Describes the installation of a package on the linked resource.
-    PackageManager.Installation installation = 12;
+    PackageManager.InstallationDetails installation_details = 12;
 
     // Describes the deployment of an artifact on a runtime.
-    Deployable.Deployment deployment = 14;
+    Deployable.DeploymentDetails deployment_details = 14;
 
     // Describes the initial scan status for this resource.
-    Discovery.Discovered discovered = 15;
+    Discovery.DiscoveredDetails discovered_details = 15;
+
+    // Describes an attestation of an artifact.
+    AttestationAuthority.AttestationDetails attestation_details = 16;
   }
 
   // A description of actions that can be taken to remedy the `Note`
@@ -813,6 +822,11 @@ message Occurrence {
 
   // Output only. The time this `Occurrence` was last updated.
   google.protobuf.Timestamp update_time = 10;
+
+  // The name of the `Operation` in the form
+  // "projects/{project_id}/operation/{OPERATION_ID}"
+  string operation_name = 19;
+
 }
 
 // PackageManager provides metadata about available / installed packages.
@@ -870,7 +884,7 @@ message PackageManager {
 
   // This represents how a particular software package may be installed on
   // a system.
-  message Installation {
+  message InstallationDetails {
     // Output only. The name of the installed package.
     string name = 1;
 
@@ -933,13 +947,22 @@ message PgpSignedAttestation {
   // be present in the signature content above, but that is not expected to be
   // used by the verifier.
   oneof key_id {
-    // The ID of the key, as output by `gpg --list-keys`.  This should be 8
-    // hexidecimal digits, capitalized.  e.g.
-    // $ gpg --list-keys pub
-    // 2048R/A663AEEA 2017-08-01 uid                  Fake Name
-    // <example-attesting-user@google.com>
-    // In the above example, the `key_id` is "A663AEEA".
-    // Note that in practice this ID is the last 64 bits of the key fingerprint.
+    // The cryptographic fingerprint of the key used to generate the signature,
+    // as output by, e.g. `gpg --list-keys`. This should be the version 4, full
+    // 160-bit fingerprint, expressed as a 40 character hexidecimal string. See
+    // https://tools.ietf.org/html/rfc4880#section-12.2 for details.
+    // Implementations may choose to acknowledge "LONG", "SHORT", or other
+    // abbreviated key IDs, but only the full fingerprint is guaranteed to work.
+    // In gpg, the full fingerprint can be retrieved from the `fpr` field
+    // returned when calling --list-keys with --with-colons.  For example:
+    // ```
+    // gpg --with-colons --with-fingerprint --force-v4-certs \
+    //     --list-keys attester@example.com
+    // tru::1:1513631572:0:3:1:5
+    // pub:...<SNIP>...
+    // fpr:::::::::24FF6481B76AC91E66A00AC657A93A81EF3AE6FB:
+    // ```
+    // Above, the fingerprint is `24FF6481B76AC91E66A00AC657A93A81EF3AE6FB`.
     string pgp_key_id = 2;
   }
 }
@@ -1425,7 +1448,8 @@ service GrafeasProjects {
   // Creates a new `Project`.
   rpc CreateProject(CreateProjectRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      post:  "/v1alpha1/{name=projects/*}"
+      post: "/v1alpha1/projects"
+      body: "project"
     };
   }
 

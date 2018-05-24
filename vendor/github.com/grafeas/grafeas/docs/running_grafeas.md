@@ -6,13 +6,13 @@ To start the server go to `samples/server/go-server/api/server/main` and execute
 
     go run main.go
 
-This will start the Grafeas gRPC and REST API:s on `localhost:10000`. To start grafeas with a custom configuration use the `-config` flag (e.g. `-config config.yaml`). The root directory includes a `config.yaml.sample` that can be used as a starting point when creating your own config file.
+This will start the Grafeas gRPC and REST API:s on `localhost:8080`. To start grafeas with a custom configuration use the `-config` flag (e.g. `-config config.yaml`). The root directory includes a `config.yaml.sample` that can be used as a starting point when creating your own config file.
 
 ### Access REST API with curl
 
 Grafeas provides both a REST API and a gRPC API. Here is an example of using the REST API to list projects in Grafeas.
 
-`curl http://localhost:10000/v1alpha1/projects`
+`curl http://localhost:8080/v1alpha1/projects`
 
 ### Access gRPC API with a go client
 
@@ -30,7 +30,7 @@ import (
 )
 
 func main() {
-	conn, err := grpc.Dial("localhost:10000", grpc.WithInsecure())
+	conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure())
 	defer conn.Close()
 	client := pb.NewGrafeasClient(conn)
 	// List notes
@@ -90,7 +90,7 @@ Add the following to your config file
 
 When using curl with a self signed certificate you need to add `-k/--insecure` and specify the client certificate.
 
-`curl -k --cert path/to/client.pem https://localhost:10000/v1alpha1/projects`
+`curl -k --cert path/to/client.pem https://localhost:8080/v1alpha1/projects`
 
 ### Access gRPC with a go client
 
@@ -138,7 +138,7 @@ func main() {
 	}
 	tlsConfig.BuildNameToCertificate()
 	creds := credentials.NewTLS(tlsConfig)
-	conn, err := grpc.Dial("localhost:10000", grpc.WithTransportCredentials(creds))
+	conn, err := grpc.Dial("localhost:8080", grpc.WithTransportCredentials(creds))
 	client := pb.NewGrafeasClient(conn)
 
 	// List notes
@@ -157,3 +157,13 @@ func main() {
 	}
 }
 ```
+
+## Enable CORS on the sample server.
+
+### Update config
+
+Add the following to your config file below the `api` key.
+
+    cors_allowed_origins:
+       - "https://some.example.tld"
+       - "https://*.example.net"
