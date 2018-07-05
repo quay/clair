@@ -87,14 +87,12 @@ To build Clair, you need to latest stable version of [Go] and a working [Go envi
 In addition, Clair requires some additional binaries be installed on the system [$PATH] as runtime dependencies:
 
 * [git]
-* [bzr]
 * [rpm]
 * [xz]
 
 [Go]: https://github.com/golang/go/releases
 [Go environment]: https://golang.org/doc/code.html
 [git]: https://git-scm.com
-[bzr]: http://bazaar.canonical.com/en
 [rpm]: http://www.rpm.org
 [xz]: http://tukaani.org/xz
 [$PATH]: https://en.wikipedia.org/wiki/PATH_(variable)
