@@ -58,19 +58,20 @@ func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, er
 		return
 	}
 
-	// Ask the database for the latest commit we successfully applied.
-	var dbCommit string
+	// Open a database transaction.
 	tx, err := db.Begin()
 	if err != nil {
 		return
 	}
 	defer tx.Rollback()
 
-	dbCommit, ok, err := tx.FindKeyValue(updaterFlag)
+	// Ask the database for the latest commit we successfully applied.
+	var dbCommit string
+	var ok bool
+	dbCommit, ok, err = tx.FindKeyValue(updaterFlag)
 	if err != nil {
 		return
 	}
-
 	if !ok {
 		dbCommit = ""
 	}
