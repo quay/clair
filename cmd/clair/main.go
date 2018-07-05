@@ -127,7 +127,7 @@ func main() {
 	flag.Parse()
 
 	// Check for dependencies.
-	for _, bin := range []string{"git", "bzr", "rpm", "xz"} {
+	for _, bin := range []string{"git", "rpm", "xz"} {
 		_, err := exec.LookPath(bin)
 		if err != nil {
 			log.WithError(err).WithField("dependency", bin).Fatal("failed to find dependency")
