@@ -194,7 +194,7 @@ func (u *updater) pullRepository() (commit string, err error) {
 		cmd.Dir = u.repositoryLocalPath
 		if out, err := cmd.CombinedOutput(); err != nil {
 			u.Clean()
-			log.WithError(err).WithField("output", string(out)).Error("could not pull alpine-secdb repository")
+			log.WithError(err).WithField("output", string(out)).Error("could not clone alpine-secdb repository")
 			return "", commonerr.ErrCouldNotDownload
 		}
 	} else {
