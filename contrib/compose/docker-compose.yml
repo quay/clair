@@ -9,7 +9,10 @@ services:
 
   clair:
     container_name: clair_clair
-    image: quay.io/coreos/clair-git:latest
+    image: quay.io/coreos/clair:latest
+    environment:
+      #  - HTTP_PROXY=http://yourproxy.com:port
+      #  - HTTPS_PROXY=http://yourproxy.com:port
     restart: unless-stopped
     depends_on:
       - postgres
