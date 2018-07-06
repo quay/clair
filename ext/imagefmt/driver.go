@@ -122,6 +122,7 @@ func Extract(format, path string, headers map[string]string, toExtract []string)
 		// Send the request and handle the response.
 		tr := &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureTLS},
+			Proxy:           http.ProxyFromEnvironment,
 		}
 		client := &http.Client{Transport: tr}
 		r, err := client.Do(request)
