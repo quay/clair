@@ -48,7 +48,7 @@ func PagedVulnerableAncestriesFromDatabaseModel(dbVuln *database.PagedVulnerable
 	}
 
 	for index, ancestryName := range dbVuln.Affected {
-		indexedAncestry := IndexedAncestryName{
+		indexedAncestry := PagedVulnerableAncestries_IndexedAncestryName{
 			Name:  ancestryName,
 			Index: int32(index),
 		}
@@ -60,9 +60,9 @@ func PagedVulnerableAncestriesFromDatabaseModel(dbVuln *database.PagedVulnerable
 
 // NotificationFromDatabaseModel converts database notification, old and new
 // vulnerabilities' paged vulnerable ancestries to be api notification.
-func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotificationWithVulnerable) (*Notification, error) {
+func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotificationWithVulnerable) (*GetNotificationResponse_Notification, error) {
 	var (
-		noti Notification
+		noti GetNotificationResponse_Notification
 		err  error
 	)
 
@@ -123,8 +123,8 @@ func VulnerabilityWithFixedInFromDatabaseModel(dbVuln database.VulnerabilityWith
 }
 
 // AncestryFromDatabaseModel converts database ancestry to api ancestry.
-func AncestryFromDatabaseModel(dbAncestry database.Ancestry) *Ancestry {
-	ancestry := &Ancestry{
+func AncestryFromDatabaseModel(dbAncestry database.Ancestry) *GetAncestryResponse_Ancestry {
+	ancestry := &GetAncestryResponse_Ancestry{
 		Name: dbAncestry.Name,
 	}
 	for _, layer := range dbAncestry.Layers {
