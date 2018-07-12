@@ -71,8 +71,8 @@ type Namespace struct {
 // determined.
 //
 // e.g. Name: OpenSSL, Version: 1.0, VersionFormat: dpkg.
-// dpkg implies the installer package manager but the namespace (might be
-// debian:7, debian:8, ...) could not be determined.
+// dpkg is the version format of the installer package manager, which in this
+// case could be dpkg or apk.
 type Feature struct {
 	Name          string
 	Version       string

@@ -44,7 +44,7 @@ A [PostgreSQL 9.4+] database instance is required for all instructions.
 #### Kubernetes (Helm)
 
 If you don't have a local Kubernetes cluster already, check out [minikube].
-This assumes you've already ran `helm init` and you have access to a currently running instance of Tiller.
+This assumes you've already ran `helm init`, you have access to a currently running instance of Tiller and that you are running the latest version of helm.
 
 [minikube]: https://github.com/kubernetes/minikube
 
@@ -53,6 +53,7 @@ git clone https://github.com/coreos/clair
 cd clair/contrib/helm
 cp clair/values.yaml ~/my_custom_values.yaml
 vi ~/my_custom_values.yaml
+helm dependency update clair
 helm install clair -f ~/my_custom_values.yaml
 ```
 
@@ -86,14 +87,12 @@ To build Clair, you need to latest stable version of [Go] and a working [Go envi
 In addition, Clair requires some additional binaries be installed on the system [$PATH] as runtime dependencies:
 
 * [git]
-* [bzr]
 * [rpm]
 * [xz]
 
 [Go]: https://github.com/golang/go/releases
 [Go environment]: https://golang.org/doc/code.html
 [git]: https://git-scm.com
-[bzr]: http://bazaar.canonical.com/en
 [rpm]: http://www.rpm.org
 [xz]: http://tukaani.org/xz
 [$PATH]: https://en.wikipedia.org/wiki/PATH_(variable)

@@ -18,7 +18,6 @@ import (
 	"fmt"
 
 	"github.com/golang/protobuf/ptypes"
-	google_protobuf1 "github.com/golang/protobuf/ptypes/empty"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -227,7 +226,7 @@ func (s *NotificationServer) GetNotification(ctx context.Context, req *pb.GetNot
 
 // MarkNotificationAsRead implements deleting a notification via the Clair gRPC
 // service.
-func (s *NotificationServer) MarkNotificationAsRead(ctx context.Context, req *pb.MarkNotificationAsReadRequest) (*google_protobuf1.Empty, error) {
+func (s *NotificationServer) MarkNotificationAsRead(ctx context.Context, req *pb.MarkNotificationAsReadRequest) (*pb.MarkNotificationAsReadResponse, error) {
 	if req.GetName() == "" {
 		return nil, status.Error(codes.InvalidArgument, "notification name should not be empty")
 	}
@@ -249,5 +248,5 @@ func (s *NotificationServer) MarkNotificationAsRead(ctx context.Context, req *pb
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &google_protobuf1.Empty{}, nil
+	return &pb.MarkNotificationAsReadResponse{}, nil
 }

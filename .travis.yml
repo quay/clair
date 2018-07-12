@@ -1,14 +1,23 @@
 language: go
 
 go: 
-  - 1.8
+  - "1.10"
 
 sudo: required
 
+env:
+  global:
+  - PATH=$HOME/.local/bin:$PATH
+
 install:
 - curl https://glide.sh/get | sh
+- mkdir -p $HOME/.local/bin
+- curl -o $HOME/.local/bin/prototool -sSL https://github.com/uber/prototool/releases/download/v0.1.0/prototool-$(uname -s)-$(uname -m)
+- chmod +x $HOME/.local/bin/prototool
 
 script:
+- prototool format -d api/v3/clairpb/clair.proto
+- prototool lint api/v3/clairpb/clair.proto
 - go test $(glide novendor | grep -v contrib)
 
 dist: trusty

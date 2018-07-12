@@ -18,14 +18,13 @@ package ubuntu
 
 import (
 	"bufio"
-	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"regexp"
-	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -38,10 +37,9 @@ import (
 )
 
 const (
-	trackerURI        = "https://launchpad.net/ubuntu-cve-tracker"
-	trackerRepository = "https://launchpad.net/ubuntu-cve-tracker"
-	updaterFlag       = "ubuntuUpdater"
-	cveURL            = "http://people.ubuntu.com/~ubuntu-security/cve/%s"
+	trackerURI  = "https://git.launchpad.net/ubuntu-cve-tracker"
+	updaterFlag = "ubuntuUpdater"
+	cveURL      = "http://people.ubuntu.com/~ubuntu-security/cve/%s"
 )
 
 var (
@@ -74,6 +72,8 @@ var (
 
 	affectsCaptureRegexp      = regexp.MustCompile(`(?P<release>.*)_(?P<package>.*): (?P<status>[^\s]*)( \(+(?P<note>[^()]*)\)+)?`)
 	affectsCaptureRegexpNames = affectsCaptureRegexp.SubexpNames()
+
+	errUnknownRelease = errors.New("found packages with CVEs for a verison of Ubuntu that Clair doesn't know about")
 )
 
 type updater struct {
@@ -84,211 +84,179 @@ func init() {
 	vulnsrc.RegisterUpdater("ubuntu", &updater{})
 }
 
-func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
+func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
 	log.WithField("package", "Ubuntu").Info("Start fetching vulnerabilities")
 
-	// Pull the bzr repository.
-	if err = u.pullRepository(); err != nil {
-		return resp, err
-	}
-
-	// Get revision number.
-	revisionNumber, err := getRevisionNumber(u.repositoryLocalPath)
+	// Pull the master branch.
+	var commit string
+	commit, err = u.pullRepository()
 	if err != nil {
 		return resp, err
 	}
 
-	tx, err := datastore.Begin()
+	// Open a database transaction.
+	tx, err := db.Begin()
 	if err != nil {
 		return resp, err
 	}
+	defer tx.Rollback()
 
-	// Get the latest revision number we successfully applied in the database.
-	dbRevisionNumber, ok, err := tx.FindKeyValue("ubuntuUpdater")
+	// Ask the database for the latest commit we successfully applied.
+	var dbCommit string
+	var ok bool
+	dbCommit, ok, err = tx.FindKeyValue(updaterFlag)
 	if err != nil {
-		return resp, err
+		return
 	}
-
-	if err := tx.Rollback(); err != nil {
-		return resp, err
-	}
-
 	if !ok {
-		dbRevisionNumber = ""
+		dbCommit = ""
+	}
+
+	// Set the updaterFlag to equal the commit processed.
+	resp.FlagName = updaterFlag
+	resp.FlagValue = commit
+
+	// Short-circuit if there have been no updates.
+	if commit == dbCommit {
+		log.WithField("package", "ubuntu").Debug("no update")
+		return
 	}
 
 	// Get the list of vulnerabilities that we have to update.
-	modifiedCVE, err := collectModifiedVulnerabilities(revisionNumber, dbRevisionNumber, u.repositoryLocalPath)
+	var modifiedCVE map[string]struct{}
+	modifiedCVE, err = collectModifiedVulnerabilities(commit, dbCommit, u.repositoryLocalPath)
 	if err != nil {
-		return resp, err
+		return
 	}
 
-	notes := make(map[string]struct{})
-	for cvePath := range modifiedCVE {
-		// Open the CVE file.
-		file, err := os.Open(u.repositoryLocalPath + "/" + cvePath)
-		if err != nil {
-			// This can happen when a file is modified and then moved in another
-			// commit.
-			continue
-		}
-
-		// Parse the vulnerability.
-		v, unknownReleases, err := parseUbuntuCVE(file)
-		if err != nil {
-			return resp, err
-		}
-
-		// Add the vulnerability to the response.
-		resp.Vulnerabilities = append(resp.Vulnerabilities, v)
-
-		// Store any unknown releases as notes.
-		for k := range unknownReleases {
-			note := fmt.Sprintf("Ubuntu %s is not mapped to any version number (eg. trusty->14.04). Please update me.", k)
-			notes[note] = struct{}{}
-
-			// If we encountered unknown Ubuntu release, we don't want the revision
-			// number to be considered as managed.
-			dbRevisionNumberInt, _ := strconv.Atoi(dbRevisionNumber)
-			revisionNumber = dbRevisionNumberInt
-		}
-
-		// Close the file manually.
-		//
-		// We do that instead of using defer because defer works on a function-level scope.
-		// We would open many files and close them all at once at the end of the function,
-		// which could lead to exceed fs.file-max.
-		file.Close()
+	// Get the list of vulnerabilities.
+	resp.Vulnerabilities, resp.Notes, err = collectVulnerabilitiesAndNotes(u.repositoryLocalPath, modifiedCVE)
+	if err != nil {
+		return
 	}
 
-	// Add flag and notes.
-	resp.FlagName = updaterFlag
-	resp.FlagValue = strconv.Itoa(revisionNumber)
-	for note := range notes {
-		resp.Notes = append(resp.Notes, note)
+	// The only notes we take are if we encountered unknown Ubuntu release.
+	// We don't want the commit to be considered as managed in that case.
+	if len(resp.Notes) != 0 {
+		resp.FlagValue = dbCommit
 	}
 
 	return
 }
 
 func (u *updater) Clean() {
-	os.RemoveAll(u.repositoryLocalPath)
+	if u.repositoryLocalPath != "" {
+		os.RemoveAll(u.repositoryLocalPath)
+	}
 }
 
-func (u *updater) pullRepository() (err error) {
+func (u *updater) pullRepository() (commit string, err error) {
 	// Determine whether we should branch or pull.
 	if _, pathExists := os.Stat(u.repositoryLocalPath); u.repositoryLocalPath == "" || os.IsNotExist(pathExists) {
 		// Create a temporary folder to store the repository.
 		if u.repositoryLocalPath, err = ioutil.TempDir(os.TempDir(), "ubuntu-cve-tracker"); err != nil {
-			return vulnsrc.ErrFilesystem
+			return "", vulnsrc.ErrFilesystem
 		}
-
-		// Branch repository.
-		cmd := exec.Command("bzr", "branch", "--use-existing-dir", trackerRepository, ".")
+		cmd := exec.Command("git", "clone", trackerURI, ".")
 		cmd.Dir = u.repositoryLocalPath
 		if out, err := cmd.CombinedOutput(); err != nil {
-			log.WithError(err).WithField("output", string(out)).Error("could not branch Ubuntu repository")
-			return commonerr.ErrCouldNotDownload
+			u.Clean()
+			log.WithError(err).WithField("output", string(out)).Error("could not clone ubuntu-cve-tracker repository")
+			return "", commonerr.ErrCouldNotDownload
 		}
-
-		return nil
+	} else {
+		// The repository already exists and it needs to be refreshed via a pull.
+		cmd := exec.Command("git", "pull")
+		cmd.Dir = u.repositoryLocalPath
+		if _, err := cmd.CombinedOutput(); err != nil {
+			return "", vulnsrc.ErrGitFailure
+		}
 	}
 
-	// Pull repository.
-	cmd := exec.Command("bzr", "pull", "--overwrite")
+	cmd := exec.Command("git", "rev-parse", "HEAD")
 	cmd.Dir = u.repositoryLocalPath
-	if out, err := cmd.CombinedOutput(); err != nil {
-		os.RemoveAll(u.repositoryLocalPath)
-		log.WithError(err).WithField("output", string(out)).Error("could not pull Ubuntu repository")
-		return commonerr.ErrCouldNotDownload
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", vulnsrc.ErrGitFailure
+	}
+
+	commit = strings.TrimSpace(string(out))
+	return
+}
+
+func collectModifiedVulnerabilities(commit, dbCommit, repositoryLocalPath string) (map[string]struct{}, error) {
+	modifiedCVE := make(map[string]struct{})
+	for _, dirName := range []string{"active", "retired"} {
+		if err := processDirectory(repositoryLocalPath, dirName, modifiedCVE); err != nil {
+			return nil, err
+		}
+	}
+	return modifiedCVE, nil
+}
+
+func processDirectory(repositoryLocalPath, dirName string, modifiedCVE map[string]struct{}) error {
+	// Open the directory.
+	d, err := os.Open(repositoryLocalPath + "/" + dirName)
+	if err != nil {
+		log.WithError(err).Error("could not open Ubuntu vulnerabilities repository's folder")
+		return vulnsrc.ErrFilesystem
+	}
+	defer d.Close()
+
+	// Get the FileInfo of all the files in the directory.
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		log.WithError(err).Error("could not read Ubuntu vulnerabilities repository's folder")
+		return vulnsrc.ErrFilesystem
+	}
+
+	// Add the vulnerabilities to the list.
+	for _, name := range names {
+		if strings.HasPrefix(name, "CVE-") {
+			modifiedCVE[dirName+"/"+name] = struct{}{}
+		}
 	}
 
 	return nil
 }
 
-func getRevisionNumber(pathToRepo string) (int, error) {
-	cmd := exec.Command("bzr", "revno")
-	cmd.Dir = pathToRepo
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		log.WithError(err).WithField("output", string(out)).Error("could not get Ubuntu repository's revision number")
-		return 0, commonerr.ErrCouldNotDownload
-	}
+func collectVulnerabilitiesAndNotes(repositoryLocalPath string, modifiedCVE map[string]struct{}) ([]database.VulnerabilityWithAffected, []string, error) {
+	vulns := make([]database.VulnerabilityWithAffected, 0)
+	noteSet := make(map[string]struct{})
 
-	revno, err := strconv.Atoi(strings.TrimSpace(string(out)))
-	if err != nil {
-		log.WithError(err).WithField("output", string(out)).Error("could not parse Ubuntu repository's revision number")
-		return 0, commonerr.ErrCouldNotDownload
-	}
-
-	return revno, nil
-}
-
-func collectModifiedVulnerabilities(revision int, dbRevision, repositoryLocalPath string) (map[string]struct{}, error) {
-	modifiedCVE := make(map[string]struct{})
-
-	// Handle a brand new database.
-	if dbRevision == "" {
-		for _, folder := range []string{"active", "retired"} {
-			d, err := os.Open(repositoryLocalPath + "/" + folder)
-			if err != nil {
-				log.WithError(err).Error("could not open Ubuntu vulnerabilities repository's folder")
-				return nil, vulnsrc.ErrFilesystem
-			}
-
-			// Get the FileInfo of all the files in the directory.
-			names, err := d.Readdirnames(-1)
-			if err != nil {
-				log.WithError(err).Error("could not read Ubuntu vulnerabilities repository's folder")
-				return nil, vulnsrc.ErrFilesystem
-			}
-
-			// Add the vulnerabilities to the list.
-			for _, name := range names {
-				if strings.HasPrefix(name, "CVE-") {
-					modifiedCVE[folder+"/"+name] = struct{}{}
-				}
-			}
-
-			// Close the file manually.
-			//
-			// We do that instead of using defer because defer works on a function-level scope.
-			// We would open many files and close them all at once at the end of the function,
-			// which could lead to exceed fs.file-max.
-			d.Close()
+	for cvePath := range modifiedCVE {
+		// Open the CVE file.
+		file, err := os.Open(repositoryLocalPath + "/" + cvePath)
+		if err != nil {
+			// This can happen when a file is modified then moved in another commit.
+			continue
 		}
 
-		return modifiedCVE, nil
-	}
-
-	// Handle an up to date database.
-	dbRevisionInt, _ := strconv.Atoi(dbRevision)
-	if revision == dbRevisionInt {
-		log.WithField("package", "Ubuntu").Debug("no update")
-		return modifiedCVE, nil
-	}
-
-	// Handle a database that needs upgrading.
-	cmd := exec.Command("bzr", "log", "--verbose", "-r"+strconv.Itoa(dbRevisionInt+1)+"..", "-n0")
-	cmd.Dir = repositoryLocalPath
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		log.WithError(err).WithField("output", string(out)).Error("could not get Ubuntu vulnerabilities repository logs")
-		return nil, commonerr.ErrCouldNotDownload
-	}
-
-	scanner := bufio.NewScanner(bytes.NewReader(out))
-	for scanner.Scan() {
-		text := strings.TrimSpace(scanner.Text())
-		if strings.Contains(text, "CVE-") && (strings.HasPrefix(text, "active/") || strings.HasPrefix(text, "retired/")) {
-			if strings.Contains(text, " => ") {
-				text = text[strings.Index(text, " => ")+4:]
-			}
-			modifiedCVE[text] = struct{}{}
+		// Parse the vulnerability.
+		v, unknownReleases, err := parseUbuntuCVE(file)
+		if err != nil {
+			file.Close()
+			return nil, nil, err
 		}
+
+		// Add the vulnerability to the response.
+		vulns = append(vulns, v)
+
+		// Store any unknown releases as notes.
+		for k := range unknownReleases {
+			noteSet[errUnknownRelease.Error()+": "+k] = struct{}{}
+		}
+
+		file.Close()
 	}
 
-	return modifiedCVE, nil
+	// Convert the note set into a slice.
+	var notes []string
+	for note := range noteSet {
+		notes = append(notes, note)
+	}
+
+	return vulns, notes, nil
 }
 
 func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.VulnerabilityWithAffected, unknownReleases map[string]struct{}, err error) {

@@ -1,4 +1,6 @@
-# Copyright 2017 clair authors
+#!/usr/bin/env bash
+
+# Copyright 2018 clair authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,18 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.10-alpine
+set -o errexit
+set -o nounset
+set -o pipefail
 
-VOLUME /config
-EXPOSE 6060 6061
+DOCKER_REPO_ROOT="$GOPATH/src/github.com/coreos/clair"
+IMAGE=${IMAGE:-"quay.io/coreos/clair-gen-proto"}
 
-ADD .   /go/src/github.com/coreos/clair/
-WORKDIR /go/src/github.com/coreos/clair/
-
-RUN apk add --no-cache git rpm xz dumb-init && \
-    go install -v github.com/coreos/clair/cmd/clair && \
-    mv /go/bin/clair /clair && \
-    rm -rf /go /usr/local/go
-
-ENTRYPOINT ["/usr/bin/dumb-init", "--", "/clair"]
-
+docker run --rm -it \
+  -v "$DOCKER_REPO_ROOT":"$DOCKER_REPO_ROOT" \
+  -w "$DOCKER_REPO_ROOT" \
+  "$IMAGE" \
+  "./api/v3/clairpb/run_in_docker.sh"

@@ -30,7 +30,7 @@ import (
 )
 
 var (
-	oracleReleaseRegexp = regexp.MustCompile(`(?P<os>[^\s]*) (Linux Server release) (?P<version>[\d]+)`)
+	oracleReleaseRegexp = regexp.MustCompile(`(?P<os>Oracle) (Linux Server release) (?P<version>[\d]+)`)
 	centosReleaseRegexp = regexp.MustCompile(`(?P<os>[^\s]*) (Linux release|release) (?P<version>[\d]+)`)
 	redhatReleaseRegexp = regexp.MustCompile(`(?P<os>Red Hat Enterprise Linux) (Client release|Server release|Workstation release) (?P<version>[\d]+)`)
 )
