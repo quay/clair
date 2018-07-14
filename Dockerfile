@@ -12,18 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.10-alpine
-
-VOLUME /config
-EXPOSE 6060 6061
-
+FROM golang:1.10-alpine AS build
 ADD .   /go/src/github.com/coreos/clair/
 WORKDIR /go/src/github.com/coreos/clair/
+RUN go build github.com/coreos/clair/cmd/clair
 
-RUN apk add --no-cache git rpm xz dumb-init && \
-    go install -v github.com/coreos/clair/cmd/clair && \
-    mv /go/bin/clair /clair && \
-    rm -rf /go /usr/local/go
-
+FROM alpine:3.8
+COPY --from=build /go/src/github.com/coreos/clair/clair /clair
+RUN apk add --no-cache git rpm xz ca-certificates dumb-init
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/clair"]
-
+VOLUME /config
+EXPOSE 6060 6061
