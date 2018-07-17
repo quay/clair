@@ -26,6 +26,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -146,7 +147,7 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 	// Create io.Reader for every data feed.
 	dataFeedReaders := make(map[string]NestedReadCloser)
 	for _, dataFeedName := range dataFeedNames {
-		fileName := localPath + dataFeedName + ".xml"
+		fileName := filepath.Join(localPath, fmt.Sprintf("%s.xml", dataFeedName))
 
 		if h, ok := dataFeedHashes[dataFeedName]; ok && h == dataFeedHashes[dataFeedName] {
 			// The hash is known, the disk should contains the feed. Try to read from it.
