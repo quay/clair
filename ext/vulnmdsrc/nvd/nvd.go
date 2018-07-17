@@ -39,8 +39,8 @@ import (
 )
 
 const (
-	dataFeedURL     string = "http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-%s.xml.gz"
-	dataFeedMetaURL string = "http://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-%s.meta"
+	dataFeedURL     string = "https://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-%s.xml.gz"
+	dataFeedMetaURL string = "https://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-%s.meta"
 
 	appenderName string = "NVD"
 
@@ -58,8 +58,9 @@ type NVDMetadata struct {
 }
 
 type NVDmetadataCVSSv2 struct {
-	Vectors string
-	Score   float64
+	PublishedDateTime string
+	Vectors           string
+	Score             float64
 }
 
 func init() {
@@ -88,9 +89,16 @@ func (a *appender) BuildCache(datastore database.Datastore) error {
 	a.dataFeedHashes = dataFeedHashes
 
 	// Parse data feeds.
-	for dataFeedName, dataFeedReader := range dataFeedReaders {
+	for dataFeedName, dataFileName := range dataFeedReaders {
+		f, err := os.Open(dataFileName)
+		if err != nil {
+			log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not open NVD data file")
+			return commonerr.ErrCouldNotParse
+		}
 		var nvd nvd
-		if err = xml.NewDecoder(dataFeedReader).Decode(&nvd); err != nil {
+		r := bufio.NewReader(f)
+		if err = xml.NewDecoder(r).Decode(&nvd); err != nil {
+			f.Close()
 			log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not decode NVD data feed")
 			return commonerr.ErrCouldNotParse
 		}
@@ -102,8 +110,7 @@ func (a *appender) BuildCache(datastore database.Datastore) error {
 				a.metadata[nvdEntry.Name] = *metadata
 			}
 		}
-
-		dataFeedReader.Close()
+		f.Close()
 	}
 
 	return nil
@@ -125,7 +132,7 @@ func (a *appender) Clean() {
 	os.RemoveAll(a.localPath)
 }
 
-func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[string]NestedReadCloser, map[string]string, error) {
+func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[string]string, map[string]string, error) {
 	var dataFeedNames []string
 	for y := 2002; y <= time.Now().Year(); y++ {
 		dataFeedNames = append(dataFeedNames, strconv.Itoa(y))
@@ -144,19 +151,16 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 		dataFeedHashes[dataFeedName] = hash
 	}
 
-	// Create io.Reader for every data feed.
-	dataFeedReaders := make(map[string]NestedReadCloser)
+	// Create map containing the name and filename for every data feed.
+	dataFeedReaders := make(map[string]string)
 	for _, dataFeedName := range dataFeedNames {
 		fileName := filepath.Join(localPath, fmt.Sprintf("%s.xml", dataFeedName))
-
 		if h, ok := dataFeedHashes[dataFeedName]; ok && h == dataFeedHashes[dataFeedName] {
 			// The hash is known, the disk should contains the feed. Try to read from it.
 			if localPath != "" {
 				if f, err := os.Open(fileName); err == nil {
-					dataFeedReaders[dataFeedName] = NestedReadCloser{
-						Reader:            f,
-						NestedReadClosers: []io.ReadCloser{f},
-					}
+					f.Close()
+					dataFeedReaders[dataFeedName] = fileName
 					continue
 				}
 			}
@@ -177,20 +181,17 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 
 			// Store it to a file at the same time if possible.
 			if f, err := os.Create(fileName); err == nil {
-				nrc := NestedReadCloser{
-					Reader:            io.TeeReader(gr, f),
-					NestedReadClosers: []io.ReadCloser{r.Body, gr, f},
+				_, err = io.Copy(f, gr)
+				if err != nil {
+					log.WithError(err).Warning("could not stream NVD data feed to filesystem")
 				}
-				dataFeedReaders[dataFeedName] = nrc
+				dataFeedReaders[dataFeedName] = fileName
+				f.Close()
 			} else {
-				nrc := NestedReadCloser{
-					Reader:            gr,
-					NestedReadClosers: []io.ReadCloser{gr, r.Body},
-				}
-				dataFeedReaders[dataFeedName] = nrc
-
 				log.WithError(err).Warning("could not store NVD data feed to filesystem")
 			}
+
+			r.Body.Close()
 		}
 	}
 
