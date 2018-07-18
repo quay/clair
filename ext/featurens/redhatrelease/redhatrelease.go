@@ -33,6 +33,7 @@ var (
 	oracleReleaseRegexp = regexp.MustCompile(`(?P<os>Oracle) (Linux Server release) (?P<version>[\d]+)`)
 	centosReleaseRegexp = regexp.MustCompile(`(?P<os>[^\s]*) (Linux release|release) (?P<version>[\d]+)`)
 	redhatReleaseRegexp = regexp.MustCompile(`(?P<os>Red Hat Enterprise Linux) (Client release|Server release|Workstation release) (?P<version>[\d]+)`)
+	fedoraReleaseRegexp = regexp.MustCompile(`(?P<os>Fedora release) (?P<version>[\d]+)`)
 )
 
 type detector struct{}
@@ -77,6 +78,16 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 				VersionFormat: rpm.ParserName,
 			}, nil
 		}
+
+		// Atempt to match Fedora.
+		r = fedoraReleaseRegexp.FindStringSubmatch(string(f))
+		if len(r) == 4 {
+			return &database.Namespace{
+				Name:          strings.ToLower(r[1]) + ":" + r[3],
+				VersionFormat: rpm.ParserName,
+			}, nil
+		}
+
 	}
 
 	return nil, nil
