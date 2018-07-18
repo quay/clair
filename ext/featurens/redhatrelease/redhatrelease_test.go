@@ -55,7 +55,7 @@ func TestDetector(t *testing.T) {
 			},
 		},
 		{
-			ExpectedNamespace: &database.Namespace{Name: "fedora:latest"},
+			ExpectedNamespace: &database.Namespace{Name: "fedora:28"},
 			Files: tarutil.FilesMap{
 				"etc/redhat-release": []byte(`Fedora release 28 (Twenty Eight)`),
 			},
