@@ -8,7 +8,7 @@ clair:
       {{- if .Values.config.postgresURI }}
       source: "{{ .Values.config.postgresURI }}"
       {{ else }}
-      source: "postgres://{{ .Values.postgresql.postgresUser }}:{{ .Values.postgresql.postgresPassword }}@{{ template "postgresql.fullname" . }}:5432/{{ .Values.postgresql.postgresDatabase }}?sslmode=disable"
+      source: "host={{ template "postgresql.fullname" . }} port=5432 user={{ .Values.postgresql.postgresUser }} password={{ .Values.postgresql.postgresPassword }} dbname={{ .Values.postgresql.postgresDatabase }} sslmode=disable statement_timeout=60000"
       {{ end }}
 
       # Number of elements kept in the cache.
