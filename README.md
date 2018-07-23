@@ -5,6 +5,7 @@
 [![Go Report Card](https://goreportcard.com/badge/coreos/clair "Go Report Card")](https://goreportcard.com/report/coreos/clair)
 [![GoDoc](https://godoc.org/github.com/coreos/clair?status.svg "GoDoc")](https://godoc.org/github.com/coreos/clair)
 [![IRC Channel](https://img.shields.io/badge/freenode-%23clair-blue.svg "IRC Channel")](http://webchat.freenode.net/?channels=clair)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fcoreos%2Fclair.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fcoreos%2Fclair?ref=badge_shield)
 
 **Note**: The `master` branch may be in an *unstable or even broken state* during development.
 Please use [releases] instead of the `master` branch in order to get stable binaries.
@@ -56,3 +57,6 @@ See [CONTRIBUTING](.github/CONTRIBUTING.md) for details on submitting patches an
 ## License
 
 Clair is under the Apache 2.0 license. See the [LICENSE](LICENSE) file for details.
+
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fcoreos%2Fclair.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fcoreos%2Fclair?ref=badge_large)
