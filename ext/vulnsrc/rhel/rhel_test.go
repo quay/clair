@@ -39,6 +39,11 @@ func TestRHELParserMultipleCVE(t *testing.T) {
 		"CVE-2015-2729", "CVE-2015-2731", "CVE-2015-2733", "CVE-2015-2734", "CVE-2015-2735", "CVE-2015-2736",
 		"CVE-2015-2737", "CVE-2015-2738", "CVE-2015-2739", "CVE-2015-2740", "CVE-2015-2741", "CVE-2015-2743",
 	}
+	expectedSeverity := []database.Severity{database.CriticalSeverity, database.HighSeverity, database.HighSeverity,
+		database.MediumSeverity, database.MediumSeverity, database.MediumSeverity, database.CriticalSeverity,
+		database.CriticalSeverity, database.CriticalSeverity, database.CriticalSeverity, database.CriticalSeverity,
+		database.CriticalSeverity, database.CriticalSeverity, database.CriticalSeverity, database.CriticalSeverity,
+		database.MediumSeverity, database.MediumSeverity}
 	expectedFeatures := []database.AffectedFeature{
 		{
 			Namespace: database.Namespace{
@@ -65,7 +70,7 @@ func TestRHELParserMultipleCVE(t *testing.T) {
 		for i, vulnerability := range vulnerabilities {
 			assert.Equal(t, expectedCve[i], vulnerability.Name)
 			assert.Equal(t, fmt.Sprintf("https://access.redhat.com/security/cve/%s", expectedCve[i]), vulnerability.Link)
-			assert.Equal(t, database.CriticalSeverity, vulnerability.Severity)
+			assert.Equal(t, expectedSeverity[i], vulnerability.Severity)
 			assert.Equal(t, `Mozilla Firefox is an open source web browser. XULRunner provides the XUL Runtime environment for Mozilla Firefox. Several flaws were found in the processing of malformed web content. A web page containing malicious content could cause Firefox to crash or, potentially, execute arbitrary code with the privileges of the user running Firefox.`, vulnerability.Description)
 
 			for _, expectedFeature := range expectedFeatures {

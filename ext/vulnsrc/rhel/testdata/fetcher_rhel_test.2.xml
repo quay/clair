@@ -50,23 +50,23 @@ Firefox.</description>
         <rights>Copyright 2015 Red Hat, Inc.</rights>
         <issued date="2015-07-02"/>
         <updated date="2015-07-02"/>
-        <cve href="https://access.redhat.com/security/cve/CVE-2015-2722">CVE-2015-2722</cve>
-        <cve href="https://access.redhat.com/security/cve/CVE-2015-2724">CVE-2015-2724</cve>
-        <cve href="https://access.redhat.com/security/cve/CVE-2015-2725">CVE-2015-2725</cve>
-        <cve href="https://access.redhat.com/security/cve/CVE-2015-2727">CVE-2015-2727</cve>
-        <cve href="https://access.redhat.com/security/cve/CVE-2015-2728">CVE-2015-2728</cve>
-        <cve href="https://access.redhat.com/security/cve/CVE-2015-2729">CVE-2015-2729</cve>
-        <cve href="https://access.redhat.com/security/cve/CVE-2015-2731">CVE-2015-2731</cve>
-        <cve href="https://access.redhat.com/security/cve/CVE-2015-2733">CVE-2015-2733</cve>
-        <cve href="https://access.redhat.com/security/cve/CVE-2015-2734">CVE-2015-2734</cve>
-        <cve href="https://access.redhat.com/security/cve/CVE-2015-2735">CVE-2015-2735</cve>
-        <cve href="https://access.redhat.com/security/cve/CVE-2015-2736">CVE-2015-2736</cve>
-        <cve href="https://access.redhat.com/security/cve/CVE-2015-2737">CVE-2015-2737</cve>
-        <cve href="https://access.redhat.com/security/cve/CVE-2015-2738">CVE-2015-2738</cve>
-        <cve href="https://access.redhat.com/security/cve/CVE-2015-2739">CVE-2015-2739</cve>
-        <cve href="https://access.redhat.com/security/cve/CVE-2015-2740">CVE-2015-2740</cve>
-        <cve href="https://access.redhat.com/security/cve/CVE-2015-2741">CVE-2015-2741</cve>
-        <cve href="https://access.redhat.com/security/cve/CVE-2015-2743">CVE-2015-2743</cve>
+        <cve cvss2="6.8/AV:N/AC:M/Au:N/C:P/I:P/A:P" cwe="CWE-416" href="https://access.redhat.com/security/cve/CVE-2015-2722" public="20150702">CVE-2015-2722</cve>
+        <cve cvss2="6.8/AV:N/AC:M/Au:N/C:P/I:P/A:P" href="https://access.redhat.com/security/cve/CVE-2015-2724" impact="important" public="20150702">CVE-2015-2724</cve>
+        <cve cvss2="6.8/AV:N/AC:M/Au:N/C:P/I:P/A:P" href="https://access.redhat.com/security/cve/CVE-2015-2725" impact="important" public="20150702">CVE-2015-2725</cve>
+        <cve cvss2="5.1/AV:N/AC:H/Au:N/C:P/I:P/A:P" href="https://access.redhat.com/security/cve/CVE-2015-2727" impact="moderate" public="20150702">CVE-2015-2727</cve>
+        <cve cvss2="5.1/AV:N/AC:H/Au:N/C:P/I:P/A:P" cwe="CWE-843" href="https://access.redhat.com/security/cve/CVE-2015-2728" impact="moderate" public="20150702">CVE-2015-2728</cve>
+        <cve cvss2="5.1/AV:N/AC:H/Au:N/C:P/I:P/A:P" cwe="CWE-125" href="https://access.redhat.com/security/cve/CVE-2015-2729" impact="moderate" public="20150702">CVE-2015-2729</cve>
+        <cve cvss2="6.8/AV:N/AC:M/Au:N/C:P/I:P/A:P" cwe="CWE-416" href="https://access.redhat.com/security/cve/CVE-2015-2731" public="20150702">CVE-2015-2731</cve>
+        <cve cvss2="6.8/AV:N/AC:M/Au:N/C:P/I:P/A:P" cwe="CWE-416" href="https://access.redhat.com/security/cve/CVE-2015-2733" public="20150702">CVE-2015-2733</cve>
+        <cve cvss2="6.8/AV:N/AC:M/Au:N/C:P/I:P/A:P" href="https://access.redhat.com/security/cve/CVE-2015-2734" public="20150702">CVE-2015-2734</cve>
+        <cve cvss2="6.8/AV:N/AC:M/Au:N/C:P/I:P/A:P" href="https://access.redhat.com/security/cve/CVE-2015-2735" public="20150702">CVE-2015-2735</cve>
+        <cve cvss2="6.8/AV:N/AC:M/Au:N/C:P/I:P/A:P" href="https://access.redhat.com/security/cve/CVE-2015-2736" public="20150702">CVE-2015-2736</cve>
+        <cve cvss2="6.8/AV:N/AC:M/Au:N/C:P/I:P/A:P" href="https://access.redhat.com/security/cve/CVE-2015-2737" public="20150702">CVE-2015-2737</cve>
+        <cve cvss2="6.8/AV:N/AC:M/Au:N/C:P/I:P/A:P" href="https://access.redhat.com/security/cve/CVE-2015-2738" public="20150702">CVE-2015-2738</cve>
+        <cve cvss2="6.8/AV:N/AC:M/Au:N/C:P/I:P/A:P" href="https://access.redhat.com/security/cve/CVE-2015-2739" public="20150702">CVE-2015-2739</cve>
+        <cve cvss2="6.8/AV:N/AC:M/Au:N/C:P/I:P/A:P" href="https://access.redhat.com/security/cve/CVE-2015-2740" public="20150702">CVE-2015-2740</cve>
+        <cve cvss2="4.3/AV:N/AC:M/Au:N/C:P/I:N/A:N" href="https://access.redhat.com/security/cve/CVE-2015-2741" impact="moderate" public="20150702">CVE-2015-2741</cve>
+        <cve cvss2="5.1/AV:N/AC:H/Au:N/C:P/I:P/A:P" cwe="CWE-250" href="https://access.redhat.com/security/cve/CVE-2015-2743" impact="moderate" public="20150702">CVE-2015-2743</cve>
         <bugzilla href="https://bugzilla.redhat.com/1236947" id="1236947">CVE-2015-2724 CVE-2015-2725 Mozilla: Miscellaneous memory safety hazards (rv:31.8 / rv:38.1) (MFSA 2015-59)</bugzilla>
         <bugzilla href="https://bugzilla.redhat.com/1236950" id="1236950">CVE-2015-2727 Mozilla: Local files or privileged URLs in pages can be opened into new tabs (MFSA 2015-60)</bugzilla>
         <bugzilla href="https://bugzilla.redhat.com/1236951" id="1236951">CVE-2015-2728 Mozilla: Type confusion in Indexed Database Manager (MFSA 2015-61)</bugzilla>
