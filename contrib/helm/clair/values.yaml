@@ -62,6 +62,9 @@ postgresql:
 # The dependant Postgres chart can be disabled, to connect to
 # an existing database by defining config.postgresURI
   enabled: true
+
+  imageTag: 9.6-alpine
+
   cpu: 1000m
   memory: 1Gi
 # These values are hardcoded until Helm supports secrets.
