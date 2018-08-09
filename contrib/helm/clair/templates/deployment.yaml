@@ -1,23 +1,26 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "fullname" . }}
+  name: {{ template "clair.fullname" . }}
   labels:
-    hertiage: {{ .Release.Service | quote }}
+    heritage: {{ .Release.Service | quote }}
     release: {{ .Release.Name | quote }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
-    component: {{ .Release.Name }}
+    app: {{ template "clair.fullname" . }}
 spec:
   replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "clair.fullname" . }}
   template:
     metadata:
       labels:
-        app: {{ template "fullname" . }}
+        app: {{ template "clair.fullname" . }}
     spec:
       volumes:
       - name: "{{ .Chart.Name }}-config"
-        configMap:
-          name: {{ template "fullname" . }}
+        secret:
+          secretName: {{ template "clair.fullname" . }}
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -26,10 +29,10 @@ spec:
         - "-log-level={{ .Values.logLevel }}"
         {{ if .Values.insecureTls }}- "--insecure-tls" {{end}}
         ports:
-        - name: clair-api
+        - name: "{{ .Chart.Name }}-api"
           containerPort: {{ .Values.service.internalApiPort }}
           protocol: TCP
-        - name: clair-health
+        - name: "{{ .Chart.Name }}-health"
           containerPort: {{ .Values.service.internalHealthPort }}
           protocol: TCP
         livenessProbe:
@@ -43,5 +46,6 @@ spec:
         volumeMounts:
         - name: "{{ .Chart.Name }}-config"
           mountPath: /etc/clair
+          readOnly: true
         resources:
 {{ toYaml .Values.resources | indent 10 }}

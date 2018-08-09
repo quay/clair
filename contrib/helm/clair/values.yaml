@@ -9,7 +9,6 @@ image:
   tag: latest
   pullPolicy: Always
 service:
-  name: clair
   type: ClusterIP
   internalApiPort: 6060
   externalApiPort: 6060
