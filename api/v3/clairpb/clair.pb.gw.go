@@ -240,7 +240,7 @@ func RegisterAncestryServiceHandlerClient(ctx context.Context, mux *runtime.Serv
 }
 
 var (
-	pattern_AncestryService_GetAncestry_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 1, 0, 4, 1, 5, 1}, []string{"ancestry", "ancestry_name"}, ""))
+	pattern_AncestryService_GetAncestry_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 3, 0, 4, 1, 5, 1}, []string{"ancestry", "ancestry_name"}, ""))
 
 	pattern_AncestryService_PostAncestry_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"ancestry"}, ""))
 )

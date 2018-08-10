@@ -65,7 +65,7 @@ message Layer {
 service AncestryService {
   // The RPC used to read the results of scanning for a particular ancestry.
   rpc GetAncestry(GetAncestryRequest) returns (GetAncestryResponse) {
-    option (google.api.http) = { get: "/ancestry/{ancestry_name}" };
+    option (google.api.http) = { get: "/ancestry/{ancestry_name=**}" };
   }
   // The RPC used to create a new scan of an ancestry.
   rpc PostAncestry(PostAncestryRequest) returns (PostAncestryResponse) {
