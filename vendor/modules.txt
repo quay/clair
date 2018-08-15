@@ -1,0 +1,95 @@
+# github.com/beorn7/perks v0.0.0-20160804104726-4c0e84591b9a
+github.com/beorn7/perks/quantile
+# github.com/cockroachdb/cmux v0.0.0-20170110192607-30d10be49292
+github.com/cockroachdb/cmux
+# github.com/coreos/pkg v0.0.0-20160727233714-3ac0863d7acf
+github.com/coreos/pkg/timeutil
+# github.com/davecgh/go-spew v0.0.0-20160907170601-6d212800a42e
+github.com/davecgh/go-spew/spew
+# github.com/fernet/fernet-go v0.0.0-20151007213151-1b2437bc582b
+github.com/fernet/fernet-go
+# github.com/golang/protobuf v0.0.0-20170601230230-5a0f697c9ed9
+github.com/golang/protobuf/ptypes
+github.com/golang/protobuf/proto
+github.com/golang/protobuf/ptypes/timestamp
+github.com/golang/protobuf/ptypes/any
+github.com/golang/protobuf/ptypes/duration
+github.com/golang/protobuf/jsonpb
+github.com/golang/protobuf/protoc-gen-go/descriptor
+github.com/golang/protobuf/ptypes/struct
+# github.com/grpc-ecosystem/go-grpc-prometheus v0.0.0-20170330212424-2500245aa611
+github.com/grpc-ecosystem/go-grpc-prometheus
+# github.com/grpc-ecosystem/grpc-gateway v0.0.0-20170531022852-2a40dd79571b
+github.com/grpc-ecosystem/grpc-gateway/runtime
+github.com/grpc-ecosystem/grpc-gateway/utilities
+github.com/grpc-ecosystem/grpc-gateway/runtime/internal
+# github.com/guregu/null v0.0.0-20160228005316-41961cea0328
+github.com/guregu/null/zero
+# github.com/hashicorp/golang-lru v0.0.0-20160813221303-0a025b7e63ad
+github.com/hashicorp/golang-lru
+github.com/hashicorp/golang-lru/simplelru
+# github.com/julienschmidt/httprouter v0.0.0-20150421170007-8c199fb6259f
+github.com/julienschmidt/httprouter
+# github.com/lib/pq v0.0.0-20170603225454-8837942c3e09
+github.com/lib/pq
+github.com/lib/pq/oid
+# github.com/matttproud/golang_protobuf_extensions v1.0.1
+github.com/matttproud/golang_protobuf_extensions/pbutil
+# github.com/pborman/uuid v0.0.0-20160209185913-a97ce2ca70fa
+github.com/pborman/uuid
+# github.com/pmezard/go-difflib v0.0.0-20151028094244-d8ed2627bdf0
+github.com/pmezard/go-difflib/difflib
+# github.com/prometheus/client_golang v0.8.0
+github.com/prometheus/client_golang/prometheus
+# github.com/prometheus/client_model v0.0.0-20170216185247-6f3806018612
+github.com/prometheus/client_model/go
+# github.com/prometheus/common v0.0.0-20170427095455-13ba4ddd0caa
+github.com/prometheus/common/expfmt
+github.com/prometheus/common/model
+github.com/prometheus/common/internal/bitbucket.org/ww/goautoneg
+# github.com/prometheus/procfs v0.0.0-20170519190837-65c1f6f8f0fc
+github.com/prometheus/procfs
+github.com/prometheus/procfs/xfs
+# github.com/remind101/migrate v0.0.0-20160423010909-d22d647232c2
+github.com/remind101/migrate
+# github.com/sirupsen/logrus v0.11.5
+github.com/sirupsen/logrus
+# github.com/stretchr/testify v1.1.4
+github.com/stretchr/testify/assert
+# github.com/tylerb/graceful v1.2.15
+github.com/tylerb/graceful
+# golang.org/x/net v0.0.0-20170605033737-59a0b19b5533
+golang.org/x/net/context
+golang.org/x/net/http2
+golang.org/x/net/http2/hpack
+golang.org/x/net/trace
+golang.org/x/net/idna
+golang.org/x/net/lex/httplex
+golang.org/x/net/internal/timeseries
+# golang.org/x/sys v0.0.0-20170529185110-b90f89a1e7a9
+golang.org/x/sys/unix
+# golang.org/x/text v0.0.0-20170603003618-ccbd3f782212
+golang.org/x/text/secure/bidirule
+golang.org/x/text/unicode/norm
+golang.org/x/text/transform
+golang.org/x/text/unicode/bidi
+# google.golang.org/genproto v0.0.0-20170531203552-aa2eb687b4d3
+google.golang.org/genproto/googleapis/api/annotations
+google.golang.org/genproto/googleapis/rpc/status
+# google.golang.org/grpc v0.0.0-20170605172541-8de2dff78c3b
+google.golang.org/grpc
+google.golang.org/grpc/codes
+google.golang.org/grpc/credentials
+google.golang.org/grpc/status
+google.golang.org/grpc/grpclog
+google.golang.org/grpc/metadata
+google.golang.org/grpc/grpclb/grpc_lb_v1
+google.golang.org/grpc/internal
+google.golang.org/grpc/keepalive
+google.golang.org/grpc/naming
+google.golang.org/grpc/peer
+google.golang.org/grpc/stats
+google.golang.org/grpc/tap
+google.golang.org/grpc/transport
+# gopkg.in/yaml.v2 v2.0.0-20170407172122-cd8b52f8269e
+gopkg.in/yaml.v2
