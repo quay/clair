@@ -57,6 +57,7 @@
         "parameters": [
           {
             "name": "ancestry_name",
+            "description": "The name of the desired ancestry.",
             "in": "path",
             "required": true,
             "type": "string"
@@ -85,7 +86,7 @@
     },
     "/notifications/{name}": {
       "get": {
-        "summary": "The RPC used to get a particularly Notification.",
+        "summary": "The RPC used to read the results of scanning for a particular ancestry.",
         "operationId": "GetNotification",
         "responses": {
           "200": {
@@ -98,6 +99,7 @@
         "parameters": [
           {
             "name": "name",
+            "description": "The name of the notification being requested.",
             "in": "path",
             "required": true,
             "type": "string"
@@ -130,7 +132,7 @@
         ]
       },
       "delete": {
-        "summary": "The RPC used to mark a Notification as read after it has been processed.",
+        "summary": "The RPC used to create a new scan of an ancestry.",
         "operationId": "MarkNotificationAsRead",
         "responses": {
           "200": {
@@ -143,6 +145,7 @@
         "parameters": [
           {
             "name": "name",
+            "description": "The name of the Notification that has been processed.",
             "in": "path",
             "required": true,
             "type": "string"

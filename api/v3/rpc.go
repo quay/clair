@@ -17,7 +17,7 @@ package v3
 import (
 	"fmt"
 
-	"github.com/golang/protobuf/ptypes"
+	"github.com/gogo/protobuf/types"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -104,7 +104,7 @@ func (s *AncestryServer) getClairStatus() (*pb.ClairStatus, error) {
 		return status, nil
 	}
 
-	status.LastUpdateTime, err = ptypes.TimestampProto(t)
+	status.LastUpdateTime, err = types.TimestampProto(t)
 	if err != nil {
 		return nil, err
 	}
