@@ -47,6 +47,9 @@ type Updater interface {
 	// Update gets vulnerability updates.
 	Update(database.Datastore) (UpdateResponse, error)
 
+	//Set the URL to retrieve vulnerabilties
+	SetURL(string)
+
 	// Clean deletes any allocated resources.
 	// It is invoked when Clair stops.
 	Clean()

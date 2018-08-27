@@ -40,7 +40,7 @@ const (
 	firstRHEL5RHSA      = 20070044
 	firstConsideredRHEL = 5
 
-	ovalURI        = "https://www.redhat.com/security/data/oval/"
+	defaultOvalURI = "https://www.redhat.com/security/data/oval/"
 	rhsaFilePrefix = "com.redhat.rhsa-"
 	updaterFlag    = "rhelUpdater"
 )
@@ -82,10 +82,16 @@ type criterion struct {
 	Comment string `xml:"comment,attr"`
 }
 
-type updater struct{}
+type updater struct {
+	ovalURI string
+}
 
 func init() {
-	vulnsrc.RegisterUpdater("rhel", &updater{})
+	vulnsrc.RegisterUpdater("rhel", &updater{ovalURI: defaultOvalURI})
+}
+
+func (u *updater) SetURL(url string) {
+	u.ovalURI = url
 }
 
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
@@ -116,7 +122,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	}
 
 	// Fetch the update list.
-	r, err := http.Get(ovalURI)
+	r, err := http.Get(u.ovalURI)
 	if err != nil {
 		log.WithError(err).Error("could not download RHEL's update list")
 		return resp, commonerr.ErrCouldNotDownload
@@ -138,7 +144,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 
 	for _, rhsa := range rhsaList {
 		// Download the RHSA's XML file.
-		r, err := http.Get(ovalURI + rhsaFilePrefix + strconv.Itoa(rhsa) + ".xml")
+		r, err := http.Get(u.ovalURI + rhsaFilePrefix + strconv.Itoa(rhsa) + ".xml")
 		if err != nil {
 			log.WithError(err).Error("could not download RHEL's update list")
 			return resp, commonerr.ErrCouldNotDownload

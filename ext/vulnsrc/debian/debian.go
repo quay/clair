@@ -35,7 +35,7 @@ import (
 )
 
 const (
-	url          = "https://security-tracker.debian.org/tracker/data/json"
+	defaultURL   = "https://security-tracker.debian.org/tracker/data/json"
 	cveURLPrefix = "https://security-tracker.debian.org/tracker"
 	updaterFlag  = "debianUpdater"
 )
@@ -53,10 +53,16 @@ type jsonRel struct {
 	Urgency      string `json:"urgency"`
 }
 
-type updater struct{}
+type updater struct {
+	url string
+}
 
 func init() {
-	vulnsrc.RegisterUpdater("debian", &updater{})
+	vulnsrc.RegisterUpdater("debian", &updater{url: defaultURL})
+}
+
+func (u *updater) SetURL(url string) {
+	u.url = url
 }
 
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
@@ -84,7 +90,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	}
 
 	// Download JSON.
-	r, err := http.Get(url)
+	r, err := http.Get(u.url)
 	if err != nil {
 		log.WithError(err).Error("could not download Debian's update")
 		return resp, commonerr.ErrCouldNotDownload

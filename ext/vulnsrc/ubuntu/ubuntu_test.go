@@ -34,7 +34,8 @@ func TestUbuntuParser(t *testing.T) {
 	// Test parsing testdata/fetcher_
 	testData, _ := os.Open(path + "/testdata/fetcher_ubuntu_test.txt")
 	defer testData.Close()
-	vulnerability, unknownReleases, err := parseUbuntuCVE(testData)
+	updater := updater{trackerURI: defaultTrackerURI}
+	vulnerability, unknownReleases, err := updater.parseUbuntuCVE(testData)
 	if assert.Nil(t, err) {
 		assert.Equal(t, "CVE-2015-4471", vulnerability.Name)
 		assert.Equal(t, database.MediumSeverity, vulnerability.Severity)

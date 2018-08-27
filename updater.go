@@ -17,6 +17,7 @@ package clair
 import (
 	"fmt"
 	"math/rand"
+	"net/url"
 	"strconv"
 	"sync"
 	"time"
@@ -56,7 +57,7 @@ var (
 	})
 
 	// EnabledUpdaters contains all updaters to be used for update.
-	EnabledUpdaters []string
+	EnabledUpdaters map[string]string
 )
 
 func init() {
@@ -67,7 +68,7 @@ func init() {
 
 // UpdaterConfig is the configuration for the Updater service.
 type UpdaterConfig struct {
-	EnabledUpdaters []string
+	EnabledUpdaters map[string]string
 	Interval        time.Duration
 }
 
@@ -85,6 +86,16 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 	if config == nil || config.Interval == 0 || len(config.EnabledUpdaters) == 0 {
 		log.Info("updater service is disabled.")
 		return
+	}
+
+	for name, updater := range vulnsrc.Updaters() {
+		if updaterURL, ok := EnabledUpdaters[name]; ok && updaterURL != "" {
+			if _, err := url.ParseRequestURI(updaterURL); err != nil {
+				log.WithField("updater name", name).Fatalf("'%s' us an invalid url", updaterURL)
+			}
+			updater.SetURL(updaterURL)
+			log.WithField("updater name", name).Infof("Vulnerability source was changed to '%s'", updaterURL)
+		}
 	}
 
 	whoAmI := uuid.New()
@@ -689,10 +700,6 @@ func updateVulnerabilities(datastore database.Datastore, vulnerabilities []datab
 }
 
 func updaterEnabled(updaterName string) bool {
-	for _, u := range EnabledUpdaters {
-		if u == updaterName {
-			return true
-		}
-	}
-	return false
+	_, found := EnabledUpdaters[updaterName]
+	return found
 }

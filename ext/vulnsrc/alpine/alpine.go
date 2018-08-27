@@ -35,17 +35,22 @@ import (
 )
 
 const (
-	secdbGitURL  = "https://git.alpinelinux.org/cgit/alpine-secdb"
-	updaterFlag  = "alpine-secdbUpdater"
-	nvdURLPrefix = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
+	defaultSecdbGitURL = "https://git.alpinelinux.org/cgit/alpine-secdb"
+	updaterFlag        = "alpine-secdbUpdater"
+	nvdURLPrefix       = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
 )
 
 func init() {
-	vulnsrc.RegisterUpdater("alpine", &updater{})
+	vulnsrc.RegisterUpdater("alpine", &updater{secdbGitURL: defaultSecdbGitURL})
 }
 
 type updater struct {
 	repositoryLocalPath string
+	secdbGitURL         string
+}
+
+func (u *updater) SetURL(url string) {
+	u.secdbGitURL = url
 }
 
 func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
@@ -190,7 +195,7 @@ func (u *updater) pullRepository() (commit string, err error) {
 			return "", vulnsrc.ErrFilesystem
 		}
 
-		cmd := exec.Command("git", "clone", secdbGitURL, ".")
+		cmd := exec.Command("git", "clone", u.secdbGitURL, ".")
 		cmd.Dir = u.repositoryLocalPath
 		if out, err := cmd.CombinedOutput(); err != nil {
 			u.Clean()
