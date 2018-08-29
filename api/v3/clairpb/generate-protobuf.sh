@@ -18,11 +18,12 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-DOCKER_REPO_ROOT="$GOPATH/src/github.com/coreos/clair"
+REPO_ROOT="$GOPATH/src/github.com/coreos/clair"
 IMAGE=${IMAGE:-"quay.io/coreos/clair-gen-proto"}
+WORKDIR=${WORKDIR:-"/go/src/github.com/coreos/clair"}
 
 docker run --rm -it \
-  -v "$DOCKER_REPO_ROOT":"$DOCKER_REPO_ROOT" \
-  -w "$DOCKER_REPO_ROOT" \
+  -v "$REPO_ROOT":"$WORKDIR" \
+  -w "$WORKDIR" \
   "$IMAGE" \
-  "./api/v3/clairpb/run_in_docker.sh"
+  "$WORKDIR/api/v3/clairpb/run_in_docker.sh"

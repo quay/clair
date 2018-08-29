@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # Copyright 2018 clair authors
 #
@@ -18,22 +18,29 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-protoc -I/usr/include -I. \
-  -I"${GOPATH}/src" \
-  -I"${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis" \
-  --go_out=plugins=grpc:. \
-  ./api/v3/clairpb/clair.proto
-
-protoc -I/usr/include -I. \
-  -I"${GOPATH}/src" \
-  -I"${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis" \
-  --grpc-gateway_out=logtostderr=true:. \
-  ./api/v3/clairpb/clair.proto
-
-protoc -I/usr/include -I. \
-  -I"${GOPATH}/src" \
-  -I"${GOPATH}/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis" \
-  --swagger_out=logtostderr=true:. \
-  ./api/v3/clairpb/clair.proto
+protoc \
+        -I $GOPATH/src/github.com/coreos/clair \
+        -I $GOPATH/src/github.com/grpc-ecosystem/grpc-gateway/ \
+        -I $GOPATH/src/github.com/gogo/googleapis \
+        --gogoslick_out=plugins=grpc,\
+Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
+Mgoogle/protobuf/empty.proto=github.com/gogo/protobuf/types,\
+Mgoogle/api/annotations.proto=github.com/gogo/googleapis/google/api,\
+Mgoogle/protobuf/field_mask.proto=github.com/gogo/protobuf/types:\
+. \
+        --grpc-gateway_out=logtostderr=true,\
+Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
+Mgoogle/protobuf/empty.proto=github.com/gogo/protobuf/types,\
+Mgoogle/api/annotations.proto=github.com/gogo/googleapis/google/api,\
+Mgoogle/protobuf/field_mask.proto=github.com/gogo/protobuf/types:\
+. \
+        --swagger_out=logtostderr=true:. \
+        --govalidators_out=gogoimport=true,\
+Mgoogle/protobuf/timestamp.proto=github.com/gogo/protobuf/types,\
+Mgoogle/protobuf/empty.proto=github.com/gogo/protobuf/types,\
+Mgoogle/api/annotations.proto=github.com/gogo/googleapis/google/api,\
+Mgoogle/protobuf/field_mask.proto=github.com/gogo/protobuf/types:\
+.\
+        /go/src/github.com/coreos/clair/api/v3/clairpb/clair.proto
 
 go generate .
