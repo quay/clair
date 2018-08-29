@@ -35,7 +35,7 @@ import (
 )
 
 const (
-	defaultSecdbGitURL = "https://git.alpinelinux.org/cgit/alpine-secdb"
+	defaultSecdbGitURL = "https://github.com/alpinelinux/alpine-secdb"
 	updaterFlag        = "alpine-secdbUpdater"
 	nvdURLPrefix       = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
 )
