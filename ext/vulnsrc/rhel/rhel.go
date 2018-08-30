@@ -122,6 +122,11 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		return resp, commonerr.ErrCouldNotDownload
 	}
 
+	if r.StatusCode != http.StatusOK {
+		log.WithField("StatusCode", r.StatusCode).Error("could not download Red Hat's oval data")
+		return resp, commonerr.ErrCouldNotDownload
+	}
+
 	// Get the list of RHSAs that we have to process.
 	var rhsaList []int
 	scanner := bufio.NewScanner(r.Body)
@@ -142,6 +147,13 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		if err != nil {
 			log.WithError(err).Error("could not download RHEL's update list")
 			return resp, commonerr.ErrCouldNotDownload
+		}
+		if r.StatusCode != http.StatusOK {
+			log.WithFields(log.Fields{
+				"Advisory":   rhsaFilePrefix + strconv.Itoa(rhsa),
+				"StatusCode": r.StatusCode,
+			}).Debug("could not download Red Hat's advisory")
+			continue
 		}
 
 		// Parse the XML.
