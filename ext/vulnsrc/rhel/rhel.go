@@ -21,7 +21,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -33,6 +32,7 @@ import (
 	"github.com/coreos/clair/ext/versionfmt/rpm"
 	"github.com/coreos/clair/ext/vulnsrc"
 	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/coreos/clair/pkg/httputil"
 )
 
 const (
@@ -101,9 +101,15 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	}
 
 	// Fetch the update list.
-	r, err := http.Get(ovalURI)
+	r, err := httputil.GetWithUserAgent(ovalURI)
 	if err != nil {
 		log.WithError(err).Error("could not download RHEL's update list")
+		return resp, commonerr.ErrCouldNotDownload
+	}
+	defer r.Body.Close()
+
+	if !httputil.Status2xx(r) {
+		log.WithField("StatusCode", r.StatusCode).Error("Failed to update RHEL")
 		return resp, commonerr.ErrCouldNotDownload
 	}
 
@@ -123,9 +129,15 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 
 	for _, rhsa := range rhsaList {
 		// Download the RHSA's XML file.
-		r, err := http.Get(ovalURI + rhsaFilePrefix + strconv.Itoa(rhsa) + ".xml")
+		r, err := httputil.GetWithUserAgent(ovalURI + rhsaFilePrefix + strconv.Itoa(rhsa) + ".xml")
 		if err != nil {
 			log.WithError(err).Error("could not download RHEL's update list")
+			return resp, commonerr.ErrCouldNotDownload
+		}
+		defer r.Body.Close()
+
+		if !httputil.Status2xx(r) {
+			log.WithField("StatusCode", r.StatusCode).Error("Failed to update RHEL")
 			return resp, commonerr.ErrCouldNotDownload
 		}
 

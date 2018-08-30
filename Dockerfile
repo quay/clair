@@ -21,7 +21,8 @@ ADD .   /go/src/github.com/coreos/clair/
 WORKDIR /go/src/github.com/coreos/clair/
 
 RUN apk add --no-cache git rpm xz && \
-    go install -v github.com/coreos/clair/cmd/clair && \
+    export CLAIR_VERSION=$(git describe --always --tags --dirty) && \
+    go install -ldflags "-X github.com/coreos/clair/pkg/version.Version=$CLAIR_VERSION" -v github.com/coreos/clair/cmd/clair && \
     mv /go/bin/clair /clair && \
     rm -rf /go /usr/local/go
 
