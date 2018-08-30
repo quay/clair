@@ -69,16 +69,17 @@ func newGrpcServer(store database.Datastore, tlsConfig *tls.Config) *grpc.Server
 	grpcServer := grpc.NewServer(grpcOpts...)
 	pb.RegisterAncestryServiceServer(grpcServer, &AncestryServer{Store: store})
 	pb.RegisterNotificationServiceServer(grpcServer, &NotificationServer{Store: store})
+	pb.RegisterStatusServiceServer(grpcServer, &StatusServer{Store: store})
 	return grpcServer
 }
 
-type httpStatusWritter struct {
+type httpStatusWriter struct {
 	http.ResponseWriter
 
 	StatusCode int
 }
 
-func (w *httpStatusWritter) WriteHeader(code int) {
+func (w *httpStatusWriter) WriteHeader(code int) {
 	w.StatusCode = code
 	w.ResponseWriter.WriteHeader(code)
 }
@@ -87,7 +88,7 @@ func (w *httpStatusWritter) WriteHeader(code int) {
 func logHandler(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
-		lrw := &httpStatusWritter{ResponseWriter: w, StatusCode: http.StatusOK}
+		lrw := &httpStatusWriter{ResponseWriter: w, StatusCode: http.StatusOK}
 
 		handler.ServeHTTP(lrw, r)
 
@@ -137,6 +138,11 @@ func newGrpcGatewayServer(ctx context.Context, listenerAddr string, tlsConfig *t
 	err = pb.RegisterNotificationServiceHandler(ctx, gwmux, conn)
 	if err != nil {
 		log.WithError(err).Fatal("could not initialize notification grpc gateway")
+	}
+
+	err = pb.RegisterStatusServiceHandler(ctx, gwmux, conn)
+	if err != nil {
+		log.WithError(err).Fatal("could not initialize status grpc gateway")
 	}
 
 	return logHandler(gwmux)

@@ -207,3 +207,17 @@ message MarkNotificationAsReadRequest {
 }
 
 message MarkNotificationAsReadResponse {}
+
+message GetStatusRequest {}
+
+message GetStatusResponse {
+  // The status of the current Clair instance.
+  ClairStatus status = 1;
+}
+
+service StatusService {
+  // The RPC used to show the internal state of current Clair instance.
+  rpc GetStatus(GetStatusRequest) returns (GetStatusResponse) {
+    option (google.api.http) = { get: "/status" };
+  }
+}
