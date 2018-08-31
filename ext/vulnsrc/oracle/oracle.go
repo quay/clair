@@ -144,6 +144,10 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		log.WithError(err).Error("could not download Oracle's update list")
 		return resp, commonerr.ErrCouldNotDownload
 	}
+	if r.StatusCode != http.StatusOK {
+		log.WithField("StatusCode", r.StatusCode).Error("could not download Oracle's update list")
+		return resp, commonerr.ErrCouldNotDownload
+	}
 	defer r.Body.Close()
 
 	// Get the list of ELSAs that we have to process.
@@ -166,6 +170,13 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		if err != nil {
 			log.WithError(err).Error("could not download Oracle's update list")
 			return resp, commonerr.ErrCouldNotDownload
+		}
+		if r.StatusCode != http.StatusOK {
+			log.WithFields(log.Fields{
+				"Elsa":       elsaFilePrefix + strconv.Itoa(elsa),
+				"StatusCode": r.StatusCode,
+			}).Debug("could not download Oracle's elsa")
+			continue
 		}
 
 		// Parse the XML.
