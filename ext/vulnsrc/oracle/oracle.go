@@ -38,7 +38,7 @@ import (
 
 const (
 	firstOracle5ELSA = 20070057
-	ovalURI          = "https://linux.oracle.com/oval/"
+	defaultOvalURI   = "https://linux.oracle.com/oval/"
 	elsaFilePrefix   = "com.oracle.elsa-"
 	updaterFlag      = "oracleUpdater"
 )
@@ -79,12 +79,16 @@ type criterion struct {
 	Comment string `xml:"comment,attr"`
 }
 
-type updater struct{}
-
-func init() {
-	vulnsrc.RegisterUpdater("oracle", &updater{})
+type updater struct {
+	ovalURI string
 }
 
+func init() {
+	vulnsrc.RegisterUpdater("oracle", &updater{ovalURI: defaultOvalURI})
+}
+func (u *updater) SetURL(url string) {
+	u.ovalURI = url
+}
 func compareELSA(left, right int) int {
 	// Fast path equals.
 	if right == left {
@@ -139,7 +143,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	}
 
 	// Fetch the update list.
-	r, err := http.Get(ovalURI)
+	r, err := http.Get(u.ovalURI)
 	if err != nil {
 		log.WithError(err).Error("could not download Oracle's update list")
 		return resp, commonerr.ErrCouldNotDownload
@@ -162,7 +166,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 
 	for _, elsa := range elsaList {
 		// Download the ELSA's XML file.
-		r, err := http.Get(ovalURI + elsaFilePrefix + strconv.Itoa(elsa) + ".xml")
+		r, err := http.Get(u.ovalURI + elsaFilePrefix + strconv.Itoa(elsa) + ".xml")
 		if err != nil {
 			log.WithError(err).Error("could not download Oracle's update list")
 			return resp, commonerr.ErrCouldNotDownload

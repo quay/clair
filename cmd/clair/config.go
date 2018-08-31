@@ -54,12 +54,19 @@ type Config struct {
 
 // DefaultConfig is a configuration that can be used as a fallback value.
 func DefaultConfig() Config {
+	var updaterMap map[string]string
+	updaters := vulnsrc.ListUpdaters()
+	updaterMap = make(map[string]string)
+	for _, updaterName := range updaters {
+		updaterMap[updaterName] = ""
+	}
+
 	return Config{
 		Database: database.RegistrableComponentConfig{
 			Type: "pgsql",
 		},
 		Updater: &clair.UpdaterConfig{
-			EnabledUpdaters: vulnsrc.ListUpdaters(),
+			EnabledUpdaters: updaterMap,
 			Interval:        1 * time.Hour,
 		},
 		Worker: &clair.WorkerConfig{

@@ -37,9 +37,9 @@ import (
 )
 
 const (
-	trackerURI  = "https://git.launchpad.net/ubuntu-cve-tracker"
-	updaterFlag = "ubuntuUpdater"
-	cveURL      = "http://people.ubuntu.com/~ubuntu-security/cve/%s"
+	defaultTrackerURI = "https://git.launchpad.net/ubuntu-cve-tracker"
+	updaterFlag       = "ubuntuUpdater"
+	cveURL            = "http://people.ubuntu.com/~ubuntu-security/cve/%s"
 )
 
 var (
@@ -78,10 +78,15 @@ var (
 
 type updater struct {
 	repositoryLocalPath string
+	trackerURI          string
 }
 
 func init() {
-	vulnsrc.RegisterUpdater("ubuntu", &updater{})
+	vulnsrc.RegisterUpdater("ubuntu", &updater{trackerURI: defaultTrackerURI})
+}
+
+func (u *updater) SetURL(url string) {
+	u.trackerURI = url
 }
 
 func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
@@ -130,7 +135,7 @@ func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, er
 	}
 
 	// Get the list of vulnerabilities.
-	resp.Vulnerabilities, resp.Notes, err = collectVulnerabilitiesAndNotes(u.repositoryLocalPath, modifiedCVE)
+	resp.Vulnerabilities, resp.Notes, err = u.collectVulnerabilitiesAndNotes(u.repositoryLocalPath, modifiedCVE)
 	if err != nil {
 		return
 	}
@@ -157,7 +162,7 @@ func (u *updater) pullRepository() (commit string, err error) {
 		if u.repositoryLocalPath, err = ioutil.TempDir(os.TempDir(), "ubuntu-cve-tracker"); err != nil {
 			return "", vulnsrc.ErrFilesystem
 		}
-		cmd := exec.Command("git", "clone", trackerURI, ".")
+		cmd := exec.Command("git", "clone", u.trackerURI, ".")
 		cmd.Dir = u.repositoryLocalPath
 		if out, err := cmd.CombinedOutput(); err != nil {
 			u.Clean()
@@ -220,7 +225,7 @@ func processDirectory(repositoryLocalPath, dirName string, modifiedCVE map[strin
 	return nil
 }
 
-func collectVulnerabilitiesAndNotes(repositoryLocalPath string, modifiedCVE map[string]struct{}) ([]database.VulnerabilityWithAffected, []string, error) {
+func (u *updater) collectVulnerabilitiesAndNotes(repositoryLocalPath string, modifiedCVE map[string]struct{}) ([]database.VulnerabilityWithAffected, []string, error) {
 	vulns := make([]database.VulnerabilityWithAffected, 0)
 	noteSet := make(map[string]struct{})
 
@@ -233,7 +238,7 @@ func collectVulnerabilitiesAndNotes(repositoryLocalPath string, modifiedCVE map[
 		}
 
 		// Parse the vulnerability.
-		v, unknownReleases, err := parseUbuntuCVE(file)
+		v, unknownReleases, err := u.parseUbuntuCVE(file)
 		if err != nil {
 			file.Close()
 			return nil, nil, err
@@ -259,7 +264,7 @@ func collectVulnerabilitiesAndNotes(repositoryLocalPath string, modifiedCVE map[
 	return vulns, notes, nil
 }
 
-func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.VulnerabilityWithAffected, unknownReleases map[string]struct{}, err error) {
+func (u *updater) parseUbuntuCVE(fileContent io.Reader) (vulnerability database.VulnerabilityWithAffected, unknownReleases map[string]struct{}, err error) {
 	unknownReleases = make(map[string]struct{})
 	readingDescription := false
 	scanner := bufio.NewScanner(fileContent)
@@ -388,7 +393,7 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 
 	// If no link has been provided (CVE-2006-NNN0 for instance), add the link to the tracker
 	if vulnerability.Link == "" {
-		vulnerability.Link = trackerURI
+		vulnerability.Link = u.trackerURI
 	}
 
 	// If no priority has been provided (CVE-2007-0667 for instance), set the priority to Unknown

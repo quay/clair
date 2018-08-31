@@ -104,8 +104,15 @@ func configClairVersion(config *Config) {
 
 	unregDetectors := strutil.CompareStringLists(config.Worker.EnabledDetectors, detectors)
 	unregListers := strutil.CompareStringLists(config.Worker.EnabledListers, listers)
-	unregUpdaters := strutil.CompareStringLists(config.Updater.EnabledUpdaters, updaters)
+
+	var enabledUpdater []string
+	for name := range config.Updater.EnabledUpdaters {
+		enabledUpdater = append(enabledUpdater, name)
+	}
+	unregUpdaters := strutil.CompareStringLists(enabledUpdater, updaters)
+
 	if len(unregDetectors) != 0 || len(unregListers) != 0 || len(unregUpdaters) != 0 {
+
 		log.WithFields(log.Fields{
 			"Unknown Detectors":   strings.Join(unregDetectors, ","),
 			"Unknown Listers":     strings.Join(unregListers, ","),
@@ -125,7 +132,7 @@ func configClairVersion(config *Config) {
 		Listers:   strutil.CompareStringListsInBoth(config.Worker.EnabledListers, listers),
 	}
 
-	clair.EnabledUpdaters = strutil.CompareStringListsInBoth(config.Updater.EnabledUpdaters, updaters)
+	clair.EnabledUpdaters = config.Updater.EnabledUpdaters
 }
 
 // Boot starts Clair instance with the provided config.
