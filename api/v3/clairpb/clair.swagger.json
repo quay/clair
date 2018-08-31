@@ -152,6 +152,31 @@
           "NotificationService"
         ]
       }
+    },
+    "/status": {
+      "get": {
+        "summary": "The RPC used to show the internal state of current Clair instance.",
+        "operationId": "GetStatus",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/clairGetStatusResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "test",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "StatusService"
+        ]
+      }
     }
   },
   "definitions": {
@@ -326,6 +351,15 @@
         "notification": {
           "$ref": "#/definitions/GetNotificationResponseNotification",
           "description": "The notification as requested."
+        }
+      }
+    },
+    "clairGetStatusResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "$ref": "#/definitions/clairClairStatus",
+          "description": "The status of the current Clair instance."
         }
       }
     },
