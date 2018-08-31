@@ -54,6 +54,7 @@ var (
 	}
 
 	rhsaRegexp = regexp.MustCompile(`com.redhat.rhsa-(\d+).xml`)
+	idRegexp   = regexp.MustCompile(`oval:com.redhat.rhsa:def:(\d+)`)
 )
 
 type oval struct {
@@ -61,6 +62,7 @@ type oval struct {
 }
 
 type definition struct {
+	ID          string      `xml:"id,attr"`
 	Title       string      `xml:"metadata>title"`
 	Description string      `xml:"metadata>description"`
 	References  []reference `xml:"metadata>reference"`
@@ -82,7 +84,10 @@ type criterion struct {
 	Comment string `xml:"comment,attr"`
 }
 
-type updater struct{}
+type updater struct {
+	FirstRHSA int
+	LastRHSA  int
+}
 
 func init() {
 	vulnsrc.RegisterUpdater("rhel", &updater{})
@@ -112,11 +117,62 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 
 	firstRHSA, err := strconv.Atoi(flagValue)
 	if firstRHSA == 0 || err != nil {
-		firstRHSA = firstRHEL5RHSA
+		u.FirstRHSA = firstRHEL5RHSA
+		return u.FetchAll()
 	}
+	u.FirstRHSA = firstRHSA
+
+	return u.FetchEach()
+
+}
+
+func (u *updater) FetchAll() (resp vulnsrc.UpdateResponse, err error) {
+	log.WithField("package", "RHEL").Infof("Download %sall.xml", rhsaFilePrefix)
+	// Download the RHSA's XML file.
+	r, err := http.Get(ovalURI + rhsaFilePrefix + "all.xml")
+	if r.StatusCode == 404 {
+		log.WithField("package", "RHEL").Warnf("%sall.xml not found, try fetch each xml", rhsaFilePrefix)
+		return u.FetchEach()
+	}
+	if err != nil {
+		log.WithField("package", "RHEL").WithError(err).Error("could not download RHEL's update list")
+		return resp, commonerr.ErrCouldNotDownload
+	}
+	if r.StatusCode != 200 {
+		log.WithField("package", "RHEL").Error("repsonse status code isn't 200")
+		return resp, commonerr.ErrCouldNotDownload
+	}
+	defer r.Body.Close()
+
+	log.WithField("package", "RHEL").Infof("Parse %sall.xml", rhsaFilePrefix)
+	// Parse the XML.
+	vs, err := parseRHSA(r.Body, u)
+	if err != nil {
+		return resp, err
+	}
+
+	log.WithField("package", "RHEL").Infof("Total %d Vulnerabilities in %sall.xml", len(vs), rhsaFilePrefix)
+	// Collect vulnerabilities.
+	for _, v := range vs {
+		resp.Vulnerabilities = append(resp.Vulnerabilities, v)
+	}
+
+	// Set the flag if we found anything.
+
+	resp.FlagName = updaterFlag
+	resp.FlagValue = strconv.Itoa(u.LastRHSA)
+
+	return resp, nil
+}
+
+func (u *updater) FetchEach() (resp vulnsrc.UpdateResponse, err error) {
 
 	// Fetch the update list.
 	r, err := http.Get(ovalURI)
+	if r.StatusCode != 200 {
+		log.WithField("package", "RHEL").Error("repsonse status code isn't 200")
+		return resp, commonerr.ErrCouldNotDownload
+	}
 	if err != nil {
 		log.WithError(err).Error("could not download RHEL's update list")
 		return resp, commonerr.ErrCouldNotDownload
@@ -130,7 +186,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		r := rhsaRegexp.FindStringSubmatch(line)
 		if len(r) == 2 {
 			rhsaNo, _ := strconv.Atoi(r[1])
-			if rhsaNo > firstRHSA {
+			if rhsaNo > u.FirstRHSA {
 				rhsaList = append(rhsaList, rhsaNo)
 			}
 		}
@@ -169,7 +225,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 
 func (u *updater) Clean() {}
 
-func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWithAffected, err error) {
+func parseRHSA(ovalReader io.Reader, updater ...*updater) (vulnerabilities []database.VulnerabilityWithAffected, err error) {
 	// Decode the XML.
 	var ov oval
 	err = xml.NewDecoder(ovalReader).Decode(&ov)
@@ -179,9 +235,29 @@ func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWi
 		return
 	}
 
+	var (
+		isFetchAll          bool
+		firstRHSA, lastRHSA int
+	)
+
+	if len(updater) > 0 {
+		isFetchAll = true
+		firstRHSA = updater[0].FirstRHSA
+	}
+
 	// Iterate over the definitions and collect any vulnerabilities that affect
 	// at least one package.
 	for _, definition := range ov.Definitions {
+		if isFetchAll {
+			r := idRegexp.FindStringSubmatch(definition.ID)
+			if len(r) == 2 {
+				rhsaNo, _ := strconv.Atoi(r[1])
+				if rhsaNo <= firstRHSA {
+					continue
+				}
+				lastRHSA = rhsaNo
+			}
+		}
 		pkgs := toFeatures(definition.Criteria)
 		if len(pkgs) > 0 {
 			vulnerability := database.VulnerabilityWithAffected{
@@ -197,6 +273,9 @@ func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWi
 			}
 			vulnerabilities = append(vulnerabilities, vulnerability)
 		}
+	}
+	if isFetchAll {
+		updater[0].LastRHSA = lastRHSA
 	}
 
 	return

@@ -20,7 +20,11 @@ import (
 	"bufio"
 	"encoding/xml"
 	"io"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -39,6 +43,7 @@ import (
 const (
 	firstOracle5ELSA = 20070057
 	ovalURI          = "https://linux.oracle.com/oval/"
+	ovalAllURI       = "https://linux.oracle.com/security/oval/"
 	elsaFilePrefix   = "com.oracle.elsa-"
 	updaterFlag      = "oracleUpdater"
 )
@@ -50,6 +55,7 @@ var (
 	}
 
 	elsaRegexp = regexp.MustCompile(`com.oracle.elsa-(\d+).xml`)
+	idRegexp   = regexp.MustCompile(`oval:com.oracle.elsa:def:(\d+)`)
 )
 
 type oval struct {
@@ -57,6 +63,7 @@ type oval struct {
 }
 
 type definition struct {
+	ID          string      `xml:"id,attr"`
 	Title       string      `xml:"metadata>title"`
 	Description string      `xml:"metadata>description"`
 	References  []reference `xml:"metadata>reference"`
@@ -79,7 +86,11 @@ type criterion struct {
 	Comment string `xml:"comment,attr"`
 }
 
-type updater struct{}
+type updater struct {
+	FirstELSA     int
+	LastELSA      int
+	ELSALocalPath string
+}
 
 func init() {
 	vulnsrc.RegisterUpdater("oracle", &updater{})
@@ -135,9 +146,86 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 
 	firstELSA, err := strconv.Atoi(flagValue)
 	if firstELSA == 0 || err != nil {
-		firstELSA = firstOracle5ELSA
+		u.FirstELSA = firstOracle5ELSA
+		return u.FetchAll()
+	}
+	u.FirstELSA = firstELSA
+
+	return u.FetchEach()
+
+}
+func (u *updater) FetchAll() (resp vulnsrc.UpdateResponse, err error) {
+	log.WithField("package", "Oracle Linux").Infof("Download %sall.xml.bz2", elsaFilePrefix)
+	// Download the ELSA's bz2 xml file.
+	r, err := http.Get(ovalAllURI + elsaFilePrefix + "all.xml.bz2")
+	if r.StatusCode == 404 {
+		log.WithField("package", "Oracle Linux").Warnf("%sall.xml.bz2 not found, try fetch each xml", elsaFilePrefix)
+		return u.FetchEach()
+	}
+	if err != nil {
+		log.WithError(err).Error("could not download ELSA's update list")
+		return resp, commonerr.ErrCouldNotDownload
+	}
+	if r.StatusCode != 200 {
+		log.WithField("package", "Oracle Linux").Error("repsonse status code isn't 200")
+		return resp, commonerr.ErrCouldNotDownload
+	}
+	defer r.Body.Close()
+
+	log.WithField("package", "Oracle Linux").Infof("Parse %sall.xml.bz2", elsaFilePrefix)
+	// Create the XML
+	u.ELSALocalPath, err = ioutil.TempDir(os.TempDir(), "oracle-oval")
+	if err != nil {
+		return resp, vulnsrc.ErrFilesystem
 	}
 
+	out, err := os.Create(filepath.Join(u.ELSALocalPath, elsaFilePrefix+"all.xml.bz2"))
+	if err != nil {
+		return resp, vulnsrc.ErrFilesystem
+	}
+	defer out.Close()
+
+	// Write the body to file
+	_, err = io.Copy(out, r.Body)
+	if err != nil {
+		return resp, vulnsrc.ErrFilesystem
+	}
+
+	cmd := exec.Command("bunzip2", elsaFilePrefix+"all.xml.bz2")
+	cmd.Dir = u.ELSALocalPath
+	if out, err := cmd.CombinedOutput(); err != nil {
+		log.WithError(err).WithField("output", string(out)).Error("could not decompress " + elsaFilePrefix + "all.xml.bz2")
+		return resp, vulnsrc.ErrFilesystem
+	}
+
+	b, err := os.Open(filepath.Join(u.ELSALocalPath, elsaFilePrefix+"all.xml"))
+	if err != nil {
+		log.WithError(err).Error("could not read " + elsaFilePrefix + "all.xml")
+		return resp, vulnsrc.ErrFilesystem
+	}
+	defer b.Close()
+
+	// Parse the XML.
+	vs, err := parseELSA(b, u)
+	if err != nil {
+		return resp, err
+	}
+
+	log.WithField("package", "Oracle Linux").Infof("Total %d Vulnerabilities in %sall.xml", len(vs), elsaFilePrefix)
+	// Collect vulnerabilities.
+	for _, v := range vs {
+		resp.Vulnerabilities = append(resp.Vulnerabilities, v)
+	}
+
+	// Set the flag if we found anything.
+
+	resp.FlagName = updaterFlag
+	resp.FlagValue = strconv.Itoa(u.LastELSA)
+
+	return resp, nil
+}
+
+func (u *updater) FetchEach() (resp vulnsrc.UpdateResponse, err error) {
 	// Fetch the update list.
 	r, err := http.Get(ovalURI)
 	if err != nil {
@@ -154,7 +242,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		r := elsaRegexp.FindStringSubmatch(line)
 		if len(r) == 2 {
 			elsaNo, _ := strconv.Atoi(r[1])
-			if compareELSA(elsaNo, firstELSA) > 0 {
+			if compareELSA(elsaNo, u.FirstELSA) > 0 {
 				elsaList = append(elsaList, elsaNo)
 			}
 		}
@@ -200,9 +288,11 @@ func largest(list []int) (largest int) {
 	return
 }
 
-func (u *updater) Clean() {}
+func (u *updater) Clean() {
+	os.RemoveAll(u.ELSALocalPath)
+}
 
-func parseELSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWithAffected, err error) {
+func parseELSA(ovalReader io.Reader, updater ...*updater) (vulnerabilities []database.VulnerabilityWithAffected, err error) {
 	// Decode the XML.
 	var ov oval
 	err = xml.NewDecoder(ovalReader).Decode(&ov)
@@ -212,9 +302,29 @@ func parseELSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWi
 		return
 	}
 
+	var (
+		isFetchAll          bool
+		firstELSA, lastELSA int
+	)
+
+	if len(updater) > 0 {
+		isFetchAll = true
+		firstELSA = updater[0].FirstELSA
+	}
+
 	// Iterate over the definitions and collect any vulnerabilities that affect
 	// at least one package.
 	for _, definition := range ov.Definitions {
+		if isFetchAll {
+			r := idRegexp.FindStringSubmatch(definition.ID)
+			if len(r) == 2 {
+				rhsaNo, _ := strconv.Atoi(r[1])
+				if rhsaNo <= firstELSA {
+					continue
+				}
+				lastELSA = rhsaNo
+			}
+		}
 		pkgs := toFeatures(definition.Criteria)
 		if len(pkgs) > 0 {
 			vulnerability := database.VulnerabilityWithAffected{
@@ -230,6 +340,9 @@ func parseELSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWi
 			}
 			vulnerabilities = append(vulnerabilities, vulnerability)
 		}
+	}
+	if isFetchAll {
+		updater[0].LastELSA = lastELSA
 	}
 
 	return
