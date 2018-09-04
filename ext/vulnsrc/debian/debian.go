@@ -90,6 +90,11 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		return resp, commonerr.ErrCouldNotDownload
 	}
 
+	if r.StatusCode != http.StatusOK {
+		log.WithField("StatusCode", r.StatusCode).Error("could not download Debian's update")
+		return resp, commonerr.ErrCouldNotDownload
+	}
+
 	// Parse the JSON.
 	resp, err = buildResponse(r.Body, latestHash)
 	if err != nil {
