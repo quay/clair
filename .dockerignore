@@ -1,4 +1,5 @@
-.*
+.dockerignore
+.travis.yml
 *.md
 DCO
 LICENSE
