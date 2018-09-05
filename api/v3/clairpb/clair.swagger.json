@@ -165,14 +165,6 @@
             }
           }
         },
-        "parameters": [
-          {
-            "name": "test",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
         "tags": [
           "StatusService"
         ]
@@ -187,20 +179,6 @@
           "type": "string",
           "description": "The name of the desired ancestry."
         },
-        "features": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clairFeature"
-          },
-          "description": "The list of features present in the ancestry.\nThis will only be provided if requested."
-        },
-        "layers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clairLayer"
-          },
-          "description": "The layers present in the ancestry."
-        },
         "scanned_listers": {
           "type": "array",
           "items": {
@@ -214,6 +192,27 @@
             "type": "string"
           },
           "description": "The configured list of namespace detectors used to scan an ancestry."
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GetAncestryResponseAncestryLayer"
+          },
+          "description": "The list of layers along with detected features in each."
+        }
+      }
+    },
+    "GetAncestryResponseAncestryLayer": {
+      "type": "object",
+      "properties": {
+        "layer": {
+          "$ref": "#/definitions/clairLayer"
+        },
+        "detectedFeatures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/clairFeature"
+          }
         }
       }
     },
@@ -420,7 +419,7 @@
           "items": {
             "$ref": "#/definitions/PostAncestryRequestPostLayer"
           },
-          "description": "The layers to be scanned for this particular ancestry."
+          "description": "The layers to be scanned for this Ancestry, ordered in the way that i th\nlayer is the i + 1 th layer's parent."
         }
       }
     },
