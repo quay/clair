@@ -1,7 +1,7 @@
 language: go
 
 go: 
-  - "1.10"
+  - "1.11"
 
 sudo: required
 
@@ -16,6 +16,7 @@ install:
 - chmod +x $HOME/.local/bin/prototool
 
 script:
+- diff -u <(echo -n) <(gofmt -l -s $(go list -f '{{.Dir}}') | grep -v '/vendor/')
 - prototool format -d api/v3/clairpb/clair.proto
 - prototool lint api/v3/clairpb/clair.proto
 - go test $(glide novendor | grep -v contrib)
