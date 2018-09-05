@@ -99,9 +99,8 @@ message GetAncestryResponse {
     // The layer's information.
     Layer layer = 1;
     // The features detected in this layer.
-    repeated Feature detectedFeatures = 2;
+    repeated Feature detected_features = 2;
   }
-
   message Ancestry {
     // The name of the desired ancestry.
     string name = 1;

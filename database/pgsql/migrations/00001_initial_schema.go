@@ -89,11 +89,11 @@ func init() {
 		UNIQUE (ancestry_id, ancestry_index));`,
 			`CREATE INDEX ON ancestry_layer(ancestry_id);`,
 
-			`CREATE TABLE IF NOT EXISTS ancestry_feature (
-		id SERIAL PRIMARY KEY, 
-		ancestry_id INT REFERENCES ancestry ON DELETE CASCADE, 
-		namespaced_feature_id INT REFERENCES namespaced_feature ON DELETE CASCADE,
-		UNIQUE (ancestry_id, namespaced_feature_id));`,
+			`CREATE TABLE IF NOT EXISTS ancestry_feature(
+			id SERIAL PRIMARY KEY,
+			ancestry_layer_id INT REFERENCES ancestry_layer ON DELETE CASCADE,
+			namespaced_feature_id INT REFERENCES namespaced_feature ON DELETE CASCADE,
+			UNIQUE (ancestry_layer_id, namespaced_feature_id));`,
 
 			`CREATE TABLE IF NOT EXISTS ancestry_lister (
 		id SERIAL PRIMARY KEY,
@@ -168,9 +168,9 @@ func init() {
 			`DROP TABLE IF EXISTS
 		ancestry,
 		ancestry_layer,
-		ancestry_feature,
 		ancestry_detector,
 		ancestry_lister,
+		ancestry_feature,
 		feature,
 		namespaced_feature,
 		keyvalue,

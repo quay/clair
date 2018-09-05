@@ -3,48 +3,37 @@ package pgsql
 import (
 	"database/sql"
 	"errors"
-	"fmt"
-	"strings"
 
-	"github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
-func (tx *pgSession) UpsertAncestry(ancestry database.Ancestry, features []database.NamespacedFeature, processedBy database.Processors) error {
+func (tx *pgSession) UpsertAncestry(ancestry database.AncestryWithContent) error {
 	if ancestry.Name == "" {
-		log.Warning("Empty ancestry name is not allowed")
+		log.Error("Empty ancestry name is not allowed")
 		return commonerr.NewBadRequestError("could not insert an ancestry with empty name")
 	}
 
 	if len(ancestry.Layers) == 0 {
-		log.Warning("Empty ancestry is not allowed")
+		log.Error("Empty ancestry is not allowed")
 		return commonerr.NewBadRequestError("could not insert an ancestry with 0 layers")
 	}
 
-	err := tx.deleteAncestry(ancestry.Name)
-	if err != nil {
+	if err := tx.deleteAncestry(ancestry.Name); err != nil {
 		return err
 	}
 
 	var ancestryID int64
-	err = tx.QueryRow(insertAncestry, ancestry.Name).Scan(&ancestryID)
-	if err != nil {
+	if err := tx.QueryRow(insertAncestry, ancestry.Name).Scan(&ancestryID); err != nil {
 		if isErrUniqueViolation(err) {
-			return handleError("insertAncestry", errors.New("Other Go-routine is processing this ancestry (skip)."))
+			return handleError("insertAncestry", errors.New("other Go-routine is processing this ancestry (skip)"))
 		}
 		return handleError("insertAncestry", err)
 	}
 
-	err = tx.insertAncestryLayers(ancestryID, ancestry.Layers)
-	if err != nil {
-		return err
-	}
-
-	err = tx.insertAncestryFeatures(ancestryID, features)
-	if err != nil {
+	if err := tx.insertAncestryLayers(ancestryID, ancestry.Layers); err != nil {
 		return err
 	}
 
@@ -52,71 +41,82 @@ func (tx *pgSession) UpsertAncestry(ancestry database.Ancestry, features []datab
 		"persistAncestryLister",
 		persistAncestryDetector,
 		"persistAncestryDetector",
-		ancestryID, processedBy)
+		ancestryID, ancestry.ProcessedBy)
 }
 
-func (tx *pgSession) FindAncestry(name string) (database.Ancestry, database.Processors, bool, error) {
-	ancestry := database.Ancestry{Name: name}
-	processed := database.Processors{}
-
-	var ancestryID int64
-	err := tx.QueryRow(searchAncestry, name).Scan(&ancestryID)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return ancestry, processed, false, nil
-		}
-		return ancestry, processed, false, handleError("searchAncestry", err)
-	}
-
-	ancestry.Layers, err = tx.findAncestryLayers(ancestryID)
-	if err != nil {
-		return ancestry, processed, false, err
-	}
-
-	processed.Detectors, err = tx.findProcessors(searchAncestryDetectors, "searchAncestryDetectors", "detector", ancestryID)
-	if err != nil {
-		return ancestry, processed, false, err
-	}
-
-	processed.Listers, err = tx.findProcessors(searchAncestryListers, "searchAncestryListers", "lister", ancestryID)
-	if err != nil {
-		return ancestry, processed, false, err
-	}
-
-	return ancestry, processed, true, nil
-}
-
-func (tx *pgSession) FindAncestryFeatures(name string) (database.AncestryWithFeatures, bool, error) {
+func (tx *pgSession) FindAncestry(name string) (database.Ancestry, bool, error) {
 	var (
-		awf database.AncestryWithFeatures
-		ok  bool
-		err error
+		ancestryID int64
+		ancestry   = database.Ancestry{Name: name}
+		err        error
 	)
-	awf.Ancestry, awf.ProcessedBy, ok, err = tx.FindAncestry(name)
-	if err != nil {
-		return awf, false, err
+
+	if err = tx.QueryRow(searchAncestry, name).Scan(&ancestryID); err != nil {
+		if err == sql.ErrNoRows {
+			return ancestry, false, nil
+		}
+		return ancestry, false, handleError("searchAncestry", err)
 	}
 
-	if !ok {
-		return awf, false, nil
+	if ancestry.Layers, err = tx.findAncestryLayers(ancestryID); err != nil {
+		return ancestry, false, err
+	}
+
+	if ancestry.ProcessedBy.Detectors, err = tx.findProcessors(searchAncestryDetectors, "searchAncestryDetectors", "detector", ancestryID); err != nil {
+		return ancestry, false, err
+	}
+
+	if ancestry.ProcessedBy.Listers, err = tx.findProcessors(searchAncestryListers, "searchAncestryListers", "lister", ancestryID); err != nil {
+		return ancestry, false, err
+	}
+
+	return ancestry, true, nil
+}
+
+func (tx *pgSession) FindAncestryWithContent(name string) (database.AncestryWithContent, bool, error) {
+	var (
+		ancestryContent database.AncestryWithContent
+		isValid         bool
+		err             error
+	)
+
+	if ancestryContent.Ancestry, isValid, err = tx.FindAncestry(name); err != nil || !isValid {
+		return ancestryContent, isValid, err
 	}
 
 	rows, err := tx.Query(searchAncestryFeatures, name)
 	if err != nil {
-		return awf, false, handleError("searchAncestryFeatures", err)
+		return ancestryContent, false, handleError("searchAncestryFeatures", err)
 	}
 
+	features := map[int][]database.NamespacedFeature{}
 	for rows.Next() {
-		nf := database.NamespacedFeature{}
-		err := rows.Scan(&nf.Namespace.Name, &nf.Namespace.VersionFormat, &nf.Feature.Name, &nf.Feature.Version)
-		if err != nil {
-			return awf, false, handleError("searchAncestryFeatures", err)
+		var (
+			feature database.NamespacedFeature
+			// layerIndex is used to determine which layer the namespaced feature belongs to.
+			layerIndex sql.NullInt64
+		)
+
+		if err := rows.Scan(&feature.Namespace.Name,
+			&feature.Namespace.VersionFormat,
+			&feature.Feature.Name, &feature.Feature.Version,
+			&layerIndex); err != nil {
+			return ancestryContent, false, handleError("searchAncestryFeatures", err)
 		}
-		nf.Feature.VersionFormat = nf.Namespace.VersionFormat
-		awf.Features = append(awf.Features, nf)
+
+		feature.Feature.VersionFormat = feature.Namespace.VersionFormat // This looks strange.
+		features[int(layerIndex.Int64)] = append(features[int(layerIndex.Int64)], feature)
 	}
 
-	return awf, true, nil
+	// By the assumption of Ancestry Layer Index, we have the ancestry's layer
+	// index corresponding to the index in the array.
+	for index, layer := range ancestryContent.Ancestry.Layers {
+		ancestryLayer := database.AncestryLayer{Layer: layer}
+		ancestryLayer.DetectedFeatures, _ = features[index]
+		ancestryContent.Layers = append(ancestryContent.Layers, ancestryLayer)
+	}
+
+	return ancestryContent, true, nil
 }
 
 func (tx *pgSession) deleteAncestry(name string) error {
@@ -164,97 +164,62 @@ func (tx *pgSession) findAncestryLayers(ancestryID int64) ([]database.Layer, err
 	if err != nil {
 		return nil, handleError("searchAncestryLayer", err)
 	}
+
 	layers := []database.Layer{}
 	for rows.Next() {
 		var layer database.Layer
-		err := rows.Scan(&layer.Hash)
-		if err != nil {
+		if err := rows.Scan(&layer.Hash); err != nil {
 			return nil, handleError("searchAncestryLayer", err)
 		}
+
 		layers = append(layers, layer)
 	}
+
 	return layers, nil
 }
 
-func (tx *pgSession) insertAncestryLayers(ancestryID int64, layers []database.Layer) error {
-	layerIDs := map[string]sql.NullInt64{}
-	for _, l := range layers {
-		layerIDs[l.Hash] = sql.NullInt64{}
-	}
-
-	layerHashes := []string{}
-	for hash := range layerIDs {
-		layerHashes = append(layerHashes, hash)
-	}
-
-	rows, err := tx.Query(searchLayerIDs, pq.Array(layerHashes))
-	if err != nil {
-		return handleError("searchLayerIDs", err)
-	}
-
-	for rows.Next() {
-		var (
-			layerID   sql.NullInt64
-			layerName string
-		)
-		err := rows.Scan(&layerID, &layerName)
-		if err != nil {
-			return handleError("searchLayerIDs", err)
-		}
-		layerIDs[layerName] = layerID
-	}
-
-	notFound := []string{}
-	for hash, id := range layerIDs {
-		if !id.Valid {
-			notFound = append(notFound, hash)
-		}
-	}
-
-	if len(notFound) > 0 {
-		return handleError("searchLayerIDs", fmt.Errorf("Layer %s is not found in database", strings.Join(notFound, ",")))
-	}
-
+// insertAncestryLayers inserts the ancestry layers along with its content into
+// the database. The layers are 0 based indexed in the original order.
+func (tx *pgSession) insertAncestryLayers(ancestryID int64, layers []database.AncestryLayer) error {
 	//TODO(Sida): use bulk insert.
 	stmt, err := tx.Prepare(insertAncestryLayer)
 	if err != nil {
 		return handleError("insertAncestryLayer", err)
 	}
 
-	defer stmt.Close()
+	ancestryLayerIDs := []sql.NullInt64{}
 	for index, layer := range layers {
-		_, err := stmt.Exec(ancestryID, index, layerIDs[layer.Hash].Int64)
-		if err != nil {
+		var ancestryLayerID sql.NullInt64
+		if err := stmt.QueryRow(ancestryID, index, layer.Hash).Scan(&ancestryLayerID); err != nil {
 			return handleError("insertAncestryLayer", commonerr.CombineErrors(err, stmt.Close()))
 		}
+
+		ancestryLayerIDs = append(ancestryLayerIDs, ancestryLayerID)
 	}
 
-	return nil
-}
-
-func (tx *pgSession) insertAncestryFeatures(ancestryID int64, features []database.NamespacedFeature) error {
-	featureIDs, err := tx.findNamespacedFeatureIDs(features)
-	if err != nil {
-		return err
+	if err := stmt.Close(); err != nil {
+		return handleError("Failed to close insertAncestryLayer statement", err)
 	}
 
-	//TODO(Sida): use bulk insert.
-	stmtFeatures, err := tx.Prepare(insertAncestryFeature)
-	if err != nil {
-		return handleError("insertAncestryFeature", err)
-	}
+	stmt, err = tx.Prepare(insertAncestryLayerFeature)
+	defer stmt.Close()
 
-	defer stmtFeatures.Close()
+	for i, layer := range layers {
+		var (
+			nsFeatureIDs []sql.NullInt64
+			layerID      = ancestryLayerIDs[i]
+		)
 
-	for _, id := range featureIDs {
-		if !id.Valid {
-			return errors.New("requested namespaced feature is not in database")
+		if nsFeatureIDs, err = tx.findNamespacedFeatureIDs(layer.DetectedFeatures); err != nil {
+			return err
 		}
 
-		_, err := stmtFeatures.Exec(ancestryID, id)
-		if err != nil {
-			return handleError("insertAncestryFeature", err)
+		for _, id := range nsFeatureIDs {
+			if _, err := stmt.Exec(layerID, id); err != nil {
+				return handleError("insertAncestryLayerFeature", commonerr.CombineErrors(err, stmt.Close()))
+			}
 		}
+
 	}
 
 	return nil

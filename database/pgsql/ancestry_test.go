@@ -26,26 +26,53 @@ import (
 func TestUpsertAncestry(t *testing.T) {
 	store, tx := openSessionForTest(t, "UpsertAncestry", true)
 	defer closeTest(t, store, tx)
-	a1 := database.Ancestry{
-		Name: "a1",
-		Layers: []database.Layer{
-			{Hash: "layer-N"},
+	a1 := database.AncestryWithContent{
+		Ancestry: database.Ancestry{
+			Name: "a1",
+			Layers: []database.Layer{
+				{Hash: "layer-N"},
+			},
+		},
+		Layers: []database.AncestryLayer{
+			{
+				Layer: database.Layer{
+					Hash: "layer-N",
+				},
+			},
 		},
 	}
 
-	a2 := database.Ancestry{}
+	a2 := database.AncestryWithContent{}
 
-	a3 := database.Ancestry{
-		Name: "a",
-		Layers: []database.Layer{
-			{Hash: "layer-0"},
+	a3 := database.AncestryWithContent{
+		Ancestry: database.Ancestry{
+			Name: "a",
+			Layers: []database.Layer{
+				{Hash: "layer-0"},
+			},
+		},
+		Layers: []database.AncestryLayer{
+			{
+				Layer: database.Layer{
+					Hash: "layer-0",
+				},
+			},
 		},
 	}
 
-	a4 := database.Ancestry{
-		Name: "a",
-		Layers: []database.Layer{
-			{Hash: "layer-1"},
+	a4 := database.AncestryWithContent{
+		Ancestry: database.Ancestry{
+			Name: "a",
+			Layers: []database.Layer{
+				{Hash: "layer-1"},
+			},
+		},
+		Layers: []database.AncestryLayer{
+			{
+				Layer: database.Layer{
+					Hash: "layer-1",
+				},
+			},
 		},
 	}
 
@@ -83,17 +110,20 @@ func TestUpsertAncestry(t *testing.T) {
 		Feature:   f2,
 	}
 
+	a4.ProcessedBy = p
 	// invalid case
-	assert.NotNil(t, tx.UpsertAncestry(a1, nil, database.Processors{}))
-	assert.NotNil(t, tx.UpsertAncestry(a2, nil, database.Processors{}))
+	assert.NotNil(t, tx.UpsertAncestry(a1))
+	assert.NotNil(t, tx.UpsertAncestry(a2))
 	// valid case
-	assert.Nil(t, tx.UpsertAncestry(a3, nil, database.Processors{}))
+	assert.Nil(t, tx.UpsertAncestry(a3))
+	a4.Layers[0].DetectedFeatures = []database.NamespacedFeature{nsf1, nsf2}
 	// replace invalid case
-	assert.NotNil(t, tx.UpsertAncestry(a4, []database.NamespacedFeature{nsf1, nsf2}, p))
+	assert.NotNil(t, tx.UpsertAncestry(a4))
+	a4.Layers[0].DetectedFeatures = []database.NamespacedFeature{nsf1}
 	// replace valid case
-	assert.Nil(t, tx.UpsertAncestry(a4, []database.NamespacedFeature{nsf1}, p))
+	assert.Nil(t, tx.UpsertAncestry(a4))
 	// validate
-	ancestry, ok, err := tx.FindAncestryFeatures("a")
+	ancestry, ok, err := tx.FindAncestryWithContent("a")
 	assert.Nil(t, err)
 	assert.True(t, ok)
 	assert.Equal(t, a4, ancestry.Ancestry)
@@ -111,8 +141,7 @@ func TestFindAncestry(t *testing.T) {
 	store, tx := openSessionForTest(t, "FindAncestry", true)
 	defer closeTest(t, store, tx)
 
-	// not found
-	_, _, ok, err := tx.FindAncestry("ancestry-non")
+	_, ok, err := tx.FindAncestry("ancestry-non")
 	assert.Nil(t, err)
 	assert.False(t, ok)
 
@@ -124,41 +153,52 @@ func TestFindAncestry(t *testing.T) {
 			{Hash: "layer-2"},
 			{Hash: "layer-3a"},
 		},
+		ProcessedBy: database.Processors{
+			Detectors: []string{"os-release"},
+			Listers:   []string{"dpkg"},
+		},
 	}
 
-	expectedProcessors := database.Processors{
-		Detectors: []string{"os-release"},
-		Listers:   []string{"dpkg"},
-	}
-
-	// found
-	a, p, ok2, err := tx.FindAncestry("ancestry-1")
+	a, ok2, err := tx.FindAncestry("ancestry-1")
 	if assert.Nil(t, err) && assert.True(t, ok2) {
 		assertAncestryEqual(t, expected, a)
-		assertProcessorsEqual(t, expectedProcessors, p)
 	}
 }
 
-func assertAncestryWithFeatureEqual(t *testing.T, expected database.AncestryWithFeatures, actual database.AncestryWithFeatures) bool {
-	return assertAncestryEqual(t, expected.Ancestry, actual.Ancestry) &&
-		assertNamespacedFeatureEqual(t, expected.Features, actual.Features) &&
-		assertProcessorsEqual(t, expected.ProcessedBy, actual.ProcessedBy)
-}
-func assertAncestryEqual(t *testing.T, expected database.Ancestry, actual database.Ancestry) bool {
-	return assert.Equal(t, expected.Name, actual.Name) && assert.Equal(t, expected.Layers, actual.Layers)
+func assertAncestryWithFeatureEqual(t *testing.T, expected database.AncestryWithContent, actual database.AncestryWithContent) bool {
+	if assertAncestryEqual(t, expected.Ancestry, actual.Ancestry) && assert.Equal(t, len(expected.Layers), len(actual.Layers)) {
+		for index, layer := range expected.Layers {
+			if !assertAncestryLayerEqual(t, layer, actual.Layers[index]) {
+				return false
+			}
+		}
+		return true
+	}
+	return false
 }
 
-func TestFindAncestryFeatures(t *testing.T) {
-	store, tx := openSessionForTest(t, "FindAncestryFeatures", true)
+func assertAncestryLayerEqual(t *testing.T, expected database.AncestryLayer, actual database.AncestryLayer) bool {
+	return assertLayerEqual(t, expected.Layer, actual.Layer) &&
+		assertNamespacedFeatureEqual(t, expected.DetectedFeatures, actual.DetectedFeatures)
+}
+
+func assertAncestryEqual(t *testing.T, expected database.Ancestry, actual database.Ancestry) bool {
+	return assert.Equal(t, expected.Name, actual.Name) &&
+		assert.Equal(t, expected.Layers, actual.Layers) &&
+		assertProcessorsEqual(t, expected.ProcessedBy, actual.ProcessedBy)
+}
+
+func TestFindAncestryWithContent(t *testing.T) {
+	store, tx := openSessionForTest(t, "FindAncestryWithContent", true)
 	defer closeTest(t, store, tx)
 
 	// invalid
-	_, ok, err := tx.FindAncestryFeatures("ancestry-non")
+	_, ok, err := tx.FindAncestryWithContent("ancestry-non")
 	if assert.Nil(t, err) {
 		assert.False(t, ok)
 	}
 
-	expected := database.AncestryWithFeatures{
+	expected := database.AncestryWithContent{
 		Ancestry: database.Ancestry{
 			Name: "ancestry-2",
 			Layers: []database.Layer{
@@ -167,41 +207,62 @@ func TestFindAncestryFeatures(t *testing.T) {
 				{Hash: "layer-2"},
 				{Hash: "layer-3b"},
 			},
+			ProcessedBy: database.Processors{
+				Detectors: []string{"os-release"},
+				Listers:   []string{"dpkg"},
+			},
 		},
-		ProcessedBy: database.Processors{
-			Detectors: []string{"os-release"},
-			Listers:   []string{"dpkg"},
-		},
-		Features: []database.NamespacedFeature{
+
+		Layers: []database.AncestryLayer{
 			{
-				Namespace: database.Namespace{
-					Name:          "debian:7",
-					VersionFormat: "dpkg",
+				Layer: database.Layer{
+					Hash: "layer-0",
 				},
-				Feature: database.Feature{
-					Name:          "wechat",
-					Version:       "0.5",
-					VersionFormat: "dpkg",
+				DetectedFeatures: []database.NamespacedFeature{
+					{
+						Namespace: database.Namespace{
+							Name:          "debian:7",
+							VersionFormat: "dpkg",
+						},
+						Feature: database.Feature{
+							Name:          "wechat",
+							Version:       "0.5",
+							VersionFormat: "dpkg",
+						},
+					},
+					{
+						Namespace: database.Namespace{
+							Name:          "debian:8",
+							VersionFormat: "dpkg",
+						},
+						Feature: database.Feature{
+							Name:          "openssl",
+							Version:       "1.0",
+							VersionFormat: "dpkg",
+						},
+					},
 				},
 			},
 			{
-				Namespace: database.Namespace{
-					Name:          "debian:8",
-					VersionFormat: "dpkg",
+				Layer: database.Layer{
+					Hash: "layer-1",
 				},
-				Feature: database.Feature{
-					Name:          "openssl",
-					Version:       "1.0",
-					VersionFormat: "dpkg",
+			},
+			{
+				Layer: database.Layer{
+					Hash: "layer-2",
+				},
+			},
+			{
+				Layer: database.Layer{
+					Hash: "layer-3b",
 				},
 			},
 		},
 	}
 	// valid
-	ancestry, ok, err := tx.FindAncestryFeatures("ancestry-2")
+	ancestry, ok, err := tx.FindAncestryWithContent("ancestry-2")
 	if assert.Nil(t, err) && assert.True(t, ok) {
-		assertAncestryEqual(t, expected.Ancestry, ancestry.Ancestry)
-		assertNamespacedFeatureEqual(t, expected.Features, ancestry.Features)
-		assertProcessorsEqual(t, expected.ProcessedBy, ancestry.ProcessedBy)
+		assertAncestryWithFeatureEqual(t, expected, ancestry)
 	}
 }

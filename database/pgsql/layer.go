@@ -22,9 +22,9 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
-func (tx *pgSession) FindLayer(hash string) (database.Layer, database.Processors, bool, error) {
-	l, p, _, ok, err := tx.findLayer(hash)
-	return l, p, ok, err
+func (tx *pgSession) FindLayer(hash string) (database.Layer, bool, error) {
+	layer, _, ok, err := tx.findLayer(hash)
+	return layer, ok, err
 }
 
 func (tx *pgSession) FindLayerWithContent(hash string) (database.LayerWithContent, bool, error) {
@@ -35,7 +35,7 @@ func (tx *pgSession) FindLayerWithContent(hash string) (database.LayerWithConten
 		err     error
 	)
 
-	layer.Layer, layer.ProcessedBy, layerID, ok, err = tx.findLayer(hash)
+	layer.Layer, layerID, ok, err = tx.findLayer(hash)
 	if err != nil {
 		return layer, false, err
 	}
@@ -49,12 +49,12 @@ func (tx *pgSession) FindLayerWithContent(hash string) (database.LayerWithConten
 	return layer, true, nil
 }
 
-func (tx *pgSession) PersistLayer(layer database.Layer) error {
-	if layer.Hash == "" {
+func (tx *pgSession) PersistLayer(hash string) error {
+	if hash == "" {
 		return commonerr.NewBadRequestError("Empty Layer Hash is not allowed")
 	}
 
-	_, err := tx.Exec(queryPersistLayer(1), layer.Hash)
+	_, err := tx.Exec(queryPersistLayer(1), hash)
 	if err != nil {
 		return handleError("queryPersistLayer", err)
 	}
@@ -275,34 +275,33 @@ func (tx *pgSession) findLayerFeatures(layerID int64) ([]database.Feature, error
 	return features, nil
 }
 
-func (tx *pgSession) findLayer(hash string) (database.Layer, database.Processors, int64, bool, error) {
+func (tx *pgSession) findLayer(hash string) (database.Layer, int64, bool, error) {
 	var (
-		layerID    int64
-		layer      = database.Layer{Hash: hash}
-		processors database.Processors
+		layerID int64
+		layer   = database.Layer{Hash: hash, ProcessedBy: database.Processors{}}
 	)
 
 	if hash == "" {
-		return layer, processors, layerID, false, commonerr.NewBadRequestError("Empty Layer Hash is not allowed")
+		return layer, layerID, false, commonerr.NewBadRequestError("Empty Layer Hash is not allowed")
 	}
 
 	err := tx.QueryRow(searchLayer, hash).Scan(&layerID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return layer, processors, layerID, false, nil
+			return layer, layerID, false, nil
 		}
-		return layer, processors, layerID, false, err
+		return layer, layerID, false, err
 	}
 
-	processors.Detectors, err = tx.findProcessors(searchLayerDetectors, "searchLayerDetectors", "detector", layerID)
+	layer.ProcessedBy.Detectors, err = tx.findProcessors(searchLayerDetectors, "searchLayerDetectors", "detector", layerID)
 	if err != nil {
-		return layer, processors, layerID, false, err
+		return layer, layerID, false, err
 	}
 
-	processors.Listers, err = tx.findProcessors(searchLayerListers, "searchLayerListers", "lister", layerID)
+	layer.ProcessedBy.Listers, err = tx.findProcessors(searchLayerListers, "searchLayerListers", "lister", layerID)
 	if err != nil {
-		return layer, processors, layerID, false, err
+		return layer, layerID, false, err
 	}
 
-	return layer, processors, layerID, true, nil
+	return layer, layerID, true, nil
 }

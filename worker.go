@@ -160,8 +160,7 @@ func getLayer(datastore database.Datastore, req LayerRequest) (layer database.La
 	}
 
 	if !ok {
-		l := database.Layer{Hash: req.Hash}
-		err = tx.PersistLayer(l)
+		err = tx.PersistLayer(req.Hash)
 		if err != nil {
 			return
 		}
@@ -170,7 +169,9 @@ func getLayer(datastore database.Datastore, req LayerRequest) (layer database.La
 			return
 		}
 
-		layer = database.LayerWithContent{Layer: l}
+		layer = database.LayerWithContent{}
+		layer.Hash = req.Hash
+
 		preq = &processRequest{
 			request:        req,
 			notProcessedBy: Processors,
@@ -313,11 +314,11 @@ func combineLayers(layer database.LayerWithContent, partial partialLayer) databa
 	layer.ProcessedBy.Listers = append(layer.ProcessedBy.Listers, strutil.CompareStringLists(partial.processedBy.Listers, layer.ProcessedBy.Listers)...)
 	return database.LayerWithContent{
 		Layer: database.Layer{
-			Hash: layer.Hash,
+			Hash:        layer.Hash,
+			ProcessedBy: layer.ProcessedBy,
 		},
-		ProcessedBy: layer.ProcessedBy,
-		Features:    features,
-		Namespaces:  namespaces,
+		Features:   features,
+		Namespaces: namespaces,
 	}
 }
 
@@ -327,7 +328,7 @@ func isAncestryProcessed(datastore database.Datastore, name string) (bool, error
 		return false, err
 	}
 	defer tx.Rollback()
-	_, processed, ok, err := tx.FindAncestry(name)
+	ancestry, ok, err := tx.FindAncestry(name)
 	if err != nil {
 		return false, err
 	}
@@ -335,14 +336,20 @@ func isAncestryProcessed(datastore database.Datastore, name string) (bool, error
 		return false, nil
 	}
 
-	notProcessed := getNotProcessedBy(processed)
+	notProcessed := getNotProcessedBy(ancestry.ProcessedBy)
 	return len(notProcessed.Detectors) == 0 && len(notProcessed.Listers) == 0, nil
 }
 
 // ProcessAncestry downloads and scans an ancestry if it's not scanned by all
 // enabled processors in this instance of Clair.
 func ProcessAncestry(datastore database.Datastore, imageFormat, name string, layerRequest []LayerRequest) error {
-	var err error
+	var (
+		err              error
+		ok               bool
+		layers           []database.LayerWithContent
+		commonProcessors database.Processors
+	)
+
 	if name == "" {
 		return commonerr.NewBadRequestError("could not process a layer which does not have a name")
 	}
@@ -351,43 +358,53 @@ func ProcessAncestry(datastore database.Datastore, imageFormat, name string, lay
 		return commonerr.NewBadRequestError("could not process a layer which does not have a format")
 	}
 
-	if ok, err := isAncestryProcessed(datastore, name); ok && err == nil {
+	if ok, err = isAncestryProcessed(datastore, name); err != nil {
+		return err
+	} else if ok {
 		log.WithField("ancestry", name).Debug("Ancestry is processed")
 		return nil
-	} else if err != nil {
+	}
+
+	if layers, err = processLayers(datastore, imageFormat, layerRequest); err != nil {
 		return err
 	}
 
-	layers, err := processLayers(datastore, imageFormat, layerRequest)
-	if err != nil {
+	if commonProcessors, err = getProcessors(layers); err != nil {
 		return err
 	}
 
-	if !validateProcessors(layers) {
-		// This error might be triggered because of multiple workers are
-		// processing the same instance with different processors.
-		return errors.New("ancestry layers are scanned with different listers and detectors")
-	}
-
-	return processAncestry(datastore, name, layers)
+	return processAncestry(datastore, name, layers, commonProcessors)
 }
 
-func processAncestry(datastore database.Datastore, name string, layers []database.LayerWithContent) error {
-	ancestryFeatures, err := computeAncestryFeatures(layers)
+// getNamespacedFeatures extracts the namespaced features introduced in each
+// layer into one array.
+func getNamespacedFeatures(layers []database.AncestryLayer) []database.NamespacedFeature {
+	features := []database.NamespacedFeature{}
+	for _, layer := range layers {
+		features = append(features, layer.DetectedFeatures...)
+	}
+	return features
+}
+
+func processAncestry(datastore database.Datastore, name string, layers []database.LayerWithContent, commonProcessors database.Processors) error {
+	var (
+		ancestry database.AncestryWithContent
+		err      error
+	)
+
+	ancestry.Name = name
+	ancestry.ProcessedBy = commonProcessors
+	ancestry.Layers, err = computeAncestryLayers(layers, commonProcessors)
 	if err != nil {
 		return err
 	}
 
-	ancestryLayers := make([]database.Layer, 0, len(layers))
-	for _, layer := range layers {
-		ancestryLayers = append(ancestryLayers, layer.Layer)
-	}
-
+	ancestryFeatures := getNamespacedFeatures(ancestry.Layers)
 	log.WithFields(log.Fields{
 		"ancestry":           name,
 		"number of features": len(ancestryFeatures),
 		"processed by":       Processors,
-		"number of layers":   len(ancestryLayers),
+		"number of layers":   len(ancestry.Layers),
 	}).Debug("compute ancestry features")
 
 	if err := persistNamespacedFeatures(datastore, ancestryFeatures); err != nil {
@@ -399,7 +416,7 @@ func processAncestry(datastore database.Datastore, name string, layers []databas
 		return err
 	}
 
-	err = tx.UpsertAncestry(database.Ancestry{Name: name, Layers: ancestryLayers}, ancestryFeatures, Processors)
+	err = tx.UpsertAncestry(ancestry)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -440,44 +457,71 @@ func persistNamespacedFeatures(datastore database.Datastore, features []database
 	return tx.Commit()
 }
 
-// validateProcessors checks if the layers processed by same set of processors.
-func validateProcessors(layers []database.LayerWithContent) bool {
+// getProcessors retrieves common subset of the processors of each layer.
+func getProcessors(layers []database.LayerWithContent) (database.Processors, error) {
 	if len(layers) == 0 {
-		return true
+		return database.Processors{}, nil
 	}
+
 	detectors := layers[0].ProcessedBy.Detectors
 	listers := layers[0].ProcessedBy.Listers
 
+	detectorsLen := len(detectors)
+	listersLen := len(listers)
+
 	for _, l := range layers[1:] {
-		if len(strutil.CompareStringLists(detectors, l.ProcessedBy.Detectors)) != 0 ||
-			len(strutil.CompareStringLists(listers, l.ProcessedBy.Listers)) != 0 {
-			return false
+		detectors := strutil.CompareStringListsInBoth(detectors, l.ProcessedBy.Detectors)
+		listers := strutil.CompareStringListsInBoth(listers, l.ProcessedBy.Listers)
+
+		if len(detectors) != detectorsLen || len(listers) != listersLen {
+			// This error might be triggered because of multiple workers are
+			// processing the same instance with different processors.
+			// TODO(sidchen): Once the features can be associated with
+			// Detectors/Listers, we can support dynamically generating ancestry's
+			// detector/lister based on the layers.
+			return database.Processors{}, errors.New("processing layers with different Clair instances is currently unsupported")
 		}
 	}
-	return true
+	return database.Processors{
+		Detectors: detectors,
+		Listers:   listers,
+	}, nil
 }
 
-// computeAncestryFeatures computes the features in an ancestry based on all
-// layers.
-func computeAncestryFeatures(ancestryLayers []database.LayerWithContent) ([]database.NamespacedFeature, error) {
+type introducedFeature struct {
+	feature    database.NamespacedFeature
+	layerIndex int
+}
+
+// computeAncestryLayers computes ancestry's layers along with what features are
+// introduced.
+func computeAncestryLayers(layers []database.LayerWithContent, commonProcessors database.Processors) ([]database.AncestryLayer, error) {
+	// TODO(sidchen): Once the features are linked to specific processor, we
+	// will use commonProcessors to filter out the features for this ancestry.
+
 	// version format -> namespace
 	namespaces := map[string]database.Namespace{}
 	// version format -> feature ID -> feature
-	features := map[string]map[string]database.NamespacedFeature{}
-	for _, layer := range ancestryLayers {
-		// At start of the loop, namespaces and features always contain the
-		// previous layer's result.
+	features := map[string]map[string]introducedFeature{}
+	ancestryLayers := []database.AncestryLayer{}
+	for index, layer := range layers {
+		// Initialize the ancestry Layer
+		initializedLayer := database.AncestryLayer{Layer: layer.Layer, DetectedFeatures: []database.NamespacedFeature{}}
+		ancestryLayers = append(ancestryLayers, initializedLayer)
+
+		// Precondition: namespaces and features contain the result from union
+		// of all parents.
 		for _, ns := range layer.Namespaces {
 			namespaces[ns.VersionFormat] = ns
 		}
 
 		// version format -> feature ID -> feature
-		currentFeatures := map[string]map[string]database.NamespacedFeature{}
+		currentFeatures := map[string]map[string]introducedFeature{}
 		for _, f := range layer.Features {
 			if ns, ok := namespaces[f.VersionFormat]; ok {
-				var currentMap map[string]database.NamespacedFeature
+				var currentMap map[string]introducedFeature
 				if currentMap, ok = currentFeatures[f.VersionFormat]; !ok {
-					currentFeatures[f.VersionFormat] = make(map[string]database.NamespacedFeature)
+					currentFeatures[f.VersionFormat] = make(map[string]introducedFeature)
 					currentMap = currentFeatures[f.VersionFormat]
 				}
 
@@ -490,9 +534,12 @@ func computeAncestryFeatures(ancestryLayers []database.LayerWithContent) ([]data
 				}
 
 				if !inherited {
-					currentMap[f.Name+":"+f.Version] = database.NamespacedFeature{
-						Feature:   f,
-						Namespace: ns,
+					currentMap[f.Name+":"+f.Version] = introducedFeature{
+						feature: database.NamespacedFeature{
+							Feature:   f,
+							Namespace: ns,
+						},
+						layerIndex: index,
 					}
 				}
 
@@ -513,13 +560,16 @@ func computeAncestryFeatures(ancestryLayers []database.LayerWithContent) ([]data
 		}
 	}
 
-	ancestryFeatures := []database.NamespacedFeature{}
 	for _, featureMap := range features {
 		for _, feature := range featureMap {
-			ancestryFeatures = append(ancestryFeatures, feature)
+			ancestryLayers[feature.layerIndex].DetectedFeatures = append(
+				ancestryLayers[feature.layerIndex].DetectedFeatures,
+				feature.feature,
+			)
 		}
 	}
-	return ancestryFeatures, nil
+
+	return ancestryLayers, nil
 }
 
 // getNotProcessedBy returns a processors, which contains the detectors and

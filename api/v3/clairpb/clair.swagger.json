@@ -206,13 +206,15 @@
       "type": "object",
       "properties": {
         "layer": {
-          "$ref": "#/definitions/clairLayer"
+          "$ref": "#/definitions/clairLayer",
+          "description": "The layer's information."
         },
-        "detectedFeatures": {
+        "detected_features": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/clairFeature"
-          }
+          },
+          "description": "The features detected in this layer."
         }
       }
     },
@@ -419,7 +421,7 @@
           "items": {
             "$ref": "#/definitions/PostAncestryRequestPostLayer"
           },
-          "description": "The layers to be scanned for this Ancestry, ordered in the way that i th\nlayer is the i + 1 th layer's parent."
+          "description": "The layers to be scanned for this Ancestry, ordered in the way that i th\nlayer is the parent of i + 1 th layer."
         }
       }
     },

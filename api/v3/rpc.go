@@ -130,13 +130,18 @@ func (s *AncestryServer) GetAncestry(ctx context.Context, req *pb.GetAncestryReq
 			return nil, status.Error(codes.NotFound, fmt.Sprintf("requested ancestry '%s' is not found", req.GetAncestryName()))
 		}
 
-		respAncestry = &pb.GetAncestryResponse_Ancestry{Name: name}
-		respAncestry.ScannedDetectors = ancestry.ProcessedBy.Detectors
-		respAncestry.ScannedListers = ancestry.ProcessedBy.Listers
-		respAncestry.Layers = []*pb.GetAncestryResponse_AncestryLayer{}
+		respAncestry = &pb.GetAncestryResponse_Ancestry{
+			Name:             name,
+			ScannedDetectors: ancestry.ProcessedBy.Detectors,
+			ScannedListers:   ancestry.ProcessedBy.Listers,
+		}
 
 		for _, layer := range ancestry.Layers {
-			ancestryLayer := &pb.GetAncestryResponse_AncestryLayer{}
+			ancestryLayer := &pb.GetAncestryResponse_AncestryLayer{
+				Layer: &pb.Layer{
+					Hash: layer.Hash,
+				},
+			}
 
 			if req.GetWithVulnerabilities() {
 				featureVulnerabilities, err := tx.FindAffectedNamespacedFeatures(layer.DetectedFeatures)
