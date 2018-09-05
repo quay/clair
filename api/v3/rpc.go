@@ -105,7 +105,12 @@ func (s *AncestryServer) PostAncestry(ctx context.Context, req *pb.PostAncestryR
 
 // GetAncestry implements retrieving an ancestry via the Clair gRPC service.
 func (s *AncestryServer) GetAncestry(ctx context.Context, req *pb.GetAncestryRequest) (*pb.GetAncestryResponse, error) {
-	if req.GetAncestryName() == "" {
+	var (
+		respAncestry *pb.GetAncestryResponse_Ancestry
+		name         = req.GetAncestryName()
+	)
+
+	if name == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "ancestry name should not be empty")
 	}
 
@@ -115,16 +120,8 @@ func (s *AncestryServer) GetAncestry(ctx context.Context, req *pb.GetAncestryReq
 	}
 	defer tx.Rollback()
 
-	ancestry, _, ok, err := tx.FindAncestry(req.GetAncestryName())
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	} else if !ok {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("requested ancestry '%s' is not found", req.GetAncestryName()))
-	}
-
-	pbAncestry := pb.AncestryFromDatabaseModel(ancestry)
 	if req.GetWithFeatures() || req.GetWithVulnerabilities() {
-		ancestryWFeature, ok, err := tx.FindAncestryFeatures(ancestry.Name)
+		ancestry, ok, err := tx.FindAncestryWithContent(name)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
@@ -132,37 +129,53 @@ func (s *AncestryServer) GetAncestry(ctx context.Context, req *pb.GetAncestryReq
 		if !ok {
 			return nil, status.Error(codes.NotFound, fmt.Sprintf("requested ancestry '%s' is not found", req.GetAncestryName()))
 		}
-		pbAncestry.ScannedDetectors = ancestryWFeature.ProcessedBy.Detectors
-		pbAncestry.ScannedListers = ancestryWFeature.ProcessedBy.Listers
 
-		if req.GetWithVulnerabilities() {
-			featureVulnerabilities, err := tx.FindAffectedNamespacedFeatures(ancestryWFeature.Features)
-			if err != nil {
-				return nil, status.Error(codes.Internal, err.Error())
-			}
+		respAncestry = &pb.GetAncestryResponse_Ancestry{Name: name}
+		respAncestry.ScannedDetectors = ancestry.ProcessedBy.Detectors
+		respAncestry.ScannedListers = ancestry.ProcessedBy.Listers
+		respAncestry.Layers = []*pb.GetAncestryResponse_AncestryLayer{}
 
-			for _, fv := range featureVulnerabilities {
-				// Ensure that every feature can be found.
-				if !fv.Valid {
-					return nil, status.Error(codes.Internal, "ancestry feature is not found")
+		for _, layer := range ancestry.Layers {
+			ancestryLayer := &pb.GetAncestryResponse_AncestryLayer{}
+
+			if req.GetWithVulnerabilities() {
+				featureVulnerabilities, err := tx.FindAffectedNamespacedFeatures(layer.DetectedFeatures)
+				if err != nil {
+					return nil, status.Error(codes.Internal, err.Error())
 				}
 
-				pbFeature := pb.NamespacedFeatureFromDatabaseModel(fv.NamespacedFeature)
-				for _, v := range fv.AffectedBy {
-					pbVuln, err := pb.VulnerabilityWithFixedInFromDatabaseModel(v)
-					if err != nil {
-						return nil, status.Error(codes.Internal, err.Error())
+				for _, fv := range featureVulnerabilities {
+					// Ensure that every feature can be found.
+					if !fv.Valid {
+						return nil, status.Error(codes.Internal, "ancestry feature is not found")
 					}
-					pbFeature.Vulnerabilities = append(pbFeature.Vulnerabilities, pbVuln)
-				}
 
-				pbAncestry.Features = append(pbAncestry.Features, pbFeature)
+					feature := pb.NamespacedFeatureFromDatabaseModel(fv.NamespacedFeature)
+					for _, v := range fv.AffectedBy {
+						vuln, err := pb.VulnerabilityWithFixedInFromDatabaseModel(v)
+						if err != nil {
+							return nil, status.Error(codes.Internal, err.Error())
+						}
+						feature.Vulnerabilities = append(feature.Vulnerabilities, vuln)
+					}
+					ancestryLayer.DetectedFeatures = append(ancestryLayer.DetectedFeatures, feature)
+				}
+			} else {
+				for _, dbFeature := range layer.DetectedFeatures {
+					ancestryLayer.DetectedFeatures = append(ancestryLayer.DetectedFeatures, pb.NamespacedFeatureFromDatabaseModel(dbFeature))
+				}
 			}
-		} else {
-			for _, f := range ancestryWFeature.Features {
-				pbAncestry.Features = append(pbAncestry.Features, pb.NamespacedFeatureFromDatabaseModel(f))
-			}
+
+			respAncestry.Layers = append(respAncestry.Layers, ancestryLayer)
 		}
+	} else {
+		dbAncestry, ok, err := tx.FindAncestry(name)
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		} else if !ok {
+			return nil, status.Error(codes.NotFound, fmt.Sprintf("requested ancestry '%s' is not found", req.GetAncestryName()))
+		}
+		respAncestry = pb.AncestryFromDatabaseModel(dbAncestry)
 	}
 
 	clairStatus, err := GetClairStatus(s.Store)
@@ -172,7 +185,7 @@ func (s *AncestryServer) GetAncestry(ctx context.Context, req *pb.GetAncestryReq
 
 	return &pb.GetAncestryResponse{
 		Status:   clairStatus,
-		Ancestry: pbAncestry,
+		Ancestry: respAncestry,
 	}, nil
 }
 
