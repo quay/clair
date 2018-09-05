@@ -18,9 +18,11 @@ package rhel
 
 import (
 	"bufio"
+	"compress/bzip2"
 	"encoding/xml"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -40,9 +42,11 @@ const (
 	firstRHEL5RHSA      = 20070044
 	firstConsideredRHEL = 5
 
-	ovalURI        = "https://www.redhat.com/security/data/oval/"
-	rhsaFilePrefix = "com.redhat.rhsa-"
-	updaterFlag    = "rhelUpdater"
+	ovalURI              = "https://www.redhat.com/security/data/oval/"
+	rhsaFilePrefix       = "com.redhat.rhsa-"
+	rhsaDecompressedFile = "com.redhat.rhsa-all.xml"
+	rhsaCompressedFile   = "com.redhat.rhsa-all.xml.bz2"
+	updaterFlag          = "rhelUpdater"
 )
 
 var (
@@ -55,6 +59,8 @@ var (
 
 	rhsaRegexp = regexp.MustCompile(`com.redhat.rhsa-(\d+).xml`)
 	idRegexp   = regexp.MustCompile(`oval:com.redhat.rhsa:def:(\d+)`)
+
+	logp = log.WithField("package", "RHEL")
 )
 
 type oval struct {
@@ -94,7 +100,7 @@ func init() {
 }
 
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
-	log.WithField("package", "RHEL").Info("Start fetching vulnerabilities")
+	logp.Info("Start fetching vulnerabilities")
 
 	tx, err := datastore.Begin()
 	if err != nil {
@@ -127,31 +133,34 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 }
 
 func (u *updater) FetchAll() (resp vulnsrc.UpdateResponse, err error) {
-	log.WithField("package", "RHEL").Infof("Download %sall.xml", rhsaFilePrefix)
-	// Download the RHSA's XML file.
-	r, err := http.Get(ovalURI + rhsaFilePrefix + "all.xml")
-	if r.StatusCode == 404 {
-		log.WithField("package", "RHEL").Warnf("%sall.xml not found, try fetch each xml", rhsaFilePrefix)
-		return u.FetchEach()
-	}
+	logp.Info("fetch compressed xml")
+	// Download the RHSA's bz2 xml file.
+	r, err := http.Get(ovalURI + rhsaCompressedFile)
 	if err != nil {
-		log.WithField("package", "RHEL").WithError(err).Error("could not download RHEL's update list")
-		return resp, commonerr.ErrCouldNotDownload
-	}
-	if r.StatusCode != 200 {
-		log.WithField("package", "RHEL").Error("repsonse status code isn't 200")
+		logp.WithError(err).Error("could not download RHEL's compressed file")
 		return resp, commonerr.ErrCouldNotDownload
 	}
 	defer r.Body.Close()
+	if r.StatusCode == 404 {
+		logp.WithField("file", rhsaCompressedFile).Warn("file not found, try fetch each xml")
+		return u.FetchEach()
+	}
+	if r.StatusCode != 200 {
+		logp.WithField("file", rhsaCompressedFile).Error("response status code isn't 200")
+		return resp, commonerr.ErrCouldNotDownload
+	}
 
-	log.WithField("package", "RHEL").Infof("Parse %sall.xml", rhsaFilePrefix)
+	logp.WithField("file", rhsaCompressedFile).Info("decompress and parse")
+
+	bzip2r := ioutil.NopCloser(bzip2.NewReader(r.Body))
+
 	// Parse the XML.
-	vs, err := parseRHSA(r.Body, u)
+	vs, err := parseRHSA(bzip2r, u)
 	if err != nil {
 		return resp, err
 	}
 
-	log.WithField("package", "RHEL").Infof("Total %d Vulnerabilities in %sall.xml", len(vs), rhsaFilePrefix)
+	logp.WithField("file", rhsaDecompressedFile).WithField("vulnerabilities", len(vs)).Info("parse xml success")
 	// Collect vulnerabilities.
 	for _, v := range vs {
 		resp.Vulnerabilities = append(resp.Vulnerabilities, v)
@@ -169,12 +178,13 @@ func (u *updater) FetchEach() (resp vulnsrc.UpdateResponse, err error) {
 
 	// Fetch the update list.
 	r, err := http.Get(ovalURI)
-	if r.StatusCode != 200 {
-		log.WithField("package", "RHEL").Error("repsonse status code isn't 200")
+	if err != nil {
+		logp.WithError(err).Error("could not download RHEL's update list")
 		return resp, commonerr.ErrCouldNotDownload
 	}
-	if err != nil {
-		log.WithError(err).Error("could not download RHEL's update list")
+	defer r.Body.Close()
+	if r.StatusCode != 200 {
+		logp.Error("response status code isn't 200")
 		return resp, commonerr.ErrCouldNotDownload
 	}
 
@@ -194,9 +204,10 @@ func (u *updater) FetchEach() (resp vulnsrc.UpdateResponse, err error) {
 
 	for _, rhsa := range rhsaList {
 		// Download the RHSA's XML file.
-		r, err := http.Get(ovalURI + rhsaFilePrefix + strconv.Itoa(rhsa) + ".xml")
+		file := rhsaFilePrefix + strconv.Itoa(rhsa) + ".xml"
+		r, err := http.Get(ovalURI + file)
 		if err != nil {
-			log.WithError(err).Error("could not download RHEL's update list")
+			logp.WithField("file", file).WithError(err).Error("could not download RHEL's update list")
 			return resp, commonerr.ErrCouldNotDownload
 		}
 
@@ -217,7 +228,7 @@ func (u *updater) FetchEach() (resp vulnsrc.UpdateResponse, err error) {
 		resp.FlagName = updaterFlag
 		resp.FlagValue = strconv.Itoa(rhsaList[len(rhsaList)-1])
 	} else {
-		log.WithField("package", "Red Hat").Debug("no update")
+		logp.Debug("no update")
 	}
 
 	return resp, nil
