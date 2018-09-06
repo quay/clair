@@ -38,6 +38,14 @@ func IntFromPtr(i *int64) Int {
 	return NewInt(*i, true)
 }
 
+// ValueOrZero returns the inner value if valid, otherwise zero.
+func (i Int) ValueOrZero() int64 {
+	if !i.Valid {
+		return 0
+	}
+	return i.Int64
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will not be considered a null Int.
@@ -48,10 +56,17 @@ func (i *Int) UnmarshalJSON(data []byte) error {
 	if err = json.Unmarshal(data, &v); err != nil {
 		return err
 	}
-	switch v.(type) {
+	switch x := v.(type) {
 	case float64:
 		// Unmarshal again, directly to int64, to avoid intermediate float64
 		err = json.Unmarshal(data, &i.Int64)
+	case string:
+		str := string(x)
+		if len(str) == 0 {
+			i.Valid = false
+			return nil
+		}
+		i.Int64, err = strconv.ParseInt(str, 10, 64)
 	case map[string]interface{}:
 		err = json.Unmarshal(data, &i.NullInt64)
 	case nil:

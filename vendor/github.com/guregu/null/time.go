@@ -60,6 +60,14 @@ func TimeFromPtr(t *time.Time) Time {
 	return NewTime(*t, true)
 }
 
+// ValueOrZero returns the inner value if valid, otherwise zero.
+func (t Time) ValueOrZero() time.Time {
+	if !t.Valid {
+		return time.Time{}
+	}
+	return t.Time
+}
+
 // MarshalJSON implements json.Marshaler.
 // It will encode null if this time is null.
 func (t Time) MarshalJSON() ([]byte, error) {
@@ -132,4 +140,10 @@ func (t Time) Ptr() *time.Time {
 		return nil
 	}
 	return &t.Time
+}
+
+// IsZero returns true for invalid Times, hopefully for future omitempty support.
+// A non-null Time with a zero value will not be considered zero.
+func (t Time) IsZero() bool {
+	return !t.Valid
 }

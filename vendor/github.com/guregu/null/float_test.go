@@ -2,12 +2,15 @@ package null
 
 import (
 	"encoding/json"
+	"math"
 	"testing"
 )
 
 var (
-	floatJSON     = []byte(`1.2345`)
-	nullFloatJSON = []byte(`{"Float64":1.2345,"Valid":true}`)
+	floatJSON       = []byte(`1.2345`)
+	floatStringJSON = []byte(`"1.2345"`)
+	floatBlankJSON  = []byte(`""`)
+	nullFloatJSON   = []byte(`{"Float64":1.2345,"Valid":true}`)
 )
 
 func TestFloatFrom(t *testing.T) {
@@ -36,15 +39,25 @@ func TestUnmarshalFloat(t *testing.T) {
 	maybePanic(err)
 	assertFloat(t, f, "float json")
 
+	var sf Float
+	err = json.Unmarshal(floatStringJSON, &sf)
+	maybePanic(err)
+	assertFloat(t, sf, "string float json")
+
 	var nf Float
 	err = json.Unmarshal(nullFloatJSON, &nf)
 	maybePanic(err)
-	assertFloat(t, nf, "sq.NullFloat64 json")
+	assertFloat(t, nf, "sql.NullFloat64 json")
 
 	var null Float
 	err = json.Unmarshal(nullJSON, &null)
 	maybePanic(err)
 	assertNullFloat(t, null, "null json")
+
+	var blank Float
+	err = json.Unmarshal(floatBlankJSON, &blank)
+	maybePanic(err)
+	assertNullFloat(t, blank, "null blank string json")
 
 	var badType Float
 	err = json.Unmarshal(boolJSON, &badType)
@@ -147,10 +160,41 @@ func TestFloatScan(t *testing.T) {
 	maybePanic(err)
 	assertFloat(t, f, "scanned float")
 
+	var sf Float
+	err = sf.Scan("1.2345")
+	maybePanic(err)
+	assertFloat(t, sf, "scanned string float")
+
 	var null Float
 	err = null.Scan(nil)
 	maybePanic(err)
 	assertNullFloat(t, null, "scanned null")
+}
+
+func TestFloatInfNaN(t *testing.T) {
+	nan := NewFloat(math.NaN(), true)
+	_, err := nan.MarshalJSON()
+	if err == nil {
+		t.Error("expected error for NaN, got nil")
+	}
+
+	inf := NewFloat(math.Inf(1), true)
+	_, err = inf.MarshalJSON()
+	if err == nil {
+		t.Error("expected error for Inf, got nil")
+	}
+}
+
+func TestFloatValueOrZero(t *testing.T) {
+	valid := NewFloat(1.2345, true)
+	if valid.ValueOrZero() != 1.2345 {
+		t.Error("unexpected ValueOrZero", valid.ValueOrZero())
+	}
+
+	invalid := NewFloat(1.2345, false)
+	if invalid.ValueOrZero() != 0 {
+		t.Error("unexpected ValueOrZero", invalid.ValueOrZero())
+	}
 }
 
 func assertFloat(t *testing.T, f Float, from string) {
