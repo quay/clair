@@ -26,7 +26,5 @@ import:
   version: ^1.1.4
   subpackages:
   - assert
-- package: github.com/tylerb/graceful
-  version: ^1.2.15
 - package: gopkg.in/yaml.v2
 - package: github.com/cockroachdb/cmux

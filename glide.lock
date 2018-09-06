@@ -1,5 +1,5 @@
-hash: b5b9ebebad30becd361736196a015af23b1d9a616a375c7fc13823121fd17226
-updated: 2017-06-05T16:11:29.019891941-04:00
+hash: 9bf7ad53b92119a17068b8724d9b406a7ca84b5bfcd0baba44b08c696a538b14
+updated: 2018-09-06T15:58:19.234504-04:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -23,9 +23,13 @@ imports:
   - jsonpb
   - proto
   - protoc-gen-go/descriptor
+  - ptypes
   - ptypes/any
-  - ptypes/empty
+  - ptypes/duration
   - ptypes/struct
+  - ptypes/timestamp
+- name: github.com/google/uuid
+  version: e704694aed0ea004bb7eb1fc2e911d048a54606a
 - name: github.com/grpc-ecosystem/go-grpc-prometheus
   version: 2500245aa6110c562d17020fb31a2c133d737799
 - name: github.com/grpc-ecosystem/grpc-gateway
@@ -35,7 +39,7 @@ imports:
   - runtime/internal
   - utilities
 - name: github.com/guregu/null
-  version: 41961cea0328defc5f95c1c473f89ebf0d1813f6
+  version: 80515d440932108546bcade467bb7d6968e812e2
   subpackages:
   - zero
 - name: github.com/hashicorp/golang-lru
@@ -53,7 +57,7 @@ imports:
   subpackages:
   - pbutil
 - name: github.com/pborman/uuid
-  version: a97ce2ca70fa5a848076093f05e639a89ca34d06
+  version: adf5a7427709b9deb95d29d3fa8a2bf9cfd388f1
 - name: github.com/pmezard/go-difflib
   version: d8ed2627bdf02c080bf22230dbb337003b7aba2d
   subpackages:
@@ -81,11 +85,9 @@ imports:
 - name: github.com/sirupsen/logrus
   version: ba1b36c82c5e05c4f912a88eab0dcd91a171688f
 - name: github.com/stretchr/testify
-  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
+  version: f35b8ab0b5a2cef36673838d662e249dd9c94686
   subpackages:
   - assert
-- name: github.com/tylerb/graceful
-  version: 4654dfbb6ad53cb5e27f37d99b02e16c1872fbbb
 - name: golang.org/x/net
   version: 59a0b19b5533c7977ddeb86b017bf507ed407b12
   subpackages:
