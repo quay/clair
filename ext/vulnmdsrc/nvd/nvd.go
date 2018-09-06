@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -36,6 +35,7 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/vulnmdsrc"
 	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/coreos/clair/pkg/httputil"
 )
 
 const (
@@ -166,9 +166,15 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 			}
 
 			// Download data feed.
-			r, err := http.Get(fmt.Sprintf(dataFeedURL, dataFeedName))
+			r, err := httputil.GetWithUserAgent(fmt.Sprintf(dataFeedURL, dataFeedName))
 			if err != nil {
 				log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not download NVD data feed")
+				return dataFeedReaders, dataFeedHashes, commonerr.ErrCouldNotDownload
+			}
+			// r is closed in BuildCache()
+
+			if !httputil.Status2xx(r) {
+				log.WithField("StatusCode", r.StatusCode).Error("Failed to download NVD data feed")
 				return dataFeedReaders, dataFeedHashes, commonerr.ErrCouldNotDownload
 			}
 
@@ -199,11 +205,15 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 }
 
 func getHashFromMetaURL(metaURL string) (string, error) {
-	r, err := http.Get(metaURL)
+	r, err := httputil.GetWithUserAgent(metaURL)
 	if err != nil {
 		return "", err
 	}
 	defer r.Body.Close()
+
+	if !httputil.Status2xx(r) {
+		return "", errors.New("Unsuccesuful status code: " + string(r.StatusCode))
+	}
 
 	scanner := bufio.NewScanner(r.Body)
 	for scanner.Scan() {
