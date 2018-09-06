@@ -1,4 +1,4 @@
-// Copyright 2017 clair authors
+// Copyright 2018 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/fernet/fernet-go"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
@@ -31,6 +30,7 @@ import (
 	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/ext/notification"
 	"github.com/coreos/clair/ext/vulnsrc"
+	"github.com/coreos/clair/pkg/pagination"
 )
 
 // ErrDatasourceNotLoaded is returned when the datasource variable in the
@@ -108,15 +108,10 @@ func LoadConfig(path string) (config *Config, err error) {
 	// Generate a pagination key if none is provided.
 	if v, ok := config.Database.Options["paginationkey"]; !ok || v == nil || v.(string) == "" {
 		log.Warn("pagination key is empty, generating...")
-		var key fernet.Key
-		if err = key.Generate(); err != nil {
-			return
-		}
-		config.Database.Options["paginationkey"] = key.Encode()
+		config.Database.Options["paginationkey"] = pagination.Must(pagination.NewKey()).String()
 	} else {
-		_, err = fernet.DecodeKey(config.Database.Options["paginationkey"].(string))
+		_, err = pagination.KeyFromString(config.Database.Options["paginationkey"].(string))
 		if err != nil {
-			err = errors.New("Invalid Pagination key; must be 32-bit URL-safe base64")
 			return
 		}
 	}

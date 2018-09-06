@@ -33,8 +33,8 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/database/pgsql/migrations"
-	"github.com/coreos/clair/database/pgsql/token"
 	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/coreos/clair/pkg/pagination"
 )
 
 var (
@@ -91,41 +91,21 @@ type pgSQL struct {
 type pgSession struct {
 	*sql.Tx
 
-	paginationKey string
+	key pagination.Key
 }
 
-type idPageNumber struct {
-	// StartID is an implementation detail for paginating by an ID required to
-	// be unique to every ancestry and always increasing.
-	//
-	// StartID is used to search for ancestry with ID >= StartID
-	StartID int64
-}
-
-func encryptPage(page idPageNumber, paginationKey string) (result database.PageNumber, err error) {
-	resultBytes, err := token.Marshal(page, paginationKey)
-	if err != nil {
-		return result, err
-	}
-	result = database.PageNumber(resultBytes)
-	return result, nil
-}
-
-func decryptPage(page database.PageNumber, paginationKey string) (result idPageNumber, err error) {
-	err = token.Unmarshal(string(page), paginationKey, &result)
-	return
-}
-
-// Begin initiates a transaction to database. The expected transaction isolation
-// level in this implementation is "Read Committed".
+// Begin initiates a transaction to database.
+//
+// The expected transaction isolation level in this implementation is "Read
+// Committed".
 func (pgSQL *pgSQL) Begin() (database.Session, error) {
 	tx, err := pgSQL.DB.Begin()
 	if err != nil {
 		return nil, err
 	}
 	return &pgSession{
-		Tx:            tx,
-		paginationKey: pgSQL.config.PaginationKey,
+		Tx:  tx,
+		key: pagination.Must(pagination.KeyFromString(pgSQL.config.PaginationKey)),
 	}, nil
 }
 

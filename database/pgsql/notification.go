@@ -165,10 +165,10 @@ func (tx *pgSession) FindNewNotification(notifiedBefore time.Time) (database.Not
 
 func (tx *pgSession) findPagedVulnerableAncestries(vulnID int64, limit int, currentPage database.PageNumber) (database.PagedVulnerableAncestries, error) {
 	vulnPage := database.PagedVulnerableAncestries{Limit: limit}
-	current := idPageNumber{0}
+	current := Page{0}
 	if currentPage != "" {
 		var err error
-		current, err = decryptPage(currentPage, tx.paginationKey)
+		current, err = PageFromPageNumber(tx.key, currentPage)
 		if err != nil {
 			return vulnPage, err
 		}
@@ -211,11 +211,7 @@ func (tx *pgSession) findPagedVulnerableAncestries(vulnID int64, limit int, curr
 	} else {
 		// Use the last ancestry's ID as the next PageNumber.
 		lastIndex = len(ancestries) - 1
-		vulnPage.Next, err = encryptPage(
-			idPageNumber{
-				ancestries[len(ancestries)-1].id,
-			}, tx.paginationKey)
-
+		vulnPage.Next, err = Page{ancestries[len(ancestries)-1].id}.PageNumber(tx.key)
 		if err != nil {
 			return vulnPage, err
 		}
@@ -226,7 +222,7 @@ func (tx *pgSession) findPagedVulnerableAncestries(vulnID int64, limit int, curr
 		vulnPage.Affected[int(ancestry.id)] = ancestry.name
 	}
 
-	vulnPage.Current, err = encryptPage(current, tx.paginationKey)
+	vulnPage.Current, err = current.PageNumber(tx.key)
 	if err != nil {
 		return vulnPage, err
 	}

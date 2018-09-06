@@ -1,4 +1,4 @@
-// Copyright 2017 clair authors
+// Copyright 2018 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -73,22 +73,22 @@ func TestPagination(t *testing.T) {
 	if assert.Nil(t, err) && assert.True(t, ok) {
 		assert.Equal(t, "test", noti.Name)
 		if assert.NotNil(t, noti.Old) && assert.NotNil(t, noti.New) {
-			oldPageNum, err := decryptPage(noti.Old.Current, tx.paginationKey)
+			oldPage, err := PageFromPageNumber(tx.key, noti.Old.Current)
 			if !assert.Nil(t, err) {
 				assert.FailNow(t, "")
 			}
 
-			assert.Equal(t, int64(0), oldPageNum.StartID)
-			newPageNum, err := decryptPage(noti.New.Current, tx.paginationKey)
+			assert.Equal(t, int64(0), oldPage.StartID)
+			newPage, err := PageFromPageNumber(tx.key, noti.New.Current)
 			if !assert.Nil(t, err) {
 				assert.FailNow(t, "")
 			}
-			newPageNextNum, err := decryptPage(noti.New.Next, tx.paginationKey)
+			newPageNext, err := PageFromPageNumber(tx.key, noti.New.Next)
 			if !assert.Nil(t, err) {
 				assert.FailNow(t, "")
 			}
-			assert.Equal(t, int64(0), newPageNum.StartID)
-			assert.Equal(t, int64(4), newPageNextNum.StartID)
+			assert.Equal(t, int64(0), newPage.StartID)
+			assert.Equal(t, int64(4), newPageNext.StartID)
 
 			noti.Old.Current = ""
 			noti.New.Current = ""
@@ -98,26 +98,26 @@ func TestPagination(t *testing.T) {
 		}
 	}
 
-	page1, err := encryptPage(idPageNumber{0}, tx.paginationKey)
+	pageNum1, err := Page{0}.PageNumber(tx.key)
 	if !assert.Nil(t, err) {
 		assert.FailNow(t, "")
 	}
 
-	page2, err := encryptPage(idPageNumber{4}, tx.paginationKey)
+	pageNum2, err := Page{4}.PageNumber(tx.key)
 	if !assert.Nil(t, err) {
 		assert.FailNow(t, "")
 	}
 
-	noti, ok, err = tx.FindVulnerabilityNotification("test", 1, page1, page2)
+	noti, ok, err = tx.FindVulnerabilityNotification("test", 1, pageNum1, pageNum2)
 	if assert.Nil(t, err) && assert.True(t, ok) {
 		assert.Equal(t, "test", noti.Name)
 		if assert.NotNil(t, noti.Old) && assert.NotNil(t, noti.New) {
-			oldCurrentPage, err := decryptPage(noti.Old.Current, tx.paginationKey)
+			oldCurrentPage, err := PageFromPageNumber(tx.key, noti.Old.Current)
 			if !assert.Nil(t, err) {
 				assert.FailNow(t, "")
 			}
 
-			newCurrentPage, err := decryptPage(noti.New.Current, tx.paginationKey)
+			newCurrentPage, err := PageFromPageNumber(tx.key, noti.New.Current)
 			if !assert.Nil(t, err) {
 				assert.FailNow(t, "")
 			}
