@@ -35,12 +35,13 @@ import (
 	"github.com/coreos/clair/pkg/httputil"
 )
 
+var ovalURI = "https://www.redhat.com/security/data/oval/"
+
 const (
 	// Before this RHSA, it deals only with RHEL <= 4.
 	firstRHEL5RHSA      = 20070044
 	firstConsideredRHEL = 5
 
-	ovalURI        = "https://www.redhat.com/security/data/oval/"
 	rhsaFilePrefix = "com.redhat.rhsa-"
 	updaterFlag    = "rhelUpdater"
 )
@@ -86,6 +87,11 @@ type updater struct{}
 
 func init() {
 	vulnsrc.RegisterUpdater("rhel", &updater{})
+}
+
+func (u *updater) SetEndpointURL(endpointURL string) {
+	log.WithFields(log.Fields{"package": "RHEL", "URL": endpointURL}).Debug("Endpoint URL changed")
+	ovalURI = endpointURL
 }
 
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {

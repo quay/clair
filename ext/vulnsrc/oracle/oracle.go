@@ -36,9 +36,10 @@ import (
 	"github.com/coreos/clair/pkg/httputil"
 )
 
+var ovalURI = "https://linux.oracle.com/oval/"
+
 const (
 	firstOracle5ELSA = 20070057
-	ovalURI          = "https://linux.oracle.com/oval/"
 	elsaFilePrefix   = "com.oracle.elsa-"
 	updaterFlag      = "oracleUpdater"
 )
@@ -113,6 +114,11 @@ func compareELSA(left, right int) int {
 
 	// Everything the length of left is the same.
 	return len(lstr) - len(rstr)
+}
+
+func (u *updater) SetEndpointURL(endpointURL string) {
+	log.WithFields(log.Fields{"package": "Oracle", "URL": endpointURL}).Debug("Endpoint URL changed")
+	ovalURI = endpointURL
 }
 
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {

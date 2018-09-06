@@ -35,10 +35,11 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
+var trackerGitURL = "https://git.launchpad.net/ubuntu-cve-tracker"
+
 const (
-	trackerGitURL = "https://git.launchpad.net/ubuntu-cve-tracker"
-	updaterFlag   = "ubuntuUpdater"
-	cveURL        = "http://people.ubuntu.com/~ubuntu-security/cve/%s"
+	updaterFlag = "ubuntuUpdater"
+	cveURL      = "http://people.ubuntu.com/~ubuntu-security/cve/%s"
 )
 
 var (
@@ -79,6 +80,11 @@ type updater struct {
 
 func init() {
 	vulnsrc.RegisterUpdater("ubuntu", &updater{})
+}
+
+func (u *updater) SetEndpointURL(endpointURL string) {
+	log.WithFields(log.Fields{"package": "Ubuntu", "URL": endpointURL}).Debug("Endpoint URL changed")
+	trackerGitURL = endpointURL
 }
 
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {

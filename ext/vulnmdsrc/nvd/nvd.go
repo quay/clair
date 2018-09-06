@@ -37,11 +37,13 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
-const (
-	dataFeedURL     string = "https://nvd.nist.gov/feeds/xml/cve/2.0/nvdcve-2.0-%s.xml.gz"
-	dataFeedMetaURL string = "https://nvd.nist.gov/feeds/xml/cve/2.0/nvdcve-2.0-%s.meta"
+var baseURL = "https://nvd.nist.gov/feeds/xml/cve/2.0/"
 
-	appenderName string = "NVD"
+const (
+	dataFeedFile string = "nvdcve-2.0-%s.xml.gz"
+	dataFeedMeta string = "nvdcve-2.0-%s.meta"
+
+	appenderName string = "nvd"
 
 	logDataFeedName string = "data feed name"
 )
@@ -63,6 +65,12 @@ type NVDmetadataCVSSv2 struct {
 
 func init() {
 	vulnmdsrc.RegisterAppender(appenderName, &appender{})
+}
+
+// This function will change the baseURL for the feed URL
+func (a *appender) SetEndpointURL(endpointURL string) {
+	log.WithFields(log.Fields{"package": appenderName, "URL": endpointURL}).Debug("Endpoint URL changed")
+	baseURL = endpointURL
 }
 
 func (a *appender) BuildCache(datastore database.Datastore) error {
@@ -132,7 +140,7 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 
 	// Get hashes for these feeds.
 	for _, dataFeedName := range dataFeedNames {
-		hash, err := getHashFromMetaURL(fmt.Sprintf(dataFeedMetaURL, dataFeedName))
+		hash, err := getHashFromMetaURL(fmt.Sprintf(baseURL+dataFeedMeta, dataFeedName))
 		if err != nil {
 			log.WithError(err).WithField(logDataFeedName, dataFeedName).Warning("could not get NVD data feed hash")
 
@@ -161,7 +169,7 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 			}
 
 			// Download data feed.
-			r, err := http.Get(fmt.Sprintf(dataFeedURL, dataFeedName))
+			r, err := http.Get(fmt.Sprintf(baseURL+dataFeedFile, dataFeedName))
 			if err != nil {
 				log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not download NVD data feed")
 				return dataFeedReaders, dataFeedHashes, commonerr.ErrCouldNotDownload

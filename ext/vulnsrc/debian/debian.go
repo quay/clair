@@ -34,8 +34,9 @@ import (
 	"github.com/coreos/clair/pkg/httputil"
 )
 
+var url = "https://security-tracker.debian.org/tracker/data/json"
+
 const (
-	url          = "https://security-tracker.debian.org/tracker/data/json"
 	cveURLPrefix = "https://security-tracker.debian.org/tracker"
 	updaterFlag  = "debianUpdater"
 )
@@ -57,6 +58,11 @@ type updater struct{}
 
 func init() {
 	vulnsrc.RegisterUpdater("debian", &updater{})
+}
+
+func (u *updater) SetEndpointURL(endpointURL string) {
+	log.WithFields(log.Fields{"package": "Debian", "URL": endpointURL}).Debug("Endpoint URL changed")
+	url = endpointURL
 }
 
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {

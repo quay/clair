@@ -55,6 +55,15 @@ clair:
     # Frequency the database will be updated with vulnerabilities from the default data sources
     # The value 0 disables the updater entirely.
     interval: 2h
+    # (Optional) Endpoints can be used to change the endpoint that a package uses
+    # If omited the default is used
+    #endpoints:
+    #  alpine: https://github.com/alpinelinux/alpine-secdb
+    #  debian: https://security-tracker.debian.org/tracker/data/json
+    #  oracle: https://linux.oracle.com/oval/
+    #  rhel: https://www.redhat.com/security/data/oval/
+    #  ubuntu: https://git.launchpad.net/ubuntu-cve-tracker
+    #  nvd: https://nvd.nist.gov/feeds/xml/cve/2.0/
 
   notifier:
     # Number of attempts before the notification is marked as failed to be sent

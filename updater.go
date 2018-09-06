@@ -16,6 +16,7 @@ package clair
 
 import (
 	"math/rand"
+	"net/url"
 	"strconv"
 	"sync"
 	"time"
@@ -64,6 +65,8 @@ func init() {
 // UpdaterConfig is the configuration for the Updater service.
 type UpdaterConfig struct {
 	Interval time.Duration
+	// Endpoints is used to change the defaults endpoints for updaters and appenders
+	Endpoints map[string]string
 }
 
 // RunUpdater begins a process that updates the vulnerability database at
@@ -75,6 +78,26 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 	if config == nil || config.Interval == 0 {
 		log.Info("updater service is disabled.")
 		return
+	}
+
+	for name, updater := range vulnsrc.Updaters() {
+		endpointURL, ok := config.Endpoints[name]
+		if ok && endpointURL != "" {
+			if _, err := url.ParseRequestURI(endpointURL); err != nil {
+				log.WithFields(log.Fields{"updater name": name, "endpoint": endpointURL}).Fatalf("Invalid url")
+			}
+			updater.SetEndpointURL(endpointURL)
+		}
+	}
+
+	for name, appender := range vulnmdsrc.Appenders() {
+		endpointURL, ok := config.Endpoints[name]
+		if ok && endpointURL != "" {
+			if _, err := url.ParseRequestURI(endpointURL); err != nil {
+				log.WithFields(log.Fields{"appender name": name, "endpoint": endpointURL}).Fatalf("Invalid url")
+			}
+			appender.SetEndpointURL(endpointURL)
+		}
 	}
 
 	whoAmI := uuid.New()

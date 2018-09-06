@@ -34,8 +34,9 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
+var secdbGitURL = "https://github.com/alpinelinux/alpine-secdb"
+
 const (
-	secdbGitURL  = "https://github.com/alpinelinux/alpine-secdb"
 	updaterFlag  = "alpine-secdbUpdater"
 	nvdURLPrefix = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
 )
@@ -46,6 +47,11 @@ func init() {
 
 type updater struct {
 	repositoryLocalPath string
+}
+
+func (u *updater) SetEndpointURL(endpointURL string) {
+	log.WithFields(log.Fields{"package": "Alpine", "URL": endpointURL}).Debug("Endpoint URL changed")
+	secdbGitURL = endpointURL
 }
 
 func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, err error) {

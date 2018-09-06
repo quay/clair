@@ -37,6 +37,9 @@ type Appender interface {
 	// for future calls to Append.
 	BuildCache(database.Datastore) error
 
+	//Set the endpoint URL for the Appender
+	SetEndpointURL(string)
+
 	// AddMetadata adds metadata to the given database.Vulnerability.
 	// It is expected that the fetcher uses .Lock.Lock() when manipulating the Metadata map.
 	// Append
