@@ -22,7 +22,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -32,6 +31,7 @@ import (
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/ext/vulnsrc"
 	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/coreos/clair/pkg/httputil"
 )
 
 const (
@@ -63,9 +63,15 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	log.WithField("package", "Debian").Info("Start fetching vulnerabilities")
 
 	// Download JSON.
-	r, err := http.Get(url)
+	r, err := httputil.GetWithUserAgent(url)
 	if err != nil {
 		log.WithError(err).Error("could not download Debian's update")
+		return resp, commonerr.ErrCouldNotDownload
+	}
+	defer r.Body.Close()
+
+	if !httputil.Status2xx(r) {
+		log.WithField("StatusCode", r.StatusCode).Error("Failed to update Debian")
 		return resp, commonerr.ErrCouldNotDownload
 	}
 
