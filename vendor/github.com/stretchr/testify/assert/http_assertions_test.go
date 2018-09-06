@@ -19,21 +19,52 @@ func httpError(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusInternalServerError)
 }
 
-func TestHTTPStatuses(t *testing.T) {
+func TestHTTPSuccess(t *testing.T) {
 	assert := New(t)
-	mockT := new(testing.T)
 
-	assert.Equal(HTTPSuccess(mockT, httpOK, "GET", "/", nil), true)
-	assert.Equal(HTTPSuccess(mockT, httpRedirect, "GET", "/", nil), false)
-	assert.Equal(HTTPSuccess(mockT, httpError, "GET", "/", nil), false)
+	mockT1 := new(testing.T)
+	assert.Equal(HTTPSuccess(mockT1, httpOK, "GET", "/", nil), true)
+	assert.False(mockT1.Failed())
 
-	assert.Equal(HTTPRedirect(mockT, httpOK, "GET", "/", nil), false)
-	assert.Equal(HTTPRedirect(mockT, httpRedirect, "GET", "/", nil), true)
-	assert.Equal(HTTPRedirect(mockT, httpError, "GET", "/", nil), false)
+	mockT2 := new(testing.T)
+	assert.Equal(HTTPSuccess(mockT2, httpRedirect, "GET", "/", nil), false)
+	assert.True(mockT2.Failed())
 
-	assert.Equal(HTTPError(mockT, httpOK, "GET", "/", nil), false)
-	assert.Equal(HTTPError(mockT, httpRedirect, "GET", "/", nil), false)
-	assert.Equal(HTTPError(mockT, httpError, "GET", "/", nil), true)
+	mockT3 := new(testing.T)
+	assert.Equal(HTTPSuccess(mockT3, httpError, "GET", "/", nil), false)
+	assert.True(mockT3.Failed())
+}
+
+func TestHTTPRedirect(t *testing.T) {
+	assert := New(t)
+
+	mockT1 := new(testing.T)
+	assert.Equal(HTTPRedirect(mockT1, httpOK, "GET", "/", nil), false)
+	assert.True(mockT1.Failed())
+
+	mockT2 := new(testing.T)
+	assert.Equal(HTTPRedirect(mockT2, httpRedirect, "GET", "/", nil), true)
+	assert.False(mockT2.Failed())
+
+	mockT3 := new(testing.T)
+	assert.Equal(HTTPRedirect(mockT3, httpError, "GET", "/", nil), false)
+	assert.True(mockT3.Failed())
+}
+
+func TestHTTPError(t *testing.T) {
+	assert := New(t)
+
+	mockT1 := new(testing.T)
+	assert.Equal(HTTPError(mockT1, httpOK, "GET", "/", nil), false)
+	assert.True(mockT1.Failed())
+
+	mockT2 := new(testing.T)
+	assert.Equal(HTTPError(mockT2, httpRedirect, "GET", "/", nil), false)
+	assert.True(mockT2.Failed())
+
+	mockT3 := new(testing.T)
+	assert.Equal(HTTPError(mockT3, httpError, "GET", "/", nil), true)
+	assert.False(mockT3.Failed())
 }
 
 func TestHTTPStatusesWrapper(t *testing.T) {
@@ -56,6 +87,35 @@ func TestHTTPStatusesWrapper(t *testing.T) {
 func httpHelloName(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	w.Write([]byte(fmt.Sprintf("Hello, %s!", name)))
+}
+
+func TestHTTPRequestWithNoParams(t *testing.T) {
+	var got *http.Request
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		got = r
+		w.WriteHeader(http.StatusOK)
+	}
+
+	True(t, HTTPSuccess(t, handler, "GET", "/url", nil))
+
+	Empty(t, got.URL.Query())
+	Equal(t, "/url", got.URL.RequestURI())
+}
+
+func TestHTTPRequestWithParams(t *testing.T) {
+	var got *http.Request
+	handler := func(w http.ResponseWriter, r *http.Request) {
+		got = r
+		w.WriteHeader(http.StatusOK)
+	}
+	params := url.Values{}
+	params.Add("id", "12345")
+
+	True(t, HTTPSuccess(t, handler, "GET", "/url", params))
+
+	Equal(t, url.Values{"id": []string{"12345"}}, got.URL.Query())
+	Equal(t, "/url?id=12345", got.URL.String())
+	Equal(t, "/url?id=12345", got.URL.RequestURI())
 }
 
 func TestHttpBody(t *testing.T) {

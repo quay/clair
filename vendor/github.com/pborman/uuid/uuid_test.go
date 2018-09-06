@@ -4,13 +4,15 @@
 
 package uuid
 
+// Some of these tests can probably be removed as they are redundant with the
+// tests in github.com/google/uuid.
+
 import (
 	"bytes"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
-	"time"
 )
 
 type test struct {
@@ -157,51 +159,6 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func clockSeq(t *testing.T, uuid UUID) int {
-	seq, ok := uuid.ClockSequence()
-	if !ok {
-		t.Fatalf("%s: invalid clock sequence", uuid)
-	}
-	return seq
-}
-
-func TestClockSeq(t *testing.T) {
-	// Fake time.Now for this test to return a monotonically advancing time; restore it at end.
-	defer func(orig func() time.Time) { timeNow = orig }(timeNow)
-	monTime := time.Now()
-	timeNow = func() time.Time {
-		monTime = monTime.Add(1 * time.Second)
-		return monTime
-	}
-
-	SetClockSequence(-1)
-	uuid1 := NewUUID()
-	uuid2 := NewUUID()
-
-	if clockSeq(t, uuid1) != clockSeq(t, uuid2) {
-		t.Errorf("clock sequence %d != %d", clockSeq(t, uuid1), clockSeq(t, uuid2))
-	}
-
-	SetClockSequence(-1)
-	uuid2 = NewUUID()
-
-	// Just on the very off chance we generated the same sequence
-	// two times we try again.
-	if clockSeq(t, uuid1) == clockSeq(t, uuid2) {
-		SetClockSequence(-1)
-		uuid2 = NewUUID()
-	}
-	if clockSeq(t, uuid1) == clockSeq(t, uuid2) {
-		t.Errorf("Duplicate clock sequence %d", clockSeq(t, uuid1))
-	}
-
-	SetClockSequence(0x1234)
-	uuid1 = NewUUID()
-	if seq := clockSeq(t, uuid1); seq != 0x1234 {
-		t.Errorf("%s: expected seq 0x1234 got 0x%04x", uuid1, seq)
-	}
-}
-
 func TestCoding(t *testing.T) {
 	text := "7d444840-9dc0-11d1-b245-5ffdce74fad2"
 	urn := "urn:uuid:7d444840-9dc0-11d1-b245-5ffdce74fad2"
@@ -270,69 +227,6 @@ func TestVersion1(t *testing.T) {
 	}
 }
 
-func TestNode(t *testing.T) {
-	// This test is mostly to make sure we don't leave nodeMu locked.
-	ifname = ""
-	if ni := NodeInterface(); ni != "" {
-		t.Errorf("NodeInterface got %q, want %q", ni, "")
-	}
-	if SetNodeInterface("xyzzy") {
-		t.Error("SetNodeInterface succeeded on a bad interface name")
-	}
-	if !SetNodeInterface("") {
-		t.Error("SetNodeInterface failed")
-	}
-	if ni := NodeInterface(); ni == "" {
-		t.Error("NodeInterface returned an empty string")
-	}
-
-	ni := NodeID()
-	if len(ni) != 6 {
-		t.Errorf("ni got %d bytes, want 6", len(ni))
-	}
-	hasData := false
-	for _, b := range ni {
-		if b != 0 {
-			hasData = true
-		}
-	}
-	if !hasData {
-		t.Error("nodeid is all zeros")
-	}
-
-	id := []byte{1,2,3,4,5,6,7,8}
-	SetNodeID(id)
-	ni = NodeID()
-	if !bytes.Equal(ni, id[:6]) {
-		t.Errorf("got nodeid %v, want %v", ni, id[:6])
-	}
-
-	if ni := NodeInterface(); ni != "user" {
-		t.Errorf("got inteface %q, want %q", ni, "user")
-	}
-}
-
-func TestNodeAndTime(t *testing.T) {
-	// Time is February 5, 1998 12:30:23.136364800 AM GMT
-
-	uuid := Parse("7d444840-9dc0-11d1-b245-5ffdce74fad2")
-	node := []byte{0x5f, 0xfd, 0xce, 0x74, 0xfa, 0xd2}
-
-	ts, ok := uuid.Time()
-	if ok {
-		c := time.Unix(ts.UnixTime())
-		want := time.Date(1998, 2, 5, 0, 30, 23, 136364800, time.UTC)
-		if !c.Equal(want) {
-			t.Errorf("Got time %v, want %v", c, want)
-		}
-	} else {
-		t.Errorf("%s: bad time", uuid)
-	}
-	if !bytes.Equal(node, uuid.NodeID()) {
-		t.Errorf("Expected node %v got %v", node, uuid.NodeID())
-	}
-}
-
 func TestMD5(t *testing.T) {
 	uuid := NewMD5(NameSpace_DNS, []byte("python.org")).String()
 	want := "6fa459ea-ee8a-3ca4-894e-db77e160355e"
@@ -346,33 +240,6 @@ func TestSHA1(t *testing.T) {
 	want := "886313e1-3b8a-5372-9b90-0c9aee199e5d"
 	if uuid != want {
 		t.Errorf("SHA1: got %q expected %q", uuid, want)
-	}
-}
-
-func TestNodeID(t *testing.T) {
-	nid := []byte{1, 2, 3, 4, 5, 6}
-	SetNodeInterface("")
-	s := NodeInterface()
-	if s == "" || s == "user" {
-		t.Errorf("NodeInterface %q after SetInteface", s)
-	}
-	node1 := NodeID()
-	if node1 == nil {
-		t.Error("NodeID nil after SetNodeInterface", s)
-	}
-	SetNodeID(nid)
-	s = NodeInterface()
-	if s != "user" {
-		t.Errorf("Expected NodeInterface %q got %q", "user", s)
-	}
-	node2 := NodeID()
-	if node2 == nil {
-		t.Error("NodeID nil after SetNodeID", s)
-	}
-	if bytes.Equal(node1, node2) {
-		t.Error("NodeID not changed after SetNodeID", s)
-	} else if !bytes.Equal(nid, node2) {
-		t.Errorf("NodeID is %x, expected %x", node2, nid)
 	}
 }
 
@@ -421,13 +288,47 @@ func TestBadRand(t *testing.T) {
 	uuid1 := New()
 	uuid2 := New()
 	if uuid1 != uuid2 {
-		t.Errorf("execpted duplicates, got %q and %q", uuid1, uuid2)
+		t.Errorf("expected duplicates, got %q and %q", uuid1, uuid2)
 	}
 	SetRand(nil)
 	uuid1 = New()
 	uuid2 = New()
 	if uuid1 == uuid2 {
-		t.Errorf("unexecpted duplicates, got %q", uuid1)
+		t.Errorf("unexpected duplicates, got %q", uuid1)
+	}
+}
+
+func TestUUID_Array(t *testing.T) {
+	expect := Array{
+		0xf4, 0x7a, 0xc1, 0x0b,
+		0x58, 0xcc,
+		0x03, 0x72,
+		0x85, 0x67,
+		0x0e, 0x02, 0xb2, 0xc3, 0xd4, 0x79,
+	}
+	uuid := Parse("f47ac10b-58cc-0372-8567-0e02b2c3d479")
+	if uuid == nil {
+		t.Fatal("invalid uuid")
+	}
+	if uuid.Array() != expect {
+		t.Fatal("invalid array")
+	}
+}
+
+func TestArray_UUID(t *testing.T) {
+	array := Array{
+		0xf4, 0x7a, 0xc1, 0x0b,
+		0x58, 0xcc,
+		0x03, 0x72,
+		0x85, 0x67,
+		0x0e, 0x02, 0xb2, 0xc3, 0xd4, 0x79,
+	}
+	expect := Parse("f47ac10b-58cc-0372-8567-0e02b2c3d479")
+	if expect == nil {
+		t.Fatal("invalid uuid")
+	}
+	if !bytes.Equal(array.UUID(), expect) {
+		t.Fatal("invalid uuid")
 	}
 }
 
@@ -465,6 +366,44 @@ func BenchmarkUUID_URN(b *testing.B) {
 	}
 	for i := 0; i < b.N; i++ {
 		if uuid.URN() == "" {
+			b.Fatal("invalid uuid")
+		}
+	}
+}
+
+func BenchmarkUUID_Array(b *testing.B) {
+	expect := Array{
+		0xf4, 0x7a, 0xc1, 0x0b,
+		0x58, 0xcc,
+		0x03, 0x72,
+		0x85, 0x67,
+		0x0e, 0x02, 0xb2, 0xc3, 0xd4, 0x79,
+	}
+	uuid := Parse("f47ac10b-58cc-0372-8567-0e02b2c3d479")
+	if uuid == nil {
+		b.Fatal("invalid uuid")
+	}
+	for i := 0; i < b.N; i++ {
+		if uuid.Array() != expect {
+			b.Fatal("invalid array")
+		}
+	}
+}
+
+func BenchmarkArray_UUID(b *testing.B) {
+	array := Array{
+		0xf4, 0x7a, 0xc1, 0x0b,
+		0x58, 0xcc,
+		0x03, 0x72,
+		0x85, 0x67,
+		0x0e, 0x02, 0xb2, 0xc3, 0xd4, 0x79,
+	}
+	expect := Parse("f47ac10b-58cc-0372-8567-0e02b2c3d479")
+	if expect == nil {
+		b.Fatal("invalid uuid")
+	}
+	for i := 0; i < b.N; i++ {
+		if !bytes.Equal(array.UUID(), expect) {
 			b.Fatal("invalid uuid")
 		}
 	}

@@ -143,3 +143,8 @@ func (t Time) Ptr() *time.Time {
 	}
 	return &t.Time
 }
+
+// IsZero returns true for null or zero Times, for potential future omitempty support.
+func (t Time) IsZero() bool {
+	return !t.Valid || t.Time.IsZero()
+}

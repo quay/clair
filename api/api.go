@@ -15,15 +15,14 @@
 package api
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"io/ioutil"
-	"net"
 	"net/http"
 	"time"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/tylerb/graceful"
 
 	"github.com/coreos/clair/api/v3"
 	"github.com/coreos/clair/database"
@@ -61,42 +60,22 @@ func RunHealth(cfg *Config, store database.Datastore, st *stopper.Stopper) {
 	}
 	log.WithField("addr", cfg.HealthAddr).Info("starting health API")
 
-	srv := &graceful.Server{
-		Timeout:          10 * time.Second, // Interrupt health checks when stopping
-		NoSignalHandling: true,             // We want to use our own Stopper
-		Server: &http.Server{
-			Addr:    cfg.HealthAddr,
-			Handler: http.TimeoutHandler(newHealthHandler(store), cfg.Timeout, timeoutResponse),
-		},
+	srv := http.Server{
+		Addr:    cfg.HealthAddr,
+		Handler: http.TimeoutHandler(newHealthHandler(store), cfg.Timeout, timeoutResponse),
 	}
 
-	listenAndServeWithStopper(srv, st, "", "")
-
-	log.Info("health API stopped")
-}
-
-// listenAndServeWithStopper wraps graceful.Server's
-// ListenAndServe/ListenAndServeTLS and adds the ability to interrupt them with
-// the provided stopper.Stopper.
-func listenAndServeWithStopper(srv *graceful.Server, st *stopper.Stopper, certFile, keyFile string) {
 	go func() {
 		<-st.Chan()
-		srv.Stop(0)
+		srv.Shutdown(context.TODO())
 	}()
 
-	var err error
-	if certFile != "" && keyFile != "" {
-		log.Info("API: TLS Enabled")
-		err = srv.ListenAndServeTLS(certFile, keyFile)
-	} else {
-		err = srv.ListenAndServe()
+	err := srv.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		log.Fatal(err)
 	}
 
-	if err != nil {
-		if opErr, ok := err.(*net.OpError); !ok || (ok && opErr.Op != "accept") {
-			log.Fatal(err)
-		}
-	}
+	log.Info("health API stopped")
 }
 
 // tlsClientConfig initializes a *tls.Config using the given CA. The resulting

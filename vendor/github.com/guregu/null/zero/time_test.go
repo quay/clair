@@ -193,6 +193,23 @@ func TestTimeValue(t *testing.T) {
 	}
 }
 
+func TestTimeIsZero(t *testing.T) {
+	str := TimeFrom(timeValue)
+	if str.IsZero() {
+		t.Errorf("IsZero() should be false")
+	}
+
+	zero := TimeFrom(time.Time{})
+	if !zero.IsZero() {
+		t.Errorf("IsZero() should be true")
+	}
+
+	null := TimeFromPtr(nil)
+	if !null.IsZero() {
+		t.Errorf("IsZero() should be true")
+	}
+}
+
 func assertTime(t *testing.T, ti Time, from string) {
 	if ti.Time != timeValue {
 		t.Errorf("bad %v time: %v ≠ %v\n", from, ti.Time, timeValue)

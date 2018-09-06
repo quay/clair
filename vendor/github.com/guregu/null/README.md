@@ -1,4 +1,4 @@
-## null [![GoDoc](https://godoc.org/github.com/guregu/null?status.svg)](https://godoc.org/github.com/guregu/null) [![Coverage](http://gocover.io/_badge/github.com/guregu/null)](http://gocover.io/github.com/guregu/null)
+## null [![GoDoc](https://godoc.org/github.com/guregu/null?status.svg)](https://godoc.org/github.com/guregu/null) [![CircleCI](https://circleci.com/gh/guregu/null.svg?style=svg)](https://circleci.com/gh/guregu/null)
 `import "gopkg.in/guregu/null.v3"`
 
 null is a library with reasonable options for dealing with nullable SQL and JSON values
@@ -69,7 +69,7 @@ Will marshal to the zero time if null. Uses `time.Time`'s marshaler. Can unmarsh
 
 
 ### Bugs
-`json`'s `",omitempty"` struct tag does not work correctly right now. It will never omit a null or empty String. This might be [fixed eventually](https://github.com/golang/go/issues/4357).
+`json`'s `",omitempty"` struct tag does not work correctly right now. It will never omit a null or empty String. This might be [fixed eventually](https://github.com/golang/go/issues/11939).
 
 ### License
 BSD
