@@ -196,10 +196,10 @@ const (
 	   SELECT DISTINCT ON (a.id)
 			a.id, a.name
 		FROM vulnerability_affected_namespaced_feature AS vanf,
-			ancestry AS a, ancestry_feature AS af
+			ancestry_layer AS al, ancestry_feature AS af
 		WHERE vanf.vulnerability_id = $1
-			AND a.id >= $2
-			AND a.id = af.ancestry_id
+			AND al.ancestry_id >= $2
+			AND al.id = af.ancestry_layer_id
 			AND af.namespaced_feature_id = vanf.namespaced_feature_id
 		ORDER BY a.id ASC
 		LIMIT $3;`
@@ -211,9 +211,9 @@ const (
 		WHERE NOT EXISTS (SELECT id FROM ancestry_lister WHERE ancestry_id = $1 AND lister = $2) ON CONFLICT DO NOTHING`
 
 	persistAncestryDetector = `
-	INSERT INTO ancestry_detector (ancestry_id, detector)
-		SELECT CAST ($1 AS INTEGER), CAST ($2 AS TEXT)
-		WHERE NOT EXISTS (SELECT id FROM ancestry_detector WHERE ancestry_id = $1 AND detector = $2) ON CONFLICT DO NOTHING`
+		INSERT INTO ancestry_detector (ancestry_id, detector)
+			SELECT CAST ($1 AS INTEGER), CAST ($2 AS TEXT)
+			WHERE NOT EXISTS (SELECT id FROM ancestry_detector WHERE ancestry_id = $1 AND detector = $2) ON CONFLICT DO NOTHING`
 
 	insertAncestry = `INSERT INTO ancestry (name) VALUES ($1) RETURNING id`
 
@@ -225,20 +225,21 @@ const (
 		ORDER BY ancestry_layer.ancestry_index ASC`
 
 	searchAncestryFeatures = `
-			SELECT namespace.name, namespace.version_format, feature.name, feature.version 
-			FROM namespace, feature, ancestry, namespaced_feature, ancestry_feature
-			WHERE ancestry.name = $1
-				AND ancestry.id = ancestry_feature.ancestry_id
-				AND ancestry_feature.namespaced_feature_id = namespaced_feature.id
-				AND namespaced_feature.feature_id = feature.id
-				AND namespaced_feature.namespace_id = namespace.id`
+		SELECT namespace.name, namespace.version_format, feature.name, feature.version, ancestry_layer.ancestry_index
+		FROM namespace, feature, ancestry, namespaced_feature, ancestry_layer, ancestry_feature
+		WHERE ancestry.name = $1
+			AND ancestry.id = ancestry_layer.ancestry_id
+			AND ancestry_feature.ancestry_layer_id = ancestry_layer.id
+			AND ancestry_feature.namespaced_feature_id = namespaced_feature.id
+			AND namespaced_feature.feature_id = feature.id
+			AND namespaced_feature.namespace_id = namespace.id`
 
-	searchAncestry          = `SELECT id FROM ancestry WHERE name = $1`
-	searchAncestryDetectors = `SELECT detector FROM ancestry_detector WHERE ancestry_id = $1`
-	searchAncestryListers   = `SELECT lister FROM ancestry_lister WHERE ancestry_id = $1`
-	removeAncestry          = `DELETE FROM ancestry WHERE name = $1`
-	insertAncestryLayer     = `INSERT INTO ancestry_layer(ancestry_id, ancestry_index, layer_id) VALUES($1,$2,$3)`
-	insertAncestryFeature   = `INSERT INTO ancestry_feature(ancestry_id, namespaced_feature_id) VALUES ($1, $2)`
+	searchAncestry             = `SELECT id FROM ancestry WHERE name = $1`
+	searchAncestryDetectors    = `SELECT detector FROM ancestry_detector WHERE ancestry_id = $1`
+	searchAncestryListers      = `SELECT lister FROM ancestry_lister WHERE ancestry_id = $1`
+	removeAncestry             = `DELETE FROM ancestry WHERE name = $1`
+	insertAncestryLayer        = `INSERT INTO ancestry_layer(ancestry_id, ancestry_index, layer_id) VALUES($1,$2, (SELECT layer.id FROM layer WHERE hash = $3 LIMIT 1)) RETURNING id`
+	insertAncestryLayerFeature = `INSERT INTO ancestry_feature(ancestry_layer_id, namespaced_feature_id) VALUES ($1, $2)`
 )
 
 // NOTE(Sida): Every search query can only have count less than postgres set

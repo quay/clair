@@ -21,17 +21,17 @@ import "time"
 type MockSession struct {
 	FctCommit                           func() error
 	FctRollback                         func() error
-	FctUpsertAncestry                   func(Ancestry, []NamespacedFeature, Processors) error
-	FctFindAncestry                     func(name string) (Ancestry, Processors, bool, error)
-	FctFindAncestryFeatures             func(name string) (AncestryWithFeatures, bool, error)
+	FctUpsertAncestry                   func(AncestryWithContent) error
+	FctFindAncestry                     func(name string) (Ancestry, bool, error)
+	FctFindAncestryWithContent          func(name string) (AncestryWithContent, bool, error)
 	FctFindAffectedNamespacedFeatures   func(features []NamespacedFeature) ([]NullableAffectedNamespacedFeature, error)
 	FctPersistNamespaces                func([]Namespace) error
 	FctPersistFeatures                  func([]Feature) error
 	FctPersistNamespacedFeatures        func([]NamespacedFeature) error
 	FctCacheAffectedNamespacedFeatures  func([]NamespacedFeature) error
-	FctPersistLayer                     func(Layer) error
+	FctPersistLayer                     func(hash string) error
 	FctPersistLayerContent              func(hash string, namespaces []Namespace, features []Feature, processedBy Processors) error
-	FctFindLayer                        func(name string) (Layer, Processors, bool, error)
+	FctFindLayer                        func(name string) (Layer, bool, error)
 	FctFindLayerWithContent             func(name string) (LayerWithContent, bool, error)
 	FctInsertVulnerabilities            func([]VulnerabilityWithAffected) error
 	FctFindVulnerabilities              func([]VulnerabilityID) ([]NullableVulnerability, error)
@@ -63,23 +63,23 @@ func (ms *MockSession) Rollback() error {
 	panic("required mock function not implemented")
 }
 
-func (ms *MockSession) UpsertAncestry(ancestry Ancestry, features []NamespacedFeature, processedBy Processors) error {
+func (ms *MockSession) UpsertAncestry(ancestry AncestryWithContent) error {
 	if ms.FctUpsertAncestry != nil {
-		return ms.FctUpsertAncestry(ancestry, features, processedBy)
+		return ms.FctUpsertAncestry(ancestry)
 	}
 	panic("required mock function not implemented")
 }
 
-func (ms *MockSession) FindAncestry(name string) (Ancestry, Processors, bool, error) {
+func (ms *MockSession) FindAncestry(name string) (Ancestry, bool, error) {
 	if ms.FctFindAncestry != nil {
 		return ms.FctFindAncestry(name)
 	}
 	panic("required mock function not implemented")
 }
 
-func (ms *MockSession) FindAncestryFeatures(name string) (AncestryWithFeatures, bool, error) {
-	if ms.FctFindAncestryFeatures != nil {
-		return ms.FctFindAncestryFeatures(name)
+func (ms *MockSession) FindAncestryWithContent(name string) (AncestryWithContent, bool, error) {
+	if ms.FctFindAncestryWithContent != nil {
+		return ms.FctFindAncestryWithContent(name)
 	}
 	panic("required mock function not implemented")
 }
@@ -119,7 +119,7 @@ func (ms *MockSession) CacheAffectedNamespacedFeatures(namespacedFeatures []Name
 	panic("required mock function not implemented")
 }
 
-func (ms *MockSession) PersistLayer(layer Layer) error {
+func (ms *MockSession) PersistLayer(layer string) error {
 	if ms.FctPersistLayer != nil {
 		return ms.FctPersistLayer(layer)
 	}
@@ -133,7 +133,7 @@ func (ms *MockSession) PersistLayerContent(hash string, namespaces []Namespace, 
 	panic("required mock function not implemented")
 }
 
-func (ms *MockSession) FindLayer(name string) (Layer, Processors, bool, error) {
+func (ms *MockSession) FindLayer(name string) (Layer, bool, error) {
 	if ms.FctFindLayer != nil {
 		return ms.FctFindLayer(name)
 	}

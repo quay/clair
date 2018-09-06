@@ -20,7 +20,7 @@ import (
 	"time"
 )
 
-// Processors are extentions to scan layer's content.
+// Processors are extentions to scan a layer's content.
 type Processors struct {
 	Listers   []string
 	Detectors []string
@@ -29,24 +29,39 @@ type Processors struct {
 // Ancestry is a manifest that keeps all layers in an image in order.
 type Ancestry struct {
 	Name string
+	// ProcessedBy contains the processors that are used when computing the
+	// content of this ancestry.
+	ProcessedBy Processors
 	// Layers should be ordered and i_th layer is the parent of i+1_th layer in
 	// the slice.
 	Layers []Layer
 }
 
-// AncestryWithFeatures is an ancestry with namespaced features detected in the
-// ancestry, which is processed by `ProcessedBy`.
-type AncestryWithFeatures struct {
+// AncestryWithContent has the ancestry's name and the Ancestry Layers
+// associated with it.
+type AncestryWithContent struct {
 	Ancestry
 
-	ProcessedBy Processors
-	Features    []NamespacedFeature
+	// TODO(sidchen) deduplicate the Layers here and the Layers in
+	// Ancestry.Layers.
+	// AncestryLayers should have the same order as Ancestry.Layers.
+	Layers []AncestryLayer
 }
 
-// Layer corresponds to a layer in an image processed by `ProcessedBy`.
+// AncestryLayer is a layer with all detected namespaced features.
+type AncestryLayer struct {
+	Layer
+
+	// DetectedFeatures are the features introduced by this layer.
+	DetectedFeatures []NamespacedFeature
+}
+
+// Layer contains the metadata of a layer.
 type Layer struct {
 	// Hash is content hash of the layer.
 	Hash string
+	// ProcessedBy contains the processors that processed this layer.
+	ProcessedBy Processors
 }
 
 // LayerWithContent is a layer with its detected namespaces and features by
@@ -54,9 +69,8 @@ type Layer struct {
 type LayerWithContent struct {
 	Layer
 
-	ProcessedBy Processors
-	Namespaces  []Namespace
-	Features    []Feature
+	Namespaces []Namespace
+	Features   []Feature
 }
 
 // Namespace is the contextual information around features.
@@ -198,6 +212,7 @@ type VulnerabilityNotificationWithVulnerable struct {
 // PageNumber is used to do pagination.
 type PageNumber string
 
+// MetadataMap is for storing the metadata returned by vulnerability database.
 type MetadataMap map[string]interface{}
 
 // NullableAffectedNamespacedFeature is an affectednamespacedfeature with

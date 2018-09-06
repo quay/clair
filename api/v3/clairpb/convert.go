@@ -125,11 +125,18 @@ func VulnerabilityWithFixedInFromDatabaseModel(dbVuln database.VulnerabilityWith
 // AncestryFromDatabaseModel converts database ancestry to api ancestry.
 func AncestryFromDatabaseModel(dbAncestry database.Ancestry) *GetAncestryResponse_Ancestry {
 	ancestry := &GetAncestryResponse_Ancestry{
-		Name: dbAncestry.Name,
+		Name:             dbAncestry.Name,
+		ScannedDetectors: dbAncestry.ProcessedBy.Detectors,
+		ScannedListers:   dbAncestry.ProcessedBy.Listers,
 	}
+
 	for _, layer := range dbAncestry.Layers {
-		ancestry.Layers = append(ancestry.Layers, LayerFromDatabaseModel(layer))
+		ancestry.Layers = append(ancestry.Layers,
+			&GetAncestryResponse_AncestryLayer{
+				Layer: LayerFromDatabaseModel(layer),
+			})
 	}
+
 	return ancestry
 }
 

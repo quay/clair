@@ -95,18 +95,21 @@ message GetAncestryRequest {
 }
 
 message GetAncestryResponse {
+  message AncestryLayer {
+    // The layer's information.
+    Layer layer = 1;
+    // The features detected in this layer.
+    repeated Feature detected_features = 2;
+  }
   message Ancestry {
     // The name of the desired ancestry.
     string name = 1;
-    // The list of features present in the ancestry.
-    // This will only be provided if requested.
-    repeated Feature features = 2;
-    // The layers present in the ancestry.
-    repeated Layer layers = 3;
     // The configured list of feature listers used to scan this ancestry.
     repeated string scanned_listers = 4;
     // The configured list of namespace detectors used to scan an ancestry.
     repeated string scanned_detectors = 5;
+    // The list of layers along with detected features in each.
+    repeated AncestryLayer layers = 6;
   }
   // The ancestry requested.
   Ancestry ancestry = 1;
@@ -128,7 +131,8 @@ message PostAncestryRequest {
   string ancestry_name = 1;
   // The format of the image being uploaded.
   string format = 2;
-  // The layers to be scanned for this particular ancestry.
+  // The layers to be scanned for this Ancestry, ordered in the way that i th
+  // layer is the parent of i + 1 th layer.
   repeated PostLayer layers = 3;
 }
 

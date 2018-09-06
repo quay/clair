@@ -91,18 +91,18 @@ type Session interface {
 
 	// UpsertAncestry inserts or replaces an ancestry and its namespaced
 	// features and processors used to scan the ancestry.
-	UpsertAncestry(ancestry Ancestry, features []NamespacedFeature, processedBy Processors) error
+	UpsertAncestry(AncestryWithContent) error
 
 	// FindAncestry retrieves an ancestry with processors used to scan the
 	// ancestry. If the ancestry is not found, return false.
 	//
 	// The ancestry's processors are returned to short cut processing ancestry
 	// if it has been processed by all processors in the current Clair instance.
-	FindAncestry(name string) (ancestry Ancestry, processedBy Processors, found bool, err error)
+	FindAncestry(name string) (ancestry Ancestry, found bool, err error)
 
-	// FindAncestryFeatures retrieves an ancestry with all detected namespaced
-	// features. If the ancestry is not found, return false.
-	FindAncestryFeatures(name string) (ancestry AncestryWithFeatures, found bool, err error)
+	// FindAncestryWithContent retrieves an ancestry with all detected
+	// namespaced features. If the ancestry is not found, return false.
+	FindAncestryWithContent(name string) (ancestry AncestryWithContent, found bool, err error)
 
 	// PersistFeatures inserts a set of features if not in the database.
 	PersistFeatures(features []Feature) error
@@ -125,8 +125,8 @@ type Session interface {
 	// PersistNamespaces inserts a set of namespaces if not in the database.
 	PersistNamespaces([]Namespace) error
 
-	// PersistLayer inserts a layer if not in the datastore.
-	PersistLayer(Layer) error
+	// PersistLayer creates a layer using the blob Sum hash.
+	PersistLayer(hash string) error
 
 	// PersistLayerContent persists a layer's content in the database. The given
 	// namespaces and features can be partial content of this layer.
@@ -135,8 +135,8 @@ type Session interface {
 	// in the database.
 	PersistLayerContent(hash string, namespaces []Namespace, features []Feature, processedBy Processors) error
 
-	// FindLayer retrieves a layer and the processors scanned the layer.
-	FindLayer(hash string) (layer Layer, processedBy Processors, found bool, err error)
+	// FindLayer retrieves the metadata of a layer.
+	FindLayer(hash string) (layer Layer, found bool, err error)
 
 	// FindLayerWithContent returns a layer with all detected features and
 	// namespaces.

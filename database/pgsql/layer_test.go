@@ -26,8 +26,8 @@ func TestPersistLayer(t *testing.T) {
 	datastore, tx := openSessionForTest(t, "PersistLayer", false)
 	defer closeTest(t, datastore, tx)
 
-	l1 := database.Layer{}
-	l2 := database.Layer{Hash: "HESOYAM"}
+	l1 := ""
+	l2 := "HESOYAM"
 
 	// invalid
 	assert.NotNil(t, tx.PersistLayer(l1))
@@ -51,24 +51,25 @@ func TestFindLayer(t *testing.T) {
 	datastore, tx := openSessionForTest(t, "FindLayer", true)
 	defer closeTest(t, datastore, tx)
 
-	expected := database.Layer{Hash: "layer-4"}
-	expectedProcessors := database.Processors{
-		Detectors: []string{"os-release", "apt-sources"},
-		Listers:   []string{"dpkg", "rpm"},
+	expected := database.Layer{
+		Hash: "layer-4",
+		ProcessedBy: database.Processors{
+			Detectors: []string{"os-release", "apt-sources"},
+			Listers:   []string{"dpkg", "rpm"},
+		},
 	}
 
 	// invalid
-	_, _, _, err := tx.FindLayer("")
+	_, _, err := tx.FindLayer("")
 	assert.NotNil(t, err)
-	_, _, ok, err := tx.FindLayer("layer-non")
+	_, ok, err := tx.FindLayer("layer-non")
 	assert.Nil(t, err)
 	assert.False(t, ok)
 
 	// valid
-	layer, processors, ok2, err := tx.FindLayer("layer-4")
+	layer, ok2, err := tx.FindLayer("layer-4")
 	if assert.Nil(t, err) && assert.True(t, ok2) {
-		assert.Equal(t, expected, layer)
-		assertProcessorsEqual(t, expectedProcessors, processors)
+		assertLayerEqual(t, expected, layer)
 	}
 }
 
@@ -85,6 +86,10 @@ func TestFindLayerWithContent(t *testing.T) {
 	expectedL := database.LayerWithContent{
 		Layer: database.Layer{
 			Hash: "layer-4",
+			ProcessedBy: database.Processors{
+				Detectors: []string{"os-release", "apt-sources"},
+				Listers:   []string{"dpkg", "rpm"},
+			},
 		},
 		Features: []database.Feature{
 			{Name: "fake", Version: "2.0", VersionFormat: "rpm"},
@@ -93,10 +98,6 @@ func TestFindLayerWithContent(t *testing.T) {
 		Namespaces: []database.Namespace{
 			{Name: "debian:7", VersionFormat: "dpkg"},
 			{Name: "fake:1.0", VersionFormat: "rpm"},
-		},
-		ProcessedBy: database.Processors{
-			Detectors: []string{"os-release", "apt-sources"},
-			Listers:   []string{"dpkg", "rpm"},
 		},
 	}
 
@@ -107,8 +108,12 @@ func TestFindLayerWithContent(t *testing.T) {
 }
 
 func assertLayerWithContentEqual(t *testing.T, expected database.LayerWithContent, actual database.LayerWithContent) bool {
-	return assert.Equal(t, expected.Layer, actual.Layer) &&
+	return assertLayerEqual(t, expected.Layer, actual.Layer) &&
 		assertFeaturesEqual(t, expected.Features, actual.Features) &&
-		assertProcessorsEqual(t, expected.ProcessedBy, actual.ProcessedBy) &&
 		assertNamespacesEqual(t, expected.Namespaces, actual.Namespaces)
+}
+
+func assertLayerEqual(t *testing.T, expected database.Layer, actual database.Layer) bool {
+	return assertProcessorsEqual(t, expected.ProcessedBy, actual.ProcessedBy) &&
+		assert.Equal(t, expected.Hash, actual.Hash)
 }
