@@ -416,7 +416,7 @@ func SeverityFromPriority(priority string) database.Severity {
 	case "critical":
 		return database.CriticalSeverity
 	default:
-		log.Warning("could not determine a vulnerability severity from: %s", priority)
+		log.Warningf("could not determine a vulnerability severity from: %s", priority)
 		return database.UnknownSeverity
 	}
 }
