@@ -165,36 +165,46 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 				}
 			}
 
-			// Download data feed.
-			r, err := httputil.GetWithUserAgent(fmt.Sprintf(dataFeedURL, dataFeedName))
-			if err != nil {
-				log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not download NVD data feed")
-				return dataFeedReaders, dataFeedHashes, commonerr.ErrCouldNotDownload
-			}
-			defer r.Body.Close()
+			downloadAndSave := func() error {
 
-			if !httputil.Status2xx(r) {
-				log.WithField("StatusCode", r.StatusCode).Error("Failed to download NVD data feed")
-				return dataFeedReaders, dataFeedHashes, commonerr.ErrCouldNotDownload
-			}
-
-			// Un-gzip it.
-			gr, err := gzip.NewReader(r.Body)
-			if err != nil {
-				log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not read NVD data feed")
-				return dataFeedReaders, dataFeedHashes, commonerr.ErrCouldNotDownload
-			}
-
-			// Store it to a file at the same time if possible.
-			if f, err := os.Create(fileName); err == nil {
-				_, err = io.Copy(f, gr)
+				// Download data feed.
+				r, err := httputil.GetWithUserAgent(fmt.Sprintf(dataFeedURL, dataFeedName))
 				if err != nil {
-					log.WithError(err).Warning("could not stream NVD data feed to filesystem")
+					log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not download NVD data feed")
+					return commonerr.ErrCouldNotDownload
 				}
-				dataFeedReaders[dataFeedName] = fileName
-				f.Close()
-			} else {
-				log.WithError(err).Warning("could not store NVD data feed to filesystem")
+				defer r.Body.Close()
+
+				if !httputil.Status2xx(r) {
+					log.WithField("StatusCode", r.StatusCode).Error("Failed to download NVD data feed")
+					return commonerr.ErrCouldNotDownload
+				}
+
+				// Un-gzip it.
+				gr, err := gzip.NewReader(r.Body)
+				if err != nil {
+					log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not read NVD data feed")
+					return commonerr.ErrCouldNotDownload
+				}
+
+				// Store it to a file at the same time if possible.
+				if f, err := os.Create(fileName); err == nil {
+					_, err = io.Copy(f, gr)
+					if err != nil {
+						log.WithError(err).Warning("could not stream NVD data feed to filesystem")
+					}
+					defer f.Close()
+					dataFeedReaders[dataFeedName] = fileName
+
+				} else {
+					log.WithError(err).Warning("could not store NVD data feed to filesystem")
+				}
+				return nil
+			}
+
+			err := downloadAndSave()
+			if err != nil {
+				return dataFeedReaders, dataFeedHashes, err
 			}
 		}
 	}
