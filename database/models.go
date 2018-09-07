@@ -18,6 +18,8 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"time"
+
+	"github.com/coreos/clair/pkg/pagination"
 )
 
 // Processors are extentions to scan a layer's content.
@@ -173,8 +175,8 @@ type PagedVulnerableAncestries struct {
 	Affected map[int]string
 
 	Limit   int
-	Current PageNumber
-	Next    PageNumber
+	Current pagination.Token
+	Next    pagination.Token
 
 	// End signals the end of the pages.
 	End bool
@@ -208,9 +210,6 @@ type VulnerabilityNotificationWithVulnerable struct {
 	Old *PagedVulnerableAncestries
 	New *PagedVulnerableAncestries
 }
-
-// PageNumber is used to do pagination.
-type PageNumber string
 
 // MetadataMap is for storing the metadata returned by vulnerability database.
 type MetadataMap map[string]interface{}

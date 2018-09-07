@@ -25,6 +25,7 @@ import (
 	pb "github.com/coreos/clair/api/v3/clairpb"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/coreos/clair/pkg/pagination"
 )
 
 // NotificationServer implements NotificationService interface for serving RPC.
@@ -214,8 +215,8 @@ func (s *NotificationServer) GetNotification(ctx context.Context, req *pb.GetNot
 	dbNotification, ok, err := tx.FindVulnerabilityNotification(
 		req.GetName(),
 		int(req.GetLimit()),
-		database.PageNumber(req.GetOldVulnerabilityPage()),
-		database.PageNumber(req.GetNewVulnerabilityPage()),
+		pagination.Token(req.GetOldVulnerabilityPage()),
+		pagination.Token(req.GetNewVulnerabilityPage()),
 	)
 
 	if err != nil {

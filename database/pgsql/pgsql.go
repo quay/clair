@@ -131,6 +131,15 @@ func (pgSQL *pgSQL) Ping() bool {
 	return pgSQL.DB.Ping() == nil
 }
 
+// Page is the representation of a page for the Postgres schema.
+type Page struct {
+	// StartID is the ID being used as the basis for pagination across database
+	// results. It is used to search for an ancestry with ID >= StartID.
+	//
+	// StartID is required to be unique to every ancestry and always increasing.
+	StartID int64
+}
+
 // Config is the configuration that is used by openDatabase.
 type Config struct {
 	Source    string

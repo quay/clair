@@ -38,6 +38,13 @@ type Key struct {
 	fkey *fernet.Key
 }
 
+// Token represents an opaque pagination token keeping track of a user's
+// progress iterating through a list of results.
+type Token string
+
+// FirstPageToken is used to represent the first page of content.
+var FirstPageToken = Token("")
+
 // NewKey generates a new random pagination key.
 func NewKey() (k Key, err error) {
 	k.fkey = new(fernet.Key)
@@ -71,21 +78,22 @@ func (k Key) String() string {
 	return k.fkey.Encode()
 }
 
-// MarshalToken encodes an interface into JSON bytes and encrypts it.
-func (k Key) MarshalToken(v interface{}) ([]byte, error) {
+// MarshalToken encodes an interface into JSON bytes and produces a Token.
+func (k Key) MarshalToken(v interface{}) (Token, error) {
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(v)
 	if err != nil {
-		return nil, err
+		return Token(""), err
 	}
 
-	return fernet.EncryptAndSign(buf.Bytes(), k.fkey)
+	tokenBytes, err := fernet.EncryptAndSign(buf.Bytes(), k.fkey)
+	return Token(tokenBytes), err
 }
 
-// UnmarshalToken decrypts a token using provided key and decodes the result
+// UnmarshalToken decrypts a Token using provided key and decodes the result
 // into the provided interface.
-func (k Key) UnmarshalToken(token string, v interface{}) error {
-	msg := fernet.VerifyAndDecrypt([]byte(token), time.Hour, []*fernet.Key{k.fkey})
+func (k Key) UnmarshalToken(t Token, v interface{}) error {
+	msg := fernet.VerifyAndDecrypt([]byte(t), time.Hour, []*fernet.Key{k.fkey})
 	if msg == nil {
 		return ErrInvalidToken
 	}

@@ -73,17 +73,20 @@ func TestPagination(t *testing.T) {
 	if assert.Nil(t, err) && assert.True(t, ok) {
 		assert.Equal(t, "test", noti.Name)
 		if assert.NotNil(t, noti.Old) && assert.NotNil(t, noti.New) {
-			oldPage, err := PageFromPageNumber(tx.key, noti.Old.Current)
+			var oldPage Page
+			err := tx.key.UnmarshalToken(noti.Old.Current, &oldPage)
 			if !assert.Nil(t, err) {
 				assert.FailNow(t, "")
 			}
 
 			assert.Equal(t, int64(0), oldPage.StartID)
-			newPage, err := PageFromPageNumber(tx.key, noti.New.Current)
+			var newPage Page
+			err = tx.key.UnmarshalToken(noti.New.Current, &newPage)
 			if !assert.Nil(t, err) {
 				assert.FailNow(t, "")
 			}
-			newPageNext, err := PageFromPageNumber(tx.key, noti.New.Next)
+			var newPageNext Page
+			err = tx.key.UnmarshalToken(noti.New.Next, &newPageNext)
 			if !assert.Nil(t, err) {
 				assert.FailNow(t, "")
 			}
@@ -98,12 +101,12 @@ func TestPagination(t *testing.T) {
 		}
 	}
 
-	pageNum1, err := Page{0}.PageNumber(tx.key)
+	pageNum1, err := tx.key.MarshalToken(Page{0})
 	if !assert.Nil(t, err) {
 		assert.FailNow(t, "")
 	}
 
-	pageNum2, err := Page{4}.PageNumber(tx.key)
+	pageNum2, err := tx.key.MarshalToken(Page{4})
 	if !assert.Nil(t, err) {
 		assert.FailNow(t, "")
 	}
@@ -112,12 +115,14 @@ func TestPagination(t *testing.T) {
 	if assert.Nil(t, err) && assert.True(t, ok) {
 		assert.Equal(t, "test", noti.Name)
 		if assert.NotNil(t, noti.Old) && assert.NotNil(t, noti.New) {
-			oldCurrentPage, err := PageFromPageNumber(tx.key, noti.Old.Current)
+			var oldCurrentPage Page
+			err = tx.key.UnmarshalToken(noti.Old.Current, &oldCurrentPage)
 			if !assert.Nil(t, err) {
 				assert.FailNow(t, "")
 			}
 
-			newCurrentPage, err := PageFromPageNumber(tx.key, noti.New.Current)
+			var newCurrentPage Page
+			err = tx.key.UnmarshalToken(noti.New.Current, &newCurrentPage)
 			if !assert.Nil(t, err) {
 				assert.FailNow(t, "")
 			}

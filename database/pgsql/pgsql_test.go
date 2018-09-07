@@ -221,7 +221,7 @@ func generateTestConfig(testName string, loadFixture bool, manageLife bool) data
 			"cachesize":               0,
 			"managedatabaselifecycle": manageLife,
 			"fixturepath":             fixturePath,
-			"paginationkey":           pagination.MustGenerateNewKey().String(),
+			"paginationkey":           pagination.Must(pagination.NewKey()).String(),
 		},
 	}
 }

@@ -20,6 +20,8 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/coreos/clair/pkg/pagination"
 )
 
 var (
@@ -168,16 +170,9 @@ type Session interface {
 	// affected ancestries affected by old or new vulnerability.
 	//
 	// Because the number of affected ancestries maybe large, they are paginated
-	// and their pages are specified by the given encrypted PageNumbers, which,
-	// if empty, are always considered first page.
-	//
-	// Session interface implementation should have encrypt and decrypt
-	// functions for PageNumber.
-	FindVulnerabilityNotification(name string, limit int,
-		oldVulnerabilityPage PageNumber,
-		newVulnerabilityPage PageNumber) (
-		noti VulnerabilityNotificationWithVulnerable,
-		found bool, err error)
+	// and their pages are specified by the paination token, which, if empty, are
+	// always considered first page.
+	FindVulnerabilityNotification(name string, limit int, oldVulnerabilityPage pagination.Token, newVulnerabilityPage pagination.Token) (noti VulnerabilityNotificationWithVulnerable, found bool, err error)
 
 	// MarkNotificationNotified marks a Notification as notified now, assuming
 	// the requested notification is in the database.
