@@ -470,7 +470,7 @@ func severity(def definition) database.Severity {
 	case "Critical":
 		return database.CriticalSeverity
 	default:
-		log.Warning("could not determine vulnerability severity from: %s.", def.Title)
+		log.Warningf("could not determine vulnerability severity from: %s.", def.Title)
 		return database.UnknownSeverity
 	}
 }
