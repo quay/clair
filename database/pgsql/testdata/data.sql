@@ -56,8 +56,8 @@ INSERT INTO layer_detector(id, layer_id, detector) VALUES
 INSERT INTO ancestry (id, name) VALUES
   (1, 'ancestry-1'), -- layer-0, layer-1, layer-2, layer-3a
   (2, 'ancestry-2'), -- layer-0, layer-1, layer-2, layer-3b
-  (3, 'ancestry-3'), -- empty; just for testing the vulnerable ancestry
-  (4, 'ancestry-4'); -- empty; just for testing the vulnerable ancestry
+  (3, 'ancestry-3'), -- layer-0
+  (4, 'ancestry-4'); -- layer-0
 
 INSERT INTO ancestry_lister (id, ancestry_id, lister) VALUES
   (1, 1, 'dpkg'),
@@ -69,7 +69,9 @@ INSERT INTO ancestry_detector (id, ancestry_id, detector) VALUES
 
 INSERT INTO ancestry_layer (id, ancestry_id, layer_id, ancestry_index) VALUES
   (1, 1, 1, 0),(2, 1, 2, 1),(3, 1, 3, 2),(4, 1, 4, 3),
-  (5, 2, 1, 0),(6, 2, 2, 1),(7, 2, 3, 2),(8, 2, 5, 3);
+  (5, 2, 1, 0),(6, 2, 2, 1),(7, 2, 3, 2),(8, 2, 5, 3),
+  (9, 3, 1, 0),
+  (10, 4, 1, 0);
 
 INSERT INTO namespaced_feature(id, feature_id, namespace_id) VALUES
   (1, 1, 1), -- wechat 0.5, debian:7
@@ -77,10 +79,12 @@ INSERT INTO namespaced_feature(id, feature_id, namespace_id) VALUES
   (3, 2, 2), -- openssl 1.0, debian:8
   (4, 3, 1); -- openssl 2.0, debian:7
 
-INSERT INTO ancestry_feature (id, ancestry_id, namespaced_feature_id) VALUES
-  (1, 1, 1), (2, 1, 4), 
-  (3, 2, 1), (4, 2, 3),
-  (5, 3, 2), (6, 4, 2); -- assume that ancestry-3 and ancestry-4 are vulnerable.
+-- assume that ancestry-3 and ancestry-4 are vulnerable.
+INSERT INTO ancestry_feature (id, ancestry_layer_id, namespaced_feature_id) VALUES
+  (1, 1, 1), (2, 1, 4), -- ancestry-1, layer 0 introduces 1, 4
+  (3, 5, 1), (4, 5, 3), -- ancestry-2, layer 0 introduces 1, 3
+  (5, 9, 2), -- ancestry-3, layer 0 introduces 2
+  (6, 10, 2); -- ancestry-4, layer 0 introduces 2 
 
 INSERT INTO vulnerability (id, namespace_id, name, description, link, severity) VALUES
   (1, 1, 'CVE-OPENSSL-1-DEB7', 'A vulnerability affecting OpenSSL < 2.0 on Debian 7.0', 'http://google.com/#q=CVE-OPENSSL-1-DEB7', 'High'),

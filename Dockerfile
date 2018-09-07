@@ -13,9 +13,11 @@
 # limitations under the License.
 
 FROM golang:1.10-alpine AS build
+RUN apk add --no-cache git
 ADD .   /go/src/github.com/coreos/clair/
 WORKDIR /go/src/github.com/coreos/clair/
-RUN go build github.com/coreos/clair/cmd/clair
+RUN export CLAIR_VERSION=$(git describe --tag --always --dirty) && \
+	go build -ldflags "-X github.com/coreos/clair/pkg/version.Version=$CLAIR_VERSION" github.com/coreos/clair/cmd/clair
 
 FROM alpine:3.8
 COPY --from=build /go/src/github.com/coreos/clair/clair /clair

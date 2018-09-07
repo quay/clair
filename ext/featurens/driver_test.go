@@ -45,8 +45,8 @@ func TestMultipleNamespaceDetector(t *testing.T) {
 	testData := []MultipleNamespaceTestData{
 		{
 			ExpectedNamespaces: []database.Namespace{
-				database.Namespace{Name: "debian:8", VersionFormat: "dpkg"},
-				database.Namespace{Name: "alpine:v3.3", VersionFormat: "dpkg"},
+				{Name: "debian:8", VersionFormat: "dpkg"},
+				{Name: "alpine:v3.3", VersionFormat: "dpkg"},
 			},
 			Files: tarutil.FilesMap{
 				"etc/os-release": []byte(`

@@ -41,7 +41,7 @@ type mockDatastore struct {
 	database.MockDatastore
 
 	layers             map[string]database.LayerWithContent
-	ancestry           map[string]database.AncestryWithFeatures
+	ancestry           map[string]database.AncestryWithContent
 	namespaces         map[string]database.Namespace
 	features           map[string]database.Feature
 	namespacedFeatures map[string]database.NamespacedFeature
@@ -65,32 +65,52 @@ func copyDatastore(md *mockDatastore) mockDatastore {
 		layers[k] = database.LayerWithContent{
 			Layer: database.Layer{
 				Hash: l.Hash,
-			},
-			ProcessedBy: database.Processors{
-				Listers:   listers,
-				Detectors: detectors,
+				ProcessedBy: database.Processors{
+					Listers:   listers,
+					Detectors: detectors,
+				},
 			},
 			Features:   features,
 			Namespaces: namespaces,
 		}
 	}
 
-	ancestry := map[string]database.AncestryWithFeatures{}
+	ancestry := map[string]database.AncestryWithContent{}
 	for k, a := range md.ancestry {
-		nf := append([]database.NamespacedFeature(nil), a.Features...)
-		l := append([]database.Layer(nil), a.Layers...)
-		listers := append([]string(nil), a.ProcessedBy.Listers...)
-		detectors := append([]string(nil), a.ProcessedBy.Detectors...)
-		ancestry[k] = database.AncestryWithFeatures{
+		ancestryLayers := []database.AncestryLayer{}
+		layers := []database.Layer{}
+
+		for _, layer := range a.Layers {
+			layers = append(layers, database.Layer{
+				Hash: layer.Hash,
+				ProcessedBy: database.Processors{
+					Detectors: append([]string(nil), layer.Layer.ProcessedBy.Detectors...),
+					Listers:   append([]string(nil), layer.Layer.ProcessedBy.Listers...),
+				},
+			})
+
+			ancestryLayers = append(ancestryLayers, database.AncestryLayer{
+				Layer: database.Layer{
+					Hash: layer.Hash,
+					ProcessedBy: database.Processors{
+						Detectors: append([]string(nil), layer.Layer.ProcessedBy.Detectors...),
+						Listers:   append([]string(nil), layer.Layer.ProcessedBy.Listers...),
+					},
+				},
+				DetectedFeatures: append([]database.NamespacedFeature(nil), layer.DetectedFeatures...),
+			})
+		}
+
+		ancestry[k] = database.AncestryWithContent{
 			Ancestry: database.Ancestry{
 				Name:   a.Name,
-				Layers: l,
+				Layers: layers,
+				ProcessedBy: database.Processors{
+					Detectors: append([]string(nil), a.ProcessedBy.Detectors...),
+					Listers:   append([]string(nil), a.ProcessedBy.Listers...),
+				},
 			},
-			ProcessedBy: database.Processors{
-				Detectors: detectors,
-				Listers:   listers,
-			},
-			Features: nf,
+			Layers: ancestryLayers,
 		}
 	}
 
@@ -121,7 +141,7 @@ func newMockDatastore() *mockDatastore {
 	errSessionDone := errors.New("Session Done")
 	md := &mockDatastore{
 		layers:             make(map[string]database.LayerWithContent),
-		ancestry:           make(map[string]database.AncestryWithFeatures),
+		ancestry:           make(map[string]database.AncestryWithContent),
 		namespaces:         make(map[string]database.Namespace),
 		features:           make(map[string]database.Feature),
 		namespacedFeatures: make(map[string]database.NamespacedFeature),
@@ -156,22 +176,20 @@ func newMockDatastore() *mockDatastore {
 			return nil
 		}
 
-		session.FctFindAncestry = func(name string) (database.Ancestry, database.Processors, bool, error) {
-			processors := database.Processors{}
+		session.FctFindAncestry = func(name string) (database.Ancestry, bool, error) {
 			if session.terminated {
-				return database.Ancestry{}, processors, false, errSessionDone
+				return database.Ancestry{}, false, errSessionDone
 			}
 			ancestry, ok := session.copy.ancestry[name]
-			return ancestry.Ancestry, ancestry.ProcessedBy, ok, nil
+			return ancestry.Ancestry, ok, nil
 		}
 
-		session.FctFindLayer = func(name string) (database.Layer, database.Processors, bool, error) {
-			processors := database.Processors{}
+		session.FctFindLayer = func(name string) (database.Layer, bool, error) {
 			if session.terminated {
-				return database.Layer{}, processors, false, errSessionDone
+				return database.Layer{}, false, errSessionDone
 			}
 			layer, ok := session.copy.layers[name]
-			return layer.Layer, layer.ProcessedBy, ok, nil
+			return layer.Layer, ok, nil
 		}
 
 		session.FctFindLayerWithContent = func(name string) (database.LayerWithContent, bool, error) {
@@ -182,12 +200,12 @@ func newMockDatastore() *mockDatastore {
 			return layer, ok, nil
 		}
 
-		session.FctPersistLayer = func(layer database.Layer) error {
+		session.FctPersistLayer = func(hash string) error {
 			if session.terminated {
 				return errSessionDone
 			}
-			if _, ok := session.copy.layers[layer.Hash]; !ok {
-				session.copy.layers[layer.Hash] = database.LayerWithContent{Layer: layer}
+			if _, ok := session.copy.layers[hash]; !ok {
+				session.copy.layers[hash] = database.LayerWithContent{Layer: database.Layer{Hash: hash}}
 			}
 			return nil
 		}
@@ -267,25 +285,20 @@ func newMockDatastore() *mockDatastore {
 			return nil
 		}
 
-		session.FctUpsertAncestry = func(ancestry database.Ancestry, features []database.NamespacedFeature, processors database.Processors) error {
+		session.FctUpsertAncestry = func(ancestry database.AncestryWithContent) error {
 			if session.terminated {
 				return errSessionDone
 			}
 
+			features := getNamespacedFeatures(ancestry.Layers)
 			// ensure features are in the database
 			for _, f := range features {
 				if _, ok := session.copy.namespacedFeatures[NamespacedFeatureKey(&f)]; !ok {
-					return errors.New("namepsaced feature not in db")
+					return errors.New("namespaced feature not in db")
 				}
 			}
 
-			ancestryWFeature := database.AncestryWithFeatures{
-				Ancestry:    ancestry,
-				Features:    features,
-				ProcessedBy: processors,
-			}
-
-			session.copy.ancestry[ancestry.Name] = ancestryWFeature
+			session.copy.ancestry[ancestry.Name] = ancestry
 			return nil
 		}
 
@@ -359,9 +372,11 @@ func TestProcessAncestryWithDistUpgrade(t *testing.T) {
 	}
 
 	assert.Nil(t, ProcessAncestry(datastore, "Docker", "Mock", layers))
+
 	// check the ancestry features
-	assert.Len(t, datastore.ancestry["Mock"].Features, 74)
-	for _, f := range datastore.ancestry["Mock"].Features {
+	features := getNamespacedFeatures(datastore.ancestry["Mock"].Layers)
+	assert.Len(t, features, 74)
+	for _, f := range features {
 		if _, ok := nonUpgradedMap[f.Feature]; ok {
 			assert.Equal(t, "debian:7", f.Namespace.Name)
 		} else {
@@ -388,20 +403,20 @@ func TestProcessLayers(t *testing.T) {
 		{Hash: "jessie", Path: testDataPath + "jessie.tar.gz"},
 	}
 
-	processedLayers, err := processLayers(datastore, "Docker", layers)
+	LayerWithContents, err := processLayers(datastore, "Docker", layers)
 	assert.Nil(t, err)
-	assert.Len(t, processedLayers, 3)
+	assert.Len(t, LayerWithContents, 3)
 	// ensure resubmit won't break the stuff
-	processedLayers, err = processLayers(datastore, "Docker", layers)
+	LayerWithContents, err = processLayers(datastore, "Docker", layers)
 	assert.Nil(t, err)
-	assert.Len(t, processedLayers, 3)
+	assert.Len(t, LayerWithContents, 3)
 	// Ensure each processed layer is correct
-	assert.Len(t, processedLayers[0].Namespaces, 0)
-	assert.Len(t, processedLayers[1].Namespaces, 1)
-	assert.Len(t, processedLayers[2].Namespaces, 1)
-	assert.Len(t, processedLayers[0].Features, 0)
-	assert.Len(t, processedLayers[1].Features, 52)
-	assert.Len(t, processedLayers[2].Features, 74)
+	assert.Len(t, LayerWithContents[0].Namespaces, 0)
+	assert.Len(t, LayerWithContents[1].Namespaces, 1)
+	assert.Len(t, LayerWithContents[2].Namespaces, 1)
+	assert.Len(t, LayerWithContents[0].Features, 0)
+	assert.Len(t, LayerWithContents[1].Features, 52)
+	assert.Len(t, LayerWithContents[2].Features, 74)
 
 	// Ensure each layer has expected namespaces and features detected
 	if blank, ok := datastore.layers["blank"]; ok {
@@ -462,10 +477,10 @@ func TestClairUpgrade(t *testing.T) {
 	}
 
 	assert.Nil(t, ProcessAncestry(datastore, "Docker", "Mock", layers))
-	assert.Len(t, datastore.ancestry["Mock"].Features, 0)
+	assert.Len(t, getNamespacedFeatures(datastore.ancestry["Mock"].Layers), 0)
 
 	assert.Nil(t, ProcessAncestry(datastore, "Docker", "Mock2", layers2))
-	assert.Len(t, datastore.ancestry["Mock2"].Features, 0)
+	assert.Len(t, getNamespacedFeatures(datastore.ancestry["Mock2"].Layers), 0)
 
 	// Clair is upgraded to use a new namespace detector. The expected
 	// behavior is that all layers will be rescanned with "apt-sources" and
@@ -478,7 +493,7 @@ func TestClairUpgrade(t *testing.T) {
 	// Even though Clair processors are upgraded, the ancestry's features should
 	// not be upgraded without posting the ancestry to Clair again.
 	assert.Nil(t, ProcessAncestry(datastore, "Docker", "Mock", layers))
-	assert.Len(t, datastore.ancestry["Mock"].Features, 0)
+	assert.Len(t, getNamespacedFeatures(datastore.ancestry["Mock"].Layers), 0)
 
 	// Clair is upgraded to use a new feature lister. The expected behavior is
 	// that all layers will be rescanned with "dpkg" and the ancestry's features
@@ -489,18 +504,18 @@ func TestClairUpgrade(t *testing.T) {
 	}
 
 	assert.Nil(t, ProcessAncestry(datastore, "Docker", "Mock", layers))
-	assert.Len(t, datastore.ancestry["Mock"].Features, 74)
+	assert.Len(t, getNamespacedFeatures(datastore.ancestry["Mock"].Layers), 74)
 	assert.Nil(t, ProcessAncestry(datastore, "Docker", "Mock2", layers2))
-	assert.Len(t, datastore.ancestry["Mock2"].Features, 52)
+	assert.Len(t, getNamespacedFeatures(datastore.ancestry["Mock2"].Layers), 52)
 
 	// check the namespaces are correct
-	for _, f := range datastore.ancestry["Mock"].Features {
+	for _, f := range getNamespacedFeatures(datastore.ancestry["Mock"].Layers) {
 		if !assert.NotEqual(t, database.Namespace{}, f.Namespace) {
 			assert.Fail(t, "Every feature should have a namespace attached")
 		}
 	}
 
-	for _, f := range datastore.ancestry["Mock2"].Features {
+	for _, f := range getNamespacedFeatures(datastore.ancestry["Mock2"].Layers) {
 		if !assert.NotEqual(t, database.Namespace{}, f.Namespace) {
 			assert.Fail(t, "Every feature should have a namespace attached")
 		}
@@ -624,8 +639,9 @@ func TestComputeAncestryFeatures(t *testing.T) {
 		}: false,
 	}
 
-	features, err := computeAncestryFeatures(layers)
+	ancestryLayers, err := computeAncestryLayers(layers, database.Processors{})
 	assert.Nil(t, err)
+	features := getNamespacedFeatures(ancestryLayers)
 	for _, f := range features {
 		if assert.Contains(t, expected, f) {
 			if assert.False(t, expected[f]) {

@@ -39,8 +39,8 @@ import (
 )
 
 const (
-	dataFeedURL     string = "https://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-%s.xml.gz"
-	dataFeedMetaURL string = "https://static.nvd.nist.gov/feeds/xml/cve/nvdcve-2.0-%s.meta"
+	dataFeedURL     string = "https://nvd.nist.gov/feeds/xml/cve/2.0/nvdcve-2.0-%s.xml.gz"
+	dataFeedMetaURL string = "https://nvd.nist.gov/feeds/xml/cve/2.0/nvdcve-2.0-%s.meta"
 
 	appenderName string = "NVD"
 

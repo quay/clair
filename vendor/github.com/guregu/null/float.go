@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 )
@@ -38,6 +39,14 @@ func FloatFromPtr(f *float64) Float {
 	return NewFloat(*f, true)
 }
 
+// ValueOrZero returns the inner value if valid, otherwise zero.
+func (f Float) ValueOrZero() float64 {
+	if !f.Valid {
+		return 0
+	}
+	return f.Float64
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 // It supports number and null input.
 // 0 will not be considered a null Float.
@@ -51,6 +60,13 @@ func (f *Float) UnmarshalJSON(data []byte) error {
 	switch x := v.(type) {
 	case float64:
 		f.Float64 = float64(x)
+	case string:
+		str := string(x)
+		if len(str) == 0 {
+			f.Valid = false
+			return nil
+		}
+		f.Float64, err = strconv.ParseFloat(str, 64)
 	case map[string]interface{}:
 		err = json.Unmarshal(data, &f.NullFloat64)
 	case nil:
@@ -83,6 +99,12 @@ func (f *Float) UnmarshalText(text []byte) error {
 func (f Float) MarshalJSON() ([]byte, error) {
 	if !f.Valid {
 		return []byte("null"), nil
+	}
+	if math.IsInf(f.Float64, 0) || math.IsNaN(f.Float64) {
+		return nil, &json.UnsupportedValueError{
+			Value: reflect.ValueOf(f.Float64),
+			Str:   strconv.FormatFloat(f.Float64, 'g', -1, 64),
+		}
 	}
 	return []byte(strconv.FormatFloat(f.Float64, 'f', -1, 64)), nil
 }
