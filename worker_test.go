@@ -41,7 +41,7 @@ type mockDatastore struct {
 	database.MockDatastore
 
 	layers             map[string]database.LayerWithContent
-	ancestry           map[string]database.AncestryWithContent
+	ancestry           map[string]database.Ancestry
 	namespaces         map[string]database.Namespace
 	features           map[string]database.Feature
 	namespacedFeatures map[string]database.NamespacedFeature
@@ -75,7 +75,7 @@ func copyDatastore(md *mockDatastore) mockDatastore {
 		}
 	}
 
-	ancestry := map[string]database.AncestryWithContent{}
+	ancestry := map[string]database.Ancestry{}
 	for k, a := range md.ancestry {
 		ancestryLayers := []database.AncestryLayer{}
 		layers := []database.Layer{}
@@ -101,14 +101,11 @@ func copyDatastore(md *mockDatastore) mockDatastore {
 			})
 		}
 
-		ancestry[k] = database.AncestryWithContent{
-			Ancestry: database.Ancestry{
-				Name:   a.Name,
-				Layers: layers,
-				ProcessedBy: database.Processors{
-					Detectors: append([]string(nil), a.ProcessedBy.Detectors...),
-					Listers:   append([]string(nil), a.ProcessedBy.Listers...),
-				},
+		ancestry[k] = database.Ancestry{
+			Name: a.Name,
+			ProcessedBy: database.Processors{
+				Detectors: append([]string(nil), a.ProcessedBy.Detectors...),
+				Listers:   append([]string(nil), a.ProcessedBy.Listers...),
 			},
 			Layers: ancestryLayers,
 		}
@@ -141,7 +138,7 @@ func newMockDatastore() *mockDatastore {
 	errSessionDone := errors.New("Session Done")
 	md := &mockDatastore{
 		layers:             make(map[string]database.LayerWithContent),
-		ancestry:           make(map[string]database.AncestryWithContent),
+		ancestry:           make(map[string]database.Ancestry),
 		namespaces:         make(map[string]database.Namespace),
 		features:           make(map[string]database.Feature),
 		namespacedFeatures: make(map[string]database.NamespacedFeature),
@@ -181,7 +178,7 @@ func newMockDatastore() *mockDatastore {
 				return database.Ancestry{}, false, errSessionDone
 			}
 			ancestry, ok := session.copy.ancestry[name]
-			return ancestry.Ancestry, ok, nil
+			return ancestry, ok, nil
 		}
 
 		session.FctFindLayer = func(name string) (database.Layer, bool, error) {
@@ -285,7 +282,7 @@ func newMockDatastore() *mockDatastore {
 			return nil
 		}
 
-		session.FctUpsertAncestry = func(ancestry database.AncestryWithContent) error {
+		session.FctUpsertAncestry = func(ancestry database.Ancestry) error {
 			if session.terminated {
 				return errSessionDone
 			}

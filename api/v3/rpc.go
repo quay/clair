@@ -44,11 +44,12 @@ type StatusServer struct {
 
 // GetStatus implements getting the current status of Clair via the Clair service.
 func (s *StatusServer) GetStatus(ctx context.Context, req *pb.GetStatusRequest) (*pb.GetStatusResponse, error) {
-	if clairStatus, err := GetClairStatus(s.Store); err != nil {
+	clairStatus, err := GetClairStatus(s.Store)
+	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
-	} else {
-		return &pb.GetStatusResponse{Status: clairStatus}, nil
 	}
+
+	return &pb.GetStatusResponse{Status: clairStatus}, nil
 }
 
 // PostAncestry implements posting an ancestry via the Clair gRPC service.
@@ -105,11 +106,7 @@ func (s *AncestryServer) PostAncestry(ctx context.Context, req *pb.PostAncestryR
 
 // GetAncestry implements retrieving an ancestry via the Clair gRPC service.
 func (s *AncestryServer) GetAncestry(ctx context.Context, req *pb.GetAncestryRequest) (*pb.GetAncestryResponse, error) {
-	var (
-		respAncestry *pb.GetAncestryResponse_Ancestry
-		name         = req.GetAncestryName()
-	)
-
+	name := req.GetAncestryName()
 	if name == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "ancestry name should not be empty")
 	}
@@ -118,79 +115,41 @@ func (s *AncestryServer) GetAncestry(ctx context.Context, req *pb.GetAncestryReq
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+
 	defer tx.Rollback()
 
-	if req.GetWithFeatures() || req.GetWithVulnerabilities() {
-		ancestry, ok, err := tx.FindAncestryWithContent(name)
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-
-		if !ok {
-			return nil, status.Error(codes.NotFound, fmt.Sprintf("requested ancestry '%s' is not found", req.GetAncestryName()))
-		}
-
-		respAncestry = &pb.GetAncestryResponse_Ancestry{
-			Name:             name,
-			ScannedDetectors: ancestry.ProcessedBy.Detectors,
-			ScannedListers:   ancestry.ProcessedBy.Listers,
-		}
-
-		for _, layer := range ancestry.Layers {
-			ancestryLayer := &pb.GetAncestryResponse_AncestryLayer{
-				Layer: &pb.Layer{
-					Hash: layer.Hash,
-				},
-			}
-
-			if req.GetWithVulnerabilities() {
-				featureVulnerabilities, err := tx.FindAffectedNamespacedFeatures(layer.DetectedFeatures)
-				if err != nil {
-					return nil, status.Error(codes.Internal, err.Error())
-				}
-
-				for _, fv := range featureVulnerabilities {
-					// Ensure that every feature can be found.
-					if !fv.Valid {
-						return nil, status.Error(codes.Internal, "ancestry feature is not found")
-					}
-
-					feature := pb.NamespacedFeatureFromDatabaseModel(fv.NamespacedFeature)
-					for _, v := range fv.AffectedBy {
-						vuln, err := pb.VulnerabilityWithFixedInFromDatabaseModel(v)
-						if err != nil {
-							return nil, status.Error(codes.Internal, err.Error())
-						}
-						feature.Vulnerabilities = append(feature.Vulnerabilities, vuln)
-					}
-					ancestryLayer.DetectedFeatures = append(ancestryLayer.DetectedFeatures, feature)
-				}
-			} else {
-				for _, dbFeature := range layer.DetectedFeatures {
-					ancestryLayer.DetectedFeatures = append(ancestryLayer.DetectedFeatures, pb.NamespacedFeatureFromDatabaseModel(dbFeature))
-				}
-			}
-
-			respAncestry.Layers = append(respAncestry.Layers, ancestryLayer)
-		}
-	} else {
-		dbAncestry, ok, err := tx.FindAncestry(name)
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		} else if !ok {
-			return nil, status.Error(codes.NotFound, fmt.Sprintf("requested ancestry '%s' is not found", req.GetAncestryName()))
-		}
-		respAncestry = pb.AncestryFromDatabaseModel(dbAncestry)
+	ancestry, ok, err := tx.FindAncestry(name)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	clairStatus, err := GetClairStatus(s.Store)
+	if !ok {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("requested ancestry '%s' is not found", req.GetAncestryName()))
+	}
+
+	pbAncestry := &pb.GetAncestryResponse_Ancestry{
+		Name:             ancestry.Name,
+		ScannedDetectors: ancestry.ProcessedBy.Detectors,
+		ScannedListers:   ancestry.ProcessedBy.Listers,
+	}
+
+	for _, layer := range ancestry.Layers {
+		pbLayer, err := GetPbAncestryLayer(tx, layer)
+		if err != nil {
+			return nil, err
+		}
+
+		pbAncestry.Layers = append(pbAncestry.Layers, pbLayer)
+	}
+
+	pbClairStatus, err := GetClairStatus(s.Store)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &pb.GetAncestryResponse{
-		Status:   clairStatus,
-		Ancestry: respAncestry,
+		Status:   pbClairStatus,
+		Ancestry: pbAncestry,
 	}, nil
 }
 

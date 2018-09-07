@@ -91,18 +91,11 @@ type Session interface {
 
 	// UpsertAncestry inserts or replaces an ancestry and its namespaced
 	// features and processors used to scan the ancestry.
-	UpsertAncestry(AncestryWithContent) error
+	UpsertAncestry(Ancestry) error
 
-	// FindAncestry retrieves an ancestry with processors used to scan the
-	// ancestry. If the ancestry is not found, return false.
-	//
-	// The ancestry's processors are returned to short cut processing ancestry
-	// if it has been processed by all processors in the current Clair instance.
-	FindAncestry(name string) (ancestry Ancestry, found bool, err error)
-
-	// FindAncestryWithContent retrieves an ancestry with all detected
+	// FindAncestry retrieves an ancestry with all detected
 	// namespaced features. If the ancestry is not found, return false.
-	FindAncestryWithContent(name string) (ancestry AncestryWithContent, found bool, err error)
+	FindAncestry(name string) (ancestry Ancestry, found bool, err error)
 
 	// PersistFeatures inserts a set of features if not in the database.
 	PersistFeatures(features []Feature) error

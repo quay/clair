@@ -388,7 +388,7 @@ func getNamespacedFeatures(layers []database.AncestryLayer) []database.Namespace
 
 func processAncestry(datastore database.Datastore, name string, layers []database.LayerWithContent, commonProcessors database.Processors) error {
 	var (
-		ancestry database.AncestryWithContent
+		ancestry database.Ancestry
 		err      error
 	)
 

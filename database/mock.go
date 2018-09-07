@@ -21,9 +21,8 @@ import "time"
 type MockSession struct {
 	FctCommit                           func() error
 	FctRollback                         func() error
-	FctUpsertAncestry                   func(AncestryWithContent) error
+	FctUpsertAncestry                   func(Ancestry) error
 	FctFindAncestry                     func(name string) (Ancestry, bool, error)
-	FctFindAncestryWithContent          func(name string) (AncestryWithContent, bool, error)
 	FctFindAffectedNamespacedFeatures   func(features []NamespacedFeature) ([]NullableAffectedNamespacedFeature, error)
 	FctPersistNamespaces                func([]Namespace) error
 	FctPersistFeatures                  func([]Feature) error
@@ -63,7 +62,7 @@ func (ms *MockSession) Rollback() error {
 	panic("required mock function not implemented")
 }
 
-func (ms *MockSession) UpsertAncestry(ancestry AncestryWithContent) error {
+func (ms *MockSession) UpsertAncestry(ancestry Ancestry) error {
 	if ms.FctUpsertAncestry != nil {
 		return ms.FctUpsertAncestry(ancestry)
 	}
@@ -73,13 +72,6 @@ func (ms *MockSession) UpsertAncestry(ancestry AncestryWithContent) error {
 func (ms *MockSession) FindAncestry(name string) (Ancestry, bool, error) {
 	if ms.FctFindAncestry != nil {
 		return ms.FctFindAncestry(name)
-	}
-	panic("required mock function not implemented")
-}
-
-func (ms *MockSession) FindAncestryWithContent(name string) (AncestryWithContent, bool, error) {
-	if ms.FctFindAncestryWithContent != nil {
-		return ms.FctFindAncestryWithContent(name)
 	}
 	panic("required mock function not implemented")
 }

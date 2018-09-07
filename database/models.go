@@ -34,17 +34,6 @@ type Ancestry struct {
 	ProcessedBy Processors
 	// Layers should be ordered and i_th layer is the parent of i+1_th layer in
 	// the slice.
-	Layers []Layer
-}
-
-// AncestryWithContent has the ancestry's name and the Ancestry Layers
-// associated with it.
-type AncestryWithContent struct {
-	Ancestry
-
-	// TODO(sidchen) deduplicate the Layers here and the Layers in
-	// Ancestry.Layers.
-	// AncestryLayers should have the same order as Ancestry.Layers.
 	Layers []AncestryLayer
 }
 
@@ -52,7 +41,8 @@ type AncestryWithContent struct {
 type AncestryLayer struct {
 	Layer
 
-	// DetectedFeatures are the features introduced by this layer.
+	// DetectedFeatures are the features introduced by this layer when it was
+	// processed.
 	DetectedFeatures []NamespacedFeature
 }
 
