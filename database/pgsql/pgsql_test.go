@@ -24,13 +24,13 @@ import (
 	"strings"
 	"testing"
 
-	fernet "github.com/fernet/fernet-go"
 	"github.com/pborman/uuid"
 	log "github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/pkg/pagination"
 )
 
 var (
@@ -215,18 +215,13 @@ func generateTestConfig(testName string, loadFixture bool, manageLife bool) data
 		source = fmt.Sprintf(sourceEnv, dbName)
 	}
 
-	var key fernet.Key
-	if err := key.Generate(); err != nil {
-		panic("failed to generate pagination key" + err.Error())
-	}
-
 	return database.RegistrableComponentConfig{
 		Options: map[string]interface{}{
 			"source":                  source,
 			"cachesize":               0,
 			"managedatabaselifecycle": manageLife,
 			"fixturepath":             fixturePath,
-			"paginationkey":           key.Encode(),
+			"paginationkey":           pagination.Must(pagination.NewKey()).String(),
 		},
 	}
 }

@@ -1,4 +1,4 @@
-// Copyright 2017 clair authors
+// Copyright 2018 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,7 +61,17 @@ import (
 	_ "github.com/coreos/clair/ext/vulnsrc/ubuntu"
 )
 
-const maxDBConnectionAttempts = 20
+// MaxDBConnectionAttempts is the total number of tries that Clair will use to
+// initially connect to a database at start-up.
+const MaxDBConnectionAttempts = 20
+
+// BinaryDependencies are the programs that Clair expects to be on the $PATH
+// because it creates subprocesses of these programs.
+var BinaryDependencies = []string{
+	"git",
+	"rpm",
+	"xz",
+}
 
 func waitForSignals(signals ...os.Signal) {
 	interrupts := make(chan os.Signal, 1)
@@ -136,7 +146,7 @@ func Boot(config *Config) {
 	// Open database
 	var db database.Datastore
 	var dbError error
-	for attempts := 1; attempts <= maxDBConnectionAttempts; attempts++ {
+	for attempts := 1; attempts <= MaxDBConnectionAttempts; attempts++ {
 		db, dbError = database.Open(config.Database)
 		if dbError == nil {
 			break
@@ -180,7 +190,7 @@ func main() {
 	flag.Parse()
 
 	// Check for dependencies.
-	for _, bin := range []string{"git", "rpm", "xz"} {
+	for _, bin := range BinaryDependencies {
 		_, err := exec.LookPath(bin)
 		if err != nil {
 			log.WithError(err).WithField("dependency", bin).Fatal("failed to find dependency")

@@ -14,7 +14,11 @@
 
 package database
 
-import "time"
+import (
+	"time"
+
+	"github.com/coreos/clair/pkg/pagination"
+)
 
 // MockSession implements Session and enables overriding each available method.
 // The default behavior of each method is to simply panic.
@@ -38,7 +42,7 @@ type MockSession struct {
 	FctDeleteVulnerabilities            func([]VulnerabilityID) error
 	FctInsertVulnerabilityNotifications func([]VulnerabilityNotification) error
 	FctFindNewNotification              func(lastNotified time.Time) (NotificationHook, bool, error)
-	FctFindVulnerabilityNotification    func(name string, limit int, oldPage PageNumber, newPage PageNumber) (
+	FctFindVulnerabilityNotification    func(name string, limit int, oldPage pagination.Token, newPage pagination.Token) (
 		vuln VulnerabilityNotificationWithVulnerable, ok bool, err error)
 	FctMarkNotificationNotified func(name string) error
 	FctDeleteNotification       func(name string) error
@@ -182,7 +186,7 @@ func (ms *MockSession) FindNewNotification(lastNotified time.Time) (Notification
 	panic("required mock function not implemented")
 }
 
-func (ms *MockSession) FindVulnerabilityNotification(name string, limit int, oldPage PageNumber, newPage PageNumber) (
+func (ms *MockSession) FindVulnerabilityNotification(name string, limit int, oldPage pagination.Token, newPage pagination.Token) (
 	VulnerabilityNotificationWithVulnerable, bool, error) {
 	if ms.FctFindVulnerabilityNotification != nil {
 		return ms.FctFindVulnerabilityNotification(name, limit, oldPage, newPage)
