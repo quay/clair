@@ -171,7 +171,7 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 				log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not download NVD data feed")
 				return dataFeedReaders, dataFeedHashes, commonerr.ErrCouldNotDownload
 			}
-			// r is closed in BuildCache()
+			defer r.Body.Close()
 
 			if !httputil.Status2xx(r) {
 				log.WithField("StatusCode", r.StatusCode).Error("Failed to download NVD data feed")
@@ -196,8 +196,6 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 			} else {
 				log.WithError(err).Warning("could not store NVD data feed to filesystem")
 			}
-
-			r.Body.Close()
 		}
 	}
 
@@ -212,7 +210,7 @@ func getHashFromMetaURL(metaURL string) (string, error) {
 	defer r.Body.Close()
 
 	if !httputil.Status2xx(r) {
-		return "", errors.New("Unsuccesuful status code: " + string(r.StatusCode))
+		return "", errors.New(metaURL + " failed status code: " + string(r.StatusCode))
 	}
 
 	scanner := bufio.NewScanner(r.Body)
