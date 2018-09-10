@@ -165,51 +165,55 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 				}
 			}
 
-			downloadAndSave := func() error {
-
-				// Download data feed.
-				r, err := httputil.GetWithUserAgent(fmt.Sprintf(dataFeedURL, dataFeedName))
-				if err != nil {
-					log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not download NVD data feed")
-					return commonerr.ErrCouldNotDownload
-				}
-				defer r.Body.Close()
-
-				if !httputil.Status2xx(r) {
-					log.WithField("StatusCode", r.StatusCode).Error("Failed to download NVD data feed")
-					return commonerr.ErrCouldNotDownload
-				}
-
-				// Un-gzip it.
-				gr, err := gzip.NewReader(r.Body)
-				if err != nil {
-					log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not read NVD data feed")
-					return commonerr.ErrCouldNotDownload
-				}
-
-				// Store it to a file at the same time if possible.
-				if f, err := os.Create(fileName); err == nil {
-					_, err = io.Copy(f, gr)
-					if err != nil {
-						log.WithError(err).Warning("could not stream NVD data feed to filesystem")
-					}
-					defer f.Close()
-					dataFeedReaders[dataFeedName] = fileName
-
-				} else {
-					log.WithError(err).Warning("could not store NVD data feed to filesystem")
-				}
-				return nil
-			}
-
-			err := downloadAndSave()
+			err := downloadFeed(dataFeedName, fileName)
 			if err != nil {
 				return dataFeedReaders, dataFeedHashes, err
 			}
+			dataFeedReaders[dataFeedName] = fileName
 		}
 	}
 
 	return dataFeedReaders, dataFeedHashes, nil
+}
+
+func downloadFeed(dataFeedName, fileName string) error {
+
+	// Download data feed.
+	r, err := httputil.GetWithUserAgent(fmt.Sprintf(dataFeedURL, dataFeedName))
+	if err != nil {
+		log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not download NVD data feed")
+		return commonerr.ErrCouldNotDownload
+	}
+	defer r.Body.Close()
+
+	if !httputil.Status2xx(r) {
+		log.WithFields(log.Fields{"StatusCode": r.StatusCode, "DataFeedName": dataFeedName}).Error("Failed to download NVD data feed")
+		return commonerr.ErrCouldNotDownload
+	}
+
+	// Un-gzip it.
+	gr, err := gzip.NewReader(r.Body)
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{"StatusCode": r.StatusCode, "DataFeedName": dataFeedName}).Error("could not read NVD data feed")
+		return commonerr.ErrCouldNotDownload
+	}
+
+	// Store it to a file at the same time if possible.
+	f, err := os.Create(fileName)
+	if err != nil {
+
+		log.WithError(err).WithField("Filename", fileName).Warning("could not store NVD data feed to filesystem")
+		return commonerr.ErrFilesystem
+	}
+	defer f.Close()
+
+	_, err = io.Copy(f, gr)
+	if err != nil {
+		log.WithError(err).WithField("Filename", fileName).Warning("could not stream NVD data feed to filesystem")
+		return commonerr.ErrFilesystem
+	}
+
+	return nil
 }
 
 func getHashFromMetaURL(metaURL string) (string, error) {
