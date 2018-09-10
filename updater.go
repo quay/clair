@@ -28,6 +28,7 @@ import (
 	"github.com/coreos/clair/ext/vulnmdsrc"
 	"github.com/coreos/clair/ext/vulnsrc"
 	"github.com/coreos/clair/pkg/stopper"
+	"github.com/coreos/clair/pkg/timeutil"
 )
 
 const (
@@ -39,6 +40,7 @@ const (
 )
 
 var (
+	sleepDuration          = updaterSleepBetweenLoopsDuration
 	promUpdaterErrorsTotal = prometheus.NewCounter(prometheus.CounterOpts{
 		Name: "clair_updater_errors_total",
 		Help: "Numbers of errors that the updater generated.",
@@ -81,7 +83,7 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 	log.WithField("lock identifier", whoAmI).Info("updater service started")
 
 	for {
-		var stop bool
+		var stop, status bool
 
 		// Determine if this is the first update and define the next update time.
 		// The next update time is (last update time + interval) or now if this is the first update.
@@ -103,7 +105,7 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 				// Launch update in a new go routine.
 				doneC := make(chan bool, 1)
 				go func() {
-					update(datastore, firstUpdate)
+					status = update(datastore, firstUpdate)
 					doneC <- true
 				}()
 
@@ -126,9 +128,17 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 					break
 				}
 
-				// Sleep for a short duration to prevent pinning the CPU on a
+				// Extend the sleep duration if there're errors to any updaters.
+				if status {
+					sleepDuration = updaterSleepBetweenLoopsDuration
+				} else {
+					sleepDuration = timeutil.ExpBackoff(sleepDuration, config.Interval)
+					log.Warn("Not all updaters succeeded, sleep duration: ", sleepDuration)
+				}
+
+				// Sleep for a certain duration to prevent pinning the CPU and request requests on a
 				// consistent failure.
-				if stopped := sleepUpdater(time.Now().Add(updaterSleepBetweenLoopsDuration), st); stopped {
+				if stopped := sleepUpdater(time.Now().Add(sleepDuration), st); stopped {
 					break
 				}
 				continue
@@ -176,7 +186,7 @@ func sleepUpdater(approxWakeup time.Time, st *stopper.Stopper) (stopped bool) {
 
 // update fetches all the vulnerabilities from the registered fetchers, upserts
 // them into the database and then sends notifications.
-func update(datastore database.Datastore, firstUpdate bool) {
+func update(datastore database.Datastore, firstUpdate bool) (status bool) {
 	defer setUpdaterDuration(time.Now())
 
 	log.Info("updating vulnerabilities")
@@ -211,6 +221,7 @@ func update(datastore database.Datastore, firstUpdate bool) {
 	}
 
 	log.Info("update finished")
+	return
 }
 
 func setUpdaterDuration(start time.Time) {
