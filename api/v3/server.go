@@ -35,15 +35,6 @@ import (
 	"github.com/coreos/clair/database"
 )
 
-// handleShutdown handles the server shut down error.
-func handleShutdown(err error) {
-	if err != nil {
-		if opErr, ok := err.(*net.OpError); !ok || (ok && opErr.Op != "accept") {
-			log.Fatal(err)
-		}
-	}
-}
-
 var (
 	promResponseDurationMilliseconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "clair_v3_api_response_duration_milliseconds",
@@ -178,7 +169,7 @@ func Run(Addr string, tlsConfig *tls.Config, CertFile, KeyFile string, store dat
 		tlsConfig.NextProtos = []string{"h2"}
 
 		apiListener = tls.NewListener(tcpMux.Match(cmux.Any()), tlsConfig)
-		go func() { handleShutdown(tcpMux.Serve()) }()
+		go func() { tcpMux.Serve() }()
 
 		grpcServer := newGrpcServer(store, tlsConfig)
 		gwmux := newGrpcGatewayServer(ctx, apiListener.Addr().String(), tlsConfig)
@@ -191,10 +182,10 @@ func Run(Addr string, tlsConfig *tls.Config, CertFile, KeyFile string, store dat
 	} else {
 		grpcL := tcpMux.Match(cmux.HTTP2HeaderField("content-type", "application/grpc"))
 		apiListener = tcpMux.Match(cmux.Any())
-		go func() { handleShutdown(tcpMux.Serve()) }()
+		go func() { tcpMux.Serve() }()
 
 		grpcServer := newGrpcServer(store, nil)
-		go func() { handleShutdown(grpcServer.Serve(grpcL)) }()
+		go func() { grpcServer.Serve(grpcL) }()
 
 		gwmux := newGrpcGatewayServer(ctx, apiListener.Addr().String(), nil)
 
@@ -211,7 +202,7 @@ func Run(Addr string, tlsConfig *tls.Config, CertFile, KeyFile string, store dat
 	}
 
 	// blocking call
-	handleShutdown(srv.Serve(apiListener))
+	srv.Serve(apiListener)
 	log.Info("Grpc API stopped")
 }
 
