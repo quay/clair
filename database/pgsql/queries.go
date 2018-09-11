@@ -218,17 +218,16 @@ const (
 	insertAncestry = `INSERT INTO ancestry (name) VALUES ($1) RETURNING id`
 
 	searchAncestryLayer = `
-		SELECT layer.hash
+		SELECT layer.hash, layer.id, ancestry_layer.ancestry_index
 		FROM layer, ancestry_layer
 		WHERE ancestry_layer.ancestry_id = $1
 			AND ancestry_layer.layer_id = layer.id
 		ORDER BY ancestry_layer.ancestry_index ASC`
 
 	searchAncestryFeatures = `
-		SELECT namespace.name, namespace.version_format, feature.name, feature.version, ancestry_layer.ancestry_index
-		FROM namespace, feature, ancestry, namespaced_feature, ancestry_layer, ancestry_feature
-		WHERE ancestry.name = $1
-			AND ancestry.id = ancestry_layer.ancestry_id
+		SELECT namespace.name, namespace.version_format, feature.name, feature.version, feature.version_format, ancestry_layer.ancestry_index
+		FROM namespace, feature, namespaced_feature, ancestry_layer, ancestry_feature
+		WHERE ancestry_layer.ancestry_id = $1
 			AND ancestry_feature.ancestry_layer_id = ancestry_layer.id
 			AND ancestry_feature.namespaced_feature_id = namespaced_feature.id
 			AND namespaced_feature.feature_id = feature.id

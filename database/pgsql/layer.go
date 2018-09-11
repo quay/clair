@@ -293,15 +293,23 @@ func (tx *pgSession) findLayer(hash string) (database.Layer, int64, bool, error)
 		return layer, layerID, false, err
 	}
 
-	layer.ProcessedBy.Detectors, err = tx.findProcessors(searchLayerDetectors, "searchLayerDetectors", "detector", layerID)
-	if err != nil {
-		return layer, layerID, false, err
+	layer.ProcessedBy, err = tx.findLayerProcessors(layerID)
+	return layer, layerID, true, err
+}
+
+func (tx *pgSession) findLayerProcessors(id int64) (database.Processors, error) {
+	var (
+		err        error
+		processors database.Processors
+	)
+
+	if processors.Detectors, err = tx.findProcessors(searchLayerDetectors, id); err != nil {
+		return processors, handleError("searchLayerDetectors", err)
 	}
 
-	layer.ProcessedBy.Listers, err = tx.findProcessors(searchLayerListers, "searchLayerListers", "lister", layerID)
-	if err != nil {
-		return layer, layerID, false, err
+	if processors.Listers, err = tx.findProcessors(searchLayerListers, id); err != nil {
+		return processors, handleError("searchLayerListers", err)
 	}
 
-	return layer, layerID, true, nil
+	return processors, nil
 }

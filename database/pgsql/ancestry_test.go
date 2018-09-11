@@ -26,13 +26,8 @@ import (
 func TestUpsertAncestry(t *testing.T) {
 	store, tx := openSessionForTest(t, "UpsertAncestry", true)
 	defer closeTest(t, store, tx)
-	a1 := database.AncestryWithContent{
-		Ancestry: database.Ancestry{
-			Name: "a1",
-			Layers: []database.Layer{
-				{Hash: "layer-N"},
-			},
-		},
+	a1 := database.Ancestry{
+		Name: "a1",
 		Layers: []database.AncestryLayer{
 			{
 				Layer: database.Layer{
@@ -42,15 +37,10 @@ func TestUpsertAncestry(t *testing.T) {
 		},
 	}
 
-	a2 := database.AncestryWithContent{}
+	a2 := database.Ancestry{}
 
-	a3 := database.AncestryWithContent{
-		Ancestry: database.Ancestry{
-			Name: "a",
-			Layers: []database.Layer{
-				{Hash: "layer-0"},
-			},
-		},
+	a3 := database.Ancestry{
+		Name: "a",
 		Layers: []database.AncestryLayer{
 			{
 				Layer: database.Layer{
@@ -60,13 +50,8 @@ func TestUpsertAncestry(t *testing.T) {
 		},
 	}
 
-	a4 := database.AncestryWithContent{
-		Ancestry: database.Ancestry{
-			Name: "a",
-			Layers: []database.Layer{
-				{Hash: "layer-1"},
-			},
-		},
+	a4 := database.Ancestry{
+		Name: "a",
 		Layers: []database.AncestryLayer{
 			{
 				Layer: database.Layer{
@@ -123,10 +108,10 @@ func TestUpsertAncestry(t *testing.T) {
 	// replace valid case
 	assert.Nil(t, tx.UpsertAncestry(a4))
 	// validate
-	ancestry, ok, err := tx.FindAncestryWithContent("a")
+	ancestry, ok, err := tx.FindAncestry("a")
 	assert.Nil(t, err)
 	assert.True(t, ok)
-	assert.Equal(t, a4, ancestry.Ancestry)
+	assertAncestryEqual(t, a4, ancestry)
 }
 
 func assertProcessorsEqual(t *testing.T, expected database.Processors, actual database.Processors) bool {
@@ -137,36 +122,10 @@ func assertProcessorsEqual(t *testing.T, expected database.Processors, actual da
 	return assert.Equal(t, expected.Detectors, actual.Detectors) && assert.Equal(t, expected.Listers, actual.Listers)
 }
 
-func TestFindAncestry(t *testing.T) {
-	store, tx := openSessionForTest(t, "FindAncestry", true)
-	defer closeTest(t, store, tx)
-
-	_, ok, err := tx.FindAncestry("ancestry-non")
-	assert.Nil(t, err)
-	assert.False(t, ok)
-
-	expected := database.Ancestry{
-		Name: "ancestry-1",
-		Layers: []database.Layer{
-			{Hash: "layer-0"},
-			{Hash: "layer-1"},
-			{Hash: "layer-2"},
-			{Hash: "layer-3a"},
-		},
-		ProcessedBy: database.Processors{
-			Detectors: []string{"os-release"},
-			Listers:   []string{"dpkg"},
-		},
-	}
-
-	a, ok2, err := tx.FindAncestry("ancestry-1")
-	if assert.Nil(t, err) && assert.True(t, ok2) {
-		assertAncestryEqual(t, expected, a)
-	}
-}
-
-func assertAncestryWithFeatureEqual(t *testing.T, expected database.AncestryWithContent, actual database.AncestryWithContent) bool {
-	if assertAncestryEqual(t, expected.Ancestry, actual.Ancestry) && assert.Equal(t, len(expected.Layers), len(actual.Layers)) {
+func assertAncestryEqual(t *testing.T, expected database.Ancestry, actual database.Ancestry) bool {
+	assert.Equal(t, expected.Name, actual.Name)
+	assertProcessorsEqual(t, expected.ProcessedBy, actual.ProcessedBy)
+	if assert.Equal(t, len(expected.Layers), len(actual.Layers)) {
 		for index, layer := range expected.Layers {
 			if !assertAncestryLayerEqual(t, layer, actual.Layers[index]) {
 				return false
@@ -182,37 +141,22 @@ func assertAncestryLayerEqual(t *testing.T, expected database.AncestryLayer, act
 		assertNamespacedFeatureEqual(t, expected.DetectedFeatures, actual.DetectedFeatures)
 }
 
-func assertAncestryEqual(t *testing.T, expected database.Ancestry, actual database.Ancestry) bool {
-	return assert.Equal(t, expected.Name, actual.Name) &&
-		assert.Equal(t, expected.Layers, actual.Layers) &&
-		assertProcessorsEqual(t, expected.ProcessedBy, actual.ProcessedBy)
-}
-
-func TestFindAncestryWithContent(t *testing.T) {
-	store, tx := openSessionForTest(t, "FindAncestryWithContent", true)
+func TestFindAncestry(t *testing.T) {
+	store, tx := openSessionForTest(t, "FindAncestry", true)
 	defer closeTest(t, store, tx)
 
 	// invalid
-	_, ok, err := tx.FindAncestryWithContent("ancestry-non")
+	_, ok, err := tx.FindAncestry("ancestry-non")
 	if assert.Nil(t, err) {
 		assert.False(t, ok)
 	}
 
-	expected := database.AncestryWithContent{
-		Ancestry: database.Ancestry{
-			Name: "ancestry-2",
-			Layers: []database.Layer{
-				{Hash: "layer-0"},
-				{Hash: "layer-1"},
-				{Hash: "layer-2"},
-				{Hash: "layer-3b"},
-			},
-			ProcessedBy: database.Processors{
-				Detectors: []string{"os-release"},
-				Listers:   []string{"dpkg"},
-			},
+	expected := database.Ancestry{
+		Name: "ancestry-2",
+		ProcessedBy: database.Processors{
+			Detectors: []string{"os-release"},
+			Listers:   []string{"dpkg"},
 		},
-
 		Layers: []database.AncestryLayer{
 			{
 				Layer: database.Layer{
@@ -261,8 +205,8 @@ func TestFindAncestryWithContent(t *testing.T) {
 		},
 	}
 	// valid
-	ancestry, ok, err := tx.FindAncestryWithContent("ancestry-2")
+	ancestry, ok, err := tx.FindAncestry("ancestry-2")
 	if assert.Nil(t, err) && assert.True(t, ok) {
-		assertAncestryWithFeatureEqual(t, expected, ancestry)
+		assertAncestryEqual(t, expected, ancestry)
 	}
 }
