@@ -1,4 +1,4 @@
-// Copyright 2017 clair authors
+// Copyright 2018 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,9 +16,6 @@ package api
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
-	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -40,14 +37,10 @@ type Config struct {
 }
 
 func Run(cfg *Config, store database.Datastore) {
-	tlsConfig, err := tlsClientConfig(cfg.CAFile)
+	err := v3.ListenAndServe(cfg.Addr, cfg.CertFile, cfg.KeyFile, cfg.CAFile, store)
 	if err != nil {
-		log.WithError(err).Fatal("could not initialize client cert authentication")
+		log.WithError(err).Fatal("could not initialize gRPC server")
 	}
-	if tlsConfig != nil {
-		log.Info("main API configured with client certificate authentication")
-	}
-	v3.Run(cfg.Addr, tlsConfig, cfg.CertFile, cfg.KeyFile, store)
 }
 
 func RunHealth(cfg *Config, store database.Datastore, st *stopper.Stopper) {
@@ -76,31 +69,4 @@ func RunHealth(cfg *Config, store database.Datastore, st *stopper.Stopper) {
 	}
 
 	log.Info("health API stopped")
-}
-
-// tlsClientConfig initializes a *tls.Config using the given CA. The resulting
-// *tls.Config is meant to be used to configure an HTTP server to do client
-// certificate authentication.
-//
-// If no CA is given, a nil *tls.Config is returned; no client certificate will
-// be required and verified. In other words, authentication will be disabled.
-func tlsClientConfig(caPath string) (*tls.Config, error) {
-	if caPath == "" {
-		return nil, nil
-	}
-
-	caCert, err := ioutil.ReadFile(caPath)
-	if err != nil {
-		return nil, err
-	}
-
-	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(caCert)
-
-	tlsConfig := &tls.Config{
-		ClientCAs:  caCertPool,
-		ClientAuth: tls.RequireAndVerifyClientCert,
-	}
-
-	return tlsConfig, nil
 }
