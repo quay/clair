@@ -201,7 +201,6 @@ func downloadFeed(dataFeedName, fileName string) error {
 	// Store it to a file at the same time if possible.
 	f, err := os.Create(fileName)
 	if err != nil {
-
 		log.WithError(err).WithField("Filename", fileName).Warning("could not store NVD data feed to filesystem")
 		return commonerr.ErrFilesystem
 	}
