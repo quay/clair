@@ -23,6 +23,9 @@ import (
 	"github.com/coreos/clair/pkg/version"
 )
 
+// Middleware is a function used to wrap the logic of another http.Handler.
+type Middleware func(http.Handler) http.Handler
+
 // GetWithUserAgent performs an HTTP GET with the proper Clair User-Agent.
 func GetWithUserAgent(url string) (*http.Response, error) {
 	client := &http.Client{}

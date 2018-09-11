@@ -1,4 +1,4 @@
-// Copyright 2017 clair authors
+// Copyright 2018 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,34 +15,18 @@
 package v3
 
 import (
-	"context"
-	"crypto/tls"
-	"net"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
-	"github.com/cockroachdb/cmux"
-	"github.com/grpc-ecosystem/go-grpc-prometheus"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 
 	pb "github.com/coreos/clair/api/v3/clairpb"
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/pkg/grpcutil"
 )
-
-// handleShutdown handles the server shut down error.
-func handleShutdown(err error) {
-	if err != nil {
-		if opErr, ok := err.(*net.OpError); !ok || (ok && opErr.Op != "accept") {
-			log.Fatal(err)
-		}
-	}
-}
 
 var (
 	promResponseDurationMilliseconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
@@ -56,21 +40,11 @@ func init() {
 	prometheus.MustRegister(promResponseDurationMilliseconds)
 }
 
-func newGrpcServer(store database.Datastore, tlsConfig *tls.Config) *grpc.Server {
-	grpcOpts := []grpc.ServerOption{
-		grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
-		grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
-	}
-
-	if tlsConfig != nil {
-		grpcOpts = append(grpcOpts, grpc.Creds(credentials.NewTLS(tlsConfig)))
-	}
-
-	grpcServer := grpc.NewServer(grpcOpts...)
-	pb.RegisterAncestryServiceServer(grpcServer, &AncestryServer{Store: store})
-	pb.RegisterNotificationServiceServer(grpcServer, &NotificationServer{Store: store})
-	pb.RegisterStatusServiceServer(grpcServer, &StatusServer{Store: store})
-	return grpcServer
+func prometheusHandler(h http.Handler) http.Handler {
+	mux := http.NewServeMux()
+	mux.Handle("/", h)
+	mux.Handle("/metrics", prometheus.Handler())
+	return mux
 }
 
 type httpStatusWriter struct {
@@ -84,145 +58,48 @@ func (w *httpStatusWriter) WriteHeader(code int) {
 	w.ResponseWriter.WriteHeader(code)
 }
 
-// logHandler adds request logging to an http handler.
-func logHandler(handler http.Handler) http.Handler {
+func loggingHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		lrw := &httpStatusWriter{ResponseWriter: w, StatusCode: http.StatusOK}
 
-		handler.ServeHTTP(lrw, r)
-
-		statusStr := strconv.Itoa(lrw.StatusCode)
-		if lrw.StatusCode == 0 {
-			statusStr = "???"
-		}
+		h.ServeHTTP(lrw, r)
 
 		log.WithFields(log.Fields{
 			"remote addr":       r.RemoteAddr,
 			"method":            r.Method,
 			"request uri":       r.RequestURI,
-			"status":            statusStr,
+			"status":            strconv.Itoa(lrw.StatusCode),
 			"elapsed time (ms)": float64(time.Since(start).Nanoseconds()) * 1e-6,
-		}).Info("Handled HTTP request")
+		}).Info("handled HTTP request")
 	})
 }
 
-func newGrpcGatewayServer(ctx context.Context, listenerAddr string, tlsConfig *tls.Config) http.Handler {
-	var (
-		gwTLSConfig *tls.Config
-		gwOpts      []grpc.DialOption
-	)
+// ListenAndServe serves the Clair v3 API over gRPC and the gRPC Gateway.
+func ListenAndServe(addr, keyFile, certFile, caPath string, store database.Datastore) error {
+	srv := grpcutil.MuxedGRPCServer{
+		Addr: addr,
+		ServicesFunc: func(gsrv *grpc.Server) {
+			pb.RegisterAncestryServiceServer(gsrv, &AncestryServer{Store: store})
+			pb.RegisterNotificationServiceServer(gsrv, &NotificationServer{Store: store})
+			pb.RegisterStatusServiceServer(gsrv, &StatusServer{Store: store})
+		},
+		ServiceHandlerFuncs: []grpcutil.RegisterServiceHandlerFunc{
+			pb.RegisterAncestryServiceHandler,
+			pb.RegisterNotificationServiceHandler,
+			pb.RegisterStatusServiceHandler,
+		},
+	}
 
-	if tlsConfig != nil {
-		gwTLSConfig = tlsConfig.Clone()
-		gwTLSConfig.InsecureSkipVerify = true
-		gwOpts = append(gwOpts, grpc.WithTransportCredentials(credentials.NewTLS(gwTLSConfig)))
+	middleware := func(h http.Handler) http.Handler {
+		return prometheusHandler(loggingHandler(h))
+	}
+
+	var err error
+	if caPath == "" {
+		err = srv.ListenAndServe(middleware)
 	} else {
-		gwOpts = append(gwOpts, grpc.WithInsecure())
+		err = srv.ListenAndServeTLS(certFile, keyFile, caPath, middleware)
 	}
-
-	// changes json serializer to include empty fields with default values
-	jsonOpt := runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{EmitDefaults: true})
-	gwmux := runtime.NewServeMux(jsonOpt)
-
-	conn, err := grpc.DialContext(ctx, listenerAddr, gwOpts...)
-	if err != nil {
-		log.WithError(err).Fatal("could not initialize grpc gateway connection")
-	}
-
-	err = pb.RegisterAncestryServiceHandler(ctx, gwmux, conn)
-	if err != nil {
-		log.WithError(err).Fatal("could not initialize ancestry grpc gateway")
-	}
-
-	err = pb.RegisterNotificationServiceHandler(ctx, gwmux, conn)
-	if err != nil {
-		log.WithError(err).Fatal("could not initialize notification grpc gateway")
-	}
-
-	err = pb.RegisterStatusServiceHandler(ctx, gwmux, conn)
-	if err != nil {
-		log.WithError(err).Fatal("could not initialize status grpc gateway")
-	}
-
-	return logHandler(gwmux)
-}
-
-func servePrometheus(mux *http.ServeMux) {
-	mux.Handle("/metrics", prometheus.Handler())
-}
-
-// Run initializes grpc and grpc gateway api services on the same address
-func Run(Addr string, tlsConfig *tls.Config, CertFile, KeyFile string, store database.Datastore) {
-	l, err := net.Listen("tcp", Addr)
-	if err != nil {
-		log.WithError(err).Fatalf("could not listen to address" + Addr)
-	}
-	log.WithField("addr", l.Addr().String()).Info("starting grpc server")
-
-	var (
-		apiHandler  http.Handler
-		apiListener net.Listener
-		srv         *http.Server
-		ctx         = context.Background()
-		httpMux     = http.NewServeMux()
-		tcpMux      = cmux.New(l)
-	)
-
-	if tlsConfig != nil {
-		cert, err := tls.LoadX509KeyPair(CertFile, KeyFile)
-		if err != nil {
-			log.WithError(err).Fatal("Failed to load certificate files")
-		}
-		tlsConfig.Certificates = []tls.Certificate{cert}
-		tlsConfig.NextProtos = []string{"h2"}
-
-		apiListener = tls.NewListener(tcpMux.Match(cmux.Any()), tlsConfig)
-		go func() { handleShutdown(tcpMux.Serve()) }()
-
-		grpcServer := newGrpcServer(store, tlsConfig)
-		gwmux := newGrpcGatewayServer(ctx, apiListener.Addr().String(), tlsConfig)
-
-		httpMux.Handle("/", gwmux)
-		servePrometheus(httpMux)
-		apiHandler = grpcHandlerFunc(grpcServer, httpMux)
-
-		log.Info("grpc server is configured with client certificate authentication")
-	} else {
-		grpcL := tcpMux.Match(cmux.HTTP2HeaderField("content-type", "application/grpc"))
-		apiListener = tcpMux.Match(cmux.Any())
-		go func() { handleShutdown(tcpMux.Serve()) }()
-
-		grpcServer := newGrpcServer(store, nil)
-		go func() { handleShutdown(grpcServer.Serve(grpcL)) }()
-
-		gwmux := newGrpcGatewayServer(ctx, apiListener.Addr().String(), nil)
-
-		httpMux.Handle("/", gwmux)
-		servePrometheus(httpMux)
-		apiHandler = httpMux
-
-		log.Warn("grpc server is configured without client certificate authentication")
-	}
-
-	srv = &http.Server{
-		Handler:   apiHandler,
-		TLSConfig: tlsConfig,
-	}
-
-	// blocking call
-	handleShutdown(srv.Serve(apiListener))
-	log.Info("Grpc API stopped")
-}
-
-// grpcHandlerFunc returns an http.Handler that delegates to grpcServer on incoming gRPC
-// connections or otherHandler otherwise. Copied from cockroachdb.
-func grpcHandlerFunc(grpcServer *grpc.Server, otherHandler http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.ProtoMajor == 2 && strings.Contains(r.Header.Get("Content-Type"), "application/grpc") {
-			grpcServer.ServeHTTP(w, r)
-		} else {
-			otherHandler.ServeHTTP(w, r)
-		}
-	})
+	return err
 }
