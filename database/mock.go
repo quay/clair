@@ -43,13 +43,13 @@ type MockSession struct {
 	FctFindNewNotification              func(lastNotified time.Time) (NotificationHook, bool, error)
 	FctFindVulnerabilityNotification    func(name string, limit int, oldPage pagination.Token, newPage pagination.Token) (
 		vuln VulnerabilityNotificationWithVulnerable, ok bool, err error)
-	FctMarkNotificationNotified func(name string) error
-	FctDeleteNotification       func(name string) error
-	FctUpdateKeyValue           func(key, value string) error
-	FctFindKeyValue             func(key string) (string, bool, error)
-	FctLock                     func(name string, owner string, duration time.Duration, renew bool) (bool, time.Time, error)
-	FctUnlock                   func(name, owner string) error
-	FctFindLock                 func(name string) (string, time.Time, bool, error)
+	FctMarkNotificationAsRead func(name string) error
+	FctDeleteNotification     func(name string) error
+	FctUpdateKeyValue         func(key, value string) error
+	FctFindKeyValue           func(key string) (string, bool, error)
+	FctLock                   func(name string, owner string, duration time.Duration, renew bool) (bool, time.Time, error)
+	FctUnlock                 func(name, owner string) error
+	FctFindLock               func(name string) (string, time.Time, bool, error)
 }
 
 func (ms *MockSession) Commit() error {
@@ -186,9 +186,9 @@ func (ms *MockSession) FindVulnerabilityNotification(name string, limit int, old
 	panic("required mock function not implemented")
 }
 
-func (ms *MockSession) MarkNotificationNotified(name string) error {
-	if ms.FctMarkNotificationNotified != nil {
-		return ms.FctMarkNotificationNotified(name)
+func (ms *MockSession) MarkNotificationAsRead(name string) error {
+	if ms.FctMarkNotificationAsRead != nil {
+		return ms.FctMarkNotificationAsRead(name)
 	}
 	panic("required mock function not implemented")
 }

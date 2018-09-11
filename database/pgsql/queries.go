@@ -168,7 +168,7 @@ const (
 		INSERT INTO Vulnerability_Notification(name, created_at, old_vulnerability_id, new_vulnerability_id)
 		VALUES ($1, $2, $3, $4)`
 
-	updatedNotificationNotified = `
+	updatedNotificationAsRead = `
 		UPDATE Vulnerability_Notification
 		SET notified_at = CURRENT_TIMESTAMP
 		WHERE name = $1`

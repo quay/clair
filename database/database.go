@@ -167,9 +167,9 @@ type Session interface {
 	// always considered first page.
 	FindVulnerabilityNotification(name string, limit int, oldVulnerabilityPage pagination.Token, newVulnerabilityPage pagination.Token) (noti VulnerabilityNotificationWithVulnerable, found bool, err error)
 
-	// MarkNotificationNotified marks a Notification as notified now, assuming
+	// MarkNotificationAsRead marks a Notification as notified now, assuming
 	// the requested notification is in the database.
-	MarkNotificationNotified(name string) error
+	MarkNotificationAsRead(name string) error
 
 	// DeleteNotification removes a Notification in the database.
 	DeleteNotification(name string) error

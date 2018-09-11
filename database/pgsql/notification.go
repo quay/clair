@@ -289,23 +289,23 @@ func (tx *pgSession) FindVulnerabilityNotification(name string, limit int, oldPa
 	return noti, true, nil
 }
 
-func (tx *pgSession) MarkNotificationNotified(name string) error {
+func (tx *pgSession) MarkNotificationAsRead(name string) error {
 	if name == "" {
 		return commonerr.NewBadRequestError("Empty notification name is not allowed")
 	}
 
-	r, err := tx.Exec(updatedNotificationNotified, name)
+	r, err := tx.Exec(updatedNotificationAsRead, name)
 	if err != nil {
-		return handleError("updatedNotificationNotified", err)
+		return handleError("updatedNotificationAsRead", err)
 	}
 
 	affected, err := r.RowsAffected()
 	if err != nil {
-		return handleError("updatedNotificationNotified", err)
+		return handleError("updatedNotificationAsRead", err)
 	}
 
 	if affected <= 0 {
-		return handleError("updatedNotificationNotified", errNotificationNotFound)
+		return handleError("updatedNotificationAsRead", errNotificationNotFound)
 	}
 	return nil
 }
