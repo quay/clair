@@ -23,19 +23,14 @@ import (
 )
 
 func (tx *pgSession) FindLayer(hash string) (database.Layer, bool, error) {
-	layer, _, ok, err := tx.findLayer(hash)
-	return layer, ok, err
-}
-
-func (tx *pgSession) FindLayerWithContent(hash string) (database.LayerWithContent, bool, error) {
 	var (
-		layer   database.LayerWithContent
+		layer   database.Layer
 		layerID int64
 		ok      bool
 		err     error
 	)
 
-	layer.Layer, layerID, ok, err = tx.findLayer(hash)
+	layer.LayerMetadata, layerID, ok, err = tx.findLayer(hash)
 	if err != nil {
 		return layer, false, err
 	}
@@ -49,46 +44,53 @@ func (tx *pgSession) FindLayerWithContent(hash string) (database.LayerWithConten
 	return layer, true, nil
 }
 
-func (tx *pgSession) PersistLayer(hash string) error {
+func (tx *pgSession) persistLayer(hash string) (int64, error) {
 	if hash == "" {
-		return commonerr.NewBadRequestError("Empty Layer Hash is not allowed")
+		return -1, commonerr.NewBadRequestError("Empty Layer Hash is not allowed")
 	}
 
-	_, err := tx.Exec(queryPersistLayer(1), hash)
-	if err != nil {
-		return handleError("queryPersistLayer", err)
+	id := sql.NullInt64{}
+	if err := tx.QueryRow(soiLayer, hash).Scan(&id); err != nil {
+		return -1, handleError("queryPersistLayer", err)
 	}
 
-	return nil
+	if !id.Valid {
+		panic("null layer.id violates database constraint")
+	}
+
+	return id.Int64, nil
 }
 
-// PersistLayerContent relates layer identified by hash with namespaces,
+// PersistLayer relates layer identified by hash with namespaces,
 // features and processors provided. If the layer, namespaces, features are not
 // in database, the function returns an error.
-func (tx *pgSession) PersistLayerContent(hash string, namespaces []database.Namespace, features []database.Feature, processedBy database.Processors) error {
+func (tx *pgSession) PersistLayer(hash string, namespaces []database.Namespace, features []database.Feature, processedBy database.Processors) error {
 	if hash == "" {
 		return commonerr.NewBadRequestError("Empty layer hash is not allowed")
 	}
 
-	var layerID int64
-	err := tx.QueryRow(searchLayer, hash).Scan(&layerID)
-	if err != nil {
+	var (
+		err error
+		id  int64
+	)
+
+	if id, err = tx.persistLayer(hash); err != nil {
 		return err
 	}
 
-	if err = tx.persistLayerNamespace(layerID, namespaces); err != nil {
+	if err = tx.persistLayerNamespace(id, namespaces); err != nil {
 		return err
 	}
 
-	if err = tx.persistLayerFeatures(layerID, features); err != nil {
+	if err = tx.persistLayerFeatures(id, features); err != nil {
 		return err
 	}
 
-	if err = tx.persistLayerDetectors(layerID, processedBy.Detectors); err != nil {
+	if err = tx.persistLayerDetectors(id, processedBy.Detectors); err != nil {
 		return err
 	}
 
-	if err = tx.persistLayerListers(layerID, processedBy.Listers); err != nil {
+	if err = tx.persistLayerListers(id, processedBy.Listers); err != nil {
 		return err
 	}
 
@@ -275,10 +277,10 @@ func (tx *pgSession) findLayerFeatures(layerID int64) ([]database.Feature, error
 	return features, nil
 }
 
-func (tx *pgSession) findLayer(hash string) (database.Layer, int64, bool, error) {
+func (tx *pgSession) findLayer(hash string) (database.LayerMetadata, int64, bool, error) {
 	var (
 		layerID int64
-		layer   = database.Layer{Hash: hash, ProcessedBy: database.Processors{}}
+		layer   = database.LayerMetadata{Hash: hash, ProcessedBy: database.Processors{}}
 	)
 
 	if hash == "" {

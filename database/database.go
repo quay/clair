@@ -120,22 +120,16 @@ type Session interface {
 	// PersistNamespaces inserts a set of namespaces if not in the database.
 	PersistNamespaces([]Namespace) error
 
-	// PersistLayer creates a layer using the blob Sum hash.
-	PersistLayer(hash string) error
-
-	// PersistLayerContent persists a layer's content in the database. The given
+	// PersistLayer persists a layer's content in the database. The given
 	// namespaces and features can be partial content of this layer.
 	//
 	// The layer, namespaces and features are expected to be already existing
 	// in the database.
-	PersistLayerContent(hash string, namespaces []Namespace, features []Feature, processedBy Processors) error
+	PersistLayer(hash string, namespaces []Namespace, features []Feature, processedBy Processors) error
 
-	// FindLayer retrieves the metadata of a layer.
-	FindLayer(hash string) (layer Layer, found bool, err error)
-
-	// FindLayerWithContent returns a layer with all detected features and
+	// FindLayer returns a layer with all detected features and
 	// namespaces.
-	FindLayerWithContent(hash string) (layer LayerWithContent, found bool, err error)
+	FindLayer(hash string) (layer Layer, found bool, err error)
 
 	// InsertVulnerabilities inserts a set of UNIQUE vulnerabilities with
 	// affected features into database, assuming that all vulnerabilities

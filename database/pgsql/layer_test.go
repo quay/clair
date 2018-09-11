@@ -26,65 +26,72 @@ func TestPersistLayer(t *testing.T) {
 	datastore, tx := openSessionForTest(t, "PersistLayer", false)
 	defer closeTest(t, datastore, tx)
 
-	l1 := ""
-	l2 := "HESOYAM"
-
 	// invalid
-	assert.NotNil(t, tx.PersistLayer(l1))
-	// valid
-	assert.Nil(t, tx.PersistLayer(l2))
-	// duplicated
-	assert.Nil(t, tx.PersistLayer(l2))
-}
+	assert.NotNil(t, tx.PersistLayer("", nil, nil, database.Processors{}))
+	// insert namespaces + features to
+	namespaces := []database.Namespace{
+		{
+			Name:          "sushi shop",
+			VersionFormat: "apk",
+		},
+	}
 
-func TestPersistLayerProcessors(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "PersistLayerProcessors", true)
-	defer closeTest(t, datastore, tx)
+	features := []database.Feature{
+		{
+			Name:          "blue fin sashimi",
+			Version:       "v1.0",
+			VersionFormat: "apk",
+		},
+	}
 
-	// invalid
-	assert.NotNil(t, tx.PersistLayerContent("hash", []database.Namespace{}, []database.Feature{}, database.Processors{}))
-	// valid
-	assert.Nil(t, tx.PersistLayerContent("layer-4", []database.Namespace{}, []database.Feature{}, database.Processors{Detectors: []string{"new detector!"}}))
+	processors := database.Processors{
+		Listers:   []string{"release"},
+		Detectors: []string{"apk"},
+	}
+
+	assert.Nil(t, tx.PersistNamespaces(namespaces))
+	assert.Nil(t, tx.PersistFeatures(features))
+
+	// Valid
+	assert.Nil(t, tx.PersistLayer("RANDOM_FOREST", namespaces, features, processors))
+
+	nonExistingFeature := []database.Feature{{Name: "lobster sushi", Version: "v0.1", VersionFormat: "apk"}}
+	// Invalid:
+	assert.NotNil(t, tx.PersistLayer("RANDOM_FOREST", namespaces, nonExistingFeature, processors))
+
+	assert.Nil(t, tx.PersistFeatures(nonExistingFeature))
+	// Update the layer
+	assert.Nil(t, tx.PersistLayer("RANDOM_FOREST", namespaces, nonExistingFeature, processors))
+
+	// confirm update
+	layer, ok, err := tx.FindLayer("RANDOM_FOREST")
+	assert.Nil(t, err)
+	assert.True(t, ok)
+
+	expectedLayer := database.Layer{
+		LayerMetadata: database.LayerMetadata{
+			Hash:        "RANDOM_FOREST",
+			ProcessedBy: processors,
+		},
+		Features:   append(features, nonExistingFeature...),
+		Namespaces: namespaces,
+	}
+
+	assertLayerWithContentEqual(t, expectedLayer, layer)
 }
 
 func TestFindLayer(t *testing.T) {
 	datastore, tx := openSessionForTest(t, "FindLayer", true)
 	defer closeTest(t, datastore, tx)
 
-	expected := database.Layer{
-		Hash: "layer-4",
-		ProcessedBy: database.Processors{
-			Detectors: []string{"os-release", "apt-sources"},
-			Listers:   []string{"dpkg", "rpm"},
-		},
-	}
-
-	// invalid
 	_, _, err := tx.FindLayer("")
 	assert.NotNil(t, err)
 	_, ok, err := tx.FindLayer("layer-non")
 	assert.Nil(t, err)
 	assert.False(t, ok)
 
-	// valid
-	layer, ok2, err := tx.FindLayer("layer-4")
-	if assert.Nil(t, err) && assert.True(t, ok2) {
-		assertLayerEqual(t, expected, layer)
-	}
-}
-
-func TestFindLayerWithContent(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "FindLayerWithContent", true)
-	defer closeTest(t, datastore, tx)
-
-	_, _, err := tx.FindLayerWithContent("")
-	assert.NotNil(t, err)
-	_, ok, err := tx.FindLayerWithContent("layer-non")
-	assert.Nil(t, err)
-	assert.False(t, ok)
-
-	expectedL := database.LayerWithContent{
-		Layer: database.Layer{
+	expectedL := database.Layer{
+		LayerMetadata: database.LayerMetadata{
 			Hash: "layer-4",
 			ProcessedBy: database.Processors{
 				Detectors: []string{"os-release", "apt-sources"},
@@ -101,19 +108,19 @@ func TestFindLayerWithContent(t *testing.T) {
 		},
 	}
 
-	layer, ok2, err := tx.FindLayerWithContent("layer-4")
+	layer, ok2, err := tx.FindLayer("layer-4")
 	if assert.Nil(t, err) && assert.True(t, ok2) {
 		assertLayerWithContentEqual(t, expectedL, layer)
 	}
 }
 
-func assertLayerWithContentEqual(t *testing.T, expected database.LayerWithContent, actual database.LayerWithContent) bool {
-	return assertLayerEqual(t, expected.Layer, actual.Layer) &&
+func assertLayerWithContentEqual(t *testing.T, expected database.Layer, actual database.Layer) bool {
+	return assertLayerEqual(t, expected.LayerMetadata, actual.LayerMetadata) &&
 		assertFeaturesEqual(t, expected.Features, actual.Features) &&
 		assertNamespacesEqual(t, expected.Namespaces, actual.Namespaces)
 }
 
-func assertLayerEqual(t *testing.T, expected database.Layer, actual database.Layer) bool {
+func assertLayerEqual(t *testing.T, expected database.LayerMetadata, actual database.LayerMetadata) bool {
 	return assertProcessorsEqual(t, expected.ProcessedBy, actual.ProcessedBy) &&
 		assert.Equal(t, expected.Hash, actual.Hash)
 }

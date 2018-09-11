@@ -73,7 +73,16 @@ const (
 			AND v.deleted_at IS NULL`
 
 	// layer.go
-	searchLayerIDs = `SELECT id, hash FROM layer WHERE hash = ANY($1);`
+	soiLayer = `
+		WITH new_layer AS (
+			INSERT INTO layer (hash)
+			SELECT CAST ($1 AS VARCHAR)
+			WHERE NOT EXISTS (SELECT id FROM layer WHERE hash = $1)
+			RETURNING id
+		)
+		SELECT id FROM new_Layer
+		UNION
+		SELECT id FROM layer WHERE hash = $1`
 
 	searchLayerFeatures = `
 		SELECT feature.Name, feature.Version, feature.version_format 

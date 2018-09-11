@@ -41,25 +41,25 @@ type Ancestry struct {
 
 // AncestryLayer is a layer with all detected namespaced features.
 type AncestryLayer struct {
-	Layer
+	LayerMetadata
 
 	// DetectedFeatures are the features introduced by this layer when it was
 	// processed.
 	DetectedFeatures []NamespacedFeature
 }
 
-// Layer contains the metadata of a layer.
-type Layer struct {
+// LayerMetadata contains the metadata of a layer.
+type LayerMetadata struct {
 	// Hash is content hash of the layer.
 	Hash string
 	// ProcessedBy contains the processors that processed this layer.
 	ProcessedBy Processors
 }
 
-// LayerWithContent is a layer with its detected namespaces and features by
+// Layer is a layer with its detected namespaces and features by
 // ProcessedBy.
-type LayerWithContent struct {
-	Layer
+type Layer struct {
+	LayerMetadata
 
 	Namespaces []Namespace
 	Features   []Feature
