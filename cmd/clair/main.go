@@ -112,29 +112,16 @@ func configClairVersion(config *Config) {
 		"Updaters":  strings.Join(updaters, ","),
 	}).Info("Clair registered components")
 
-	unregDetectors := strutil.CompareStringLists(config.Worker.EnabledDetectors, detectors)
-	unregListers := strutil.CompareStringLists(config.Worker.EnabledListers, listers)
 	unregUpdaters := strutil.CompareStringLists(config.Updater.EnabledUpdaters, updaters)
-	if len(unregDetectors) != 0 || len(unregListers) != 0 || len(unregUpdaters) != 0 {
+	if len(unregUpdaters) != 0 {
 		log.WithFields(log.Fields{
-			"Unknown Detectors":   strings.Join(unregDetectors, ","),
-			"Unknown Listers":     strings.Join(unregListers, ","),
-			"Unknown Updaters":    strings.Join(unregUpdaters, ","),
-			"Available Listers":   strings.Join(featurefmt.ListListers(), ","),
-			"Available Detectors": strings.Join(featurens.ListDetectors(), ","),
-			"Available Updaters":  strings.Join(vulnsrc.ListUpdaters(), ","),
+			"Unknown Updaters":   strings.Join(unregUpdaters, ","),
+			"Available Updaters": strings.Join(vulnsrc.ListUpdaters(), ","),
 		}).Fatal("Unknown or unregistered components are configured")
 	}
 
-	// verify the user specified detectors/listers/updaters are implemented. If
-	// some are not registered, it logs warning and won't use the unregistered
-	// extensions.
-
-	clair.Processors = database.Processors{
-		Detectors: strutil.CompareStringListsInBoth(config.Worker.EnabledDetectors, detectors),
-		Listers:   strutil.CompareStringListsInBoth(config.Worker.EnabledListers, listers),
-	}
-
+	// All listers and detectors are enabled.
+	clair.Processors = database.Processors{Detectors: detectors, Listers: listers}
 	clair.EnabledUpdaters = strutil.CompareStringListsInBoth(config.Updater.EnabledUpdaters, updaters)
 }
 

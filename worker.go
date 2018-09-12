@@ -52,11 +52,6 @@ var (
 	Processors database.Processors
 )
 
-type WorkerConfig struct {
-	EnabledDetectors []string `yaml:"namespace_detectors"`
-	EnabledListers   []string `yaml:"feature_listers"`
-}
-
 // LayerRequest represents all information necessary to download and process a
 // layer.
 type LayerRequest struct {
