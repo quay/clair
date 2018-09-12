@@ -163,19 +163,12 @@
           "type": "string",
           "description": "The name of the desired ancestry."
         },
-        "scanned_listers": {
+        "detectors": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/clairDetector"
           },
-          "description": "The configured list of feature listers used to scan this ancestry."
-        },
-        "scanned_detectors": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "The configured list of namespace detectors used to scan an ancestry."
+          "description": "The detectors used to scan this Ancestry. It may not be the current set\nof detectors in clair status."
         },
         "layers": {
           "type": "array",
@@ -268,19 +261,12 @@
     "clairClairStatus": {
       "type": "object",
       "properties": {
-        "listers": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "The configured list of feature listers used to scan an ancestry."
-        },
         "detectors": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/clairDetector"
           },
-          "description": "The configured list of namespace detectors used to scan an ancestry."
+          "title": "The implemented detectors in this Clair instance"
         },
         "last_update_time": {
           "type": "string",
@@ -289,6 +275,32 @@
         }
       }
     },
+    "clairDetector": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the detector."
+        },
+        "version": {
+          "type": "string",
+          "description": "The version of the detector."
+        },
+        "type": {
+          "$ref": "#/definitions/clairDetectorType",
+          "description": "The type of the detector."
+        }
+      }
+    },
+    "clairDetectorType": {
+      "type": "string",
+      "enum": [
+        "DETECTOR_TYPE_INVALID",
+        "DETECTOR_TYPE_NAMESPACE",
+        "DETECTOR_TYPE_FEATURE"
+      ],
+      "default": "DETECTOR_TYPE_INVALID"
+    },
     "clairFeature": {
       "type": "object",
       "properties": {
@@ -296,9 +308,9 @@
           "type": "string",
           "description": "The name of the feature."
         },
-        "namespace_name": {
-          "type": "string",
-          "description": "The name of the namespace in which the feature is detected."
+        "namespace": {
+          "$ref": "#/definitions/clairNamespace",
+          "description": "The namespace in which the feature is detected."
         },
         "version": {
           "type": "string",
@@ -307,6 +319,10 @@
         "version_format": {
           "type": "string",
           "description": "The format used to parse version numbers for the feature."
+        },
+        "detector": {
+          "$ref": "#/definitions/clairDetector",
+          "description": "The detector used to detect this feature. This only exists when present in\nan Ancestry."
         },
         "vulnerabilities": {
           "type": "array",
@@ -359,6 +375,19 @@
     },
     "clairMarkNotificationAsReadResponse": {
       "type": "object"
+    },
+    "clairNamespace": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the namespace."
+        },
+        "detector": {
+          "$ref": "#/definitions/clairDetector",
+          "description": "The detector used to detect the namespace. This only exists when present in\nan Ancestry Feature."
+        }
+      }
     },
     "clairPagedVulnerableAncestries": {
       "type": "object",

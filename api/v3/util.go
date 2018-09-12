@@ -50,7 +50,11 @@ func GetPbAncestryLayer(session database.Session, layer database.AncestryLayer) 
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	for _, feature := range features {
+	// NOTE(sidac): It's quite inefficient, but the easiest way to implement
+	// this feature for now, we should refactor the implementation if there's
+	// any performance issue. It's expected that the number of features is less
+	// than 1000.
+	for _, feature := range affectedFeatures {
 		if !feature.Valid {
 			return nil, status.Error(codes.Internal, "ancestry feature is not found")
 		}
