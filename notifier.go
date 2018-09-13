@@ -93,7 +93,7 @@ func RunNotifier(config *notification.Config, datastore database.Datastore, stop
 		go func() {
 			success, interrupted := handleTask(*notification, stopper, config.Attempts)
 			if success {
-				err := markNotificationNotified(datastore, notification.Name)
+				err := markNotificationAsRead(datastore, notification.Name)
 				if err != nil {
 					log.WithError(err).Error("Failed to mark notification notified")
 				}
@@ -196,14 +196,14 @@ func findNewNotification(datastore database.Datastore, renotifyInterval time.Dur
 	return tx.FindNewNotification(time.Now().Add(-renotifyInterval))
 }
 
-func markNotificationNotified(datastore database.Datastore, name string) error {
+func markNotificationAsRead(datastore database.Datastore, name string) error {
 	tx, err := datastore.Begin()
 	if err != nil {
 		log.WithError(err).Error("an error happens when beginning database transaction")
 	}
 	defer tx.Rollback()
 
-	if err := tx.MarkNotificationNotified(name); err != nil {
+	if err := tx.MarkNotificationAsRead(name); err != nil {
 		return err
 	}
 	return tx.Commit()

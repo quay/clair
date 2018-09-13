@@ -40,7 +40,7 @@ import (
 type mockDatastore struct {
 	database.MockDatastore
 
-	layers             map[string]database.LayerWithContent
+	layers             map[string]database.Layer
 	ancestry           map[string]database.Ancestry
 	namespaces         map[string]database.Namespace
 	features           map[string]database.Feature
@@ -56,14 +56,14 @@ type mockSession struct {
 }
 
 func copyDatastore(md *mockDatastore) mockDatastore {
-	layers := map[string]database.LayerWithContent{}
+	layers := map[string]database.Layer{}
 	for k, l := range md.layers {
 		features := append([]database.Feature(nil), l.Features...)
 		namespaces := append([]database.Namespace(nil), l.Namespaces...)
 		listers := append([]string(nil), l.ProcessedBy.Listers...)
 		detectors := append([]string(nil), l.ProcessedBy.Detectors...)
-		layers[k] = database.LayerWithContent{
-			Layer: database.Layer{
+		layers[k] = database.Layer{
+			LayerMetadata: database.LayerMetadata{
 				Hash: l.Hash,
 				ProcessedBy: database.Processors{
 					Listers:   listers,
@@ -78,23 +78,23 @@ func copyDatastore(md *mockDatastore) mockDatastore {
 	ancestry := map[string]database.Ancestry{}
 	for k, a := range md.ancestry {
 		ancestryLayers := []database.AncestryLayer{}
-		layers := []database.Layer{}
+		layers := []database.LayerMetadata{}
 
 		for _, layer := range a.Layers {
-			layers = append(layers, database.Layer{
+			layers = append(layers, database.LayerMetadata{
 				Hash: layer.Hash,
 				ProcessedBy: database.Processors{
-					Detectors: append([]string(nil), layer.Layer.ProcessedBy.Detectors...),
-					Listers:   append([]string(nil), layer.Layer.ProcessedBy.Listers...),
+					Detectors: append([]string(nil), layer.LayerMetadata.ProcessedBy.Detectors...),
+					Listers:   append([]string(nil), layer.LayerMetadata.ProcessedBy.Listers...),
 				},
 			})
 
 			ancestryLayers = append(ancestryLayers, database.AncestryLayer{
-				Layer: database.Layer{
+				LayerMetadata: database.LayerMetadata{
 					Hash: layer.Hash,
 					ProcessedBy: database.Processors{
-						Detectors: append([]string(nil), layer.Layer.ProcessedBy.Detectors...),
-						Listers:   append([]string(nil), layer.Layer.ProcessedBy.Listers...),
+						Detectors: append([]string(nil), layer.LayerMetadata.ProcessedBy.Detectors...),
+						Listers:   append([]string(nil), layer.LayerMetadata.ProcessedBy.Listers...),
 					},
 				},
 				DetectedFeatures: append([]database.NamespacedFeature(nil), layer.DetectedFeatures...),
@@ -137,7 +137,7 @@ func copyDatastore(md *mockDatastore) mockDatastore {
 func newMockDatastore() *mockDatastore {
 	errSessionDone := errors.New("Session Done")
 	md := &mockDatastore{
-		layers:             make(map[string]database.LayerWithContent),
+		layers:             make(map[string]database.Layer),
 		ancestry:           make(map[string]database.Ancestry),
 		namespaces:         make(map[string]database.Namespace),
 		features:           make(map[string]database.Feature),
@@ -186,25 +186,7 @@ func newMockDatastore() *mockDatastore {
 				return database.Layer{}, false, errSessionDone
 			}
 			layer, ok := session.copy.layers[name]
-			return layer.Layer, ok, nil
-		}
-
-		session.FctFindLayerWithContent = func(name string) (database.LayerWithContent, bool, error) {
-			if session.terminated {
-				return database.LayerWithContent{}, false, errSessionDone
-			}
-			layer, ok := session.copy.layers[name]
 			return layer, ok, nil
-		}
-
-		session.FctPersistLayer = func(hash string) error {
-			if session.terminated {
-				return errSessionDone
-			}
-			if _, ok := session.copy.layers[hash]; !ok {
-				session.copy.layers[hash] = database.LayerWithContent{Layer: database.Layer{Hash: hash}}
-			}
-			return nil
 		}
 
 		session.FctPersistNamespaces = func(ns []database.Namespace) error {
@@ -234,15 +216,20 @@ func newMockDatastore() *mockDatastore {
 			return nil
 		}
 
-		session.FctPersistLayerContent = func(hash string, namespaces []database.Namespace, features []database.Feature, processedBy database.Processors) error {
+		session.FctPersistLayer = func(hash string, namespaces []database.Namespace, features []database.Feature, processedBy database.Processors) error {
 			if session.terminated {
 				return errSessionDone
 			}
 
 			// update the layer
+			_, ok := session.copy.layers[hash]
+			if !ok {
+				session.copy.layers[hash] = database.Layer{}
+			}
+
 			layer, ok := session.copy.layers[hash]
 			if !ok {
-				return errors.New("layer not found")
+				return errors.New("Failed to insert layer")
 			}
 
 			layerFeatures := map[string]database.Feature{}
@@ -381,7 +368,7 @@ func TestProcessAncestryWithDistUpgrade(t *testing.T) {
 		}
 	}
 
-	assert.Equal(t, []database.Layer{
+	assert.Equal(t, []database.LayerMetadata{
 		{Hash: "blank"},
 		{Hash: "wheezy"},
 		{Hash: "jessie"},
@@ -571,33 +558,33 @@ func TestComputeAncestryFeatures(t *testing.T) {
 	// Suppose Clair is watching two files for namespaces one containing ns1
 	// changes e.g. os-release and the other one containing ns2 changes e.g.
 	// node.
-	blank := database.LayerWithContent{Layer: database.Layer{Hash: "blank"}}
-	initNS1a := database.LayerWithContent{
-		Layer:      database.Layer{Hash: "init ns1a"},
-		Namespaces: []database.Namespace{ns1a},
-		Features:   []database.Feature{f1, f2},
+	blank := database.Layer{LayerMetadata: database.LayerMetadata{Hash: "blank"}}
+	initNS1a := database.Layer{
+		LayerMetadata: database.LayerMetadata{Hash: "init ns1a"},
+		Namespaces:    []database.Namespace{ns1a},
+		Features:      []database.Feature{f1, f2},
 	}
 
-	upgradeNS2b := database.LayerWithContent{
-		Layer:      database.Layer{Hash: "upgrade ns2b"},
-		Namespaces: []database.Namespace{ns2b},
+	upgradeNS2b := database.Layer{
+		LayerMetadata: database.LayerMetadata{Hash: "upgrade ns2b"},
+		Namespaces:    []database.Namespace{ns2b},
 	}
 
-	upgradeNS1b := database.LayerWithContent{
-		Layer:      database.Layer{Hash: "upgrade ns1b"},
-		Namespaces: []database.Namespace{ns1b},
-		Features:   []database.Feature{f1, f2},
+	upgradeNS1b := database.Layer{
+		LayerMetadata: database.LayerMetadata{Hash: "upgrade ns1b"},
+		Namespaces:    []database.Namespace{ns1b},
+		Features:      []database.Feature{f1, f2},
 	}
 
-	initNS2a := database.LayerWithContent{
-		Layer:      database.Layer{Hash: "init ns2a"},
-		Namespaces: []database.Namespace{ns2a},
-		Features:   []database.Feature{f3, f4},
+	initNS2a := database.Layer{
+		LayerMetadata: database.LayerMetadata{Hash: "init ns2a"},
+		Namespaces:    []database.Namespace{ns2a},
+		Features:      []database.Feature{f3, f4},
 	}
 
-	removeF2 := database.LayerWithContent{
-		Layer:    database.Layer{Hash: "remove f2"},
-		Features: []database.Feature{f1},
+	removeF2 := database.Layer{
+		LayerMetadata: database.LayerMetadata{Hash: "remove f2"},
+		Features:      []database.Feature{f1},
 	}
 
 	// blank -> ns1:a, f1 f2 (init)
@@ -609,7 +596,7 @@ func TestComputeAncestryFeatures(t *testing.T) {
 	// -> f1 (remove f2)
 	// -> blank (empty)
 
-	layers := []database.LayerWithContent{
+	layers := []database.Layer{
 		blank,
 		initNS1a,
 		removeF2,

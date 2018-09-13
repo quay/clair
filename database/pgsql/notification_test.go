@@ -200,7 +200,7 @@ func TestFindNewNotification(t *testing.T) {
 	}
 
 	// can't find the notified
-	assert.Nil(t, tx.MarkNotificationNotified("test"))
+	assert.Nil(t, tx.MarkNotificationAsRead("test"))
 	// if the notified time is before
 	noti, ok, err = tx.FindNewNotification(time.Now().Add(-time.Duration(10 * time.Second)))
 	assert.Nil(t, err)
@@ -225,16 +225,16 @@ func TestFindNewNotification(t *testing.T) {
 	assert.False(t, ok)
 }
 
-func TestMarkNotificationNotified(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "MarkNotificationNotified", true)
+func TestMarkNotificationAsRead(t *testing.T) {
+	datastore, tx := openSessionForTest(t, "MarkNotificationAsRead", true)
 	defer closeTest(t, datastore, tx)
 
 	// invalid case: notification doesn't exist
-	assert.NotNil(t, tx.MarkNotificationNotified("non-existing"))
+	assert.NotNil(t, tx.MarkNotificationAsRead("non-existing"))
 	// valid case
-	assert.Nil(t, tx.MarkNotificationNotified("test"))
+	assert.Nil(t, tx.MarkNotificationAsRead("test"))
 	// valid case
-	assert.Nil(t, tx.MarkNotificationNotified("test"))
+	assert.Nil(t, tx.MarkNotificationAsRead("test"))
 }
 
 func TestDeleteNotification(t *testing.T) {

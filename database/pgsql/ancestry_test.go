@@ -30,7 +30,7 @@ func TestUpsertAncestry(t *testing.T) {
 		Name: "a1",
 		Layers: []database.AncestryLayer{
 			{
-				Layer: database.Layer{
+				LayerMetadata: database.LayerMetadata{
 					Hash: "layer-N",
 				},
 			},
@@ -43,7 +43,7 @@ func TestUpsertAncestry(t *testing.T) {
 		Name: "a",
 		Layers: []database.AncestryLayer{
 			{
-				Layer: database.Layer{
+				LayerMetadata: database.LayerMetadata{
 					Hash: "layer-0",
 				},
 			},
@@ -54,7 +54,7 @@ func TestUpsertAncestry(t *testing.T) {
 		Name: "a",
 		Layers: []database.AncestryLayer{
 			{
-				Layer: database.Layer{
+				LayerMetadata: database.LayerMetadata{
 					Hash: "layer-1",
 				},
 			},
@@ -137,7 +137,7 @@ func assertAncestryEqual(t *testing.T, expected database.Ancestry, actual databa
 }
 
 func assertAncestryLayerEqual(t *testing.T, expected database.AncestryLayer, actual database.AncestryLayer) bool {
-	return assertLayerEqual(t, expected.Layer, actual.Layer) &&
+	return assertLayerEqual(t, expected.LayerMetadata, actual.LayerMetadata) &&
 		assertNamespacedFeatureEqual(t, expected.DetectedFeatures, actual.DetectedFeatures)
 }
 
@@ -159,7 +159,7 @@ func TestFindAncestry(t *testing.T) {
 		},
 		Layers: []database.AncestryLayer{
 			{
-				Layer: database.Layer{
+				LayerMetadata: database.LayerMetadata{
 					Hash: "layer-0",
 				},
 				DetectedFeatures: []database.NamespacedFeature{
@@ -188,17 +188,17 @@ func TestFindAncestry(t *testing.T) {
 				},
 			},
 			{
-				Layer: database.Layer{
+				LayerMetadata: database.LayerMetadata{
 					Hash: "layer-1",
 				},
 			},
 			{
-				Layer: database.Layer{
+				LayerMetadata: database.LayerMetadata{
 					Hash: "layer-2",
 				},
 			},
 			{
-				Layer: database.Layer{
+				LayerMetadata: database.LayerMetadata{
 					Hash: "layer-3b",
 				},
 			},

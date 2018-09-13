@@ -123,7 +123,7 @@ func VulnerabilityWithFixedInFromDatabaseModel(dbVuln database.VulnerabilityWith
 }
 
 // LayerFromDatabaseModel converts database layer to api layer.
-func LayerFromDatabaseModel(dbLayer database.Layer) *Layer {
+func LayerFromDatabaseModel(dbLayer database.LayerMetadata) *Layer {
 	layer := Layer{Hash: dbLayer.Hash}
 	return &layer
 }

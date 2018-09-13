@@ -32,10 +32,8 @@ type MockSession struct {
 	FctPersistFeatures                  func([]Feature) error
 	FctPersistNamespacedFeatures        func([]NamespacedFeature) error
 	FctCacheAffectedNamespacedFeatures  func([]NamespacedFeature) error
-	FctPersistLayer                     func(hash string) error
-	FctPersistLayerContent              func(hash string, namespaces []Namespace, features []Feature, processedBy Processors) error
+	FctPersistLayer                     func(hash string, namespaces []Namespace, features []Feature, processedBy Processors) error
 	FctFindLayer                        func(name string) (Layer, bool, error)
-	FctFindLayerWithContent             func(name string) (LayerWithContent, bool, error)
 	FctInsertVulnerabilities            func([]VulnerabilityWithAffected) error
 	FctFindVulnerabilities              func([]VulnerabilityID) ([]NullableVulnerability, error)
 	FctDeleteVulnerabilities            func([]VulnerabilityID) error
@@ -43,13 +41,13 @@ type MockSession struct {
 	FctFindNewNotification              func(lastNotified time.Time) (NotificationHook, bool, error)
 	FctFindVulnerabilityNotification    func(name string, limit int, oldPage pagination.Token, newPage pagination.Token) (
 		vuln VulnerabilityNotificationWithVulnerable, ok bool, err error)
-	FctMarkNotificationNotified func(name string) error
-	FctDeleteNotification       func(name string) error
-	FctUpdateKeyValue           func(key, value string) error
-	FctFindKeyValue             func(key string) (string, bool, error)
-	FctLock                     func(name string, owner string, duration time.Duration, renew bool) (bool, time.Time, error)
-	FctUnlock                   func(name, owner string) error
-	FctFindLock                 func(name string) (string, time.Time, bool, error)
+	FctMarkNotificationAsRead func(name string) error
+	FctDeleteNotification     func(name string) error
+	FctUpdateKeyValue         func(key, value string) error
+	FctFindKeyValue           func(key string) (string, bool, error)
+	FctLock                   func(name string, owner string, duration time.Duration, renew bool) (bool, time.Time, error)
+	FctUnlock                 func(name, owner string) error
+	FctFindLock               func(name string) (string, time.Time, bool, error)
 }
 
 func (ms *MockSession) Commit() error {
@@ -115,16 +113,9 @@ func (ms *MockSession) CacheAffectedNamespacedFeatures(namespacedFeatures []Name
 	panic("required mock function not implemented")
 }
 
-func (ms *MockSession) PersistLayer(layer string) error {
+func (ms *MockSession) PersistLayer(hash string, namespaces []Namespace, features []Feature, processedBy Processors) error {
 	if ms.FctPersistLayer != nil {
-		return ms.FctPersistLayer(layer)
-	}
-	panic("required mock function not implemented")
-}
-
-func (ms *MockSession) PersistLayerContent(hash string, namespaces []Namespace, features []Feature, processedBy Processors) error {
-	if ms.FctPersistLayerContent != nil {
-		return ms.FctPersistLayerContent(hash, namespaces, features, processedBy)
+		return ms.FctPersistLayer(hash, namespaces, features, processedBy)
 	}
 	panic("required mock function not implemented")
 }
@@ -132,13 +123,6 @@ func (ms *MockSession) PersistLayerContent(hash string, namespaces []Namespace, 
 func (ms *MockSession) FindLayer(name string) (Layer, bool, error) {
 	if ms.FctFindLayer != nil {
 		return ms.FctFindLayer(name)
-	}
-	panic("required mock function not implemented")
-}
-
-func (ms *MockSession) FindLayerWithContent(name string) (LayerWithContent, bool, error) {
-	if ms.FctFindLayerWithContent != nil {
-		return ms.FctFindLayerWithContent(name)
 	}
 	panic("required mock function not implemented")
 }
@@ -186,9 +170,9 @@ func (ms *MockSession) FindVulnerabilityNotification(name string, limit int, old
 	panic("required mock function not implemented")
 }
 
-func (ms *MockSession) MarkNotificationNotified(name string) error {
-	if ms.FctMarkNotificationNotified != nil {
-		return ms.FctMarkNotificationNotified(name)
+func (ms *MockSession) MarkNotificationAsRead(name string) error {
+	if ms.FctMarkNotificationAsRead != nil {
+		return ms.FctMarkNotificationAsRead(name)
 	}
 	panic("required mock function not implemented")
 }

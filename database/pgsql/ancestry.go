@@ -170,7 +170,7 @@ func (tx *pgSession) findAncestryLayers(id int64) ([]database.AncestryLayer, err
 		}
 
 		if !index.Valid || !id.Valid {
-			return nil, commonerr.ErrNotFound
+			panic("null ancestry ID or ancestry index violates database constraints")
 		}
 
 		if _, ok := layers[index.Int64]; ok {
