@@ -65,11 +65,20 @@ type definition struct {
 	Description string      `xml:"metadata>description"`
 	References  []reference `xml:"metadata>reference"`
 	Criteria    criteria    `xml:"criteria"`
+	Severity    string      `xml:"metadata>advisory>severity"`
+	Cves        []cve       `xml:"metadata>advisory>cve"`
 }
 
 type reference struct {
 	Source string `xml:"source,attr"`
 	URI    string `xml:"ref_url,attr"`
+	ID     string `xml:"ref_id,attr"`
+}
+
+type cve struct {
+	Impact string `xml:"impact,attr"`
+	Href   string `xml:"href,attr"`
+	ID     string `xml:",chardata"`
 }
 
 type criteria struct {
@@ -196,18 +205,37 @@ func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWi
 	for _, definition := range ov.Definitions {
 		pkgs := toFeatures(definition.Criteria)
 		if len(pkgs) > 0 {
+
+			// Init vulnerability
 			vulnerability := database.VulnerabilityWithAffected{
 				Vulnerability: database.Vulnerability{
-					Name:        name(definition),
-					Link:        link(definition),
-					Severity:    severity(definition),
+					Name:        rhsaName(definition),
+					Link:        rhsaLink(definition),
+					Severity:    severity(definition.Severity),
 					Description: description(definition),
 				},
 			}
 			for _, p := range pkgs {
 				vulnerability.Affected = append(vulnerability.Affected, p)
 			}
-			vulnerabilities = append(vulnerabilities, vulnerability)
+
+			// Only RHSA is present
+			if len(definition.References) == 1 {
+				vulnerabilities = append(vulnerabilities, vulnerability)
+				continue
+			}
+
+			// Create one vulnerability by CVE
+			for _, currentCve := range definition.Cves {
+				vulnerability.Name = currentCve.ID
+				vulnerability.Link = currentCve.Href
+				if currentCve.Impact != "" {
+					vulnerability.Severity = severity(currentCve.Impact)
+				} else {
+					vulnerability.Severity = severity(definition.Severity)
+				}
+				vulnerabilities = append(vulnerabilities, vulnerability)
+			}
 		}
 	}
 
@@ -358,23 +386,8 @@ func description(def definition) (desc string) {
 	return
 }
 
-func name(def definition) string {
-	return strings.TrimSpace(def.Title[:strings.Index(def.Title, ": ")])
-}
-
-func link(def definition) (link string) {
-	for _, reference := range def.References {
-		if reference.Source == "RHSA" {
-			link = reference.URI
-			break
-		}
-	}
-
-	return
-}
-
-func severity(def definition) database.Severity {
-	switch strings.TrimSpace(def.Title[strings.LastIndex(def.Title, "(")+1 : len(def.Title)-1]) {
+func severity(sev string) database.Severity {
+	switch strings.Title(sev) {
 	case "Low":
 		return database.LowSeverity
 	case "Moderate":
@@ -384,7 +397,18 @@ func severity(def definition) database.Severity {
 	case "Critical":
 		return database.CriticalSeverity
 	default:
-		log.Warningf("could not determine vulnerability severity from: %s.", def.Title)
+		log.Warningf("could not determine vulnerability severity from: %s.", sev)
 		return database.UnknownSeverity
 	}
+}
+
+func rhsaName(def definition) string {
+	return strings.TrimSpace(def.Title[:strings.Index(def.Title, ": ")])
+}
+
+func rhsaLink(def definition) (link string) {
+	if len(def.References) > 0 {
+		link = def.References[0].URI
+	}
+	return
 }
