@@ -27,9 +27,6 @@ var (
 	// ErrFilesystem is returned when a fetcher fails to interact with the local filesystem.
 	ErrFilesystem = errors.New("vulnsrc: something went wrong when interacting with the fs")
 
-	// ErrGitFailure is returned when a fetcher fails to interact with git.
-	ErrGitFailure = errors.New("vulnsrc: something went wrong when interacting with git")
-
 	updatersM sync.RWMutex
 	updaters  = make(map[string]Updater)
 )
