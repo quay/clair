@@ -24,7 +24,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -36,6 +35,7 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/vulnmdsrc"
 	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/coreos/clair/pkg/httputil"
 )
 
 const (
@@ -165,45 +165,66 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 				}
 			}
 
-			// Download data feed.
-			r, err := http.Get(fmt.Sprintf(dataFeedURL, dataFeedName))
+			err := downloadFeed(dataFeedName, fileName)
 			if err != nil {
-				log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not download NVD data feed")
-				return dataFeedReaders, dataFeedHashes, commonerr.ErrCouldNotDownload
+				return dataFeedReaders, dataFeedHashes, err
 			}
-
-			// Un-gzip it.
-			gr, err := gzip.NewReader(r.Body)
-			if err != nil {
-				log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not read NVD data feed")
-				return dataFeedReaders, dataFeedHashes, commonerr.ErrCouldNotDownload
-			}
-
-			// Store it to a file at the same time if possible.
-			if f, err := os.Create(fileName); err == nil {
-				_, err = io.Copy(f, gr)
-				if err != nil {
-					log.WithError(err).Warning("could not stream NVD data feed to filesystem")
-				}
-				dataFeedReaders[dataFeedName] = fileName
-				f.Close()
-			} else {
-				log.WithError(err).Warning("could not store NVD data feed to filesystem")
-			}
-
-			r.Body.Close()
+			dataFeedReaders[dataFeedName] = fileName
 		}
 	}
 
 	return dataFeedReaders, dataFeedHashes, nil
 }
 
+func downloadFeed(dataFeedName, fileName string) error {
+
+	// Download data feed.
+	r, err := httputil.GetWithUserAgent(fmt.Sprintf(dataFeedURL, dataFeedName))
+	if err != nil {
+		log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not download NVD data feed")
+		return commonerr.ErrCouldNotDownload
+	}
+	defer r.Body.Close()
+
+	if !httputil.Status2xx(r) {
+		log.WithFields(log.Fields{"StatusCode": r.StatusCode, "DataFeedName": dataFeedName}).Error("Failed to download NVD data feed")
+		return commonerr.ErrCouldNotDownload
+	}
+
+	// Un-gzip it.
+	gr, err := gzip.NewReader(r.Body)
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{"StatusCode": r.StatusCode, "DataFeedName": dataFeedName}).Error("could not read NVD data feed")
+		return commonerr.ErrCouldNotDownload
+	}
+
+	// Store it to a file at the same time if possible.
+	f, err := os.Create(fileName)
+	if err != nil {
+		log.WithError(err).WithField("Filename", fileName).Warning("could not store NVD data feed to filesystem")
+		return commonerr.ErrFilesystem
+	}
+	defer f.Close()
+
+	_, err = io.Copy(f, gr)
+	if err != nil {
+		log.WithError(err).WithField("Filename", fileName).Warning("could not stream NVD data feed to filesystem")
+		return commonerr.ErrFilesystem
+	}
+
+	return nil
+}
+
 func getHashFromMetaURL(metaURL string) (string, error) {
-	r, err := http.Get(metaURL)
+	r, err := httputil.GetWithUserAgent(metaURL)
 	if err != nil {
 		return "", err
 	}
 	defer r.Body.Close()
+
+	if !httputil.Status2xx(r) {
+		return "", errors.New(metaURL + " failed status code: " + string(r.StatusCode))
+	}
 
 	scanner := bufio.NewScanner(r.Body)
 	for scanner.Scan() {
