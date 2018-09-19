@@ -1,5 +1,5 @@
-hash: 9bf7ad53b92119a17068b8724d9b406a7ca84b5bfcd0baba44b08c696a538b14
-updated: 2018-09-06T15:58:19.234504-04:00
+hash: 3fd0e471868863d6ef4cd32bbcdc9b3d061911a15b458e7edd26cfba4faa62db
+updated: 2018-09-17T13:13:44.344244-04:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -15,6 +15,8 @@ imports:
   version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
   subpackages:
   - spew
+- name: github.com/deckarep/golang-set
+  version: cbaa98ba5575e67703b32b4b19f73c91f3c4159e
 - name: github.com/fernet/fernet-go
   version: 1b2437bc582b3cfbb341ee5a29f8ef5b42912ff2
 - name: github.com/golang/protobuf
