@@ -33,6 +33,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/coreos/clair/pkg/strutil"
 	"github.com/coreos/clair/pkg/tarutil"
 )
 
@@ -106,7 +107,7 @@ func UnregisterExtractor(name string) {
 func Extract(format, path string, headers map[string]string, toExtract []string) (tarutil.FilesMap, error) {
 	var layerReader io.ReadCloser
 	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
-		// Create a new HTTP request object.
+		log.WithField("path", strutil.CleanURL(path)).Debug("start downloading layer blob...")
 		request, err := http.NewRequest("GET", path, nil)
 		if err != nil {
 			return nil, ErrCouldNotFindLayer
@@ -127,21 +128,23 @@ func Extract(format, path string, headers map[string]string, toExtract []string)
 		client := &http.Client{Transport: tr}
 		r, err := client.Do(request)
 		if err != nil {
-			log.WithError(err).Warning("could not download layer")
+			log.WithError(err).Error("could not download layer")
 			return nil, ErrCouldNotFindLayer
 		}
 
 		// Fail if we don't receive a 2xx HTTP status code.
 		if math.Floor(float64(r.StatusCode/100)) != 2 {
-			log.WithField("status code", r.StatusCode).Warning("could not download layer: expected 2XX")
+			log.WithError(ErrCouldNotFindLayer).WithField("status code", r.StatusCode).Error("could not download layer: expected 2XX")
 			return nil, ErrCouldNotFindLayer
 		}
 
 		layerReader = r.Body
 	} else {
+		log.WithField("path", strutil.CleanURL(path)).Debug("start reading layer blob from local file system...")
 		var err error
 		layerReader, err = os.Open(path)
 		if err != nil {
+			log.WithError(ErrCouldNotFindLayer).Error("could not open layer")
 			return nil, ErrCouldNotFindLayer
 		}
 	}

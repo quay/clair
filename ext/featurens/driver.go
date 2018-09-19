@@ -29,7 +29,7 @@ import (
 
 var (
 	detectorsM sync.RWMutex
-	detectors  = make(map[string]Detector)
+	detectors  = make(map[string]detector)
 )
 
 // Detector represents an ability to detect a namespace used for organizing
@@ -46,13 +46,19 @@ type Detector interface {
 	RequiredFilenames() []string
 }
 
+type detector struct {
+	Detector
+
+	info database.Detector
+}
+
 // RegisterDetector makes a detector available by the provided name.
 //
 // If called twice with the same name, the name is blank, or if the provided
 // Detector is nil, this function panics.
-func RegisterDetector(name string, d Detector) {
-	if name == "" {
-		panic("namespace: could not register a Detector with an empty name")
+func RegisterDetector(name string, version string, d Detector) {
+	if name == "" || version == "" {
+		panic("namespace: could not register a Detector with an empty name or version")
 	}
 	if d == nil {
 		panic("namespace: could not register a nil Detector")
@@ -61,60 +67,69 @@ func RegisterDetector(name string, d Detector) {
 	detectorsM.Lock()
 	defer detectorsM.Unlock()
 
-	if _, dup := detectors[name]; dup {
+	if _, ok := detectors[name]; ok {
 		panic("namespace: RegisterDetector called twice for " + name)
 	}
 
-	detectors[name] = d
+	detectors[name] = detector{d, database.NewNamespaceDetector(name, version)}
 }
 
-// Detect iterators through all registered Detectors and returns all non-nil detected namespaces
-func Detect(files tarutil.FilesMap, detectorNames []string) ([]database.Namespace, error) {
+// Detect uses detectors specified to retrieve the detect result.
+func Detect(files tarutil.FilesMap, toUse []database.Detector) ([]database.LayerNamespace, error) {
 	detectorsM.RLock()
 	defer detectorsM.RUnlock()
-	namespaces := map[string]*database.Namespace{}
-	for _, name := range detectorNames {
-		if detector, ok := detectors[name]; ok {
+
+	namespaces := []database.LayerNamespace{}
+	for _, d := range toUse {
+		// Only use the detector with the same type
+		if d.DType != database.NamespaceDetectorType {
+			continue
+		}
+
+		if detector, ok := detectors[d.Name]; ok {
 			namespace, err := detector.Detect(files)
 			if err != nil {
-				log.WithError(err).WithField("name", name).Warning("failed while attempting to detect namespace")
+				log.WithError(err).WithField("detector", d).Warning("failed while attempting to detect namespace")
 				return nil, err
 			}
 
 			if namespace != nil {
-				log.WithFields(log.Fields{"name": name, "namespace": namespace.Name}).Debug("detected namespace")
-				namespaces[namespace.Name] = namespace
+				log.WithFields(log.Fields{"detector": d, "namespace": namespace.Name}).Debug("detected namespace")
+				namespaces = append(namespaces, database.LayerNamespace{
+					Namespace: *namespace,
+					By:        detector.info,
+				})
 			}
 		} else {
-			log.WithField("Name", name).Warn("Unknown namespace detector")
+			log.WithField("detector", d).Fatal("unknown namespace detector")
 		}
 	}
 
-	nslist := []database.Namespace{}
-	for _, ns := range namespaces {
-		nslist = append(nslist, *ns)
-	}
-	return nslist, nil
+	return namespaces, nil
 }
 
-// RequiredFilenames returns the total list of files required for all
-// registered Detectors.
-func RequiredFilenames(detectorNames []string) (files []string) {
+// RequiredFilenames returns all files required by the give extensions. Any
+// extension metadata that has non namespace-detector type will be skipped.
+func RequiredFilenames(toUse []database.Detector) (files []string) {
 	detectorsM.RLock()
 	defer detectorsM.RUnlock()
 
-	for _, detector := range detectors {
-		files = append(files, detector.RequiredFilenames()...)
+	for _, d := range toUse {
+		if d.DType != database.NamespaceDetectorType {
+			continue
+		}
+
+		files = append(files, detectors[d.Name].RequiredFilenames()...)
 	}
 
 	return
 }
 
-// ListDetectors returns the names of all registered namespace detectors.
-func ListDetectors() []string {
-	r := []string{}
-	for name := range detectors {
-		r = append(r, name)
+// ListDetectors returns the info of all registered namespace detectors.
+func ListDetectors() []database.Detector {
+	r := make([]database.Detector, 0, len(detectors))
+	for _, d := range detectors {
+		r = append(r, d.info)
 	}
 	return r
 }

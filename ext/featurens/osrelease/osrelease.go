@@ -45,7 +45,7 @@ var (
 type detector struct{}
 
 func init() {
-	featurens.RegisterDetector("os-release", &detector{})
+	featurens.RegisterDetector("os-release", "1.0", &detector{})
 }
 
 func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {

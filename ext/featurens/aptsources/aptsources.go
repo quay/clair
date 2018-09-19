@@ -32,7 +32,7 @@ import (
 type detector struct{}
 
 func init() {
-	featurens.RegisterDetector("apt-sources", &detector{})
+	featurens.RegisterDetector("apt-sources", "1.0", &detector{})
 }
 
 func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {

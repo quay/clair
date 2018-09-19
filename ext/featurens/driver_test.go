@@ -8,6 +8,7 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/pkg/tarutil"
+	"github.com/coreos/clair/pkg/testutil"
 
 	_ "github.com/coreos/clair/ext/featurens/alpinerelease"
 	_ "github.com/coreos/clair/ext/featurens/aptsources"
@@ -16,40 +17,14 @@ import (
 	_ "github.com/coreos/clair/ext/featurens/redhatrelease"
 )
 
-type MultipleNamespaceTestData struct {
-	Files              tarutil.FilesMap
-	ExpectedNamespaces []database.Namespace
-}
-
-func assertnsNameEqual(t *testing.T, nslist_expected, nslist []database.Namespace) {
-	assert.Equal(t, len(nslist_expected), len(nslist))
-	expected := map[string]struct{}{}
-	input := map[string]struct{}{}
-	// compare the two sets
-	for i := range nslist_expected {
-		expected[nslist_expected[i].Name] = struct{}{}
-		input[nslist[i].Name] = struct{}{}
-	}
-	assert.Equal(t, expected, input)
-}
-
-func testMultipleNamespace(t *testing.T, testData []MultipleNamespaceTestData) {
-	for _, td := range testData {
-		nslist, err := featurens.Detect(td.Files, featurens.ListDetectors())
-		assert.Nil(t, err)
-		assertnsNameEqual(t, td.ExpectedNamespaces, nslist)
-	}
-}
-
-func TestMultipleNamespaceDetector(t *testing.T) {
-	testData := []MultipleNamespaceTestData{
-		{
-			ExpectedNamespaces: []database.Namespace{
-				{Name: "debian:8", VersionFormat: "dpkg"},
-				{Name: "alpine:v3.3", VersionFormat: "dpkg"},
-			},
-			Files: tarutil.FilesMap{
-				"etc/os-release": []byte(`
+var namespaceDetectorTests = []struct {
+	in  tarutil.FilesMap
+	out []database.LayerNamespace
+	err string
+}{
+	{
+		in: tarutil.FilesMap{
+			"etc/os-release": []byte(`
 PRETTY_NAME="Debian GNU/Linux 8 (jessie)"
 NAME="Debian GNU/Linux"
 VERSION_ID="8"
@@ -58,9 +33,23 @@ ID=debian
 HOME_URL="http://www.debian.org/"
 SUPPORT_URL="http://www.debian.org/support/"
 BUG_REPORT_URL="https://bugs.debian.org/"`),
-				"etc/alpine-release": []byte(`3.3.4`),
-			},
+			"etc/alpine-release": []byte(`3.3.4`),
 		},
+		out: []database.LayerNamespace{
+			{database.Namespace{"debian:8", "dpkg"}, database.NewNamespaceDetector("os-release", "1.0")},
+			{database.Namespace{"alpine:v3.3", "dpkg"}, database.NewNamespaceDetector("alpine-release", "1.0")},
+		},
+	},
+}
+
+func TestNamespaceDetector(t *testing.T) {
+	for _, test := range namespaceDetectorTests {
+		out, err := featurens.Detect(test.in, featurens.ListDetectors())
+		if test.err != "" {
+			assert.EqualError(t, err, test.err)
+			return
+		}
+
+		testutil.AssertLayerNamespacesEqual(t, test.out, out)
 	}
-	testMultipleNamespace(t, testData)
 }
