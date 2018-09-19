@@ -22,15 +22,31 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
-func (tx *pgSession) FindLayer(hash string) (database.Layer, bool, error) {
-	var (
-		layer   database.Layer
-		layerID int64
-		ok      bool
-		err     error
-	)
+const (
+	soiLayer = `
+		WITH new_layer AS (
+			INSERT INTO layer (hash)
+			SELECT CAST ($1 AS VARCHAR)
+			WHERE NOT EXISTS (SELECT id FROM layer WHERE hash = $1)
+			RETURNING id
+		)
+		SELECT id FROM new_Layer
+		UNION
+		SELECT id FROM layer WHERE hash = $1`
 
-	layer.LayerMetadata, layerID, ok, err = tx.findLayer(hash)
+	searchLayerFeatures = `
+		SELECT feature_id, detector_id
+			FROM layer_feature
+			WHERE layer_id = $1`
+
+	searchLayerNamespaces = `
+		SELECT namespace.Name, namespace.version_format 
+		FROM namespace, layer_namespace 
+		WHERE layer_namespace.layer_id = $1 
+			AND layer_namespace.namespace_id = namespace.id`
+
+	searchLayer = `SELECT id FROM layer WHERE hash = $1`
+)
 	if err != nil {
 		return layer, false, err
 	}

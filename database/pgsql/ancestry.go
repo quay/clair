@@ -10,6 +10,38 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
+const (
+	insertAncestry = `
+		INSERT INTO ancestry (name) VALUES ($1) RETURNING id`
+
+	searchAncestryLayer = `
+		SELECT layer.hash, layer.id, ancestry_layer.ancestry_index
+		FROM layer, ancestry_layer
+		WHERE ancestry_layer.ancestry_id = $1
+			AND ancestry_layer.layer_id = layer.id
+		ORDER BY ancestry_layer.ancestry_index ASC`
+
+	searchAncestryFeatures = `
+		SELECT namespace.name, namespace.version_format, feature.name, feature.version, feature.version_format, ancestry_layer.ancestry_index
+		FROM namespace, feature, namespaced_feature, ancestry_layer, ancestry_feature
+		WHERE ancestry_layer.ancestry_id = $1
+			AND ancestry_feature.ancestry_layer_id = ancestry_layer.id
+			AND ancestry_feature.namespaced_feature_id = namespaced_feature.id
+			AND namespaced_feature.feature_id = feature.id
+			AND namespaced_feature.namespace_id = namespace.id`
+
+	searchAncestry      = `SELECT id FROM ancestry WHERE name = $1`
+	removeAncestry      = `DELETE FROM ancestry WHERE name = $1`
+	insertAncestryLayer = `
+		INSERT INTO ancestry_layer (ancestry_id, ancestry_index, layer_id) VALUES
+		($1, $2, (SELECT layer.id FROM layer WHERE hash = $3 LIMIT 1))
+		RETURNING id`
+	insertAncestryLayerFeature = `
+		INSERT INTO ancestry_feature
+		(ancestry_layer_id, namespaced_feature_id, feature_detector_id, namespace_detector_id) VALUES
+		($1, $2, $3, $4)`
+)
+
 type ancestryLayerWithID struct {
 	database.AncestryLayer
 

@@ -27,6 +27,44 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
+const (
+	// feature.go
+	soiNamespacedFeature = `
+		WITH new_feature_ns AS (
+			INSERT INTO namespaced_feature(feature_id, namespace_id)
+			SELECT CAST ($1 AS INTEGER), CAST ($2 AS INTEGER)
+			WHERE NOT EXISTS ( SELECT id FROM namespaced_feature WHERE namespaced_feature.feature_id = $1 AND namespaced_feature.namespace_id = $2)
+			RETURNING id
+		)
+		SELECT id FROM namespaced_feature WHERE namespaced_feature.feature_id = $1 AND namespaced_feature.namespace_id = $2
+		UNION
+		SELECT id FROM new_feature_ns`
+
+	searchPotentialAffectingVulneraibilities = `
+		SELECT nf.id, v.id, vaf.affected_version, vaf.id
+		FROM vulnerability_affected_feature AS vaf, vulnerability AS v,
+			namespaced_feature AS nf, feature AS f
+		WHERE nf.id = ANY($1)
+			AND nf.feature_id = f.id
+			AND nf.namespace_id = v.namespace_id
+			AND vaf.feature_name = f.name
+			AND vaf.vulnerability_id = v.id
+			AND v.deleted_at IS NULL`
+
+	searchNamespacedFeaturesVulnerabilities = `
+		SELECT vanf.namespaced_feature_id, v.name, v.description, v.link, 
+			v.severity, v.metadata, vaf.fixedin, n.name, n.version_format
+		FROM vulnerability_affected_namespaced_feature AS vanf, 
+			Vulnerability AS v,
+			vulnerability_affected_feature AS vaf,
+			namespace AS n
+		WHERE vanf.namespaced_feature_id = ANY($1)
+			AND vaf.id = vanf.added_by
+			AND v.id = vanf.vulnerability_id
+			AND n.id = v.namespace_id
+			AND v.deleted_at IS NULL`
+)
+
 var (
 	errFeatureNotFound = errors.New("Feature not found")
 )

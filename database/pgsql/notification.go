@@ -26,6 +26,49 @@ import (
 	"github.com/coreos/clair/pkg/pagination"
 )
 
+const (
+	// notification.go
+	insertNotification = `
+		INSERT INTO Vulnerability_Notification(name, created_at, old_vulnerability_id, new_vulnerability_id)
+		VALUES ($1, $2, $3, $4)`
+
+	updatedNotificationAsRead = `
+		UPDATE Vulnerability_Notification
+		SET notified_at = CURRENT_TIMESTAMP
+		WHERE name = $1`
+
+	removeNotification = `
+		UPDATE Vulnerability_Notification
+	  SET deleted_at = CURRENT_TIMESTAMP
+	  WHERE name = $1 AND deleted_at IS NULL`
+
+	searchNotificationAvailable = `
+		SELECT name, created_at, notified_at, deleted_at
+		FROM Vulnerability_Notification
+		WHERE (notified_at IS NULL OR notified_at < $1)
+					AND deleted_at IS NULL
+					AND name NOT IN (SELECT name FROM Lock)
+		ORDER BY Random()
+		LIMIT 1`
+
+	searchNotification = `
+		SELECT created_at, notified_at, deleted_at, old_vulnerability_id, new_vulnerability_id
+		FROM Vulnerability_Notification
+		WHERE name = $1`
+
+	searchNotificationVulnerableAncestry = `
+	   SELECT DISTINCT ON (a.id)
+			a.id, a.name
+		FROM vulnerability_affected_namespaced_feature AS vanf,
+			ancestry_layer AS al, ancestry_feature AS af
+		WHERE vanf.vulnerability_id = $1
+			AND al.ancestry_id >= $2
+			AND al.id = af.ancestry_layer_id
+			AND af.namespaced_feature_id = vanf.namespaced_feature_id
+		ORDER BY a.id ASC
+		LIMIT $3;`
+)
+
 var (
 	errNotificationNotFound = errors.New("requested notification is not found")
 )

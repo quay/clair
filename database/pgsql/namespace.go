@@ -23,6 +23,10 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
+const (
+	searchNamespaceID = `SELECT id FROM Namespace WHERE name = $1 AND version_format = $2`
+)
+
 var (
 	errNamespaceNotFound = errors.New("Requested Namespace is not in database")
 )
