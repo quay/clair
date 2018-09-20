@@ -14,42 +14,46 @@
 
 package strutil
 
-// CompareStringLists returns the strings that are present in X but not in Y.
-func CompareStringLists(X, Y []string) []string {
-	m := make(map[string]bool)
+import (
+	"regexp"
 
-	for _, y := range Y {
-		m[y] = true
-	}
+	set "github.com/deckarep/golang-set"
+)
 
-	diff := []string{}
+var urlParametersRegexp = regexp.MustCompile(`(\?|\&)([^=]+)\=([^ &]+)`)
+
+func convertToSet(X []string) set.Set {
+	s := set.NewSet()
 	for _, x := range X {
-		if m[x] {
-			continue
-		}
-
-		diff = append(diff, x)
-		m[x] = true
+		s.Add(x)
 	}
-
-	return diff
+	return s
 }
 
-// CompareStringListsInBoth returns the strings that are present in both X and Y.
-func CompareStringListsInBoth(X, Y []string) []string {
-	m := make(map[string]struct{})
-
-	for _, y := range Y {
-		m[y] = struct{}{}
+func setToStringSlice(s set.Set) []string {
+	strs := make([]string, 0, s.Cardinality())
+	for _, str := range s.ToSlice() {
+		strs = append(strs, str.(string))
 	}
 
-	diff := []string{}
-	for _, x := range X {
-		if _, e := m[x]; e {
-			diff = append(diff, x)
-			delete(m, x)
-		}
-	}
+	return strs
+}
 
-	return diff
+// Difference returns the strings that are present in X but not in Y.
+func Difference(X, Y []string) []string {
+	x := convertToSet(X)
+	y := convertToSet(Y)
+	return setToStringSlice(x.Difference(y))
+}
+
+// Intersect returns the strings that are present in both X and Y.
+func Intersect(X, Y []string) []string {
+	x := convertToSet(X)
+	y := convertToSet(Y)
+	return setToStringSlice(x.Intersect(y))
+}
+
+// CleanURL removes all parameters from an URL.
+func CleanURL(str string) string {
+	return urlParametersRegexp.ReplaceAllString(str, "")
 }

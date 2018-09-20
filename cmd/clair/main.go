@@ -102,27 +102,13 @@ func stopCPUProfiling(f *os.File) {
 }
 
 func configClairVersion(config *Config) {
-	listers := featurefmt.ListListers()
-	detectors := featurens.ListDetectors()
-	updaters := vulnsrc.ListUpdaters()
+	clair.EnabledDetectors = append(featurefmt.ListListers(), featurens.ListDetectors()...)
+	clair.EnabledUpdaters = strutil.Intersect(config.Updater.EnabledUpdaters, vulnsrc.ListUpdaters())
 
 	log.WithFields(log.Fields{
-		"Listers":   strings.Join(listers, ","),
-		"Detectors": strings.Join(detectors, ","),
-		"Updaters":  strings.Join(updaters, ","),
-	}).Info("Clair registered components")
-
-	unregUpdaters := strutil.CompareStringLists(config.Updater.EnabledUpdaters, updaters)
-	if len(unregUpdaters) != 0 {
-		log.WithFields(log.Fields{
-			"Unknown Updaters":   strings.Join(unregUpdaters, ","),
-			"Available Updaters": strings.Join(vulnsrc.ListUpdaters(), ","),
-		}).Fatal("Unknown or unregistered components are configured")
-	}
-
-	// All listers and detectors are enabled.
-	clair.Processors = database.Processors{Detectors: detectors, Listers: listers}
-	clair.EnabledUpdaters = strutil.CompareStringListsInBoth(config.Updater.EnabledUpdaters, updaters)
+		"Detectors": database.SerializeDetectors(clair.EnabledDetectors),
+		"Updaters":  clair.EnabledUpdaters,
+	}).Info("enabled Clair extensions")
 }
 
 // Boot starts Clair instance with the provided config.
@@ -147,6 +133,7 @@ func Boot(config *Config) {
 
 	defer db.Close()
 
+	clair.InitWorker(db)
 	// Start notifier
 	st.Begin()
 	go clair.RunNotifier(config.Notifier, db, st)
@@ -167,6 +154,18 @@ func Boot(config *Config) {
 	st.Stop()
 }
 
+// Initialize logging system
+func configureLogger(flagLogLevel *string) {
+	logLevel, err := log.ParseLevel(strings.ToUpper(*flagLogLevel))
+	if err != nil {
+		log.WithError(err).Error("failed to set logger parser level")
+	}
+
+	log.SetLevel(logLevel)
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&formatter.JSONExtendedFormatter{ShowLn: true})
+}
+
 func main() {
 	// Parse command-line arguments
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
@@ -176,6 +175,7 @@ func main() {
 	flagInsecureTLS := flag.Bool("insecure-tls", false, "Disable TLS server's certificate chain and hostname verification when pulling layers.")
 	flag.Parse()
 
+	configureLogger(flagLogLevel)
 	// Check for dependencies.
 	for _, bin := range BinaryDependencies {
 		_, err := exec.LookPath(bin)
@@ -183,12 +183,6 @@ func main() {
 			log.WithError(err).WithField("dependency", bin).Fatal("failed to find dependency")
 		}
 	}
-
-	// Initialize logging system
-	logLevel, err := log.ParseLevel(strings.ToUpper(*flagLogLevel))
-	log.SetLevel(logLevel)
-	log.SetOutput(os.Stdout)
-	log.SetFormatter(&formatter.JSONExtendedFormatter{ShowLn: true})
 
 	config, err := LoadConfig(*flagConfigPath)
 	if err != nil {
