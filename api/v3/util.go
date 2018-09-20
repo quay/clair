@@ -13,8 +13,7 @@ import (
 // protobuf struct.
 func GetClairStatus(store database.Datastore) (*pb.ClairStatus, error) {
 	status := &pb.ClairStatus{
-		Listers:   clair.Processors.Listers,
-		Detectors: clair.Processors.Detectors,
+		Detectors: pb.DetectorsFromDatabaseModel(clair.EnabledDetectors),
 	}
 
 	t, firstUpdate, err := clair.GetLastUpdateTime(store)
@@ -34,19 +33,16 @@ func GetClairStatus(store database.Datastore) (*pb.ClairStatus, error) {
 
 // GetPbAncestryLayer retrieves an ancestry layer with vulnerabilities and
 // features in an ancestry based on the provided database layer.
-func GetPbAncestryLayer(session database.Session, layer database.AncestryLayer) (*pb.GetAncestryResponse_AncestryLayer, error) {
+func GetPbAncestryLayer(tx database.Session, layer database.AncestryLayer) (*pb.GetAncestryResponse_AncestryLayer, error) {
 	pbLayer := &pb.GetAncestryResponse_AncestryLayer{
 		Layer: &pb.Layer{
 			Hash: layer.Hash,
 		},
 	}
 
-	var (
-		features []database.NullableAffectedNamespacedFeature
-		err      error
-	)
-
-	if features, err = session.FindAffectedNamespacedFeatures(layer.DetectedFeatures); err != nil {
+	features := layer.GetFeatures()
+	affectedFeatures, err := tx.FindAffectedNamespacedFeatures(features)
+	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
@@ -59,20 +55,27 @@ func GetPbAncestryLayer(session database.Session, layer database.AncestryLayer) 
 			return nil, status.Error(codes.Internal, "ancestry feature is not found")
 		}
 
-		var (
-			pbFeature = pb.NamespacedFeatureFromDatabaseModel(feature.NamespacedFeature)
-			pbVuln    *pb.Vulnerability
-			err       error
-		)
-		for _, vuln := range feature.AffectedBy {
-			if pbVuln, err = pb.VulnerabilityWithFixedInFromDatabaseModel(vuln); err != nil {
-				return nil, status.Error(codes.Internal, err.Error())
+		for _, detectedFeature := range layer.Features {
+			if detectedFeature.NamespacedFeature != feature.NamespacedFeature {
+				continue
 			}
 
-			pbFeature.Vulnerabilities = append(pbFeature.Vulnerabilities, pbVuln)
-		}
+			var (
+				pbFeature = pb.NamespacedFeatureFromDatabaseModel(detectedFeature)
+				pbVuln    *pb.Vulnerability
+				err       error
+			)
 
-		pbLayer.DetectedFeatures = append(pbLayer.DetectedFeatures, pbFeature)
+			for _, vuln := range feature.AffectedBy {
+				if pbVuln, err = pb.VulnerabilityWithFixedInFromDatabaseModel(vuln); err != nil {
+					return nil, status.Error(codes.Internal, err.Error())
+				}
+
+				pbFeature.Vulnerabilities = append(pbFeature.Vulnerabilities, pbVuln)
+			}
+
+			pbLayer.DetectedFeatures = append(pbLayer.DetectedFeatures, pbFeature)
+		}
 	}
 
 	return pbLayer, nil
