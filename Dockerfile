@@ -13,7 +13,7 @@
 # limitations under the License.
 
 FROM golang:1.10-alpine AS build
-RUN apk add --no-cache git
+RUN apk add --no-cache git build-base
 ADD .   /go/src/github.com/coreos/clair/
 WORKDIR /go/src/github.com/coreos/clair/
 RUN export CLAIR_VERSION=$(git describe --tag --always --dirty) && \
