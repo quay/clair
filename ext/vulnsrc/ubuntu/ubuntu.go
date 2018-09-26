@@ -1,4 +1,4 @@
-// Copyright 2017 clair authors
+// Copyright 2018 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,9 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
-	"os/exec"
 	"regexp"
 	"strings"
 
@@ -33,7 +31,7 @@ import (
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/ext/vulnsrc"
-	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/coreos/clair/pkg/gitutil"
 )
 
 const (
@@ -89,7 +87,7 @@ func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, er
 
 	// Pull the master branch.
 	var commit string
-	commit, err = u.pullRepository()
+	u.repositoryLocalPath, commit, err = gitutil.CloneOrPull(trackerURI, u.repositoryLocalPath, updaterFlag)
 	if err != nil {
 		return resp, err
 	}
@@ -148,40 +146,6 @@ func (u *updater) Clean() {
 	if u.repositoryLocalPath != "" {
 		os.RemoveAll(u.repositoryLocalPath)
 	}
-}
-
-func (u *updater) pullRepository() (commit string, err error) {
-	// Determine whether we should branch or pull.
-	if _, pathExists := os.Stat(u.repositoryLocalPath); u.repositoryLocalPath == "" || os.IsNotExist(pathExists) {
-		// Create a temporary folder to store the repository.
-		if u.repositoryLocalPath, err = ioutil.TempDir(os.TempDir(), "ubuntu-cve-tracker"); err != nil {
-			return "", vulnsrc.ErrFilesystem
-		}
-		cmd := exec.Command("git", "clone", trackerURI, ".")
-		cmd.Dir = u.repositoryLocalPath
-		if out, err := cmd.CombinedOutput(); err != nil {
-			u.Clean()
-			log.WithError(err).WithField("output", string(out)).Error("could not clone ubuntu-cve-tracker repository")
-			return "", commonerr.ErrCouldNotDownload
-		}
-	} else {
-		// The repository already exists and it needs to be refreshed via a pull.
-		cmd := exec.Command("git", "pull")
-		cmd.Dir = u.repositoryLocalPath
-		if _, err := cmd.CombinedOutput(); err != nil {
-			return "", vulnsrc.ErrGitFailure
-		}
-	}
-
-	cmd := exec.Command("git", "rev-parse", "HEAD")
-	cmd.Dir = u.repositoryLocalPath
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", vulnsrc.ErrGitFailure
-	}
-
-	commit = strings.TrimSpace(string(out))
-	return
 }
 
 func collectModifiedVulnerabilities(commit, dbCommit, repositoryLocalPath string) (map[string]struct{}, error) {

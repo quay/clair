@@ -1,4 +1,4 @@
-// Copyright 2017 clair authors
+// Copyright 2018 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -31,7 +30,7 @@ import (
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/ext/vulnsrc"
-	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/coreos/clair/pkg/gitutil"
 )
 
 const (
@@ -53,7 +52,7 @@ func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, er
 
 	// Pull the master branch.
 	var commit string
-	commit, err = u.pullRepository()
+	u.repositoryLocalPath, commit, err = gitutil.CloneOrPull(secdbGitURL, u.repositoryLocalPath, updaterFlag)
 	if err != nil {
 		return
 	}
@@ -180,40 +179,6 @@ func parseVulnsFromNamespace(repositoryPath, namespace string) (vulns []database
 		file.Close()
 	}
 
-	return
-}
-
-func (u *updater) pullRepository() (commit string, err error) {
-	// If the repository doesn't exist, clone it.
-	if _, pathExists := os.Stat(u.repositoryLocalPath); u.repositoryLocalPath == "" || os.IsNotExist(pathExists) {
-		if u.repositoryLocalPath, err = ioutil.TempDir(os.TempDir(), "alpine-secdb"); err != nil {
-			return "", vulnsrc.ErrFilesystem
-		}
-
-		cmd := exec.Command("git", "clone", secdbGitURL, ".")
-		cmd.Dir = u.repositoryLocalPath
-		if out, err := cmd.CombinedOutput(); err != nil {
-			u.Clean()
-			log.WithError(err).WithField("output", string(out)).Error("could not clone alpine-secdb repository")
-			return "", commonerr.ErrCouldNotDownload
-		}
-	} else {
-		// The repository already exists and it needs to be refreshed via a pull.
-		cmd := exec.Command("git", "pull")
-		cmd.Dir = u.repositoryLocalPath
-		if _, err := cmd.CombinedOutput(); err != nil {
-			return "", vulnsrc.ErrGitFailure
-		}
-	}
-
-	cmd := exec.Command("git", "rev-parse", "HEAD")
-	cmd.Dir = u.repositoryLocalPath
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", vulnsrc.ErrGitFailure
-	}
-
-	commit = strings.TrimSpace(string(out))
 	return
 }
 
