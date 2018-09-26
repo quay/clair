@@ -7,18 +7,26 @@ If you are using a third party client, please create issues on their respective 
 Are you using a development build of Clair (e.g. quay.io/coreos/clair-git)?
 Your problem might be solved by switching to a stable release (e.g. quay.io/coreos/clair).
 
+Issues that do not contain the Environment section will be automatically closed.
+If you're making a feature request, please specify "N/A" under the environment section.
+Nobody can help you without context.
+
 -->
 
-**Description of Problem**:
+### Description of Problem / Feature Request
 
+<!--- your content here --->
 
-**Expected Outcome**:
+### Expected Outcome
 
+<!--- your content here --->
 
-**Actual Outcome**:
+### Actual Outcome
 
+<!--- your content here --->
 
-**Environment**:
+### Environment
+
 - Clair version/image: 
 - Clair client name/version: 
 - Host OS: 

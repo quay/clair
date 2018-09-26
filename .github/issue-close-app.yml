@@ -1,0 +1,4 @@
+comment: "This issue is closed because it does not meet our issue template. Please read it."
+issueConfigs:
+- content:
+  - "### Environment"
