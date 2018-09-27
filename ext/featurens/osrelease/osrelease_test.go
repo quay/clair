@@ -76,6 +76,24 @@ REDHAT_SUPPORT_PRODUCT_VERSION=20`),
 			ExpectedNamespace: nil,
 			Files:             tarutil.FilesMap{},
 		},
+		{ // Arch Linux doesn't have a VERSION_ID
+			ExpectedNamespace: &database.Namespace{Name: "arch"},
+			Files: tarutil.FilesMap{
+				"etc/os-release": []byte(
+					`NAME="Arch Linux"
+PRETTY_NAME="Arch Linux"
+ID=arch
+ID_LIKE=archlinux
+ANSI_COLOR="0;36"
+HOME_URL="https://www.archlinux.org/"
+SUPPORT_URL="https://bbs.archlinux.org/"
+BUG_REPORT_URL="https://bugs.archlinux.org/"`),
+			},
+		},
+		{
+			ExpectedNamespace: nil,
+			Files:             tarutil.FilesMap{},
+		},
 	}
 
 	featurens.TestDetector(t, &detector{}, testData)

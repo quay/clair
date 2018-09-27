@@ -30,6 +30,7 @@ import (
 	"github.com/coreos/clair/pkg/strutil"
 
 	// Register the required detectors.
+	_ "github.com/coreos/clair/ext/featurefmt/alpm"
 	_ "github.com/coreos/clair/ext/featurefmt/dpkg"
 	_ "github.com/coreos/clair/ext/featurefmt/rpm"
 	_ "github.com/coreos/clair/ext/featurens/aptsources"
@@ -334,7 +335,7 @@ func TestProcessAncestryWithDistUpgrade(t *testing.T) {
 
 	nonUpgradedMap := map[database.Feature]struct{}{}
 	for _, f := range nonUpgradedFeatures {
-		f.VersionFormat = "dpkg"
+		f.VersionFormat = dpkg.ParserName
 		nonUpgradedMap[f] = struct{}{}
 	}
 
@@ -431,6 +432,36 @@ func TestProcessLayers(t *testing.T) {
 	} else {
 		assert.Fail(t, "jessie is not stored")
 		return
+	}
+}
+
+func TestProcessArchLayers(t *testing.T) {
+	_, f, _, _ := runtime.Caller(0)
+	testDataPath := filepath.Join(filepath.Dir(f)) + "/testdata/arch/"
+
+	datastore := newMockDatastore()
+
+	// suppose there are multiple arch layers
+	layers := []LayerRequest{
+		{Hash: "blank", Path: testDataPath + "blank.tar.gz"},
+		{Hash: "arch", Path: testDataPath + "arch.tar.gz"},
+		{Hash: "arch2", Path: testDataPath + "arch2.tar.gz"},
+		{Hash: "arch3", Path: testDataPath + "arch3.tar.gz"},
+	}
+
+	Processors = database.Processors{
+		Detectors: []string{"os-release"},
+		Listers:   []string{"alpm"},
+	}
+
+	assert.Nil(t, ProcessAncestry(datastore, "Docker", "Mock", layers))
+	assert.Len(t, datastore.ancestry["Mock"].Features, 6)
+
+	// check the namespaces are correct
+	for _, f := range datastore.ancestry["Mock"].Features {
+		if !assert.NotEqual(t, database.Namespace{}, f.Namespace) {
+			assert.Fail(t, "Every feature should have a namespace attached")
+		}
 	}
 }
 

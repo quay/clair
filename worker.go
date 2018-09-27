@@ -564,6 +564,15 @@ func computeAncestryLayers(layers []database.Layer, commonProcessors database.Pr
 		// all detectable features removed is to pass in the file status.
 		for vf, mapF := range currentFeatures {
 			features[vf] = mapF
+			/*
+				// FIXME: Arch Linux installed packages are a list of directories
+				if len(features[vf]) == 0 {
+					features[vf] = make(map[string]database.NamespacedFeature)
+				}
+				for k, f := range mapF {
+				    features[vf][k] = f
+				}
+			*/
 		}
 	}
 

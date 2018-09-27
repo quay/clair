@@ -1,0 +1,58 @@
+[
+  {
+    "name": "AVG-652",
+    "packages": [
+      "zsh"
+    ],
+    "status": "Unknown",
+    "severity": "Medium",
+    "type": "denial of service",
+    "affected": "5.4.2-1",
+    "fixed": null,
+    "ticket": null,
+    "issues": [
+      "CVE-2018-1071"
+    ],
+    "advisories": []
+  },
+  {
+    "name": "AVG-367",
+    "packages": [
+      "libvorbis"
+    ],
+    "status": "Fixed",
+    "severity": "Critical",
+    "type": "multiple issues",
+    "affected": "1.3.5-1",
+    "fixed": "1.3.6-1",
+    "ticket": null,
+    "issues": [
+      "CVE-2018-5146",
+      "CVE-2017-14633",
+      "CVE-2017-14632"
+    ],
+    "advisories": [
+      "ASA-201803-12"
+    ]
+  },
+  {
+    "name": "AVG-658",
+    "packages": [
+      "lib32-libvorbis"
+    ],
+    "status": "Fixed",
+    "severity": "Critical",
+    "type": "multiple issues",
+    "affected": "1.3.5-1",
+    "fixed": "1.3.6-1",
+    "ticket": null,
+    "issues": [
+      "CVE-2018-5146",
+      "CVE-2017-14633",
+      "CVE-2017-14632"
+    ],
+    "advisories": [
+      "ASA-201803-21"
+    ]
+  }
+]
