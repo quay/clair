@@ -21,7 +21,6 @@ import (
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/pagination"
-	"github.com/coreos/clair/pkg/testutil"
 )
 
 // int keys must be the consistent with the database ID.
@@ -232,12 +231,12 @@ func AssertPagedVulnerableAncestriesEqual(t *testing.T, key pagination.Key, expe
 		return assert.Equal(t, expected, actual)
 	}
 
-	return testutil.AssertVulnerabilityEqual(t, &expected.Vulnerability, &actual.Vulnerability) &&
+	return database.AssertVulnerabilityEqual(t, &expected.Vulnerability, &actual.Vulnerability) &&
 		assert.Equal(t, expected.Limit, actual.Limit) &&
 		assert.Equal(t, mustUnmarshalToken(key, expected.Current), mustUnmarshalToken(key, actual.Current)) &&
 		assert.Equal(t, mustUnmarshalToken(key, expected.Next), mustUnmarshalToken(key, actual.Next)) &&
 		assert.Equal(t, expected.End, actual.End) &&
-		testutil.AssertIntStringMapEqual(t, expected.Affected, actual.Affected)
+		database.AssertIntStringMapEqual(t, expected.Affected, actual.Affected)
 }
 
 func mustUnmarshalToken(key pagination.Key, token pagination.Token) Page {

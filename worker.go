@@ -26,7 +26,6 @@ import (
 	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/ext/imagefmt"
 	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/pkg/dbutil"
 	"github.com/coreos/clair/pkg/strutil"
 	"github.com/coreos/clair/pkg/tarutil"
 )
@@ -102,7 +101,7 @@ func processRequests(imageFormat string, toDetect map[string]*processRequest) (m
 }
 
 func getProcessRequest(datastore database.Datastore, req LayerRequest) (preq *processRequest, err error) {
-	layer, ok, err := dbutil.FindLayer(datastore, req.Hash)
+	layer, ok, err := database.FindLayer(datastore, req.Hash)
 	if err != nil {
 		return
 	}
@@ -125,7 +124,7 @@ func getProcessRequest(datastore database.Datastore, req LayerRequest) (preq *pr
 		preq = &processRequest{
 			LayerRequest:  req,
 			existingLayer: &layer,
-			detectors:     dbutil.DiffDetectors(EnabledDetectors, layer.By),
+			detectors:     database.DiffDetectors(EnabledDetectors, layer.By),
 		}
 	}
 
@@ -140,18 +139,18 @@ func persistProcessResult(datastore database.Datastore, results map[string]*proc
 		namespaces = append(namespaces, r.newLayerContent.GetNamespaces()...)
 	}
 
-	features = dbutil.DeduplicateFeatures(features...)
-	namespaces = dbutil.DeduplicateNamespaces(namespaces...)
-	if err := dbutil.PersistNamespaces(datastore, namespaces); err != nil {
+	features = database.DeduplicateFeatures(features...)
+	namespaces = database.DeduplicateNamespaces(namespaces...)
+	if err := database.PersistNamespaces(datastore, namespaces); err != nil {
 		return err
 	}
 
-	if err := dbutil.PersistFeatures(datastore, features); err != nil {
+	if err := database.PersistFeatures(datastore, features); err != nil {
 		return err
 	}
 
 	for _, layer := range results {
-		if err := dbutil.PersistPartialLayer(datastore, layer.newLayerContent); err != nil {
+		if err := database.PersistPartialLayer(datastore, layer.newLayerContent); err != nil {
 			return err
 		}
 	}
@@ -196,19 +195,19 @@ func processLayers(datastore database.Datastore, imageFormat string, requests []
 func getProcessResultLayers(results map[string]*processResult) map[string]database.Layer {
 	layers := map[string]database.Layer{}
 	for name, r := range results {
-		layers[name] = *dbutil.MergeLayers(r.existingLayer, r.newLayerContent)
+		layers[name] = *database.MergeLayers(r.existingLayer, r.newLayerContent)
 	}
 
 	return layers
 }
 
 func isAncestryProcessed(datastore database.Datastore, name string) (bool, error) {
-	ancestry, ok, err := dbutil.FindAncestry(datastore, name)
+	ancestry, ok, err := database.FindAncestry(datastore, name)
 	if err != nil || !ok {
 		return ok, err
 	}
 
-	return len(dbutil.DiffDetectors(EnabledDetectors, ancestry.By)) == 0, nil
+	return len(database.DiffDetectors(EnabledDetectors, ancestry.By)) == 0, nil
 }
 
 // ProcessAncestry downloads and scans an ancestry if it's not scanned by all
@@ -255,7 +254,7 @@ func processAncestry(datastore database.Datastore, name string, layers []databas
 		return err
 	}
 
-	ancestryFeatures := dbutil.GetAncestryFeatures(ancestry)
+	ancestryFeatures := database.GetAncestryFeatures(ancestry)
 	log.WithFields(log.Fields{
 		"ancestry":       name,
 		"processed by":   EnabledDetectors,
@@ -263,17 +262,17 @@ func processAncestry(datastore database.Datastore, name string, layers []databas
 		"layer count":    len(ancestry.Layers),
 	}).Debug("compute ancestry features")
 
-	if err := dbutil.PersistNamespacedFeatures(datastore, ancestryFeatures); err != nil {
+	if err := database.PersistNamespacedFeatures(datastore, ancestryFeatures); err != nil {
 		log.WithField("ancestry", name).WithError(err).Error("could not persist namespaced features for ancestry")
 		return err
 	}
 
-	if err := dbutil.CacheRelatedVulnerability(datastore, ancestryFeatures); err != nil {
+	if err := database.CacheRelatedVulnerability(datastore, ancestryFeatures); err != nil {
 		log.WithField("ancestry", name).WithError(err).Error("failed to cache feature related vulnerability")
 		return err
 	}
 
-	if err := dbutil.UpsertAncestry(datastore, ancestry); err != nil {
+	if err := database.UpsertAncestry(datastore, ancestry); err != nil {
 		log.WithField("ancestry", name).WithError(err).Error("could not upsert ancestry")
 		return err
 	}

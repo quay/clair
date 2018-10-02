@@ -1,4 +1,18 @@
-package testutil
+// Copyright 2018 clair authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package database
 
 import (
 	"encoding/json"
@@ -7,13 +21,11 @@ import (
 
 	"github.com/deckarep/golang-set"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/coreos/clair/database"
 )
 
 // AssertDetectorsEqual asserts actual detectors are content wise equal to
 // expected detectors regardless of the ordering.
-func AssertDetectorsEqual(t *testing.T, expected, actual []database.Detector) bool {
+func AssertDetectorsEqual(t *testing.T, expected, actual []Detector) bool {
 	if len(expected) != len(actual) {
 		return assert.Fail(t, "detectors are not equal", "expected: '%v', actual: '%v'", expected, actual)
 	}
@@ -37,7 +49,7 @@ func AssertDetectorsEqual(t *testing.T, expected, actual []database.Detector) bo
 
 // AssertAncestryEqual asserts actual ancestry equals to expected ancestry
 // content wise.
-func AssertAncestryEqual(t *testing.T, expected, actual *database.Ancestry) bool {
+func AssertAncestryEqual(t *testing.T, expected, actual *Ancestry) bool {
 	if expected == actual {
 		return true
 	}
@@ -63,7 +75,7 @@ func AssertAncestryEqual(t *testing.T, expected, actual *database.Ancestry) bool
 
 // AssertAncestryLayerEqual asserts actual ancestry layer equals to expected
 // ancestry layer content wise.
-func AssertAncestryLayerEqual(t *testing.T, expected, actual *database.AncestryLayer) bool {
+func AssertAncestryLayerEqual(t *testing.T, expected, actual *AncestryLayer) bool {
 	if !assert.Equal(t, expected.Hash, actual.Hash) {
 		return false
 	}
@@ -76,7 +88,7 @@ func AssertAncestryLayerEqual(t *testing.T, expected, actual *database.AncestryL
 	}
 
 	// feature -> is in actual layer
-	hitCounter := map[database.AncestryFeature]bool{}
+	hitCounter := map[AncestryFeature]bool{}
 	for _, f := range expected.Features {
 		hitCounter[f] = false
 	}
@@ -131,9 +143,9 @@ func AssertElementsEqual(t *testing.T, expected, actual []interface{}) bool {
 
 // AssertFeaturesEqual asserts content in actual equals content in expected
 // regardless of ordering.
-func AssertFeaturesEqual(t *testing.T, expected, actual []database.Feature) bool {
+func AssertFeaturesEqual(t *testing.T, expected, actual []Feature) bool {
 	if assert.Len(t, actual, len(expected)) {
-		has := map[database.Feature]bool{}
+		has := map[Feature]bool{}
 		for _, nf := range expected {
 			has[nf] = false
 		}
@@ -154,7 +166,7 @@ func AssertFeaturesEqual(t *testing.T, expected, actual []database.Feature) bool
 
 // AssertLayerFeaturesEqual asserts content in actual equals to content in
 // expected regardless of ordering.
-func AssertLayerFeaturesEqual(t *testing.T, expected, actual []database.LayerFeature) bool {
+func AssertLayerFeaturesEqual(t *testing.T, expected, actual []LayerFeature) bool {
 	if !assert.Len(t, actual, len(expected)) {
 		return false
 	}
@@ -174,7 +186,7 @@ func AssertLayerFeaturesEqual(t *testing.T, expected, actual []database.LayerFea
 
 // AssertNamespacesEqual asserts content in actual equals to content in
 // expected regardless of ordering.
-func AssertNamespacesEqual(t *testing.T, expected, actual []database.Namespace) bool {
+func AssertNamespacesEqual(t *testing.T, expected, actual []Namespace) bool {
 	expectedInterfaces := []interface{}{}
 	for _, e := range expected {
 		expectedInterfaces = append(expectedInterfaces, e)
@@ -190,7 +202,7 @@ func AssertNamespacesEqual(t *testing.T, expected, actual []database.Namespace) 
 
 // AssertLayerNamespacesEqual asserts content in actual equals to content in
 // expected regardless of ordering.
-func AssertLayerNamespacesEqual(t *testing.T, expected, actual []database.LayerNamespace) bool {
+func AssertLayerNamespacesEqual(t *testing.T, expected, actual []LayerNamespace) bool {
 	expectedInterfaces := []interface{}{}
 	for _, e := range expected {
 		expectedInterfaces = append(expectedInterfaces, e)
@@ -205,7 +217,7 @@ func AssertLayerNamespacesEqual(t *testing.T, expected, actual []database.LayerN
 }
 
 // AssertLayerEqual asserts actual layer equals to expected layer content wise.
-func AssertLayerEqual(t *testing.T, expected, actual *database.Layer) bool {
+func AssertLayerEqual(t *testing.T, expected, actual *Layer) bool {
 	if expected == actual {
 		return true
 	}
@@ -239,7 +251,7 @@ func AssertIntStringMapEqual(t *testing.T, expected, actual map[int]string) bool
 }
 
 // AssertVulnerabilityEqual asserts two vulnerabilities are equal.
-func AssertVulnerabilityEqual(t *testing.T, expected, actual *database.Vulnerability) bool {
+func AssertVulnerabilityEqual(t *testing.T, expected, actual *Vulnerability) bool {
 	return assert.Equal(t, expected.Name, actual.Name) &&
 		assert.Equal(t, expected.Link, actual.Link) &&
 		assert.Equal(t, expected.Description, actual.Description) &&
@@ -248,7 +260,7 @@ func AssertVulnerabilityEqual(t *testing.T, expected, actual *database.Vulnerabi
 		AssertMetadataMapEqual(t, expected.Metadata, actual.Metadata)
 }
 
-func castMetadataMapToInterface(metadata database.MetadataMap) map[string]interface{} {
+func castMetadataMapToInterface(metadata MetadataMap) map[string]interface{} {
 	content, err := json.Marshal(metadata)
 	if err != nil {
 		panic(err)
@@ -263,7 +275,7 @@ func castMetadataMapToInterface(metadata database.MetadataMap) map[string]interf
 }
 
 // AssertMetadataMapEqual asserts two metadata maps are equal.
-func AssertMetadataMapEqual(t *testing.T, expected, actual database.MetadataMap) bool {
+func AssertMetadataMapEqual(t *testing.T, expected, actual MetadataMap) bool {
 	expectedMap := castMetadataMapToInterface(expected)
 	actualMap := castMetadataMapToInterface(actual)
 	checked := mapset.NewSet()

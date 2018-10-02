@@ -20,7 +20,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/pkg/testutil"
 )
 
 var upsertAncestryTests = []struct {
@@ -89,7 +88,7 @@ func TestUpsertAncestry(t *testing.T) {
 			actual, ok, err := tx.FindAncestry(test.in.Name)
 			assert.Nil(t, err)
 			assert.True(t, ok)
-			testutil.AssertAncestryEqual(t, test.in, &actual)
+			database.AssertAncestryEqual(t, test.in, &actual)
 		})
 	}
 }
@@ -132,7 +131,7 @@ func TestFindAncestry(t *testing.T) {
 			assert.Nil(t, err)
 			assert.Equal(t, test.ok, ok)
 			if test.ok {
-				testutil.AssertAncestryEqual(t, test.ancestry, &ancestry)
+				database.AssertAncestryEqual(t, test.ancestry, &ancestry)
 			}
 		})
 	}

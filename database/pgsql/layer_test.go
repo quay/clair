@@ -20,7 +20,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/pkg/testutil"
 )
 
 var persistLayerTests = []struct {
@@ -136,7 +135,7 @@ func TestPersistLayer(t *testing.T) {
 				layer, ok, err := tx.FindLayer(test.name)
 				assert.Nil(t, err)
 				assert.True(t, ok)
-				testutil.AssertLayerEqual(t, test.layer, &layer)
+				database.AssertLayerEqual(t, test.layer, &layer)
 			}
 		})
 	}
@@ -184,7 +183,7 @@ func TestFindLayer(t *testing.T) {
 			assert.Nil(t, err)
 			assert.Equal(t, test.ok, ok)
 			if test.ok {
-				testutil.AssertLayerEqual(t, test.out, &layer)
+				database.AssertLayerEqual(t, test.out, &layer)
 			}
 		})
 	}

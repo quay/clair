@@ -21,8 +21,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/coreos/clair/pkg/dbutil"
-
 	"github.com/pborman/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
@@ -210,7 +208,7 @@ func update(datastore database.Datastore, firstUpdate bool) {
 		namespaces = append(namespaces, ns)
 	}
 
-	if err := dbutil.PersistNamespaces(datastore, namespaces); err != nil {
+	if err := database.PersistNamespaces(datastore, namespaces); err != nil {
 		log.WithError(err).Error("Unable to insert namespaces")
 		return
 	}

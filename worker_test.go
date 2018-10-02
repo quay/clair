@@ -28,8 +28,6 @@ import (
 	"github.com/coreos/clair/ext/featurefmt"
 	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
-	"github.com/coreos/clair/pkg/dbutil"
-	"github.com/coreos/clair/pkg/testutil"
 
 	// Register the required detectors.
 	_ "github.com/coreos/clair/ext/featurefmt/dpkg"
@@ -203,7 +201,7 @@ func newMockDatastore() *mockDatastore {
 			}
 
 			layer, _ := session.copy.layers[hash]
-			dbutil.MergeLayers(&layer, &database.Layer{
+			database.MergeLayers(&layer, &database.Layer{
 				Hash:       hash,
 				By:         by,
 				Namespaces: namespaces,
@@ -359,7 +357,7 @@ func TestProcessLayers(t *testing.T) {
 
 	// Ensure each layer has expected namespaces and features detected
 	if blank, ok := datastore.layers["blank"]; ok {
-		testutil.AssertDetectorsEqual(t, EnabledDetectors, blank.By)
+		database.AssertDetectorsEqual(t, EnabledDetectors, blank.By)
 		assert.Len(t, blank.Namespaces, 0)
 		assert.Len(t, blank.Features, 0)
 	} else {
@@ -368,7 +366,7 @@ func TestProcessLayers(t *testing.T) {
 	}
 
 	if wheezy, ok := datastore.layers["wheezy"]; ok {
-		testutil.AssertDetectorsEqual(t, EnabledDetectors, wheezy.By)
+		database.AssertDetectorsEqual(t, EnabledDetectors, wheezy.By)
 		assert.Equal(t, []database.LayerNamespace{
 			{database.Namespace{"debian:7", dpkg.ParserName}, database.NewNamespaceDetector("os-release", "1.0")},
 		}, wheezy.Namespaces)
@@ -380,7 +378,7 @@ func TestProcessLayers(t *testing.T) {
 	}
 
 	if jessie, ok := datastore.layers["jessie"]; ok {
-		testutil.AssertDetectorsEqual(t, EnabledDetectors, jessie.By)
+		database.AssertDetectorsEqual(t, EnabledDetectors, jessie.By)
 		assert.Equal(t, []database.LayerNamespace{
 			{database.Namespace{"debian:8", dpkg.ParserName}, database.NewNamespaceDetector("os-release", "1.0")},
 		}, jessie.Namespaces)
@@ -578,8 +576,8 @@ func TestComputeAncestryFeatures(t *testing.T) {
 	ancestryLayers, detectors, err := computeAncestryLayers(layers)
 	require.Nil(t, err)
 
-	testutil.AssertDetectorsEqual(t, expectedDetectors, detectors)
+	database.AssertDetectorsEqual(t, expectedDetectors, detectors)
 	for i := range expected {
-		testutil.AssertAncestryLayerEqual(t, &expected[i], &ancestryLayers[i])
+		database.AssertAncestryLayerEqual(t, &expected[i], &ancestryLayers[i])
 	}
 }

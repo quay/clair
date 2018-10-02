@@ -12,47 +12,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package dbutil
+package database
 
 import (
 	"github.com/deckarep/golang-set"
-
-	"github.com/coreos/clair/database"
 )
 
 // DeduplicateNamespaces deduplicates a list of namespaces.
-func DeduplicateNamespaces(namespaces ...database.Namespace) []database.Namespace {
+func DeduplicateNamespaces(namespaces ...Namespace) []Namespace {
 	nsSet := mapset.NewSet()
 	for _, ns := range namespaces {
 		nsSet.Add(ns)
 	}
 
-	result := make([]database.Namespace, 0, nsSet.Cardinality())
+	uniqueNamespaces := make([]Namespace, 0, nsSet.Cardinality())
 	for ns := range nsSet.Iter() {
-		result = append(result, ns.(database.Namespace))
+		uniqueNamespaces = append(uniqueNamespaces, ns.(Namespace))
 	}
 
-	return result
+	return uniqueNamespaces
 }
 
 // DeduplicateFeatures deduplicates a list of list of features.
-func DeduplicateFeatures(features ...database.Feature) []database.Feature {
+func DeduplicateFeatures(features ...Feature) []Feature {
 	fSet := mapset.NewSet()
 	for _, f := range features {
 		fSet.Add(f)
 	}
 
-	result := make([]database.Feature, 0, fSet.Cardinality())
+	uniqueFeatures := make([]Feature, 0, fSet.Cardinality())
 	for f := range fSet.Iter() {
-		result = append(result, f.(database.Feature))
+		uniqueFeatures = append(uniqueFeatures, f.(Feature))
 	}
 
-	return result
+	return uniqueFeatures
 }
 
 // PersistPartialLayer wraps session PersistLayer function with begin and
 // commit.
-func PersistPartialLayer(datastore database.Datastore, layer *database.Layer) error {
+func PersistPartialLayer(datastore Datastore, layer *Layer) error {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return err
@@ -67,7 +65,7 @@ func PersistPartialLayer(datastore database.Datastore, layer *database.Layer) er
 }
 
 // PersistFeatures wraps session PersistFeatures function with begin and commit.
-func PersistFeatures(datastore database.Datastore, features []database.Feature) error {
+func PersistFeatures(datastore Datastore, features []Feature) error {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return err
@@ -82,7 +80,7 @@ func PersistFeatures(datastore database.Datastore, features []database.Feature) 
 
 // PersistNamespaces wraps session PersistNamespaces function with begin and
 // commit.
-func PersistNamespaces(datastore database.Datastore, namespaces []database.Namespace) error {
+func PersistNamespaces(datastore Datastore, namespaces []Namespace) error {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return err
@@ -97,20 +95,20 @@ func PersistNamespaces(datastore database.Datastore, namespaces []database.Names
 }
 
 // FindAncestry wraps session FindAncestry function with begin and rollback.
-func FindAncestry(datastore database.Datastore, name string) (database.Ancestry, bool, error) {
+func FindAncestry(datastore Datastore, name string) (Ancestry, bool, error) {
 	tx, err := datastore.Begin()
 	defer tx.Rollback()
 
 	if err != nil {
-		return database.Ancestry{}, false, err
+		return Ancestry{}, false, err
 	}
 
 	return tx.FindAncestry(name)
 }
 
 // FindLayer wraps session FindLayer function with begin and rollback.
-func FindLayer(datastore database.Datastore, hash string) (layer database.Layer, ok bool, err error) {
-	var tx database.Session
+func FindLayer(datastore Datastore, hash string) (layer Layer, ok bool, err error) {
+	var tx Session
 	if tx, err = datastore.Begin(); err != nil {
 		return
 	}
@@ -122,24 +120,24 @@ func FindLayer(datastore database.Datastore, hash string) (layer database.Layer,
 
 // DeduplicateNamespacedFeatures returns a copy of all unique features in the
 // input.
-func DeduplicateNamespacedFeatures(features []database.NamespacedFeature) []database.NamespacedFeature {
+func DeduplicateNamespacedFeatures(features []NamespacedFeature) []NamespacedFeature {
 	nsSet := mapset.NewSet()
 	for _, ns := range features {
 		nsSet.Add(ns)
 	}
 
-	result := make([]database.NamespacedFeature, 0, nsSet.Cardinality())
+	uniqueFeatures := make([]NamespacedFeature, 0, nsSet.Cardinality())
 	for ns := range nsSet.Iter() {
-		result = append(result, ns.(database.NamespacedFeature))
+		uniqueFeatures = append(uniqueFeatures, ns.(NamespacedFeature))
 	}
 
-	return result
+	return uniqueFeatures
 }
 
 // GetAncestryFeatures returns a list of unique namespaced features in the
 // ancestry.
-func GetAncestryFeatures(ancestry database.Ancestry) []database.NamespacedFeature {
-	features := []database.NamespacedFeature{}
+func GetAncestryFeatures(ancestry Ancestry) []NamespacedFeature {
+	features := []NamespacedFeature{}
 	for _, layer := range ancestry.Layers {
 		features = append(features, layer.GetFeatures()...)
 	}
@@ -148,7 +146,7 @@ func GetAncestryFeatures(ancestry database.Ancestry) []database.NamespacedFeatur
 }
 
 // UpsertAncestry wraps session UpsertAncestry function with begin and commit.
-func UpsertAncestry(datastore database.Datastore, ancestry database.Ancestry) error {
+func UpsertAncestry(datastore Datastore, ancestry Ancestry) error {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return err
@@ -168,7 +166,7 @@ func UpsertAncestry(datastore database.Datastore, ancestry database.Ancestry) er
 
 // PersistNamespacedFeatures wraps session PersistNamespacedFeatures function
 // with begin and commit.
-func PersistNamespacedFeatures(datastore database.Datastore, features []database.NamespacedFeature) error {
+func PersistNamespacedFeatures(datastore Datastore, features []NamespacedFeature) error {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return err
@@ -188,7 +186,7 @@ func PersistNamespacedFeatures(datastore database.Datastore, features []database
 
 // CacheRelatedVulnerability wraps session CacheAffectedNamespacedFeatures
 // function with begin and commit.
-func CacheRelatedVulnerability(datastore database.Datastore, features []database.NamespacedFeature) error {
+func CacheRelatedVulnerability(datastore Datastore, features []NamespacedFeature) error {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return err
@@ -203,7 +201,7 @@ func CacheRelatedVulnerability(datastore database.Datastore, features []database
 }
 
 // IntersectDetectors returns the detectors in both d1 and d2.
-func IntersectDetectors(d1 []database.Detector, d2 []database.Detector) []database.Detector {
+func IntersectDetectors(d1 []Detector, d2 []Detector) []Detector {
 	d1Set := mapset.NewSet()
 	for _, d := range d1 {
 		d1Set.Add(d)
@@ -215,16 +213,16 @@ func IntersectDetectors(d1 []database.Detector, d2 []database.Detector) []databa
 	}
 
 	inter := d1Set.Intersect(d2Set)
-	result := make([]database.Detector, 0, inter.Cardinality())
+	detectors := make([]Detector, 0, inter.Cardinality())
 	for d := range inter.Iter() {
-		result = append(result, d.(database.Detector))
+		detectors = append(detectors, d.(Detector))
 	}
 
-	return result
+	return detectors
 }
 
 // DiffDetectors returns the detectors belongs to d1 but not d2
-func DiffDetectors(d1 []database.Detector, d2 []database.Detector) []database.Detector {
+func DiffDetectors(d1 []Detector, d2 []Detector) []Detector {
 	d1Set := mapset.NewSet()
 	for _, d := range d1 {
 		d1Set.Add(d)
@@ -236,17 +234,17 @@ func DiffDetectors(d1 []database.Detector, d2 []database.Detector) []database.De
 	}
 
 	diff := d1Set.Difference(d2Set)
-	result := make([]database.Detector, 0, diff.Cardinality())
+	detectors := make([]Detector, 0, diff.Cardinality())
 	for d := range diff.Iter() {
-		result = append(result, d.(database.Detector))
+		detectors = append(detectors, d.(Detector))
 	}
 
-	return result
+	return detectors
 }
 
 // MergeLayers merges all content in new layer to l, where the content is
 // updated.
-func MergeLayers(l *database.Layer, new *database.Layer) *database.Layer {
+func MergeLayers(l *Layer, new *Layer) *Layer {
 	featureSet := mapset.NewSet()
 	namespaceSet := mapset.NewSet()
 	bySet := mapset.NewSet()

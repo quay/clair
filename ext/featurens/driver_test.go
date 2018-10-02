@@ -8,7 +8,6 @@ import (
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/pkg/tarutil"
-	"github.com/coreos/clair/pkg/testutil"
 
 	_ "github.com/coreos/clair/ext/featurens/alpinerelease"
 	_ "github.com/coreos/clair/ext/featurens/aptsources"
@@ -50,6 +49,6 @@ func TestNamespaceDetector(t *testing.T) {
 			return
 		}
 
-		testutil.AssertLayerNamespacesEqual(t, test.out, out)
+		database.AssertLayerNamespacesEqual(t, test.out, out)
 	}
 }
