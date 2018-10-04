@@ -186,10 +186,10 @@ func (tx *pgSession) PersistNamespacedFeatures(features []database.NamespacedFea
 		return nil
 	}
 
-	nsIDs := map[database.Namespace]sql.NullInt64{}
+	namespaces := []database.Namespace{}
 	fIDs := map[database.Feature]sql.NullInt64{}
 	for _, f := range features {
-		nsIDs[f.Namespace] = sql.NullInt64{}
+		namespaces = append(namespaces, f.Namespace)
 		fIDs[f.Feature] = sql.NullInt64{}
 	}
 
@@ -215,29 +215,18 @@ func (tx *pgSession) PersistNamespacedFeatures(features []database.NamespacedFea
 		return err
 	}
 
-	nsToFind := []database.Namespace{}
-	for ns := range nsIDs {
-		nsToFind = append(nsToFind, ns)
-	}
-
-	if ids, err := tx.findNamespaceIDs(nsToFind); err == nil {
-		for i, id := range ids {
-			if !id.Valid {
-				return database.ErrMissingEntities
-			}
-			nsIDs[nsToFind[i]] = id
-		}
-	} else {
+	nsIDs, err := tx.searchNamespaces(namespaces)
+	if err != nil {
 		return err
 	}
 
 	keys := make([]interface{}, len(features)*2)
 	for i, f := range features {
 		keys[i*2] = fIDs[f.Feature]
-		keys[i*2+1] = nsIDs[f.Namespace]
+		keys[i*2+1] = nsIDs.byValue[f.Namespace]
 	}
 
-	_, err := tx.Exec(queryPersistNamespacedFeature(len(features)), keys...)
+	_, err = tx.Exec(queryPersistNamespacedFeature(len(features)), keys...)
 	if err != nil {
 		return err
 	}

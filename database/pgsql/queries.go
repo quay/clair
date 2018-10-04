@@ -70,7 +70,7 @@ func querySearchNamespacedFeature(nsfCount int) string {
 	)
 }
 
-func querySearchNamespace(nsCount int) string {
+func querySearchNamespaces(nsCount int) string {
 	return fmt.Sprintf(
 		`SELECT id, name, version_format 
 		FROM namespace WHERE (name, version_format) IN (%s)`,

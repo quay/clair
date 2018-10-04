@@ -174,18 +174,15 @@ func (tx *pgSession) persistAllLayerNamespaces(layerID int64, namespaces []datab
 		rawNamespaces = append(rawNamespaces, ns.Namespace)
 	}
 
-	rawNamespaceIDs, err := tx.findNamespaceIDs(rawNamespaces)
+	rawNamespaceIDs, err := tx.searchNamespaces(rawNamespaces)
 	if err != nil {
 		return err
 	}
 
 	dbLayerNamespaces := make([]dbLayerNamespace, 0, len(namespaces))
-	for i, ns := range namespaces {
+	for _, ns := range namespaces {
 		detectorID := detectorMap.byValue[ns.By]
-		namespaceID := rawNamespaceIDs[i].Int64
-		if !rawNamespaceIDs[i].Valid {
-			return database.ErrMissingEntities
-		}
+		namespaceID := int64(rawNamespaceIDs.byValue[ns.Namespace])
 
 		dbLayerNamespaces = append(dbLayerNamespaces, dbLayerNamespace{layerID, namespaceID, detectorID})
 	}

@@ -15,7 +15,6 @@
 package pgsql
 
 import (
-	"database/sql"
 	"sort"
 
 	"github.com/coreos/clair/database"
@@ -25,6 +24,25 @@ import (
 const (
 	searchNamespaceID = `SELECT id FROM Namespace WHERE name = $1 AND version_format = $2`
 )
+
+type namespaceMap struct {
+	byID    map[int]database.Namespace
+	byValue map[database.Namespace]int
+}
+
+func newNamespaceMap() namespaceMap {
+	return namespaceMap{make(map[int]database.Namespace), make(map[database.Namespace]int)}
+}
+
+func (m *namespaceMap) ContainValue(namespace database.Namespace) bool {
+	_, ok := m.byValue[namespace]
+	return ok
+}
+
+func (m *namespaceMap) Add(id int, namespace database.Namespace) {
+	m.byID[id] = namespace
+	m.byValue[namespace] = id
+}
 
 // PersistNamespaces soi namespaces into database.
 func (tx *pgSession) PersistNamespaces(namespaces []database.Namespace) error {
@@ -54,42 +72,46 @@ func (tx *pgSession) PersistNamespaces(namespaces []database.Namespace) error {
 	return nil
 }
 
-func (tx *pgSession) findNamespaceIDs(namespaces []database.Namespace) ([]sql.NullInt64, error) {
+// searchNamespaces searches the ID for all the namespaces in the input.
+func (tx *pgSession) searchNamespaces(namespaces []database.Namespace) (namespaceMap, error) {
+	m := newNamespaceMap()
 	if len(namespaces) == 0 {
-		return nil, nil
+		return m, nil
 	}
 
+	namespaces = database.DeduplicateNamespaces(namespaces...)
 	keys := make([]interface{}, len(namespaces)*2)
-	nsMap := map[database.Namespace]sql.NullInt64{}
 	for i, n := range namespaces {
 		keys[i*2] = n.Name
 		keys[i*2+1] = n.VersionFormat
-		nsMap[n] = sql.NullInt64{}
 	}
 
-	rows, err := tx.Query(querySearchNamespace(len(namespaces)), keys...)
+	rows, err := tx.Query(querySearchNamespaces(len(namespaces)), keys...)
 	if err != nil {
-		return nil, handleError("searchNamespace", err)
+		return m, handleError("searchNamespaces", err)
 	}
 
 	defer rows.Close()
 
-	var (
-		id sql.NullInt64
-		ns database.Namespace
-	)
 	for rows.Next() {
-		err := rows.Scan(&id, &ns.Name, &ns.VersionFormat)
-		if err != nil {
-			return nil, handleError("searchNamespace", err)
+		var (
+			id int
+			ns database.Namespace
+		)
+
+		if err := rows.Scan(&id, &ns.Name, &ns.VersionFormat); err != nil {
+			return m, handleError("searchNamespaces", err)
 		}
-		nsMap[ns] = id
+
+		m.Add(id, ns)
 	}
 
-	ids := make([]sql.NullInt64, len(namespaces))
-	for i, ns := range namespaces {
-		ids[i] = nsMap[ns]
+	// ensure that all namespaces exist in the map, otherwise, return missing entities
+	for _, n := range namespaces {
+		if !m.ContainValue(n) {
+			return m, database.ErrMissingEntities
+		}
 	}
 
-	return ids, nil
+	return m, nil
 }

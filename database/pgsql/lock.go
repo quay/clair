@@ -45,7 +45,7 @@ func (tx *pgSession) Lock(name string, owner string, duration time.Duration, ren
 		return false, time.Time{}, commonerr.NewBadRequestError("Invalid Lock Parameters")
 	}
 
-	until := time.Now().Add(duration)
+	until := time.Now().UTC().Add(duration)
 	if renew {
 		defer observeQueryTime("Lock", "update", time.Now())
 		// Renew lock.
