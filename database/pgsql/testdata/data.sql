@@ -120,7 +120,16 @@ INSERT INTO vulnerability_affected_namespaced_feature(id, vulnerability_id, name
  (1, 1, 2, 1);
 
 INSERT INTO vulnerability_notification(id, name, created_at, notified_at, deleted_at, old_vulnerability_id, new_vulnerability_id) VALUES
- (1, 'test', NULL, NULL, NULL, 2, 1); -- 'CVE-NOPE' -> 'CVE-OPENSSL-1-DEB7'
+ (1, 'test', TIMESTAMP '2039-01-02 03:04:05', NULL, NULL, 2, 1), -- 'CVE-NOPE' -> 'CVE-OPENSSL-1-DEB7'
+ (2, 'victory', TIMESTAMP '2039-01-02 03:04:05', TIMESTAMP '2049-01-02 03:04:05', NULL, 2, 1),
+ (3, 'bomb!', TIMESTAMP '2039-01-02 03:04:05', TIMESTAMP '2059-01-02 03:04:05', TIMESTAMP '2059-01-02 03:04:05', 2, 1);
+
+INSERT INTO keyvalue(id, key, value) VALUES 
+ (1, 'key', 'value');
+
+INSERT INTO lock(id, name, owner, until) VALUES
+ (1, 'name1', 'owner1', TIMESTAMP '2039-01-02 03:04:05'),
+ (2, 'name2', 'owner2', TIMESTAMP '2009-01-02 03:04:05');
 
 SELECT pg_catalog.setval(pg_get_serial_sequence('feature', 'id'), (SELECT MAX(id) FROM feature)+1);
 SELECT pg_catalog.setval(pg_get_serial_sequence('namespace', 'id'), (SELECT MAX(id) FROM namespace)+1);
@@ -142,3 +151,6 @@ SELECT pg_catalog.setval(pg_get_serial_sequence('vulnerability_affected_feature'
 SELECT pg_catalog.setval(pg_get_serial_sequence('vulnerability_affected_namespaced_feature', 'id'), (SELECT MAX(id) FROM vulnerability_affected_namespaced_feature)+1);
 SELECT pg_catalog.setval(pg_get_serial_sequence('vulnerability_notification', 'id'), (SELECT MAX(id) FROM vulnerability_notification)+1);
 SELECT pg_catalog.setval(pg_get_serial_sequence('detector', 'id'), (SELECT MAX(id) FROM detector)+1);
+
+SELECT pg_catalog.setval(pg_get_serial_sequence('keyvalue', 'id'), (SELECT MAX(id) FROM keyvalue)+1);
+SELECT pg_catalog.setval(pg_get_serial_sequence('lock', 'id'), (SELECT MAX(id) FROM lock)+1);

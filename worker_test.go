@@ -25,6 +25,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/database/dbtest"
 	"github.com/coreos/clair/ext/featurefmt"
 	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
@@ -357,7 +358,7 @@ func TestProcessLayers(t *testing.T) {
 
 	// Ensure each layer has expected namespaces and features detected
 	if blank, ok := datastore.layers["blank"]; ok {
-		database.AssertDetectorsEqual(t, EnabledDetectors, blank.By)
+		dbtest.AssertDetectorsEqual(t, EnabledDetectors, blank.By)
 		assert.Len(t, blank.Namespaces, 0)
 		assert.Len(t, blank.Features, 0)
 	} else {
@@ -366,7 +367,7 @@ func TestProcessLayers(t *testing.T) {
 	}
 
 	if wheezy, ok := datastore.layers["wheezy"]; ok {
-		database.AssertDetectorsEqual(t, EnabledDetectors, wheezy.By)
+		dbtest.AssertDetectorsEqual(t, EnabledDetectors, wheezy.By)
 		assert.Equal(t, []database.LayerNamespace{
 			{database.Namespace{"debian:7", dpkg.ParserName}, database.NewNamespaceDetector("os-release", "1.0")},
 		}, wheezy.Namespaces)
@@ -378,7 +379,7 @@ func TestProcessLayers(t *testing.T) {
 	}
 
 	if jessie, ok := datastore.layers["jessie"]; ok {
-		database.AssertDetectorsEqual(t, EnabledDetectors, jessie.By)
+		dbtest.AssertDetectorsEqual(t, EnabledDetectors, jessie.By)
 		assert.Equal(t, []database.LayerNamespace{
 			{database.Namespace{"debian:8", dpkg.ParserName}, database.NewNamespaceDetector("os-release", "1.0")},
 		}, jessie.Namespaces)
@@ -576,8 +577,8 @@ func TestComputeAncestryFeatures(t *testing.T) {
 	ancestryLayers, detectors, err := computeAncestryLayers(layers)
 	require.Nil(t, err)
 
-	database.AssertDetectorsEqual(t, expectedDetectors, detectors)
+	dbtest.AssertDetectorsEqual(t, expectedDetectors, detectors)
 	for i := range expected {
-		database.AssertAncestryLayerEqual(t, &expected[i], &ancestryLayers[i])
+		dbtest.AssertAncestryLayerEqual(t, &expected[i], &ancestryLayers[i])
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/database/dbtest"
 	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/pkg/tarutil"
 
@@ -49,6 +50,6 @@ func TestNamespaceDetector(t *testing.T) {
 			return
 		}
 
-		database.AssertLayerNamespacesEqual(t, test.out, out)
+		dbtest.AssertLayerNamespacesEqual(t, test.out, out)
 	}
 }

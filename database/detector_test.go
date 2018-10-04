@@ -17,21 +17,21 @@ package database_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/coreos/clair/database"
 )
 
-func TestCompareSeverity(t *testing.T) {
-	assert.Equal(t, database.MediumSeverity.Compare(database.MediumSeverity), 0, "Severity comparison failed")
-	assert.True(t, database.MediumSeverity.Compare(database.HighSeverity) < 0, "Severity comparison failed")
-	assert.True(t, database.CriticalSeverity.Compare(database.LowSeverity) > 0, "Severity comparison failed")
-}
+func TestParseDetectorType(t *testing.T) {
+	_, err := database.NewDetectorType("")
+	require.Equal(t, database.ErrFailedToParseDetectorType, err)
 
-func TestParseSeverity(t *testing.T) {
-	_, err := database.NewSeverity("Test")
-	assert.Equal(t, database.ErrFailedToParseSeverity, err)
+	_, err = database.NewDetectorType("∞")
+	require.Equal(t, database.ErrFailedToParseDetectorType, err)
 
-	_, err = database.NewSeverity("Unknown")
-	assert.Nil(t, err)
+	for _, dtype := range database.DetectorTypes {
+		dtypeNew, err := database.NewDetectorType(string(dtype))
+		require.Nil(t, err)
+		require.Equal(t, dtype, dtypeNew)
+	}
 }

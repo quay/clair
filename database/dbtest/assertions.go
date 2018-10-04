@@ -12,36 +12,131 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package database
+// Package dbtest provides utilities for database testing.
+package dbtest
 
 import (
 	"encoding/json"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/deckarep/golang-set"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/pkg/pagination"
 )
 
-// AssertDetectorsEqual asserts actual detectors are content wise equal to
-// expected detectors regardless of the ordering.
-func AssertDetectorsEqual(t *testing.T, expected, actual []Detector) bool {
-	if len(expected) != len(actual) {
-		return assert.Fail(t, "detectors are not equal", "expected: '%v', actual: '%v'", expected, actual)
+func AssertVulnerabilityNotificationWithVulnerableEqual(t *testing.T, key pagination.Key, expected, actual *database.VulnerabilityNotificationWithVulnerable) bool {
+	if expected == actual {
+		return true
 	}
 
-	sort.Slice(expected, func(i, j int) bool {
-		return expected[i].String() < expected[j].String()
-	})
+	if expected == nil || actual == nil {
+		return assert.Equal(t, expected, actual)
+	}
 
-	sort.Slice(actual, func(i, j int) bool {
-		return actual[i].String() < actual[j].String()
-	})
+	return assert.Equal(t, expected.NotificationHook, actual.NotificationHook) &&
+		AssertPagedVulnerableAncestriesEqual(t, key, expected.Old, actual.Old) &&
+		AssertPagedVulnerableAncestriesEqual(t, key, expected.New, actual.New)
+}
 
-	for i := range expected {
-		if expected[i] != actual[i] {
-			return assert.Fail(t, "detectors are not equal", "expected: '%v', actual: '%v'", expected, actual)
+func AssertPagedVulnerableAncestriesEqual(t *testing.T, key pagination.Key, expected, actual *database.PagedVulnerableAncestries) bool {
+	if expected == actual {
+		return true
+	}
+
+	if expected == nil || actual == nil {
+		return assert.Equal(t, expected, actual)
+	}
+
+	return AssertVulnerabilityEqual(t, &expected.Vulnerability, &actual.Vulnerability) &&
+		assert.Equal(t, expected.Limit, actual.Limit) &&
+		assert.Equal(t, MustUnmarshalToken(key, expected.Current), MustUnmarshalToken(key, actual.Current)) &&
+		assert.Equal(t, MustUnmarshalToken(key, expected.Next), MustUnmarshalToken(key, actual.Next)) &&
+		assert.Equal(t, expected.End, actual.End) &&
+		AssertIntStringMapEqual(t, expected.Affected, actual.Affected)
+}
+
+func AssertVulnerabilityWithAffectedEqual(t *testing.T, expected database.VulnerabilityWithAffected, actual database.VulnerabilityWithAffected) bool {
+	return assert.Equal(t, expected.Vulnerability, actual.Vulnerability) && assertAffectedFeaturesEqual(t, expected.Affected, actual.Affected)
+}
+
+func assertNamespacedFeatureEqual(t *testing.T, expected []database.NamespacedFeature, actual []database.NamespacedFeature) bool {
+	if assert.Len(t, actual, len(expected)) {
+		has := map[database.NamespacedFeature]bool{}
+		for _, nf := range expected {
+			has[nf] = false
 		}
+
+		for _, nf := range actual {
+			has[nf] = true
+		}
+
+		for nf, visited := range has {
+			if !assert.True(t, visited, nf.Namespace.Name+":"+nf.Name+" is expected") {
+				return false
+			}
+		}
+		return true
+	}
+	return false
+}
+
+func assertAffectedFeaturesEqual(t *testing.T, expected []database.AffectedFeature, actual []database.AffectedFeature) bool {
+	if assert.Len(t, actual, len(expected)) {
+		has := map[database.AffectedFeature]bool{}
+		for _, i := range expected {
+			has[i] = false
+		}
+		for _, i := range actual {
+			if visited, ok := has[i]; !ok {
+				return false
+			} else if visited {
+				return false
+			}
+			has[i] = true
+		}
+		return true
+	}
+	return false
+}
+
+func MustParseTime(value string) time.Time {
+	t, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		panic(err)
+	}
+
+	return t
+}
+
+func AssertAffectedNamespacedFeature(t *testing.T, n1 database.AffectedNamespacedFeature, n2 database.AffectedNamespacedFeature) bool {
+	return assertVulnerabilityWithFixedIn(t, n1.AffectedBy, n2.AffectedBy) && assertNamespacedFeatureEqual(t, []database.NamespacedFeature{n1.NamespacedFeature}, []database.NamespacedFeature{n2.NamespacedFeature})
+}
+
+func assertVulnerabilityWithFixedIn(t *testing.T, expected, actual []database.VulnerabilityWithFixedIn) bool {
+	if !assert.Len(t, actual, len(expected)) {
+		return false
+	}
+
+	matched := map[int]bool{} // checks if the object on index i is already matched
+	for _, v := range actual {
+		// find the matched expected value
+		found := false
+		for i, ev := range expected {
+			// hack: create a sub test for checking the equality without rewriting the functions.
+			subt := &testing.T{}
+			if ev.FixedInVersion == v.FixedInVersion && AssertVulnerabilityEqual(subt, &ev.Vulnerability, &v.Vulnerability) {
+				require.False(t, found)
+				require.False(t, matched[i])
+				found = true
+				matched[i] = true
+			}
+		}
+		require.True(t, found)
 	}
 
 	return true
@@ -49,7 +144,7 @@ func AssertDetectorsEqual(t *testing.T, expected, actual []Detector) bool {
 
 // AssertAncestryEqual asserts actual ancestry equals to expected ancestry
 // content wise.
-func AssertAncestryEqual(t *testing.T, expected, actual *Ancestry) bool {
+func AssertAncestryEqual(t *testing.T, expected, actual *database.Ancestry) bool {
 	if expected == actual {
 		return true
 	}
@@ -73,9 +168,33 @@ func AssertAncestryEqual(t *testing.T, expected, actual *Ancestry) bool {
 	return false
 }
 
+// AssertDetectorsEqual asserts actual detectors are content wise equal to
+// expected detectors regardless of the ordering.
+func AssertDetectorsEqual(t *testing.T, expected, actual []database.Detector) bool {
+	if len(expected) != len(actual) {
+		return assert.Fail(t, "detectors are not equal", "expected: '%v', actual: '%v'", expected, actual)
+	}
+
+	sort.Slice(expected, func(i, j int) bool {
+		return expected[i].String() < expected[j].String()
+	})
+
+	sort.Slice(actual, func(i, j int) bool {
+		return actual[i].String() < actual[j].String()
+	})
+
+	for i := range expected {
+		if expected[i] != actual[i] {
+			return assert.Fail(t, "detectors are not equal", "expected: '%v', actual: '%v'", expected, actual)
+		}
+	}
+
+	return true
+}
+
 // AssertAncestryLayerEqual asserts actual ancestry layer equals to expected
 // ancestry layer content wise.
-func AssertAncestryLayerEqual(t *testing.T, expected, actual *AncestryLayer) bool {
+func AssertAncestryLayerEqual(t *testing.T, expected, actual *database.AncestryLayer) bool {
 	if !assert.Equal(t, expected.Hash, actual.Hash) {
 		return false
 	}
@@ -88,7 +207,7 @@ func AssertAncestryLayerEqual(t *testing.T, expected, actual *AncestryLayer) boo
 	}
 
 	// feature -> is in actual layer
-	hitCounter := map[AncestryFeature]bool{}
+	hitCounter := map[database.AncestryFeature]bool{}
 	for _, f := range expected.Features {
 		hitCounter[f] = false
 	}
@@ -143,9 +262,9 @@ func AssertElementsEqual(t *testing.T, expected, actual []interface{}) bool {
 
 // AssertFeaturesEqual asserts content in actual equals content in expected
 // regardless of ordering.
-func AssertFeaturesEqual(t *testing.T, expected, actual []Feature) bool {
+func AssertFeaturesEqual(t *testing.T, expected, actual []database.Feature) bool {
 	if assert.Len(t, actual, len(expected)) {
-		has := map[Feature]bool{}
+		has := map[database.Feature]bool{}
 		for _, nf := range expected {
 			has[nf] = false
 		}
@@ -166,7 +285,7 @@ func AssertFeaturesEqual(t *testing.T, expected, actual []Feature) bool {
 
 // AssertLayerFeaturesEqual asserts content in actual equals to content in
 // expected regardless of ordering.
-func AssertLayerFeaturesEqual(t *testing.T, expected, actual []LayerFeature) bool {
+func AssertLayerFeaturesEqual(t *testing.T, expected, actual []database.LayerFeature) bool {
 	if !assert.Len(t, actual, len(expected)) {
 		return false
 	}
@@ -186,7 +305,7 @@ func AssertLayerFeaturesEqual(t *testing.T, expected, actual []LayerFeature) boo
 
 // AssertNamespacesEqual asserts content in actual equals to content in
 // expected regardless of ordering.
-func AssertNamespacesEqual(t *testing.T, expected, actual []Namespace) bool {
+func AssertNamespacesEqual(t *testing.T, expected, actual []database.Namespace) bool {
 	expectedInterfaces := []interface{}{}
 	for _, e := range expected {
 		expectedInterfaces = append(expectedInterfaces, e)
@@ -202,7 +321,7 @@ func AssertNamespacesEqual(t *testing.T, expected, actual []Namespace) bool {
 
 // AssertLayerNamespacesEqual asserts content in actual equals to content in
 // expected regardless of ordering.
-func AssertLayerNamespacesEqual(t *testing.T, expected, actual []LayerNamespace) bool {
+func AssertLayerNamespacesEqual(t *testing.T, expected, actual []database.LayerNamespace) bool {
 	expectedInterfaces := []interface{}{}
 	for _, e := range expected {
 		expectedInterfaces = append(expectedInterfaces, e)
@@ -217,7 +336,7 @@ func AssertLayerNamespacesEqual(t *testing.T, expected, actual []LayerNamespace)
 }
 
 // AssertLayerEqual asserts actual layer equals to expected layer content wise.
-func AssertLayerEqual(t *testing.T, expected, actual *Layer) bool {
+func AssertLayerEqual(t *testing.T, expected, actual *database.Layer) bool {
 	if expected == actual {
 		return true
 	}
@@ -251,7 +370,7 @@ func AssertIntStringMapEqual(t *testing.T, expected, actual map[int]string) bool
 }
 
 // AssertVulnerabilityEqual asserts two vulnerabilities are equal.
-func AssertVulnerabilityEqual(t *testing.T, expected, actual *Vulnerability) bool {
+func AssertVulnerabilityEqual(t *testing.T, expected, actual *database.Vulnerability) bool {
 	return assert.Equal(t, expected.Name, actual.Name) &&
 		assert.Equal(t, expected.Link, actual.Link) &&
 		assert.Equal(t, expected.Description, actual.Description) &&
@@ -260,7 +379,7 @@ func AssertVulnerabilityEqual(t *testing.T, expected, actual *Vulnerability) boo
 		AssertMetadataMapEqual(t, expected.Metadata, actual.Metadata)
 }
 
-func castMetadataMapToInterface(metadata MetadataMap) map[string]interface{} {
+func castMetadataMapToInterface(metadata database.MetadataMap) map[string]interface{} {
 	content, err := json.Marshal(metadata)
 	if err != nil {
 		panic(err)
@@ -275,7 +394,7 @@ func castMetadataMapToInterface(metadata MetadataMap) map[string]interface{} {
 }
 
 // AssertMetadataMapEqual asserts two metadata maps are equal.
-func AssertMetadataMapEqual(t *testing.T, expected, actual MetadataMap) bool {
+func AssertMetadataMapEqual(t *testing.T, expected, actual database.MetadataMap) bool {
 	expectedMap := castMetadataMapToInterface(expected)
 	actualMap := castMetadataMapToInterface(actual)
 	checked := mapset.NewSet()
