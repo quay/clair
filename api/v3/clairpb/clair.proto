@@ -45,17 +45,17 @@ message Vulnerability {
 }
 
 message Detector {
-  enum Type {
-    DETECTOR_TYPE_INVALID = 0;
-    DETECTOR_TYPE_NAMESPACE = 1;
-    DETECTOR_TYPE_FEATURE = 2;
+  enum DType {
+    DETECTOR_D_TYPE_INVALID = 0;
+    DETECTOR_D_TYPE_NAMESPACE = 1;
+    DETECTOR_D_TYPE_FEATURE = 2;
   }
   // The name of the detector.
   string name = 1;
   // The version of the detector.
   string version = 2;
   // The type of the detector.
-  Type type = 3;
+  DType dtype = 3;
 }
 
 message Namespace {

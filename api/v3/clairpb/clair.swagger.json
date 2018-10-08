@@ -156,6 +156,15 @@
     }
   },
   "definitions": {
+    "DetectorDType": {
+      "type": "string",
+      "enum": [
+        "DETECTOR_D_TYPE_INVALID",
+        "DETECTOR_D_TYPE_NAMESPACE",
+        "DETECTOR_D_TYPE_FEATURE"
+      ],
+      "default": "DETECTOR_D_TYPE_INVALID"
+    },
     "GetAncestryResponseAncestry": {
       "type": "object",
       "properties": {
@@ -286,20 +295,11 @@
           "type": "string",
           "description": "The version of the detector."
         },
-        "type": {
-          "$ref": "#/definitions/clairDetectorType",
+        "dtype": {
+          "$ref": "#/definitions/DetectorDType",
           "description": "The type of the detector."
         }
       }
-    },
-    "clairDetectorType": {
-      "type": "string",
-      "enum": [
-        "DETECTOR_TYPE_INVALID",
-        "DETECTOR_TYPE_NAMESPACE",
-        "DETECTOR_TYPE_FEATURE"
-      ],
-      "default": "DETECTOR_TYPE_INVALID"
     },
     "clairFeature": {
       "type": "object",

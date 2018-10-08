@@ -24,9 +24,9 @@ import (
 
 // DatabaseDetectorTypeMapping maps the database detector type to the integer
 // enum proto.
-var DatabaseDetectorTypeMapping = map[database.DetectorType]Detector_Type{
-	database.NamespaceDetectorType: Detector_Type(1),
-	database.FeatureDetectorType:   Detector_Type(2),
+var DatabaseDetectorTypeMapping = map[database.DetectorType]Detector_DType{
+	database.NamespaceDetectorType: Detector_DType(1),
+	database.FeatureDetectorType:   Detector_DType(2),
 }
 
 // PagedVulnerableAncestriesFromDatabaseModel converts database
@@ -152,7 +152,7 @@ func DetectorFromDatabaseModel(detector database.Detector) *Detector {
 	return &Detector{
 		Name:    detector.Name,
 		Version: detector.Version,
-		Type:    DatabaseDetectorTypeMapping[detector.DType],
+		Dtype:   DatabaseDetectorTypeMapping[detector.DType],
 	}
 }
 
