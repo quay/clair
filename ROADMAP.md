@@ -8,8 +8,12 @@ The [milestones defined in GitHub](https://github.com/coreos/clair/milestones) r
 The roadmap below outlines new features that will be added to Clair, and while subject to change, define what future stable will look like.
 
 - Support multiple namespaces per image
-  - This enables language-level package managers (e.g. npm, pip)
+  - This enables language-level package managers (e.g. npm, pip) in the future
+- Take advantage of OCI/Docker content-addressiblity to avoid duplicated work
+  - This simplifies the amount of work required for an offline clair in the future
+- Support mappings between source packages and binary packages
+- Versioned detectors that are present in API results
+  - This will enable clients to determine when images need to be reindexed
+- gRPC API that works on sets of layers rather than individual layers
+- Structured logging in JSON
 - Improve coverage and readability of documentation
-- Decouple the project from Postgres
-- gRPC API supporting direct uploads of images
-- Support operating Clair without internet access
