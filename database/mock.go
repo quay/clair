@@ -30,9 +30,10 @@ type MockSession struct {
 	FctFindAffectedNamespacedFeatures   func(features []NamespacedFeature) ([]NullableAffectedNamespacedFeature, error)
 	FctPersistNamespaces                func([]Namespace) error
 	FctPersistFeatures                  func([]Feature) error
+	FctPersistDetectors                 func(detectors []Detector) error
 	FctPersistNamespacedFeatures        func([]NamespacedFeature) error
 	FctCacheAffectedNamespacedFeatures  func([]NamespacedFeature) error
-	FctPersistLayer                     func(hash string, namespaces []Namespace, features []Feature, processedBy Processors) error
+	FctPersistLayer                     func(hash string, features []LayerFeature, namespaces []LayerNamespace, by []Detector) error
 	FctFindLayer                        func(name string) (Layer, bool, error)
 	FctInsertVulnerabilities            func([]VulnerabilityWithAffected) error
 	FctFindVulnerabilities              func([]VulnerabilityID) ([]NullableVulnerability, error)
@@ -85,6 +86,13 @@ func (ms *MockSession) FindAffectedNamespacedFeatures(features []NamespacedFeatu
 	panic("required mock function not implemented")
 }
 
+func (ms *MockSession) PersistDetectors(detectors []Detector) error {
+	if ms.FctPersistDetectors != nil {
+		return ms.FctPersistDetectors(detectors)
+	}
+	panic("required mock function not implemented")
+}
+
 func (ms *MockSession) PersistNamespaces(namespaces []Namespace) error {
 	if ms.FctPersistNamespaces != nil {
 		return ms.FctPersistNamespaces(namespaces)
@@ -113,9 +121,9 @@ func (ms *MockSession) CacheAffectedNamespacedFeatures(namespacedFeatures []Name
 	panic("required mock function not implemented")
 }
 
-func (ms *MockSession) PersistLayer(hash string, namespaces []Namespace, features []Feature, processedBy Processors) error {
+func (ms *MockSession) PersistLayer(hash string, features []LayerFeature, namespaces []LayerNamespace, detectors []Detector) error {
 	if ms.FctPersistLayer != nil {
-		return ms.FctPersistLayer(hash, namespaces, features, processedBy)
+		return ms.FctPersistLayer(hash, features, namespaces, detectors)
 	}
 	panic("required mock function not implemented")
 }
