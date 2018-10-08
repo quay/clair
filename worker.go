@@ -101,7 +101,7 @@ func processRequests(imageFormat string, toDetect map[string]*processRequest) (m
 }
 
 func getProcessRequest(datastore database.Datastore, req LayerRequest) (preq *processRequest, err error) {
-	layer, ok, err := database.FindLayer(datastore, req.Hash)
+	layer, ok, err := database.FindLayerAndRollback(datastore, req.Hash)
 	if err != nil {
 		return
 	}
@@ -141,16 +141,16 @@ func persistProcessResult(datastore database.Datastore, results map[string]*proc
 
 	features = database.DeduplicateFeatures(features...)
 	namespaces = database.DeduplicateNamespaces(namespaces...)
-	if err := database.PersistNamespaces(datastore, namespaces); err != nil {
+	if err := database.PersistNamespacesAndCommit(datastore, namespaces); err != nil {
 		return err
 	}
 
-	if err := database.PersistFeatures(datastore, features); err != nil {
+	if err := database.PersistFeaturesAndCommit(datastore, features); err != nil {
 		return err
 	}
 
 	for _, layer := range results {
-		if err := database.PersistPartialLayer(datastore, layer.newLayerContent); err != nil {
+		if err := database.PersistPartialLayerAndCommit(datastore, layer.newLayerContent); err != nil {
 			return err
 		}
 	}
@@ -202,7 +202,7 @@ func getProcessResultLayers(results map[string]*processResult) map[string]databa
 }
 
 func isAncestryProcessed(datastore database.Datastore, name string) (bool, error) {
-	ancestry, ok, err := database.FindAncestry(datastore, name)
+	ancestry, ok, err := database.FindAncestryAndRollback(datastore, name)
 	if err != nil || !ok {
 		return ok, err
 	}
@@ -262,17 +262,17 @@ func processAncestry(datastore database.Datastore, name string, layers []databas
 		"layer count":    len(ancestry.Layers),
 	}).Debug("compute ancestry features")
 
-	if err := database.PersistNamespacedFeatures(datastore, ancestryFeatures); err != nil {
+	if err := database.PersistNamespacedFeaturesAndCommit(datastore, ancestryFeatures); err != nil {
 		log.WithField("ancestry", name).WithError(err).Error("could not persist namespaced features for ancestry")
 		return err
 	}
 
-	if err := database.CacheRelatedVulnerability(datastore, ancestryFeatures); err != nil {
+	if err := database.CacheRelatedVulnerabilityAndCommit(datastore, ancestryFeatures); err != nil {
 		log.WithField("ancestry", name).WithError(err).Error("failed to cache feature related vulnerability")
 		return err
 	}
 
-	if err := database.UpsertAncestry(datastore, ancestry); err != nil {
+	if err := database.UpsertAncestryAndCommit(datastore, ancestry); err != nil {
 		log.WithField("ancestry", name).WithError(err).Error("could not upsert ancestry")
 		return err
 	}

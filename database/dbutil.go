@@ -48,9 +48,9 @@ func DeduplicateFeatures(features ...Feature) []Feature {
 	return uniqueFeatures
 }
 
-// PersistPartialLayer wraps session PersistLayer function with begin and
+// PersistPartialLayerAndCommit wraps session PersistLayer function with begin and
 // commit.
-func PersistPartialLayer(datastore Datastore, layer *Layer) error {
+func PersistPartialLayerAndCommit(datastore Datastore, layer *Layer) error {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return err
@@ -64,8 +64,8 @@ func PersistPartialLayer(datastore Datastore, layer *Layer) error {
 	return tx.Commit()
 }
 
-// PersistFeatures wraps session PersistFeatures function with begin and commit.
-func PersistFeatures(datastore Datastore, features []Feature) error {
+// PersistFeaturesAndCommit wraps session PersistFeaturesAndCommit function with begin and commit.
+func PersistFeaturesAndCommit(datastore Datastore, features []Feature) error {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return err
@@ -78,9 +78,9 @@ func PersistFeatures(datastore Datastore, features []Feature) error {
 	return tx.Commit()
 }
 
-// PersistNamespaces wraps session PersistNamespaces function with begin and
-// commit.
-func PersistNamespaces(datastore Datastore, namespaces []Namespace) error {
+// PersistNamespacesAndCommit wraps session PersistNamespaces function with
+// begin and commit.
+func PersistNamespacesAndCommit(datastore Datastore, namespaces []Namespace) error {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return err
@@ -94,8 +94,9 @@ func PersistNamespaces(datastore Datastore, namespaces []Namespace) error {
 	return tx.Commit()
 }
 
-// FindAncestry wraps session FindAncestry function with begin and rollback.
-func FindAncestry(datastore Datastore, name string) (Ancestry, bool, error) {
+// FindAncestryAndRollback wraps session FindAncestry function with begin and
+// rollback.
+func FindAncestryAndRollback(datastore Datastore, name string) (Ancestry, bool, error) {
 	tx, err := datastore.Begin()
 	defer tx.Rollback()
 
@@ -106,8 +107,8 @@ func FindAncestry(datastore Datastore, name string) (Ancestry, bool, error) {
 	return tx.FindAncestry(name)
 }
 
-// FindLayer wraps session FindLayer function with begin and rollback.
-func FindLayer(datastore Datastore, hash string) (layer Layer, ok bool, err error) {
+// FindLayerAndRollback wraps session FindLayer function with begin and rollback.
+func FindLayerAndRollback(datastore Datastore, hash string) (layer Layer, ok bool, err error) {
 	var tx Session
 	if tx, err = datastore.Begin(); err != nil {
 		return
@@ -145,8 +146,8 @@ func GetAncestryFeatures(ancestry Ancestry) []NamespacedFeature {
 	return DeduplicateNamespacedFeatures(features)
 }
 
-// UpsertAncestry wraps session UpsertAncestry function with begin and commit.
-func UpsertAncestry(datastore Datastore, ancestry Ancestry) error {
+// UpsertAncestryAndCommit wraps session UpsertAncestry function with begin and commit.
+func UpsertAncestryAndCommit(datastore Datastore, ancestry Ancestry) error {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return err
@@ -164,9 +165,9 @@ func UpsertAncestry(datastore Datastore, ancestry Ancestry) error {
 	return nil
 }
 
-// PersistNamespacedFeatures wraps session PersistNamespacedFeatures function
+// PersistNamespacedFeaturesAndCommit wraps session PersistNamespacedFeatures function
 // with begin and commit.
-func PersistNamespacedFeatures(datastore Datastore, features []NamespacedFeature) error {
+func PersistNamespacedFeaturesAndCommit(datastore Datastore, features []NamespacedFeature) error {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return err
@@ -184,9 +185,9 @@ func PersistNamespacedFeatures(datastore Datastore, features []NamespacedFeature
 	return nil
 }
 
-// CacheRelatedVulnerability wraps session CacheAffectedNamespacedFeatures
+// CacheRelatedVulnerabilityAndCommit wraps session CacheAffectedNamespacedFeatures
 // function with begin and commit.
-func CacheRelatedVulnerability(datastore Datastore, features []NamespacedFeature) error {
+func CacheRelatedVulnerabilityAndCommit(datastore Datastore, features []NamespacedFeature) error {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return err
