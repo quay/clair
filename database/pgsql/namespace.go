@@ -16,15 +16,14 @@ package pgsql
 
 import (
 	"database/sql"
-	"errors"
 	"sort"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
-var (
-	errNamespaceNotFound = errors.New("Requested Namespace is not in database")
+const (
+	searchNamespaceID = `SELECT id FROM Namespace WHERE name = $1 AND version_format = $2`
 )
 
 // PersistNamespaces soi namespaces into database.

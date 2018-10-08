@@ -22,12 +22,12 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/featurefmt"
 	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
-	"github.com/coreos/clair/pkg/strutil"
 
 	// Register the required detectors.
 	_ "github.com/coreos/clair/ext/featurefmt/dpkg"
@@ -58,55 +58,27 @@ type mockSession struct {
 func copyDatastore(md *mockDatastore) mockDatastore {
 	layers := map[string]database.Layer{}
 	for k, l := range md.layers {
-		features := append([]database.Feature(nil), l.Features...)
-		namespaces := append([]database.Namespace(nil), l.Namespaces...)
-		listers := append([]string(nil), l.ProcessedBy.Listers...)
-		detectors := append([]string(nil), l.ProcessedBy.Detectors...)
 		layers[k] = database.Layer{
-			LayerMetadata: database.LayerMetadata{
-				Hash: l.Hash,
-				ProcessedBy: database.Processors{
-					Listers:   listers,
-					Detectors: detectors,
-				},
-			},
-			Features:   features,
-			Namespaces: namespaces,
+			Hash:       l.Hash,
+			By:         append([]database.Detector{}, l.By...),
+			Features:   append([]database.LayerFeature{}, l.Features...),
+			Namespaces: append([]database.LayerNamespace{}, l.Namespaces...),
 		}
 	}
 
 	ancestry := map[string]database.Ancestry{}
 	for k, a := range md.ancestry {
 		ancestryLayers := []database.AncestryLayer{}
-		layers := []database.LayerMetadata{}
-
 		for _, layer := range a.Layers {
-			layers = append(layers, database.LayerMetadata{
-				Hash: layer.Hash,
-				ProcessedBy: database.Processors{
-					Detectors: append([]string(nil), layer.LayerMetadata.ProcessedBy.Detectors...),
-					Listers:   append([]string(nil), layer.LayerMetadata.ProcessedBy.Listers...),
-				},
-			})
-
 			ancestryLayers = append(ancestryLayers, database.AncestryLayer{
-				LayerMetadata: database.LayerMetadata{
-					Hash: layer.Hash,
-					ProcessedBy: database.Processors{
-						Detectors: append([]string(nil), layer.LayerMetadata.ProcessedBy.Detectors...),
-						Listers:   append([]string(nil), layer.LayerMetadata.ProcessedBy.Listers...),
-					},
-				},
-				DetectedFeatures: append([]database.NamespacedFeature(nil), layer.DetectedFeatures...),
+				Hash:     layer.Hash,
+				Features: append([]database.AncestryFeature{}, layer.Features...),
 			})
 		}
 
 		ancestry[k] = database.Ancestry{
-			Name: a.Name,
-			ProcessedBy: database.Processors{
-				Detectors: append([]string(nil), a.ProcessedBy.Detectors...),
-				Listers:   append([]string(nil), a.ProcessedBy.Listers...),
-			},
+			Name:   a.Name,
+			By:     append([]database.Detector{}, a.By...),
 			Layers: ancestryLayers,
 		}
 	}
@@ -125,6 +97,7 @@ func copyDatastore(md *mockDatastore) mockDatastore {
 	for k, f := range md.namespacedFeatures {
 		namespacedFeatures[k] = f
 	}
+
 	return mockDatastore{
 		layers:             layers,
 		ancestry:           ancestry,
@@ -194,10 +167,7 @@ func newMockDatastore() *mockDatastore {
 				return errSessionDone
 			}
 			for _, n := range ns {
-				_, ok := session.copy.namespaces[n.Name]
-				if !ok {
-					session.copy.namespaces[n.Name] = n
-				}
+				session.copy.namespaces[NamespaceKey(&n)] = n
 			}
 			return nil
 		}
@@ -207,63 +177,36 @@ func newMockDatastore() *mockDatastore {
 				return errSessionDone
 			}
 			for _, f := range fs {
-				key := FeatureKey(&f)
-				_, ok := session.copy.features[key]
-				if !ok {
-					session.copy.features[key] = f
-				}
+				session.copy.features[FeatureKey(&f)] = f
 			}
+
 			return nil
 		}
 
-		session.FctPersistLayer = func(hash string, namespaces []database.Namespace, features []database.Feature, processedBy database.Processors) error {
+		session.FctPersistLayer = func(hash string, features []database.LayerFeature, namespaces []database.LayerNamespace, by []database.Detector) error {
 			if session.terminated {
 				return errSessionDone
 			}
 
-			// update the layer
-			_, ok := session.copy.layers[hash]
-			if !ok {
-				session.copy.layers[hash] = database.Layer{}
-			}
-
-			layer, ok := session.copy.layers[hash]
-			if !ok {
-				return errors.New("Failed to insert layer")
-			}
-
-			layerFeatures := map[string]database.Feature{}
-			layerNamespaces := map[string]database.Namespace{}
-			for _, f := range layer.Features {
-				layerFeatures[FeatureKey(&f)] = f
-			}
-			for _, n := range layer.Namespaces {
-				layerNamespaces[n.Name] = n
-			}
-
-			// ensure that all the namespaces, features are in the database
 			for _, ns := range namespaces {
-				if _, ok := session.copy.namespaces[ns.Name]; !ok {
-					return errors.New("Namespaces should be in the database")
-				}
-				if _, ok := layerNamespaces[ns.Name]; !ok {
-					layer.Namespaces = append(layer.Namespaces, ns)
-					layerNamespaces[ns.Name] = ns
+				if _, ok := session.copy.namespaces[NamespaceKey(&ns.Namespace)]; !ok {
+					panic("")
 				}
 			}
 
 			for _, f := range features {
-				if _, ok := session.copy.features[FeatureKey(&f)]; !ok {
-					return errors.New("Namespaces should be in the database")
-				}
-				if _, ok := layerFeatures[FeatureKey(&f)]; !ok {
-					layer.Features = append(layer.Features, f)
-					layerFeatures[FeatureKey(&f)] = f
+				if _, ok := session.copy.features[FeatureKey(&f.Feature)]; !ok {
+					panic("")
 				}
 			}
 
-			layer.ProcessedBy.Detectors = append(layer.ProcessedBy.Detectors, strutil.CompareStringLists(processedBy.Detectors, layer.ProcessedBy.Detectors)...)
-			layer.ProcessedBy.Listers = append(layer.ProcessedBy.Listers, strutil.CompareStringLists(processedBy.Listers, layer.ProcessedBy.Listers)...)
+			layer, _ := session.copy.layers[hash]
+			database.MergeLayers(&layer, &database.Layer{
+				Hash:       hash,
+				By:         by,
+				Namespaces: namespaces,
+				Features:   features,
+			})
 
 			session.copy.layers[hash] = layer
 			return nil
@@ -274,11 +217,12 @@ func newMockDatastore() *mockDatastore {
 				return errSessionDone
 			}
 
-			features := getNamespacedFeatures(ancestry.Layers)
-			// ensure features are in the database
-			for _, f := range features {
-				if _, ok := session.copy.namespacedFeatures[NamespacedFeatureKey(&f)]; !ok {
-					return errors.New("namespaced feature not in db")
+			// ensure the namespaces features are in the code base
+			for _, l := range ancestry.Layers {
+				for _, f := range l.GetFeatures() {
+					if _, ok := session.copy.namespacedFeatures[NamespacedFeatureKey(&f)]; !ok {
+						panic("")
+					}
 				}
 			}
 
@@ -288,6 +232,14 @@ func newMockDatastore() *mockDatastore {
 
 		session.FctPersistNamespacedFeatures = func(namespacedFeatures []database.NamespacedFeature) error {
 			for i, f := range namespacedFeatures {
+				if _, ok := session.copy.features[FeatureKey(&f.Feature)]; !ok {
+					panic("")
+				}
+
+				if _, ok := session.copy.namespaces[NamespaceKey(&f.Namespace)]; !ok {
+					panic("")
+				}
+
 				session.copy.namespacedFeatures[NamespacedFeatureKey(&f)] = namespacedFeatures[i]
 			}
 			return nil
@@ -304,10 +256,7 @@ func newMockDatastore() *mockDatastore {
 }
 
 func TestMain(m *testing.M) {
-	Processors = database.Processors{
-		Listers:   featurefmt.ListListers(),
-		Detectors: featurens.ListDetectors(),
-	}
+	EnabledDetectors = append(featurefmt.ListListers(), featurens.ListDetectors()...)
 	m.Run()
 }
 
@@ -315,11 +264,16 @@ func FeatureKey(f *database.Feature) string {
 	return strings.Join([]string{f.Name, f.VersionFormat, f.Version}, "__")
 }
 
+func NamespaceKey(ns *database.Namespace) string {
+	return strings.Join([]string{ns.Name, ns.VersionFormat}, "__")
+}
+
 func NamespacedFeatureKey(f *database.NamespacedFeature) string {
 	return strings.Join([]string{f.Name, f.Namespace.Name}, "__")
 }
 
 func TestProcessAncestryWithDistUpgrade(t *testing.T) {
+	// TODO(sidac): Change to use table driven tests.
 	// Create the list of Features that should not been upgraded from one layer to another.
 	nonUpgradedFeatures := []database.Feature{
 		{Name: "libtext-wrapi18n-perl", Version: "0.06-7"},
@@ -358,7 +312,12 @@ func TestProcessAncestryWithDistUpgrade(t *testing.T) {
 	assert.Nil(t, ProcessAncestry(datastore, "Docker", "Mock", layers))
 
 	// check the ancestry features
-	features := getNamespacedFeatures(datastore.ancestry["Mock"].Layers)
+	features := []database.AncestryFeature{}
+	for i, l := range datastore.ancestry["Mock"].Layers {
+		assert.Equal(t, layers[i].Hash, l.Hash)
+		features = append(features, l.Features...)
+	}
+
 	assert.Len(t, features, 74)
 	for _, f := range features {
 		if _, ok := nonUpgradedMap[f.Feature]; ok {
@@ -367,12 +326,6 @@ func TestProcessAncestryWithDistUpgrade(t *testing.T) {
 			assert.Equal(t, "debian:8", f.Namespace.Name)
 		}
 	}
-
-	assert.Equal(t, []database.LayerMetadata{
-		{Hash: "blank"},
-		{Hash: "wheezy"},
-		{Hash: "jessie"},
-	}, datastore.ancestry["Mock"].Layers)
 }
 
 func TestProcessLayers(t *testing.T) {
@@ -404,8 +357,7 @@ func TestProcessLayers(t *testing.T) {
 
 	// Ensure each layer has expected namespaces and features detected
 	if blank, ok := datastore.layers["blank"]; ok {
-		assert.Equal(t, blank.ProcessedBy.Detectors, Processors.Detectors)
-		assert.Equal(t, blank.ProcessedBy.Listers, Processors.Listers)
+		database.AssertDetectorsEqual(t, EnabledDetectors, blank.By)
 		assert.Len(t, blank.Namespaces, 0)
 		assert.Len(t, blank.Features, 0)
 	} else {
@@ -414,9 +366,11 @@ func TestProcessLayers(t *testing.T) {
 	}
 
 	if wheezy, ok := datastore.layers["wheezy"]; ok {
-		assert.Equal(t, wheezy.ProcessedBy.Detectors, Processors.Detectors)
-		assert.Equal(t, wheezy.ProcessedBy.Listers, Processors.Listers)
-		assert.Equal(t, wheezy.Namespaces, []database.Namespace{{Name: "debian:7", VersionFormat: dpkg.ParserName}})
+		database.AssertDetectorsEqual(t, EnabledDetectors, wheezy.By)
+		assert.Equal(t, []database.LayerNamespace{
+			{database.Namespace{"debian:7", dpkg.ParserName}, database.NewNamespaceDetector("os-release", "1.0")},
+		}, wheezy.Namespaces)
+
 		assert.Len(t, wheezy.Features, 52)
 	} else {
 		assert.Fail(t, "wheezy is not stored")
@@ -424,9 +378,10 @@ func TestProcessLayers(t *testing.T) {
 	}
 
 	if jessie, ok := datastore.layers["jessie"]; ok {
-		assert.Equal(t, jessie.ProcessedBy.Detectors, Processors.Detectors)
-		assert.Equal(t, jessie.ProcessedBy.Listers, Processors.Listers)
-		assert.Equal(t, jessie.Namespaces, []database.Namespace{{Name: "debian:8", VersionFormat: dpkg.ParserName}})
+		database.AssertDetectorsEqual(t, EnabledDetectors, jessie.By)
+		assert.Equal(t, []database.LayerNamespace{
+			{database.Namespace{"debian:8", dpkg.ParserName}, database.NewNamespaceDetector("os-release", "1.0")},
+		}, jessie.Namespaces)
 		assert.Len(t, jessie.Features, 74)
 	} else {
 		assert.Fail(t, "jessie is not stored")
@@ -434,157 +389,124 @@ func TestProcessLayers(t *testing.T) {
 	}
 }
 
-// TestUpgradeClair checks if a clair is upgraded and certain ancestry's
-// features should not change. We assume that Clair should only upgrade
-func TestClairUpgrade(t *testing.T) {
-	_, f, _, _ := runtime.Caller(0)
-	testDataPath := filepath.Join(filepath.Dir(f)) + "/testdata/DistUpgrade/"
-
-	datastore := newMockDatastore()
-
-	// suppose there are two ancestries.
-	layers := []LayerRequest{
-		{Hash: "blank", Path: testDataPath + "blank.tar.gz"},
-		{Hash: "wheezy", Path: testDataPath + "wheezy.tar.gz"},
-		{Hash: "jessie", Path: testDataPath + "jessie.tar.gz"},
+func getFeatures(a database.Ancestry) []database.AncestryFeature {
+	features := []database.AncestryFeature{}
+	for _, l := range a.Layers {
+		features = append(features, l.Features...)
 	}
 
-	layers2 := []LayerRequest{
-		{Hash: "blank", Path: testDataPath + "blank.tar.gz"},
-		{Hash: "wheezy", Path: testDataPath + "wheezy.tar.gz"},
-	}
-
-	// Suppose user scan an ancestry with an old instance of Clair.
-	Processors = database.Processors{
-		Detectors: []string{"os-release"},
-		Listers:   []string{"rpm"},
-	}
-
-	assert.Nil(t, ProcessAncestry(datastore, "Docker", "Mock", layers))
-	assert.Len(t, getNamespacedFeatures(datastore.ancestry["Mock"].Layers), 0)
-
-	assert.Nil(t, ProcessAncestry(datastore, "Docker", "Mock2", layers2))
-	assert.Len(t, getNamespacedFeatures(datastore.ancestry["Mock2"].Layers), 0)
-
-	// Clair is upgraded to use a new namespace detector. The expected
-	// behavior is that all layers will be rescanned with "apt-sources" and
-	// the ancestry's features are recalculated.
-	Processors = database.Processors{
-		Detectors: []string{"os-release", "apt-sources"},
-		Listers:   []string{"rpm"},
-	}
-
-	// Even though Clair processors are upgraded, the ancestry's features should
-	// not be upgraded without posting the ancestry to Clair again.
-	assert.Nil(t, ProcessAncestry(datastore, "Docker", "Mock", layers))
-	assert.Len(t, getNamespacedFeatures(datastore.ancestry["Mock"].Layers), 0)
-
-	// Clair is upgraded to use a new feature lister. The expected behavior is
-	// that all layers will be rescanned with "dpkg" and the ancestry's features
-	// are invalidated and recalculated.
-	Processors = database.Processors{
-		Detectors: []string{"os-release", "apt-sources"},
-		Listers:   []string{"rpm", "dpkg"},
-	}
-
-	assert.Nil(t, ProcessAncestry(datastore, "Docker", "Mock", layers))
-	assert.Len(t, getNamespacedFeatures(datastore.ancestry["Mock"].Layers), 74)
-	assert.Nil(t, ProcessAncestry(datastore, "Docker", "Mock2", layers2))
-	assert.Len(t, getNamespacedFeatures(datastore.ancestry["Mock2"].Layers), 52)
-
-	// check the namespaces are correct
-	for _, f := range getNamespacedFeatures(datastore.ancestry["Mock"].Layers) {
-		if !assert.NotEqual(t, database.Namespace{}, f.Namespace) {
-			assert.Fail(t, "Every feature should have a namespace attached")
-		}
-	}
-
-	for _, f := range getNamespacedFeatures(datastore.ancestry["Mock2"].Layers) {
-		if !assert.NotEqual(t, database.Namespace{}, f.Namespace) {
-			assert.Fail(t, "Every feature should have a namespace attached")
-		}
-	}
+	return features
 }
 
-// TestMultipleNamespaces tests computing ancestry features
 func TestComputeAncestryFeatures(t *testing.T) {
 	vf1 := "format 1"
 	vf2 := "format 2"
 
-	ns1a := database.Namespace{
-		Name:          "namespace 1:a",
-		VersionFormat: vf1,
+	nd1 := database.NewNamespaceDetector("apk", "1.0")
+	fd1 := database.NewFeatureDetector("fd1", "1.0")
+	// this detector only scans one layer with one extra feature, this one
+	// should be omitted.
+	fd2 := database.NewFeatureDetector("fd2", "1.0")
+
+	ns1a := database.LayerNamespace{
+		database.Namespace{
+			Name:          "namespace 1:a",
+			VersionFormat: vf1,
+		}, nd1,
 	}
 
-	ns1b := database.Namespace{
-		Name:          "namespace 1:b",
-		VersionFormat: vf1,
-	}
+	ns1b := database.LayerNamespace{
+		database.Namespace{
+			Name:          "namespace 1:b",
+			VersionFormat: vf1,
+		}, nd1}
 
-	ns2a := database.Namespace{
-		Name:          "namespace 2:a",
-		VersionFormat: vf2,
-	}
+	ns2a := database.LayerNamespace{
+		database.Namespace{
+			Name:          "namespace 2:a",
+			VersionFormat: vf2,
+		}, nd1}
 
-	ns2b := database.Namespace{
-		Name:          "namespace 2:b",
-		VersionFormat: vf2,
-	}
+	ns2b := database.LayerNamespace{
+		database.Namespace{
+			Name:          "namespace 2:b",
+			VersionFormat: vf2,
+		}, nd1}
 
-	f1 := database.Feature{
-		Name:          "feature 1",
-		Version:       "0.1",
-		VersionFormat: vf1,
-	}
+	f1 := database.LayerFeature{
+		database.Feature{
+			Name:          "feature 1",
+			Version:       "0.1",
+			VersionFormat: vf1,
+		}, fd1}
 
-	f2 := database.Feature{
+	f2 := database.LayerFeature{database.Feature{
 		Name:          "feature 2",
 		Version:       "0.2",
 		VersionFormat: vf1,
-	}
+	}, fd2}
 
-	f3 := database.Feature{
-		Name:          "feature 1",
-		Version:       "0.3",
-		VersionFormat: vf2,
-	}
+	f3 := database.LayerFeature{
+		database.Feature{
+			Name:          "feature 1",
+			Version:       "0.3",
+			VersionFormat: vf2,
+		}, fd1}
 
-	f4 := database.Feature{
-		Name:          "feature 2",
-		Version:       "0.3",
-		VersionFormat: vf2,
+	f4 := database.LayerFeature{
+		database.Feature{
+			Name:          "feature 2",
+			Version:       "0.3",
+			VersionFormat: vf2,
+		}, fd1}
+
+	f5 := database.LayerFeature{
+		database.Feature{
+			Name:          "feature 3",
+			Version:       "0.3",
+			VersionFormat: vf2,
+		},
+		fd2,
 	}
 
 	// Suppose Clair is watching two files for namespaces one containing ns1
 	// changes e.g. os-release and the other one containing ns2 changes e.g.
 	// node.
-	blank := database.Layer{LayerMetadata: database.LayerMetadata{Hash: "blank"}}
+	blank := database.Layer{
+		Hash: "blank",
+		By:   []database.Detector{nd1, fd1, fd1},
+	}
 	initNS1a := database.Layer{
-		LayerMetadata: database.LayerMetadata{Hash: "init ns1a"},
-		Namespaces:    []database.Namespace{ns1a},
-		Features:      []database.Feature{f1, f2},
+		Hash:       "initNS1a",
+		By:         []database.Detector{nd1, fd1, fd1},
+		Namespaces: []database.LayerNamespace{ns1a},
+		Features:   []database.LayerFeature{f1, f2},
 	}
 
 	upgradeNS2b := database.Layer{
-		LayerMetadata: database.LayerMetadata{Hash: "upgrade ns2b"},
-		Namespaces:    []database.Namespace{ns2b},
+		Hash:       "upgradeNS2b",
+		By:         []database.Detector{nd1, fd1, fd1},
+		Namespaces: []database.LayerNamespace{ns2b},
 	}
 
 	upgradeNS1b := database.Layer{
-		LayerMetadata: database.LayerMetadata{Hash: "upgrade ns1b"},
-		Namespaces:    []database.Namespace{ns1b},
-		Features:      []database.Feature{f1, f2},
+		Hash:       "upgradeNS1b",
+		By:         []database.Detector{nd1, fd1, fd1, fd2},
+		Namespaces: []database.LayerNamespace{ns1b},
+		Features:   []database.LayerFeature{f1, f2, f5},
 	}
 
 	initNS2a := database.Layer{
-		LayerMetadata: database.LayerMetadata{Hash: "init ns2a"},
-		Namespaces:    []database.Namespace{ns2a},
-		Features:      []database.Feature{f3, f4},
+		Hash:       "initNS2a",
+		By:         []database.Detector{nd1, fd1, fd1},
+		Namespaces: []database.LayerNamespace{ns2a},
+		Features:   []database.LayerFeature{f3, f4},
 	}
 
 	removeF2 := database.Layer{
-		LayerMetadata: database.LayerMetadata{Hash: "remove f2"},
-		Features:      []database.Feature{f1},
+		Hash:     "removeF2",
+		By:       []database.Detector{nd1, fd1, fd1},
+		Features: []database.LayerFeature{f1},
 	}
 
 	// blank -> ns1:a, f1 f2 (init)
@@ -597,44 +519,65 @@ func TestComputeAncestryFeatures(t *testing.T) {
 	// -> blank (empty)
 
 	layers := []database.Layer{
-		blank,
-		initNS1a,
-		removeF2,
-		initNS2a,
-		upgradeNS2b,
-		blank,
-		upgradeNS1b,
-		removeF2,
+		blank,       // empty
+		initNS1a,    // namespace: NS1a, features: f1, f2
+		removeF2,    // namespace:     , features: f1
+		initNS2a,    // namespace: NS2a, features: f3, f4 ( under NS2a )
+		upgradeNS2b, // namespace: NS2b, ( f3, f4 are now under NS2b )
+		blank,       // empty
+		upgradeNS1b, // namespace: NS1b, ( f1, f2 are now under NS1b, and they are introduced in this layer. )
+		removeF2,    // namespace:     , features: f1
 		blank,
 	}
 
-	expected := map[database.NamespacedFeature]bool{
+	expected := []database.AncestryLayer{
 		{
-			Feature:   f1,
-			Namespace: ns1a,
-		}: false,
+			"blank",
+			[]database.AncestryFeature{},
+		},
 		{
-			Feature:   f3,
-			Namespace: ns2a,
-		}: false,
+			"initNS1a",
+			[]database.AncestryFeature{{database.NamespacedFeature{f1.Feature, ns1a.Namespace}, f1.By, ns1a.By}},
+		},
 		{
-			Feature:   f4,
-			Namespace: ns2a,
-		}: false,
+			"removeF2",
+			[]database.AncestryFeature{},
+		},
+		{
+			"initNS2a",
+			[]database.AncestryFeature{
+				{database.NamespacedFeature{f3.Feature, ns2a.Namespace}, f3.By, ns2a.By},
+				{database.NamespacedFeature{f4.Feature, ns2a.Namespace}, f4.By, ns2a.By},
+			},
+		},
+		{
+			"upgradeNS2b",
+			[]database.AncestryFeature{},
+		},
+		{
+			"blank",
+			[]database.AncestryFeature{},
+		},
+		{
+			"upgradeNS1b",
+			[]database.AncestryFeature{},
+		},
+		{
+			"removeF2",
+			[]database.AncestryFeature{},
+		},
+		{
+			"blank",
+			[]database.AncestryFeature{},
+		},
 	}
 
-	ancestryLayers, err := computeAncestryLayers(layers, database.Processors{})
-	assert.Nil(t, err)
-	features := getNamespacedFeatures(ancestryLayers)
-	for _, f := range features {
-		if assert.Contains(t, expected, f) {
-			if assert.False(t, expected[f]) {
-				expected[f] = true
-			}
-		}
-	}
+	expectedDetectors := []database.Detector{nd1, fd1}
+	ancestryLayers, detectors, err := computeAncestryLayers(layers)
+	require.Nil(t, err)
 
-	for f, visited := range expected {
-		assert.True(t, visited, "expected feature is missing : "+f.Namespace.Name+":"+f.Name)
+	database.AssertDetectorsEqual(t, expectedDetectors, detectors)
+	for i := range expected {
+		database.AssertAncestryLayerEqual(t, &expected[i], &ancestryLayers[i])
 	}
 }

@@ -23,6 +23,15 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
+const (
+	searchKeyValue = `SELECT value FROM KeyValue WHERE key = $1`
+	upsertKeyValue = `
+			INSERT INTO KeyValue(key, value) 
+				VALUES ($1, $2) 
+				ON CONFLICT ON CONSTRAINT keyvalue_key_key 
+				DO UPDATE SET key=$1, value=$2`
+)
+
 func (tx *pgSession) UpdateKeyValue(key, value string) (err error) {
 	if key == "" || value == "" {
 		log.Warning("could not insert a flag which has an empty name or value")

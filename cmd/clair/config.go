@@ -26,8 +26,6 @@ import (
 	"github.com/coreos/clair"
 	"github.com/coreos/clair/api"
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/featurefmt"
-	"github.com/coreos/clair/ext/featurens"
 	"github.com/coreos/clair/ext/notification"
 	"github.com/coreos/clair/ext/vulnsrc"
 	"github.com/coreos/clair/pkg/pagination"
@@ -47,7 +45,6 @@ type File struct {
 type Config struct {
 	Database database.RegistrableComponentConfig
 	Updater  *clair.UpdaterConfig
-	Worker   *clair.WorkerConfig
 	Notifier *notification.Config
 	API      *api.Config
 }
@@ -61,10 +58,6 @@ func DefaultConfig() Config {
 		Updater: &clair.UpdaterConfig{
 			EnabledUpdaters: vulnsrc.ListUpdaters(),
 			Interval:        1 * time.Hour,
-		},
-		Worker: &clair.WorkerConfig{
-			EnabledDetectors: featurens.ListDetectors(),
-			EnabledListers:   featurefmt.ListListers(),
 		},
 		API: &api.Config{
 			HealthAddr: "0.0.0.0:6061",

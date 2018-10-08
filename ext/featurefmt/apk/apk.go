@@ -29,7 +29,7 @@ import (
 )
 
 func init() {
-	featurefmt.RegisterLister("apk", dpkg.ParserName, &lister{})
+	featurefmt.RegisterLister("apk", "1.0", &lister{})
 }
 
 type lister struct{}

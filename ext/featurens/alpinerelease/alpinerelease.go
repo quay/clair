@@ -36,7 +36,7 @@ const (
 var versionRegexp = regexp.MustCompile(`^(\d)+\.(\d)+\.(\d)+$`)
 
 func init() {
-	featurens.RegisterDetector("alpine-release", &detector{})
+	featurens.RegisterDetector("alpine-release", "1.0", &detector{})
 }
 
 type detector struct{}

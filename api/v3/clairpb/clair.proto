@@ -44,17 +44,42 @@ message Vulnerability {
   repeated Feature affected_versions = 8;
 }
 
+message Detector {
+  enum DType {
+    DETECTOR_D_TYPE_INVALID = 0;
+    DETECTOR_D_TYPE_NAMESPACE = 1;
+    DETECTOR_D_TYPE_FEATURE = 2;
+  }
+  // The name of the detector.
+  string name = 1;
+  // The version of the detector.
+  string version = 2;
+  // The type of the detector.
+  DType dtype = 3;
+}
+
+message Namespace {
+  // The name of the namespace.
+  string name = 1;
+  // The detector used to detect the namespace. This only exists when present in
+  // an Ancestry Feature.
+  Detector detector = 2;
+}
+
 message Feature {
   // The name of the feature.
   string name = 1;
-  // The name of the namespace in which the feature is detected.
-  string namespace_name = 2;
+  // The namespace in which the feature is detected.
+  Namespace namespace = 2;
   // The specific version of this feature.
   string version = 3;
   // The format used to parse version numbers for the feature.
   string version_format = 4;
+  // The detector used to detect this feature. This only exists when present in
+  // an Ancestry.
+  Detector detector = 5;
   // The list of vulnerabilities that affect the feature.
-  repeated Vulnerability vulnerabilities = 5;
+  repeated Vulnerability vulnerabilities = 6;
 }
 
 message Layer {
@@ -77,12 +102,10 @@ service AncestryService {
 }
 
 message ClairStatus {
-  // The configured list of feature listers used to scan an ancestry.
-  repeated string listers = 1;
-  // The configured list of namespace detectors used to scan an ancestry.
-  repeated string detectors = 2;
+  // The implemented detectors in this Clair instance
+  repeated Detector detectors = 1;
   // The time at which the updater last ran.
-  google.protobuf.Timestamp last_update_time = 3;
+  google.protobuf.Timestamp last_update_time = 2;
 }
 
 message GetAncestryRequest {
@@ -100,12 +123,11 @@ message GetAncestryResponse {
   message Ancestry {
     // The name of the desired ancestry.
     string name = 1;
-    // The configured list of feature listers used to scan this ancestry.
-    repeated string scanned_listers = 4;
-    // The configured list of namespace detectors used to scan an ancestry.
-    repeated string scanned_detectors = 5;
+    // The detectors used to scan this Ancestry. It may not be the current set
+    // of detectors in clair status.
+    repeated Detector detectors = 2;
     // The list of layers along with detected features in each.
-    repeated AncestryLayer layers = 6;
+    repeated AncestryLayer layers = 3;
   }
   // The ancestry requested.
   Ancestry ancestry = 1;

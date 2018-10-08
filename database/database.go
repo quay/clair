@@ -33,6 +33,14 @@ var (
 	// fails (i.e. when an entity which is supposed to be unique is detected
 	// twice)
 	ErrInconsistent = errors.New("database: inconsistent database")
+
+	// ErrInvalidParameters is an error that occurs when the parameters are not valid.
+	ErrInvalidParameters = errors.New("database: parameters are not valid")
+
+	// ErrMissingEntities is an error that occurs when an associated immutable
+	// entity doesn't exist in the database. This error can indicate a wrong
+	// implementation or corrupted database.
+	ErrMissingEntities = errors.New("database: associated immutable entities are missing in the database")
 )
 
 // RegistrableComponentConfig is a configuration block that can be used to
@@ -99,6 +107,9 @@ type Session interface {
 	// namespaced features. If the ancestry is not found, return false.
 	FindAncestry(name string) (ancestry Ancestry, found bool, err error)
 
+	// PersistDetector inserts a slice of detectors if not in the database.
+	PersistDetectors(detectors []Detector) error
+
 	// PersistFeatures inserts a set of features if not in the database.
 	PersistFeatures(features []Feature) error
 
@@ -120,12 +131,10 @@ type Session interface {
 	// PersistNamespaces inserts a set of namespaces if not in the database.
 	PersistNamespaces([]Namespace) error
 
-	// PersistLayer persists a layer's content in the database. The given
-	// namespaces and features can be partial content of this layer.
+	// PersistLayer appends a layer's content in the database.
 	//
-	// The layer, namespaces and features are expected to be already existing
-	// in the database.
-	PersistLayer(hash string, namespaces []Namespace, features []Feature, processedBy Processors) error
+	// If any feature, namespace, or detector is not in the database, it returns not found error.
+	PersistLayer(hash string, features []LayerFeature, namespaces []LayerNamespace, detectedBy []Detector) error
 
 	// FindLayer returns a layer with all detected features and
 	// namespaces.
@@ -157,8 +166,8 @@ type Session interface {
 	// affected ancestries affected by old or new vulnerability.
 	//
 	// Because the number of affected ancestries maybe large, they are paginated
-	// and their pages are specified by the paination token, which, if empty, are
-	// always considered first page.
+	// and their pages are specified by the pagination token, which should be
+	// considered first page when it's empty.
 	FindVulnerabilityNotification(name string, limit int, oldVulnerabilityPage pagination.Token, newVulnerabilityPage pagination.Token) (noti VulnerabilityNotificationWithVulnerable, found bool, err error)
 
 	// MarkNotificationAsRead marks a Notification as notified now, assuming

@@ -52,7 +52,7 @@ func TestPersistNamespacedFeatures(t *testing.T) {
 
 	// existing features
 	f1 := database.Feature{
-		Name:          "wechat",
+		Name:          "ourchat",
 		Version:       "0.5",
 		VersionFormat: "dpkg",
 	}
@@ -211,27 +211,6 @@ func listFeatures(t *testing.T, tx *pgSession) []database.Feature {
 		fs = append(fs, f)
 	}
 	return fs
-}
-
-func assertFeaturesEqual(t *testing.T, expected []database.Feature, actual []database.Feature) bool {
-	if assert.Len(t, actual, len(expected)) {
-		has := map[database.Feature]bool{}
-		for _, nf := range expected {
-			has[nf] = false
-		}
-
-		for _, nf := range actual {
-			has[nf] = true
-		}
-
-		for nf, visited := range has {
-			if !assert.True(t, visited, nf.Name+" is expected") {
-				return false
-			}
-			return true
-		}
-	}
-	return false
 }
 
 func assertNamespacedFeatureEqual(t *testing.T, expected []database.NamespacedFeature, actual []database.NamespacedFeature) bool {

@@ -28,3 +28,5 @@ import:
   - assert
 - package: gopkg.in/yaml.v2
 - package: github.com/cockroachdb/cmux
+- package: github.com/deckarep/golang-set
+  version: ^1.7.1

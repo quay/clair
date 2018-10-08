@@ -23,6 +23,14 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
+const (
+	soiLock           = `INSERT INTO lock(name, owner, until) VALUES ($1, $2, $3)`
+	searchLock        = `SELECT owner, until FROM Lock WHERE name = $1`
+	updateLock        = `UPDATE Lock SET until = $3 WHERE name = $1 AND owner = $2`
+	removeLock        = `DELETE FROM Lock WHERE name = $1 AND owner = $2`
+	removeLockExpired = `DELETE FROM LOCK WHERE until < CURRENT_TIMESTAMP`
+)
+
 var (
 	errLockNotFound = errors.New("lock is not in database")
 )

@@ -31,9 +31,8 @@ import (
 )
 
 var (
-	listersM             sync.RWMutex
-	listers              = make(map[string]Lister)
-	versionfmtListerName = make(map[string][]string)
+	listersM sync.RWMutex
+	listers  = make(map[string]lister)
 )
 
 // Lister represents an ability to list the features present in an image layer.
@@ -48,13 +47,19 @@ type Lister interface {
 	RequiredFilenames() []string
 }
 
+type lister struct {
+	Lister
+
+	info database.Detector
+}
+
 // RegisterLister makes a Lister available by the provided name.
 //
 // If called twice with the same name, the name is blank, or if the provided
 // Lister is nil, this function panics.
-func RegisterLister(name string, versionfmt string, l Lister) {
-	if name == "" {
-		panic("featurefmt: could not register a Lister with an empty name")
+func RegisterLister(name string, version string, l Lister) {
+	if name == "" || version == "" {
+		panic("featurefmt: could not register a Lister with an empty name or version")
 	}
 	if l == nil {
 		panic("featurefmt: could not register a nil Lister")
@@ -67,51 +72,65 @@ func RegisterLister(name string, versionfmt string, l Lister) {
 		panic("featurefmt: RegisterLister called twice for " + name)
 	}
 
-	listers[name] = l
-	versionfmtListerName[versionfmt] = append(versionfmtListerName[versionfmt], name)
+	listers[name] = lister{l, database.NewFeatureDetector(name, version)}
 }
 
 // ListFeatures produces the list of Features in an image layer using
 // every registered Lister.
-func ListFeatures(files tarutil.FilesMap, listerNames []string) ([]database.Feature, error) {
+func ListFeatures(files tarutil.FilesMap, toUse []database.Detector) ([]database.LayerFeature, error) {
 	listersM.RLock()
 	defer listersM.RUnlock()
 
-	var totalFeatures []database.Feature
+	features := []database.LayerFeature{}
+	for _, d := range toUse {
+		// Only use the detector with the same type
+		if d.DType != database.FeatureDetectorType {
+			continue
+		}
 
-	for _, name := range listerNames {
-		if lister, ok := listers[name]; ok {
-			features, err := lister.ListFeatures(files)
+		if lister, ok := listers[d.Name]; ok {
+			fs, err := lister.ListFeatures(files)
 			if err != nil {
-				return []database.Feature{}, err
+				return nil, err
 			}
-			totalFeatures = append(totalFeatures, features...)
+
+			for _, f := range fs {
+				features = append(features, database.LayerFeature{
+					Feature: f,
+					By:      lister.info,
+				})
+			}
+
 		} else {
-			log.WithField("Name", name).Warn("Unknown Lister")
+			log.WithField("Name", d).Fatal("unknown feature detector")
 		}
 	}
 
-	return totalFeatures, nil
+	return features, nil
 }
 
-// RequiredFilenames returns the total list of files required for all
-// registered Listers.
-func RequiredFilenames(listerNames []string) (files []string) {
+// RequiredFilenames returns all files required by the give extensions. Any
+// extension metadata that has non feature-detector type will be skipped.
+func RequiredFilenames(toUse []database.Detector) (files []string) {
 	listersM.RLock()
 	defer listersM.RUnlock()
 
-	for _, lister := range listers {
-		files = append(files, lister.RequiredFilenames()...)
+	for _, d := range toUse {
+		if d.DType != database.FeatureDetectorType {
+			continue
+		}
+
+		files = append(files, listers[d.Name].RequiredFilenames()...)
 	}
 
 	return
 }
 
 // ListListers returns the names of all the registered feature listers.
-func ListListers() []string {
-	r := []string{}
-	for name := range listers {
-		r = append(r, name)
+func ListListers() []database.Detector {
+	r := []database.Detector{}
+	for _, d := range listers {
+		r = append(r, d.info)
 	}
 	return r
 }

@@ -22,6 +22,13 @@ import (
 	"github.com/coreos/clair/ext/versionfmt"
 )
 
+// DatabaseDetectorTypeMapping maps the database detector type to the integer
+// enum proto.
+var DatabaseDetectorTypeMapping = map[database.DetectorType]Detector_DType{
+	database.NamespaceDetectorType: Detector_DType(1),
+	database.FeatureDetectorType:   Detector_DType(2),
+}
+
 // PagedVulnerableAncestriesFromDatabaseModel converts database
 // PagedVulnerableAncestries to api PagedVulnerableAncestries and assigns
 // indexes to ancestries.
@@ -122,23 +129,38 @@ func VulnerabilityWithFixedInFromDatabaseModel(dbVuln database.VulnerabilityWith
 	return vuln, nil
 }
 
-// LayerFromDatabaseModel converts database layer to api layer.
-func LayerFromDatabaseModel(dbLayer database.LayerMetadata) *Layer {
-	layer := Layer{Hash: dbLayer.Hash}
-	return &layer
-}
-
 // NamespacedFeatureFromDatabaseModel converts database namespacedFeature to api Feature.
-func NamespacedFeatureFromDatabaseModel(feature database.NamespacedFeature) *Feature {
+func NamespacedFeatureFromDatabaseModel(feature database.AncestryFeature) *Feature {
 	version := feature.Feature.Version
 	if version == versionfmt.MaxVersion {
 		version = "None"
 	}
 
 	return &Feature{
-		Name:          feature.Feature.Name,
-		NamespaceName: feature.Namespace.Name,
+		Name: feature.Feature.Name,
+		Namespace: &Namespace{
+			Name:     feature.Namespace.Name,
+			Detector: DetectorFromDatabaseModel(feature.NamespaceBy),
+		},
 		VersionFormat: feature.Namespace.VersionFormat,
 		Version:       version,
+		Detector:      DetectorFromDatabaseModel(feature.FeatureBy),
 	}
+}
+
+func DetectorFromDatabaseModel(detector database.Detector) *Detector {
+	return &Detector{
+		Name:    detector.Name,
+		Version: detector.Version,
+		Dtype:   DatabaseDetectorTypeMapping[detector.DType],
+	}
+}
+
+func DetectorsFromDatabaseModel(dbDetectors []database.Detector) []*Detector {
+	detectors := make([]*Detector, 0, len(dbDetectors))
+	for _, d := range dbDetectors {
+		detectors = append(detectors, DetectorFromDatabaseModel(d))
+	}
+
+	return detectors
 }

@@ -220,7 +220,7 @@ func TestCaching(t *testing.T) {
 			actualAffectedNames = append(actualAffectedNames, s.Name)
 		}
 
-		assert.Len(t, strutil.CompareStringLists(expectedAffectedNames, actualAffectedNames), 0)
-		assert.Len(t, strutil.CompareStringLists(actualAffectedNames, expectedAffectedNames), 0)
+		assert.Len(t, strutil.Difference(expectedAffectedNames, actualAffectedNames), 0)
+		assert.Len(t, strutil.Difference(actualAffectedNames, expectedAffectedNames), 0)
 	}
 }

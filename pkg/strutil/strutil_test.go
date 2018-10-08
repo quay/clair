@@ -21,12 +21,12 @@ import (
 )
 
 func TestStringComparison(t *testing.T) {
-	cmp := CompareStringLists([]string{"a", "b", "b", "a"}, []string{"a", "c"})
+	cmp := Difference([]string{"a", "b", "b", "a"}, []string{"a", "c"})
 	assert.Len(t, cmp, 1)
 	assert.NotContains(t, cmp, "a")
 	assert.Contains(t, cmp, "b")
 
-	cmp = CompareStringListsInBoth([]string{"a", "a", "b", "c"}, []string{"a", "c", "c"})
+	cmp = Intersect([]string{"a", "a", "b", "c"}, []string{"a", "c", "c"})
 	assert.Len(t, cmp, 2)
 	assert.NotContains(t, cmp, "b")
 	assert.Contains(t, cmp, "a")

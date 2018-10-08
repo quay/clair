@@ -16,9 +16,9 @@ package clair
 
 import (
 	"errors"
-	"regexp"
 	"sync"
 
+	"github.com/deckarep/golang-set"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
@@ -27,10 +27,7 @@ import (
 	"github.com/coreos/clair/ext/imagefmt"
 	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/pkg/strutil"
-)
-
-const (
-	logLayerName = "layer"
+	"github.com/coreos/clair/pkg/tarutil"
 )
 
 var (
@@ -38,24 +35,9 @@ var (
 	// manager is not supported.
 	ErrUnsupported = commonerr.NewBadRequestError("worker: OS and/or package manager are not supported")
 
-	// ErrParentUnknown is the error that should be raised when a parent layer
-	// has yet to be processed for the current layer.
-	ErrParentUnknown = commonerr.NewBadRequestError("worker: parent layer is unknown, it must be processed first")
-
-	urlParametersRegexp = regexp.MustCompile(`(\?|\&)([^=]+)\=([^ &]+)`)
-
-	// Processors contain the names of namespace detectors and feature listers
-	// enabled in this instance of Clair.
-	//
-	// Processors are initialized during booting and configured in the
-	// configuration file.
-	Processors database.Processors
+	// EnabledDetectors are detectors to be used to scan the layers.
+	EnabledDetectors []database.Detector
 )
-
-type WorkerConfig struct {
-	EnabledDetectors []string `yaml:"namespace_detectors"`
-	EnabledListers   []string `yaml:"feature_listers"`
-}
 
 // LayerRequest represents all information necessary to download and process a
 // layer.
@@ -65,296 +47,176 @@ type LayerRequest struct {
 	Headers map[string]string
 }
 
-// partialLayer stores layer's content detected by `processedBy` processors.
-type partialLayer struct {
-	hash        string
-	processedBy database.Processors
-	namespaces  []database.Namespace
-	features    []database.Feature
-
-	err error
+type processResult struct {
+	existingLayer   *database.Layer
+	newLayerContent *database.Layer
+	err             error
 }
 
-// processRequest stores parameters used for processing layers.
+// processRequest stores parameters used for processing a layer.
 type processRequest struct {
-	request LayerRequest
-	// notProcessedBy represents a set of processors used to process the
-	// request.
-	notProcessedBy database.Processors
+	LayerRequest
+
+	existingLayer *database.Layer
+	detectors     []database.Detector
 }
 
-// cleanURL removes all parameters from an URL.
-func cleanURL(str string) string {
-	return urlParametersRegexp.ReplaceAllString(str, "")
+type introducedFeature struct {
+	feature    database.AncestryFeature
+	layerIndex int
 }
 
-// processLayers in parallel processes a set of requests for unique set of layers
+// processRequests in parallel processes a set of requests for unique set of layers
 // and returns sets of unique namespaces, features and layers to be inserted
 // into the database.
-func processRequests(imageFormat string, toDetect []processRequest) ([]database.Namespace, []database.Feature, map[string]partialLayer, error) {
+func processRequests(imageFormat string, toDetect map[string]*processRequest) (map[string]*processResult, error) {
 	wg := &sync.WaitGroup{}
 	wg.Add(len(toDetect))
-	results := make([]partialLayer, len(toDetect))
-	for i := range toDetect {
-		go func(req *processRequest, res *partialLayer) {
-			res.hash = req.request.Hash
-			res.processedBy = req.notProcessedBy
-			res.namespaces, res.features, res.err = detectContent(imageFormat, req.request.Hash, req.request.Path, req.request.Headers, req.notProcessedBy)
-			wg.Done()
-		}(&toDetect[i], &results[i])
-	}
-	wg.Wait()
-	distinctNS := map[database.Namespace]struct{}{}
-	distinctF := map[database.Feature]struct{}{}
 
+	results := map[string]*processResult{}
+	for i := range toDetect {
+		results[i] = nil
+	}
+
+	for i := range toDetect {
+		result := processResult{}
+		results[i] = &result
+		go func(req *processRequest, res *processResult) {
+			*res = *detectContent(imageFormat, req)
+			wg.Done()
+		}(toDetect[i], &result)
+	}
+
+	wg.Wait()
 	errs := []error{}
 	for _, r := range results {
 		errs = append(errs, r.err)
 	}
 
 	if err := commonerr.CombineErrors(errs...); err != nil {
-		return nil, nil, nil, err
+		return nil, err
 	}
 
-	updates := map[string]partialLayer{}
-	for _, r := range results {
-		for _, ns := range r.namespaces {
-			distinctNS[ns] = struct{}{}
-		}
-
-		for _, f := range r.features {
-			distinctF[f] = struct{}{}
-		}
-
-		if _, ok := updates[r.hash]; !ok {
-			updates[r.hash] = r
-		} else {
-			return nil, nil, nil, errors.New("Duplicated updates is not allowed")
-		}
-	}
-
-	namespaces := make([]database.Namespace, 0, len(distinctNS))
-	features := make([]database.Feature, 0, len(distinctF))
-
-	for ns := range distinctNS {
-		namespaces = append(namespaces, ns)
-	}
-
-	for f := range distinctF {
-		features = append(features, f)
-	}
-	return namespaces, features, updates, nil
+	return results, nil
 }
 
-func getLayer(datastore database.Datastore, req LayerRequest) (layer database.Layer, preq *processRequest, err error) {
-	var (
-		tx database.Session
-		ok bool
-	)
-
-	if tx, err = datastore.Begin(); err != nil {
-		return
-	}
-
-	defer tx.Rollback()
-
-	if layer, ok, err = tx.FindLayer(req.Hash); err != nil {
+func getProcessRequest(datastore database.Datastore, req LayerRequest) (preq *processRequest, err error) {
+	layer, ok, err := database.FindLayerAndRollback(datastore, req.Hash)
+	if err != nil {
 		return
 	}
 
 	if !ok {
-		layer = database.Layer{
-			LayerMetadata: database.LayerMetadata{
-				Hash: req.Hash,
-			},
-		}
-
+		log.WithField("layer", req.Hash).Debug("found no existing layer in database")
 		preq = &processRequest{
-			request:        req,
-			notProcessedBy: Processors,
+			LayerRequest:  req,
+			existingLayer: &database.Layer{Hash: req.Hash},
+			detectors:     EnabledDetectors,
 		}
 	} else {
-		notProcessed := getNotProcessedBy(layer.ProcessedBy)
-		if !(len(notProcessed.Detectors) == 0 && len(notProcessed.Listers) == 0 && ok) {
-			preq = &processRequest{
-				request:        req,
-				notProcessedBy: notProcessed,
-			}
+		log.WithFields(log.Fields{
+			"layer":           layer.Hash,
+			"detectors":       layer.By,
+			"feature count":   len(layer.Features),
+			"namespace count": len(layer.Namespaces),
+		}).Debug("found existing layer in database")
+
+		preq = &processRequest{
+			LayerRequest:  req,
+			existingLayer: &layer,
+			detectors:     database.DiffDetectors(EnabledDetectors, layer.By),
 		}
 	}
 
 	return
 }
 
+func persistProcessResult(datastore database.Datastore, results map[string]*processResult) error {
+	features := []database.Feature{}
+	namespaces := []database.Namespace{}
+	for _, r := range results {
+		features = append(features, r.newLayerContent.GetFeatures()...)
+		namespaces = append(namespaces, r.newLayerContent.GetNamespaces()...)
+	}
+
+	features = database.DeduplicateFeatures(features...)
+	namespaces = database.DeduplicateNamespaces(namespaces...)
+	if err := database.PersistNamespacesAndCommit(datastore, namespaces); err != nil {
+		return err
+	}
+
+	if err := database.PersistFeaturesAndCommit(datastore, features); err != nil {
+		return err
+	}
+
+	for _, layer := range results {
+		if err := database.PersistPartialLayerAndCommit(datastore, layer.newLayerContent); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // processLayers processes a set of post layer requests, stores layers and
 // returns an ordered list of processed layers with detected features and
 // namespaces.
 func processLayers(datastore database.Datastore, imageFormat string, requests []LayerRequest) ([]database.Layer, error) {
-	toDetect := []processRequest{}
-	layers := map[string]database.Layer{}
-	for _, req := range requests {
-		if _, ok := layers[req.Hash]; ok {
-			continue
-		}
-		layer, preq, err := getLayer(datastore, req)
+	var (
+		reqMap = make(map[string]*processRequest)
+		err    error
+	)
+
+	for _, r := range requests {
+		reqMap[r.Hash], err = getProcessRequest(datastore, r)
 		if err != nil {
 			return nil, err
 		}
-		layers[req.Hash] = layer
-		if preq != nil {
-			toDetect = append(toDetect, *preq)
-		}
 	}
 
-	namespaces, features, partialLayers, err := processRequests(imageFormat, toDetect)
+	results, err := processRequests(imageFormat, reqMap)
 	if err != nil {
 		return nil, err
 	}
 
-	// Store partial results.
-	if err := persistNamespaces(datastore, namespaces); err != nil {
+	if err := persistProcessResult(datastore, results); err != nil {
 		return nil, err
 	}
 
-	if err := persistFeatures(datastore, features); err != nil {
-		return nil, err
+	completeLayers := getProcessResultLayers(results)
+	layers := make([]database.Layer, 0, len(requests))
+	for _, r := range requests {
+		layers = append(layers, completeLayers[r.Hash])
 	}
 
-	for _, layer := range partialLayers {
-		if err := persistPartialLayer(datastore, layer); err != nil {
-			return nil, err
-		}
-
-		log.WithFields(log.Fields{
-			"Hash":                layer.hash,
-			"namespace count":     len(layer.namespaces),
-			"feature count":       len(layer.features),
-			"namespace detectors": layer.processedBy.Detectors,
-			"feature listers":     layer.processedBy.Listers,
-		}).Debug("saved layer")
-	}
-
-	// NOTE(Sida): The full layers are computed using partially
-	// processed layers in current database session. If any other instances of
-	// Clair are changing some layers in this set of layers, it might generate
-	// different results especially when the other Clair is with different
-	// processors.
-	completeLayers := []database.Layer{}
-	for _, req := range requests {
-		if partialLayer, ok := partialLayers[req.Hash]; ok {
-			completeLayers = append(completeLayers, combineLayers(layers[req.Hash], partialLayer))
-		} else {
-			completeLayers = append(completeLayers, layers[req.Hash])
-		}
-	}
-
-	return completeLayers, nil
+	return layers, nil
 }
 
-func persistPartialLayer(datastore database.Datastore, layer partialLayer) error {
-	tx, err := datastore.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	if err := tx.PersistLayer(layer.hash, layer.namespaces, layer.features, layer.processedBy); err != nil {
-		return err
+func getProcessResultLayers(results map[string]*processResult) map[string]database.Layer {
+	layers := map[string]database.Layer{}
+	for name, r := range results {
+		layers[name] = *database.MergeLayers(r.existingLayer, r.newLayerContent)
 	}
 
-	return tx.Commit()
-}
-
-func persistFeatures(datastore database.Datastore, features []database.Feature) error {
-	tx, err := datastore.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	if err := tx.PersistFeatures(features); err != nil {
-		return err
-	}
-	return tx.Commit()
-}
-
-func persistNamespaces(datastore database.Datastore, namespaces []database.Namespace) error {
-	tx, err := datastore.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	if err := tx.PersistNamespaces(namespaces); err != nil {
-		return err
-	}
-
-	return tx.Commit()
-}
-
-// combineLayers merges `layer` and `partial` without duplicated content.
-func combineLayers(layer database.Layer, partial partialLayer) database.Layer {
-	mapF := map[database.Feature]struct{}{}
-	mapNS := map[database.Namespace]struct{}{}
-	for _, f := range layer.Features {
-		mapF[f] = struct{}{}
-	}
-	for _, ns := range layer.Namespaces {
-		mapNS[ns] = struct{}{}
-	}
-	for _, f := range partial.features {
-		mapF[f] = struct{}{}
-	}
-	for _, ns := range partial.namespaces {
-		mapNS[ns] = struct{}{}
-	}
-	features := make([]database.Feature, 0, len(mapF))
-	namespaces := make([]database.Namespace, 0, len(mapNS))
-	for f := range mapF {
-		features = append(features, f)
-	}
-	for ns := range mapNS {
-		namespaces = append(namespaces, ns)
-	}
-
-	layer.ProcessedBy.Detectors = append(layer.ProcessedBy.Detectors, strutil.CompareStringLists(partial.processedBy.Detectors, layer.ProcessedBy.Detectors)...)
-	layer.ProcessedBy.Listers = append(layer.ProcessedBy.Listers, strutil.CompareStringLists(partial.processedBy.Listers, layer.ProcessedBy.Listers)...)
-	return database.Layer{
-		LayerMetadata: database.LayerMetadata{
-			Hash:        layer.Hash,
-			ProcessedBy: layer.ProcessedBy,
-		},
-		Features:   features,
-		Namespaces: namespaces,
-	}
+	return layers
 }
 
 func isAncestryProcessed(datastore database.Datastore, name string) (bool, error) {
-	tx, err := datastore.Begin()
-	if err != nil {
-		return false, err
-	}
-	defer tx.Rollback()
-	ancestry, ok, err := tx.FindAncestry(name)
-	if err != nil {
-		return false, err
-	}
-	if !ok {
-		return false, nil
+	ancestry, ok, err := database.FindAncestryAndRollback(datastore, name)
+	if err != nil || !ok {
+		return ok, err
 	}
 
-	notProcessed := getNotProcessedBy(ancestry.ProcessedBy)
-	return len(notProcessed.Detectors) == 0 && len(notProcessed.Listers) == 0, nil
+	return len(database.DiffDetectors(EnabledDetectors, ancestry.By)) == 0, nil
 }
 
 // ProcessAncestry downloads and scans an ancestry if it's not scanned by all
 // enabled processors in this instance of Clair.
 func ProcessAncestry(datastore database.Datastore, imageFormat, name string, layerRequest []LayerRequest) error {
 	var (
-		err              error
-		ok               bool
-		layers           []database.Layer
-		commonProcessors database.Processors
+		err    error
+		ok     bool
+		layers []database.Layer
 	)
 
 	if name == "" {
@@ -365,10 +227,12 @@ func ProcessAncestry(datastore database.Datastore, imageFormat, name string, lay
 		return commonerr.NewBadRequestError("could not process a layer which does not have a format")
 	}
 
+	log.WithField("ancestry", name).Debug("start processing ancestry...")
 	if ok, err = isAncestryProcessed(datastore, name); err != nil {
+		log.WithError(err).Error("could not determine if ancestry is processed")
 		return err
 	} else if ok {
-		log.WithField("name", name).Debug("ancestry is already processed")
+		log.WithField("ancestry", name).Debug("ancestry is already processed")
 		return nil
 	}
 
@@ -376,155 +240,100 @@ func ProcessAncestry(datastore database.Datastore, imageFormat, name string, lay
 		return err
 	}
 
-	if commonProcessors, err = getProcessors(layers); err != nil {
-		return err
-	}
-
-	return processAncestry(datastore, name, layers, commonProcessors)
+	return processAncestry(datastore, name, layers)
 }
 
-// getNamespacedFeatures extracts the namespaced features introduced in each
-// layer into one array.
-func getNamespacedFeatures(layers []database.AncestryLayer) []database.NamespacedFeature {
-	features := []database.NamespacedFeature{}
-	for _, layer := range layers {
-		features = append(features, layer.DetectedFeatures...)
-	}
-	return features
-}
-
-func processAncestry(datastore database.Datastore, name string, layers []database.Layer, commonProcessors database.Processors) error {
+func processAncestry(datastore database.Datastore, name string, layers []database.Layer) error {
 	var (
-		ancestry database.Ancestry
+		ancestry = database.Ancestry{Name: name}
 		err      error
 	)
 
-	ancestry.Name = name
-	ancestry.ProcessedBy = commonProcessors
-	ancestry.Layers, err = computeAncestryLayers(layers, commonProcessors)
+	ancestry.Layers, ancestry.By, err = computeAncestryLayers(layers)
 	if err != nil {
 		return err
 	}
 
-	ancestryFeatures := getNamespacedFeatures(ancestry.Layers)
+	ancestryFeatures := database.GetAncestryFeatures(ancestry)
 	log.WithFields(log.Fields{
-		"ancestry":           name,
-		"number of features": len(ancestryFeatures),
-		"processed by":       Processors,
-		"number of layers":   len(ancestry.Layers),
+		"ancestry":       name,
+		"processed by":   EnabledDetectors,
+		"features count": len(ancestryFeatures),
+		"layer count":    len(ancestry.Layers),
 	}).Debug("compute ancestry features")
 
-	if err := persistNamespacedFeatures(datastore, ancestryFeatures); err != nil {
+	if err := database.PersistNamespacedFeaturesAndCommit(datastore, ancestryFeatures); err != nil {
+		log.WithField("ancestry", name).WithError(err).Error("could not persist namespaced features for ancestry")
 		return err
 	}
 
-	tx, err := datastore.Begin()
-	if err != nil {
+	if err := database.CacheRelatedVulnerabilityAndCommit(datastore, ancestryFeatures); err != nil {
+		log.WithField("ancestry", name).WithError(err).Error("failed to cache feature related vulnerability")
 		return err
 	}
 
-	err = tx.UpsertAncestry(ancestry)
-	if err != nil {
-		tx.Rollback()
+	if err := database.UpsertAncestryAndCommit(datastore, ancestry); err != nil {
+		log.WithField("ancestry", name).WithError(err).Error("could not upsert ancestry")
 		return err
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
-func persistNamespacedFeatures(datastore database.Datastore, features []database.NamespacedFeature) error {
-	tx, err := datastore.Begin()
-	if err != nil {
-		return err
+func getCommonDetectors(layers []database.Layer) mapset.Set {
+	// find the common detector for all layers and filter the namespaces and
+	// features based on that.
+	commonDetectors := mapset.NewSet()
+	for _, d := range layers[0].By {
+		commonDetectors.Add(d)
 	}
 
-	if err := tx.PersistNamespacedFeatures(features); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-
-	tx, err = datastore.Begin()
-	if err != nil {
-		return err
-	}
-
-	if err := tx.CacheAffectedNamespacedFeatures(features); err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	return tx.Commit()
-}
-
-// getProcessors retrieves common subset of the processors of each layer.
-func getProcessors(layers []database.Layer) (database.Processors, error) {
-	if len(layers) == 0 {
-		return database.Processors{}, nil
-	}
-
-	detectors := layers[0].ProcessedBy.Detectors
-	listers := layers[0].ProcessedBy.Listers
-
-	detectorsLen := len(detectors)
-	listersLen := len(listers)
-
-	for _, l := range layers[1:] {
-		detectors := strutil.CompareStringListsInBoth(detectors, l.ProcessedBy.Detectors)
-		listers := strutil.CompareStringListsInBoth(listers, l.ProcessedBy.Listers)
-
-		if len(detectors) != detectorsLen || len(listers) != listersLen {
-			// This error might be triggered because of multiple workers are
-			// processing the same instance with different processors.
-			// TODO(sidchen): Once the features can be associated with
-			// Detectors/Listers, we can support dynamically generating ancestry's
-			// detector/lister based on the layers.
-			return database.Processors{}, errors.New("processing layers with different Clair instances is currently unsupported")
+	for _, l := range layers {
+		detectors := mapset.NewSet()
+		for _, d := range l.By {
+			detectors.Add(d)
 		}
-	}
-	return database.Processors{
-		Detectors: detectors,
-		Listers:   listers,
-	}, nil
-}
 
-type introducedFeature struct {
-	feature    database.NamespacedFeature
-	layerIndex int
+		commonDetectors = commonDetectors.Intersect(detectors)
+	}
+
+	return commonDetectors
 }
 
 // computeAncestryLayers computes ancestry's layers along with what features are
 // introduced.
-func computeAncestryLayers(layers []database.Layer, commonProcessors database.Processors) ([]database.AncestryLayer, error) {
-	// TODO(sidchen): Once the features are linked to specific processor, we
-	// will use commonProcessors to filter out the features for this ancestry.
+func computeAncestryLayers(layers []database.Layer) ([]database.AncestryLayer, []database.Detector, error) {
+	if len(layers) == 0 {
+		return nil, nil, nil
+	}
 
+	commonDetectors := getCommonDetectors(layers)
 	// version format -> namespace
-	namespaces := map[string]database.Namespace{}
+	namespaces := map[string]database.LayerNamespace{}
 	// version format -> feature ID -> feature
 	features := map[string]map[string]introducedFeature{}
 	ancestryLayers := []database.AncestryLayer{}
 	for index, layer := range layers {
-		// Initialize the ancestry Layer
-		initializedLayer := database.AncestryLayer{LayerMetadata: layer.LayerMetadata, DetectedFeatures: []database.NamespacedFeature{}}
+		initializedLayer := database.AncestryLayer{Hash: layer.Hash}
 		ancestryLayers = append(ancestryLayers, initializedLayer)
 
 		// Precondition: namespaces and features contain the result from union
 		// of all parents.
 		for _, ns := range layer.Namespaces {
+			if !commonDetectors.Contains(ns.By) {
+				continue
+			}
+
 			namespaces[ns.VersionFormat] = ns
 		}
 
 		// version format -> feature ID -> feature
 		currentFeatures := map[string]map[string]introducedFeature{}
 		for _, f := range layer.Features {
+			if !commonDetectors.Contains(f.By) {
+				continue
+			}
+
 			if ns, ok := namespaces[f.VersionFormat]; ok {
 				var currentMap map[string]introducedFeature
 				if currentMap, ok = currentFeatures[f.VersionFormat]; !ok {
@@ -542,16 +351,20 @@ func computeAncestryLayers(layers []database.Layer, commonProcessors database.Pr
 
 				if !inherited {
 					currentMap[f.Name+":"+f.Version] = introducedFeature{
-						feature: database.NamespacedFeature{
-							Feature:   f,
-							Namespace: ns,
+						feature: database.AncestryFeature{
+							NamespacedFeature: database.NamespacedFeature{
+								Feature:   f.Feature,
+								Namespace: ns.Namespace,
+							},
+							NamespaceBy: ns.By,
+							FeatureBy:   f.By,
 						},
 						layerIndex: index,
 					}
 				}
 
 			} else {
-				return nil, errors.New("No corresponding version format")
+				return nil, nil, errors.New("No corresponding version format")
 			}
 		}
 
@@ -569,57 +382,97 @@ func computeAncestryLayers(layers []database.Layer, commonProcessors database.Pr
 
 	for _, featureMap := range features {
 		for _, feature := range featureMap {
-			ancestryLayers[feature.layerIndex].DetectedFeatures = append(
-				ancestryLayers[feature.layerIndex].DetectedFeatures,
+			ancestryLayers[feature.layerIndex].Features = append(
+				ancestryLayers[feature.layerIndex].Features,
 				feature.feature,
 			)
 		}
 	}
 
-	return ancestryLayers, nil
+	detectors := make([]database.Detector, 0, commonDetectors.Cardinality())
+	for d := range commonDetectors.Iter() {
+		detectors = append(detectors, d.(database.Detector))
+	}
+
+	return ancestryLayers, detectors, nil
 }
 
-// getNotProcessedBy returns a processors, which contains the detectors and
-// listers not in `processedBy` but implemented in the current clair instance.
-func getNotProcessedBy(processedBy database.Processors) database.Processors {
-	notProcessedLister := strutil.CompareStringLists(Processors.Listers, processedBy.Listers)
-	notProcessedDetector := strutil.CompareStringLists(Processors.Detectors, processedBy.Detectors)
-	return database.Processors{
-		Listers:   notProcessedLister,
-		Detectors: notProcessedDetector,
+func extractRequiredFiles(imageFormat string, req *processRequest) (tarutil.FilesMap, error) {
+	requiredFiles := append(featurefmt.RequiredFilenames(req.detectors), featurens.RequiredFilenames(req.detectors)...)
+	if len(requiredFiles) == 0 {
+		log.WithFields(log.Fields{
+			"layer":     req.Hash,
+			"detectors": req.detectors,
+		}).Info("layer requires no file to extract")
+		return make(tarutil.FilesMap), nil
 	}
+
+	files, err := imagefmt.Extract(imageFormat, req.Path, req.Headers, requiredFiles)
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"layer": req.Hash,
+			"path":  strutil.CleanURL(req.Path),
+		}).Error("failed to extract data from path")
+		return nil, err
+	}
+
+	return files, err
 }
 
 // detectContent downloads a layer and detects all features and namespaces.
-func detectContent(imageFormat, name, path string, headers map[string]string, toProcess database.Processors) (namespaces []database.Namespace, featureVersions []database.Feature, err error) {
-	log.WithFields(log.Fields{"Hash": name}).Debug("Process Layer")
-	totalRequiredFiles := append(featurefmt.RequiredFilenames(toProcess.Listers), featurens.RequiredFilenames(toProcess.Detectors)...)
-	files, err := imagefmt.Extract(imageFormat, path, headers, totalRequiredFiles)
-	if err != nil {
-		log.WithError(err).WithFields(log.Fields{
-			logLayerName: name,
-			"path":       cleanURL(path),
-		}).Error("failed to extract data from path")
+func detectContent(imageFormat string, req *processRequest) (res *processResult) {
+	var (
+		files tarutil.FilesMap
+		layer = database.Layer{Hash: req.Hash, By: req.detectors}
+	)
+
+	res = &processResult{req.existingLayer, &layer, nil}
+	log.WithFields(log.Fields{
+		"layer":     req.Hash,
+		"detectors": req.detectors,
+	}).Info("detecting layer content...")
+
+	files, res.err = extractRequiredFiles(imageFormat, req)
+	if res.err != nil {
 		return
 	}
 
-	namespaces, err = featurens.Detect(files, toProcess.Detectors)
-	if err != nil {
+	if layer.Namespaces, res.err = featurens.Detect(files, req.detectors); res.err != nil {
 		return
 	}
 
-	if len(featureVersions) > 0 {
-		log.WithFields(log.Fields{logLayerName: name, "count": len(namespaces)}).Debug("detected layer namespaces")
-	}
-
-	featureVersions, err = featurefmt.ListFeatures(files, toProcess.Listers)
-	if err != nil {
+	if layer.Features, res.err = featurefmt.ListFeatures(files, req.detectors); res.err != nil {
 		return
 	}
 
-	if len(featureVersions) > 0 {
-		log.WithFields(log.Fields{logLayerName: name, "count": len(featureVersions)}).Debug("detected layer features")
-	}
+	log.WithFields(log.Fields{
+		"layer":           req.Hash,
+		"detectors":       req.detectors,
+		"namespace count": len(layer.Namespaces),
+		"feature count":   len(layer.Features),
+	}).Info("processed layer")
 
 	return
+}
+
+// InitWorker initializes the worker.
+func InitWorker(datastore database.Datastore) {
+	if len(EnabledDetectors) == 0 {
+		log.Warn("no enabled detector, and therefore, no ancestry will be processed.")
+		return
+	}
+
+	tx, err := datastore.Begin()
+	if err != nil {
+		log.WithError(err).Fatal("cannot connect to database to initialize worker")
+	}
+
+	defer tx.Rollback()
+	if err := tx.PersistDetectors(EnabledDetectors); err != nil {
+		log.WithError(err).Fatal("cannot insert detectors to initialize worker")
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.WithError(err).Fatal("cannot commit detector changes to initialize worker")
+	}
 }
