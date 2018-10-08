@@ -37,6 +37,8 @@ var (
 	withFixtureName, withoutFixtureName string
 )
 
+var testPaginationKey = pagination.Must(pagination.NewKey())
+
 func genTemplateDatabase(name string, loadFixture bool) (sourceURL string, dbName string) {
 	config := generateTestConfig(name, loadFixture, false)
 	source := config.Options["source"].(string)
@@ -215,13 +217,15 @@ func generateTestConfig(testName string, loadFixture bool, manageLife bool) data
 		source = fmt.Sprintf(sourceEnv, dbName)
 	}
 
+	log.Infof("pagination key for current test: %s", testPaginationKey.String())
+
 	return database.RegistrableComponentConfig{
 		Options: map[string]interface{}{
 			"source":                  source,
 			"cachesize":               0,
 			"managedatabaselifecycle": manageLife,
 			"fixturepath":             fixturePath,
-			"paginationkey":           pagination.Must(pagination.NewKey()).String(),
+			"paginationkey":           testPaginationKey.String(),
 		},
 	}
 }
@@ -247,6 +251,8 @@ func openSessionForTest(t *testing.T, name string, loadFixture bool) (*pgSQL, *p
 		t.Error(err)
 		t.FailNow()
 	}
+
+	log.Infof("transaction pagination key: '%s'", tx.(*pgSession).key.String())
 	return store, tx.(*pgSession)
 }
 

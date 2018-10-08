@@ -27,7 +27,6 @@ import (
 )
 
 const (
-	// notification.go
 	insertNotification = `
 		INSERT INTO Vulnerability_Notification(name, created_at, old_vulnerability_id, new_vulnerability_id)
 		VALUES ($1, $2, $3, $4)`
@@ -60,9 +59,10 @@ const (
 	   SELECT DISTINCT ON (a.id)
 			a.id, a.name
 		FROM vulnerability_affected_namespaced_feature AS vanf,
-			ancestry_layer AS al, ancestry_feature AS af
+			ancestry_layer AS al, ancestry_feature AS af, ancestry AS a
 		WHERE vanf.vulnerability_id = $1
-			AND al.ancestry_id >= $2
+			AND a.id >= $2
+			AND al.ancestry_id = a.id
 			AND al.id = af.ancestry_layer_id
 			AND af.namespaced_feature_id = vanf.namespaced_feature_id
 		ORDER BY a.id ASC
@@ -211,14 +211,12 @@ func (tx *pgSession) findPagedVulnerableAncestries(vulnID int64, limit int, curr
 	vulnPage := database.PagedVulnerableAncestries{Limit: limit}
 	currentPage := Page{0}
 	if currentToken != pagination.FirstPageToken {
-		var err error
-		err = tx.key.UnmarshalToken(currentToken, &currentPage)
-		if err != nil {
+		if err := tx.key.UnmarshalToken(currentToken, &currentPage); err != nil {
 			return vulnPage, err
 		}
 	}
 
-	err := tx.QueryRow(searchVulnerabilityByID, vulnID).Scan(
+	if err := tx.QueryRow(searchVulnerabilityByID, vulnID).Scan(
 		&vulnPage.Name,
 		&vulnPage.Description,
 		&vulnPage.Link,
@@ -226,8 +224,7 @@ func (tx *pgSession) findPagedVulnerableAncestries(vulnID int64, limit int, curr
 		&vulnPage.Metadata,
 		&vulnPage.Namespace.Name,
 		&vulnPage.Namespace.VersionFormat,
-	)
-	if err != nil {
+	); err != nil {
 		return vulnPage, handleError("searchVulnerabilityByID", err)
 	}
 
@@ -290,7 +287,6 @@ func (tx *pgSession) FindVulnerabilityNotification(name string, limit int, oldPa
 	}
 
 	noti.Name = name
-
 	err := tx.QueryRow(searchNotification, name).Scan(&created, &notified,
 		&deleted, &oldVulnID, &newVulnID)
 

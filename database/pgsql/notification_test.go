@@ -19,121 +19,144 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/pkg/pagination"
 )
 
-func TestPagination(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "Pagination", true)
+type findVulnerabilityNotificationIn struct {
+	notificationName        string
+	pageSize                int
+	oldAffectedAncestryPage pagination.Token
+	newAffectedAncestryPage pagination.Token
+}
+
+type findVulnerabilityNotificationOut struct {
+	notification *database.VulnerabilityNotificationWithVulnerable
+	ok           bool
+	err          string
+}
+
+var findVulnerabilityNotificationTests = []struct {
+	title string
+	in    findVulnerabilityNotificationIn
+	out   findVulnerabilityNotificationOut
+}{
+	{
+		title: "find notification with invalid page",
+		in: findVulnerabilityNotificationIn{
+			notificationName:        "test",
+			pageSize:                1,
+			oldAffectedAncestryPage: pagination.FirstPageToken,
+			newAffectedAncestryPage: pagination.Token("random non sense"),
+		},
+		out: findVulnerabilityNotificationOut{
+			err: pagination.ErrInvalidToken.Error(),
+		},
+	},
+	{
+		title: "find non-existing notification",
+		in: findVulnerabilityNotificationIn{
+			notificationName:        "non-existing",
+			pageSize:                1,
+			oldAffectedAncestryPage: pagination.FirstPageToken,
+			newAffectedAncestryPage: pagination.FirstPageToken,
+		},
+		out: findVulnerabilityNotificationOut{
+			ok: false,
+		},
+	},
+	{
+		title: "find existing notification first page",
+		in: findVulnerabilityNotificationIn{
+			notificationName:        "test",
+			pageSize:                1,
+			oldAffectedAncestryPage: pagination.FirstPageToken,
+			newAffectedAncestryPage: pagination.FirstPageToken,
+		},
+		out: findVulnerabilityNotificationOut{
+			&database.VulnerabilityNotificationWithVulnerable{
+				NotificationHook: realNotification[1].NotificationHook,
+				Old: &database.PagedVulnerableAncestries{
+					Vulnerability: realVulnerability[2],
+					Limit:         1,
+					Affected:      make(map[int]string),
+					Current:       mustMarshalToken(testPaginationKey, Page{0}),
+					Next:          mustMarshalToken(testPaginationKey, Page{0}),
+					End:           true,
+				},
+				New: &database.PagedVulnerableAncestries{
+					Vulnerability: realVulnerability[1],
+					Limit:         1,
+					Affected:      map[int]string{3: "ancestry-3"},
+					Current:       mustMarshalToken(testPaginationKey, Page{0}),
+					Next:          mustMarshalToken(testPaginationKey, Page{4}),
+					End:           false,
+				},
+			},
+
+			true,
+			"",
+		},
+	},
+
+	{
+		title: "find existing notification of second page of new affected ancestry",
+		in: findVulnerabilityNotificationIn{
+			notificationName:        "test",
+			pageSize:                1,
+			oldAffectedAncestryPage: pagination.FirstPageToken,
+			newAffectedAncestryPage: mustMarshalToken(testPaginationKey, Page{4}),
+		},
+		out: findVulnerabilityNotificationOut{
+			&database.VulnerabilityNotificationWithVulnerable{
+				NotificationHook: realNotification[1].NotificationHook,
+				Old: &database.PagedVulnerableAncestries{
+					Vulnerability: realVulnerability[2],
+					Limit:         1,
+					Affected:      make(map[int]string),
+					Current:       mustMarshalToken(testPaginationKey, Page{0}),
+					Next:          mustMarshalToken(testPaginationKey, Page{0}),
+					End:           true,
+				},
+				New: &database.PagedVulnerableAncestries{
+					Vulnerability: realVulnerability[1],
+					Limit:         1,
+					Affected:      map[int]string{4: "ancestry-4"},
+					Current:       mustMarshalToken(testPaginationKey, Page{4}),
+					Next:          mustMarshalToken(testPaginationKey, Page{0}),
+					End:           true,
+				},
+			},
+
+			true,
+			"",
+		},
+	},
+}
+
+func TestFindVulnerabilityNotification(t *testing.T) {
+	datastore, tx := openSessionForTest(t, "pagination", true)
 	defer closeTest(t, datastore, tx)
 
-	ns := database.Namespace{
-		Name:          "debian:7",
-		VersionFormat: "dpkg",
-	}
-
-	vNew := database.Vulnerability{
-		Namespace:   ns,
-		Name:        "CVE-OPENSSL-1-DEB7",
-		Description: "A vulnerability affecting OpenSSL < 2.0 on Debian 7.0",
-		Link:        "http://google.com/#q=CVE-OPENSSL-1-DEB7",
-		Severity:    database.HighSeverity,
-	}
-
-	vOld := database.Vulnerability{
-		Namespace:   ns,
-		Name:        "CVE-NOPE",
-		Description: "A vulnerability affecting nothing",
-		Severity:    database.UnknownSeverity,
-	}
-
-	noti, ok, err := tx.FindVulnerabilityNotification("test", 1, "", "")
-	oldPage := database.PagedVulnerableAncestries{
-		Vulnerability: vOld,
-		Limit:         1,
-		Affected:      make(map[int]string),
-		End:           true,
-	}
-
-	newPage1 := database.PagedVulnerableAncestries{
-		Vulnerability: vNew,
-		Limit:         1,
-		Affected:      map[int]string{3: "ancestry-3"},
-		End:           false,
-	}
-
-	newPage2 := database.PagedVulnerableAncestries{
-		Vulnerability: vNew,
-		Limit:         1,
-		Affected:      map[int]string{4: "ancestry-4"},
-		Next:          "",
-		End:           true,
-	}
-
-	if assert.Nil(t, err) && assert.True(t, ok) {
-		assert.Equal(t, "test", noti.Name)
-		if assert.NotNil(t, noti.Old) && assert.NotNil(t, noti.New) {
-			var oldPage Page
-			err := tx.key.UnmarshalToken(noti.Old.Current, &oldPage)
-			if !assert.Nil(t, err) {
-				assert.FailNow(t, "")
+	for _, test := range findVulnerabilityNotificationTests {
+		t.Run(test.title, func(t *testing.T) {
+			notification, ok, err := tx.FindVulnerabilityNotification(test.in.notificationName, test.in.pageSize, test.in.oldAffectedAncestryPage, test.in.newAffectedAncestryPage)
+			if test.out.err != "" {
+				require.EqualError(t, err, test.out.err)
+				return
 			}
 
-			assert.Equal(t, int64(0), oldPage.StartID)
-			var newPage Page
-			err = tx.key.UnmarshalToken(noti.New.Current, &newPage)
-			if !assert.Nil(t, err) {
-				assert.FailNow(t, "")
-			}
-			var newPageNext Page
-			err = tx.key.UnmarshalToken(noti.New.Next, &newPageNext)
-			if !assert.Nil(t, err) {
-				assert.FailNow(t, "")
-			}
-			assert.Equal(t, int64(0), newPage.StartID)
-			assert.Equal(t, int64(4), newPageNext.StartID)
-
-			noti.Old.Current = ""
-			noti.New.Current = ""
-			noti.New.Next = ""
-			assert.Equal(t, oldPage, *noti.Old)
-			assert.Equal(t, newPage1, *noti.New)
-		}
-	}
-
-	pageNum1, err := tx.key.MarshalToken(Page{0})
-	if !assert.Nil(t, err) {
-		assert.FailNow(t, "")
-	}
-
-	pageNum2, err := tx.key.MarshalToken(Page{4})
-	if !assert.Nil(t, err) {
-		assert.FailNow(t, "")
-	}
-
-	noti, ok, err = tx.FindVulnerabilityNotification("test", 1, pageNum1, pageNum2)
-	if assert.Nil(t, err) && assert.True(t, ok) {
-		assert.Equal(t, "test", noti.Name)
-		if assert.NotNil(t, noti.Old) && assert.NotNil(t, noti.New) {
-			var oldCurrentPage Page
-			err = tx.key.UnmarshalToken(noti.Old.Current, &oldCurrentPage)
-			if !assert.Nil(t, err) {
-				assert.FailNow(t, "")
+			require.Nil(t, err)
+			if !test.out.ok {
+				require.Equal(t, test.out.ok, ok)
+				return
 			}
 
-			var newCurrentPage Page
-			err = tx.key.UnmarshalToken(noti.New.Current, &newCurrentPage)
-			if !assert.Nil(t, err) {
-				assert.FailNow(t, "")
-			}
-
-			assert.Equal(t, int64(0), oldCurrentPage.StartID)
-			assert.Equal(t, int64(4), newCurrentPage.StartID)
-			noti.Old.Current = ""
-			noti.New.Current = ""
-			assert.Equal(t, oldPage, *noti.Old)
-			assert.Equal(t, newPage2, *noti.New)
-		}
+			require.True(t, ok)
+			assertVulnerabilityNotificationWithVulnerableEqual(t, testPaginationKey, test.out.notification, &notification)
+		})
 	}
 }
 

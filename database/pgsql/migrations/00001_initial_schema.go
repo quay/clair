@@ -38,8 +38,8 @@ var (
 
 			`CREATE TABLE IF NOT EXISTS namespaced_feature (
 				id SERIAL PRIMARY KEY,
-				namespace_id INT REFERENCES namespace,
-				feature_id INT REFERENCES feature,
+				namespace_id INT REFERENCES namespace ON DELETE CASCADE,
+				feature_id INT REFERENCES feature ON DELETE CASCADE,
 				UNIQUE (namespace_id, feature_id));`,
 		},
 		Down: []string{
@@ -116,7 +116,7 @@ var (
 				id SERIAL PRIMARY KEY,
 				ancestry_id INT REFERENCES ancestry ON DELETE CASCADE,
 				ancestry_index INT NOT NULL,
-				layer_id INT REFERENCES layer ON DELETE RESTRICT,
+				layer_id INT NOT NULL REFERENCES layer ON DELETE RESTRICT,
 				UNIQUE (ancestry_id, ancestry_index));`,
 			`CREATE INDEX ON ancestry_layer(ancestry_id);`,
 
@@ -130,7 +130,7 @@ var (
 
 			`CREATE TABLE IF NOT EXISTS ancestry_detector(
 				id SERIAL PRIMARY KEY,
-				ancestry_id INT REFERENCES layer ON DELETE CASCADE,
+				ancestry_id INT REFERENCES ancestry ON DELETE CASCADE,
 				detector_id INT REFERENCES detector ON DELETE CASCADE,
 				UNIQUE(ancestry_id, detector_id));`,
 			`CREATE INDEX ON ancestry_detector(ancestry_id);`,

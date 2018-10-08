@@ -121,7 +121,8 @@ func queryPersistLayerFeature(count int) string {
 		"layer_feature",
 		"layer_feature_layer_id_feature_id_key",
 		"layer_id",
-		"feature_id")
+		"feature_id",
+		"detector_id")
 }
 
 func queryPersistNamespace(count int) string {
@@ -132,28 +133,13 @@ func queryPersistNamespace(count int) string {
 		"version_format")
 }
 
-func queryPersistLayerListers(count int) string {
-	return queryPersist(count,
-		"layer_lister",
-		"layer_lister_layer_id_lister_key",
-		"layer_id",
-		"lister")
-}
-
-func queryPersistLayerDetectors(count int) string {
-	return queryPersist(count,
-		"layer_detector",
-		"layer_detector_layer_id_detector_key",
-		"layer_id",
-		"detector")
-}
-
 func queryPersistLayerNamespace(count int) string {
 	return queryPersist(count,
 		"layer_namespace",
 		"layer_namespace_layer_id_namespace_id_key",
 		"layer_id",
-		"namespace_id")
+		"namespace_id",
+		"detector_id")
 }
 
 // size of key and array should be both greater than 0

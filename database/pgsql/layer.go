@@ -18,6 +18,8 @@ import (
 	"database/sql"
 	"sort"
 
+	"github.com/deckarep/golang-set"
+
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/commonerr"
 )
@@ -34,300 +36,331 @@ const (
 		UNION
 		SELECT id FROM layer WHERE hash = $1`
 
-	searchLayerFeatures = `
-		SELECT feature_id, detector_id
-			FROM layer_feature
-			WHERE layer_id = $1`
+	findLayerFeatures = `
+		SELECT f.name, f.version, f.version_format, lf.detector_id
+			FROM layer_feature AS lf, feature AS f
+			WHERE lf.feature_id = f.id
+				AND lf.layer_id = $1`
 
-	searchLayerNamespaces = `
-		SELECT namespace.Name, namespace.version_format 
-		FROM namespace, layer_namespace 
-		WHERE layer_namespace.layer_id = $1 
-			AND layer_namespace.namespace_id = namespace.id`
+	findLayerNamespaces = `
+		SELECT ns.name, ns.version_format, ln.detector_id
+			FROM layer_namespace AS ln, namespace AS ns
+			WHERE ln.namespace_id = ns.id
+				AND ln.layer_id = $1`
 
-	searchLayer = `SELECT id FROM layer WHERE hash = $1`
+	findLayerID = `SELECT id FROM layer WHERE hash = $1`
 )
+
+// dbLayerNamespace represents the layer_namespace table.
+type dbLayerNamespace struct {
+	layerID     int64
+	namespaceID int64
+	detectorID  int64
+}
+
+// dbLayerFeature represents the layer_feature table
+type dbLayerFeature struct {
+	layerID    int64
+	featureID  int64
+	detectorID int64
+}
+
+func (tx *pgSession) FindLayer(hash string) (database.Layer, bool, error) {
+	layer := database.Layer{Hash: hash}
+	if hash == "" {
+		return layer, false, commonerr.NewBadRequestError("non empty layer hash is expected.")
+	}
+
+	layerID, ok, err := tx.findLayerID(hash)
+	if err != nil || !ok {
+		return layer, ok, err
+	}
+
+	detectorMap, err := tx.findAllDetectors()
 	if err != nil {
 		return layer, false, err
 	}
 
-	if !ok {
-		return layer, false, nil
+	if layer.By, err = tx.findLayerDetectors(layerID); err != nil {
+		return layer, false, err
 	}
 
-	layer.Features, err = tx.findLayerFeatures(layerID)
-	layer.Namespaces, err = tx.findLayerNamespaces(layerID)
+	if layer.Features, err = tx.findLayerFeatures(layerID, detectorMap); err != nil {
+		return layer, false, err
+	}
+
+	if layer.Namespaces, err = tx.findLayerNamespaces(layerID, detectorMap); err != nil {
+		return layer, false, err
+	}
+
 	return layer, true, nil
 }
 
-func (tx *pgSession) persistLayer(hash string) (int64, error) {
+func sanitizePersistLayerInput(hash string, features []database.LayerFeature, namespaces []database.LayerNamespace, detectedBy []database.Detector) error {
 	if hash == "" {
-		return -1, commonerr.NewBadRequestError("Empty Layer Hash is not allowed")
+		return commonerr.NewBadRequestError("expected non-empty layer hash")
 	}
 
-	id := sql.NullInt64{}
-	if err := tx.QueryRow(soiLayer, hash).Scan(&id); err != nil {
-		return -1, handleError("queryPersistLayer", err)
+	detectedBySet := mapset.NewSet()
+	for _, d := range detectedBy {
+		detectedBySet.Add(d)
 	}
 
-	if !id.Valid {
-		panic("null layer.id violates database constraint")
+	for _, f := range features {
+		if !detectedBySet.Contains(f.By) {
+			return database.ErrInvalidParameters
+		}
 	}
 
-	return id.Int64, nil
+	for _, n := range namespaces {
+		if !detectedBySet.Contains(n.By) {
+			return database.ErrInvalidParameters
+		}
+	}
+
+	return nil
 }
 
-// PersistLayer relates layer identified by hash with namespaces,
-// features and processors provided. If the layer, namespaces, features are not
-// in database, the function returns an error.
-func (tx *pgSession) PersistLayer(hash string, namespaces []database.Namespace, features []database.Feature, processedBy database.Processors) error {
-	if hash == "" {
-		return commonerr.NewBadRequestError("Empty layer hash is not allowed")
-	}
-
+// PersistLayer saves the content of a layer to the database.
+func (tx *pgSession) PersistLayer(hash string, features []database.LayerFeature, namespaces []database.LayerNamespace, detectedBy []database.Detector) error {
 	var (
-		err error
-		id  int64
+		err         error
+		id          int64
+		detectorIDs []int64
 	)
 
-	if id, err = tx.persistLayer(hash); err != nil {
+	if err = sanitizePersistLayerInput(hash, features, namespaces, detectedBy); err != nil {
 		return err
 	}
 
-	if err = tx.persistLayerNamespace(id, namespaces); err != nil {
+	if id, err = tx.soiLayer(hash); err != nil {
 		return err
 	}
 
-	if err = tx.persistLayerFeatures(id, features); err != nil {
+	if detectorIDs, err = tx.findDetectorIDs(detectedBy); err != nil {
+		if err == commonerr.ErrNotFound {
+			return database.ErrMissingEntities
+		}
+
 		return err
 	}
 
-	if err = tx.persistLayerDetectors(id, processedBy.Detectors); err != nil {
+	if err = tx.persistLayerDetectors(id, detectorIDs); err != nil {
 		return err
 	}
 
-	if err = tx.persistLayerListers(id, processedBy.Listers); err != nil {
+	if err = tx.persistAllLayerFeatures(id, features); err != nil {
+		return err
+	}
+
+	if err = tx.persistAllLayerNamespaces(id, namespaces); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (tx *pgSession) persistLayerDetectors(id int64, detectors []string) error {
-	if len(detectors) == 0 {
-		return nil
-	}
-
-	// Sorting is needed before inserting into database to prevent deadlock.
-	sort.Strings(detectors)
-	keys := make([]interface{}, len(detectors)*2)
-	for i, d := range detectors {
-		keys[i*2] = id
-		keys[i*2+1] = d
-	}
-	_, err := tx.Exec(queryPersistLayerDetectors(len(detectors)), keys...)
+func (tx *pgSession) persistAllLayerNamespaces(layerID int64, namespaces []database.LayerNamespace) error {
+	detectorMap, err := tx.findAllDetectors()
 	if err != nil {
-		return handleError("queryPersistLayerDetectors", err)
-	}
-	return nil
-}
-
-func (tx *pgSession) persistLayerListers(id int64, listers []string) error {
-	if len(listers) == 0 {
-		return nil
+		return err
 	}
 
-	sort.Strings(listers)
-	keys := make([]interface{}, len(listers)*2)
-	for i, d := range listers {
-		keys[i*2] = id
-		keys[i*2+1] = d
+	// TODO(sidac): This kind of type conversion is very useless and wasteful,
+	// we need interfaces around the database models to reduce these kind of
+	// operations.
+	rawNamespaces := make([]database.Namespace, 0, len(namespaces))
+	for _, ns := range namespaces {
+		rawNamespaces = append(rawNamespaces, ns.Namespace)
 	}
 
-	_, err := tx.Exec(queryPersistLayerListers(len(listers)), keys...)
+	rawNamespaceIDs, err := tx.findNamespaceIDs(rawNamespaces)
 	if err != nil {
-		return handleError("queryPersistLayerDetectors", err)
+		return err
 	}
+
+	dbLayerNamespaces := make([]dbLayerNamespace, 0, len(namespaces))
+	for i, ns := range namespaces {
+		detectorID := detectorMap.byValue[ns.By]
+		namespaceID := rawNamespaceIDs[i].Int64
+		if !rawNamespaceIDs[i].Valid {
+			return database.ErrMissingEntities
+		}
+
+		dbLayerNamespaces = append(dbLayerNamespaces, dbLayerNamespace{layerID, namespaceID, detectorID})
+	}
+
+	return tx.persistLayerNamespaces(dbLayerNamespaces)
+}
+
+func (tx *pgSession) persistAllLayerFeatures(layerID int64, features []database.LayerFeature) error {
+	detectorMap, err := tx.findAllDetectors()
+	if err != nil {
+		return err
+	}
+
+	rawFeatures := make([]database.Feature, 0, len(features))
+	for _, f := range features {
+		rawFeatures = append(rawFeatures, f.Feature)
+	}
+
+	featureIDs, err := tx.findFeatureIDs(rawFeatures)
+	if err != nil {
+		return err
+	}
+
+	dbFeatures := make([]dbLayerFeature, 0, len(features))
+	for i, f := range features {
+		detectorID := detectorMap.byValue[f.By]
+		featureID := featureIDs[i].Int64
+		if !featureIDs[i].Valid {
+			return database.ErrMissingEntities
+		}
+
+		dbFeatures = append(dbFeatures, dbLayerFeature{layerID, featureID, detectorID})
+	}
+
+	if err := tx.persistLayerFeatures(dbFeatures); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (tx *pgSession) persistLayerFeatures(id int64, features []database.Feature) error {
+func (tx *pgSession) persistLayerFeatures(features []dbLayerFeature) error {
 	if len(features) == 0 {
 		return nil
 	}
 
-	fIDs, err := tx.findFeatureIDs(features)
-	if err != nil {
-		return err
+	sort.Slice(features, func(i, j int) bool {
+		return features[i].featureID < features[j].featureID
+	})
+
+	keys := make([]interface{}, len(features)*3)
+	for i, feature := range features {
+		keys[i*3] = feature.layerID
+		keys[i*3+1] = feature.featureID
+		keys[i*3+2] = feature.detectorID
 	}
 
-	ids := make([]int, len(fIDs))
-	for i, fID := range fIDs {
-		if !fID.Valid {
-			return errNamespaceNotFound
-		}
-		ids[i] = int(fID.Int64)
-	}
-
-	sort.IntSlice(ids).Sort()
-	keys := make([]interface{}, len(features)*2)
-	for i, fID := range ids {
-		keys[i*2] = id
-		keys[i*2+1] = fID
-	}
-
-	_, err = tx.Exec(queryPersistLayerFeature(len(features)), keys...)
+	_, err := tx.Exec(queryPersistLayerFeature(len(features)), keys...)
 	if err != nil {
 		return handleError("queryPersistLayerFeature", err)
 	}
 	return nil
 }
 
-func (tx *pgSession) persistLayerNamespace(id int64, namespaces []database.Namespace) error {
+func (tx *pgSession) persistLayerNamespaces(namespaces []dbLayerNamespace) error {
 	if len(namespaces) == 0 {
 		return nil
 	}
 
-	nsIDs, err := tx.findNamespaceIDs(namespaces)
-	if err != nil {
-		return err
-	}
-
 	// for every bulk persist operation, the input data should be sorted.
-	ids := make([]int, len(nsIDs))
-	for i, nsID := range nsIDs {
-		if !nsID.Valid {
-			panic(errNamespaceNotFound)
-		}
-		ids[i] = int(nsID.Int64)
+	sort.Slice(namespaces, func(i, j int) bool {
+		return namespaces[i].namespaceID < namespaces[j].namespaceID
+	})
+
+	elementSize := 3
+	keys := make([]interface{}, len(namespaces)*elementSize)
+	for i, row := range namespaces {
+		keys[i*3] = row.layerID
+		keys[i*3+1] = row.namespaceID
+		keys[i*3+2] = row.detectorID
 	}
 
-	sort.IntSlice(ids).Sort()
-
-	keys := make([]interface{}, len(namespaces)*2)
-	for i, nsID := range ids {
-		keys[i*2] = id
-		keys[i*2+1] = nsID
-	}
-
-	_, err = tx.Exec(queryPersistLayerNamespace(len(namespaces)), keys...)
+	_, err := tx.Exec(queryPersistLayerNamespace(len(namespaces)), keys...)
 	if err != nil {
 		return handleError("queryPersistLayerNamespace", err)
 	}
-	return nil
-}
-
-func (tx *pgSession) persistProcessors(listerQuery, listerQueryName, detectorQuery, detectorQueryName string, id int64, processors database.Processors) error {
-	stmt, err := tx.Prepare(listerQuery)
-	if err != nil {
-		return handleError(listerQueryName, err)
-	}
-
-	for _, l := range processors.Listers {
-		_, err := stmt.Exec(id, l)
-		if err != nil {
-			stmt.Close()
-			return handleError(listerQueryName, err)
-		}
-	}
-
-	if err := stmt.Close(); err != nil {
-		return handleError(listerQueryName, err)
-	}
-
-	stmt, err = tx.Prepare(detectorQuery)
-	if err != nil {
-		return handleError(detectorQueryName, err)
-	}
-
-	for _, d := range processors.Detectors {
-		_, err := stmt.Exec(id, d)
-		if err != nil {
-			stmt.Close()
-			return handleError(detectorQueryName, err)
-		}
-	}
-
-	if err := stmt.Close(); err != nil {
-		return handleError(detectorQueryName, err)
-	}
 
 	return nil
 }
 
-func (tx *pgSession) findLayerNamespaces(layerID int64) ([]database.Namespace, error) {
-	var namespaces []database.Namespace
-
-	rows, err := tx.Query(searchLayerNamespaces, layerID)
+func (tx *pgSession) findLayerNamespaces(layerID int64, detectors detectorMap) ([]database.LayerNamespace, error) {
+	rows, err := tx.Query(findLayerNamespaces, layerID)
 	if err != nil {
-		return nil, handleError("searchLayerFeatures", err)
+		return nil, handleError("findLayerNamespaces", err)
 	}
 
+	namespaces := []database.LayerNamespace{}
 	for rows.Next() {
-		ns := database.Namespace{}
-		err := rows.Scan(&ns.Name, &ns.VersionFormat)
-		if err != nil {
+		var (
+			namespace  database.LayerNamespace
+			detectorID int64
+		)
+
+		if err := rows.Scan(&namespace.Name, &namespace.VersionFormat, &detectorID); err != nil {
 			return nil, err
 		}
-		namespaces = append(namespaces, ns)
+
+		namespace.By = detectors.byID[detectorID]
+		namespaces = append(namespaces, namespace)
 	}
+
 	return namespaces, nil
 }
 
-func (tx *pgSession) findLayerFeatures(layerID int64) ([]database.Feature, error) {
-	var features []database.Feature
-
-	rows, err := tx.Query(searchLayerFeatures, layerID)
+func (tx *pgSession) findLayerFeatures(layerID int64, detectors detectorMap) ([]database.LayerFeature, error) {
+	rows, err := tx.Query(findLayerFeatures, layerID)
 	if err != nil {
-		return nil, handleError("searchLayerFeatures", err)
+		return nil, handleError("findLayerFeatures", err)
+	}
+	defer rows.Close()
+
+	features := []database.LayerFeature{}
+	for rows.Next() {
+		var (
+			detectorID int64
+			feature    database.LayerFeature
+		)
+		if err := rows.Scan(&feature.Name, &feature.Version, &feature.VersionFormat, &detectorID); err != nil {
+			return nil, handleError("findLayerFeatures", err)
+		}
+
+		feature.By = detectors.byID[detectorID]
+		features = append(features, feature)
 	}
 
-	for rows.Next() {
-		f := database.Feature{}
-		err := rows.Scan(&f.Name, &f.Version, &f.VersionFormat)
-		if err != nil {
-			return nil, err
-		}
-		features = append(features, f)
-	}
 	return features, nil
 }
 
-func (tx *pgSession) findLayer(hash string) (database.LayerMetadata, int64, bool, error) {
-	var (
-		layerID int64
-		layer   = database.LayerMetadata{Hash: hash, ProcessedBy: database.Processors{}}
-	)
-
-	if hash == "" {
-		return layer, layerID, false, commonerr.NewBadRequestError("Empty Layer Hash is not allowed")
-	}
-
-	err := tx.QueryRow(searchLayer, hash).Scan(&layerID)
+func (tx *pgSession) findLayerID(hash string) (int64, bool, error) {
+	var layerID int64
+	err := tx.QueryRow(findLayerID, hash).Scan(&layerID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return layer, layerID, false, nil
+			return layerID, false, nil
 		}
-		return layer, layerID, false, err
+
+		return layerID, false, handleError("findLayerID", err)
 	}
 
-	layer.ProcessedBy, err = tx.findLayerProcessors(layerID)
-	return layer, layerID, true, err
+	return layerID, true, nil
 }
 
-func (tx *pgSession) findLayerProcessors(id int64) (database.Processors, error) {
-	var (
-		err        error
-		processors database.Processors
-	)
+func (tx *pgSession) findLayerIDs(hashes []string) ([]int64, bool, error) {
+	layerIDs := make([]int64, 0, len(hashes))
+	for _, hash := range hashes {
+		id, ok, err := tx.findLayerID(hash)
+		if !ok {
+			return nil, false, nil
+		}
 
-	if processors.Detectors, err = tx.findProcessors(searchLayerDetectors, id); err != nil {
-		return processors, handleError("searchLayerDetectors", err)
+		if err != nil {
+			return nil, false, err
+		}
+
+		layerIDs = append(layerIDs, id)
 	}
 
-	if processors.Listers, err = tx.findProcessors(searchLayerListers, id); err != nil {
-		return processors, handleError("searchLayerListers", err)
+	return layerIDs, true, nil
+}
+
+func (tx *pgSession) soiLayer(hash string) (int64, error) {
+	var id int64
+	if err := tx.QueryRow(soiLayer, hash).Scan(&id); err != nil {
+		return 0, handleError("soiLayer", err)
 	}
 
-	return processors, nil
+	return id, nil
 }

@@ -16,7 +16,6 @@ package pgsql
 
 import (
 	"database/sql"
-	"errors"
 	"sort"
 
 	"github.com/lib/pq"
@@ -28,7 +27,6 @@ import (
 )
 
 const (
-	// feature.go
 	soiNamespacedFeature = `
 		WITH new_feature_ns AS (
 			INSERT INTO namespaced_feature(feature_id, namespace_id)
@@ -64,15 +62,6 @@ const (
 			AND n.id = v.namespace_id
 			AND v.deleted_at IS NULL`
 )
-
-var (
-	errFeatureNotFound = errors.New("Feature not found")
-)
-
-type vulnerabilityAffecting struct {
-	vulnerabilityID int64
-	addedByID       int64
-}
 
 func (tx *pgSession) PersistFeatures(features []database.Feature) error {
 	if len(features) == 0 {
@@ -126,7 +115,7 @@ func (tx *pgSession) searchAffectingVulnerabilities(features []database.Namespac
 	fMap := map[int64]database.NamespacedFeature{}
 	for i, f := range features {
 		if !ids[i].Valid {
-			return nil, errFeatureNotFound
+			return nil, database.ErrMissingEntities
 		}
 		fMap[ids[i].Int64] = f
 	}
@@ -218,7 +207,7 @@ func (tx *pgSession) PersistNamespacedFeatures(features []database.NamespacedFea
 	if ids, err := tx.findFeatureIDs(fToFind); err == nil {
 		for i, id := range ids {
 			if !id.Valid {
-				return errFeatureNotFound
+				return database.ErrMissingEntities
 			}
 			fIDs[fToFind[i]] = id
 		}
@@ -234,7 +223,7 @@ func (tx *pgSession) PersistNamespacedFeatures(features []database.NamespacedFea
 	if ids, err := tx.findNamespaceIDs(nsToFind); err == nil {
 		for i, id := range ids {
 			if !id.Valid {
-				return errNamespaceNotFound
+				return database.ErrMissingEntities
 			}
 			nsIDs[nsToFind[i]] = id
 		}

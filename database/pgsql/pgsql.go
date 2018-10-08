@@ -270,6 +270,7 @@ func migrateDatabase(db *sql.DB) error {
 // createDatabase creates a new database.
 // The source parameter should not contain a dbname.
 func createDatabase(source, dbName string) error {
+	log.WithFields(log.Fields{"source": source, "dbName": dbName}).Debug("creating database...")
 	// Open database.
 	db, err := sql.Open("postgres", source)
 	if err != nil {
@@ -325,7 +326,7 @@ func handleError(desc string, err error) error {
 		return commonerr.ErrNotFound
 	}
 
-	log.WithError(err).WithField("Description", desc).Error("Handled Database Error")
+	log.WithError(err).WithField("Description", desc).Error("database: handled database error")
 	promErrorsTotal.WithLabelValues(desc).Inc()
 
 	if _, o := err.(*pq.Error); o || err == sql.ErrTxDone || strings.HasPrefix(err.Error(), "sql:") {
