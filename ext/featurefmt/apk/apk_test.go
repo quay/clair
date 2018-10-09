@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/featurefmt"
+	"github.com/coreos/clair/ext/featurefmt/featurefmttest"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/pkg/tarutil"
 )
@@ -42,13 +42,13 @@ func TestAPKFeatureDetection(t *testing.T) {
 		testFeatures[i].VersionFormat = dpkg.ParserName
 	}
 
-	testData := []featurefmt.TestData{
+	testData := []featurefmttest.TestData{
 		{
 			Features: testFeatures,
 			Files: tarutil.FilesMap{
-				"lib/apk/db/installed": featurefmt.LoadFileForTest("apk/testdata/installed"),
+				"lib/apk/db/installed": featurefmttest.LoadFileForTest("apk/testdata/installed"),
 			},
 		},
 	}
-	featurefmt.TestLister(t, &lister{}, testData)
+	featurefmttest.TestLister(t, &lister{}, testData)
 }

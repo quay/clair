@@ -17,14 +17,9 @@
 package featurefmt
 
 import (
-	"io/ioutil"
-	"path/filepath"
-	"runtime"
 	"sync"
-	"testing"
 
 	log "github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/pkg/tarutil"
@@ -133,31 +128,4 @@ func ListListers() []database.Detector {
 		r = append(r, d.info)
 	}
 	return r
-}
-
-// TestData represents the data used to test an implementation of Lister.
-type TestData struct {
-	Files    tarutil.FilesMap
-	Features []database.Feature
-}
-
-// LoadFileForTest can be used in order to obtain the []byte contents of a file
-// that is meant to be used for test data.
-func LoadFileForTest(name string) []byte {
-	_, filename, _, _ := runtime.Caller(0)
-	d, _ := ioutil.ReadFile(filepath.Join(filepath.Dir(filename)) + "/" + name)
-	return d
-}
-
-// TestLister runs a Lister on each provided instance of TestData and asserts
-// the ouput to be equal to the expected output.
-func TestLister(t *testing.T, l Lister, testData []TestData) {
-	for _, td := range testData {
-		featureVersions, err := l.ListFeatures(td.Files)
-		if assert.Nil(t, err) && assert.Len(t, featureVersions, len(td.Features)) {
-			for _, expectedFeature := range td.Features {
-				assert.Contains(t, featureVersions, expectedFeature)
-			}
-		}
-	}
 }

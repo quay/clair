@@ -18,13 +18,13 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/featurefmt"
+	"github.com/coreos/clair/ext/featurefmt/featurefmttest"
 	"github.com/coreos/clair/ext/versionfmt/rpm"
 	"github.com/coreos/clair/pkg/tarutil"
 )
 
 func TestRpmFeatureDetection(t *testing.T) {
-	testData := []featurefmt.TestData{
+	testData := []featurefmttest.TestData{
 		// Test a CentOS 7 RPM database
 		// Memo: Use the following command on a RPM-based system to shrink a database: rpm -qa --qf "%{NAME}\n" |tail -n +3| xargs rpm -e --justdb
 		{
@@ -43,10 +43,10 @@ func TestRpmFeatureDetection(t *testing.T) {
 				},
 			},
 			Files: tarutil.FilesMap{
-				"var/lib/rpm/Packages": featurefmt.LoadFileForTest("rpm/testdata/Packages"),
+				"var/lib/rpm/Packages": featurefmttest.LoadFileForTest("rpm/testdata/Packages"),
 			},
 		},
 	}
 
-	featurefmt.TestLister(t, &lister{}, testData)
+	featurefmttest.TestLister(t, &lister{}, testData)
 }
