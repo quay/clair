@@ -165,6 +165,12 @@ type Feature struct {
 	Name          string
 	Version       string
 	VersionFormat string
+
+	// Parent feature indicates that the vulnerability affects parent feature
+	// will also affect this feature.
+	//
+	// e.g. A source package is the parent feature of a binary package.
+	Parent *Feature
 }
 
 // NamespacedFeature is a feature with determined namespace and can be affected
