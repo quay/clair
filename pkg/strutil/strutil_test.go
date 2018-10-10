@@ -18,7 +18,23 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestSubstring(t *testing.T) {
+	for _, test := range [...]struct {
+		in    string
+		start int
+		end   int
+
+		out string
+	}{
+		{"", 0, 1, ""}, {"", 0, 0, ""}, {"", -1, -1, ""}, {"1", 1, 0, ""},
+		{"1", 1, 1, ""}, {"1", 0, 1, "1"}, {"1", 0, 2, ""},
+	} {
+		require.Equal(t, test.out, Substring(test.in, test.start, test.end))
+	}
+}
 
 func TestStringComparison(t *testing.T) {
 	cmp := Difference([]string{"a", "b", "b", "a"}, []string{"a", "c"})

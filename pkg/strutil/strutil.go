@@ -57,3 +57,13 @@ func Intersect(X, Y []string) []string {
 func CleanURL(str string) string {
 	return urlParametersRegexp.ReplaceAllString(str, "")
 }
+
+// Substring returns a substring by [start, end). If start or end are out
+// of bound, it returns "".
+func Substring(s string, start, end int) string {
+	if start > len(s) || start < 0 || end > len(s) || end < 0 || start >= end {
+		return ""
+	}
+
+	return s[start:end]
+}
