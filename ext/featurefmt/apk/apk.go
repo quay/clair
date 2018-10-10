@@ -19,6 +19,7 @@ import (
 	"bufio"
 	"bytes"
 
+	"github.com/deckarep/golang-set"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
@@ -34,6 +35,16 @@ func init() {
 
 type lister struct{}
 
+func valid(pkg *featurefmt.PackageInfo) bool {
+	return pkg.PackageName != "" && pkg.PackageVersion != ""
+}
+
+func addSourceVersion(pkg *featurefmt.PackageInfo) {
+	if pkg.SourceName != "" {
+		pkg.SourceVersion = pkg.PackageVersion
+	}
+}
+
 func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {
 	file, exists := files["lib/apk/db/installed"]
 	if !exists {
@@ -43,49 +54,45 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 	// Iterate over each line in the "installed" file attempting to parse each
 	// package into a feature that will be stored in a set to guarantee
 	// uniqueness.
-	pkgSet := make(map[string]database.Feature)
-	ipkg := database.Feature{}
+	packages := mapset.NewSet()
+	pkg := featurefmt.PackageInfo{}
 	scanner := bufio.NewScanner(bytes.NewBuffer(file))
 	for scanner.Scan() {
 		line := scanner.Text()
 		if len(line) < 2 {
+			if valid(&pkg) {
+				addSourceVersion(&pkg)
+				packages.Add(pkg)
+				pkg.Reset()
+			}
 			continue
 		}
 
 		// Parse the package name or version.
-		switch {
-		case line[:2] == "P:":
-			ipkg.Name = line[2:]
-		case line[:2] == "V:":
+		switch line[:2] {
+		case "P:":
+			pkg.PackageName = line[2:]
+		case "V:":
 			version := string(line[2:])
 			err := versionfmt.Valid(dpkg.ParserName, version)
 			if err != nil {
 				log.WithError(err).WithField("version", version).Warning("could not parse package version. skipping")
+				continue
 			} else {
-				ipkg.Version = version
+				pkg.PackageVersion = version
 			}
-		case line == "":
-			// Restart if the parser reaches another package definition before
-			// creating a valid package.
-			ipkg = database.Feature{}
-		}
-
-		// If we have a whole feature, store it in the set and try to parse a new
-		// one.
-		if ipkg.Name != "" && ipkg.Version != "" {
-			pkgSet[ipkg.Name+"#"+ipkg.Version] = ipkg
-			ipkg = database.Feature{}
+		case "o:":
+			pkg.SourceName = line[2:]
 		}
 	}
 
-	// Convert the map into a slice and attach the version format
-	pkgs := make([]database.Feature, 0, len(pkgSet))
-	for _, pkg := range pkgSet {
-		pkg.VersionFormat = dpkg.ParserName
-		pkgs = append(pkgs, pkg)
+	// in case of no terminal line
+	if valid(&pkg) {
+		addSourceVersion(&pkg)
+		packages.Add(pkg)
 	}
 
-	return pkgs, nil
+	return featurefmt.PackageSetToFeatures(dpkg.ParserName, packages), nil
 }
 
 func (l lister) RequiredFilenames() []string {
