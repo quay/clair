@@ -17,7 +17,7 @@
 package debian
 
 import (
-	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -67,7 +67,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		return resp, err
 	}
 
-	// Get the SHA-1 of the latest update's JSON data
+	// Get the hash of the latest update's JSON data
 	latestHash, ok, err := tx.FindKeyValue(updaterFlag)
 	if err != nil {
 		return resp, err
@@ -119,9 +119,9 @@ func buildResponse(jsonReader io.Reader, latestKnownHash string) (resp vulnsrc.U
 		}
 	}()
 
-	// Create a TeeReader so that we can unmarshal into JSON and write to a SHA-1
+	// Create a TeeReader so that we can unmarshal into JSON and write to a hash
 	// digest at the same time.
-	jsonSHA := sha1.New()
+	jsonSHA := sha256.New()
 	teedJSONReader := io.TeeReader(jsonReader, jsonSHA)
 
 	// Unmarshal JSON.
