@@ -40,8 +40,13 @@ func DeduplicateFeatures(features ...Feature) []Feature {
 		fSet.Add(f)
 	}
 
-	uniqueFeatures := make([]Feature, 0, fSet.Cardinality())
-	for f := range fSet.Iter() {
+	return ConvertFeatureSetToFeatures(fSet)
+}
+
+// ConvertFeatureSetToFeatures converts a feature set to an array of features
+func ConvertFeatureSetToFeatures(features mapset.Set) []Feature {
+	uniqueFeatures := make([]Feature, 0, features.Cardinality())
+	for f := range features.Iter() {
 		uniqueFeatures = append(uniqueFeatures, f.(Feature))
 	}
 

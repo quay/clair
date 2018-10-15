@@ -35,14 +35,8 @@ func init() {
 
 type lister struct{}
 
-func valid(pkg *featurefmt.PackageInfo) bool {
-	return pkg.PackageName != "" && pkg.PackageVersion != ""
-}
-
-func addSourceVersion(pkg *featurefmt.PackageInfo) {
-	if pkg.SourceName != "" {
-		pkg.SourceVersion = pkg.PackageVersion
-	}
+func valid(pkg *database.Feature) bool {
+	return pkg.Name != "" && pkg.Version != ""
 }
 
 func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {
@@ -55,23 +49,24 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 	// package into a feature that will be stored in a set to guarantee
 	// uniqueness.
 	packages := mapset.NewSet()
-	pkg := featurefmt.PackageInfo{}
+	pkg := database.Feature{VersionFormat: dpkg.ParserName}
 	scanner := bufio.NewScanner(bytes.NewBuffer(file))
 	for scanner.Scan() {
 		line := scanner.Text()
 		if len(line) < 2 {
 			if valid(&pkg) {
-				addSourceVersion(&pkg)
 				packages.Add(pkg)
-				pkg.Reset()
+				pkg = database.Feature{VersionFormat: dpkg.ParserName}
 			}
 			continue
 		}
 
 		// Parse the package name or version.
+		// Alpine package doesn't have specific source package. The "origin"
+		// package is sub package.
 		switch line[:2] {
 		case "P:":
-			pkg.PackageName = line[2:]
+			pkg.Name = line[2:]
 		case "V:":
 			version := string(line[2:])
 			err := versionfmt.Valid(dpkg.ParserName, version)
@@ -79,20 +74,17 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 				log.WithError(err).WithField("version", version).Warning("could not parse package version. skipping")
 				continue
 			} else {
-				pkg.PackageVersion = version
+				pkg.Version = version
 			}
-		case "o:":
-			pkg.SourceName = line[2:]
 		}
 	}
 
 	// in case of no terminal line
 	if valid(&pkg) {
-		addSourceVersion(&pkg)
 		packages.Add(pkg)
 	}
 
-	return featurefmt.PackageSetToFeatures(dpkg.ParserName, packages), nil
+	return database.ConvertFeatureSetToFeatures(packages), nil
 }
 
 func (l lister) RequiredFilenames() []string {

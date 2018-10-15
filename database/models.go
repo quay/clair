@@ -158,19 +158,15 @@ type Namespace struct {
 // Feature represents a package detected in a layer but the namespace is not
 // determined.
 //
-// e.g. Name: OpenSSL, Version: 1.0, VersionFormat: dpkg.
+// e.g. Name: Libssl1.0, Version: 1.0, Name: Openssl, Version: 1.0, VersionFormat: dpkg.
 // dpkg is the version format of the installer package manager, which in this
 // case could be dpkg or apk.
 type Feature struct {
 	Name          string
 	Version       string
+	SourceName    string
+	SourceVersion string
 	VersionFormat string
-
-	// Parent feature indicates that the vulnerability affects parent feature
-	// will also affect this feature.
-	//
-	// e.g. A source package is the parent feature of a binary package.
-	Parent *Feature
 }
 
 // NamespacedFeature is a feature with determined namespace and can be affected

@@ -55,8 +55,8 @@ func isIgnored(packageName string) bool {
 	return false
 }
 
-func valid(pkg *featurefmt.PackageInfo) bool {
-	return pkg.PackageName != "" && pkg.PackageVersion != "" &&
+func valid(pkg *database.Feature) bool {
+	return pkg.Name != "" && pkg.Version != "" &&
 		((pkg.SourceName == "" && pkg.SourceVersion != "") ||
 			(pkg.SourceName != "" && pkg.SourceVersion != ""))
 }
@@ -104,9 +104,9 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 			continue
 		}
 
-		pkg := featurefmt.PackageInfo{PackageName: line[0]}
-		pkg.PackageVersion = strings.Replace(line[1], "(none):", "", -1)
-		if err := versionfmt.Valid(rpm.ParserName, pkg.PackageVersion); err != nil {
+		pkg := database.Feature{Name: line[0], VersionFormat: rpm.ParserName}
+		pkg.Version = strings.Replace(line[1], "(none):", "", -1)
+		if err := versionfmt.Valid(rpm.ParserName, pkg.Version); err != nil {
 			log.WithError(err).WithField("version", line[1]).Warning("skipped unparseable package")
 			continue
 		}
@@ -121,7 +121,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 		}
 	}
 
-	return featurefmt.PackageSetToFeatures(rpm.ParserName, packages), nil
+	return database.ConvertFeatureSetToFeatures(packages), nil
 }
 
 func (l lister) RequiredFilenames() []string {
@@ -140,7 +140,7 @@ const (
 
 // parseSourceRPM parses the source rpm package representation string
 // http://ftp.rpm.org/max-rpm/ch-rpm-file-format.html
-func parseSourceRPM(sourceRPM string, pkg *featurefmt.PackageInfo) error {
+func parseSourceRPM(sourceRPM string, pkg *database.Feature) error {
 	state := parseRPM
 	previousCheckPoint := len(sourceRPM)
 	release := ""
