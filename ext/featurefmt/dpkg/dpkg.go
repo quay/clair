@@ -20,6 +20,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/deckarep/golang-set"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
@@ -40,29 +41,39 @@ func init() {
 	featurefmt.RegisterLister("dpkg", "1.0", &lister{})
 }
 
+func valid(pkg *featurefmt.PackageInfo) bool {
+	return pkg.PackageName != "" && pkg.PackageVersion != ""
+}
+
+func addSourceVersion(pkg *featurefmt.PackageInfo) {
+	if pkg.SourceName != "" && pkg.SourceVersion == "" {
+		pkg.SourceVersion = pkg.PackageVersion
+	}
+}
+
 func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {
 	f, hasFile := files["var/lib/dpkg/status"]
 	if !hasFile {
 		return []database.Feature{}, nil
 	}
 
-	// Create a map to store packages and ensure their uniqueness
-	packagesMap := make(map[string]database.Feature)
+	var (
+		pkg  featurefmt.PackageInfo
+		pkgs = mapset.NewSet()
+		err  error
+	)
 
-	var pkg database.Feature
-	var err error
 	scanner := bufio.NewScanner(strings.NewReader(string(f)))
 	for scanner.Scan() {
 		line := scanner.Text()
-
 		if strings.HasPrefix(line, "Package: ") {
 			// Package line
 			// Defines the name of the package
 
-			pkg.Name = strings.TrimSpace(strings.TrimPrefix(line, "Package: "))
-			pkg.Version = ""
+			pkg.PackageName = strings.TrimSpace(strings.TrimPrefix(line, "Package: "))
+			pkg.PackageVersion = ""
 		} else if strings.HasPrefix(line, "Source: ") {
-			// Source line (Optionnal)
+			// Source line (Optional)
 			// Gives the name of the source package
 			// May also specifies a version
 
@@ -72,50 +83,38 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 				md[dpkgSrcCaptureRegexpNames[i]] = strings.TrimSpace(n)
 			}
 
-			pkg.Name = md["name"]
+			pkg.SourceName = md["name"]
 			if md["version"] != "" {
 				version := md["version"]
-				err = versionfmt.Valid(dpkg.ParserName, version)
-				if err != nil {
+				if err = versionfmt.Valid(dpkg.ParserName, version); err != nil {
 					log.WithError(err).WithField("version", string(line[1])).Warning("could not parse package version. skipping")
 				} else {
-					pkg.Version = version
+					pkg.SourceVersion = version
 				}
 			}
-		} else if strings.HasPrefix(line, "Version: ") && pkg.Version == "" {
+		} else if strings.HasPrefix(line, "Version: ") {
 			// Version line
 			// Defines the version of the package
 			// This version is less important than a version retrieved from a Source line
 			// because the Debian vulnerabilities often skips the epoch from the Version field
 			// which is not present in the Source version, and because +bX revisions don't matter
 			version := strings.TrimPrefix(line, "Version: ")
-			err = versionfmt.Valid(dpkg.ParserName, version)
-			if err != nil {
+			if err = versionfmt.Valid(dpkg.ParserName, version); err != nil {
 				log.WithError(err).WithField("version", string(line[1])).Warning("could not parse package version. skipping")
 			} else {
-				pkg.Version = version
+				pkg.PackageVersion = version
 			}
 		} else if line == "" {
-			pkg.Name = ""
-			pkg.Version = ""
+			pkg.Reset()
 		}
 
-		// Add the package to the result array if we have all the informations
-		if pkg.Name != "" && pkg.Version != "" {
-			packagesMap[pkg.Name+"#"+pkg.Version] = pkg
-			pkg.Name = ""
-			pkg.Version = ""
+		if valid(&pkg) {
+			addSourceVersion(&pkg)
+			pkgs.Add(pkg)
 		}
 	}
 
-	// Convert the map to a slice and add version format.
-	packages := make([]database.Feature, 0, len(packagesMap))
-	for _, pkg := range packagesMap {
-		pkg.VersionFormat = dpkg.ParserName
-		packages = append(packages, pkg)
-	}
-
-	return packages, nil
+	return featurefmt.PackageSetToFeatures(dpkg.ParserName, pkgs), nil
 }
 
 func (l lister) RequiredFilenames() []string {
