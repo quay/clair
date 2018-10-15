@@ -54,7 +54,7 @@ func loadTestFiles(testFilePaths map[string]string) tarutil.FilesMap {
 type TestCase struct {
 	Name           string
 	FilePaths      map[string]string
-	ExpectedResult []PackageInfo
+	ExpectedResult []database.Feature
 }
 
 // RunTest runs a featurefmt test by loading the package info database files and
@@ -65,7 +65,7 @@ func RunTest(t *testing.T, test TestCase, lister Lister, expectedVersionFormat s
 		expected := test.ExpectedResult
 		features, err := lister.ListFeatures(filesMap)
 		require.Nil(t, err)
-		visited := map[PackageInfo]bool{}
+		visited := map[database.Feature]bool{}
 		// we only enforce the unique packages to match, the result features
 		// should be always deduplicated.
 		for _, pkg := range expected {
@@ -75,22 +75,16 @@ func RunTest(t *testing.T, test TestCase, lister Lister, expectedVersionFormat s
 		assert.Len(t, features, len(visited))
 		for _, f := range features {
 			assert.Equal(t, expectedVersionFormat, f.VersionFormat)
-			if f.Parent != nil {
-				// currently we don't have more than 2 levels deep features.
-				assert.Equal(t, expectedVersionFormat, f.Parent.VersionFormat)
-			}
-
-			pkg := convertToPackageInfo(&f)
-			if ok, found := visited[pkg]; ok {
-				assert.Fail(t, "duplicated features is not allowed", "feature=%#v", f, pkg)
+			if ok, found := visited[f]; ok {
+				assert.Fail(t, "duplicated features is not allowed", "feature=%#v", f)
 			} else if !found {
-				assert.Fail(t, "unexpected feature", "feature = %#v", pkg)
+				assert.Fail(t, "unexpected feature", "feature = %#v", f)
 			}
 
-			visited[pkg] = true
+			visited[f] = true
 		}
 
-		missingPackages := []PackageInfo{}
+		missingPackages := []database.Feature{}
 		for pkg, ok := range visited {
 			if !ok {
 				missingPackages = append(missingPackages, pkg)
@@ -99,20 +93,4 @@ func RunTest(t *testing.T, test TestCase, lister Lister, expectedVersionFormat s
 
 		assert.Len(t, missingPackages, 0, "missing packages")
 	})
-}
-
-func convertToPackageInfo(feature *database.Feature) PackageInfo {
-	pkg := PackageInfo{
-		PackageName:    feature.Name,
-		PackageVersion: feature.Version,
-	}
-
-	// Since in the actual package manager metadata file, there's no explicit
-	// tree structure, the features are converted to compare the metadata only.
-	if feature.Parent != nil {
-		pkg.SourceName = feature.Parent.Name
-		pkg.SourceVersion = feature.Parent.Version
-	}
-
-	return pkg
 }

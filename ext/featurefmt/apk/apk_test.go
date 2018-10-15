@@ -17,6 +17,7 @@ package apk
 import (
 	"testing"
 
+	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/featurefmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 )
@@ -26,18 +27,18 @@ func TestAPKFeatureDetection(t *testing.T) {
 		{
 			"valid case",
 			map[string]string{"lib/apk/db/installed": "apk/testdata/valid"},
-			[]featurefmt.PackageInfo{
-				{"musl", "1.1.14-r10", "", ""},
-				{"busybox", "1.24.2-r9", "", ""},
-				{"alpine-baselayout", "3.0.3-r0", "", ""},
-				{"alpine-keys", "1.1-r0", "", ""},
-				{"zlib", "1.2.8-r2", "", ""},
-				{"libcrypto1.0", "1.0.2h-r1", "openssl", "1.0.2h-r1"},
-				{"libssl1.0", "1.0.2h-r1", "openssl", "1.0.2h-r1"},
-				{"apk-tools", "2.6.7-r0", "", ""},
-				{"scanelf", "1.1.6-r0", "pax-utils", "1.1.6-r0"},
-				{"musl-utils", "1.1.14-r10", "musl", "1.1.14-r10"},
-				{"libc-utils", "0.7-r0", "libc-dev", "0.7-r0"},
+			[]database.Feature{
+				{"musl", "1.1.14-r10", "", "", dpkg.ParserName},
+				{"busybox", "1.24.2-r9", "", "", dpkg.ParserName},
+				{"alpine-baselayout", "3.0.3-r0", "", "", dpkg.ParserName},
+				{"alpine-keys", "1.1-r0", "", "", dpkg.ParserName},
+				{"zlib", "1.2.8-r2", "", "", dpkg.ParserName},
+				{"libcrypto1.0", "1.0.2h-r1", "", "", dpkg.ParserName},
+				{"libssl1.0", "1.0.2h-r1", "", "", dpkg.ParserName},
+				{"apk-tools", "2.6.7-r0", "", "", dpkg.ParserName},
+				{"scanelf", "1.1.6-r0", "", "", dpkg.ParserName},
+				{"musl-utils", "1.1.14-r10", "", "", dpkg.ParserName},
+				{"libc-utils", "0.7-r0", "", "", dpkg.ParserName},
 			},
 		},
 	} {

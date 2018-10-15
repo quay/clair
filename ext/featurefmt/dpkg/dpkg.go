@@ -41,13 +41,17 @@ func init() {
 	featurefmt.RegisterLister("dpkg", "1.0", &lister{})
 }
 
-func valid(pkg *featurefmt.PackageInfo) bool {
-	return pkg.PackageName != "" && pkg.PackageVersion != ""
+func valid(pkg *database.Feature) bool {
+	return pkg.Name != "" && pkg.Version != ""
 }
 
-func addSourceVersion(pkg *featurefmt.PackageInfo) {
-	if pkg.SourceName != "" && pkg.SourceVersion == "" {
-		pkg.SourceVersion = pkg.PackageVersion
+func addSourcePackage(pkg *database.Feature) {
+	if pkg.SourceName == "" {
+		pkg.SourceName = pkg.Name
+	}
+
+	if pkg.SourceVersion == "" {
+		pkg.SourceVersion = pkg.Version
 	}
 }
 
@@ -58,7 +62,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 	}
 
 	var (
-		pkg  featurefmt.PackageInfo
+		pkg  = database.Feature{VersionFormat: dpkg.ParserName}
 		pkgs = mapset.NewSet()
 		err  error
 	)
@@ -70,8 +74,8 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 			// Package line
 			// Defines the name of the package
 
-			pkg.PackageName = strings.TrimSpace(strings.TrimPrefix(line, "Package: "))
-			pkg.PackageVersion = ""
+			pkg.Name = strings.TrimSpace(strings.TrimPrefix(line, "Package: "))
+			pkg.Version = ""
 		} else if strings.HasPrefix(line, "Source: ") {
 			// Source line (Optional)
 			// Gives the name of the source package
@@ -102,19 +106,19 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 			if err = versionfmt.Valid(dpkg.ParserName, version); err != nil {
 				log.WithError(err).WithField("version", string(line[1])).Warning("could not parse package version. skipping")
 			} else {
-				pkg.PackageVersion = version
+				pkg.Version = version
 			}
 		} else if line == "" {
-			pkg.Reset()
+			pkg = database.Feature{VersionFormat: dpkg.ParserName}
 		}
 
 		if valid(&pkg) {
-			addSourceVersion(&pkg)
+			addSourcePackage(&pkg)
 			pkgs.Add(pkg)
 		}
 	}
 
-	return featurefmt.PackageSetToFeatures(dpkg.ParserName, pkgs), nil
+	return database.ConvertFeatureSetToFeatures(pkgs), nil
 }
 
 func (l lister) RequiredFilenames() []string {
