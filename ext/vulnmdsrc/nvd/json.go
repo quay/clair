@@ -22,27 +22,39 @@ import (
 )
 
 type nvd struct {
-	Entries []nvdEntry `xml:"entry"`
+	Entries []nvdEntry `json:"CVE_Items"`
 }
 
 type nvdEntry struct {
-	Name              string  `xml:"http://scap.nist.gov/schema/vulnerability/0.4 cve-id"`
-	CVSS              nvdCVSS `xml:"http://scap.nist.gov/schema/vulnerability/0.4 cvss"`
-	PublishedDateTime string  `xml:"http://scap.nist.gov/schema/vulnerability/0.4 published-datetime"`
+	CVE               nvdCVE    `json:"cve"`
+	Impact            nvdImpact `json:"impact"`
+	PublishedDateTime string    `json:"publishedDate"`
 }
 
-type nvdCVSS struct {
-	BaseMetrics nvdCVSSBaseMetrics `xml:"http://scap.nist.gov/schema/cvss-v2/0.2 base_metrics"`
+type nvdCVE struct {
+	Metadata nvdCVEMetadata `json:"CVE_data_meta"`
 }
 
-type nvdCVSSBaseMetrics struct {
-	Score            float64 `xml:"score"`
-	AccessVector     string  `xml:"access-vector"`
-	AccessComplexity string  `xml:"access-complexity"`
-	Authentication   string  `xml:"authentication"`
-	ConfImpact       string  `xml:"confidentiality-impact"`
-	IntegImpact      string  `xml:"integrity-impact"`
-	AvailImpact      string  `xml:"availability-impact"`
+type nvdCVEMetadata struct {
+	CVEID string `json:"ID"`
+}
+
+type nvdImpact struct {
+	BaseMetricV2 nvdBaseMetricV2 `json:"baseMetricV2"`
+}
+
+type nvdBaseMetricV2 struct {
+	CVSSv2 nvdCVSSv2 `json:"cvssV2"`
+}
+
+type nvdCVSSv2 struct {
+	Score            float64 `json:"baseScore"`
+	AccessVector     string  `json:"accessVector"`
+	AccessComplexity string  `json:"accessComplexity"`
+	Authentication   string  `json:"authentication"`
+	ConfImpact       string  `json:"confidentialityImpact"`
+	IntegImpact      string  `json:"integrityImpact"`
+	AvailImpact      string  `json:"availabilityImpact"`
 }
 
 var vectorValuesToLetters map[string]string
@@ -56,8 +68,8 @@ func init() {
 	vectorValuesToLetters["MEDIUM"] = "M"
 	vectorValuesToLetters["LOW"] = "L"
 	vectorValuesToLetters["NONE"] = "N"
-	vectorValuesToLetters["SINGLE_INSTANCE"] = "S"
-	vectorValuesToLetters["MULTIPLE_INSTANCES"] = "M"
+	vectorValuesToLetters["SINGLE"] = "S"
+	vectorValuesToLetters["MULTIPLE"] = "M"
 	vectorValuesToLetters["PARTIAL"] = "P"
 	vectorValuesToLetters["COMPLETE"] = "C"
 }
@@ -66,18 +78,23 @@ func (n nvdEntry) Metadata() *NVDMetadata {
 	metadata := &NVDMetadata{
 		CVSSv2: NVDmetadataCVSSv2{
 			PublishedDateTime: n.PublishedDateTime,
-			Vectors:           n.CVSS.BaseMetrics.String(),
-			Score:             n.CVSS.BaseMetrics.Score,
+			Vectors:           n.Impact.BaseMetricV2.CVSSv2.String(),
+			Score:             n.Impact.BaseMetricV2.CVSSv2.Score,
 		},
 	}
 
 	if metadata.CVSSv2.Vectors == "" {
 		return nil
 	}
+
 	return metadata
 }
 
-func (n nvdCVSSBaseMetrics) String() string {
+func (n nvdEntry) Name() string {
+	return n.CVE.Metadata.CVEID
+}
+
+func (n nvdCVSSv2) String() string {
 	var str string
 	addVec(&str, "AV", n.AccessVector)
 	addVec(&str, "AC", n.AccessComplexity)
@@ -94,7 +111,7 @@ func addVec(str *string, vec, val string) {
 		if let, ok := vectorValuesToLetters[val]; ok {
 			*str = fmt.Sprintf("%s%s:%s/", *str, vec, let)
 		} else {
-			log.WithFields(log.Fields{"value": val, "vector": vec}).Warning("unknown value for CVSSv2 vector")
+			log.WithFields(log.Fields{"value": val, "vector": vec}).Warning("unknown value for CVSS vector")
 		}
 	}
 }
