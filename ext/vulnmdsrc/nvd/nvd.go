@@ -55,12 +55,18 @@ type appender struct {
 
 type NVDMetadata struct {
 	CVSSv2 NVDmetadataCVSSv2
+	CVSSv3 NVDmetadataCVSSv3
 }
 
 type NVDmetadataCVSSv2 struct {
 	PublishedDateTime string
 	Vectors           string
 	Score             float64
+}
+
+type NVDmetadataCVSSv3 struct {
+	Vectors string
+	Score   float64
 }
 
 func init() {

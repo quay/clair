@@ -41,6 +41,7 @@ type nvdCVEMetadata struct {
 
 type nvdImpact struct {
 	BaseMetricV2 nvdBaseMetricV2 `json:"baseMetricV2"`
+	BaseMetricV3 nvdBaseMetricV3 `json:"baseMetricV3"`
 }
 
 type nvdBaseMetricV2 struct {
@@ -55,6 +56,22 @@ type nvdCVSSv2 struct {
 	ConfImpact       string  `json:"confidentialityImpact"`
 	IntegImpact      string  `json:"integrityImpact"`
 	AvailImpact      string  `json:"availabilityImpact"`
+}
+
+type nvdBaseMetricV3 struct {
+	CVSSv3 nvdCVSSv3 `json:"cvssV3"`
+}
+
+type nvdCVSSv3 struct {
+	Score              float64 `json:"baseScore"`
+	AttackVector       string  `json:"attackVector"`
+	AttackComplexity   string  `json:"attackComplexity"`
+	PrivilegesRequired string  `json:"privilegesRequired"`
+	UserInteraction    string  `json:"userInteraction"`
+	Scope              string  `json:"scope"`
+	ConfImpact         string  `json:"confidentialityImpact"`
+	IntegImpact        string  `json:"integrityImpact"`
+	AvailImpact        string  `json:"availabilityImpact"`
 }
 
 var vectorValuesToLetters map[string]string
@@ -72,6 +89,12 @@ func init() {
 	vectorValuesToLetters["MULTIPLE"] = "M"
 	vectorValuesToLetters["PARTIAL"] = "P"
 	vectorValuesToLetters["COMPLETE"] = "C"
+
+	// CVSSv3 only
+	vectorValuesToLetters["PHYSICAL"] = "P"
+	vectorValuesToLetters["REQUIRED"] = "R"
+	vectorValuesToLetters["CHANGED"] = "C"
+	vectorValuesToLetters["UNCHANGED"] = "U"
 }
 
 func (n nvdEntry) Metadata() *NVDMetadata {
@@ -80,6 +103,10 @@ func (n nvdEntry) Metadata() *NVDMetadata {
 			PublishedDateTime: n.PublishedDateTime,
 			Vectors:           n.Impact.BaseMetricV2.CVSSv2.String(),
 			Score:             n.Impact.BaseMetricV2.CVSSv2.Score,
+		},
+		CVSSv3: NVDmetadataCVSSv3{
+			Vectors: n.Impact.BaseMetricV3.CVSSv3.String(),
+			Score:   n.Impact.BaseMetricV3.CVSSv3.Score,
 		},
 	}
 
@@ -103,6 +130,24 @@ func (n nvdCVSSv2) String() string {
 	addVec(&str, "I", n.IntegImpact)
 	addVec(&str, "A", n.AvailImpact)
 	str = strings.TrimSuffix(str, "/")
+	return str
+}
+
+func (n nvdCVSSv3) String() string {
+	var str string
+	addVec(&str, "AV", n.AttackVector)
+	addVec(&str, "AC", n.AttackComplexity)
+	addVec(&str, "PR", n.PrivilegesRequired)
+	addVec(&str, "UI", n.UserInteraction)
+	addVec(&str, "S", n.Scope)
+	addVec(&str, "C", n.ConfImpact)
+	addVec(&str, "I", n.IntegImpact)
+	addVec(&str, "A", n.AvailImpact)
+	str = strings.TrimSuffix(str, "/")
+
+	if len(str) > 0 {
+		return fmt.Sprintf("CVSS:3.0/%s", str)
+	}
 	return str
 }
 
