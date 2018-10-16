@@ -95,23 +95,30 @@ func (a *appender) BuildCache(datastore database.Datastore) error {
 			log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not open NVD data file")
 			return commonerr.ErrCouldNotParse
 		}
-		var nvd nvd
 
 		r := bufio.NewReader(f)
-		if err := json.NewDecoder(r).Decode(&nvd); err != nil {
-			f.Close()
-			log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not decode NVD data feed")
-			return commonerr.ErrCouldNotParse
-		}
-
-		// For each entry of this data feed:
-		for _, nvdEntry := range nvd.Entries {
-			// Create metadata entry.
-			if metadata := nvdEntry.Metadata(); metadata != nil {
-				a.metadata[nvdEntry.Name()] = *metadata
-			}
+		if err := a.parseDataFeed(r); err != nil {
+			log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not parse NVD data file")
+			return err
 		}
 		f.Close()
+	}
+
+	return nil
+}
+
+func (a *appender) parseDataFeed(r io.Reader) error {
+	var nvd nvd
+
+	if err := json.NewDecoder(r).Decode(&nvd); err != nil {
+		return commonerr.ErrCouldNotParse
+	}
+
+	for _, nvdEntry := range nvd.Entries {
+		// Create metadata entry.
+		if metadata := nvdEntry.Metadata(); metadata != nil {
+			a.metadata[nvdEntry.Name()] = *metadata
+		}
 	}
 
 	return nil
