@@ -73,7 +73,7 @@ func CloneOrPull(remote, repoPath, tempDirPrefix string) (path, head string, err
 		path = repoPath
 	}
 
-	if _, pathExists := os.Stat(path); os.IsNotExist(pathExists) {
+	if _, pathExists := os.Stat(path); repoPath == "" || os.IsNotExist(pathExists) {
 		head, err = clone(remote, path)
 		return
 	}
