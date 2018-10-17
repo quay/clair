@@ -54,7 +54,11 @@ cd clair/contrib/helm
 cp clair/values.yaml ~/my_custom_values.yaml
 vi ~/my_custom_values.yaml
 helm dependency update clair
-helm install clair -f ~/my_custom_values.yaml
+helm install clair -f ~/my_custom_values.yaml  
+      ### above does fail with Error: grpc: received message larger than max (80091877 vs. 20971520)
+      ### helm version
+      ### Client: &version.Version{SemVer:"v2.11.0", GitCommit:"2e55dbe1fdb5fdb96b75ff144a339489417b146b", GitTreeState:"clean"}
+      ### Server: &version.Version{SemVer:"v2.11.0", GitCommit:"2e55dbe1fdb5fdb96b75ff144a339489417b146b", GitTreeState:"clean"}
 ```
 
 ### Local
@@ -77,8 +81,12 @@ If this error is raised, manually execute `docker-compose start clair`.
 ```sh
 $ mkdir $PWD/clair_config
 $ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.yaml.sample -o $PWD/clair_config/config.yaml
-$ docker run -d -e POSTGRES_PASSWORD="" -p 5432:5432 postgres:9.6
-$ docker run --net=host -d -p 6060-6061:6060-6061 -v $PWD/clair_config:/config quay.io/coreos/clair-git:latest -config=/config/config.yaml
+$ docker network create --driver bridge clair
+$ docker run --net=clair -d -e POSTGRES_PASSWORD="" -p 5432:5432 postgres:9.6
+### Edit $PWD/clair_config/config.yaml and set the correct postgres IP address:
+### source: host=<IP Address as shown e.g. by 'docker network inspect clair'>
+$ docker run --net=clair -d -p 6060-6061:6060-6061 -v $PWD/clair_config:/config --name clair_clair quay.io/coreos/clair-git:latest --config=/config/config.yaml
+### Please observe the additional '-' with '--config='!
 ```
 
 #### Source
