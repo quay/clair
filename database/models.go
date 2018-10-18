@@ -199,8 +199,10 @@ type VulnerabilityWithFixedIn struct {
 // by a Vulnerability. Namespace and Feature Name is unique. Affected Feature is
 // bound to vulnerability.
 type AffectedFeature struct {
-	Namespace   Namespace
-	FeatureName string
+	// AffectedType determines which type of package it affects.
+	AffectedType AffectedFeatureType
+	Namespace    Namespace
+	FeatureName  string
 	// FixedInVersion is known next feature version that's not affected by the
 	// vulnerability. Empty FixedInVersion means the unaffected version is
 	// unknown.
@@ -229,7 +231,7 @@ type Vulnerability struct {
 	Metadata MetadataMap
 }
 
-// VulnerabilityWithAffected is an vulnerability with all known affected
+// VulnerabilityWithAffected is a vulnerability with all known affected
 // features.
 type VulnerabilityWithAffected struct {
 	Vulnerability
