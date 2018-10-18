@@ -46,6 +46,7 @@ func TestRHELParserMultipleCVE(t *testing.T) {
 		database.MediumSeverity, database.MediumSeverity}
 	expectedFeatures := []database.AffectedFeature{
 		{
+			AffectedType: affectedType,
 			Namespace: database.Namespace{
 				Name:          "centos:6",
 				VersionFormat: rpm.ParserName,
@@ -55,6 +56,7 @@ func TestRHELParserMultipleCVE(t *testing.T) {
 			AffectedVersion: "0:38.1.0-1.el6_6",
 		},
 		{
+			AffectedType: affectedType,
 			Namespace: database.Namespace{
 				Name:          "centos:7",
 				VersionFormat: rpm.ParserName,
@@ -94,6 +96,7 @@ func TestRHELParserOneCVE(t *testing.T) {
 
 		expectedFeatures := []database.AffectedFeature{
 			{
+				AffectedType: affectedType,
 				Namespace: database.Namespace{
 					Name:          "centos:7",
 					VersionFormat: rpm.ParserName,
@@ -103,6 +106,7 @@ func TestRHELParserOneCVE(t *testing.T) {
 				FixedInVersion:  "0:3.1.1-7.el7_1",
 			},
 			{
+				AffectedType: affectedType,
 				Namespace: database.Namespace{
 					Name:          "centos:7",
 					VersionFormat: rpm.ParserName,
@@ -112,6 +116,7 @@ func TestRHELParserOneCVE(t *testing.T) {
 				FixedInVersion:  "0:3.1.1-7.el7_1",
 			},
 			{
+				AffectedType: affectedType,
 				Namespace: database.Namespace{
 					Name:          "centos:7",
 					VersionFormat: rpm.ParserName,

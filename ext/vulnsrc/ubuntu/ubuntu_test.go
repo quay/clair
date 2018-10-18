@@ -46,6 +46,7 @@ func TestUbuntuParser(t *testing.T) {
 
 		expectedFeatures := []database.AffectedFeature{
 			{
+				AffectedType: affectedType,
 				Namespace: database.Namespace{
 					Name:          "ubuntu:14.04",
 					VersionFormat: dpkg.ParserName,
@@ -54,6 +55,7 @@ func TestUbuntuParser(t *testing.T) {
 				AffectedVersion: versionfmt.MaxVersion,
 			},
 			{
+				AffectedType: affectedType,
 				Namespace: database.Namespace{
 					Name:          "ubuntu:15.04",
 					VersionFormat: dpkg.ParserName,
@@ -63,6 +65,7 @@ func TestUbuntuParser(t *testing.T) {
 				AffectedVersion: "0.4-3",
 			},
 			{
+				AffectedType: affectedType,
 				Namespace: database.Namespace{
 					Name:          "ubuntu:15.10",
 					VersionFormat: dpkg.ParserName,

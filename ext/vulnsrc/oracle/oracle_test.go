@@ -42,6 +42,7 @@ func TestOracleParser(t *testing.T) {
 
 		expectedFeatures := []database.AffectedFeature{
 			{
+				AffectedType: affectedType,
 				Namespace: database.Namespace{
 					Name:          "oracle:7",
 					VersionFormat: rpm.ParserName,
@@ -51,6 +52,7 @@ func TestOracleParser(t *testing.T) {
 				AffectedVersion: "0:3.1.1-7.el7_1",
 			},
 			{
+				AffectedType: affectedType,
 				Namespace: database.Namespace{
 					Name:          "oracle:7",
 					VersionFormat: rpm.ParserName,
@@ -60,6 +62,7 @@ func TestOracleParser(t *testing.T) {
 				AffectedVersion: "0:3.1.1-7.el7_1",
 			},
 			{
+				AffectedType: affectedType,
 				Namespace: database.Namespace{
 					Name:          "oracle:7",
 					VersionFormat: rpm.ParserName,
@@ -86,6 +89,7 @@ func TestOracleParser(t *testing.T) {
 		assert.Equal(t, ` [38.1.0-1.0.1.el7_1] - Add firefox-oracle-default-prefs.js and remove the corresponding Red Hat file [38.1.0-1] - Update to 38.1.0 ESR [38.0.1-2] - Fixed rhbz#1222807 by removing preun section `, vulnerabilities[0].Description)
 		expectedFeatures := []database.AffectedFeature{
 			{
+				AffectedType: affectedType,
 				Namespace: database.Namespace{
 					Name:          "oracle:6",
 					VersionFormat: rpm.ParserName,
@@ -95,6 +99,7 @@ func TestOracleParser(t *testing.T) {
 				AffectedVersion: "0:38.1.0-1.0.1.el6_6",
 			},
 			{
+				AffectedType: affectedType,
 				Namespace: database.Namespace{
 					Name:          "oracle:7",
 					VersionFormat: rpm.ParserName,
