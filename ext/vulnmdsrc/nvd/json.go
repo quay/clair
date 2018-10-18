@@ -74,7 +74,25 @@ type nvdCVSSv3 struct {
 	AvailImpact        string  `json:"availabilityImpact"`
 }
 
-var vectorValuesToLetters map[string]string
+var vectorValuesToLetters = map[string]string{
+	"NETWORK":          "N",
+	"ADJACENT_NETWORK": "A",
+	"LOCAL":            "L",
+	"HIGH":             "H",
+	"MEDIUM":           "M",
+	"LOW":              "L",
+	"NONE":             "N",
+	"SINGLE":           "S",
+	"MULTIPLE":         "M",
+	"PARTIAL":          "P",
+	"COMPLETE":         "C",
+
+	// CVSSv3 only
+	"PHYSICAL":  "P",
+	"REQUIRED":  "R",
+	"CHANGED":   "C",
+	"UNCHANGED": "U",
+}
 
 func init() {
 	vectorValuesToLetters = make(map[string]string)
