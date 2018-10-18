@@ -183,6 +183,7 @@ func newmockUpdaterDatastore() *mockUpdaterDatastore {
 
 func TestDoVulnerabilitiesNamespacing(t *testing.T) {
 	fv1 := database.AffectedFeature{
+		AffectedType:    database.AffectSourcePackage,
 		Namespace:       database.Namespace{Name: "Namespace1"},
 		FeatureName:     "Feature1",
 		FixedInVersion:  "0.1",
@@ -190,6 +191,7 @@ func TestDoVulnerabilitiesNamespacing(t *testing.T) {
 	}
 
 	fv2 := database.AffectedFeature{
+		AffectedType:    database.AffectSourcePackage,
 		Namespace:       database.Namespace{Name: "Namespace2"},
 		FeatureName:     "Feature1",
 		FixedInVersion:  "0.2",
@@ -197,7 +199,7 @@ func TestDoVulnerabilitiesNamespacing(t *testing.T) {
 	}
 
 	fv3 := database.AffectedFeature{
-
+		AffectedType:    database.AffectSourcePackage,
 		Namespace:       database.Namespace{Name: "Namespace2"},
 		FeatureName:     "Feature2",
 		FixedInVersion:  "0.3",
@@ -235,8 +237,9 @@ func TestCreatVulnerabilityNotification(t *testing.T) {
 		VersionFormat: vf1,
 	}
 	af1 := database.AffectedFeature{
-		Namespace:   ns1,
-		FeatureName: "feature 1",
+		AffectedType: database.AffectSourcePackage,
+		Namespace:    ns1,
+		FeatureName:  "feature 1",
 	}
 
 	v1 := database.VulnerabilityWithAffected{

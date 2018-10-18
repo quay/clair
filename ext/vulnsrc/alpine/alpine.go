@@ -37,6 +37,9 @@ const (
 	secdbGitURL  = "https://github.com/alpinelinux/alpine-secdb"
 	updaterFlag  = "alpine-secdbUpdater"
 	nvdURLPrefix = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
+	// affected type indicates if the affected feature hint is for binary or
+	// source package.
+	affectedType = database.AffectBinaryPackage
 )
 
 func init() {
@@ -226,6 +229,7 @@ func parseYAML(r io.Reader) (vulns []database.VulnerabilityWithAffected, err err
 				}
 				vuln.Affected = []database.AffectedFeature{
 					{
+						AffectedType:    affectedType,
 						FeatureName:     pkg.Name,
 						AffectedVersion: version,
 						FixedInVersion:  fixedInVersion,

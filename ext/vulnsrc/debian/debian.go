@@ -38,6 +38,7 @@ const (
 	url          = "https://security-tracker.debian.org/tracker/data/json"
 	cveURLPrefix = "https://security-tracker.debian.org/tracker"
 	updaterFlag  = "debianUpdater"
+	affectedType = database.AffectSourcePackage
 )
 
 type jsonData map[string]map[string]jsonVuln
@@ -227,6 +228,7 @@ func parseDebianJSON(data *jsonData) (vulnerabilities []database.VulnerabilityWi
 
 				// Create and add the feature version.
 				pkg := database.AffectedFeature{
+					AffectedType:    affectedType,
 					FeatureName:     pkgName,
 					AffectedVersion: version,
 					FixedInVersion:  fixedInVersion,

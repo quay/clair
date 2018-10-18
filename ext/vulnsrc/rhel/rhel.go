@@ -43,6 +43,7 @@ const (
 	ovalURI        = "https://www.redhat.com/security/data/oval/"
 	rhsaFilePrefix = "com.redhat.rhsa-"
 	updaterFlag    = "rhelUpdater"
+	affectedType   = database.AffectBinaryPackage
 )
 
 var (
@@ -341,6 +342,7 @@ func toFeatures(criteria criteria) []database.AffectedFeature {
 			} else if strings.Contains(c.Comment, " is earlier than ") {
 				const prefixLen = len(" is earlier than ")
 				featureVersion.FeatureName = strings.TrimSpace(c.Comment[:strings.Index(c.Comment, " is earlier than ")])
+				featureVersion.AffectedType = affectedType
 				version := c.Comment[strings.Index(c.Comment, " is earlier than ")+prefixLen:]
 				err := versionfmt.Valid(rpm.ParserName, version)
 				if err != nil {

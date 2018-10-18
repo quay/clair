@@ -35,9 +35,10 @@ import (
 )
 
 const (
-	trackerURI  = "https://git.launchpad.net/ubuntu-cve-tracker"
-	updaterFlag = "ubuntuUpdater"
-	cveURL      = "http://people.ubuntu.com/~ubuntu-security/cve/%s"
+	trackerURI   = "https://git.launchpad.net/ubuntu-cve-tracker"
+	updaterFlag  = "ubuntuUpdater"
+	cveURL       = "http://people.ubuntu.com/~ubuntu-security/cve/%s"
+	affectedType = database.AffectSourcePackage
 )
 
 var (
@@ -334,6 +335,7 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 
 				// Create and add the new package.
 				featureVersion := database.AffectedFeature{
+					AffectedType: affectedType,
 					Namespace: database.Namespace{
 						Name:          releaseName,
 						VersionFormat: dpkg.ParserName,
