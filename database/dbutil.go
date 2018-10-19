@@ -53,6 +53,20 @@ func ConvertFeatureSetToFeatures(features mapset.Set) []Feature {
 	return uniqueFeatures
 }
 
+// FindKeyValueAndRollback wraps session FindKeyValue function with begin and
+// roll back.
+func FindKeyValueAndRollback(datastore Datastore, key string) (value string, ok bool, err error) {
+	var tx Session
+	tx, err = datastore.Begin()
+	if err != nil {
+		return
+	}
+	defer tx.Rollback()
+
+	value, ok, err = tx.FindKeyValue(key)
+	return
+}
+
 // PersistPartialLayerAndCommit wraps session PersistLayer function with begin and
 // commit.
 func PersistPartialLayerAndCommit(datastore Datastore, layer *Layer) error {
