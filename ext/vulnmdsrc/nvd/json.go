@@ -96,27 +96,6 @@ var vectorValuesToLetters = map[string]string{
 	"UNCHANGED": "U",
 }
 
-func init() {
-	vectorValuesToLetters = make(map[string]string)
-	vectorValuesToLetters["NETWORK"] = "N"
-	vectorValuesToLetters["ADJACENT_NETWORK"] = "A"
-	vectorValuesToLetters["LOCAL"] = "L"
-	vectorValuesToLetters["HIGH"] = "H"
-	vectorValuesToLetters["MEDIUM"] = "M"
-	vectorValuesToLetters["LOW"] = "L"
-	vectorValuesToLetters["NONE"] = "N"
-	vectorValuesToLetters["SINGLE"] = "S"
-	vectorValuesToLetters["MULTIPLE"] = "M"
-	vectorValuesToLetters["PARTIAL"] = "P"
-	vectorValuesToLetters["COMPLETE"] = "C"
-
-	// CVSSv3 only
-	vectorValuesToLetters["PHYSICAL"] = "P"
-	vectorValuesToLetters["REQUIRED"] = "R"
-	vectorValuesToLetters["CHANGED"] = "C"
-	vectorValuesToLetters["UNCHANGED"] = "U"
-}
-
 func (n nvdEntry) Metadata() *NVDMetadata {
 	metadata := &NVDMetadata{
 		CVSSv2: NVDmetadataCVSSv2{
