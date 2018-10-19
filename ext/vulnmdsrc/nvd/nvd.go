@@ -65,8 +65,10 @@ type NVDmetadataCVSSv2 struct {
 }
 
 type NVDmetadataCVSSv3 struct {
-	Vectors string
-	Score   float64
+	Vectors             string
+	Score               float64
+	ExploitabilityScore float64
+	ImpactScore         float64
 }
 
 func init() {

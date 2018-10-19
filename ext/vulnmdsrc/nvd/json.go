@@ -59,7 +59,9 @@ type nvdCVSSv2 struct {
 }
 
 type nvdBaseMetricV3 struct {
-	CVSSv3 nvdCVSSv3 `json:"cvssV3"`
+	CVSSv3              nvdCVSSv3 `json:"cvssV3"`
+	ExploitabilityScore float64   `json:"exploitabilityScore"`
+	ImpactScore         float64   `json:"impactScore"`
 }
 
 type nvdCVSSv3 struct {
@@ -123,8 +125,10 @@ func (n nvdEntry) Metadata() *NVDMetadata {
 			Score:             n.Impact.BaseMetricV2.CVSSv2.Score,
 		},
 		CVSSv3: NVDmetadataCVSSv3{
-			Vectors: n.Impact.BaseMetricV3.CVSSv3.String(),
-			Score:   n.Impact.BaseMetricV3.CVSSv3.Score,
+			Vectors:             n.Impact.BaseMetricV3.CVSSv3.String(),
+			Score:               n.Impact.BaseMetricV3.CVSSv3.Score,
+			ExploitabilityScore: n.Impact.BaseMetricV3.ExploitabilityScore,
+			ImpactScore:         n.Impact.BaseMetricV3.ImpactScore,
 		},
 	}
 
