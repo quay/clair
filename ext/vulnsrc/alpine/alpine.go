@@ -18,10 +18,8 @@ package alpine
 
 import (
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -30,10 +28,13 @@ import (
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/dpkg"
 	"github.com/coreos/clair/ext/vulnsrc"
+	"github.com/coreos/clair/pkg/fsutil"
 	"github.com/coreos/clair/pkg/gitutil"
 )
 
 const (
+	// This Alpine vulnerability database affects origin packages, which has
+	// `origin` field of itself.
 	secdbGitURL  = "https://github.com/alpinelinux/alpine-secdb"
 	updaterFlag  = "alpine-secdbUpdater"
 	nvdURLPrefix = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
@@ -51,61 +52,44 @@ type updater struct {
 }
 
 func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
-	log.WithField("package", "Alpine").Info("Start fetching vulnerabilities")
-
+	log.WithField("package", "Alpine").Info("start fetching vulnerabilities")
 	// Pull the master branch.
-	var commit string
-	u.repositoryLocalPath, commit, err = gitutil.CloneOrPull(secdbGitURL, u.repositoryLocalPath, updaterFlag)
-	if err != nil {
-		return
-	}
+	var (
+		commit         string
+		existingCommit string
+		foundCommit    bool
+		namespaces     []string
+		vulns          []database.VulnerabilityWithAffected
+	)
 
-	// Open a database transaction.
-	tx, err := db.Begin()
-	if err != nil {
+	if u.repositoryLocalPath, commit, err = gitutil.CloneOrPull(secdbGitURL, u.repositoryLocalPath, updaterFlag); err != nil {
 		return
-	}
-	defer tx.Rollback()
-
-	// Ask the database for the latest commit we successfully applied.
-	var dbCommit string
-	var ok bool
-	dbCommit, ok, err = tx.FindKeyValue(updaterFlag)
-	if err != nil {
-		return
-	}
-	if !ok {
-		dbCommit = ""
 	}
 
 	// Set the updaterFlag to equal the commit processed.
 	resp.FlagName = updaterFlag
 	resp.FlagValue = commit
+	if existingCommit, foundCommit, err = database.FindKeyValueAndRollback(db, updaterFlag); err != nil {
+		return
+	}
 
 	// Short-circuit if there have been no updates.
-	if commit == dbCommit {
-		log.WithField("package", "alpine").Debug("no update")
+	if foundCommit && commit == existingCommit {
+		log.WithField("package", "alpine").Debug("no update, skip")
 		return
 	}
 
 	// Get the list of namespaces from the repository.
-	var namespaces []string
-	namespaces, err = ls(u.repositoryLocalPath, directoriesOnly)
-	if err != nil {
+	if namespaces, err = fsutil.Readdir(u.repositoryLocalPath, fsutil.DirectoriesOnly); err != nil {
 		return
 	}
 
 	// Append any changed vulnerabilities to the response.
 	for _, namespace := range namespaces {
-		var vulns []database.VulnerabilityWithAffected
-		var note string
-		vulns, note, err = parseVulnsFromNamespace(u.repositoryLocalPath, namespace)
-		if err != nil {
+		if vulns, err = parseVulnsFromNamespace(u.repositoryLocalPath, namespace); err != nil {
 			return
 		}
-		if note != "" {
-			resp.Notes = append(resp.Notes, note)
-		}
+
 		resp.Vulnerabilities = append(resp.Vulnerabilities, vulns...)
 	}
 
@@ -118,74 +102,26 @@ func (u *updater) Clean() {
 	}
 }
 
-type lsFilter int
-
-const (
-	filesOnly lsFilter = iota
-	directoriesOnly
-)
-
-func ls(path string, filter lsFilter) ([]string, error) {
-	dir, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer dir.Close()
-
-	finfos, err := dir.Readdir(0)
-	if err != nil {
-		return nil, err
-	}
-
-	var files []string
-	for _, info := range finfos {
-		if filter == directoriesOnly && !info.IsDir() {
-			continue
-		}
-
-		if filter == filesOnly && info.IsDir() {
-			continue
-		}
-
-		if strings.HasPrefix(info.Name(), ".") {
-			continue
-		}
-
-		files = append(files, info.Name())
-	}
-
-	return files, nil
-}
-
-func parseVulnsFromNamespace(repositoryPath, namespace string) (vulns []database.VulnerabilityWithAffected, note string, err error) {
+func parseVulnsFromNamespace(repositoryPath, namespace string) (vulns []database.VulnerabilityWithAffected, err error) {
 	nsDir := filepath.Join(repositoryPath, namespace)
 	var dbFilenames []string
-	dbFilenames, err = ls(nsDir, filesOnly)
-	if err != nil {
+	if dbFilenames, err = fsutil.Readdir(nsDir, fsutil.FilesOnly); err != nil {
 		return
 	}
 
 	for _, filename := range dbFilenames {
-		var file io.ReadCloser
-		file, err = os.Open(filepath.Join(nsDir, filename))
-		if err != nil {
+		var db *secDB
+		if db, err = newSecDB(filepath.Join(nsDir, filename)); err != nil {
 			return
 		}
 
-		var fileVulns []database.VulnerabilityWithAffected
-		fileVulns, err = parseYAML(file)
-		if err != nil {
-			return
-		}
-
-		vulns = append(vulns, fileVulns...)
-		file.Close()
+		vulns = append(vulns, db.Vulnerabilities()...)
 	}
 
 	return
 }
 
-type secDBFile struct {
+type secDB struct {
 	Distro   string `yaml:"distroversion"`
 	Packages []struct {
 		Pkg struct {
@@ -195,42 +131,54 @@ type secDBFile struct {
 	} `yaml:"packages"`
 }
 
-func parseYAML(r io.Reader) (vulns []database.VulnerabilityWithAffected, err error) {
-	var rBytes []byte
-	rBytes, err = ioutil.ReadAll(r)
+func newSecDB(filePath string) (file *secDB, err error) {
+	var f io.ReadCloser
+	f, err = os.Open(filePath)
 	if err != nil {
 		return
 	}
 
-	var file secDBFile
-	err = yaml.Unmarshal(rBytes, &file)
-	if err != nil {
+	defer f.Close()
+	file = &secDB{}
+	err = yaml.NewDecoder(f).Decode(file)
+	return
+}
+
+func (file *secDB) Vulnerabilities() (vulns []database.VulnerabilityWithAffected) {
+	if file == nil {
 		return
 	}
 
-	for _, pack := range file.Packages {
-		pkg := pack.Pkg
-		for version, vulnStrs := range pkg.Fixes {
-			err := versionfmt.Valid(dpkg.ParserName, version)
-			if err != nil {
-				log.WithError(err).WithField("version", version).Warning("could not parse package version. skipping")
+	namespace := database.Namespace{Name: "alpine:" + file.Distro, VersionFormat: dpkg.ParserName}
+	for _, pkg := range file.Packages {
+		for version, cveNames := range pkg.Pkg.Fixes {
+			if err := versionfmt.Valid(dpkg.ParserName, version); err != nil {
+				log.WithError(err).WithFields(log.Fields{
+					"version":      version,
+					"package name": pkg.Pkg.Name,
+				}).Warning("could not parse package version, skipping")
 				continue
 			}
 
-			for _, vulnStr := range vulnStrs {
-				var vuln database.VulnerabilityWithAffected
-				vuln.Severity = database.UnknownSeverity
-				vuln.Name = vulnStr
-				vuln.Link = nvdURLPrefix + vulnStr
+			for _, cve := range cveNames {
+				vuln := database.VulnerabilityWithAffected{
+					Vulnerability: database.Vulnerability{
+						Name:      cve,
+						Link:      nvdURLPrefix + cve,
+						Severity:  database.UnknownSeverity,
+						Namespace: namespace,
+					},
+				}
 
 				var fixedInVersion string
 				if version != versionfmt.MaxVersion {
 					fixedInVersion = version
 				}
+
 				vuln.Affected = []database.AffectedFeature{
 					{
 						AffectedType:    affectedType,
-						FeatureName:     pkg.Name,
+						FeatureName:     pkg.Pkg.Name,
 						AffectedVersion: version,
 						FixedInVersion:  fixedInVersion,
 						Namespace: database.Namespace{

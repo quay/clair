@@ -119,15 +119,9 @@ func compareELSA(left, right int) int {
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
 	log.WithField("package", "Oracle Linux").Info("Start fetching vulnerabilities")
 	// Get the first ELSA we have to manage.
-	tx, err := datastore.Begin()
+	flagValue, ok, err := database.FindKeyValueAndRollback(datastore, updaterFlag)
 	if err != nil {
-		return resp, err
-	}
-	defer tx.Rollback()
-
-	flagValue, ok, err := tx.FindKeyValue(updaterFlag)
-	if err != nil {
-		return resp, err
+		return
 	}
 
 	if !ok {

@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -101,12 +102,11 @@ func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, er
 	defer tx.Rollback()
 
 	// Ask the database for the latest commit we successfully applied.
-	var dbCommit string
-	var ok bool
-	dbCommit, ok, err = tx.FindKeyValue(updaterFlag)
+	dbCommit, ok, err := database.FindKeyValueAndRollback(db, updaterFlag)
 	if err != nil {
 		return
 	}
+
 	if !ok {
 		dbCommit = ""
 	}
@@ -161,7 +161,7 @@ func collectModifiedVulnerabilities(commit, dbCommit, repositoryLocalPath string
 
 func processDirectory(repositoryLocalPath, dirName string, modifiedCVE map[string]struct{}) error {
 	// Open the directory.
-	d, err := os.Open(repositoryLocalPath + "/" + dirName)
+	d, err := os.Open(filepath.Join(repositoryLocalPath, dirName))
 	if err != nil {
 		log.WithError(err).Error("could not open Ubuntu vulnerabilities repository's folder")
 		return vulnsrc.ErrFilesystem
@@ -191,7 +191,7 @@ func collectVulnerabilitiesAndNotes(repositoryLocalPath string, modifiedCVE map[
 
 	for cvePath := range modifiedCVE {
 		// Open the CVE file.
-		file, err := os.Open(repositoryLocalPath + "/" + cvePath)
+		file, err := os.Open(filepath.Join(repositoryLocalPath, cvePath))
 		if err != nil {
 			// This can happen when a file is modified then moved in another commit.
 			continue
