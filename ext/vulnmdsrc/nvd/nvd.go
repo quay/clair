@@ -19,7 +19,7 @@ package nvd
 import (
 	"bufio"
 	"compress/gzip"
-	"encoding/xml"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -39,8 +39,8 @@ import (
 )
 
 const (
-	dataFeedURL     string = "https://nvd.nist.gov/feeds/xml/cve/2.0/nvdcve-2.0-%s.xml.gz"
-	dataFeedMetaURL string = "https://nvd.nist.gov/feeds/xml/cve/2.0/nvdcve-2.0-%s.meta"
+	dataFeedURL     string = "https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-%s.json.gz"
+	dataFeedMetaURL string = "https://nvd.nist.gov/feeds/json/cve/1.0/nvdcve-1.0-%s.meta"
 
 	appenderName string = "NVD"
 
@@ -55,12 +55,20 @@ type appender struct {
 
 type NVDMetadata struct {
 	CVSSv2 NVDmetadataCVSSv2
+	CVSSv3 NVDmetadataCVSSv3
 }
 
 type NVDmetadataCVSSv2 struct {
 	PublishedDateTime string
 	Vectors           string
 	Score             float64
+}
+
+type NVDmetadataCVSSv3 struct {
+	Vectors             string
+	Score               float64
+	ExploitabilityScore float64
+	ImpactScore         float64
 }
 
 func init() {
@@ -95,22 +103,30 @@ func (a *appender) BuildCache(datastore database.Datastore) error {
 			log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not open NVD data file")
 			return commonerr.ErrCouldNotParse
 		}
-		var nvd nvd
-		r := bufio.NewReader(f)
-		if err = xml.NewDecoder(r).Decode(&nvd); err != nil {
-			f.Close()
-			log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not decode NVD data feed")
-			return commonerr.ErrCouldNotParse
-		}
 
-		// For each entry of this data feed:
-		for _, nvdEntry := range nvd.Entries {
-			// Create metadata entry.
-			if metadata := nvdEntry.Metadata(); metadata != nil {
-				a.metadata[nvdEntry.Name] = *metadata
-			}
+		r := bufio.NewReader(f)
+		if err := a.parseDataFeed(r); err != nil {
+			log.WithError(err).WithField(logDataFeedName, dataFeedName).Error("could not parse NVD data file")
+			return err
 		}
 		f.Close()
+	}
+
+	return nil
+}
+
+func (a *appender) parseDataFeed(r io.Reader) error {
+	var nvd nvd
+
+	if err := json.NewDecoder(r).Decode(&nvd); err != nil {
+		return commonerr.ErrCouldNotParse
+	}
+
+	for _, nvdEntry := range nvd.Entries {
+		// Create metadata entry.
+		if metadata := nvdEntry.Metadata(); metadata != nil {
+			a.metadata[nvdEntry.Name()] = *metadata
+		}
 	}
 
 	return nil
@@ -154,7 +170,8 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 	// Create map containing the name and filename for every data feed.
 	dataFeedReaders := make(map[string]string)
 	for _, dataFeedName := range dataFeedNames {
-		fileName := filepath.Join(localPath, fmt.Sprintf("%s.xml", dataFeedName))
+		fileName := filepath.Join(localPath, fmt.Sprintf("%s.json", dataFeedName))
+
 		if h, ok := dataFeedHashes[dataFeedName]; ok && h == dataFeedHashes[dataFeedName] {
 			// The hash is known, the disk should contains the feed. Try to read from it.
 			if localPath != "" {
@@ -177,7 +194,6 @@ func getDataFeeds(dataFeedHashes map[string]string, localPath string) (map[strin
 }
 
 func downloadFeed(dataFeedName, fileName string) error {
-
 	// Download data feed.
 	r, err := httputil.GetWithUserAgent(fmt.Sprintf(dataFeedURL, dataFeedName))
 	if err != nil {
