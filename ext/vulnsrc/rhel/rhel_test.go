@@ -31,7 +31,7 @@ func TestRHELParserMultipleCVE(t *testing.T) {
 	path := filepath.Join(filepath.Dir(filename))
 
 	// Test parsing testdata/fetcher_rhel_test.2.xml
-	testFile, _ := os.Open(path + "/testdata/fetcher_rhel_test.2.xml")
+	testFile, _ := os.Open(filepath.Join(path, "/testdata/fetcher_rhel_test.2.xml"))
 	vulnerabilities, err := parseRHSA(testFile)
 
 	// Expected
@@ -86,7 +86,7 @@ func TestRHELParserOneCVE(t *testing.T) {
 	path := filepath.Join(filepath.Dir(filename))
 
 	// Test parsing testdata/fetcher_rhel_test.1.xml
-	testFile, _ := os.Open(path + "/testdata/fetcher_rhel_test.1.xml")
+	testFile, _ := os.Open(filepath.Join(path, "/testdata/fetcher_rhel_test.1.xml"))
 	vulnerabilities, err := parseRHSA(testFile)
 	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, 1) {
 		assert.Equal(t, "CVE-2015-0252", vulnerabilities[0].Name)

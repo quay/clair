@@ -30,7 +30,7 @@ func TestOracleParser(t *testing.T) {
 	path := filepath.Join(filepath.Dir(filename))
 
 	// Test parsing testdata/fetcher_oracle_test.1.xml
-	testFile, _ := os.Open(path + "/testdata/fetcher_oracle_test.1.xml")
+	testFile, _ := os.Open(filepath.Join(path, "/testdata/fetcher_oracle_test.1.xml"))
 	defer testFile.Close()
 
 	vulnerabilities, err := parseELSA(testFile)
@@ -78,7 +78,7 @@ func TestOracleParser(t *testing.T) {
 		}
 	}
 
-	testFile2, _ := os.Open(path + "/testdata/fetcher_oracle_test.2.xml")
+	testFile2, _ := os.Open(filepath.Join(path, "/testdata/fetcher_oracle_test.2.xml"))
 	defer testFile2.Close()
 
 	vulnerabilities, err = parseELSA(testFile2)

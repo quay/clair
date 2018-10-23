@@ -101,18 +101,9 @@ func init() {
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
 	log.WithField("package", "RHEL").Info("Start fetching vulnerabilities")
 
-	tx, err := datastore.Begin()
-	if err != nil {
-		return resp, err
-	}
-
 	// Get the first RHSA we have to manage.
-	flagValue, ok, err := tx.FindKeyValue(updaterFlag)
+	flagValue, ok, err := database.FindKeyValueAndRollback(datastore, updaterFlag)
 	if err != nil {
-		return resp, err
-	}
-
-	if err := tx.Rollback(); err != nil {
 		return resp, err
 	}
 

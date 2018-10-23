@@ -62,22 +62,9 @@ func init() {
 
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
 	log.WithField("package", "Debian").Info("Start fetching vulnerabilities")
-
-	tx, err := datastore.Begin()
+	latestHash, ok, err := database.FindKeyValueAndRollback(datastore, updaterFlag)
 	if err != nil {
-		return resp, err
-	}
-
-	// Get the hash of the latest update's JSON data
-	latestHash, ok, err := tx.FindKeyValue(updaterFlag)
-	if err != nil {
-		return resp, err
-	}
-
-	// NOTE(sida): The transaction won't mutate the database and I want the
-	// transaction to be short.
-	if err := tx.Rollback(); err != nil {
-		return resp, err
+		return
 	}
 
 	if !ok {
@@ -136,7 +123,7 @@ func buildResponse(jsonReader io.Reader, latestKnownHash string) (resp vulnsrc.U
 	// Calculate the hash and skip updating if the hash has been seen before.
 	hash = hex.EncodeToString(jsonSHA.Sum(nil))
 	if latestKnownHash == hash {
-		log.WithField("package", "Debian").Debug("no update")
+		log.WithField("package", "Debian").Debug("no update, skip")
 		return resp, nil
 	}
 

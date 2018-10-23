@@ -32,7 +32,7 @@ func TestUbuntuParser(t *testing.T) {
 	path := filepath.Join(filepath.Dir(filename))
 
 	// Test parsing testdata/fetcher_
-	testData, _ := os.Open(path + "/testdata/fetcher_ubuntu_test.txt")
+	testData, _ := os.Open(filepath.Join(path, "/testdata/fetcher_ubuntu_test.txt"))
 	defer testData.Close()
 	vulnerability, unknownReleases, err := parseUbuntuCVE(testData)
 	if assert.Nil(t, err) {

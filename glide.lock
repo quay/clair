@@ -1,5 +1,5 @@
-hash: 3fd0e471868863d6ef4cd32bbcdc9b3d061911a15b458e7edd26cfba4faa62db
-updated: 2018-09-17T13:13:44.344244-04:00
+hash: 208de0ba40f951c17ac45683952efdd6b14f5efbfb70dcdb493c52954d96cb75
+updated: 2018-10-22T22:58:38.105092-04:00
 imports:
 - name: github.com/beorn7/perks
   version: 4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9
@@ -49,7 +49,7 @@ imports:
   subpackages:
   - simplelru
 - name: github.com/julienschmidt/httprouter
-  version: 8c199fb6259ffc1af525cc3ad52ee60ba8359669
+  version: 348b672cd90d8190f8240323e372ecd1e66b59dc
 - name: github.com/lib/pq
   version: 8837942c3e09574accbc5f150e2c5e057189cace
   subpackages:
@@ -65,9 +65,10 @@ imports:
   subpackages:
   - difflib
 - name: github.com/prometheus/client_golang
-  version: c5b7fccd204277076155f10851dad72b76a49317
+  version: 1cafe34db7fdec6022e17e00e1c1ea501022f3e4
   subpackages:
   - prometheus
+  - prometheus/internal
 - name: github.com/prometheus/client_model
   version: 6f3806018612930941127f2a7c6c453ba2c527d2
   subpackages:
@@ -90,6 +91,7 @@ imports:
   version: f35b8ab0b5a2cef36673838d662e249dd9c94686
   subpackages:
   - assert
+  - require
 - name: golang.org/x/net
   version: 59a0b19b5533c7977ddeb86b017bf507ed407b12
   subpackages:
@@ -133,5 +135,5 @@ imports:
   - tap
   - transport
 - name: gopkg.in/yaml.v2
-  version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
+  version: 5420a8b6744d3b0345ab293f6fcba19c978f1183
 testImports: []
