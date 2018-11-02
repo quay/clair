@@ -15,6 +15,7 @@
 package oracle
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -25,7 +26,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestOracleParser(t *testing.T) {
+func TestOracleParserOneCve(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
 	path := filepath.Join(filepath.Dir(filename))
 
@@ -35,8 +36,8 @@ func TestOracleParser(t *testing.T) {
 
 	vulnerabilities, err := parseELSA(testFile)
 	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, 1) {
-		assert.Equal(t, "ELSA-2015-1193", vulnerabilities[0].Name)
-		assert.Equal(t, "http://linux.oracle.com/errata/ELSA-2015-1193.html", vulnerabilities[0].Link)
+		assert.Equal(t, "CVE-2015-0252", vulnerabilities[0].Name)
+		assert.Equal(t, "http://linux.oracle.com/cve/CVE-2015-0252.html", vulnerabilities[0].Link)
 		assert.Equal(t, database.MediumSeverity, vulnerabilities[0].Severity)
 		assert.Equal(t, ` [3.1.1-7] Resolves: rhbz#1217104 CVE-2015-0252 `, vulnerabilities[0].Description)
 
@@ -77,41 +78,30 @@ func TestOracleParser(t *testing.T) {
 			assert.Contains(t, vulnerabilities[0].Affected, expectedFeature)
 		}
 	}
+}
 
-	testFile2, _ := os.Open(filepath.Join(path, "/testdata/fetcher_oracle_test.2.xml"))
-	defer testFile2.Close()
+func TestELSAParserMultipleCVE(t *testing.T) {
+	testFile, _ := os.Open("testdata/fetcher_oracle_test.2.xml")
+	defer testFile.Close()
 
-	vulnerabilities, err = parseELSA(testFile2)
-	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, 1) {
-		assert.Equal(t, "ELSA-2015-1207", vulnerabilities[0].Name)
-		assert.Equal(t, "http://linux.oracle.com/errata/ELSA-2015-1207.html", vulnerabilities[0].Link)
-		assert.Equal(t, database.CriticalSeverity, vulnerabilities[0].Severity)
-		assert.Equal(t, ` [38.1.0-1.0.1.el7_1] - Add firefox-oracle-default-prefs.js and remove the corresponding Red Hat file [38.1.0-1] - Update to 38.1.0 ESR [38.0.1-2] - Fixed rhbz#1222807 by removing preun section `, vulnerabilities[0].Description)
-		expectedFeatures := []database.AffectedFeature{
-			{
-				AffectedType: affectedType,
-				Namespace: database.Namespace{
-					Name:          "oracle:6",
-					VersionFormat: rpm.ParserName,
-				},
-				FeatureName:     "firefox",
-				FixedInVersion:  "0:38.1.0-1.0.1.el6_6",
-				AffectedVersion: "0:38.1.0-1.0.1.el6_6",
-			},
-			{
-				AffectedType: affectedType,
-				Namespace: database.Namespace{
-					Name:          "oracle:7",
-					VersionFormat: rpm.ParserName,
-				},
-				FeatureName:     "firefox",
-				FixedInVersion:  "0:38.1.0-1.0.1.el7_1",
-				AffectedVersion: "0:38.1.0-1.0.1.el7_1",
-			},
-		}
+	vulnerabilities, err := parseELSA(testFile)
 
-		for _, expectedFeature := range expectedFeatures {
-			assert.Contains(t, vulnerabilities[0].Affected, expectedFeature)
+	// Expected
+	expectedCve := []string{"CVE-2015-2722", "CVE-2015-2724", "CVE-2015-2725", "CVE-2015-2727",
+		"CVE-2015-2728", "CVE-2015-2729", "CVE-2015-2731", "CVE-2015-2733", "CVE-2015-2734",
+		"CVE-2015-2735", "CVE-2015-2736", "CVE-2015-2737", "CVE-2015-2738", "CVE-2015-2739",
+		"CVE-2015-2740", "CVE-2015-2741", "CVE-2015-2743"}
+	expectedSeverity := []string{"Negligible", "Low", "Medium", "High",
+		"Critical", "Unknown", "Critical", "Critical", "Critical",
+		"Critical", "Critical", "Critical", "Critical", "Critical",
+		"Critical", "Critical", "Critical"}
+
+	if assert.Nil(t, err) && assert.Len(t, vulnerabilities, len(expectedCve)) {
+		for i, vulnerability := range vulnerabilities {
+			assert.Equal(t, expectedCve[i], vulnerability.Name)
+			assert.Equal(t, fmt.Sprintf("http://linux.oracle.com/cve/%s.html", expectedCve[i]), vulnerability.Link)
+			assert.Equal(t, database.Severity(expectedSeverity[i]), vulnerability.Severity)
+			assert.Equal(t, ` [38.1.0-1.0.1.el7_1] - Add firefox-oracle-default-prefs.js and remove the corresponding Red Hat file [38.1.0-1] - Update to 38.1.0 ESR [38.0.1-2] - Fixed rhbz#1222807 by removing preun section `, vulnerability.Description)
 		}
 	}
 }
