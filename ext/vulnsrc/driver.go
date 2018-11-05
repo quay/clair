@@ -37,6 +37,7 @@ type UpdateResponse struct {
 	FlagValue       string
 	Notes           []string
 	Vulnerabilities []database.VulnerabilityWithAffected
+	ToRemove        []database.VulnerabilityID //for removing CVEs
 }
 
 // Updater represents anything that can fetch vulnerabilities.

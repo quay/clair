@@ -191,7 +191,7 @@ func update(datastore database.Datastore, firstUpdate bool) {
 	log.Info("updating vulnerabilities")
 
 	// Fetch updates.
-	success, vulnerabilities, flags, notes := fetch(datastore)
+	success, vulnerabilities, flags, notes, remove := fetch(datastore)
 
 	// do vulnerability namespacing again to merge potentially duplicated
 	// vulnerabilities from each updater.
@@ -213,7 +213,7 @@ func update(datastore database.Datastore, firstUpdate bool) {
 		return
 	}
 
-	changes, err := updateVulnerabilities(datastore, vulnerabilities)
+	changes, err := updateVulnerabilities(datastore, vulnerabilities, remove)
 
 	defer func() {
 		if err != nil {
@@ -261,9 +261,10 @@ func setUpdaterDuration(start time.Time) {
 }
 
 // fetch get data from the registered fetchers, in parallel.
-func fetch(datastore database.Datastore) (bool, []database.VulnerabilityWithAffected, map[string]string, []string) {
+func fetch(datastore database.Datastore) (bool, []database.VulnerabilityWithAffected, map[string]string, []string, []database.VulnerabilityID) {
 	var vulnerabilities []database.VulnerabilityWithAffected
 	var notes []string
+	var remove []database.VulnerabilityID
 	status := true
 	flags := make(map[string]string)
 
@@ -297,6 +298,8 @@ func fetch(datastore database.Datastore) (bool, []database.VulnerabilityWithAffe
 		if resp != nil {
 			vulnerabilities = append(vulnerabilities, doVulnerabilitiesNamespacing(resp.Vulnerabilities)...)
 			notes = append(notes, resp.Notes...)
+			//askkkkkk
+			remove = append(remove, resp.ToRemove...)
 			if resp.FlagName != "" && resp.FlagValue != "" {
 				flags[resp.FlagName] = resp.FlagValue
 			}
@@ -304,7 +307,7 @@ func fetch(datastore database.Datastore) (bool, []database.VulnerabilityWithAffe
 	}
 
 	close(responseC)
-	return status, addMetadata(datastore, vulnerabilities), flags, notes
+	return status, addMetadata(datastore, vulnerabilities), flags, notes, remove
 }
 
 // Add metadata to the specified vulnerabilities using the registered
@@ -619,7 +622,7 @@ func createVulnerabilityNotifications(datastore database.Datastore, changes []vu
 
 // updateVulnerabilities upserts unique vulnerabilities into the database and
 // computes vulnerability changes.
-func updateVulnerabilities(datastore database.Datastore, vulnerabilities []database.VulnerabilityWithAffected) ([]vulnerabilityChange, error) {
+func updateVulnerabilities(datastore database.Datastore, vulnerabilities []database.VulnerabilityWithAffected, remove []database.VulnerabilityID) ([]vulnerabilityChange, error) {
 	log.WithField("count", len(vulnerabilities)).Debug("updating vulnerabilities")
 	if len(vulnerabilities) == 0 {
 		return nil, nil
@@ -679,6 +682,13 @@ func updateVulnerabilities(datastore database.Datastore, vulnerabilities []datab
 	log.WithField("count", len(toAdd)).Debug("inserting new vulnerabilities")
 	if err := tx.InsertVulnerabilities(toAdd); err != nil {
 		return nil, err
+	}
+	fmt.Println("Vulnerabilites Inserted")
+	fmt.Println("Removing False Positives")
+	if len(remove) > 0 {
+		if err := tx.DeleteVulnerabilities(remove); err != nil {
+			return nil, err
+		}
 	}
 
 	if err := tx.Commit(); err != nil {
