@@ -142,14 +142,18 @@ func parseOSIO(body []byte) (vulnerabilities []database.VulnerabilityWithAffecte
 				Description: i.Description,
 			},
 		}
-
-		if i.Ecosystem == "pypi" {
+		switch i.Ecosystem {
+		case "pypi":
 			namespace = "python"
-		} else if i.Ecosystem == "npm" {
+			break
+		case "npm":
 			namespace = "node"
-		} else if i.Ecosystem == "maven" {
+			break
+		case "maven":
 			namespace = "java"
+			break
 		}
+
 		pkg := database.AffectedFeature{
 			FeatureName:     i.Name,
 			AffectedVersion: i.Version,
@@ -165,13 +169,18 @@ func parseOSIO(body []byte) (vulnerabilities []database.VulnerabilityWithAffecte
 	}
 	for _, i := range output.RemoveCVEList {
 
-		if i.Ecosystem == "pypi" {
+		switch i.Ecosystem {
+		case "pypi":
 			namespace = "python"
-		} else if i.Ecosystem == "npm" {
+			break
+		case "npm":
 			namespace = "node"
-		} else if i.Ecosystem == "maven" {
+			break
+		case "maven":
 			namespace = "java"
+			break
 		}
+
 		remove_cve := database.VulnerabilityID{
 			Name:      i.CveId,
 			Namespace: namespace,
