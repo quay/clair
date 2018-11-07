@@ -63,11 +63,19 @@ type definition struct {
 	References  []reference `xml:"metadata>reference"`
 	Criteria    criteria    `xml:"criteria"`
 	Severity    string      `xml:"metadata>advisory>severity"`
+	CVEs        []cve       `xml:"metadata>advisory>cve"`
 }
 
 type reference struct {
 	Source string `xml:"source,attr"`
 	URI    string `xml:"ref_url,attr"`
+	ID     string `xml:"ref_id,attr"`
+}
+
+type cve struct {
+	Impact string `xml:"impact,attr"`
+	Href   string `xml:"href,attr"`
+	ID     string `xml:",chardata"`
 }
 
 type criteria struct {
@@ -227,14 +235,31 @@ func parseELSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWi
 				Vulnerability: database.Vulnerability{
 					Name:        name(definition),
 					Link:        link(definition),
-					Severity:    severity(definition),
+					Severity:    severity(definition.Severity),
 					Description: description(definition),
 				},
 			}
 			for _, p := range pkgs {
 				vulnerability.Affected = append(vulnerability.Affected, p)
 			}
-			vulnerabilities = append(vulnerabilities, vulnerability)
+
+			// Only ELSA is present
+			if len(definition.CVEs) == 0 {
+				vulnerabilities = append(vulnerabilities, vulnerability)
+				continue
+			}
+
+			// Create one vulnerability per CVE
+			for _, currentCVE := range definition.CVEs {
+				vulnerability.Name = currentCVE.ID
+				vulnerability.Link = currentCVE.Href
+				if currentCVE.Impact != "" {
+					vulnerability.Severity = severity(currentCVE.Impact)
+				} else {
+					vulnerability.Severity = severity(definition.Severity)
+				}
+				vulnerabilities = append(vulnerabilities, vulnerability)
+			}
 		}
 	}
 
@@ -396,20 +421,20 @@ func link(def definition) (link string) {
 	return
 }
 
-func severity(def definition) database.Severity {
-	switch strings.ToLower(def.Severity) {
+func severity(sev string) database.Severity {
+	switch strings.ToLower(sev) {
 	case "n/a":
 		return database.NegligibleSeverity
 	case "low":
 		return database.LowSeverity
 	case "moderate":
 		return database.MediumSeverity
-	case "important":
+	case "important", "high": // some ELSAs have "high" instead of "important"
 		return database.HighSeverity
 	case "critical":
 		return database.CriticalSeverity
 	default:
-		log.WithField("severity", def.Severity).Warning("could not determine vulnerability severity")
+		log.WithField("severity", sev).Warning("could not determine vulnerability severity")
 		return database.UnknownSeverity
 	}
 }

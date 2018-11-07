@@ -47,18 +47,18 @@ ELSA-2015-1207:  firefox security update (CRITICAL)
 - Fixed rhbz#1222807 by removing preun section
 </description>
 <!--
- ~~~~~~~~~~~~~~~~~~~~   advisory details   ~~~~~~~~~~~~~~~~~~~ 
+ ~~~~~~~~~~~~~~~~~~~~   advisory details   ~~~~~~~~~~~~~~~~~~~
 -->
 <advisory>
 <severity>CRITICAL</severity>
 <rights>Copyright 2015 Oracle, Inc.</rights>
 <issued date="2015-07-03"/>
-<cve href="http://linux.oracle.com/cve/CVE-2015-2722.html">CVE-2015-2722</cve>
-<cve href="http://linux.oracle.com/cve/CVE-2015-2724.html">CVE-2015-2724</cve>
-<cve href="http://linux.oracle.com/cve/CVE-2015-2725.html">CVE-2015-2725</cve>
-<cve href="http://linux.oracle.com/cve/CVE-2015-2727.html">CVE-2015-2727</cve>
-<cve href="http://linux.oracle.com/cve/CVE-2015-2728.html">CVE-2015-2728</cve>
-<cve href="http://linux.oracle.com/cve/CVE-2015-2729.html">CVE-2015-2729</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2722.html" impact="N/A">CVE-2015-2722</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2724.html" impact="LOW">CVE-2015-2724</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2725.html" impact="MODERATE">CVE-2015-2725</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2727.html" impact="IMPORTANT">CVE-2015-2727</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2728.html" impact="CRITICAL">CVE-2015-2728</cve>
+<cve href="http://linux.oracle.com/cve/CVE-2015-2729.html" impact="OTHER">CVE-2015-2729</cve>
 <cve href="http://linux.oracle.com/cve/CVE-2015-2731.html">CVE-2015-2731</cve>
 <cve href="http://linux.oracle.com/cve/CVE-2015-2733.html">CVE-2015-2733</cve>
 <cve href="http://linux.oracle.com/cve/CVE-2015-2734.html">CVE-2015-2734</cve>
@@ -99,7 +99,7 @@ ELSA-2015-1207:  firefox security update (CRITICAL)
 </definition>
 </definitions>
 <!--
- ~~~~~~~~~~~~~~~~~~~~~   rpminfo tests   ~~~~~~~~~~~~~~~~~~~~~ 
+ ~~~~~~~~~~~~~~~~~~~~~   rpminfo tests   ~~~~~~~~~~~~~~~~~~~~~
 -->
 <tests>
 <rpminfo_test id="oval:com.oracle.elsa:tst:20151207001"  version="501" comment="Oracle Linux 5 is installed" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
@@ -141,7 +141,7 @@ ELSA-2015-1207:  firefox security update (CRITICAL)
 
 </tests>
 <!--
- ~~~~~~~~~~~~~~~~~~~~   rpminfo objects   ~~~~~~~~~~~~~~~~~~~~ 
+ ~~~~~~~~~~~~~~~~~~~~   rpminfo objects   ~~~~~~~~~~~~~~~~~~~~
 -->
 <objects>
 <rpminfo_object xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:com.oracle.elsa:obj:20151207002" version="501">
@@ -154,7 +154,7 @@ ELSA-2015-1207:  firefox security update (CRITICAL)
 </objects>
 <states>
 <!--
- ~~~~~~~~~~~~~~~~~~~~   rpminfo states   ~~~~~~~~~~~~~~~~~~~~~ 
+ ~~~~~~~~~~~~~~~~~~~~   rpminfo states   ~~~~~~~~~~~~~~~~~~~~~
 -->
 <rpminfo_state xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" id="oval:com.oracle.elsa:ste:20151207001" version="501"><signature_keyid operation="equals">66ced3de1e5e0159</signature_keyid>
 </rpminfo_state>
