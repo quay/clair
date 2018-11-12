@@ -233,6 +233,12 @@ const (
       LEFT JOIN Vulnerability_Affects_FeatureVersion vaf ON fv.id = vaf.featureversion_id
       JOIN Vulnerability v ON vaf.vulnerability_id = v.id
     WHERE featureversion_id = $1`
+
+	getSetting = `SELECT value FROM Settings WHERE NAME=$1`
+
+	insertSetting = `INSERT INTO Settings (name, value) VALUES ($1, $2)`
+
+	updateSetting = `UPDATE Settings SET value=$1 where name=$2`
 )
 
 // buildInputArray constructs a PostgreSQL input array from the specified integers.

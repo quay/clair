@@ -36,6 +36,7 @@ const (
 	updaterLockDuration              = updaterLockRefreshDuration + time.Minute*2
 	updaterLockRefreshDuration       = time.Minute * 8
 	updaterSleepBetweenLoopsDuration = time.Minute
+	ownerAPI                         = "api"
 )
 
 var (
@@ -159,6 +160,44 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 	}
 
 	log.Info("updater service stopped")
+}
+
+func Update(datastore database.Datastore) bool {
+	// Attempt to get a lock on the the update.
+	log.Debug("attempting to obtain update lock")
+	hasLock, _ := datastore.Lock(updaterLockName, ownerAPI, updaterLockDuration, false)
+	if hasLock {
+		// Unlock the update.
+		defer datastore.Unlock(updaterLockName, ownerAPI)
+
+		// Launch update in a new go routine.
+		doneC := make(chan bool, 1)
+		go func() {
+			update(datastore, true)
+			doneC <- true
+		}()
+
+		for done := false; !done; {
+			select {
+			case <-doneC:
+				done = true
+			case <-time.After(updaterLockRefreshDuration):
+				// Refresh the lock until the update is done.
+				datastore.Lock(updaterLockName, ownerAPI, updaterLockDuration, true)
+			}
+		}
+
+		return true
+	} else {
+		lockOwner, lockExpiration, err := datastore.FindLock(updaterLockName)
+		if err != nil {
+			log.Errorf("find updater lock error: %v", err)
+		} else {
+			log.WithFields(log.Fields{"lock owner": lockOwner, "lock expiration": lockExpiration}).Error("update lock is already taken")
+		}
+	}
+
+	return false
 }
 
 // sleepUpdater sleeps the updater for an approximate duration, but remains

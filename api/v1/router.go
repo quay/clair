@@ -25,6 +25,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
+	"github.com/vmware/harbor/src/common/dao/clair"
 )
 
 var (
@@ -94,6 +95,12 @@ func NewRouter(store database.Datastore, paginationKey string) *httprouter.Route
 
 	// Metrics
 	router.GET("/metrics", httpHandler(getMetrics, ctx))
+
+	// Update vulnerabilities database immediately
+	router.POST("/update", httpHandler(updateVolnerabilities, ctx))
+
+	// Set vulnerabilities database regular updating policy
+	router.POST("/settings", httpHandler(setSetting, ctx))
 
 	return router
 }

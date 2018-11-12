@@ -2,14 +2,14 @@ version: '2'
 services:
   postgres:
     container_name: clair_postgres
-    image: postgres:latest
+    image: postgres:9.2-alpine
     restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: password
 
   clair:
     container_name: clair_clair
-    image: quay.io/coreos/clair-git:latest
+    image: clair:v2.0.6
     restart: unless-stopped
     depends_on:
       - postgres
@@ -19,5 +19,5 @@ services:
       - postgres
     volumes:
       - /tmp:/tmp
-      - ./clair_config:/config
+      - ./config.yaml:/config/config.yaml
     command: [-config, /config/config.yaml]

@@ -321,6 +321,11 @@ type FeatureEnvelope struct {
 	Error    *Error     `json:"Error,omitempty"`
 }
 
+type SettingEnvelope struct {
+	Name  string `json:"Name"`
+	Value string `json:"Value"`
+}
+
 func tokenUnmarshal(token string, key string, v interface{}) error {
 	k, _ := fernet.DecodeKey(key)
 	msg := fernet.VerifyAndDecrypt([]byte(token), time.Hour, []*fernet.Key{k})

@@ -216,6 +216,12 @@ type Datastore interface {
 	// Ping returns the health status of the database.
 	Ping() bool
 
+	// Get setting from database
+	GetSetting(name string) (string, error)
+
+	// Upsert a setting
+	UpsertSetting(name, value string) (bool, error)
+
 	// Close closes the database and frees any allocated resource.
 	Close()
 }

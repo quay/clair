@@ -55,6 +55,7 @@ import (
 	_ "github.com/coreos/clair/ext/vulnsrc/oracle"
 	_ "github.com/coreos/clair/ext/vulnsrc/rhel"
 	_ "github.com/coreos/clair/ext/vulnsrc/ubuntu"
+	"github.com/coreos/clair/pkg/updater"
 )
 
 func waitForSignals(signals ...os.Signal) {
@@ -109,7 +110,8 @@ func Boot(config *Config) {
 
 	// Start updater
 	st.Begin()
-	go clair.RunUpdater(config.Updater, db, st)
+	// go clair.RunUpdater(config.Updater, db, st)
+	go updater.ScheduleUpdater(db)
 
 	// Wait for interruption and shutdown gracefully.
 	waitForSignals(syscall.SIGINT, syscall.SIGTERM)

@@ -121,3 +121,9 @@ type VulnerabilityNotificationPageNumber struct {
 
 var VulnerabilityNotificationFirstPage = VulnerabilityNotificationPageNumber{0, 0}
 var NoVulnerabilityNotificationPage = VulnerabilityNotificationPageNumber{-1, -1}
+
+type Setting struct {
+	Model
+	Name  string
+	Value string
+}
