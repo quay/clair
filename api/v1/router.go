@@ -25,7 +25,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
-	"github.com/vmware/harbor/src/common/dao/clair"
 )
 
 var (
