@@ -6,7 +6,7 @@ This document tracks projects that integrate with Clair. [Join the community](ht
 
 | Title                                                                     | Event                         | Video                 | Slides                |
 |---------------------------------------------------------------------------|-------------------------------|-----------------------|-----------------------|
-| Clair: The Container Image Security Analyzer                              | [ContainerDays Boston 2016]   | https://goo.gl/ey7QQR | https://goo.gl/WmNiwA |
+| Clair: The Container Image Security Analyzer                              | [ContainerDays Boston 2016]   | https://goo.gl/ey7QQR | https://goo.gl/KtVLAR |
 | Identifying Common Vulnerabilities and Exposures in Containers with Clair | [CoreOS Fest 2016]            | https://goo.gl/fGtb9s | https://goo.gl/35gixV |
 | Clair: A Container Image Security Analyzer                                | [Microservices NYC]           | https://goo.gl/WZaCU2 | https://goo.gl/sCXGcH |
 | Clair: A Container Image Security Analyzer                                | [Container Orchestration NYC] | https://goo.gl/wxi24C | https://goo.gl/VfRxv2 |
