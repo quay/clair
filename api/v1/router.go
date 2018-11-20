@@ -101,5 +101,8 @@ func NewRouter(store database.Datastore, paginationKey string) *httprouter.Route
 	// Set vulnerabilities database regular updating policy
 	router.POST("/settings", httpHandler(setSetting, ctx))
 
+	// Get settings
+	router.GET("/settings/:setting", httpHandler(getSetting, ctx))
+
 	return router
 }

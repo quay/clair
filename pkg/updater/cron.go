@@ -63,3 +63,7 @@ func UpdateSchedule(db database.Datastore, schedule string) error {
 
 	return nil
 }
+
+func GetSchedule(db database.Datastore) (string, error) {
+	return db.GetSetting(UpdaterScheduleSetting)
+}

@@ -52,6 +52,7 @@ const (
 	getMetricsRoute            = "v1/getMetrics"
 	updateVulnerabilitiesRoute = "v1/updateVulnerabilitiesRoute"
 	setUpdaterPolicyRoute      = "v1/setUpdaterPolicy"
+	getUpdaterPolicyRoute      = "v1/getUpdaterPolicy"
 
 	// maxBodySize restricts client request bodies to 1MiB.
 	maxBodySize int64 = 1048576
@@ -542,4 +543,24 @@ func setSetting(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx
 
 	w.WriteHeader(http.StatusOK)
 	return setUpdaterPolicyRoute, http.StatusOK
+}
+
+func getSetting(w http.ResponseWriter, r *http.Request, p httprouter.Params, ctx *context) (string, int) {
+	setting := p.ByName("setting")
+	if setting != updater.UpdaterScheduleSetting {
+		log.Errorf("Unknown setting '%s', only '%s' is supported now.", setting, updater.UpdaterScheduleSetting)
+		w.WriteHeader(http.StatusBadRequest)
+		return getUpdaterPolicyRoute, http.StatusBadRequest
+	}
+
+	value, err := updater.GetSchedule(ctx.Store)
+	if err != nil {
+		log.Errorf("Get updater schedule error: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return getUpdaterPolicyRoute, http.StatusInternalServerError
+	}
+	writeResponse(w, r, http.StatusOK, SettingEnvelope{Name: setting, Value: value})
+
+	w.WriteHeader(http.StatusOK)
+	return getUpdaterPolicyRoute, http.StatusOK
 }
