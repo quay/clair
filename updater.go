@@ -91,16 +91,14 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 	log.WithField("lock identifier", whoAmI).Info("updater service started")
 
 	for {
-		var stop bool
-
 		// Determine if this is the first update and define the next update time.
 		// The next update time is (last update time + interval) or now if this is the first update.
 		nextUpdate := time.Now().UTC()
-		lastUpdate, firstUpdate, err := GetLastUpdateTime(datastore)
+		lastUpdate, isFirstUpdate, err := GetLastUpdateTime(datastore)
 		if err != nil {
 			log.WithError(err).Error("an error occurred while getting the last update time")
 			nextUpdate = nextUpdate.Add(config.Interval)
-		} else if !firstUpdate {
+		} else if !isFirstUpdate {
 			nextUpdate = lastUpdate.Add(config.Interval)
 		}
 
@@ -108,29 +106,30 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 		if nextUpdate.Before(time.Now().UTC()) {
 			// Attempt to get a lock on the the update.
 			log.Debug("attempting to obtain update lock")
-			hasLock, hasLockUntil := lock(datastore, updaterLockName, whoAmI, updaterLockDuration, false)
+			hasLock, hasLockUntil := database.AcquireLock(datastore, updaterLockName, whoAmI, updaterLockDuration, false)
 			if hasLock {
 				// Launch update in a new go routine.
 				doneC := make(chan bool, 1)
 				go func() {
-					update(datastore, firstUpdate)
+					update(datastore, isFirstUpdate)
 					doneC <- true
 				}()
 
+				var stop bool
 				for done := false; !done && !stop; {
 					select {
 					case <-doneC:
 						done = true
 					case <-time.After(updaterLockRefreshDuration):
 						// Refresh the lock until the update is done.
-						lock(datastore, updaterLockName, whoAmI, updaterLockDuration, true)
+						database.AcquireLock(datastore, updaterLockName, whoAmI, updaterLockDuration, true)
 					case <-st.Chan():
 						stop = true
 					}
 				}
 
 				// Unlock the updater.
-				unlock(datastore, updaterLockName, whoAmI)
+				database.ReleaseLock(datastore, updaterLockName, whoAmI)
 
 				if stop {
 					break

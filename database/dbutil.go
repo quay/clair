@@ -15,6 +15,8 @@
 package database
 
 import (
+	"time"
+
 	"github.com/deckarep/golang-set"
 )
 
@@ -303,4 +305,48 @@ func MergeLayers(l *Layer, new *Layer) *Layer {
 	}
 
 	return l
+}
+
+// AcquireLock acquires a named global lock for a duration.
+//
+// If renewal is true, the lock is extended as long as the same owner is
+// attempting to renew the lock.
+func AcquireLock(datastore Datastore, name, owner string, duration time.Duration, renewal bool) (success bool, expiration time.Time) {
+	// any error will cause the function to catch the error and return false.
+	tx, err := datastore.Begin()
+	if err != nil {
+		return false, time.Time{}
+	}
+
+	defer tx.Rollback()
+
+	locked, t, err := tx.Lock(name, owner, duration, renewal)
+	if err != nil {
+		return false, time.Time{}
+	}
+
+	if locked {
+		if err := tx.Commit(); err != nil {
+			return false, time.Time{}
+		}
+	}
+
+	return locked, t
+}
+
+// ReleaseLock releases a named global lock.
+func ReleaseLock(datastore Datastore, name, owner string) {
+	tx, err := datastore.Begin()
+	if err != nil {
+		return
+	}
+
+	defer tx.Rollback()
+
+	if err := tx.Unlock(name, owner); err != nil {
+		return
+	}
+	if err := tx.Commit(); err != nil {
+		return
+	}
 }

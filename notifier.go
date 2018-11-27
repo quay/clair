@@ -102,7 +102,7 @@ func RunNotifier(config *notification.Config, datastore database.Datastore, stop
 			if interrupted {
 				running = false
 			}
-			unlock(datastore, notification.Name, whoAmI)
+			database.ReleaseLock(datastore, notification.Name, whoAmI)
 			done <- true
 		}()
 
@@ -113,7 +113,7 @@ func RunNotifier(config *notification.Config, datastore database.Datastore, stop
 			case <-done:
 				break outer
 			case <-time.After(notifierLockRefreshDuration):
-				lock(datastore, notification.Name, whoAmI, notifierLockDuration, true)
+				database.AcquireLock(datastore, notification.Name, whoAmI, notifierLockDuration, true)
 			case <-stopper.Chan():
 				running = false
 				break
@@ -141,7 +141,7 @@ func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoA
 		}
 
 		// Lock the notification.
-		if hasLock, _ := lock(datastore, notification.Name, whoAmI, notifierLockDuration, false); hasLock {
+		if hasLock, _ := database.AcquireLock(datastore, notification.Name, whoAmI, notifierLockDuration, false); hasLock {
 			log.WithField(logNotiName, notification.Name).Info("found and locked a notification")
 			return &notification
 		}
@@ -207,45 +207,4 @@ func markNotificationAsRead(datastore database.Datastore, name string) error {
 		return err
 	}
 	return tx.Commit()
-}
-
-// unlock removes a lock with provided name, owner. Internally, it handles
-// database transaction and catches error.
-func unlock(datastore database.Datastore, name, owner string) {
-	tx, err := datastore.Begin()
-	if err != nil {
-		return
-	}
-
-	defer tx.Rollback()
-
-	if err := tx.Unlock(name, owner); err != nil {
-		return
-	}
-	if err := tx.Commit(); err != nil {
-		return
-	}
-}
-
-func lock(datastore database.Datastore, name string, owner string, duration time.Duration, renew bool) (bool, time.Time) {
-	// any error will cause the function to catch the error and return false.
-	tx, err := datastore.Begin()
-	if err != nil {
-		return false, time.Time{}
-	}
-
-	defer tx.Rollback()
-
-	locked, t, err := tx.Lock(name, owner, duration, renew)
-	if err != nil {
-		return false, time.Time{}
-	}
-
-	if locked {
-		if err := tx.Commit(); err != nil {
-			return false, time.Time{}
-		}
-	}
-
-	return locked, t
 }
