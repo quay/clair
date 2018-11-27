@@ -83,7 +83,7 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 	log.WithField("lock identifier", whoAmI).Info("updater service started")
 
 	for {
-		var stop, status bool
+		var stop, updateSuccessful bool
 
 		// Determine if this is the first update and define the next update time.
 		// The next update time is (last update time + interval) or now if this is the first update.
@@ -105,7 +105,7 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 				// Launch update in a new go routine.
 				doneC := make(chan bool, 1)
 				go func() {
-					status = update(datastore, firstUpdate)
+					updateSuccessful = update(datastore, firstUpdate)
 					doneC <- true
 				}()
 
@@ -129,7 +129,7 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 				}
 
 				// Extend the sleep duration if there're errors to any updaters.
-				if status {
+				if updateSuccessful {
 					sleepDuration = updaterSleepBetweenLoopsDuration
 				} else {
 					sleepDuration = timeutil.ExpBackoff(sleepDuration, config.Interval)
@@ -186,13 +186,13 @@ func sleepUpdater(approxWakeup time.Time, st *stopper.Stopper) (stopped bool) {
 
 // update fetches all the vulnerabilities from the registered fetchers, upserts
 // them into the database and then sends notifications.
-func update(datastore database.Datastore, firstUpdate bool) (status bool) {
+func update(datastore database.Datastore, firstUpdate bool) (updateSuccessful bool) {
 	defer setUpdaterDuration(time.Now())
 
 	log.Info("updating vulnerabilities")
 
 	// Fetch updates.
-	status, vulnerabilities, flags, notes := fetch(datastore)
+	updateSuccessful, vulnerabilities, flags, notes := fetch(datastore)
 
 	// Insert vulnerabilities.
 	log.WithField("count", len(vulnerabilities)).Debug("inserting vulnerabilities for update")
@@ -216,7 +216,7 @@ func update(datastore database.Datastore, firstUpdate bool) (status bool) {
 	promUpdaterNotesTotal.Set(float64(len(notes)))
 
 	// Update last successful update if every fetchers worked properly.
-	if status {
+	if updateSuccessful {
 		datastore.InsertKeyValue(updaterLastFlagName, strconv.FormatInt(time.Now().UTC().Unix(), 10))
 	}
 
