@@ -15,6 +15,7 @@
 package database
 
 import (
+	"errors"
 	"time"
 
 	"github.com/deckarep/golang-set"
@@ -349,4 +350,25 @@ func ReleaseLock(datastore Datastore, name, owner string) {
 	if err := tx.Commit(); err != nil {
 		return
 	}
+}
+
+// ErrLockNotFound is returned when FindLock succeeds, but cannot find a lock.
+var ErrLockNotFound = errors.New("no lock was found")
+
+// FindLock determines if a global lock with the provided name already exists.
+func FindLock(datastore Datastore, updaterLockName string) (owner string, expiration time.Time, err error) {
+	var tx Session
+	tx, err = datastore.Begin()
+	if err != nil {
+		return
+	}
+	defer tx.Rollback()
+
+	var found bool
+	owner, expiration, found, err = tx.FindLock(updaterLockName)
+	if err != nil && !found {
+		err = ErrLockNotFound
+	}
+
+	return
 }

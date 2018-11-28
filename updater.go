@@ -142,9 +142,9 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 				}
 				continue
 			} else {
-				lockOwner, lockExpiration, ok, err := findLock(datastore, updaterLockName)
-				if !ok || err != nil {
-					log.Debug("update lock is already taken")
+				lockOwner, lockExpiration, err := database.FindLock(datastore, updaterLockName)
+				if err != nil {
+					log.WithError(err).Warn("failed to find update lock")
 					nextUpdate = hasLockUntil
 				} else {
 					log.WithFields(log.Fields{"lock owner": lockOwner, "lock expiration": lockExpiration}).Debug("update lock is already taken")
@@ -462,15 +462,6 @@ func doVulnerabilitiesNamespacing(vulnerabilities []database.VulnerabilityWithAf
 	}
 
 	return response
-}
-
-func findLock(datastore database.Datastore, updaterLockName string) (string, time.Time, bool, error) {
-	tx, err := datastore.Begin()
-	if err != nil {
-		log.WithError(err).Error()
-	}
-	defer tx.Rollback()
-	return tx.FindLock(updaterLockName)
 }
 
 // updateUpdaterFlags updates the flags specified by updaters, every transaction
