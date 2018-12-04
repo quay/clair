@@ -243,7 +243,6 @@ func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotifica
 	}
 
 	// TODO(jzelinskie): implement "changed" key
-	fmt.Println(dbNotification.Deleted.IsZero())
 	return Notification{
 		Name:     dbNotification.Name,
 		Created:  created,
