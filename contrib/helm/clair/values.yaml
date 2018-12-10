@@ -55,6 +55,7 @@ config:
   - apk
   - dpkg
   - rpm
+nodeSelector: {}
 tolerations: []
 
 # Configuration values for the postgresql dependency.
