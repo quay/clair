@@ -21,6 +21,10 @@ spec:
       - name: "{{ .Chart.Name }}-config"
         secret:
           secretName: {{ template "clair.fullname" . }}
+      {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+      {{- end }}
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
