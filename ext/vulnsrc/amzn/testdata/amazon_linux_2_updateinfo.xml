@@ -1,0 +1,104 @@
+<?xml version="1.0" ?>
+<updates>
+    <update author="linux-security@amazon.com" from="linux-security@amazon.com" status="final" type="security" version="1.4">
+        <id>ALAS2-2018-939</id>
+        <title>Amazon Linux 2 2017.12 - ALAS2-2018-939: critical priority package update for kernel</title>
+        <issued date="2018-01-11 21:05" />
+        <updated date="2018-01-16 01:28" />
+        <severity>critical</severity>
+        <description>
+            Package updates are available for Amazon Linux 2 that fix the following vulnerabilities:
+            CVE-2017-5754:
+            1519781:
+            CVE-2017-5754 hw: cpu: speculative execution permission faults handling
+            An industry-wide issue was found in the way many modern microprocessor designs have implemented speculative execution of instructions (a commonly used performance optimization). There are three primary variants of the issue which differ in the way the speculative execution can be exploited. Variant CVE-2017-5754 relies on the fact that, on impacted microprocessors, during speculative execution of instruction permission faults, exception generation triggered by a faulting access is suppressed until the retirement of the whole instruction block. In a combination with the fact that memory accesses may populate the cache even when the block is being dropped and never committed (executed), an unprivileged local attacker could use this flaw to read privileged (kernel space) memory by conducting targeted cache side-channel attacks. Note: CVE-2017-5754 affects Intel x86-64 microprocessors. AMD x86-64 microprocessors are not affected by this issue.
+
+            CVE-2017-5715:
+            An industry-wide issue was found in the way many modern microprocessor designs have implemented speculative execution of instructions (a commonly used performance optimization). There are three primary variants of the issue which differ in the way the speculative execution can be exploited. Variant CVE-2017-5715 triggers the speculative execution by utilizing branch target injection. It relies on the presence of a precisely-defined instruction sequence in the privileged code as well as the fact that memory accesses may cause allocation into the microprocessor&amp;#039;s data cache even for speculatively executed instructions that never actually commit (retire). As a result, an unprivileged attacker could use this flaw to cross the syscall and guest/host boundaries and read privileged memory by conducting targeted cache side-channel attacks.
+            1519780:
+            CVE-2017-5715 hw: cpu: speculative execution branch target injection
+        </description>
+        <references>
+            <reference href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-5754" id="CVE-2017-5754" title="" type="cve" />
+            <reference href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-5715" id="CVE-2017-5715" title="" type="cve" />
+        </references>
+        <pkglist>
+            <collection short="amazon-linux-2">
+                <name>Amazon Linux 2</name>
+                <package arch="x86_64" epoch="0" name="kernel" release="38.79.amzn2" version="4.9.76">
+                    <filename>Packages/kernel-4.9.76-38.79.amzn2.x86_64.rpm</filename>
+                </package>
+                <package arch="x86_64" epoch="0" name="kernel-headers" release="38.79.amzn2" version="4.9.76">
+                    <filename>Packages/kernel-headers-4.9.76-38.79.amzn2.x86_64.rpm</filename>
+                </package>
+                <package arch="x86_64" epoch="0" name="kernel-debuginfo-common-x86_64" release="38.79.amzn2" version="4.9.76">
+                    <filename>Packages/kernel-debuginfo-common-x86_64-4.9.76-38.79.amzn2.x86_64.rpm</filename></package>
+                <package arch="x86_64" epoch="0" name="perf" release="38.79.amzn2" version="4.9.76">
+                    <filename>Packages/perf-4.9.76-38.79.amzn2.x86_64.rpm</filename></package>
+                <package arch="x86_64" epoch="0" name="perf-debuginfo" release="38.79.amzn2" version="4.9.76">
+                    <filename>Packages/perf-debuginfo-4.9.76-38.79.amzn2.x86_64.rpm</filename>
+                </package>
+                <package arch="x86_64" epoch="0" name="python-perf" release="38.79.amzn2" version="4.9.76">
+                    <filename>Packages/python-perf-4.9.76-38.79.amzn2.x86_64.rpm</filename>
+                </package>
+                <package arch="x86_64" epoch="0" name="python-perf-debuginfo" release="38.79.amzn2" version="4.9.76">
+                    <filename>Packages/python-perf-debuginfo-4.9.76-38.79.amzn2.x86_64.rpm</filename>
+                </package>
+                <package arch="x86_64" epoch="0" name="kernel-tools" release="38.79.amzn2" version="4.9.76">
+                    <filename>Packages/kernel-tools-4.9.76-38.79.amzn2.x86_64.rpm</filename>
+                </package>
+                <package arch="x86_64" epoch="0" name="kernel-tools-devel" release="38.79.amzn2" version="4.9.76">
+                    <filename>Packages/kernel-tools-devel-4.9.76-38.79.amzn2.x86_64.rpm</filename>
+                </package>
+                <package arch="x86_64" epoch="0" name="kernel-tools-debuginfo" release="38.79.amzn2" version="4.9.76">
+                    <filename>Packages/kernel-tools-debuginfo-4.9.76-38.79.amzn2.x86_64.rpm</filename>
+                </package>
+                <package arch="x86_64" epoch="0" name="kernel-devel" release="38.79.amzn2" version="4.9.76">
+                    <filename>Packages/kernel-devel-4.9.76-38.79.amzn2.x86_64.rpm</filename>
+                </package>
+                <package arch="x86_64" epoch="0" name="kernel-debuginfo" release="38.79.amzn2" version="4.9.76">
+                    <filename>Packages/kernel-debuginfo-4.9.76-38.79.amzn2.x86_64.rpm</filename>
+                </package>
+                <package arch="noarch" epoch="0" name="kernel-doc" release="38.79.amzn2" version="4.9.76">
+                    <filename>Packages/kernel-doc-4.9.76-38.79.amzn2.noarch.rpm</filename>
+                </package>
+            </collection>
+        </pkglist>
+    </update>
+    <update author="linux-security@amazon.com" from="linux-security@amazon.com" status="final" type="security" version="1.4">
+        <id>ALAS2-2018-942</id>
+        <title>Amazon Linux 2 2017.12 - ALAS2-2018-942: important priority package update for qemu-kvm</title>
+        <issued date="2018-02-07 18:49" /><updated date="2018-02-08 21:46" />
+        <severity>important</severity>
+        <description>
+            Package updates are available for Amazon Linux 2 that fix the following vulnerabilities:
+            CVE-2017-5715:
+            An industry-wide issue was found in the way many modern microprocessor designs have implemented speculative execution of instructions (a commonly used performance optimization). There are three primary variants of the issue which differ in the way the speculative execution can be exploited. Variant CVE-2017-5715 triggers the speculative execution by utilizing branch target injection. It relies on the presence of a precisely-defined instruction sequence in the privileged code as well as the fact that memory accesses may cause allocation into the microprocessor&amp;#039;s data cache even for speculatively executed instructions that never actually commit (retire). As a result, an unprivileged attacker could use this flaw to cross the syscall and guest/host boundaries and read privileged memory by conducting targeted cache side-channel attacks.
+            1519780:
+            CVE-2017-5715 hw: cpu: speculative execution branch target injection
+        </description>
+        <references>
+            <reference href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-5715" id="CVE-2017-5715" title="" type="cve" />
+        </references>
+        <pkglist>
+            <collection short="amazon-linux-2">
+                <name>Amazon Linux 2</name>
+                <package arch="x86_64" epoch="10" name="qemu-kvm" release="141.amzn2.5.3" version="1.5.3">
+                    <filename>Packages/qemu-kvm-1.5.3-141.amzn2.5.3.x86_64.rpm</filename>
+                </package>
+                <package arch="x86_64" epoch="10" name="qemu-img" release="141.amzn2.5.3" version="1.5.3">
+                    <filename>Packages/qemu-img-1.5.3-141.amzn2.5.3.x86_64.rpm</filename>
+                </package>
+                <package arch="x86_64" epoch="10" name="qemu-kvm-common" release="141.amzn2.5.3" version="1.5.3">
+                    <filename>Packages/qemu-kvm-common-1.5.3-141.amzn2.5.3.x86_64.rpm</filename>
+                </package>
+                <package arch="x86_64" epoch="10" name="qemu-kvm-tools" release="141.amzn2.5.3" version="1.5.3">
+                    <filename>Packages/qemu-kvm-tools-1.5.3-141.amzn2.5.3.x86_64.rpm</filename>
+                </package>
+                <package arch="x86_64" epoch="10" name="qemu-kvm-debuginfo" release="141.amzn2.5.3" version="1.5.3">
+                    <filename>Packages/qemu-kvm-debuginfo-1.5.3-141.amzn2.5.3.x86_64.rpm</filename>
+                </package>
+            </collection>
+        </pkglist>
+    </update>
+</updates>
