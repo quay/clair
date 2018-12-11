@@ -2,7 +2,6 @@ package osio
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -17,12 +16,14 @@ import (
 var (
 	output    OsioApiResponse
 	namespace = ""
+	firstDate = time.Now().AddDate(0, 0, -7)
+	page_flag = true
+	page      = 1
 )
 
 const (
-	osio_api    = "https://614101b9-6841-48ad-9daa-515bc7d5eacb.mock.pstmn.io/api/v1/cves/bydate/"
+	osio_api    = "http://bayesian-api-slenka-fabric8-analytics.devtools-dev.ext.devshift.net/api/v1/cves/bydate/"
 	updaterFlag = "osioUpdater"
-	firstDate   = 20181030
 )
 
 type updater struct{}
@@ -57,11 +58,6 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 
 	log.WithField("package", "OSIO").Info("Start fetching vulnerabilities")
 
-	day := firstDate % 100
-	month := (firstDate % 10000) / 100
-	year := firstDate / 10000
-	t := time.Date(year, time.Month(month), day, 0, 0, 0, 0, time.UTC)
-
 	tx, err := datastore.Begin()
 	if err != nil {
 		return resp, err
@@ -80,56 +76,77 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		flagValue = ""
 	}
 
-	firstOSIO, err := strconv.Atoi(flagValue)
-	if firstOSIO == 0 || err != nil {
-		firstOSIO = firstDate
+	firstDate_str := firstDate.Format("2006-01-02")
+	firstOSIO := flagValue
+	if firstOSIO == "" {
+		firstOSIO = firstDate_str
 	}
+	y, err := strconv.Atoi(firstOSIO[:4])
+	m, err := strconv.Atoi(firstOSIO[5:7])
+	d, err := strconv.Atoi(firstOSIO[8:])
+	firstOSIO_time := time.Date(y, time.Month(m), d, 0, 0, 0, 0, time.UTC)
 
-	fmt.Println("HIT the API of OSIO")
+	start_date := firstOSIO_time
+	end_date := time.Now()
 
-	for i := 0; i < 3; i++ {
+	for rd := rangeDate(start_date, end_date); ; {
+		date := rd() // in time format
+		if date.IsZero() {
+			break
+		}
+		page_flag = true
+		page = 1
+		for page_flag && page < 100 {
 
-		time_format := t.Format("2006-01-02")
-		osio_api_url := osio_api + time_format[:4] + time_format[5:7] + time_format[8:]
-		resp1, err1 := http.Get(osio_api_url)
-		if err1 != nil {
-			fmt.Println("cannot fetch URL %q: %v", osio_api_url, err)
+			time_format := date.Format("2006-01-02")
+
+			osio_api_url := osio_api + time_format[:4] + time_format[5:7] + time_format[8:] + "?page=" + strconv.Itoa(page)
+			resp1, err1 := http.Get(osio_api_url)
+
+			if err1 != nil {
+				log.WithField("package", "OSIO").Info("cannot fetch URL %q: %v", osio_api_url, err)
+			}
+
+			defer resp1.Body.Close()
+
+			if resp1.StatusCode != http.StatusOK {
+				log.WithField("package", "OSIO").Info("unexpected http GET status: %s", resp1.Status)
+			}
+
+			body, err := ioutil.ReadAll(resp1.Body)
+			if err != nil {
+				log.WithField("package", "OSIO").Info("Parsing not possible")
+			}
+			vs, rm, err := parseOSIO(body)
+			if err != nil {
+				return resp, err
+			}
+			for _, v := range vs {
+				resp.Vulnerabilities = append(resp.Vulnerabilities, v)
+			}
+
+			for _, r := range rm {
+				resp.ToRemove = append(resp.ToRemove, r)
+			}
+			ok := resp1.Header.Get("page")
+			page = page + 1
+			if ok == "" {
+				page_flag = false
+			}
 		}
 
-		defer resp1.Body.Close()
+	} //ranging over dates
 
-		if resp1.StatusCode != http.StatusOK {
-			fmt.Println("unexpected http GET status: %s", resp1.Status)
-		}
-		body, err := ioutil.ReadAll(resp1.Body)
-		fmt.Println(string(body))
-		if err != nil {
-			fmt.Println("Parsing not possible")
-		}
-		vs, rm, err := parseOSIO(body)
-		if err != nil {
-			return resp, err
-		}
-		for _, v := range vs {
-			resp.Vulnerabilities = append(resp.Vulnerabilities, v)
-		}
+	resp.FlagName = updaterFlag
+	end_date_str := end_date.Format("2006-01-02")
+	resp.FlagValue = end_date_str
 
-		for _, r := range rm {
-			resp.ToRemove = append(resp.ToRemove, r)
-		}
-		resp.FlagName = updaterFlag
-		resp.FlagValue = flagValue
-		tomorrow := t.AddDate(0, 0, 1)
-		t = tomorrow
-	}
-	fmt.Println("Sending Update Response")
 	return resp, nil
 
 }
 
 func parseOSIO(body []byte) (vulnerabilities []database.VulnerabilityWithAffected, removeCve []database.VulnerabilityID, err error) {
 
-	fmt.Println("inside parse OSIO")
 	json.Unmarshal([]byte(body), &output)
 
 	for _, i := range output.AddCVEList {
@@ -142,6 +159,7 @@ func parseOSIO(body []byte) (vulnerabilities []database.VulnerabilityWithAffecte
 				Description: i.Description,
 			},
 		}
+
 		switch i.Ecosystem {
 		case "pypi":
 			namespace = "python"
@@ -153,7 +171,6 @@ func parseOSIO(body []byte) (vulnerabilities []database.VulnerabilityWithAffecte
 			namespace = "java"
 			break
 		}
-
 		pkg := database.AffectedFeature{
 			FeatureName:     i.Name,
 			AffectedVersion: i.Version,
@@ -168,7 +185,6 @@ func parseOSIO(body []byte) (vulnerabilities []database.VulnerabilityWithAffecte
 
 	}
 	for _, i := range output.RemoveCVEList {
-
 		switch i.Ecosystem {
 		case "pypi":
 			namespace = "python"
@@ -180,7 +196,6 @@ func parseOSIO(body []byte) (vulnerabilities []database.VulnerabilityWithAffecte
 			namespace = "java"
 			break
 		}
-
 		remove_cve := database.VulnerabilityID{
 			Name:      i.CveId,
 			Namespace: namespace,
@@ -203,5 +218,19 @@ func severity(sev float32) database.Severity {
 	default:
 		log.Warningf("could not determine vulnerability severity from: %f.", sev)
 		return database.UnknownSeverity
+	}
+}
+func rangeDate(start, end time.Time) func() time.Time {
+	y, m, d := start.Date()
+	start = time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
+	y, m, d = end.Date()
+	end = time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
+	return func() time.Time {
+		if start.After(end) {
+			return time.Time{}
+		}
+		date := start
+		start = start.AddDate(0, 0, 1)
+		return date
 	}
 }
