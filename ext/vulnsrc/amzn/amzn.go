@@ -173,6 +173,11 @@ func (u *updater) getUpdateInfoURI() (updateInfoURI string, err error) {
 	}
 	defer mirrorListResponse.Body.Close()
 
+	if !httputil.Status2xx(mirrorListResponse) {
+		log.WithField("StatusCode", mirrorListResponse.StatusCode).Error("could not download mirror list")
+		return updateInfoURI, commonerr.ErrCouldNotDownload
+	}
+
 	// Parse the URI of the first mirror.
 	scanner := bufio.NewScanner(mirrorListResponse.Body)
 	success := scanner.Scan()
@@ -189,6 +194,11 @@ func (u *updater) getUpdateInfoURI() (updateInfoURI string, err error) {
 		return updateInfoURI, commonerr.ErrCouldNotDownload
 	}
 	defer repoMdResponse.Body.Close()
+
+	if !httputil.Status2xx(repoMdResponse) {
+		log.WithField("StatusCode", repoMdResponse.StatusCode).Error("could not download repomd.xml")
+		return updateInfoURI, commonerr.ErrCouldNotDownload
+	}
 
 	// Decode repomd.xml.
 	var repoMd RepoMd
