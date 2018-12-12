@@ -64,20 +64,20 @@ func TestAmazonLinux1(t *testing.T) {
 				Name:          "amzn:2018.03",
 				VersionFormat: rpm.ParserName,
 			},
-			FeatureName: "httpd-devel",
+			FeatureName:     "httpd-devel",
 			AffectedVersion: "2.2.21-1.18.amzn1",
-			FixedInVersion: "2.2.21-1.18.amzn1",
-			AffectedType: database.AffectBinaryPackage,
+			FixedInVersion:  "2.2.21-1.18.amzn1",
+			AffectedType:    database.AffectBinaryPackage,
 		},
 		{
 			Namespace: database.Namespace{
 				Name:          "amzn:2018.03",
 				VersionFormat: rpm.ParserName,
 			},
-			FeatureName: "httpd-debuginfo",
+			FeatureName:     "httpd-debuginfo",
 			AffectedVersion: "2.2.21-1.18.amzn1",
-			FixedInVersion: "2.2.21-1.18.amzn1",
-			AffectedType: database.AffectBinaryPackage,
+			FixedInVersion:  "2.2.21-1.18.amzn1",
+			AffectedType:    database.AffectBinaryPackage,
 		},
 	}
 
@@ -97,20 +97,20 @@ func TestAmazonLinux1(t *testing.T) {
 				Name:          "amzn:2018.03",
 				VersionFormat: rpm.ParserName,
 			},
-			FeatureName: "cyrus-imapd-debuginfo",
+			FeatureName:     "cyrus-imapd-debuginfo",
 			AffectedVersion: "2.3.16-6.4.amzn1",
-			FixedInVersion: "2.3.16-6.4.amzn1",
-			AffectedType: database.AffectBinaryPackage,
+			FixedInVersion:  "2.3.16-6.4.amzn1",
+			AffectedType:    database.AffectBinaryPackage,
 		},
 		{
 			Namespace: database.Namespace{
 				Name:          "amzn:2018.03",
 				VersionFormat: rpm.ParserName,
 			},
-			FeatureName: "cyrus-imapd-utils",
+			FeatureName:     "cyrus-imapd-utils",
 			AffectedVersion: "2.3.16-6.4.amzn1",
-			FixedInVersion: "2.3.16-6.4.amzn1",
-			AffectedType: database.AffectBinaryPackage,
+			FixedInVersion:  "2.3.16-6.4.amzn1",
+			AffectedType:    database.AffectBinaryPackage,
 		},
 	}
 
@@ -120,7 +120,7 @@ func TestAmazonLinux1(t *testing.T) {
 }
 
 func TestAmazonLinux2(t *testing.T) {
-	amazonLinux2Updater := updater {
+	amazonLinux2Updater := updater{
 		Name:          "Amazon Linux 2",
 		Namespace:     "amzn:2",
 		UpdaterFlag:   "amazonLinux2Updater",
@@ -157,20 +157,20 @@ func TestAmazonLinux2(t *testing.T) {
 				Name:          "amzn:2",
 				VersionFormat: rpm.ParserName,
 			},
-			FeatureName: "kernel",
+			FeatureName:     "kernel",
 			AffectedVersion: "4.9.76-38.79.amzn2",
-			FixedInVersion: "4.9.76-38.79.amzn2",
-			AffectedType: database.AffectBinaryPackage,
+			FixedInVersion:  "4.9.76-38.79.amzn2",
+			AffectedType:    database.AffectBinaryPackage,
 		},
 		{
 			Namespace: database.Namespace{
 				Name:          "amzn:2",
 				VersionFormat: rpm.ParserName,
 			},
-			FeatureName: "kernel-headers",
+			FeatureName:     "kernel-headers",
 			AffectedVersion: "4.9.76-38.79.amzn2",
-			FixedInVersion: "4.9.76-38.79.amzn2",
-			AffectedType: database.AffectBinaryPackage,
+			FixedInVersion:  "4.9.76-38.79.amzn2",
+			AffectedType:    database.AffectBinaryPackage,
 		},
 	}
 
@@ -190,20 +190,20 @@ func TestAmazonLinux2(t *testing.T) {
 				Name:          "amzn:2",
 				VersionFormat: rpm.ParserName,
 			},
-			FeatureName: "qemu-kvm",
+			FeatureName:     "qemu-kvm",
 			AffectedVersion: "10:1.5.3-141.amzn2.5.3",
-			FixedInVersion: "10:1.5.3-141.amzn2.5.3",
-			AffectedType: database.AffectBinaryPackage,
+			FixedInVersion:  "10:1.5.3-141.amzn2.5.3",
+			AffectedType:    database.AffectBinaryPackage,
 		},
 		{
 			Namespace: database.Namespace{
 				Name:          "amzn:2",
 				VersionFormat: rpm.ParserName,
 			},
-			FeatureName: "qemu-img",
+			FeatureName:     "qemu-img",
 			AffectedVersion: "10:1.5.3-141.amzn2.5.3",
-			FixedInVersion: "10:1.5.3-141.amzn2.5.3",
-			AffectedType: database.AffectBinaryPackage,
+			FixedInVersion:  "10:1.5.3-141.amzn2.5.3",
+			AffectedType:    database.AffectBinaryPackage,
 		},
 	}
 

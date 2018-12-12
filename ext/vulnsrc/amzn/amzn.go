@@ -35,14 +35,14 @@ import (
 )
 
 const (
-	amazonLinux1Name                = "Amazon Linux 2018.03"
-	amazonLinux1Namespace           = "amzn:2018.03"
-	amazonLinux1UpdaterFlag         = "amazonLinux1Updater"
-	amazonLinux1MirrorListURI       = "http://repo.us-west-2.amazonaws.com/2018.03/updates/x86_64/mirror.list"
-	amazonLinux2Name                = "Amazon Linux 2"
-	amazonLinux2Namespace           = "amzn:2"
-	amazonLinux2UpdaterFlag         = "amazonLinux2Updater"
-	amazonLinux2MirrorListURI       = "https://cdn.amazonlinux.com/2/core/latest/x86_64/mirror.list"
+	amazonLinux1Name          = "Amazon Linux 2018.03"
+	amazonLinux1Namespace     = "amzn:2018.03"
+	amazonLinux1UpdaterFlag   = "amazonLinux1Updater"
+	amazonLinux1MirrorListURI = "http://repo.us-west-2.amazonaws.com/2018.03/updates/x86_64/mirror.list"
+	amazonLinux2Name          = "Amazon Linux 2"
+	amazonLinux2Namespace     = "amzn:2"
+	amazonLinux2UpdaterFlag   = "amazonLinux2Updater"
+	amazonLinux2MirrorListURI = "https://cdn.amazonlinux.com/2/core/latest/x86_64/mirror.list"
 )
 
 type updater struct {
@@ -54,7 +54,7 @@ type updater struct {
 
 func init() {
 	// Register updater for Amazon Linux 2018.03.
-	amazonLinux1Updater := updater {
+	amazonLinux1Updater := updater{
 		Name:          amazonLinux1Name,
 		Namespace:     amazonLinux1Namespace,
 		UpdaterFlag:   amazonLinux1UpdaterFlag,
@@ -63,7 +63,7 @@ func init() {
 	vulnsrc.RegisterUpdater("amzn", &amazonLinux1Updater)
 
 	// Register updater for Amazon Linux 2.
-	amazonLinux2Updater := updater {
+	amazonLinux2Updater := updater{
 		Name:          amazonLinux2Name,
 		Namespace:     amazonLinux2Namespace,
 		UpdaterFlag:   amazonLinux2UpdaterFlag,
@@ -82,7 +82,7 @@ func (u *updater) Update(datastore database.Datastore) (response vulnsrc.UpdateR
 	}
 
 	if !found {
-		flagValue = "";
+		flagValue = ""
 	}
 
 	var timestamp string
