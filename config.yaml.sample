@@ -61,6 +61,10 @@ clair:
       - rhel
       - oracle
       - alpine
+      - redhat_pypi
+      - redhat_maven
+      - redhat_npm
+
 
   notifier:
     # Number of attempts before the notification is marked as failed to be sent

@@ -44,6 +44,7 @@ import (
 	// Register extensions.
 	_ "github.com/coreos/clair/ext/featurefmt/apk"
 	_ "github.com/coreos/clair/ext/featurefmt/dpkg"
+	_ "github.com/coreos/clair/ext/featurefmt/pypi"
 	_ "github.com/coreos/clair/ext/featurefmt/rpm"
 	_ "github.com/coreos/clair/ext/featurens/alpinerelease"
 	_ "github.com/coreos/clair/ext/featurens/aptsources"
@@ -57,7 +58,9 @@ import (
 	_ "github.com/coreos/clair/ext/vulnsrc/alpine"
 	_ "github.com/coreos/clair/ext/vulnsrc/debian"
 	_ "github.com/coreos/clair/ext/vulnsrc/oracle"
-	_ "github.com/coreos/clair/ext/vulnsrc/osio"
+	_ "github.com/coreos/clair/ext/vulnsrc/redhat/redhat_maven"
+	_ "github.com/coreos/clair/ext/vulnsrc/redhat/redhat_npm"
+	_ "github.com/coreos/clair/ext/vulnsrc/redhat/redhat_pypi"
 	_ "github.com/coreos/clair/ext/vulnsrc/rhel"
 	_ "github.com/coreos/clair/ext/vulnsrc/ubuntu"
 )
@@ -103,13 +106,40 @@ func stopCPUProfiling(f *os.File) {
 }
 
 func configClairVersion(config *Config) {
-	clair.EnabledDetectors = append(featurefmt.ListListers(), featurens.ListDetectors()...)
-	clair.EnabledUpdaters = strutil.Intersect(config.Updater.EnabledUpdaters, vulnsrc.ListUpdaters())
+	listers := featurefmt.ListListers()
+	detectors := featurens.ListDetectors()
+	updaters := vulnsrc.ListUpdaters()
 
 	log.WithFields(log.Fields{
-		"Detectors": database.SerializeDetectors(clair.EnabledDetectors),
-		"Updaters":  clair.EnabledUpdaters,
-	}).Info("enabled Clair extensions")
+		"Listers":   strings.Join(listers, ","),
+		"Detectors": strings.Join(detectors, ","),
+		"Updaters":  strings.Join(updaters, ","),
+	}).Info("Clair registered components")
+
+	unregDetectors := strutil.CompareStringLists(config.Worker.EnabledDetectors, detectors)
+	unregListers := strutil.CompareStringLists(config.Worker.EnabledListers, listers)
+	unregUpdaters := strutil.CompareStringLists(config.Updater.EnabledUpdaters, updaters)
+	if len(unregDetectors) != 0 || len(unregListers) != 0 || len(unregUpdaters) != 0 {
+		log.WithFields(log.Fields{
+			"Unknown Detectors":   strings.Join(unregDetectors, ","),
+			"Unknown Listers":     strings.Join(unregListers, ","),
+			"Unknown Updaters":    strings.Join(unregUpdaters, ","),
+			"Available Listers":   strings.Join(featurefmt.ListListers(), ","),
+			"Available Detectors": strings.Join(featurens.ListDetectors(), ","),
+			"Available Updaters":  strings.Join(vulnsrc.ListUpdaters(), ","),
+		}).Fatal("Unknown or unregistered components are configured")
+	}
+
+	// verify the user specified detectors/listers/updaters are implemented. If
+	// some are not registered, it logs warning and won't use the unregistered
+	// extensions.
+
+	clair.Processors = database.Processors{
+		Detectors: strutil.CompareStringListsInBoth(config.Worker.EnabledDetectors, detectors),
+		Listers:   strutil.CompareStringListsInBoth(config.Worker.EnabledListers, listers),
+	}
+
+	clair.EnabledUpdaters = strutil.CompareStringListsInBoth(config.Updater.EnabledUpdaters, updaters)
 }
 
 // Boot starts Clair instance with the provided config.
@@ -134,7 +164,6 @@ func Boot(config *Config) {
 
 	defer db.Close()
 
-	clair.InitWorker(db)
 	// Start notifier
 	st.Begin()
 	go clair.RunNotifier(config.Notifier, db, st)
@@ -155,18 +184,6 @@ func Boot(config *Config) {
 	st.Stop()
 }
 
-// Initialize logging system
-func configureLogger(flagLogLevel *string) {
-	logLevel, err := log.ParseLevel(strings.ToUpper(*flagLogLevel))
-	if err != nil {
-		log.WithError(err).Error("failed to set logger parser level")
-	}
-
-	log.SetLevel(logLevel)
-	log.SetOutput(os.Stdout)
-	log.SetFormatter(&formatter.JSONExtendedFormatter{ShowLn: true})
-}
-
 func main() {
 	// Parse command-line arguments
 	flag.CommandLine = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
@@ -176,7 +193,6 @@ func main() {
 	flagInsecureTLS := flag.Bool("insecure-tls", false, "Disable TLS server's certificate chain and hostname verification when pulling layers.")
 	flag.Parse()
 
-	configureLogger(flagLogLevel)
 	// Check for dependencies.
 	for _, bin := range BinaryDependencies {
 		_, err := exec.LookPath(bin)
@@ -184,6 +200,12 @@ func main() {
 			log.WithError(err).WithField("dependency", bin).Fatal("failed to find dependency")
 		}
 	}
+
+	// Initialize logging system
+	logLevel, err := log.ParseLevel(strings.ToUpper(*flagLogLevel))
+	log.SetLevel(logLevel)
+	log.SetOutput(os.Stdout)
+	log.SetFormatter(&formatter.JSONExtendedFormatter{ShowLn: true})
 
 	config, err := LoadConfig(*flagConfigPath)
 	if err != nil {
