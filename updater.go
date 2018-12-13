@@ -298,7 +298,6 @@ func fetch(datastore database.Datastore) (bool, []database.VulnerabilityWithAffe
 		if resp != nil {
 			vulnerabilities = append(vulnerabilities, doVulnerabilitiesNamespacing(resp.Vulnerabilities)...)
 			notes = append(notes, resp.Notes...)
-			//askkkkkk
 			remove = append(remove, resp.ToRemove...)
 			if resp.FlagName != "" && resp.FlagValue != "" {
 				flags[resp.FlagName] = resp.FlagValue
@@ -683,8 +682,6 @@ func updateVulnerabilities(datastore database.Datastore, vulnerabilities []datab
 	if err := tx.InsertVulnerabilities(toAdd); err != nil {
 		return nil, err
 	}
-	fmt.Println("Vulnerabilites Inserted")
-	fmt.Println("Removing False Positives")
 	if len(remove) > 0 {
 		if err := tx.DeleteVulnerabilities(remove); err != nil {
 			return nil, err
