@@ -28,10 +28,11 @@ import (
 
 func TestAmazonLinux1(t *testing.T) {
 	amazonLinux1Updater := updater{
+		MirrorListURI: "http://repo.us-west-2.amazonaws.com/2018.03/updates/x86_64/mirror.list",
 		Name:          "Amazon Linux 2018.03",
 		Namespace:     "amzn:2018.03",
 		UpdaterFlag:   "amazonLinux1Updater",
-		MirrorListURI: "http://repo.us-west-2.amazonaws.com/2018.03/updates/x86_64/mirror.list",
+		LinkFormat:    "https://alas.aws.amazon.com/%s.html",
 	}
 
 	_, filename, _, _ := runtime.Caller(0)
@@ -49,8 +50,7 @@ func TestAmazonLinux1(t *testing.T) {
 	updateInfo, err := decodeUpdateInfo(updateInfoXml)
 	assert.Nil(t, err)
 
-	vulnerabilities, err := amazonLinux1Updater.alasListToVulnerabilities(updateInfo.ALASList)
-	assert.Nil(t, err)
+	vulnerabilities := amazonLinux1Updater.alasListToVulnerabilities(updateInfo.ALASList)
 
 	assert.Equal(t, "ALAS-2011-1", vulnerabilities[0].Name)
 	assert.Equal(t, "https://alas.aws.amazon.com/ALAS-2011-1.html", vulnerabilities[0].Link)
@@ -121,10 +121,11 @@ func TestAmazonLinux1(t *testing.T) {
 
 func TestAmazonLinux2(t *testing.T) {
 	amazonLinux2Updater := updater{
+		MirrorListURI: "https://cdn.amazonlinux.com/2/core/latest/x86_64/mirror.list",
 		Name:          "Amazon Linux 2",
 		Namespace:     "amzn:2",
 		UpdaterFlag:   "amazonLinux2Updater",
-		MirrorListURI: "https://cdn.amazonlinux.com/2/core/latest/x86_64/mirror.list",
+		LinkFormat:    "https://alas.aws.amazon.com/AL2/%s.html",
 	}
 
 	_, filename, _, _ := runtime.Caller(0)
@@ -142,8 +143,7 @@ func TestAmazonLinux2(t *testing.T) {
 	updateInfo, err := decodeUpdateInfo(updateInfoXml)
 	assert.Nil(t, err)
 
-	vulnerabilities, err := amazonLinux2Updater.alasListToVulnerabilities(updateInfo.ALASList)
-	assert.Nil(t, err)
+	vulnerabilities := amazonLinux2Updater.alasListToVulnerabilities(updateInfo.ALASList)
 
 	assert.Equal(t, "ALAS2-2018-939", vulnerabilities[0].Name)
 	assert.Equal(t, "https://alas.aws.amazon.com/AL2/ALAS-2018-939.html", vulnerabilities[0].Link)
