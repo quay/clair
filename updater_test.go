@@ -132,7 +132,7 @@ func newmockUpdaterDatastore() *mockUpdaterDatastore {
 				vuln, ok := session.copy.vulnerabilities[id]
 				r = append(r, database.NullableVulnerability{
 					VulnerabilityWithAffected: vuln,
-					Valid:                     ok,
+					Valid: ok,
 				})
 			}
 			return r, nil

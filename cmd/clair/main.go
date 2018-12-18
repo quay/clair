@@ -58,8 +58,8 @@ import (
 	_ "github.com/coreos/clair/ext/vulnsrc/debian"
 	_ "github.com/coreos/clair/ext/vulnsrc/oracle"
 	_ "github.com/coreos/clair/ext/vulnsrc/redhat/redhat_maven"
-        _ "github.com/coreos/clair/ext/vulnsrc/redhat/redhat_npm"
-        _ "github.com/coreos/clair/ext/vulnsrc/redhat/redhat_pypi"
+	_ "github.com/coreos/clair/ext/vulnsrc/redhat/redhat_npm"
+	_ "github.com/coreos/clair/ext/vulnsrc/redhat/redhat_pypi"
 	_ "github.com/coreos/clair/ext/vulnsrc/rhel"
 	_ "github.com/coreos/clair/ext/vulnsrc/ubuntu"
 )
