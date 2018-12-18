@@ -621,7 +621,8 @@ func createVulnerabilityNotifications(datastore database.Datastore, changes []vu
 
 // updateVulnerabilities upserts unique vulnerabilities into the database and
 // computes vulnerability changes.
-func updateVulnerabilities(datastore database.Datastore, vulnerabilities []database.VulnerabilityWithAffected, remove []database.VulnerabilityID) ([]vulnerabilityChange, error) {
+// computes vulnerability changes.
+func updateVulnerabilities(datastore database.Datastore, vulnerabilities []database.VulnerabilityWithAffected, remove ...[]database.VulnerabilityID) ([]vulnerabilityChange, error) {
 	log.WithField("count", len(vulnerabilities)).Debug("updating vulnerabilities")
 	if len(vulnerabilities) == 0 {
 		return nil, nil
@@ -683,7 +684,7 @@ func updateVulnerabilities(datastore database.Datastore, vulnerabilities []datab
 		return nil, err
 	}
 	if len(remove) > 0 {
-		if err := tx.DeleteVulnerabilities(remove); err != nil {
+		if err := tx.DeleteVulnerabilities(remove[0]); err != nil {
 			return nil, err
 		}
 	}
