@@ -90,6 +90,11 @@ var (
 				UNIQUE (layer_id, feature_id));`,
 			`CREATE INDEX ON layer_feature(layer_id);`,
 
+			`CREATE TABLE IF NOT EXISTS layer_feature_context (
+				id SERIAL PRIMARY KEY,
+				layer_feature_id INT REFERENCES layer_feature ON DELETE CASCADE,
+				context TEXT NOT NULL);`,
+
 			`CREATE TABLE IF NOT EXISTS layer_namespace (
 				id SERIAL PRIMARY KEY,
 				layer_id INT REFERENCES layer ON DELETE CASCADE,
