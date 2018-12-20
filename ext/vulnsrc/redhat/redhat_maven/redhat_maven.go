@@ -102,13 +102,13 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 			redhat_api_url := redhat_api + time_format[:4] + time_format[5:7] + time_format[8:] + "?page=" + strconv.Itoa(page) + "&ecosystem=maven"
 			resp1, err1 := http.Get(redhat_api_url)
 			if err1 != nil {
-				log.WithField("package", "RedHat").Info("cannot fetch URL %q: %v", redhat_api_url, err)
+				log.WithField("package", "RedHat").Info("cannot fetch URL " + redhat_api_url)
 			}
 
 			defer resp1.Body.Close()
 
 			if resp1.StatusCode != http.StatusOK {
-				log.WithField("package", "RedHat").Info("unexpected http GET status: %s", resp1.Status)
+				log.WithField("package", "RedHat").Info("unexpected http GET status " + resp1.Status)
 			}
 
 			body, err := ioutil.ReadAll(resp1.Body)
