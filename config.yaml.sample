@@ -61,8 +61,6 @@ clair:
       - rhel
       - oracle
       - alpine
-      - redhat_pypi
-      - redhat_maven
       - redhat_npm
 
 

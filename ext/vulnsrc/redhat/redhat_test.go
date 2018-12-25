@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/coreos/clair/database"
-	RH "github.com/coreos/clair/ext/vulnsrc/redhat/redhat_maven"
+	RH "github.com/coreos/clair/ext/vulnsrc/redhat/redhat_npm"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,60 +24,60 @@ func TestRedhatParsing(t *testing.T) {
 	if assert.Nil(t, err) {
 		if assert.Len(t, vulnerabilities, 3) {
 			for _, vulnerability := range vulnerabilities {
-				if vulnerability.Name == "CVE-2013-4310" {
-					assert.Equal(t, "https://nvd.nist.gov/vuln/detail/CVE-2013-4310", vulnerability.Link)
+				if vulnerability.Name == "CVE-2018-3745" {
+					assert.Equal(t, "https://nvd.nist.gov/vuln/detail/CVE-2018-3745", vulnerability.Link)
 					assert.Equal(t, database.MediumSeverity, vulnerability.Severity)
-					assert.Equal(t, "The Struts 2 action mapping mechanism supports the special parameter prefix  action: which is intended to help with attaching navigational information to  buttons within forms", vulnerability.Description)
+					assert.Equal(t, "atob 2.0.3 and earlier allocates uninitialized Buffers when number is passed in input on Node.js 4.x and below.", vulnerability.Description)
 
 					expectedFeatures := []database.AffectedFeature{
 						{
 							Namespace: database.Namespace{
-								Name:          "java",
-								VersionFormat: "maven",
+								Name:          "node",
+								VersionFormat: "npm",
 							},
-							FeatureName:     "org.apache.struts:struts2-core",
-							FixedInVersion:  ">=2.3.15.3,2.3.15",
-							AffectedVersion: "2.3.8",
+							FeatureName:     "atob",
+							FixedInVersion:  ">=2.1.0",
+							AffectedVersion: "2.0.2",
 						},
 					}
 
 					for _, expectedFeature := range expectedFeatures {
 						assert.Contains(t, vulnerability.Affected, expectedFeature)
 					}
-				} else if vulnerability.Name == "CVE-2015-5377" {
-					assert.Equal(t, "https://nvd.nist.gov/vuln/detail/CVE-2015-5377", vulnerability.Link)
-					assert.Equal(t, database.HighSeverity, vulnerability.Severity)
-					assert.Equal(t, "Some description here updated just now.", vulnerability.Description)
+				} else if vulnerability.Name == "CVE-2018-3732" {
+					assert.Equal(t, "https://nvd.nist.gov/vuln/detail/CVE-2018-3732", vulnerability.Link)
+					assert.Equal(t, database.MediumSeverity, vulnerability.Severity)
+					assert.Equal(t, "resolve-path node module before 1.4.0 suffers from a Path Traversal vulnerability due to lack of validation of paths with certain special characters, which allows a malicious user to read content of any file with known path.", vulnerability.Description)
 
 					expectedFeatures := []database.AffectedFeature{
 						{
 							Namespace: database.Namespace{
-								Name:          "java",
-								VersionFormat: "maven",
+								Name:          "node",
+								VersionFormat: "npm",
 							},
-							FeatureName:     "org.elasticsearch:elasticsearch",
-							FixedInVersion:  "",
-							AffectedVersion: "1.6.0",
+							FeatureName:     "resolve-path",
+							FixedInVersion:  ">=1.4.0",
+							AffectedVersion: "1.2.0",
 						},
 					}
 
 					for _, expectedFeature := range expectedFeatures {
 						assert.Contains(t, vulnerability.Affected, expectedFeature)
 					}
-				} else if vulnerability.Name == "CVE-2013-4366" {
-					assert.Equal(t, "https://nvd.nist.gov/vuln/detail/CVE-2013-4366", vulnerability.Link)
-					assert.Equal(t, database.HighSeverity, vulnerability.Severity)
-					assert.Equal(t, "some desc", vulnerability.Description)
+				} else if vulnerability.Name == "CVE-2018-3737" {
+					assert.Equal(t, "https://nvd.nist.gov/vuln/detail/CVE-2018-3737", vulnerability.Link)
+					assert.Equal(t, database.MediumSeverity, vulnerability.Severity)
+					assert.Equal(t, "sshpk is vulnerable to ReDoS when parsing crafted invalid public keys.", vulnerability.Description)
 
 					expectedFeatures := []database.AffectedFeature{
 						{
 							Namespace: database.Namespace{
-								Name:          "java",
-								VersionFormat: "maven",
+								Name:          "node",
+								VersionFormat: "npm",
 							},
-							FeatureName:     "httpclient",
-							FixedInVersion:  "4.3.1",
-							AffectedVersion: "4.3",
+							FeatureName:     "sshpk",
+							FixedInVersion:  ">=1.13.2",
+							AffectedVersion: "1.13.1",
 						},
 					}
 
@@ -91,8 +91,8 @@ func TestRedhatParsing(t *testing.T) {
 		}
 		if assert.Len(t, removeCve, 1) {
 			for _, removecve := range removeCve {
-				if removecve.Name == "CVE-2016-2141" {
-					assert.Equal(t, "java", removecve.Namespace)
+				if removecve.Name == "CVE-2018-3767" {
+					assert.Equal(t, "node", removecve.Namespace)
 				}
 			}
 		}

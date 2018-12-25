@@ -1,38 +1,38 @@
 {
     "add": [
                 {
-                    "cve_id": "CVE-2013-4310",
-                    "cvss_v2": 5.8,
-                    "description": "The Struts 2 action mapping mechanism supports the special parameter prefix  action: which is intended to help with attaching navigational information to  buttons within forms",
-                    "name": "org.apache.struts:struts2-core",
-                    "ecosystem": "maven",
-                    "fixed_in": ">=2.3.15.3,2.3.15",
+                    "cve_id": "CVE-2018-3745",
+                    "cvss_v2": 6.4,
+                    "description": "atob 2.0.3 and earlier allocates uninitialized Buffers when number is passed in input on Node.js 4.x and below.",
+                    "name": "atob",
+                    "ecosystem": "npm",
+                    "fixed_in": ">=2.1.0",
                     "status": "null",
-                    "version": "2.3.8",
-	                "link": "https://nvd.nist.gov/vuln/detail/CVE-2013-4310"
+                    "version": "2.0.2",
+	                "link": "https://nvd.nist.gov/vuln/detail/CVE-2018-3745"
                 },
                 {
-                    "cve_id": "CVE-2015-5377",
-                    "cvss_v2": 7.5,
-                    "description": "Some description here updated just now.",
-                    "ecosystem": "maven",
-                    "fixed_in": null,
-                    "name": "org.elasticsearch:elasticsearch",
-                    "status": "Analyzed",
-                    "version": "1.6.0",
-                    "link": "https://nvd.nist.gov/vuln/detail/CVE-2015-5377"
+                    "cve_id": "CVE-2018-3732",
+                    "cvss_v2": 5.0,
+                    "description": "resolve-path node module before 1.4.0 suffers from a Path Traversal vulnerability due to lack of validation of paths with certain special characters, which allows a malicious user to read content of any file with known path.",
+                    "ecosystem": "npm",
+                    "fixed_in": ">=1.4.0",
+                    "name": "resolve-path",
+                    "status": "null",
+                    "version": "1.2.0",
+                    "link": "https://nvd.nist.gov/vuln/detail/CVE-2018-3732"
                 },
                 {
                     
-                    "cve_id": "CVE-2013-4366",
-                    "cvss_v2": 7.5,
-                    "description": "some desc",
-                    "ecosystem": "maven",
-                    "fixed_in": "4.3.1",
-                    "name": "httpclient",
-                    "status": "Analyzed",
-                    "version": "4.3",
-                    "link": "https://nvd.nist.gov/vuln/detail/CVE-2013-4366"
+                    "cve_id": "CVE-2018-3737",
+                    "cvss_v2": 5.0,
+                    "description": "sshpk is vulnerable to ReDoS when parsing crafted invalid public keys.",
+                    "ecosystem": "npm",
+                    "fixed_in": ">=1.13.2",
+                    "name": "sshpk",
+                    "status": "null",
+                    "version": "1.13.1",
+                    "link": "https://nvd.nist.gov/vuln/detail/CVE-2018-3737"
                     
 
                 }
@@ -40,8 +40,8 @@
             "count": 4,
             "remove": [
                 { 
-                    "cve-id": "CVE-2016-2141", 
-                    "ecosystem": "maven" 
+                    "cve-id": "CVE-2018-3767", 
+                    "ecosystem": "npm" 
                 } 
             ] 
 }
