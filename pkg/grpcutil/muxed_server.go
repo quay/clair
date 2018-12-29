@@ -116,8 +116,14 @@ func (srv *MuxedGRPCServer) ListenAndServeTLS(certFile, keyFile, caPath string, 
 	if srv.TLSConfig == nil {
 		srv.TLSConfig = &tls.Config{}
 	}
-	configureCA(srv.TLSConfig, caPath)
-	configureCertificate(srv.TLSConfig, certFile, keyFile)
+	err := configureCA(srv.TLSConfig, caPath)
+	if err != nil {
+		return err
+	}
+	err = configureCertificate(srv.TLSConfig, certFile, keyFile)
+	if err != nil {
+		return err
+	}
 
 	listener, err := tls.Listen("tcp", srv.Addr, srv.TLSConfig)
 	if err != nil {
