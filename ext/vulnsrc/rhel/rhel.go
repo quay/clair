@@ -221,7 +221,7 @@ func parseRHSA(ovalReader io.Reader) (vulnerabilities []database.VulnerabilityWi
 			for _, currentCve := range definition.Cves {
 				vulnerability.Name = currentCve.ID
 				vulnerability.Link = currentCve.Href
-				if currentCve.Impact != "" {
+				if currentCve.Impact != "" && currentCve.Impact != "none" {
 					vulnerability.Severity = severity(currentCve.Impact)
 				} else {
 					vulnerability.Severity = severity(definition.Severity)
