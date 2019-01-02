@@ -76,11 +76,9 @@ func (tx *pgSession) PersistFeatures(features []database.Feature) error {
 	})
 
 	// TODO(Sida): A better interface for bulk insertion is needed.
-	keys := make([]interface{}, len(features)*3)
-	for i, f := range features {
-		keys[i*3] = f.Name
-		keys[i*3+1] = f.Version
-		keys[i*3+2] = f.VersionFormat
+	keys := make([]interface{}, 0, len(features)*3)
+	for _, f := range features {
+		keys = append(keys, f.Name, f.Version, f.VersionFormat)
 		if f.Name == "" || f.Version == "" || f.VersionFormat == "" {
 			return commonerr.NewBadRequestError("Empty feature name, version or version format is not allowed")
 		}
@@ -160,11 +158,9 @@ func (tx *pgSession) CacheAffectedNamespacedFeatures(features []database.Namespa
 
 	cache, err := tx.searchAffectingVulnerabilities(features)
 
-	keys := make([]interface{}, len(cache)*3)
-	for i, c := range cache {
-		keys[i*3] = c.vulnID
-		keys[i*3+1] = c.nsFeatureID
-		keys[i*3+2] = c.vulnAffectingID
+	keys := make([]interface{}, 0, len(cache)*3)
+	for _, c := range cache {
+		keys = append(keys, c.vulnID, c.nsFeatureID, c.vulnAffectingID)
 	}
 
 	if len(cache) == 0 {
@@ -231,10 +227,9 @@ func (tx *pgSession) PersistNamespacedFeatures(features []database.NamespacedFea
 		return err
 	}
 
-	keys := make([]interface{}, len(features)*2)
-	for i, f := range features {
-		keys[i*2] = fIDs[f.Feature]
-		keys[i*2+1] = nsIDs[f.Namespace]
+	keys := make([]interface{}, 0, len(features)*2)
+	for _, f := range features {
+		keys = append(keys, fIDs[f.Feature], nsIDs[f.Namespace])
 	}
 
 	_, err := tx.Exec(queryPersistNamespacedFeature(len(features)), keys...)
@@ -329,12 +324,9 @@ func (tx *pgSession) findNamespacedFeatureIDs(nfs []database.NamespacedFeature) 
 	}
 
 	nfsMap := map[database.NamespacedFeature]sql.NullInt64{}
-	keys := make([]interface{}, len(nfs)*4)
-	for i, nf := range nfs {
-		keys[i*4] = nfs[i].Name
-		keys[i*4+1] = nfs[i].Version
-		keys[i*4+2] = nfs[i].VersionFormat
-		keys[i*4+3] = nfs[i].Namespace.Name
+	keys := make([]interface{}, 0, len(nfs)*4)
+	for _, nf := range nfs {
+		keys = append(keys, nf.Name, nf.Version, nf.VersionFormat, nf.Namespace.Name)
 		nfsMap[nf] = sql.NullInt64{}
 	}
 
@@ -373,11 +365,9 @@ func (tx *pgSession) findFeatureIDs(fs []database.Feature) ([]sql.NullInt64, err
 
 	fMap := map[database.Feature]sql.NullInt64{}
 
-	keys := make([]interface{}, len(fs)*3)
-	for i, f := range fs {
-		keys[i*3] = f.Name
-		keys[i*3+1] = f.Version
-		keys[i*3+2] = f.VersionFormat
+	keys := make([]interface{}, 0, len(fs)*3)
+	for _, f := range fs {
+		keys = append(keys, f.Name, f.Version, f.VersionFormat)
 		fMap[f] = sql.NullInt64{}
 	}
 
