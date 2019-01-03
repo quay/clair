@@ -4,11 +4,11 @@ INSERT INTO namespace (id, name, version_format) VALUES
   (2, 'debian:8', 'dpkg'),
   (3, 'fake:1.0', 'rpm');
 
-INSERT INTO feature (id, name, version, version_format) VALUES
-  (1, 'ourchat', '0.5', 'dpkg'),
-  (2, 'openssl', '1.0', 'dpkg'),
-  (3, 'openssl', '2.0', 'dpkg'),
-  (4, 'fake', '2.0', 'rpm');
+INSERT INTO feature (id, name, version, source_name, source_version, version_format) VALUES
+  (1, 'ourchat', '0.5', 'ourchat', '0.5', 'dpkg'),
+  (2, 'openssl', '1.0', 'openssl', '1.0', 'dpkg'),
+  (3, 'openssl', '2.0', 'openssl', '2.0', 'dpkg'),
+  (4, 'fake', '2.0', 'fake-src', '2.0', 'rpm');
 
 INSERT INTO namespaced_feature(id, feature_id, namespace_id) VALUES
   (1, 1, 1), -- ourchat 0.5, debian:7

@@ -37,7 +37,7 @@ const (
 		SELECT id FROM layer WHERE hash = $1`
 
 	findLayerFeatures = `
-		SELECT f.name, f.version, f.version_format, lf.detector_id
+		SELECT f.name, f.version, f.source_name, f.source_version, f.version_format, lf.detector_id
 			FROM layer_feature AS lf, feature AS f
 			WHERE lf.feature_id = f.id
 				AND lf.layer_id = $1`
@@ -307,7 +307,8 @@ func (tx *pgSession) findLayerFeatures(layerID int64, detectors detectorMap) ([]
 			detectorID int64
 			feature    database.LayerFeature
 		)
-		if err := rows.Scan(&feature.Name, &feature.Version, &feature.VersionFormat, &detectorID); err != nil {
+		if err := rows.Scan(&feature.Name, &feature.Version, &feature.SourceName, &feature.SourceVersion,
+			&feature.VersionFormat, &detectorID); err != nil {
 			return nil, handleError("findLayerFeatures", err)
 		}
 

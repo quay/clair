@@ -169,6 +169,20 @@ type Feature struct {
 	VersionFormat string
 }
 
+// Valid checks if the Feature Layer is compliant to the spec.
+func (f *Feature) Valid() bool {
+	if f == nil {
+		return false
+	}
+
+	if f.Name == "" || f.Version == "" || f.SourceName == "" ||
+		f.SourceVersion == "" || f.VersionFormat == "" {
+		return false
+	}
+
+	return true
+}
+
 // NamespacedFeature is a feature with determined namespace and can be affected
 // by vulnerabilities.
 //

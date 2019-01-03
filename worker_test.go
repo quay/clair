@@ -276,14 +276,14 @@ func TestProcessAncestryWithDistUpgrade(t *testing.T) {
 	// TODO(sidac): Change to use table driven tests.
 	// Create the list of Features that should not been upgraded from one layer to another.
 	nonUpgradedFeatures := []database.Feature{
-		{Name: "libtext-wrapi18n-perl", Version: "0.06-7"},
-		{Name: "libtext-charwidth-perl", Version: "0.04-7"},
-		{Name: "libtext-iconv-perl", Version: "1.7-5"},
-		{Name: "mawk", Version: "1.3.3-17"},
-		{Name: "insserv", Version: "1.14.0-5"},
-		{Name: "db", Version: "5.1.29-5"},
-		{Name: "ustr", Version: "1.0.4-3"},
-		{Name: "xz-utils", Version: "5.1.1alpha+20120614-2"},
+		{Name: "libtext-wrapi18n-perl", Version: "0.06-7", SourceName: "libtext", SourceVersion: "0.06-7"},
+		{Name: "libtext-charwidth-perl", Version: "0.04-7", SourceName: "libtext", SourceVersion: "0.04-7"},
+		{Name: "libtext-iconv-perl", Version: "1.7-5", SourceName: "libtext", SourceVersion: "1.7-5"},
+		{Name: "mawk", Version: "1.3.3-17", SourceName: "mawk", SourceVersion: "1.3.3-17"},
+		{Name: "insserv", Version: "1.14.0-5", SourceName: "insserv", SourceVersion: "1.14.0-5"},
+		{Name: "db", Version: "5.1.29-5", SourceName: "db", SourceVersion: "5.1.29-5"},
+		{Name: "ustr", Version: "1.0.4-3", SourceName: "ustr", SourceVersion: "1.0.4-3"},
+		{Name: "xz-utils", Version: "5.1.1alpha+20120614-2", SourceName: "xz", SourceVersion: "5.1.1alpha+20120614-2"},
 	}
 
 	nonUpgradedMap := map[database.Feature]struct{}{}
@@ -318,7 +318,7 @@ func TestProcessAncestryWithDistUpgrade(t *testing.T) {
 		features = append(features, l.Features...)
 	}
 
-	assert.Len(t, features, 74)
+	assert.Len(t, features, 117)
 	for _, f := range features {
 		if _, ok := nonUpgradedMap[f.Feature]; ok {
 			assert.Equal(t, "debian:7", f.Namespace.Name)
@@ -352,8 +352,8 @@ func TestProcessLayers(t *testing.T) {
 	assert.Len(t, LayerWithContents[1].Namespaces, 1)
 	assert.Len(t, LayerWithContents[2].Namespaces, 1)
 	assert.Len(t, LayerWithContents[0].Features, 0)
-	assert.Len(t, LayerWithContents[1].Features, 52)
-	assert.Len(t, LayerWithContents[2].Features, 74)
+	assert.Len(t, LayerWithContents[1].Features, 80)
+	assert.Len(t, LayerWithContents[2].Features, 117)
 
 	// Ensure each layer has expected namespaces and features detected
 	if blank, ok := datastore.layers["blank"]; ok {
@@ -371,7 +371,7 @@ func TestProcessLayers(t *testing.T) {
 			{database.Namespace{"debian:7", dpkg.ParserName}, database.NewNamespaceDetector("os-release", "1.0")},
 		}, wheezy.Namespaces)
 
-		assert.Len(t, wheezy.Features, 52)
+		assert.Len(t, wheezy.Features, 80)
 	} else {
 		assert.Fail(t, "wheezy is not stored")
 		return
@@ -382,7 +382,7 @@ func TestProcessLayers(t *testing.T) {
 		assert.Equal(t, []database.LayerNamespace{
 			{database.Namespace{"debian:8", dpkg.ParserName}, database.NewNamespaceDetector("os-release", "1.0")},
 		}, jessie.Namespaces)
-		assert.Len(t, jessie.Features, 74)
+		assert.Len(t, jessie.Features, 117)
 	} else {
 		assert.Fail(t, "jessie is not stored")
 		return

@@ -76,11 +76,12 @@ func (tx *pgSession) PersistFeatures(features []database.Feature) error {
 	})
 
 	// TODO(Sida): A better interface for bulk insertion is needed.
-	keys := make([]interface{}, 0, len(features)*3)
+	keys := make([]interface{}, 0, len(features)*5)
 	for _, f := range features {
-		keys = append(keys, f.Name, f.Version, f.VersionFormat)
-		if f.Name == "" || f.Version == "" || f.VersionFormat == "" {
-			return commonerr.NewBadRequestError("Empty feature name, version or version format is not allowed")
+		keys = append(keys, f.Name, f.Version, f.SourceName, f.SourceVersion, f.VersionFormat)
+		if !f.Valid() {
+			return commonerr.NewBadRequestError(
+				"Empty feature properties are not allowed")
 		}
 	}
 
@@ -324,9 +325,9 @@ func (tx *pgSession) findNamespacedFeatureIDs(nfs []database.NamespacedFeature) 
 	}
 
 	nfsMap := map[database.NamespacedFeature]sql.NullInt64{}
-	keys := make([]interface{}, 0, len(nfs)*4)
+	keys := make([]interface{}, 0, len(nfs)*6)
 	for _, nf := range nfs {
-		keys = append(keys, nf.Name, nf.Version, nf.VersionFormat, nf.Namespace.Name)
+		keys = append(keys, nf.Name, nf.Version, nf.SourceName, nf.SourceVersion, nf.VersionFormat, nf.Namespace.Name)
 		nfsMap[nf] = sql.NullInt64{}
 	}
 
@@ -342,7 +343,8 @@ func (tx *pgSession) findNamespacedFeatureIDs(nfs []database.NamespacedFeature) 
 	)
 
 	for rows.Next() {
-		err := rows.Scan(&id, &nf.Name, &nf.Version, &nf.VersionFormat, &nf.Namespace.Name)
+		err := rows.Scan(&id, &nf.Name, &nf.Version, &nf.SourceName,
+			&nf.SourceVersion, &nf.VersionFormat, &nf.Namespace.Name)
 		nf.Namespace.VersionFormat = nf.VersionFormat
 		if err != nil {
 			return nil, handleError("searchNamespacedFeature", err)
@@ -382,7 +384,7 @@ func (tx *pgSession) findFeatureIDs(fs []database.Feature) ([]sql.NullInt64, err
 		f  database.Feature
 	)
 	for rows.Next() {
-		err := rows.Scan(&id, &f.Name, &f.Version, &f.VersionFormat)
+		err := rows.Scan(&id, &f.Name, &f.Version, &f.SourceName, &f.SourceVersion, &f.VersionFormat)
 		if err != nil {
 			return nil, handleError("querySearchFeatureID", err)
 		}

@@ -30,7 +30,7 @@ func TestPersistFeatures(t *testing.T) {
 	defer closeTest(t, datastore, tx)
 
 	f1 := database.Feature{}
-	f2 := database.Feature{Name: "n", Version: "v", VersionFormat: "vf"}
+	f2 := database.Feature{Name: "n", Version: "v", SourceName: "sn", SourceVersion: "sv", VersionFormat: "vf"}
 
 	// empty
 	assert.Nil(t, tx.PersistFeatures([]database.Feature{}))
