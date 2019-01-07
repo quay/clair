@@ -84,7 +84,7 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 	switch OS {
 	case "debian", "ubuntu":
 		versionFormat = dpkg.ParserName
-	case "centos", "rhel", "fedora", "amzn", "ol", "oracle":
+	case "centos", "rhel", "fedora", "amzn", "ol", "oracle", "opensuse", "sles":
 		versionFormat = rpm.ParserName
 	default:
 		return nil, nil
