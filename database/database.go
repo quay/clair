@@ -183,23 +183,16 @@ type Session interface {
 	// FindKeyValue retrieves a value from the given key.
 	FindKeyValue(key string) (value string, found bool, err error)
 
-	// Lock creates or renew a Lock in the database with the given name, owner
-	// and duration.
+	// Lock acquires or renews a lock in the database with the given name, owner
+	// and duration without blocking. After the specified duration, the lock
+	// expires if it hasn't already been unlocked in order to prevent a deadlock.
 	//
-	// After the specified duration, the Lock expires by itself if it hasn't been
-	// unlocked, and thus, let other users create a Lock with the same name.
-	// However, the owner can renew its Lock by setting renew to true.
-	// Lock should not block, it should instead returns whether the Lock has been
-	// successfully acquired/renewed. If it's the case, the expiration time of
-	// that Lock is returned as well.
+	// If the acquisition of a lock is not successful, expiration should be
+	// the time that existing lock expires.
 	Lock(name string, owner string, duration time.Duration, renew bool) (success bool, expiration time.Time, err error)
 
 	// Unlock releases an existing Lock.
 	Unlock(name, owner string) error
-
-	// FindLock returns the owner of a Lock specified by the name, and its
-	// expiration time if it exists.
-	FindLock(name string) (owner string, expiration time.Time, found bool, err error)
 }
 
 // Datastore represents a persistent data store
