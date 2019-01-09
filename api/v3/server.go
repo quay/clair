@@ -76,7 +76,7 @@ func loggingHandler(h http.Handler) http.Handler {
 }
 
 // ListenAndServe serves the Clair v3 API over gRPC and the gRPC Gateway.
-func ListenAndServe(addr, keyFile, certFile, caPath string, store database.Datastore) error {
+func ListenAndServe(addr, certFile, keyFile, caPath string, store database.Datastore) error {
 	srv := grpcutil.MuxedGRPCServer{
 		Addr: addr,
 		ServicesFunc: func(gsrv *grpc.Server) {
