@@ -1,4 +1,4 @@
-// Copyright 2017 clair authors
+// Copyright 2019 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -91,13 +91,8 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 
 	// Clean up any resources the updater left behind.
 	defer func() {
-		for _, appenders := range vulnmdsrc.Appenders() {
-			appenders.Clean()
-		}
-		for _, updaters := range vulnsrc.Updaters() {
-			updaters.Clean()
-		}
-
+		vulnmdsrc.CleanAll()
+		vulnsrc.CleanAll()
 		log.Info("updater service stopped")
 	}()
 
