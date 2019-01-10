@@ -200,20 +200,7 @@ func update(ctx context.Context, datastore database.Datastore, firstUpdate bool)
 	// Fetch updates.
 	success, vulnerabilities, flags, notes := fetchUpdates(ctx, datastore)
 
-	// do vulnerability namespacing again to merge potentially duplicated
-	// vulnerabilities from each updater.
-	vulnerabilities = doVulnerabilitiesNamespacing(vulnerabilities)
-
-	// deduplicate fetched namespaces and store them into database.
-	nsMap := map[database.Namespace]struct{}{}
-	for _, vuln := range vulnerabilities {
-		nsMap[vuln.Namespace] = struct{}{}
-	}
-
-	namespaces := make([]database.Namespace, 0, len(nsMap))
-	for ns := range nsMap {
-		namespaces = append(namespaces, ns)
-	}
+	namespaces, vulnerabilities := deduplicate(vulnerabilities)
 
 	if err := database.PersistNamespacesAndCommit(datastore, namespaces); err != nil {
 		log.WithError(err).Error("Unable to insert namespaces")
@@ -262,6 +249,24 @@ func update(ctx context.Context, datastore database.Datastore, firstUpdate bool)
 
 	log.Info("update finished")
 	return nil
+}
+
+func deduplicate(vulns []database.VulnerabilityWithAffected) ([]database.Namespace, []database.VulnerabilityWithAffected) {
+	// do vulnerability namespacing again to merge potentially duplicated
+	// vulnerabilities from each updater.
+	vulnerabilities := doVulnerabilitiesNamespacing(vulns)
+
+	nsMap := map[database.Namespace]struct{}{}
+	for _, vuln := range vulnerabilities {
+		nsMap[vuln.Namespace] = struct{}{}
+	}
+
+	namespaces := make([]database.Namespace, 0, len(nsMap))
+	for ns := range nsMap {
+		namespaces = append(namespaces, ns)
+	}
+
+	return namespaces, vulnerabilities
 }
 
 func setUpdaterDuration(start time.Time) {
