@@ -59,12 +59,22 @@ var tests = []test{
 	{"f47ac10b-58cc-4372-e567-0e02b2c3d479", 4, Future, true},
 	{"f47ac10b-58cc-4372-f567-0e02b2c3d479", 4, Future, true},
 
+
 	{"f47ac10b158cc-5372-a567-0e02b2c3d479", 0, Invalid, false},
 	{"f47ac10b-58cc25372-a567-0e02b2c3d479", 0, Invalid, false},
 	{"f47ac10b-58cc-53723a567-0e02b2c3d479", 0, Invalid, false},
 	{"f47ac10b-58cc-5372-a56740e02b2c3d479", 0, Invalid, false},
 	{"f47ac10b-58cc-5372-a567-0e02-2c3d479", 0, Invalid, false},
 	{"g47ac10b-58cc-4372-a567-0e02b2c3d479", 0, Invalid, false},
+
+
+	{"{f47ac10b-58cc-0372-8567-0e02b2c3d479}", 0, RFC4122, true},
+	{"{f47ac10b-58cc-0372-8567-0e02b2c3d479", 0, Invalid, false},
+	{"f47ac10b-58cc-0372-8567-0e02b2c3d479}", 0, Invalid, false},
+
+	{"f47ac10b58cc037285670e02b2c3d479", 0, RFC4122, true},
+	{"f47ac10b58cc037285670e02b2c3d4790", 0, Invalid, false},
+	{"f47ac10b58cc037285670e02b2c3d47", 0, Invalid, false},
 }
 
 var constants = []struct {

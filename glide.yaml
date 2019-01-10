@@ -31,3 +31,4 @@ import:
   version: ^1.7.1
 - package: gopkg.in/yaml.v2
   version: ^2.2.1
+- package: golang.org/x/sync/errgroup

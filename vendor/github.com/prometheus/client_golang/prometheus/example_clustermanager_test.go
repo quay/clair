@@ -13,7 +13,13 @@
 
 package prometheus_test
 
-import "github.com/prometheus/client_golang/prometheus"
+import (
+	"log"
+	"net/http"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+)
 
 // ClusterManager is an example for a system that might have been built without
 // Prometheus in mind. It models a central manager of jobs running in a
@@ -124,4 +130,13 @@ func ExampleCollector() {
 	// variables to then do something with them.
 	NewClusterManager("db", reg)
 	NewClusterManager("ca", reg)
+
+	// Add the standard process and Go metrics to the custom registry.
+	reg.MustRegister(
+		prometheus.NewProcessCollector(prometheus.ProcessCollectorOpts{}),
+		prometheus.NewGoCollector(),
+	)
+
+	http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
