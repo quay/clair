@@ -61,6 +61,7 @@ clair:
       - rhel
       - oracle
       - alpine
+      - suse
 
   notifier:
     # Number of attempts before the notification is marked as failed to be sent
