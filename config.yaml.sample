@@ -83,5 +83,8 @@ clair:
       keyfile: 
       certfile: 
 
+      tokenfile:
+      token:
+
       # Optional HTTP Proxy: must be a valid URL (including the scheme).
       proxy:

@@ -36,6 +36,7 @@ const timeout = 5 * time.Second
 
 type sender struct {
 	endpoint string
+	token    string
 	client   *http.Client
 }
 
@@ -46,7 +47,11 @@ type Config struct {
 	CertFile   string
 	KeyFile    string
 	CAFile     string
-	Proxy      string
+
+	TokenFile string
+	Token     string
+
+	Proxy string
 }
 
 func init() {
@@ -75,10 +80,22 @@ func (s *sender) Configure(config *notification.Config) (bool, error) {
 	if httpConfig.Endpoint == "" {
 		return false, nil
 	}
-	if _, err := url.ParseRequestURI(httpConfig.Endpoint); err != nil {
+	var webhookURL *url.URL
+	if webhookURL, err = url.ParseRequestURI(httpConfig.Endpoint); err != nil {
 		return false, fmt.Errorf("could not parse endpoint URL: %s\n", err)
 	}
 	s.endpoint = httpConfig.Endpoint
+
+	// get the auth token
+	if httpConfig.Token != "" {
+		s.token = httpConfig.Token
+	} else if httpConfig.TokenFile != "" {
+		byteToken, err := ioutil.ReadFile(httpConfig.TokenFile)
+		if err != nil {
+			return false, err
+		}
+		s.token = string(byteToken)
+	}
 
 	// Setup HTTP client.
 	transport := &http.Transport{}
@@ -87,10 +104,12 @@ func (s *sender) Configure(config *notification.Config) (bool, error) {
 		Timeout:   timeout,
 	}
 
-	// Initialize TLS.
-	transport.TLSClientConfig, err = loadTLSClientConfig(&httpConfig)
-	if err != nil {
-		return false, fmt.Errorf("could not initialize client cert auth: %s\n", err)
+	// Initialize TLS only if the scheme is 'https'.
+	if webhookURL.Scheme == "https" {
+		transport.TLSClientConfig, err = loadTLSClientConfig(&httpConfig)
+		if err != nil {
+			return false, fmt.Errorf("could not initialize client cert auth: %s\n", err)
+		}
 	}
 
 	// Set proxy.
@@ -119,7 +138,15 @@ func (s *sender) Send(notificationName string) error {
 	}
 
 	// Send notification via HTTP POST.
-	resp, err := s.client.Post(s.endpoint, "application/json", bytes.NewBuffer(jsonNotification))
+	req, err := http.NewRequest("POST", s.endpoint, bytes.NewBuffer(jsonNotification))
+	if err != nil {
+		return fmt.Errorf("failed to create new post request to send notification with name %q", notificationName)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if s.token != "" {
+		req.Header.Set("Authorization", "Bearer "+s.token)
+	}
+	resp, err := s.client.Do(req)
 	if err != nil || resp == nil || (resp.StatusCode != 200 && resp.StatusCode != 201) {
 		if resp != nil {
 			return fmt.Errorf("got status %d, expected 200/201", resp.StatusCode)
@@ -136,13 +163,8 @@ func (s *sender) Send(notificationName string) error {
 // If no certificates are given, (nil, nil) is returned.
 // The CA certificate is optional and falls back to the system default.
 func loadTLSClientConfig(cfg *Config) (*tls.Config, error) {
-	if cfg.CertFile == "" || cfg.KeyFile == "" {
-		return nil, nil
-	}
-
-	cert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
-	if err != nil {
-		return nil, err
+	tlsConfig := &tls.Config{
+		ServerName: cfg.ServerName,
 	}
 
 	var caCertPool *x509.CertPool
@@ -153,12 +175,16 @@ func loadTLSClientConfig(cfg *Config) (*tls.Config, error) {
 		}
 		caCertPool = x509.NewCertPool()
 		caCertPool.AppendCertsFromPEM(caCert)
+
+		tlsConfig.RootCAs = caCertPool
 	}
 
-	tlsConfig := &tls.Config{
-		ServerName:   cfg.ServerName,
-		Certificates: []tls.Certificate{cert},
-		RootCAs:      caCertPool,
+	if cfg.CertFile != "" && cfg.KeyFile != "" {
+		cert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.KeyFile)
+		if err != nil {
+			return nil, err
+		}
+		tlsConfig.Certificates = []tls.Certificate{cert}
 	}
 
 	return tlsConfig, nil
