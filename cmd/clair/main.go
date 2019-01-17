@@ -52,6 +52,7 @@ import (
 	_ "github.com/coreos/clair/ext/featurens/redhatrelease"
 	_ "github.com/coreos/clair/ext/imagefmt/aci"
 	_ "github.com/coreos/clair/ext/imagefmt/docker"
+	_ "github.com/coreos/clair/ext/notification/messagebus"
 	_ "github.com/coreos/clair/ext/notification/webhook"
 	_ "github.com/coreos/clair/ext/vulnmdsrc/nvd"
 	_ "github.com/coreos/clair/ext/vulnsrc/alpine"

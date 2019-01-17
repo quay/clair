@@ -85,3 +85,14 @@ clair:
 
       # Optional HTTP Proxy: must be a valid URL (including the scheme).
       proxy:
+    messsagebus:
+      # Brokers array/list - with failover support
+      brokers:
+
+      # Path to certificate, key and ca certificate files
+      certfile:
+      keyfile:
+      cafile:
+
+      # Virtual topic where a notification is sent
+      destination:
