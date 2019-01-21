@@ -14,6 +14,7 @@ require (
 	github.com/coreos/pkg v0.0.0-20160727233714-3ac0863d7acf
 	github.com/deckarep/golang-set v1.7.1
 	github.com/fernet/fernet-go v0.0.0-20151007213151-1b2437bc582b
+	github.com/go-stomp/stomp v2.0.4+incompatible
 	github.com/golang/protobuf v1.2.0
 	github.com/google/go-cmp v0.3.0 // indirect
 	github.com/google/uuid v1.1.0 // indirect

@@ -44,6 +44,8 @@ github.com/docker/libnetwork v0.8.0-dev.2.0.20190604151032-3c26b4e7495e/go.mod h
 github.com/fernet/fernet-go v0.0.0-20151007213151-1b2437bc582b h1:QqmfGmPkAbYcqM0YdHOS8JxqRJqEx+0rxjYZ1OiP6aw=
 github.com/fernet/fernet-go v0.0.0-20151007213151-1b2437bc582b/go.mod h1:2H9hjfbpSMHwY503FclkV/lZTBh2YlOmLLSda12uL8c=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
+github.com/go-stomp/stomp v2.0.4+incompatible h1:kLDcoPr8Ldoq61kpo6pwwzSacF6UZ+HJAzlHFLz8JCM=
+github.com/go-stomp/stomp v2.0.4+incompatible/go.mod h1:VqCtqNZv1226A1/79yh+rMiFUcfY3R109np+7ke4n0c=
 github.com/godbus/dbus v4.1.0+incompatible/go.mod h1:/YcGZj5zSblfDWMMoOzV4fas9FZnQYTkDnsGvmh2Grw=
 github.com/gofrs/flock v0.7.0/go.mod h1:F1TvTiK9OcQqauNUHlbJvyl9Qa1QvF/gOUDKA14jxHU=
 github.com/gogo/googleapis v1.1.0/go.mod h1:gf4bu3Q80BeJ6H1S1vYPm8/ELATdvryBaNFGgqEef3s=
