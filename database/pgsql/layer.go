@@ -235,12 +235,9 @@ func (tx *pgSession) persistLayerFeatures(features []dbLayerFeature) error {
 	sort.Slice(features, func(i, j int) bool {
 		return features[i].featureID < features[j].featureID
 	})
-
-	keys := make([]interface{}, len(features)*3)
-	for i, feature := range features {
-		keys[i*3] = feature.layerID
-		keys[i*3+1] = feature.featureID
-		keys[i*3+2] = feature.detectorID
+	keys := make([]interface{}, 0, len(features)*3)
+	for _, f := range features {
+		keys = append(keys, f.layerID, f.featureID, f.detectorID)
 	}
 
 	_, err := tx.Exec(queryPersistLayerFeature(len(features)), keys...)
@@ -260,12 +257,9 @@ func (tx *pgSession) persistLayerNamespaces(namespaces []dbLayerNamespace) error
 		return namespaces[i].namespaceID < namespaces[j].namespaceID
 	})
 
-	elementSize := 3
-	keys := make([]interface{}, len(namespaces)*elementSize)
-	for i, row := range namespaces {
-		keys[i*3] = row.layerID
-		keys[i*3+1] = row.namespaceID
-		keys[i*3+2] = row.detectorID
+	keys := make([]interface{}, 0, len(namespaces)*3)
+	for _, row := range namespaces {
+		keys = append(keys, row.layerID, row.namespaceID, row.detectorID)
 	}
 
 	_, err := tx.Exec(queryPersistLayerNamespace(len(namespaces)), keys...)
