@@ -14,9 +14,15 @@ spec:
     port: {{ .Values.service.externalApiPort }}
     targetPort: {{ .Values.service.internalApiPort }}
     protocol: TCP
+{{- if and (.Values.service.apiNodePort) (eq .Values.service.type "NodePort") }}
+    nodePort: {{ .Values.service.apiNodePort }}
+{{- end }}
   - name: "{{ .Chart.Name }}-health"
     port: {{ .Values.service.externalHealthPort }}
     targetPort: {{ .Values.service.internalHealthPort }}
     protocol: TCP
+{{- if and (.Values.service.healthNodePort) (eq .Values.service.type "NodePort") }}
+    nodePort: {{ .Values.service.healthNodePort }}
+{{- end }}
   selector:
     app: {{ template "clair.fullname" . }}
