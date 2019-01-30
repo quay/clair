@@ -83,7 +83,7 @@ $ docker run --net=host -d -p 6060-6061:6060-6061 -v $PWD/clair_config:/config q
 
 #### Source
 
-To build Clair, you need to latest stable version of [Go] and a working [Go environment].
+To build Clair, you need the latest stable version of [Go] and a working [Go environment].
 In addition, Clair requires some additional binaries be installed on the system [$PATH] as runtime dependencies:
 
 * [git]
