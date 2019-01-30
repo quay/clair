@@ -16,6 +16,7 @@ package redhat
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -26,7 +27,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRHELParserOneCVE(t *testing.T) {
+func TestRedHatParserOneCVE(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
 	path := filepath.Join(filepath.Dir(filename))
 
@@ -36,7 +37,15 @@ func TestRHELParserOneCVE(t *testing.T) {
 	if err := json.NewDecoder(testFile).Decode(&rhsaData); err != nil {
 		panic(err)
 	}
-	vulnerabilities := parseAdvisory(rhsaData.ErrataList["RHSA-2019:0139"])
+
+	testFile2, _ := os.Open(filepath.Join(path, "/testdata/cvemap.xml"))
+	var cveCpeMapping Cvemap
+	if err := xml.NewDecoder(testFile2).Decode(&cveCpeMapping); err != nil {
+		panic(err)
+	}
+	adv := rhsaData.ErrataList["RHSA-2019:0139"]
+	adv.Name = "RHSA-2019:0139"
+	vulnerabilities := parseAdvisory(adv, cveCpeMapping)
 	assert.Equal(t, "CVE-2017-2582", vulnerabilities[0].Name)
 	assert.Equal(t, "https://access.redhat.com/security/cve/CVE-2017-2582", vulnerabilities[0].Link)
 	assert.Equal(t, database.MediumSeverity, vulnerabilities[0].Severity)
@@ -46,7 +55,7 @@ func TestRHELParserOneCVE(t *testing.T) {
 		{
 			AffectedType: affectedType,
 			Namespace: database.Namespace{
-				Name:          "redhat",
+				Name:          "rhel:6",
 				VersionFormat: rpm.ParserName,
 			},
 			FeatureName:     "tomcat7-docs-webapp",
@@ -56,7 +65,7 @@ func TestRHELParserOneCVE(t *testing.T) {
 		{
 			AffectedType: affectedType,
 			Namespace: database.Namespace{
-				Name:          "redhat",
+				Name:          "rhel:7",
 				VersionFormat: rpm.ParserName,
 			},
 			FeatureName:     "tomcat7-selinux",

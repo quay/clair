@@ -19,6 +19,7 @@ package redhat
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"strings"
 	"time"
 
@@ -32,11 +33,12 @@ import (
 )
 
 const (
-	rhsaFirstTime = "2000-01-001T01:01:01+02:00"
-	vmaasURL      = "https://webapp-vmaas-stable.1b13.insights.openshiftapps.com/api/v1"
-	cveURL        = "https://access.redhat.com/security/cve/"
-	updaterFlag   = "redHatUpdater"
-	affectedType  = database.AffectBinaryPackage
+	rhsaFirstTime    = "2000-01-001T01:01:01+02:00"
+	vmaasURL         = "https://webapp-vmaas-stable.1b13.insights.openshiftapps.com/api/v1"
+	cveCPEMappingURL = "https://www.redhat.com/security/data/metrics/cvemap.xml"
+	cveURL           = "https://access.redhat.com/security/cve/"
+	updaterFlag      = "redHatUpdater"
+	affectedType     = database.AffectBinaryPackage
 )
 
 type Advisory struct {
@@ -75,6 +77,40 @@ type VmaasPostRequest struct {
 	ErrataList    []string `json:"errata_list"`
 	ModifiedSince string   `json:"modified_since"`
 	Page          int      `json:"page"`
+}
+
+type Vulnerability struct {
+	XMLName        xml.Name `xml:"Vulnerability"`
+	Text           string   `xml:",chardata"`
+	Name           string   `xml:"name,attr"`
+	ThreatSeverity string   `xml:"ThreatSeverity"`
+	PublicDate     string   `xml:"PublicDate"`
+	Bugzilla       struct {
+		Text string `xml:",chardata"`
+		ID   string `xml:"id,attr"`
+		URL  string `xml:"url,attr"`
+		Lang string `xml:"lang,attr"`
+	} `xml:"Bugzilla"`
+	AffectedRelease []struct {
+		Text        string `xml:",chardata"`
+		Cpe         string `xml:"cpe,attr"`
+		ProductName string `xml:"ProductName"`
+		ReleaseDate string `xml:"ReleaseDate"`
+		Advisory    struct {
+			Text string `xml:",chardata"`
+			Type string `xml:"type,attr"`
+			URL  string `xml:"url,attr"`
+		} `xml:"Advisory"`
+		Package struct {
+			Text string `xml:",chardata"`
+			Name string `xml:"name,attr"`
+		} `xml:"Package"`
+	} `xml:"AffectedRelease"`
+	UpstreamFix string `xml:"UpstreamFix"`
+}
+
+type Cvemap struct {
+	Vulnerability []Vulnerability
 }
 
 type updater struct{}
@@ -124,7 +160,8 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		if err := json.NewDecoder(r.Body).Decode(&rhsaData); err != nil {
 			return resp, err
 		}
-		for _, advisory := range rhsaData.ErrataList {
+		for advisoryName, advisory := range rhsaData.ErrataList {
+			advisory.Name = advisoryName
 			advisories = append(advisories, advisory)
 		}
 		currentPage++
@@ -134,11 +171,28 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		}
 	}
 
-	for _, advisory := range advisories {
-		vulnerabilities := parseAdvisory(advisory)
-		resp.Vulnerabilities = append(resp.Vulnerabilities, vulnerabilities...)
-
+	r, err := httputil.GetWithUserAgent(cveCPEMappingURL)
+	if err != nil {
+		log.WithError(err).Error("Could not download RedHat's CVE mapping file")
+		return resp, commonerr.ErrCouldNotDownload
 	}
+	defer r.Body.Close()
+
+	if !httputil.Status2xx(r) {
+		log.WithField("StatusCode", r.StatusCode).Error("Failed to update RedHat")
+		return resp, commonerr.ErrCouldNotDownload
+	}
+
+	var cveCpeMapping Cvemap
+	if err := xml.NewDecoder(r.Body).Decode(&cveCpeMapping); err != nil {
+		return resp, err
+	}
+
+	for _, advisory := range advisories {
+		vulnerabilities := parseAdvisory(advisory, cveCpeMapping)
+		resp.Vulnerabilities = append(resp.Vulnerabilities, vulnerabilities...)
+	}
+
 	if len(resp.Vulnerabilities) > 0 {
 		log.WithFields(log.Fields{
 			"items":   len(resp.Vulnerabilities),
@@ -154,8 +208,16 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 }
 
 // parseAdvisory - parse advisory metadata and create new Vulnerabilities objects
-func parseAdvisory(advisory Advisory) (vulnerabilities []database.VulnerabilityWithAffected) {
+func parseAdvisory(advisory Advisory, cveCpeMapping Cvemap) (vulnerabilities []database.VulnerabilityWithAffected) {
 	for _, cve := range advisory.CveList {
+		namespace := "unknown"
+		var cveToCpe Vulnerability
+		for _, cveMappingItem := range cveCpeMapping.Vulnerability {
+			if cveMappingItem.Name == cve {
+				cveToCpe = cveMappingItem
+				break
+			}
+		}
 		vulnerability := database.VulnerabilityWithAffected{
 			Vulnerability: database.Vulnerability{
 				Name:        cve,
@@ -166,21 +228,37 @@ func parseAdvisory(advisory Advisory) (vulnerabilities []database.VulnerabilityW
 		}
 		for _, nvra := range advisory.PackageList {
 			parsedNVRA := parseNVRA(nvra)
+			for _, cveAdvisory := range cveToCpe.AffectedRelease {
+				if cveAdvisory.Advisory.Text == advisory.Name && parsedNVRA.nvr() == cveAdvisory.Package.Text {
+					namespace = cveAdvisory.Cpe
+					break
+				}
+			}
+			// Once CPEs will be publicly available in RH's images we can use
+			// CPEs directly instead of centos:version
+			// To avoid false positives we need to filter only RHEL products
+			if strings.HasPrefix(namespace, "cpe:/o:redhat:enterprise_linux:7") {
+				namespace = "rhel:7"
+			} else if strings.HasPrefix(namespace, "cpe:/o:redhat:enterprise_linux:6") {
+				namespace = "rhel:6"
+			} else {
+				continue
+			}
 			p := database.AffectedFeature{
 				FeatureName:     parsedNVRA.Name,
 				AffectedVersion: parsedNVRA.Version + "-" + parsedNVRA.Release,
 				FixedInVersion:  parsedNVRA.Version + "-" + parsedNVRA.Release,
 				AffectedType:    affectedType,
 				Namespace: database.Namespace{
-					// Not sure what namespace should I use here (can we use CPE here?)
-					// TODO: fix it
-					Name:          "redhat",
+					Name:          namespace,
 					VersionFormat: rpm.ParserName,
 				},
 			}
 			vulnerability.Affected = append(vulnerability.Affected, p)
 		}
-		vulnerabilities = append(vulnerabilities, vulnerability)
+		if len(vulnerability.Affected) > 0 {
+			vulnerabilities = append(vulnerabilities, vulnerability)
+		}
 	}
 	return
 }
@@ -200,6 +278,9 @@ func parseNVRA(nvra string) NVRA {
 	parsedNVRA.Name = nvra[:versionIndex]
 
 	return parsedNVRA
+}
+func (nvra *NVRA) nvr() string {
+	return nvra.Name + "-" + nvra.Version + "-" + nvra.Release
 }
 
 func severity(sev string) database.Severity {

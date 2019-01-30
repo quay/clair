@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<cvemap updated="2019-01-29T12:15:39">
+    <Vulnerability name="CVE-2017-2582">
+        <PublicDate>2000-04-13T00:00:00</PublicDate>
+        <Bugzilla id="1616471" url="https://bugzilla.redhat.com/show_bug.cgi?id=1616471" xml:lang="en:us">
+    CVE-2000-0336 security flaw
+        </Bugzilla>
+        <Details xml:lang="en:us" source="Mitre">
+    Linux OpenLDAP server allows local users to modify arbitrary files via a symlink attack.
+        </Details>
+        <AffectedRelease cpe="cpe:/o:redhat:enterprise_linux:6.1">
+            <ProductName>Red Hat Linux 6.1</ProductName>
+            <ReleaseDate>2000-04-21T00:00:00</ReleaseDate>
+            <Advisory type="RHSA" url="https://access.redhat.com/errata/RHSA-2019:0139">RHSA-2019:0139</Advisory>
+            <Package name="kernel">tomcat7-docs-webapp-7.0.70-31.ep7.el6</Package>
+        </AffectedRelease>
+        <AffectedRelease cpe="cpe:/o:redhat:enterprise_linux:7">
+            <ProductName>Red Hat Linux 6.2</ProductName>
+            <ReleaseDate>2000-04-21T00:00:00</ReleaseDate>
+            <Advisory type="RHSA" url="https://access.redhat.com/errata/RHSA-2019:0139">RHSA-2019:0139</Advisory>
+            <Package name="kernel">tomcat7-selinux-7.0.70-31.ep7.el6</Package>
+        </AffectedRelease>
+    </Vulnerability>
+</cvemap>

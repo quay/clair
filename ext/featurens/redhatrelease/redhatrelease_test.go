@@ -43,7 +43,7 @@ func TestDetector(t *testing.T) {
 			},
 		},
 		{
-			ExpectedNamespace: &database.Namespace{Name: "centos:7"},
+			ExpectedNamespace: &database.Namespace{Name: "rhel:7"},
 			Files: tarutil.FilesMap{
 				"etc/redhat-release": []byte(`Red Hat Enterprise Linux Server release 7.2 (Maipo)`),
 			},
