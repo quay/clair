@@ -25,7 +25,7 @@ import (
 func TestDetector(t *testing.T) {
 	testData := []featurens.TestData{
 		{
-			ExpectedNamespace: &database.Namespace{Name: "debian:unstable"},
+			ExpectedNamespace: []*database.Namespace{{Name: "debian:unstable"}},
 			Files: tarutil.FilesMap{
 				"etc/os-release": []byte(
 					`PRETTY_NAME="Debian GNU/Linux stretch/sid"

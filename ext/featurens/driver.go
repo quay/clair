@@ -37,7 +37,7 @@ var (
 type Detector interface {
 	// Detect attempts to determine a Namespace from a FilesMap of an image
 	// layer.
-	Detect(tarutil.FilesMap) (*database.Namespace, error)
+	Detect(tarutil.FilesMap) ([]*database.Namespace, error)
 
 	// RequiredFilenames returns the list of files required to be in the FilesMap
 	// provided to the Detect method.
@@ -87,19 +87,22 @@ func Detect(files tarutil.FilesMap, toUse []database.Detector) ([]database.Layer
 		}
 
 		if detector, ok := detectors[d.Name]; ok {
-			namespace, err := detector.Detect(files)
-			if err != nil {
-				log.WithError(err).WithField("detector", d).Warning("failed while attempting to detect namespace")
-				return nil, err
+			layerNamespace, err := detector.Detect(files)
+			for _, ns := range layerNamespace {
+				if err != nil {
+					log.WithError(err).WithField("detector", d).Warning("failed while attempting to detect namespace")
+					return nil, err
+				}
+
+				if ns != nil {
+					log.WithFields(log.Fields{"detector": d, "namespace": ns.Name}).Debug("detected namespace")
+					namespaces = append(namespaces, database.LayerNamespace{
+						Namespace: *ns,
+						By:        detector.info,
+					})
+				}
 			}
 
-			if namespace != nil {
-				log.WithFields(log.Fields{"detector": d, "namespace": namespace.Name}).Debug("detected namespace")
-				namespaces = append(namespaces, database.LayerNamespace{
-					Namespace: *namespace,
-					By:        detector.info,
-				})
-			}
 		} else {
 			log.WithField("detector", d).Fatal("unknown namespace detector")
 		}
@@ -137,20 +140,22 @@ func ListDetectors() []database.Detector {
 // TestData represents the data used to test an implementation of Detector.
 type TestData struct {
 	Files             tarutil.FilesMap
-	ExpectedNamespace *database.Namespace
+	ExpectedNamespace []*database.Namespace
 }
 
 // TestDetector runs a Detector on each provided instance of TestData and
 // asserts the output to be equal to the expected output.
 func TestDetector(t *testing.T, d Detector, testData []TestData) {
 	for _, td := range testData {
-		namespace, err := d.Detect(td.Files)
+		namespaces, err := d.Detect(td.Files)
 		assert.Nil(t, err)
-
-		if namespace == nil {
-			assert.Equal(t, td.ExpectedNamespace, namespace)
-		} else {
-			assert.Equal(t, td.ExpectedNamespace.Name, namespace.Name)
+		for _, namespace := range namespaces {
+			if namespace == nil {
+				assert.Equal(t, td.ExpectedNamespace, namespace)
+			} else {
+				assert.Equal(t, td.ExpectedNamespace[0].Name, namespace.Name)
+			}
 		}
+
 	}
 }

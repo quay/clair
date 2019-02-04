@@ -25,31 +25,31 @@ import (
 func TestDetector(t *testing.T) {
 	testData := []featurens.TestData{
 		{
-			ExpectedNamespace: &database.Namespace{Name: "oracle:6"},
+			ExpectedNamespace: []*database.Namespace{{Name: "oracle:6"}},
 			Files: tarutil.FilesMap{
 				"etc/oracle-release": []byte(`Oracle Linux Server release 6.8`),
 			},
 		},
 		{
-			ExpectedNamespace: &database.Namespace{Name: "oracle:7"},
+			ExpectedNamespace: []*database.Namespace{{Name: "oracle:7"}},
 			Files: tarutil.FilesMap{
 				"etc/oracle-release": []byte(`Oracle Linux Server release 7.2`),
 			},
 		},
 		{
-			ExpectedNamespace: &database.Namespace{Name: "centos:6"},
+			ExpectedNamespace: []*database.Namespace{{Name: "centos:6"}},
 			Files: tarutil.FilesMap{
 				"etc/centos-release": []byte(`CentOS release 6.6 (Final)`),
 			},
 		},
 		{
-			ExpectedNamespace: &database.Namespace{Name: "centos:7"},
+			ExpectedNamespace: []*database.Namespace{{Name: "centos:7"}},
 			Files: tarutil.FilesMap{
 				"etc/redhat-release": []byte(`Red Hat Enterprise Linux Server release 7.2 (Maipo)`),
 			},
 		},
 		{
-			ExpectedNamespace: &database.Namespace{Name: "centos:7"},
+			ExpectedNamespace: []*database.Namespace{{Name: "centos:7"}},
 			Files: tarutil.FilesMap{
 				"etc/system-release": []byte(`CentOS Linux release 7.1.1503 (Core)`),
 			},

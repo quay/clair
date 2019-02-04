@@ -25,7 +25,7 @@ import (
 func TestDetector(t *testing.T) {
 	testData := []featurens.TestData{
 		{
-			ExpectedNamespace: &database.Namespace{Name: "debian:8"},
+			ExpectedNamespace: []*database.Namespace{{Name: "debian:8"}},
 			Files: tarutil.FilesMap{
 				"etc/os-release": []byte(
 					`PRETTY_NAME="Debian GNU/Linux 8 (jessie)"
@@ -39,7 +39,7 @@ BUG_REPORT_URL="https://bugs.debian.org/"`),
 			},
 		},
 		{
-			ExpectedNamespace: &database.Namespace{Name: "ubuntu:15.10"},
+			ExpectedNamespace: []*database.Namespace{{Name: "ubuntu:15.10"}},
 			Files: tarutil.FilesMap{
 				"etc/os-release": []byte(
 					`NAME="Ubuntu"
@@ -54,7 +54,7 @@ BUG_REPORT_URL="http://bugs.launchpad.net/ubuntu/"`),
 			},
 		},
 		{ // Doesn't have quotes around VERSION_ID
-			ExpectedNamespace: &database.Namespace{Name: "fedora:20"},
+			ExpectedNamespace: []*database.Namespace{{Name: "fedora:20"}},
 			Files: tarutil.FilesMap{
 				"etc/os-release": []byte(
 					`NAME=Fedora

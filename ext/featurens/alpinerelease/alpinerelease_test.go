@@ -25,19 +25,19 @@ import (
 func TestDetector(t *testing.T) {
 	testData := []featurens.TestData{
 		{
-			ExpectedNamespace: &database.Namespace{Name: "alpine:v3.3"},
+			ExpectedNamespace: []*database.Namespace{{Name: "alpine:v3.3"}},
 			Files:             tarutil.FilesMap{"etc/alpine-release": []byte(`3.3.4`)},
 		},
 		{
-			ExpectedNamespace: &database.Namespace{Name: "alpine:v3.4"},
+			ExpectedNamespace: []*database.Namespace{{Name: "alpine:v3.4"}},
 			Files:             tarutil.FilesMap{"etc/alpine-release": []byte(`3.4.0`)},
 		},
 		{
-			ExpectedNamespace: &database.Namespace{Name: "alpine:v0.3"},
+			ExpectedNamespace: []*database.Namespace{{Name: "alpine:v0.3"}},
 			Files:             tarutil.FilesMap{"etc/alpine-release": []byte(`0.3.4`)},
 		},
 		{
-			ExpectedNamespace: &database.Namespace{Name: "alpine:v0.3"},
+			ExpectedNamespace: []*database.Namespace{{Name: "alpine:v0.3"}},
 			Files: tarutil.FilesMap{"etc/alpine-release": []byte(`
 0.3.4
 `)},

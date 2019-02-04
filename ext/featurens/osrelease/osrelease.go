@@ -48,7 +48,7 @@ func init() {
 	featurens.RegisterDetector("os-release", "1.0", &detector{})
 }
 
-func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
+func (d detector) Detect(files tarutil.FilesMap) ([]*database.Namespace, error) {
 	var OS, version string
 
 	for _, filePath := range blacklistFilenames {
@@ -91,9 +91,11 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 	}
 
 	if OS != "" && version != "" {
-		return &database.Namespace{
-			Name:          OS + ":" + version,
-			VersionFormat: versionFormat,
+		return []*database.Namespace{
+			{
+				Name:          OS + ":" + version,
+				VersionFormat: versionFormat,
+			},
 		}, nil
 	}
 	return nil, nil
