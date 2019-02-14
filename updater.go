@@ -22,15 +22,16 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pborman/uuid"
+	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
+
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/vulnmdsrc"
 	"github.com/coreos/clair/ext/vulnsrc"
 	"github.com/coreos/clair/pkg/stopper"
 	"github.com/coreos/clair/pkg/timeutil"
-	"github.com/pborman/uuid"
-	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
-	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -121,7 +122,7 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 
 		// If the next update timer is in the past, then try to update.
 		if nextUpdate.Before(time.Now().UTC()) {
-			// Attempt to get a lock on the the update.
+			// Attempt to get a lock on the update.
 			log.Debug("attempting to obtain update lock")
 			acquiredLock, lockExpiration := database.AcquireLock(datastore, updaterLockName, whoAmI, updaterLockDuration, false)
 			if lockExpiration.IsZero() {
@@ -134,6 +135,7 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 				sleepDuration, err = updateWhileRenewingLock(datastore, whoAmI, isFirstUpdate, st)
 				if err != nil {
 					if err == errReceivedStopSignal {
+						log.Debug("updater received stop signal")
 						return
 					}
 					log.WithError(err).Debug("failed to acquired lock")
@@ -275,7 +277,7 @@ func setUpdaterDuration(start time.Time) {
 
 // fetchUpdates asynchronously runs all of the enabled Updaters, aggregates
 // their results, and appends metadata to the vulnerabilities found.
-func fetchUpdates(ctx context.Context, datastore database.Datastore) (status bool, vulns []database.VulnerabilityWithAffected, flags map[string]string, notes []string) {
+func fetchUpdates(ctx context.Context, datastore database.Datastore) (success bool, vulns []database.VulnerabilityWithAffected, flags map[string]string, notes []string) {
 	flags = make(map[string]string)
 
 	log.Info("fetching vulnerability updates")
@@ -316,7 +318,7 @@ func fetchUpdates(ctx context.Context, datastore database.Datastore) (status boo
 	}
 
 	if err := g.Wait(); err == nil {
-		status = true
+		success = true
 	}
 
 	vulns = addMetadata(ctx, datastore, vulns)

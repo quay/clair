@@ -21,8 +21,9 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/coreos/clair/pkg/stopper"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/coreos/clair/pkg/stopper"
 )
 
 // ApproxSleep is a stoppable time.Sleep that adds a slight random variation to
@@ -30,8 +31,9 @@ import (
 func ApproxSleep(approxWakeup time.Time, st *stopper.Stopper) (stopped bool) {
 	waitUntil := approxWakeup.Add(time.Duration(rand.ExpFloat64()/0.5) * time.Second)
 	log.WithField("wakeup", waitUntil).Debug("updater sleeping")
-	if !waitUntil.Before(time.Now().UTC()) {
-		if !st.Sleep(waitUntil.Sub(time.Now())) {
+	now := time.Now().UTC()
+	if !waitUntil.Before(now) {
+		if !st.Sleep(waitUntil.Sub(now)) {
 			return true
 		}
 	}
