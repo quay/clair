@@ -1,4 +1,4 @@
-// Copyright 2017 clair authors
+// Copyright 2019 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,13 +15,13 @@
 package clair
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/coreos/clair/database"
+	"github.com/stretchr/testify/assert"
 )
 
 type mockUpdaterDatastore struct {
@@ -270,27 +270,27 @@ func TestCreatVulnerabilityNotification(t *testing.T) {
 	}
 
 	datastore := newmockUpdaterDatastore()
-	change, err := updateVulnerabilities(datastore, []database.VulnerabilityWithAffected{})
+	change, err := updateVulnerabilities(context.TODO(), datastore, []database.VulnerabilityWithAffected{})
 	assert.Nil(t, err)
 	assert.Len(t, change, 0)
 
-	change, err = updateVulnerabilities(datastore, []database.VulnerabilityWithAffected{v1})
+	change, err = updateVulnerabilities(context.TODO(), datastore, []database.VulnerabilityWithAffected{v1})
 	assert.Nil(t, err)
 	assert.Len(t, change, 1)
 	assert.Nil(t, change[0].old)
 	assertVulnerability(t, *change[0].new, v1)
 
-	change, err = updateVulnerabilities(datastore, []database.VulnerabilityWithAffected{v1})
+	change, err = updateVulnerabilities(context.TODO(), datastore, []database.VulnerabilityWithAffected{v1})
 	assert.Nil(t, err)
 	assert.Len(t, change, 0)
 
-	change, err = updateVulnerabilities(datastore, []database.VulnerabilityWithAffected{v2})
+	change, err = updateVulnerabilities(context.TODO(), datastore, []database.VulnerabilityWithAffected{v2})
 	assert.Nil(t, err)
 	assert.Len(t, change, 1)
 	assertVulnerability(t, *change[0].new, v2)
 	assertVulnerability(t, *change[0].old, v1)
 
-	change, err = updateVulnerabilities(datastore, []database.VulnerabilityWithAffected{v3})
+	change, err = updateVulnerabilities(context.TODO(), datastore, []database.VulnerabilityWithAffected{v3})
 	assert.Nil(t, err)
 	assert.Len(t, change, 1)
 	assertVulnerability(t, *change[0].new, v3)

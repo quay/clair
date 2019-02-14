@@ -1,3 +1,23 @@
+## 0.9.2 / 2018-12-06
+* [FEATURE] Support for Go modules. #501
+* [FEATURE] `Timer.ObserveDuration` returns observed duration. #509
+* [ENHANCEMENT] Improved doc comments and error messages. #504 
+* [BUGFIX] Fix race condition during metrics gathering. #512
+* [BUGFIX] Fix testutil metric comparison for Histograms and empty labels. #494
+  #498
+
+## 0.9.1 / 2018-11-03
+* [FEATURE] Add `WriteToTextfile` function to facilitate the creation of
+  *.prom files for the textfile collector of the node exporter. #489
+* [ENHANCEMENT] More descriptive error messages for inconsistent label
+  cardinality. #487
+* [ENHANCEMENT] Exposition: Use a GZIP encoder pool to avoid allocations in
+  high-frequency scrape scenarios. #366
+* [ENHANCEMENT] Exposition: Streaming serving of metrics data while encoding.
+  #482
+* [ENHANCEMENT] API client: Add a way to return the body of a 5xx response.
+  #479
+
 ## 0.9.0 / 2018-10-15
 * [CHANGE] Go1.6 is no longer supported.
 * [CHANGE] More refinements of the `Registry` consistency checks: Duplicated

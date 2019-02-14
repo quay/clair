@@ -26,7 +26,6 @@ func TestLock(t *testing.T) {
 	defer datastore.Close()
 
 	var l bool
-	var et time.Time
 
 	// Create a first lock.
 	l, _, err := tx.Lock("test1", "owner1", time.Minute, false)
@@ -62,17 +61,9 @@ func TestLock(t *testing.T) {
 	assert.Nil(t, err)
 	tx = restartSession(t, datastore, tx, true)
 
-	l, et, err = tx.Lock("test1", "owner2", time.Minute, false)
+	l, _, err = tx.Lock("test1", "owner2", time.Minute, false)
 	assert.Nil(t, err)
 	assert.True(t, l)
-	tx = restartSession(t, datastore, tx, true)
-
-	// LockInfo
-	o, et2, ok, err := tx.FindLock("test1")
-	assert.True(t, ok)
-	assert.Nil(t, err)
-	assert.Equal(t, "owner2", o)
-	assert.Equal(t, et.Second(), et2.Second())
 	tx = restartSession(t, datastore, tx, true)
 
 	// Create a second lock which is actually already expired ...

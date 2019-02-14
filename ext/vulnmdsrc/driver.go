@@ -86,3 +86,11 @@ func Appenders() map[string]Appender {
 
 	return ret
 }
+
+// CleanAll is a utility function that calls Clean() on every registered
+// Appender.
+func CleanAll() {
+	for _, appender := range Appenders() {
+		appender.Clean()
+	}
+}

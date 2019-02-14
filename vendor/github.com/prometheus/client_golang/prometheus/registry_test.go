@@ -21,9 +21,12 @@ package prometheus_test
 
 import (
 	"bytes"
+	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -250,7 +253,7 @@ metric: <
 		},
 	}
 
-	expectedMetricFamilyInvalidLabelValueAsText := []byte(`An error has occurred during metrics gathering:
+	expectedMetricFamilyInvalidLabelValueAsText := []byte(`An error has occurred while serving metrics:
 
 collected metric "name" { label:<name:"constname" value:"\377" > label:<name:"labelname" value:"different_val" > counter:<value:42 > } has a label named "constname" whose value is not utf8: "\xff"
 `)
@@ -299,15 +302,15 @@ complex_bucket 1
 			},
 		},
 	}
-	bucketCollisionMsg := []byte(`An error has occurred during metrics gathering:
+	bucketCollisionMsg := []byte(`An error has occurred while serving metrics:
 
 collected metric named "complex_bucket" collides with previously collected histogram named "complex"
 `)
-	summaryCountCollisionMsg := []byte(`An error has occurred during metrics gathering:
+	summaryCountCollisionMsg := []byte(`An error has occurred while serving metrics:
 
 collected metric named "complex_count" collides with previously collected summary named "complex"
 `)
-	histogramCountCollisionMsg := []byte(`An error has occurred during metrics gathering:
+	histogramCountCollisionMsg := []byte(`An error has occurred while serving metrics:
 
 collected metric named "complex_count" collides with previously collected histogram named "complex"
 `)
@@ -333,7 +336,7 @@ collected metric named "complex_count" collides with previously collected histog
 			},
 		},
 	}
-	duplicateLabelMsg := []byte(`An error has occurred during metrics gathering:
+	duplicateLabelMsg := []byte(`An error has occurred while serving metrics:
 
 collected metric "broken_metric" { label:<name:"foo" value:"bar" > label:<name:"foo" value:"baz" > counter:<value:2.7 > } has two or more labels with the same name: foo
 `)
@@ -781,6 +784,11 @@ func TestAlreadyRegistered(t *testing.T) {
 // same HistogramVec is registered concurrently and the Gather method of the
 // registry is called concurrently.
 func TestHistogramVecRegisterGatherConcurrency(t *testing.T) {
+	labelNames := make([]string, 16) // Need at least 13 to expose #512.
+	for i := range labelNames {
+		labelNames[i] = fmt.Sprint("label_", i)
+	}
+
 	var (
 		reg = prometheus.NewPedanticRegistry()
 		hv  = prometheus.NewHistogramVec(
@@ -789,7 +797,7 @@ func TestHistogramVecRegisterGatherConcurrency(t *testing.T) {
 				Help:        "This helps testing.",
 				ConstLabels: prometheus.Labels{"foo": "bar"},
 			},
-			[]string{"one", "two", "three"},
+			labelNames,
 		)
 		labelValues = []string{"a", "b", "c", "alpha", "beta", "gamma", "aleph", "beth", "gimel"}
 		quit        = make(chan struct{})
@@ -804,11 +812,11 @@ func TestHistogramVecRegisterGatherConcurrency(t *testing.T) {
 				return
 			default:
 				obs := rand.NormFloat64()*.1 + .2
-				hv.WithLabelValues(
-					labelValues[rand.Intn(len(labelValues))],
-					labelValues[rand.Intn(len(labelValues))],
-					labelValues[rand.Intn(len(labelValues))],
-				).Observe(obs)
+				values := make([]string, 0, len(labelNames))
+				for range labelNames {
+					values = append(values, labelValues[rand.Intn(len(labelValues))])
+				}
+				hv.WithLabelValues(values...).Observe(obs)
 			}
 		}
 	}
@@ -846,7 +854,7 @@ func TestHistogramVecRegisterGatherConcurrency(t *testing.T) {
 					if len(g) != 1 {
 						t.Error("Gathered unexpected number of metric families:", len(g))
 					}
-					if len(g[0].Metric[0].Label) != 4 {
+					if len(g[0].Metric[0].Label) != len(labelNames)+1 {
 						t.Error("Gathered unexpected number of label pairs:", len(g[0].Metric[0].Label))
 					}
 				}
@@ -870,4 +878,103 @@ func TestHistogramVecRegisterGatherConcurrency(t *testing.T) {
 	time.Sleep(time.Second)
 	close(quit)
 	wg.Wait()
+}
+
+func TestWriteToTextfile(t *testing.T) {
+	expectedOut := `# HELP test_counter test counter
+# TYPE test_counter counter
+test_counter{name="qux"} 1
+# HELP test_gauge test gauge
+# TYPE test_gauge gauge
+test_gauge{name="baz"} 1.1
+# HELP test_hist test histogram
+# TYPE test_hist histogram
+test_hist_bucket{name="bar",le="0.005"} 0
+test_hist_bucket{name="bar",le="0.01"} 0
+test_hist_bucket{name="bar",le="0.025"} 0
+test_hist_bucket{name="bar",le="0.05"} 0
+test_hist_bucket{name="bar",le="0.1"} 0
+test_hist_bucket{name="bar",le="0.25"} 0
+test_hist_bucket{name="bar",le="0.5"} 0
+test_hist_bucket{name="bar",le="1"} 1
+test_hist_bucket{name="bar",le="2.5"} 1
+test_hist_bucket{name="bar",le="5"} 2
+test_hist_bucket{name="bar",le="10"} 2
+test_hist_bucket{name="bar",le="+Inf"} 2
+test_hist_sum{name="bar"} 3.64
+test_hist_count{name="bar"} 2
+# HELP test_summary test summary
+# TYPE test_summary summary
+test_summary{name="foo",quantile="0.5"} 10
+test_summary{name="foo",quantile="0.9"} 20
+test_summary{name="foo",quantile="0.99"} 20
+test_summary_sum{name="foo"} 30
+test_summary_count{name="foo"} 2
+`
+
+	registry := prometheus.NewRegistry()
+
+	summary := prometheus.NewSummaryVec(
+		prometheus.SummaryOpts{
+			Name: "test_summary",
+			Help: "test summary",
+		},
+		[]string{"name"},
+	)
+
+	histogram := prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name: "test_hist",
+			Help: "test histogram",
+		},
+		[]string{"name"},
+	)
+
+	gauge := prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "test_gauge",
+			Help: "test gauge",
+		},
+		[]string{"name"},
+	)
+
+	counter := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "test_counter",
+			Help: "test counter",
+		},
+		[]string{"name"},
+	)
+
+	registry.MustRegister(summary)
+	registry.MustRegister(histogram)
+	registry.MustRegister(gauge)
+	registry.MustRegister(counter)
+
+	summary.With(prometheus.Labels{"name": "foo"}).Observe(10)
+	summary.With(prometheus.Labels{"name": "foo"}).Observe(20)
+	histogram.With(prometheus.Labels{"name": "bar"}).Observe(0.93)
+	histogram.With(prometheus.Labels{"name": "bar"}).Observe(2.71)
+	gauge.With(prometheus.Labels{"name": "baz"}).Set(1.1)
+	counter.With(prometheus.Labels{"name": "qux"}).Inc()
+
+	tmpfile, err := ioutil.TempFile("", "prom_registry_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpfile.Name())
+
+	if err := prometheus.WriteToTextfile(tmpfile.Name(), registry); err != nil {
+		t.Fatal(err)
+	}
+
+	fileBytes, err := ioutil.ReadFile(tmpfile.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+	fileContents := string(fileBytes)
+
+	if fileContents != expectedOut {
+		t.Error("file contents didn't match unexpected")
+	}
 }

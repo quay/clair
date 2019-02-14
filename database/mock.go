@@ -48,7 +48,6 @@ type MockSession struct {
 	FctFindKeyValue           func(key string) (string, bool, error)
 	FctLock                   func(name string, owner string, duration time.Duration, renew bool) (bool, time.Time, error)
 	FctUnlock                 func(name, owner string) error
-	FctFindLock               func(name string) (string, time.Time, bool, error)
 }
 
 func (ms *MockSession) Commit() error {
@@ -216,13 +215,6 @@ func (ms *MockSession) Lock(name string, owner string, duration time.Duration, r
 func (ms *MockSession) Unlock(name, owner string) error {
 	if ms.FctUnlock != nil {
 		return ms.FctUnlock(name, owner)
-	}
-	panic("required mock function not implemented")
-}
-
-func (ms *MockSession) FindLock(name string) (string, time.Time, bool, error) {
-	if ms.FctFindLock != nil {
-		return ms.FctFindLock(name)
 	}
 	panic("required mock function not implemented")
 }

@@ -93,3 +93,11 @@ func ListUpdaters() []string {
 	}
 	return r
 }
+
+// CleanAll is a utility function that calls Clean() on every registered
+// Updater.
+func CleanAll() {
+	for _, updater := range Updaters() {
+		updater.Clean()
+	}
+}

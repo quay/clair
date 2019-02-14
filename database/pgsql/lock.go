@@ -25,7 +25,7 @@ import (
 
 const (
 	soiLock           = `INSERT INTO lock(name, owner, until) VALUES ($1, $2, $3)`
-	searchLock        = `SELECT owner, until FROM Lock WHERE name = $1`
+	searchLock        = `SELECT until FROM Lock WHERE name = $1`
 	updateLock        = `UPDATE Lock SET until = $3 WHERE name = $1 AND owner = $2`
 	removeLock        = `DELETE FROM Lock WHERE name = $1 AND owner = $2`
 	removeLockExpired = `DELETE FROM LOCK WHERE until < CURRENT_TIMESTAMP`
@@ -67,7 +67,9 @@ func (tx *pgSession) Lock(name string, owner string, duration time.Duration, ren
 	_, err := tx.Exec(soiLock, name, owner, until)
 	if err != nil {
 		if isErrUniqueViolation(err) {
-			return false, until, nil
+			// Return the existing locks expiration.
+			err := tx.QueryRow(searchLock, name).Scan(&until)
+			return false, until, handleError("searchLock", err)
 		}
 		return false, until, handleError("insertLock", err)
 	}
@@ -84,25 +86,6 @@ func (tx *pgSession) Unlock(name, owner string) error {
 
 	_, err := tx.Exec(removeLock, name, owner)
 	return err
-}
-
-// FindLock returns the owner of a lock specified by its name and its
-// expiration time.
-func (tx *pgSession) FindLock(name string) (string, time.Time, bool, error) {
-	if name == "" {
-		return "", time.Time{}, false, commonerr.NewBadRequestError("could not find an invalid lock")
-	}
-
-	defer observeQueryTime("FindLock", "all", time.Now())
-
-	var owner string
-	var until time.Time
-	err := tx.QueryRow(searchLock, name).Scan(&owner, &until)
-	if err != nil {
-		return owner, until, false, handleError("searchLock", err)
-	}
-
-	return owner, until, true, nil
 }
 
 // pruneLocks removes every expired locks from the database
