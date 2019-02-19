@@ -37,22 +37,12 @@ var (
 
 type lister struct{}
 
+func (l lister) RequiredFilenames() []string {
+	return []string{"var/lib/dpkg/status"}
+}
+
 func init() {
 	featurefmt.RegisterLister("dpkg", "1.0", &lister{})
-}
-
-func valid(pkg *database.Feature) bool {
-	return pkg.Name != "" && pkg.Version != ""
-}
-
-func addSourcePackage(pkg *database.Feature) {
-	if pkg.SourceName == "" {
-		pkg.SourceName = pkg.Name
-	}
-
-	if pkg.SourceVersion == "" {
-		pkg.SourceVersion = pkg.Version
-	}
 }
 
 func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {
@@ -61,21 +51,45 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 		return []database.Feature{}, nil
 	}
 
-	var (
-		pkg  = database.Feature{VersionFormat: dpkg.ParserName}
-		pkgs = mapset.NewSet()
-		err  error
-	)
-
+	packages := mapset.NewSet()
 	scanner := bufio.NewScanner(strings.NewReader(string(f)))
 	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.HasPrefix(line, "Package: ") {
-			// Package line
-			// Defines the name of the package
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			continue
+		}
 
-			pkg.Name = strings.TrimSpace(strings.TrimPrefix(line, "Package: "))
-			pkg.Version = ""
+		binary, source := parseDpkgDB(scanner)
+		if binary != nil {
+			packages.Add(*binary)
+		}
+
+		if source != nil {
+			packages.Add(*source)
+		}
+	}
+
+	return database.ConvertFeatureSetToFeatures(packages), nil
+}
+
+// parseDpkgDB consumes the status file scanner exactly one package info, until
+// EOF or empty space, and generate the parsed packages from it.
+func parseDpkgDB(scanner *bufio.Scanner) (binaryPackage *database.Feature, sourcePackage *database.Feature) {
+	var (
+		name          string
+		version       string
+		sourceName    string
+		sourceVersion string
+	)
+
+	for {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" {
+			break
+		}
+
+		if strings.HasPrefix(line, "Package: ") {
+			name = strings.TrimSpace(strings.TrimPrefix(line, "Package: "))
 		} else if strings.HasPrefix(line, "Source: ") {
 			// Source line (Optional)
 			// Gives the name of the source package
@@ -87,14 +101,9 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 				md[dpkgSrcCaptureRegexpNames[i]] = strings.TrimSpace(n)
 			}
 
-			pkg.SourceName = md["name"]
+			sourceName = md["name"]
 			if md["version"] != "" {
-				version := md["version"]
-				if err = versionfmt.Valid(dpkg.ParserName, version); err != nil {
-					log.WithError(err).WithField("version", string(line[1])).Warning("could not parse package version. skipping")
-				} else {
-					pkg.SourceVersion = version
-				}
+				sourceVersion = md["version"]
 			}
 		} else if strings.HasPrefix(line, "Version: ") {
 			// Version line
@@ -102,25 +111,43 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 			// This version is less important than a version retrieved from a Source line
 			// because the Debian vulnerabilities often skips the epoch from the Version field
 			// which is not present in the Source version, and because +bX revisions don't matter
-			version := strings.TrimPrefix(line, "Version: ")
-			if err = versionfmt.Valid(dpkg.ParserName, version); err != nil {
-				log.WithError(err).WithField("version", string(line[1])).Warning("could not parse package version. skipping")
-			} else {
-				pkg.Version = version
-			}
-		} else if line == "" {
-			pkg = database.Feature{VersionFormat: dpkg.ParserName}
+			version = strings.TrimPrefix(line, "Version: ")
 		}
 
-		if valid(&pkg) {
-			addSourcePackage(&pkg)
-			pkgs.Add(pkg)
+		if !scanner.Scan() {
+			break
 		}
 	}
 
-	return database.ConvertFeatureSetToFeatures(pkgs), nil
-}
+	if name != "" && version != "" {
+		if err := versionfmt.Valid(dpkg.ParserName, version); err != nil {
+			log.WithError(err).WithFields(log.Fields{"name": name, "version": version}).Warning("skipped unparseable package")
+		} else {
+			binaryPackage = &database.Feature{name, version, dpkg.ParserName, database.BinaryPackage}
+		}
+	}
 
-func (l lister) RequiredFilenames() []string {
-	return []string{"var/lib/dpkg/status"}
+	// Source version and names are computed from binary package names and versions
+	// in dpkg.
+	// Source package name:
+	// https://git.dpkg.org/cgit/dpkg/dpkg.git/tree/lib/dpkg/pkg-format.c#n338
+	// Source package version:
+	// https://git.dpkg.org/cgit/dpkg/dpkg.git/tree/lib/dpkg/pkg-format.c#n355
+	if sourceName == "" {
+		sourceName = name
+	}
+
+	if sourceVersion == "" {
+		sourceVersion = version
+	}
+
+	if sourceName != "" && sourceVersion != "" {
+		if err := versionfmt.Valid(dpkg.ParserName, version); err != nil {
+			log.WithError(err).WithFields(log.Fields{"name": name, "version": version}).Warning("skipped unparseable package")
+		} else {
+			sourcePackage = &database.Feature{sourceName, sourceVersion, dpkg.ParserName, database.SourcePackage}
+		}
+	}
+
+	return
 }
