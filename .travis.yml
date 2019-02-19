@@ -35,11 +35,6 @@ matrix:
       apt:
         packages:
         - rpm
-      postgresql: 9.4
-  - addons:
-      apt:
-        packages:
-        - rpm
       postgresql: 9.5
   - addons:
       apt:
