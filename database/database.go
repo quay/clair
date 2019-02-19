@@ -17,7 +17,6 @@
 package database
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -27,20 +26,20 @@ import (
 var (
 	// ErrBackendException is an error that occurs when the database backend
 	// does not work properly (ie. unreachable).
-	ErrBackendException = errors.New("database: an error occurred when querying the backend")
+	ErrBackendException = NewStorageError("an error occurred when querying the backend")
 
 	// ErrInconsistent is an error that occurs when a database consistency check
 	// fails (i.e. when an entity which is supposed to be unique is detected
 	// twice)
-	ErrInconsistent = errors.New("database: inconsistent database")
+	ErrInconsistent = NewStorageError("inconsistent database")
 
 	// ErrInvalidParameters is an error that occurs when the parameters are not valid.
-	ErrInvalidParameters = errors.New("database: parameters are not valid")
+	ErrInvalidParameters = NewStorageError("parameters are not valid")
 
 	// ErrMissingEntities is an error that occurs when an associated immutable
 	// entity doesn't exist in the database. This error can indicate a wrong
 	// implementation or corrupted database.
-	ErrMissingEntities = errors.New("database: associated immutable entities are missing in the database")
+	ErrMissingEntities = NewStorageError("associated immutable entities are missing in the database")
 )
 
 // RegistrableComponentConfig is a configuration block that can be used to
