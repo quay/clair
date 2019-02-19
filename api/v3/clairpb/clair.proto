@@ -80,6 +80,9 @@ message Feature {
   Detector detector = 5;
   // The list of vulnerabilities that affect the feature.
   repeated Vulnerability vulnerabilities = 6;
+  // The feature type indicates if the feature represents a source package or
+  // binary package.
+  string feature_type = 7;
 }
 
 message Layer {

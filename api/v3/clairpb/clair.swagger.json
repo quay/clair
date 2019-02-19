@@ -330,6 +330,10 @@
             "$ref": "#/definitions/clairVulnerability"
           },
           "description": "The list of vulnerabilities that affect the feature."
+        },
+        "feature_type": {
+          "type": "string",
+          "description": "The feature type indicates if the feature represents a source package or\nbinary package."
         }
       }
     },
