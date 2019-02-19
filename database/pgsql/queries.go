@@ -52,21 +52,22 @@ func querySearchNotDeletedVulnerabilityID(count int) string {
 
 func querySearchFeatureID(featureCount int) string {
 	return fmt.Sprintf(`
-		SELECT id, name, version, version_format 
-		FROM Feature WHERE (name, version, version_format) IN (%s)`,
-		queryString(3, featureCount),
+		SELECT id, name, version, version_format, type
+		FROM Feature WHERE (name, version, version_format, type) IN (%s)`,
+		queryString(4, featureCount),
 	)
 }
 
 func querySearchNamespacedFeature(nsfCount int) string {
 	return fmt.Sprintf(`
-	SELECT nf.id, f.name, f.version, f.version_format, n.name
-		FROM namespaced_feature AS nf, feature AS f, namespace AS n
+	SELECT nf.id, f.name, f.version, f.version_format, t.name, n.name
+		FROM namespaced_feature AS nf, feature AS f, namespace AS n, feature_type AS t
 		WHERE nf.feature_id = f.id
 			AND nf.namespace_id = n.id
 			AND n.version_format = f.version_format 
-			AND (f.name, f.version, f.version_format, n.name) IN (%s)`,
-		queryString(4, nsfCount),
+			AND f.type = t.id
+			AND (f.name, f.version, f.version_format, t.name, n.name) IN (%s)`,
+		queryString(5, nsfCount),
 	)
 }
 
@@ -110,10 +111,11 @@ func queryInsertNotifications(count int) string {
 func queryPersistFeature(count int) string {
 	return queryPersist(count,
 		"feature",
-		"feature_name_version_version_format_key",
+		"feature_name_version_version_format_type_key",
 		"name",
 		"version",
-		"version_format")
+		"version_format",
+		"type")
 }
 
 func queryPersistLayerFeature(count int) string {

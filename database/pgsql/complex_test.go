@@ -25,6 +25,7 @@ import (
 
 	"github.com/pborman/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
@@ -65,19 +66,13 @@ func testGenRandomVulnerabilityAndNamespacedFeature(t *testing.T, store database
 	for i := 0; i < numFeatures; i++ {
 		version := rand.Intn(numFeatures)
 
-		features[i] = database.Feature{
-			Name:          featureName,
-			VersionFormat: featureVersionFormat,
-			Version:       strconv.Itoa(version),
-		}
-
+		features[i] = *database.NewSourcePackage(featureName, strconv.Itoa(version), featureVersionFormat)
 		nsFeatures[i] = database.NamespacedFeature{
 			Namespace: namespace,
 			Feature:   features[i],
 		}
 	}
 
-	// insert features
 	if !assert.Nil(t, tx.PersistFeatures(features)) {
 		t.FailNow()
 	}
@@ -98,6 +93,7 @@ func testGenRandomVulnerabilityAndNamespacedFeature(t *testing.T, store database
 				{
 					Namespace:       namespace,
 					FeatureName:     featureName,
+					FeatureType:     database.SourcePackage,
 					AffectedVersion: strconv.Itoa(version),
 					FixedInVersion:  strconv.Itoa(version),
 				},
@@ -117,7 +113,6 @@ func TestConcurrency(t *testing.T) {
 		t.FailNow()
 	}
 	defer store.Close()
-
 	start := time.Now()
 	var wg sync.WaitGroup
 	wg.Add(100)
@@ -137,65 +132,39 @@ func TestConcurrency(t *testing.T) {
 	fmt.Println("total", time.Since(start))
 }
 
-func genRandomNamespaces(t *testing.T, count int) []database.Namespace {
-	r := make([]database.Namespace, count)
-	for i := 0; i < count; i++ {
-		r[i] = database.Namespace{
-			Name:          uuid.New(),
-			VersionFormat: "dpkg",
-		}
-	}
-	return r
-}
-
 func TestCaching(t *testing.T) {
 	store, err := openDatabaseForTest("Caching", false)
 	if !assert.Nil(t, err) {
 		t.FailNow()
 	}
 	defer store.Close()
-
 	nsFeatures, vulnerabilities := testGenRandomVulnerabilityAndNamespacedFeature(t, store)
-
-	fmt.Printf("%d features, %d vulnerabilities are generated", len(nsFeatures), len(vulnerabilities))
-
-	var wg sync.WaitGroup
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		tx, err := store.Begin()
-		if !assert.Nil(t, err) {
-			t.FailNow()
-		}
-
-		assert.Nil(t, tx.PersistNamespacedFeatures(nsFeatures))
-		fmt.Println("finished to insert namespaced features")
-
-		tx.Commit()
-	}()
-
-	go func() {
-		defer wg.Done()
-		tx, err := store.Begin()
-		if !assert.Nil(t, err) {
-			t.FailNow()
-		}
-
-		assert.Nil(t, tx.InsertVulnerabilities(vulnerabilities))
-		fmt.Println("finished to insert vulnerabilities")
-		tx.Commit()
-
-	}()
-
-	wg.Wait()
-
 	tx, err := store.Begin()
+	if !assert.Nil(t, err) {
+		t.FailNow()
+	}
+
+	require.Nil(t, tx.PersistNamespacedFeatures(nsFeatures))
+	if err := tx.Commit(); err != nil {
+		panic(err)
+	}
+
+	tx, err = store.Begin()
+	if !assert.Nil(t, err) {
+		t.FailNow()
+	}
+
+	require.Nil(t, tx.InsertVulnerabilities(vulnerabilities))
+	if err := tx.Commit(); err != nil {
+		panic(err)
+	}
+
+	tx, err = store.Begin()
 	if !assert.Nil(t, err) {
 		t.FailNow()
 	}
 	defer tx.Rollback()
 
-	// Verify consistency now.
 	affected, err := tx.FindAffectedNamespacedFeatures(nsFeatures)
 	if !assert.Nil(t, err) {
 		t.FailNow()
@@ -220,7 +189,7 @@ func TestCaching(t *testing.T) {
 			actualAffectedNames = append(actualAffectedNames, s.Name)
 		}
 
-		assert.Len(t, strutil.Difference(expectedAffectedNames, actualAffectedNames), 0)
-		assert.Len(t, strutil.Difference(actualAffectedNames, expectedAffectedNames), 0)
+		require.Len(t, strutil.Difference(expectedAffectedNames, actualAffectedNames), 0, "\nvulns: %#v\nfeature:%#v\nexpected:%#v\nactual:%#v", vulnerabilities, ansf.NamespacedFeature, expectedAffectedNames, actualAffectedNames)
+		require.Len(t, strutil.Difference(actualAffectedNames, expectedAffectedNames), 0)
 	}
 }

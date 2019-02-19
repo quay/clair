@@ -109,6 +109,7 @@ func dropTemplateDatabase(url string, name string) {
 	}
 
 }
+
 func TestMain(m *testing.M) {
 	fURL, fName := genTemplateDatabase("fixture", true)
 	nfURL, nfName := genTemplateDatabase("nonfixture", false)

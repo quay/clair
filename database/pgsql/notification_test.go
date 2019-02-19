@@ -211,8 +211,8 @@ func TestInsertVulnerabilityNotifications(t *testing.T) {
 }
 
 func TestFindNewNotification(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "FindNewNotification", true)
-	defer closeTest(t, datastore, tx)
+	tx, cleanup := createTestPgSessionWithFixtures(t, "TestFindNewNotification")
+	defer cleanup()
 
 	noti, ok, err := tx.FindNewNotification(time.Now())
 	if assert.Nil(t, err) && assert.True(t, ok) {
@@ -229,7 +229,7 @@ func TestFindNewNotification(t *testing.T) {
 	assert.Nil(t, err)
 	assert.False(t, ok)
 	// can find the notified after a period of time
-	noti, ok, err = tx.FindNewNotification(time.Now().Add(time.Duration(1000)))
+	noti, ok, err = tx.FindNewNotification(time.Now().Add(time.Duration(10 * time.Second)))
 	if assert.Nil(t, err) && assert.True(t, ok) {
 		assert.Equal(t, "test", noti.Name)
 		assert.NotEqual(t, time.Time{}, noti.Notified)

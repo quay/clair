@@ -4,11 +4,12 @@ INSERT INTO namespace (id, name, version_format) VALUES
   (2, 'debian:8', 'dpkg'),
   (3, 'fake:1.0', 'rpm');
 
-INSERT INTO feature (id, name, version, version_format) VALUES
-  (1, 'ourchat', '0.5', 'dpkg'),
-  (2, 'openssl', '1.0', 'dpkg'),
-  (3, 'openssl', '2.0', 'dpkg'),
-  (4, 'fake', '2.0', 'rpm');
+INSERT INTO feature (id, name, version, version_format, type) VALUES
+  (1, 'ourchat', '0.5', 'dpkg', 1),
+  (2, 'openssl', '1.0', 'dpkg', 1),
+  (3, 'openssl', '2.0', 'dpkg', 1),
+  (4, 'fake', '2.0', 'rpm', 1),
+  (5, 'mount', '2.31.1-0.4ubuntu3.1', 'dpkg', 2);
 
 INSERT INTO namespaced_feature(id, feature_id, namespace_id) VALUES
   (1, 1, 1), -- ourchat 0.5, debian:7
@@ -112,9 +113,9 @@ INSERT INTO vulnerability (id, namespace_id, name, description, link, severity) 
 INSERT INTO vulnerability (id, namespace_id, name, description, link, severity, deleted_at) VALUES
 	(3, 1, 'CVE-DELETED', '', '', 'Unknown', '2017-08-08 17:49:31.668483');
 	
-INSERT INTO vulnerability_affected_feature(id, vulnerability_id, feature_name, affected_version, fixedin) VALUES
-(1, 1, 'openssl', '2.0', '2.0'),
-(2, 1, 'libssl', '1.9-abc', '1.9-abc');
+INSERT INTO vulnerability_affected_feature(id, vulnerability_id, feature_name, affected_version, fixedin, feature_type) VALUES
+(1, 1, 'openssl', '2.0', '2.0', 1),
+(2, 1, 'libssl', '1.9-abc', '1.9-abc', 1);
 
 INSERT INTO vulnerability_affected_namespaced_feature(id, vulnerability_id, namespaced_feature_id, added_by) VALUES
  (1, 1, 2, 1);

@@ -37,9 +37,10 @@ const (
 		SELECT id FROM layer WHERE hash = $1`
 
 	findLayerFeatures = `
-		SELECT f.name, f.version, f.version_format, lf.detector_id
-			FROM layer_feature AS lf, feature AS f
+		SELECT f.name, f.version, f.version_format, t.name, lf.detector_id
+			FROM layer_feature AS lf, feature AS f, feature_type AS t
 			WHERE lf.feature_id = f.id
+				AND t.id = f.type
 				AND lf.layer_id = $1`
 
 	findLayerNamespaces = `
@@ -307,7 +308,7 @@ func (tx *pgSession) findLayerFeatures(layerID int64, detectors detectorMap) ([]
 			detectorID int64
 			feature    database.LayerFeature
 		)
-		if err := rows.Scan(&feature.Name, &feature.Version, &feature.VersionFormat, &detectorID); err != nil {
+		if err := rows.Scan(&feature.Name, &feature.Version, &feature.VersionFormat, &feature.Type, &detectorID); err != nil {
 			return nil, handleError("findLayerFeatures", err)
 		}
 
