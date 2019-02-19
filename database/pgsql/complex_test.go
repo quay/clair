@@ -134,46 +134,31 @@ func TestConcurrency(t *testing.T) {
 
 func TestCaching(t *testing.T) {
 	store, err := openDatabaseForTest("Caching", false)
-	if !assert.Nil(t, err) {
-		t.FailNow()
-	}
+	require.Nil(t, err)
 	defer store.Close()
+
 	nsFeatures, vulnerabilities := testGenRandomVulnerabilityAndNamespacedFeature(t, store)
 	tx, err := store.Begin()
-	if !assert.Nil(t, err) {
-		t.FailNow()
-	}
+	require.Nil(t, err)
 
 	require.Nil(t, tx.PersistNamespacedFeatures(nsFeatures))
-	if err := tx.Commit(); err != nil {
-		panic(err)
-	}
+	require.Nil(t, tx.Commit())
 
 	tx, err = store.Begin()
-	if !assert.Nil(t, err) {
-		t.FailNow()
-	}
+	require.Nil(t, tx.Commit())
 
 	require.Nil(t, tx.InsertVulnerabilities(vulnerabilities))
-	if err := tx.Commit(); err != nil {
-		panic(err)
-	}
+	require.Nil(t, tx.Commit())
 
 	tx, err = store.Begin()
-	if !assert.Nil(t, err) {
-		t.FailNow()
-	}
+	require.Nil(t, err)
 	defer tx.Rollback()
 
 	affected, err := tx.FindAffectedNamespacedFeatures(nsFeatures)
-	if !assert.Nil(t, err) {
-		t.FailNow()
-	}
+	require.Nil(t, err)
 
 	for _, ansf := range affected {
-		if !assert.True(t, ansf.Valid) {
-			t.FailNow()
-		}
+		require.True(t, ansf.Valid)
 
 		expectedAffectedNames := []string{}
 		for _, vuln := range vulnerabilities {

@@ -270,7 +270,6 @@ func (tx *pgSession) FindAffectedNamespacedFeatures(features []database.Namespac
 	if err != nil {
 		return nil, handleError("searchNamespacedFeaturesVulnerabilities", err)
 	}
-
 	defer rows.Close()
 
 	for rows.Next() {
