@@ -19,7 +19,12 @@ var (
 	// the ancestry.
 	entities = MigrationQuery{
 		Up: []string{
-			// namespaces
+			`CREATE TABLE IF NOT EXISTS feature_type (
+				id SERIAL PRIMARY KEY,
+				name TEXT NOT NULL UNIQUE);`,
+
+			`INSERT INTO feature_type(name) VALUES ('source'), ('binary')`,
+
 			`CREATE TABLE IF NOT EXISTS namespace (
 				id SERIAL PRIMARY KEY,
 				name TEXT NULL,
@@ -27,13 +32,13 @@ var (
 				UNIQUE (name, version_format));`,
 			`CREATE INDEX ON namespace(name);`,
 
-			// features
 			`CREATE TABLE IF NOT EXISTS feature (
 				id SERIAL PRIMARY KEY,
 				name TEXT NOT NULL,
 				version TEXT NOT NULL,
 				version_format TEXT NOT NULL,
-				UNIQUE (name, version, version_format));`,
+				type INT REFERENCES feature_type ON DELETE CASCADE,
+				UNIQUE (name, version, version_format, type));`,
 			`CREATE INDEX ON feature(name);`,
 
 			`CREATE TABLE IF NOT EXISTS namespaced_feature (
@@ -43,17 +48,15 @@ var (
 				UNIQUE (namespace_id, feature_id));`,
 		},
 		Down: []string{
-			`DROP TABLE IF EXISTS namespace, feature, namespaced_feature CASCADE;`,
+			`DROP TABLE IF EXISTS namespace, feature, namespaced_feature, feature_type CASCADE;`,
 		},
 	}
 
 	// detector is analysis extensions used by the worker.
 	detector = MigrationQuery{
 		Up: []string{
-			// Detector Type
 			`CREATE TYPE detector_type AS ENUM ('namespace', 'feature');`,
 
-			// Detector
 			`CREATE TABLE IF NOT EXISTS detector (
 				id SERIAL PRIMARY KEY,
 				name TEXT NOT NULL,
@@ -70,7 +73,6 @@ var (
 	// layer contains all metadata and scanned features and namespaces.
 	layer = MigrationQuery{
 		Up: []string{
-			// layers
 			`CREATE TABLE IF NOT EXISTS layer(
 				id SERIAL PRIMARY KEY,
 				hash TEXT NOT NULL UNIQUE);`,
@@ -107,7 +109,6 @@ var (
 	// layers.
 	ancestry = MigrationQuery{
 		Up: []string{
-			// ancestry
 			`CREATE TABLE IF NOT EXISTS ancestry (
 				id SERIAL PRIMARY KEY,
 				name TEXT NOT NULL UNIQUE);`,
@@ -145,7 +146,6 @@ var (
 		Up: []string{
 			`CREATE TYPE severity AS ENUM ('Unknown', 'Negligible', 'Low', 'Medium', 'High', 'Critical', 'Defcon1');`,
 
-			// vulnerability
 			`CREATE TABLE IF NOT EXISTS vulnerability (
 				id SERIAL PRIMARY KEY,
 				namespace_id INT REFERENCES Namespace,
@@ -159,13 +159,18 @@ var (
 			`CREATE INDEX ON vulnerability(namespace_id, name);`,
 			`CREATE INDEX ON vulnerability(namespace_id);`,
 
+			// vulnerability_affected_feature is a de-normalized table to store
+			// the affected features in a independent place other than the
+			// feature table to reduce table lock issue, and makes it easier for
+			// decoupling updater and the Clair main logic.
 			`CREATE TABLE IF NOT EXISTS vulnerability_affected_feature (
 				id SERIAL PRIMARY KEY, 
 				vulnerability_id INT REFERENCES vulnerability ON DELETE CASCADE,
 				feature_name TEXT NOT NULL,
+				feature_type INT NOT NULL REFERENCES feature_type ON DELETE CASCADE,
 				affected_version TEXT,
 				fixedin TEXT);`,
-			`CREATE INDEX ON vulnerability_affected_feature(vulnerability_id, feature_name);`,
+			`CREATE INDEX ON vulnerability_affected_feature(vulnerability_id, feature_name, feature_type);`,
 
 			`CREATE TABLE IF NOT EXISTS vulnerability_affected_namespaced_feature(
 				id SERIAL PRIMARY KEY,
@@ -176,8 +181,8 @@ var (
 			`CREATE INDEX ON vulnerability_affected_namespaced_feature(namespaced_feature_id);`,
 		},
 		Down: []string{
-			`DROP TYPE IF EXISTS severity;`,
 			`DROP TABLE IF EXISTS vulnerability, vulnerability_affected_feature, vulnerability_affected_namespaced_feature CASCADE;`,
+			`DROP TYPE IF EXISTS severity;`,
 		},
 	}
 
