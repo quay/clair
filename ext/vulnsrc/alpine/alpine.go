@@ -40,7 +40,7 @@ const (
 	nvdURLPrefix = "https://cve.mitre.org/cgi-bin/cvename.cgi?name="
 	// affected type indicates if the affected feature hint is for binary or
 	// source package.
-	affectedType = database.AffectBinaryPackage
+	affectedType = database.BinaryPackage
 )
 
 func init() {
@@ -177,7 +177,7 @@ func (file *secDB) Vulnerabilities() (vulns []database.VulnerabilityWithAffected
 
 				vuln.Affected = []database.AffectedFeature{
 					{
-						AffectedType:    affectedType,
+						FeatureType:     affectedType,
 						FeatureName:     pkg.Pkg.Name,
 						AffectedVersion: version,
 						FixedInVersion:  fixedInVersion,

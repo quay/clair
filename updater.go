@@ -425,7 +425,7 @@ func doVulnerabilitiesNamespacing(vulnerabilities []database.VulnerabilityWithAf
 
 		for _, fv := range namespacedFeatures {
 			// validate vulnerabilities, throw out the invalid vulnerabilities
-			if fv.AffectedType == "" || fv.AffectedVersion == "" || fv.FeatureName == "" || fv.Namespace.Name == "" || fv.Namespace.VersionFormat == "" {
+			if fv.FeatureType == "" || fv.AffectedVersion == "" || fv.FeatureName == "" || fv.Namespace.Name == "" || fv.Namespace.VersionFormat == "" {
 				log.WithFields(log.Fields{
 					"Name":             fv.FeatureName,
 					"Affected Version": fv.AffectedVersion,
