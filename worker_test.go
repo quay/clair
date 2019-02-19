@@ -284,11 +284,15 @@ func TestProcessAncestryWithDistUpgrade(t *testing.T) {
 		{Name: "db", Version: "5.1.29-5"},
 		{Name: "ustr", Version: "1.0.4-3"},
 		{Name: "xz-utils", Version: "5.1.1alpha+20120614-2"},
+		{Name: "libdb5.1", Version: "5.1.29-5"},
 	}
 
 	nonUpgradedMap := map[database.Feature]struct{}{}
 	for _, f := range nonUpgradedFeatures {
 		f.VersionFormat = "dpkg"
+		f.Type = database.SourcePackage
+		nonUpgradedMap[f] = struct{}{}
+		f.Type = database.BinaryPackage
 		nonUpgradedMap[f] = struct{}{}
 	}
 
@@ -318,12 +322,12 @@ func TestProcessAncestryWithDistUpgrade(t *testing.T) {
 		features = append(features, l.Features...)
 	}
 
-	assert.Len(t, features, 74)
+	assert.Len(t, features, 161)
 	for _, f := range features {
 		if _, ok := nonUpgradedMap[f.Feature]; ok {
-			assert.Equal(t, "debian:7", f.Namespace.Name)
+			assert.Equal(t, "debian:7", f.Namespace.Name, "%#v", f)
 		} else {
-			assert.Equal(t, "debian:8", f.Namespace.Name)
+			assert.Equal(t, "debian:8", f.Namespace.Name, "#%v", f)
 		}
 	}
 }
@@ -352,8 +356,8 @@ func TestProcessLayers(t *testing.T) {
 	assert.Len(t, LayerWithContents[1].Namespaces, 1)
 	assert.Len(t, LayerWithContents[2].Namespaces, 1)
 	assert.Len(t, LayerWithContents[0].Features, 0)
-	assert.Len(t, LayerWithContents[1].Features, 52)
-	assert.Len(t, LayerWithContents[2].Features, 74)
+	assert.Len(t, LayerWithContents[1].Features, 132)
+	assert.Len(t, LayerWithContents[2].Features, 191)
 
 	// Ensure each layer has expected namespaces and features detected
 	if blank, ok := datastore.layers["blank"]; ok {
@@ -371,7 +375,7 @@ func TestProcessLayers(t *testing.T) {
 			{database.Namespace{"debian:7", dpkg.ParserName}, database.NewNamespaceDetector("os-release", "1.0")},
 		}, wheezy.Namespaces)
 
-		assert.Len(t, wheezy.Features, 52)
+		assert.Len(t, wheezy.Features, 132)
 	} else {
 		assert.Fail(t, "wheezy is not stored")
 		return
@@ -382,7 +386,7 @@ func TestProcessLayers(t *testing.T) {
 		assert.Equal(t, []database.LayerNamespace{
 			{database.Namespace{"debian:8", dpkg.ParserName}, database.NewNamespaceDetector("os-release", "1.0")},
 		}, jessie.Namespaces)
-		assert.Len(t, jessie.Features, 74)
+		assert.Len(t, jessie.Features, 191)
 	} else {
 		assert.Fail(t, "jessie is not stored")
 		return
