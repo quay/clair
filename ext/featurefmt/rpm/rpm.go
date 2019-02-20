@@ -45,6 +45,10 @@ func init() {
 	featurefmt.RegisterLister("rpm", "1.0", &lister{})
 }
 
+func (l lister) RequiredFilenames() []string {
+	return []string{"var/lib/rpm/Packages"}
+}
+
 func isIgnored(packageName string) bool {
 	for _, pkg := range ignoredPackages {
 		if pkg == packageName {
@@ -53,12 +57,6 @@ func isIgnored(packageName string) bool {
 	}
 
 	return false
-}
-
-func valid(pkg *database.Feature) bool {
-	return pkg.Name != "" && pkg.Version != "" &&
-		((pkg.SourceName == "" && pkg.SourceVersion != "") ||
-			(pkg.SourceName != "" && pkg.SourceVersion != ""))
 }
 
 func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {
@@ -84,7 +82,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 	// Extract binary package names because RHSA refers to binary package names.
 	out, err := exec.Command("rpm", "--dbpath", tmpDir, "-qa", "--qf", "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{SOURCERPM}\n").CombinedOutput()
 	if err != nil {
-		log.WithError(err).WithField("output", string(out)).Error("could not query RPM")
+		log.WithError(err).WithField("output", string(out)).Error("failed to query RPM")
 		// Do not bubble up because we probably won't be able to fix it,
 		// the database must be corrupted
 		return []database.Feature{}, nil
@@ -93,39 +91,51 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 	packages := mapset.NewSet()
 	scanner := bufio.NewScanner(strings.NewReader(string(out)))
 	for scanner.Scan() {
-		line := strings.Split(scanner.Text(), " ")
-		if len(line) != 3 {
-			// We may see warnings on some RPM versions:
-			// "warning: Generating 12 missing index(es), please wait..."
-			continue
+		rpmPackage, srpmPackage := parseRPMOutput(scanner.Text())
+		if rpmPackage != nil {
+			packages.Add(*rpmPackage)
 		}
 
-		if isIgnored(line[0]) {
-			continue
-		}
-
-		pkg := database.Feature{Name: line[0], VersionFormat: rpm.ParserName}
-		pkg.Version = strings.Replace(line[1], "(none):", "", -1)
-		if err := versionfmt.Valid(rpm.ParserName, pkg.Version); err != nil {
-			log.WithError(err).WithField("version", line[1]).Warning("skipped unparseable package")
-			continue
-		}
-
-		if err := parseSourceRPM(line[2], &pkg); err != nil {
-			log.WithError(err).WithField("sourcerpm", line[2]).Warning("skipped unparseable package")
-			continue
-		}
-
-		if valid(&pkg) {
-			packages.Add(pkg)
+		if srpmPackage != nil {
+			packages.Add(*srpmPackage)
 		}
 	}
 
 	return database.ConvertFeatureSetToFeatures(packages), nil
 }
 
-func (l lister) RequiredFilenames() []string {
-	return []string{"var/lib/rpm/Packages"}
+func parseRPMOutput(raw string) (rpmPackage *database.Feature, srpmPackage *database.Feature) {
+	line := strings.Split(raw, " ")
+	if len(line) != 3 {
+		// We may see warnings on some RPM versions:
+		// "warning: Generating 12 missing index(es), please wait..."
+		return
+	}
+
+	if isIgnored(line[0]) {
+		return
+	}
+
+	name, version, srpm := line[0], strings.Replace(line[1], "(none):", "", -1), line[2]
+	if err := versionfmt.Valid(rpm.ParserName, version); err != nil {
+		log.WithError(err).WithFields(log.Fields{"name": name, "version": version}).Warning("skipped unparseable package")
+		return
+	}
+
+	rpmPackage = &database.Feature{name, version, rpm.ParserName, database.BinaryPackage}
+	srpmName, srpmVersion, srpmRelease, _, err := parseSourceRPM(srpm)
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{"name": name, "sourcerpm": srpm}).Warning("skipped unparseable package")
+		return
+	}
+
+	srpmVersion = srpmVersion + "-" + srpmRelease
+	if err = versionfmt.Valid(rpm.ParserName, srpmVersion); err != nil {
+		return
+	}
+
+	srpmPackage = &database.Feature{srpmName, srpmVersion, rpm.ParserName, database.SourcePackage}
+	return
 }
 
 type rpmParserState string
@@ -140,11 +150,9 @@ const (
 
 // parseSourceRPM parses the source rpm package representation string
 // http://ftp.rpm.org/max-rpm/ch-rpm-file-format.html
-func parseSourceRPM(sourceRPM string, pkg *database.Feature) error {
+func parseSourceRPM(sourceRPM string) (name string, version string, release string, architecture string, err error) {
 	state := parseRPM
 	previousCheckPoint := len(sourceRPM)
-	release := ""
-	version := ""
 	for i := len(sourceRPM) - 1; i >= 0; i-- {
 		switch state {
 		case parseRPM:
@@ -153,16 +161,18 @@ func parseSourceRPM(sourceRPM string, pkg *database.Feature) error {
 				packageType := strutil.Substring(sourceRPM, i+1, len(sourceRPM))
 				previousCheckPoint = i
 				if packageType != "rpm" {
-					return fmt.Errorf("unexpected package type, expect: 'rpm', got: '%s'", packageType)
+					err = fmt.Errorf("unexpected package type, expect: 'rpm', got: '%s'", packageType)
+					return
 				}
 			}
 		case parseArchitecture:
 			if string(sourceRPM[i]) == "." {
 				state = parseRelease
-				architecture := strutil.Substring(sourceRPM, i+1, previousCheckPoint)
+				architecture = strutil.Substring(sourceRPM, i+1, previousCheckPoint)
 				previousCheckPoint = i
 				if architecture != "src" && architecture != "nosrc" {
-					return fmt.Errorf("unexpected package architecture, expect: 'src' or 'nosrc', got: '%s'", architecture)
+					err = fmt.Errorf("unexpected package architecture, expect: 'src' or 'nosrc', got: '%s'", architecture)
+					return
 				}
 			}
 		case parseRelease:
@@ -171,7 +181,8 @@ func parseSourceRPM(sourceRPM string, pkg *database.Feature) error {
 				release = strutil.Substring(sourceRPM, i+1, previousCheckPoint)
 				previousCheckPoint = i
 				if release == "" {
-					return fmt.Errorf("unexpected package release, expect: not empty")
+					err = fmt.Errorf("unexpected package release, expect: not empty")
+					return
 				}
 			}
 		case parseVersion:
@@ -181,7 +192,8 @@ func parseSourceRPM(sourceRPM string, pkg *database.Feature) error {
 				version = strutil.Substring(sourceRPM, i+1, previousCheckPoint)
 				previousCheckPoint = i
 				if version == "" {
-					return fmt.Errorf("unexpected package version, expect: not empty")
+					err = fmt.Errorf("unexpected package version, expect: not empty")
+					return
 				}
 				break
 			}
@@ -189,20 +201,15 @@ func parseSourceRPM(sourceRPM string, pkg *database.Feature) error {
 	}
 
 	if state != terminate {
-		return fmt.Errorf("unexpected termination while parsing '%s'", state)
+		err = fmt.Errorf("unexpected termination while parsing '%s'", state)
+		return
 	}
 
-	concatVersion := version + "-" + release
-	if err := versionfmt.Valid(rpm.ParserName, concatVersion); err != nil {
-		return err
-	}
-
-	name := strutil.Substring(sourceRPM, 0, previousCheckPoint)
+	name = strutil.Substring(sourceRPM, 0, previousCheckPoint)
 	if name == "" {
-		return fmt.Errorf("unexpected package name, expect: not empty")
+		err = fmt.Errorf("unexpected package name, expect: not empty")
+		return
 	}
 
-	pkg.SourceName = name
-	pkg.SourceVersion = concatVersion
-	return nil
+	return
 }

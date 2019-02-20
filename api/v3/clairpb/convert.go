@@ -99,6 +99,7 @@ func NotificationFromDatabaseModel(dbNotification database.VulnerabilityNotifica
 	return &noti, nil
 }
 
+// VulnerabilityFromDatabaseModel converts database Vulnerability to api Vulnerability.
 func VulnerabilityFromDatabaseModel(dbVuln database.Vulnerability) (*Vulnerability, error) {
 	metaString := ""
 	if dbVuln.Metadata != nil {
@@ -119,6 +120,7 @@ func VulnerabilityFromDatabaseModel(dbVuln database.Vulnerability) (*Vulnerabili
 	}, nil
 }
 
+// VulnerabilityWithFixedInFromDatabaseModel converts database VulnerabilityWithFixedIn to api Vulnerability.
 func VulnerabilityWithFixedInFromDatabaseModel(dbVuln database.VulnerabilityWithFixedIn) (*Vulnerability, error) {
 	vuln, err := VulnerabilityFromDatabaseModel(dbVuln.Vulnerability)
 	if err != nil {
@@ -145,9 +147,11 @@ func NamespacedFeatureFromDatabaseModel(feature database.AncestryFeature) *Featu
 		VersionFormat: feature.Namespace.VersionFormat,
 		Version:       version,
 		Detector:      DetectorFromDatabaseModel(feature.FeatureBy),
+		FeatureType:   string(feature.Type),
 	}
 }
 
+// DetectorFromDatabaseModel converts database detector to api detector.
 func DetectorFromDatabaseModel(detector database.Detector) *Detector {
 	return &Detector{
 		Name:    detector.Name,
@@ -156,6 +160,7 @@ func DetectorFromDatabaseModel(detector database.Detector) *Detector {
 	}
 }
 
+// DetectorsFromDatabaseModel converts database detectors to api detectors.
 func DetectorsFromDatabaseModel(dbDetectors []database.Detector) []*Detector {
 	detectors := make([]*Detector, 0, len(dbDetectors))
 	for _, d := range dbDetectors {

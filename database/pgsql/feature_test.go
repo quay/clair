@@ -18,134 +18,53 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/coreos/clair/database"
-
-	// register dpkg feature lister for testing
-	_ "github.com/coreos/clair/ext/featurefmt/dpkg"
 )
 
 func TestPersistFeatures(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "PersistFeatures", false)
-	defer closeTest(t, datastore, tx)
+	tx, cleanup := createTestPgSession(t, "TestPersistFeatures")
+	defer cleanup()
 
-	f1 := database.Feature{}
-	f2 := database.Feature{Name: "n", Version: "v", VersionFormat: "vf"}
+	invalid := database.Feature{}
+	valid := *database.NewBinaryPackage("mount", "2.31.1-0.4ubuntu3.1", "dpkg")
 
-	// empty
-	assert.Nil(t, tx.PersistFeatures([]database.Feature{}))
 	// invalid
-	assert.NotNil(t, tx.PersistFeatures([]database.Feature{f1}))
-	// duplicated
-	assert.Nil(t, tx.PersistFeatures([]database.Feature{f2, f2}))
+	require.NotNil(t, tx.PersistFeatures([]database.Feature{invalid}))
 	// existing
-	assert.Nil(t, tx.PersistFeatures([]database.Feature{f2}))
+	require.Nil(t, tx.PersistFeatures([]database.Feature{valid}))
+	require.Nil(t, tx.PersistFeatures([]database.Feature{valid}))
 
-	fs := listFeatures(t, tx)
-	assert.Len(t, fs, 1)
-	assert.Equal(t, f2, fs[0])
+	features := selectAllFeatures(t, tx)
+	assert.Equal(t, []database.Feature{valid}, features)
 }
 
 func TestPersistNamespacedFeatures(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "PersistNamespacedFeatures", true)
-	defer closeTest(t, datastore, tx)
+	tx, cleanup := createTestPgSessionWithFixtures(t, "TestPersistNamespacedFeatures")
+	defer cleanup()
 
 	// existing features
-	f1 := database.Feature{
-		Name:          "ourchat",
-		Version:       "0.5",
-		VersionFormat: "dpkg",
-	}
-
+	f1 := database.NewSourcePackage("ourchat", "0.5", "dpkg")
 	// non-existing features
-	f2 := database.Feature{
-		Name: "fake!",
-	}
-
-	f3 := database.Feature{
-		Name:          "openssl",
-		Version:       "2.0",
-		VersionFormat: "dpkg",
-	}
-
+	f2 := database.NewSourcePackage("fake!", "", "")
 	// exising namespace
-	n1 := database.Namespace{
-		Name:          "debian:7",
-		VersionFormat: "dpkg",
-	}
-
-	n3 := database.Namespace{
-		Name:          "debian:8",
-		VersionFormat: "dpkg",
-	}
-
+	n1 := database.NewNamespace("debian:7", "dpkg")
 	// non-existing namespace
-	n2 := database.Namespace{
-		Name:          "debian:non",
-		VersionFormat: "dpkg",
-	}
-
+	n2 := database.NewNamespace("debian:non", "dpkg")
 	// existing namespaced feature
-	nf1 := database.NamespacedFeature{
-		Namespace: n1,
-		Feature:   f1,
-	}
-
+	nf1 := database.NewNamespacedFeature(n1, f1)
 	// invalid namespaced feature
-	nf2 := database.NamespacedFeature{
-		Namespace: n2,
-		Feature:   f2,
-	}
-
-	// new namespaced feature affected by vulnerability
-	nf3 := database.NamespacedFeature{
-		Namespace: n3,
-		Feature:   f3,
-	}
-
+	nf2 := database.NewNamespacedFeature(n2, f2)
 	// namespaced features with namespaces or features not in the database will
 	// generate error.
 	assert.Nil(t, tx.PersistNamespacedFeatures([]database.NamespacedFeature{}))
-
-	assert.NotNil(t, tx.PersistNamespacedFeatures([]database.NamespacedFeature{nf1, nf2}))
+	assert.NotNil(t, tx.PersistNamespacedFeatures([]database.NamespacedFeature{*nf1, *nf2}))
 	// valid case: insert nf3
-	assert.Nil(t, tx.PersistNamespacedFeatures([]database.NamespacedFeature{nf1, nf3}))
+	assert.Nil(t, tx.PersistNamespacedFeatures([]database.NamespacedFeature{*nf1}))
 
 	all := listNamespacedFeatures(t, tx)
-	assert.Contains(t, all, nf1)
-	assert.Contains(t, all, nf3)
-}
-
-func TestVulnerableFeature(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "VulnerableFeature", true)
-	defer closeTest(t, datastore, tx)
-
-	f1 := database.Feature{
-		Name:          "openssl",
-		Version:       "1.3",
-		VersionFormat: "dpkg",
-	}
-
-	n1 := database.Namespace{
-		Name:          "debian:7",
-		VersionFormat: "dpkg",
-	}
-
-	nf1 := database.NamespacedFeature{
-		Namespace: n1,
-		Feature:   f1,
-	}
-	assert.Nil(t, tx.PersistFeatures([]database.Feature{f1}))
-	assert.Nil(t, tx.PersistNamespacedFeatures([]database.NamespacedFeature{nf1}))
-	assert.Nil(t, tx.CacheAffectedNamespacedFeatures([]database.NamespacedFeature{nf1}))
-	// ensure the namespaced feature is affected correctly
-	anf, err := tx.FindAffectedNamespacedFeatures([]database.NamespacedFeature{nf1})
-	if assert.Nil(t, err) &&
-		assert.Len(t, anf, 1) &&
-		assert.True(t, anf[0].Valid) &&
-		assert.Len(t, anf[0].AffectedBy, 1) {
-		assert.Equal(t, "CVE-OPENSSL-1-DEB7", anf[0].AffectedBy[0].Name)
-	}
+	assert.Contains(t, all, *nf1)
 }
 
 func TestFindAffectedNamespacedFeatures(t *testing.T) {
@@ -156,6 +75,7 @@ func TestFindAffectedNamespacedFeatures(t *testing.T) {
 			Name:          "openssl",
 			Version:       "1.0",
 			VersionFormat: "dpkg",
+			Type:          database.SourcePackage,
 		},
 		Namespace: database.Namespace{
 			Name:          "debian:7",
@@ -173,30 +93,41 @@ func TestFindAffectedNamespacedFeatures(t *testing.T) {
 }
 
 func listNamespacedFeatures(t *testing.T, tx *pgSession) []database.NamespacedFeature {
-	rows, err := tx.Query(`SELECT f.name, f.version, f.version_format, n.name, n.version_format
+	types, err := tx.getFeatureTypeMap()
+	if err != nil {
+		panic(err)
+	}
+
+	rows, err := tx.Query(`SELECT f.name, f.version, f.version_format, f.type, n.name, n.version_format
 	FROM feature AS f, namespace AS n, namespaced_feature AS nf
 	WHERE nf.feature_id = f.id AND nf.namespace_id = n.id`)
 	if err != nil {
-		t.Error(err)
-		t.FailNow()
+		panic(err)
 	}
 
 	nf := []database.NamespacedFeature{}
 	for rows.Next() {
 		f := database.NamespacedFeature{}
-		err := rows.Scan(&f.Name, &f.Version, &f.VersionFormat, &f.Namespace.Name, &f.Namespace.VersionFormat)
+		var typeID int
+		err := rows.Scan(&f.Name, &f.Version, &f.VersionFormat, &typeID, &f.Namespace.Name, &f.Namespace.VersionFormat)
 		if err != nil {
-			t.Error(err)
-			t.FailNow()
+			panic(err)
 		}
+
+		f.Type = types.byID[typeID]
 		nf = append(nf, f)
 	}
 
 	return nf
 }
 
-func listFeatures(t *testing.T, tx *pgSession) []database.Feature {
-	rows, err := tx.Query("SELECT name, version, version_format FROM feature")
+func selectAllFeatures(t *testing.T, tx *pgSession) []database.Feature {
+	types, err := tx.getFeatureTypeMap()
+	if err != nil {
+		panic(err)
+	}
+
+	rows, err := tx.Query("SELECT name, version, version_format, type FROM feature")
 	if err != nil {
 		t.FailNow()
 	}
@@ -204,7 +135,9 @@ func listFeatures(t *testing.T, tx *pgSession) []database.Feature {
 	fs := []database.Feature{}
 	for rows.Next() {
 		f := database.Feature{}
-		err := rows.Scan(&f.Name, &f.Version, &f.VersionFormat)
+		var typeID int
+		err := rows.Scan(&f.Name, &f.Version, &f.VersionFormat, &typeID)
+		f.Type = types.byID[typeID]
 		if err != nil {
 			t.FailNow()
 		}
@@ -232,4 +165,34 @@ func assertNamespacedFeatureEqual(t *testing.T, expected []database.NamespacedFe
 		return true
 	}
 	return false
+}
+
+func TestFindNamespacedFeatureIDs(t *testing.T) {
+	tx, cleanup := createTestPgSessionWithFixtures(t, "TestFindNamespacedFeatureIDs")
+	defer cleanup()
+
+	features := []database.NamespacedFeature{}
+	expectedIDs := []int{}
+	for id, feature := range realNamespacedFeatures {
+		features = append(features, feature)
+		expectedIDs = append(expectedIDs, id)
+	}
+
+	features = append(features, realNamespacedFeatures[1]) // test duplicated
+	expectedIDs = append(expectedIDs, 1)
+
+	namespace := realNamespaces[1]
+	features = append(features, *database.NewNamespacedFeature(&namespace, database.NewBinaryPackage("not-found", "1.0", "dpkg"))) // test not found feature
+
+	ids, err := tx.findNamespacedFeatureIDs(features)
+	require.Nil(t, err)
+	require.Len(t, ids, len(expectedIDs)+1)
+	for i, id := range ids {
+		if i == len(ids)-1 {
+			require.False(t, id.Valid)
+		} else {
+			require.True(t, id.Valid)
+			require.Equal(t, expectedIDs[i], int(id.Int64))
+		}
+	}
 }

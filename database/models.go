@@ -155,18 +155,33 @@ type Namespace struct {
 	VersionFormat string
 }
 
+func NewNamespace(name string, versionFormat string) *Namespace {
+	return &Namespace{name, versionFormat}
+}
+
 // Feature represents a package detected in a layer but the namespace is not
 // determined.
 //
-// e.g. Name: Libssl1.0, Version: 1.0, Name: Openssl, Version: 1.0, VersionFormat: dpkg.
+// e.g. Name: Libssl1.0, Version: 1.0, VersionFormat: dpkg, Type: binary
 // dpkg is the version format of the installer package manager, which in this
 // case could be dpkg or apk.
 type Feature struct {
 	Name          string
 	Version       string
-	SourceName    string
-	SourceVersion string
 	VersionFormat string
+	Type          FeatureType
+}
+
+func NewFeature(name string, version string, versionFormat string, featureType FeatureType) *Feature {
+	return &Feature{name, version, versionFormat, featureType}
+}
+
+func NewBinaryPackage(name string, version string, versionFormat string) *Feature {
+	return &Feature{name, version, versionFormat, BinaryPackage}
+}
+
+func NewSourcePackage(name string, version string, versionFormat string) *Feature {
+	return &Feature{name, version, versionFormat, SourcePackage}
 }
 
 // NamespacedFeature is a feature with determined namespace and can be affected
@@ -177,6 +192,11 @@ type NamespacedFeature struct {
 	Feature
 
 	Namespace Namespace
+}
+
+func NewNamespacedFeature(namespace *Namespace, feature *Feature) *NamespacedFeature {
+	// TODO: namespaced feature should use pointer values
+	return &NamespacedFeature{*feature, *namespace}
 }
 
 // AffectedNamespacedFeature is a namespaced feature affected by the
@@ -199,10 +219,10 @@ type VulnerabilityWithFixedIn struct {
 // by a Vulnerability. Namespace and Feature Name is unique. Affected Feature is
 // bound to vulnerability.
 type AffectedFeature struct {
-	// AffectedType determines which type of package it affects.
-	AffectedType AffectedFeatureType
-	Namespace    Namespace
-	FeatureName  string
+	// FeatureType determines which type of package it affects.
+	FeatureType FeatureType
+	Namespace   Namespace
+	FeatureName string
 	// FixedInVersion is known next feature version that's not affected by the
 	// vulnerability. Empty FixedInVersion means the unaffected version is
 	// unknown.

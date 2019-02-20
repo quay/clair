@@ -43,12 +43,12 @@ var persistLayerTests = []struct {
 		features: []database.LayerFeature{
 			{realFeatures[1], realDetectors[1]},
 		},
-		err: "database: parameters are not valid",
+		err: "parameters are not valid",
 	},
 	{
 		title: "layer with non-existing feature",
 		name:  "random-forest",
-		err:   "database: associated immutable entities are missing in the database",
+		err:   "associated immutable entities are missing in the database",
 		by:    []database.Detector{realDetectors[2]},
 		features: []database.LayerFeature{
 			{fakeFeatures[1], realDetectors[2]},
@@ -57,7 +57,7 @@ var persistLayerTests = []struct {
 	{
 		title: "layer with non-existing namespace",
 		name:  "random-forest2",
-		err:   "database: associated immutable entities are missing in the database",
+		err:   "associated immutable entities are missing in the database",
 		by:    []database.Detector{realDetectors[1]},
 		namespaces: []database.LayerNamespace{
 			{fakeNamespaces[1], realDetectors[1]},
@@ -66,7 +66,7 @@ var persistLayerTests = []struct {
 	{
 		title: "layer with non-existing detector",
 		name:  "random-forest3",
-		err:   "database: associated immutable entities are missing in the database",
+		err:   "associated immutable entities are missing in the database",
 		by:    []database.Detector{fakeDetector[1]},
 	},
 	{

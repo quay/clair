@@ -55,6 +55,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 		line := scanner.Text()
 		if len(line) < 2 {
 			if valid(&pkg) {
+				pkg.Type = database.BinaryPackage
 				packages.Add(pkg)
 				pkg = database.Feature{VersionFormat: dpkg.ParserName}
 			}
@@ -81,6 +82,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 
 	// in case of no terminal line
 	if valid(&pkg) {
+		pkg.Type = database.BinaryPackage
 		packages.Add(pkg)
 	}
 

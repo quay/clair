@@ -46,6 +46,7 @@ const (
 			AND nf.feature_id = f.id
 			AND nf.namespace_id = v.namespace_id
 			AND vaf.feature_name = f.name
+			AND vaf.feature_type = f.type
 			AND vaf.vulnerability_id = v.id
 			AND v.deleted_at IS NULL`
 
@@ -68,6 +69,11 @@ func (tx *pgSession) PersistFeatures(features []database.Feature) error {
 		return nil
 	}
 
+	types, err := tx.getFeatureTypeMap()
+	if err != nil {
+		return err
+	}
+
 	// Sorting is needed before inserting into database to prevent deadlock.
 	sort.Slice(features, func(i, j int) bool {
 		return features[i].Name < features[j].Name ||
@@ -78,13 +84,13 @@ func (tx *pgSession) PersistFeatures(features []database.Feature) error {
 	// TODO(Sida): A better interface for bulk insertion is needed.
 	keys := make([]interface{}, 0, len(features)*3)
 	for _, f := range features {
-		keys = append(keys, f.Name, f.Version, f.VersionFormat)
+		keys = append(keys, f.Name, f.Version, f.VersionFormat, types.byName[f.Type])
 		if f.Name == "" || f.Version == "" || f.VersionFormat == "" {
 			return commonerr.NewBadRequestError("Empty feature name, version or version format is not allowed")
 		}
 	}
 
-	_, err := tx.Exec(queryPersistFeature(len(features)), keys...)
+	_, err = tx.Exec(queryPersistFeature(len(features)), keys...)
 	return handleError("queryPersistFeature", err)
 }
 
@@ -240,52 +246,27 @@ func (tx *pgSession) PersistNamespacedFeatures(features []database.NamespacedFea
 	return nil
 }
 
-// FindAffectedNamespacedFeatures looks up cache table and retrieves all
-// vulnerabilities associated with the features.
+// FindAffectedNamespacedFeatures retrieves vulnerabilities associated with the
+// feature.
 func (tx *pgSession) FindAffectedNamespacedFeatures(features []database.NamespacedFeature) ([]database.NullableAffectedNamespacedFeature, error) {
 	if len(features) == 0 {
 		return nil, nil
 	}
 
-	returnFeatures := make([]database.NullableAffectedNamespacedFeature, len(features))
-
-	// featureMap is used to keep track of duplicated features.
-	featureMap := map[database.NamespacedFeature][]*database.NullableAffectedNamespacedFeature{}
-	// initialize return value and generate unique feature request queries.
-	for i, f := range features {
-		returnFeatures[i] = database.NullableAffectedNamespacedFeature{
-			AffectedNamespacedFeature: database.AffectedNamespacedFeature{
-				NamespacedFeature: f,
-			},
-		}
-
-		featureMap[f] = append(featureMap[f], &returnFeatures[i])
-	}
-
-	// query unique namespaced features
-	distinctFeatures := []database.NamespacedFeature{}
-	for f := range featureMap {
-		distinctFeatures = append(distinctFeatures, f)
-	}
-
-	nsFeatureIDs, err := tx.findNamespacedFeatureIDs(distinctFeatures)
+	vulnerableFeatures := make([]database.NullableAffectedNamespacedFeature, len(features))
+	featureIDs, err := tx.findNamespacedFeatureIDs(features)
 	if err != nil {
 		return nil, err
 	}
 
-	toQuery := []int64{}
-	featureIDMap := map[int64][]*database.NullableAffectedNamespacedFeature{}
-	for i, id := range nsFeatureIDs {
+	for i, id := range featureIDs {
 		if id.Valid {
-			toQuery = append(toQuery, id.Int64)
-			for _, f := range featureMap[distinctFeatures[i]] {
-				f.Valid = id.Valid
-				featureIDMap[id.Int64] = append(featureIDMap[id.Int64], f)
-			}
+			vulnerableFeatures[i].Valid = true
+			vulnerableFeatures[i].NamespacedFeature = features[i]
 		}
 	}
 
-	rows, err := tx.Query(searchNamespacedFeaturesVulnerabilities, pq.Array(toQuery))
+	rows, err := tx.Query(searchNamespacedFeaturesVulnerabilities, pq.Array(featureIDs))
 	if err != nil {
 		return nil, handleError("searchNamespacedFeaturesVulnerabilities", err)
 	}
@@ -296,6 +277,7 @@ func (tx *pgSession) FindAffectedNamespacedFeatures(features []database.Namespac
 			featureID int64
 			vuln      database.VulnerabilityWithFixedIn
 		)
+
 		err := rows.Scan(&featureID,
 			&vuln.Name,
 			&vuln.Description,
@@ -306,16 +288,19 @@ func (tx *pgSession) FindAffectedNamespacedFeatures(features []database.Namespac
 			&vuln.Namespace.Name,
 			&vuln.Namespace.VersionFormat,
 		)
+
 		if err != nil {
 			return nil, handleError("searchNamespacedFeaturesVulnerabilities", err)
 		}
 
-		for _, f := range featureIDMap[featureID] {
-			f.AffectedBy = append(f.AffectedBy, vuln)
+		for i, id := range featureIDs {
+			if id.Valid && id.Int64 == featureID {
+				vulnerableFeatures[i].AffectedNamespacedFeature.AffectedBy = append(vulnerableFeatures[i].AffectedNamespacedFeature.AffectedBy, vuln)
+			}
 		}
 	}
 
-	return returnFeatures, nil
+	return vulnerableFeatures, nil
 }
 
 func (tx *pgSession) findNamespacedFeatureIDs(nfs []database.NamespacedFeature) ([]sql.NullInt64, error) {
@@ -323,11 +308,10 @@ func (tx *pgSession) findNamespacedFeatureIDs(nfs []database.NamespacedFeature) 
 		return nil, nil
 	}
 
-	nfsMap := map[database.NamespacedFeature]sql.NullInt64{}
-	keys := make([]interface{}, 0, len(nfs)*4)
+	nfsMap := map[database.NamespacedFeature]int64{}
+	keys := make([]interface{}, 0, len(nfs)*5)
 	for _, nf := range nfs {
-		keys = append(keys, nf.Name, nf.Version, nf.VersionFormat, nf.Namespace.Name)
-		nfsMap[nf] = sql.NullInt64{}
+		keys = append(keys, nf.Name, nf.Version, nf.VersionFormat, nf.Type, nf.Namespace.Name)
 	}
 
 	rows, err := tx.Query(querySearchNamespacedFeature(len(nfs)), keys...)
@@ -337,12 +321,12 @@ func (tx *pgSession) findNamespacedFeatureIDs(nfs []database.NamespacedFeature) 
 
 	defer rows.Close()
 	var (
-		id sql.NullInt64
+		id int64
 		nf database.NamespacedFeature
 	)
 
 	for rows.Next() {
-		err := rows.Scan(&id, &nf.Name, &nf.Version, &nf.VersionFormat, &nf.Namespace.Name)
+		err := rows.Scan(&id, &nf.Name, &nf.Version, &nf.VersionFormat, &nf.Type, &nf.Namespace.Name)
 		nf.Namespace.VersionFormat = nf.VersionFormat
 		if err != nil {
 			return nil, handleError("searchNamespacedFeature", err)
@@ -352,7 +336,11 @@ func (tx *pgSession) findNamespacedFeatureIDs(nfs []database.NamespacedFeature) 
 
 	ids := make([]sql.NullInt64, len(nfs))
 	for i, nf := range nfs {
-		ids[i] = nfsMap[nf]
+		if id, ok := nfsMap[nf]; ok {
+			ids[i] = sql.NullInt64{id, true}
+		} else {
+			ids[i] = sql.NullInt64{}
+		}
 	}
 
 	return ids, nil
@@ -363,11 +351,17 @@ func (tx *pgSession) findFeatureIDs(fs []database.Feature) ([]sql.NullInt64, err
 		return nil, nil
 	}
 
+	types, err := tx.getFeatureTypeMap()
+	if err != nil {
+		return nil, err
+	}
+
 	fMap := map[database.Feature]sql.NullInt64{}
 
-	keys := make([]interface{}, 0, len(fs)*3)
+	keys := make([]interface{}, 0, len(fs)*4)
 	for _, f := range fs {
-		keys = append(keys, f.Name, f.Version, f.VersionFormat)
+		typeID := types.byName[f.Type]
+		keys = append(keys, f.Name, f.Version, f.VersionFormat, typeID)
 		fMap[f] = sql.NullInt64{}
 	}
 
@@ -382,10 +376,13 @@ func (tx *pgSession) findFeatureIDs(fs []database.Feature) ([]sql.NullInt64, err
 		f  database.Feature
 	)
 	for rows.Next() {
-		err := rows.Scan(&id, &f.Name, &f.Version, &f.VersionFormat)
+		var typeID int
+		err := rows.Scan(&id, &f.Name, &f.Version, &f.VersionFormat, &typeID)
 		if err != nil {
 			return nil, handleError("querySearchFeatureID", err)
 		}
+
+		f.Type = types.byID[typeID]
 		fMap[f] = id
 	}
 

@@ -1,4 +1,4 @@
-// Copyright 2018 clair authors
+// Copyright 2019 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,13 +14,22 @@
 
 package database
 
-// AffectedFeatureType indicates the type of feature that a vulnerability
-// affects.
-type AffectedFeatureType string
+// StorageError is database error
+type StorageError struct {
+	reason   string
+	original error
+}
 
-const (
-	// AffectSourcePackage indicates the vulnerability affects a source package.
-	AffectSourcePackage AffectedFeatureType = "source"
-	// AffectBinaryPackage indicates the vulnerability affects a binary package.
-	AffectBinaryPackage AffectedFeatureType = "binary"
-)
+func (e *StorageError) Error() string {
+	return e.reason
+}
+
+// NewStorageErrorWithInternalError creates a new database error
+func NewStorageErrorWithInternalError(reason string, originalError error) *StorageError {
+	return &StorageError{reason, originalError}
+}
+
+// NewStorageError creates a new database error
+func NewStorageError(reason string) *StorageError {
+	return &StorageError{reason, nil}
+}

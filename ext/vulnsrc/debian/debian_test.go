@@ -41,7 +41,7 @@ func TestDebianParser(t *testing.T) {
 
 				expectedFeatures := []database.AffectedFeature{
 					{
-						AffectedType: affectedType,
+						FeatureType: affectedType,
 						Namespace: database.Namespace{
 							Name:          "debian:8",
 							VersionFormat: dpkg.ParserName,
@@ -50,7 +50,7 @@ func TestDebianParser(t *testing.T) {
 						AffectedVersion: versionfmt.MaxVersion,
 					},
 					{
-						AffectedType: affectedType,
+						FeatureType: affectedType,
 						Namespace: database.Namespace{
 							Name:          "debian:unstable",
 							VersionFormat: dpkg.ParserName,
@@ -71,7 +71,7 @@ func TestDebianParser(t *testing.T) {
 
 				expectedFeatures := []database.AffectedFeature{
 					{
-						AffectedType: affectedType,
+						FeatureType: affectedType,
 						Namespace: database.Namespace{
 							Name:          "debian:8",
 							VersionFormat: dpkg.ParserName,
@@ -81,7 +81,7 @@ func TestDebianParser(t *testing.T) {
 						AffectedVersion: "0.7.0",
 					},
 					{
-						AffectedType: affectedType,
+						FeatureType: affectedType,
 						Namespace: database.Namespace{
 							Name:          "debian:unstable",
 							VersionFormat: dpkg.ParserName,
@@ -91,7 +91,7 @@ func TestDebianParser(t *testing.T) {
 						AffectedVersion: "0.7.0",
 					},
 					{
-						AffectedType: affectedType,
+						FeatureType: affectedType,
 						Namespace: database.Namespace{
 							Name:          "debian:8",
 							VersionFormat: dpkg.ParserName,

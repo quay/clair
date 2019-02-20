@@ -23,10 +23,11 @@ const (
 
 	findAncestryFeatures = `
 		SELECT namespace.name, namespace.version_format, feature.name, 
-			feature.version, feature.version_format, ancestry_layer.ancestry_index, 
+			feature.version, feature.version_format, feature_type.name, ancestry_layer.ancestry_index, 
 			ancestry_feature.feature_detector_id, ancestry_feature.namespace_detector_id
-		FROM namespace, feature, namespaced_feature, ancestry_layer, ancestry_feature
+		FROM namespace, feature, feature_type, namespaced_feature, ancestry_layer, ancestry_feature
 		WHERE ancestry_layer.ancestry_id = $1
+			AND feature_type.id = feature.type
 			AND ancestry_feature.ancestry_layer_id = ancestry_layer.id
 			AND ancestry_feature.namespaced_feature_id = namespaced_feature.id
 			AND namespaced_feature.feature_id = feature.id
@@ -256,6 +257,7 @@ func (tx *pgSession) findAncestryFeatures(ancestryID int64, detectors detectorMa
 			&feature.Feature.Name,
 			&feature.Feature.Version,
 			&feature.Feature.VersionFormat,
+			&feature.Feature.Type,
 			&index,
 			&featureDetectorID,
 			&namespaceDetectorID,

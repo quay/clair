@@ -43,7 +43,7 @@ func TestOracleParserOneCve(t *testing.T) {
 
 		expectedFeatures := []database.AffectedFeature{
 			{
-				AffectedType: affectedType,
+				FeatureType: affectedType,
 				Namespace: database.Namespace{
 					Name:          "oracle:7",
 					VersionFormat: rpm.ParserName,
@@ -53,7 +53,7 @@ func TestOracleParserOneCve(t *testing.T) {
 				AffectedVersion: "0:3.1.1-7.el7_1",
 			},
 			{
-				AffectedType: affectedType,
+				FeatureType: affectedType,
 				Namespace: database.Namespace{
 					Name:          "oracle:7",
 					VersionFormat: rpm.ParserName,
@@ -63,7 +63,7 @@ func TestOracleParserOneCve(t *testing.T) {
 				AffectedVersion: "0:3.1.1-7.el7_1",
 			},
 			{
-				AffectedType: affectedType,
+				FeatureType: affectedType,
 				Namespace: database.Namespace{
 					Name:          "oracle:7",
 					VersionFormat: rpm.ParserName,
