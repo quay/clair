@@ -26,13 +26,13 @@ import (
 type Ancestry struct {
 	// Name is a globally unique value for a set of layers. This is often the
 	// sha256 digest of an OCI/Docker manifest.
-	Name string
+	Name string `json:"name"`
 	// By contains the processors that are used when computing the
 	// content of this ancestry.
-	By []Detector
+	By []Detector `json:"by"`
 	// Layers should be ordered and i_th layer is the parent of i+1_th layer in
 	// the slice.
-	Layers []AncestryLayer
+	Layers []AncestryLayer `json:"layers"`
 }
 
 // Valid checks if the ancestry is compliant to spec.
@@ -63,10 +63,10 @@ func (a *Ancestry) Valid() bool {
 // AncestryLayer is a layer with all detected namespaced features.
 type AncestryLayer struct {
 	// Hash is the sha-256 tarsum on the layer's blob content.
-	Hash string
+	Hash string `json:"hash"`
 	// Features are the features introduced by this layer when it was
 	// processed.
-	Features []AncestryFeature
+	Features []AncestryFeature `json:"features"`
 }
 
 // Valid checks if the Ancestry Layer is compliant to the spec.
@@ -95,22 +95,22 @@ func (l *AncestryLayer) GetFeatures() []NamespacedFeature {
 // AncestryFeature is a namespaced feature with the detectors used to
 // find this feature.
 type AncestryFeature struct {
-	NamespacedFeature
+	NamespacedFeature `json:"namespacedFeature"`
 
 	// FeatureBy is the detector that detected the feature.
-	FeatureBy Detector
+	FeatureBy Detector `json:"featureBy"`
 	// NamespaceBy is the detector that detected the namespace.
-	NamespaceBy Detector
+	NamespaceBy Detector `json:"namespaceBy"`
 }
 
 // Layer is a layer with all the detected features and namespaces.
 type Layer struct {
 	// Hash is the sha-256 tarsum on the layer's blob content.
-	Hash string
+	Hash string `json:"hash"`
 	// By contains a list of detectors scanned this Layer.
-	By         []Detector
-	Namespaces []LayerNamespace
-	Features   []LayerFeature
+	By         []Detector       `json:"by"`
+	Namespaces []LayerNamespace `json:"namespaces"`
+	Features   []LayerFeature   `json:"features"`
 }
 
 func (l *Layer) GetFeatures() []Feature {
@@ -133,26 +133,26 @@ func (l *Layer) GetNamespaces() []Namespace {
 
 // LayerNamespace is a namespace with detection information.
 type LayerNamespace struct {
-	Namespace
+	Namespace `json:"namespace"`
 
 	// By is the detector found the namespace.
-	By Detector
+	By Detector `json:"by"`
 }
 
 // LayerFeature is a feature with detection information.
 type LayerFeature struct {
-	Feature
+	Feature `json:"feature"`
 
 	// By is the detector found the feature.
-	By Detector
+	By Detector `json:"by"`
 }
 
 // Namespace is the contextual information around features.
 //
 // e.g. Debian:7, NodeJS.
 type Namespace struct {
-	Name          string
-	VersionFormat string
+	Name          string `json:"name"`
+	VersionFormat string `json:"versionFormat"`
 }
 
 func NewNamespace(name string, versionFormat string) *Namespace {
@@ -166,10 +166,10 @@ func NewNamespace(name string, versionFormat string) *Namespace {
 // dpkg is the version format of the installer package manager, which in this
 // case could be dpkg or apk.
 type Feature struct {
-	Name          string
-	Version       string
-	VersionFormat string
-	Type          FeatureType
+	Name          string      `json:"name"`
+	Version       string      `json:"version"`
+	VersionFormat string      `json:"versionFormat"`
+	Type          FeatureType `json:"type"`
 }
 
 func NewFeature(name string, version string, versionFormat string, featureType FeatureType) *Feature {
@@ -189,9 +189,9 @@ func NewSourcePackage(name string, version string, versionFormat string) *Featur
 //
 // e.g. OpenSSL 1.0 dpkg Debian:7.
 type NamespacedFeature struct {
-	Feature
+	Feature `json:"feature"`
 
-	Namespace Namespace
+	Namespace Namespace `json:"namespace"`
 }
 
 func NewNamespacedFeature(namespace *Namespace, feature *Feature) *NamespacedFeature {

@@ -17,6 +17,8 @@ package v3
 import (
 	"fmt"
 
+	"github.com/coreos/clair/ext/imagefmt"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -27,6 +29,10 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/pkg/pagination"
 )
+
+func newRPCErrorWithClairError(code codes.Code, err error) error {
+	return status.Errorf(code, "clair error reason: '%s'", err.Error())
+}
 
 // NotificationServer implements NotificationService interface for serving RPC.
 type NotificationServer struct {
@@ -55,23 +61,34 @@ func (s *StatusServer) GetStatus(ctx context.Context, req *pb.GetStatusRequest) 
 
 // PostAncestry implements posting an ancestry via the Clair gRPC service.
 func (s *AncestryServer) PostAncestry(ctx context.Context, req *pb.PostAncestryRequest) (*pb.PostAncestryResponse, error) {
-	ancestryName := req.GetAncestryName()
-	if ancestryName == "" {
-		return nil, status.Error(codes.InvalidArgument, "ancestry name should not be empty")
+	// validate request
+	blobFormat := req.GetFormat()
+	if !imagefmt.IsSupported(blobFormat) {
+		return nil, status.Error(codes.InvalidArgument, "image blob format is not supported")
 	}
 
-	layers := req.GetLayers()
-	if len(layers) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "ancestry should have at least one layer")
+	clairStatus, err := GetClairStatus(s.Store)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	ancestryFormat := req.GetFormat()
-	if ancestryFormat == "" {
-		return nil, status.Error(codes.InvalidArgument, "ancestry format should not be empty")
+	// check if the ancestry is already processed, if not we build the ancestry again.
+	layerHashes := make([]string, len(req.Layers))
+	for i, layer := range req.Layers {
+		layerHashes[i] = layer.GetHash()
 	}
 
-	ancestryLayers := []clair.LayerRequest{}
-	for _, layer := range layers {
+	found, err := clair.IsAncestryCached(s.Store, req.AncestryName, layerHashes)
+	if err != nil {
+		return nil, newRPCErrorWithClairError(codes.Internal, err)
+	}
+
+	if found {
+		return &pb.PostAncestryResponse{Status: clairStatus}, nil
+	}
+
+	builder := clair.NewAncestryBuilder(clair.EnabledDetectors())
+	for _, layer := range req.Layers {
 		if layer == nil {
 			err := status.Error(codes.InvalidArgument, "ancestry layer is invalid")
 			return nil, err
@@ -85,21 +102,22 @@ func (s *AncestryServer) PostAncestry(ctx context.Context, req *pb.PostAncestryR
 			return nil, status.Error(codes.InvalidArgument, "ancestry layer path should not be empty")
 		}
 
-		ancestryLayers = append(ancestryLayers, clair.LayerRequest{
-			Hash:    layer.Hash,
-			Headers: layer.Headers,
-			Path:    layer.Path,
-		})
+		// TODO(sidac): make AnalyzeLayer to be async to ensure
+		// non-blocking downloads.
+		// We'll need to deal with two layers post by the same or different
+		// requests that may have the same hash. In that case, since every
+		// layer/feature/namespace is unique in the database, it may introduce
+		// deadlock.
+		clairLayer, err := clair.AnalyzeLayer(ctx, s.Store, layer.Hash, req.Format, layer.Path, layer.Headers)
+		if err != nil {
+			return nil, newRPCErrorWithClairError(codes.Internal, err)
+		}
+
+		builder.AddLeafLayer(clairLayer)
 	}
 
-	err := clair.ProcessAncestry(s.Store, ancestryFormat, ancestryName, ancestryLayers)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "ancestry is failed to be processed: "+err.Error())
-	}
-
-	clairStatus, err := GetClairStatus(s.Store)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+	if err := clair.SaveAncestry(s.Store, builder.Ancestry(req.AncestryName)); err != nil {
+		return nil, newRPCErrorWithClairError(codes.Internal, err)
 	}
 
 	return &pb.PostAncestryResponse{Status: clairStatus}, nil
