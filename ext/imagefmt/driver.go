@@ -21,19 +21,12 @@
 package imagefmt
 
 import (
-	"crypto/tls"
 	"fmt"
 	"io"
-	"math"
-	"net/http"
-	"os"
 	"strings"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/pkg/strutil"
 	"github.com/coreos/clair/pkg/tarutil"
 )
 
@@ -102,67 +95,22 @@ func UnregisterExtractor(name string) {
 	delete(extractors, name)
 }
 
-// Extract streams an image layer from disk or over HTTP, determines the
-// image format, then extracts the files specified.
-func Extract(format, path string, headers map[string]string, toExtract []string) (tarutil.FilesMap, error) {
-	var layerReader io.ReadCloser
-	if strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://") {
-		log.WithField("path", strutil.CleanURL(path)).Debug("start downloading layer blob...")
-		request, err := http.NewRequest("GET", path, nil)
-		if err != nil {
-			return nil, ErrCouldNotFindLayer
-		}
-
-		// Set any provided HTTP Headers.
-		if headers != nil {
-			for k, v := range headers {
-				request.Header.Set(k, v)
-			}
-		}
-
-		// Send the request and handle the response.
-		tr := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: insecureTLS},
-			Proxy:           http.ProxyFromEnvironment,
-		}
-		client := &http.Client{Transport: tr}
-		r, err := client.Do(request)
-		if err != nil {
-			log.WithError(err).Error("could not download layer")
-			return nil, ErrCouldNotFindLayer
-		}
-
-		// Fail if we don't receive a 2xx HTTP status code.
-		if math.Floor(float64(r.StatusCode/100)) != 2 {
-			log.WithError(ErrCouldNotFindLayer).WithField("status code", r.StatusCode).Error("could not download layer: expected 2XX")
-			return nil, ErrCouldNotFindLayer
-		}
-
-		layerReader = r.Body
-	} else {
-		log.WithField("path", strutil.CleanURL(path)).Debug("start reading layer blob from local file system...")
-		var err error
-		layerReader, err = os.Open(path)
-		if err != nil {
-			log.WithError(ErrCouldNotFindLayer).Error("could not open layer")
-			return nil, ErrCouldNotFindLayer
-		}
-	}
-	defer layerReader.Close()
-
+// Extract a set of files as FilesMap from a layer blob.
+func Extract(format string, blobReader io.ReadCloser, filePaths []string) (tarutil.FilesMap, error) {
 	if extractor, exists := Extractors()[strings.ToLower(format)]; exists {
-		files, err := extractor.ExtractFiles(layerReader, toExtract)
+		files, err := extractor.ExtractFiles(blobReader, filePaths)
 		if err != nil {
 			return nil, err
 		}
+
 		return files, nil
 	}
 
-	return nil, commonerr.NewBadRequestError(fmt.Sprintf("unsupported image format '%s'", format))
+	return nil, fmt.Errorf("unsupported image format '%s'", format)
 }
 
-// SetInsecureTLS sets the insecureTLS to control whether TLS server's certificate chain
-// and hostname are verified when pulling layers.
-func SetInsecureTLS(insecure bool) {
-	insecureTLS = insecure
+// IsSupported checks if a format is supported
+func IsSupported(format string) bool {
+	_, ok := Extractors()[strings.ToLower(format)]
+	return ok
 }
