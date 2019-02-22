@@ -17,8 +17,6 @@ package v3
 import (
 	"fmt"
 
-	"github.com/coreos/clair/ext/imagefmt"
-
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -26,6 +24,7 @@ import (
 	"github.com/coreos/clair"
 	pb "github.com/coreos/clair/api/v3/clairpb"
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/ext/imagefmt"
 	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/pkg/pagination"
 )
@@ -61,7 +60,6 @@ func (s *StatusServer) GetStatus(ctx context.Context, req *pb.GetStatusRequest) 
 
 // PostAncestry implements posting an ancestry via the Clair gRPC service.
 func (s *AncestryServer) PostAncestry(ctx context.Context, req *pb.PostAncestryRequest) (*pb.PostAncestryResponse, error) {
-	// validate request
 	blobFormat := req.GetFormat()
 	if !imagefmt.IsSupported(blobFormat) {
 		return nil, status.Error(codes.InvalidArgument, "image blob format is not supported")
@@ -72,7 +70,7 @@ func (s *AncestryServer) PostAncestry(ctx context.Context, req *pb.PostAncestryR
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	// check if the ancestry is already processed, if not we build the ancestry again.
+	// check if the ancestry is already processed; if not we build the ancestry again.
 	layerHashes := make([]string, len(req.Layers))
 	for i, layer := range req.Layers {
 		layerHashes[i] = layer.GetHash()

@@ -278,7 +278,13 @@ func IsAncestryCached(store database.Datastore, name string, layerHashes []strin
 	}
 
 	if found {
-		log.WithField("ancestry.Name", name).Debug("found cached ancestry")
+		if len(database.DiffDetectors(EnabledDetectors(), ancestry.By)) == 0 {
+			log.WithField("ancestry.Name", name).Debug("found cached ancestry")
+		} else {
+			log.WithField("ancestry.Name", name).Debug("found outdated ancestry cache")
+		}
+	} else {
+		log.WithField("ancestry.Name", name).Debug("ancestry not cached")
 	}
 
 	return found && len(database.DiffDetectors(EnabledDetectors(), ancestry.By)) == 0, nil
