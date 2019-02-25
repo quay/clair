@@ -338,6 +338,10 @@ func (tx *pgSession) insertAncestryFeatures(ancestryLayerID int64, layer databas
 	defer stmt.Close()
 
 	for index, id := range nsFeatureIDs {
+		if !id.Valid {
+			return database.ErrMissingEntities
+		}
+
 		namespaceDetectorID, ok := detectors.byValue[layer.Features[index].NamespaceBy]
 		if !ok {
 			return database.ErrMissingEntities
