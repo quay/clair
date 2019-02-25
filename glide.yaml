@@ -31,4 +31,16 @@ import:
   version: ^1.7.1
 - package: gopkg.in/yaml.v2
   version: ^2.2.1
-- package: golang.org/x/sync/errgroup
+- package: github.com/grpc-ecosystem/grpc-gateway
+  version: ^1.7.0
+  subpackages:
+  - protoc-gen-grpc-gateway
+  - protoc-gen-swagger
+- package: github.com/golang/protobuf
+  version: ^1.2.0
+  subpackages:
+  - proto
+  - protoc-gen-go
+- package: github.com/ghodss/yaml
+  version: ^1.0.0
+- package: github.com/golang/glog
