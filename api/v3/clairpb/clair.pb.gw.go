@@ -59,10 +59,12 @@ func request_AncestryService_PostAncestry_0(ctx context.Context, marshaler runti
 	var protoReq PostAncestryRequest
 	var metadata runtime.ServerMetadata
 
-	if req.ContentLength > 0 {
-		if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil {
-			return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
-		}
+	newReader, berr := utilities.IOReaderFactory(req.Body)
+	if berr != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", berr)
+	}
+	if err := marshaler.NewDecoder(newReader()).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.PostAncestry(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -151,14 +153,14 @@ func RegisterAncestryServiceHandlerFromEndpoint(ctx context.Context, mux *runtim
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -172,8 +174,8 @@ func RegisterAncestryServiceHandler(ctx context.Context, mux *runtime.ServeMux, 
 	return RegisterAncestryServiceHandlerClient(ctx, mux, NewAncestryServiceClient(conn))
 }
 
-// RegisterAncestryServiceHandler registers the http handlers for service AncestryService to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "AncestryServiceClient".
+// RegisterAncestryServiceHandlerClient registers the http handlers for service AncestryService
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "AncestryServiceClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "AncestryServiceClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "AncestryServiceClient" to call the correct interceptors.
@@ -182,15 +184,6 @@ func RegisterAncestryServiceHandlerClient(ctx context.Context, mux *runtime.Serv
 	mux.Handle("GET", pattern_AncestryService_GetAncestry_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -211,15 +204,6 @@ func RegisterAncestryServiceHandlerClient(ctx context.Context, mux *runtime.Serv
 	mux.Handle("POST", pattern_AncestryService_PostAncestry_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -262,14 +246,14 @@ func RegisterNotificationServiceHandlerFromEndpoint(ctx context.Context, mux *ru
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -283,8 +267,8 @@ func RegisterNotificationServiceHandler(ctx context.Context, mux *runtime.ServeM
 	return RegisterNotificationServiceHandlerClient(ctx, mux, NewNotificationServiceClient(conn))
 }
 
-// RegisterNotificationServiceHandler registers the http handlers for service NotificationService to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "NotificationServiceClient".
+// RegisterNotificationServiceHandlerClient registers the http handlers for service NotificationService
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "NotificationServiceClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "NotificationServiceClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "NotificationServiceClient" to call the correct interceptors.
@@ -293,15 +277,6 @@ func RegisterNotificationServiceHandlerClient(ctx context.Context, mux *runtime.
 	mux.Handle("GET", pattern_NotificationService_GetNotification_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -322,15 +297,6 @@ func RegisterNotificationServiceHandlerClient(ctx context.Context, mux *runtime.
 	mux.Handle("DELETE", pattern_NotificationService_MarkNotificationAsRead_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -373,14 +339,14 @@ func RegisterStatusServiceHandlerFromEndpoint(ctx context.Context, mux *runtime.
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -394,8 +360,8 @@ func RegisterStatusServiceHandler(ctx context.Context, mux *runtime.ServeMux, co
 	return RegisterStatusServiceHandlerClient(ctx, mux, NewStatusServiceClient(conn))
 }
 
-// RegisterStatusServiceHandler registers the http handlers for service StatusService to "mux".
-// The handlers forward requests to the grpc endpoint over the given implementation of "StatusServiceClient".
+// RegisterStatusServiceHandlerClient registers the http handlers for service StatusService
+// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "StatusServiceClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "StatusServiceClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "StatusServiceClient" to call the correct interceptors.
@@ -404,15 +370,6 @@ func RegisterStatusServiceHandlerClient(ctx context.Context, mux *runtime.ServeM
 	mux.Handle("GET", pattern_StatusService_GetStatus_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
-		if cn, ok := w.(http.CloseNotifier); ok {
-			go func(done <-chan struct{}, closed <-chan bool) {
-				select {
-				case <-done:
-				case <-closed:
-					cancel()
-				}
-			}(ctx.Done(), cn.CloseNotify())
-		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
