@@ -3,6 +3,7 @@ package runtime_test
 import (
 	"bytes"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -13,7 +14,7 @@ import (
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/golang/protobuf/ptypes/wrappers"
-	"github.com/grpc-ecosystem/grpc-gateway/examples/examplepb"
+	"github.com/grpc-ecosystem/grpc-gateway/examples/proto/examplepb"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 )
 
@@ -121,25 +122,23 @@ func TestJSONPbMarshal(t *testing.T) {
 
 func TestJSONPbMarshalFields(t *testing.T) {
 	var m runtime.JSONPb
-	for _, spec := range []struct {
-		val  interface{}
-		want string
-	}{} {
-		buf, err := m.Marshal(spec.val)
+	m.EnumsAsInts = true // builtin fixtures include an enum, expected to be marshaled as int
+	for _, spec := range builtinFieldFixtures {
+		buf, err := m.Marshal(spec.data)
 		if err != nil {
-			t.Errorf("m.Marshal(%#v) failed with %v; want success", spec.val, err)
+			t.Errorf("m.Marshal(%#v) failed with %v; want success", spec.data, err)
 		}
-		if got, want := string(buf), spec.want; got != want {
-			t.Errorf("m.Marshal(%#v) = %q; want %q", spec.val, got, want)
+		if got, want := string(buf), spec.json; got != want {
+			t.Errorf("m.Marshal(%#v) = %q; want %q", spec.data, got, want)
 		}
 	}
 
-	m.EnumsAsInts = true
+	m.EnumsAsInts = false
 	buf, err := m.Marshal(examplepb.NumericEnum_ONE)
 	if err != nil {
 		t.Errorf("m.Marshal(%#v) failed with %v; want success", examplepb.NumericEnum_ONE, err)
 	}
-	if got, want := string(buf), "1"; got != want {
+	if got, want := string(buf), `"ONE"`; got != want {
 		t.Errorf("m.Marshal(%#v) = %q; want %q", examplepb.NumericEnum_ONE, got, want)
 	}
 }
@@ -272,8 +271,8 @@ func TestJSONPbEncoder(t *testing.T) {
 				if strings.ContainsAny(json, " \t\r\n") {
 					t.Errorf("strings.ContainsAny(%q, %q) = true; want false", json, " \t\r\n")
 				}
-				if strings.Contains(json, "ONE") {
-					t.Errorf(`strings.Contains(%q, "ONE") = true; want false`, json)
+				if !strings.Contains(json, "ONE") {
+					t.Errorf(`strings.Contains(%q, "ONE") = false; want true`, json)
 				}
 				if want := "uint64Value"; !strings.Contains(json, want) {
 					t.Errorf(`strings.Contains(%q, %q) = false; want true`, json, want)
@@ -616,3 +615,163 @@ var (
 		// TODO(yugui) Add other well-known types once jsonpb supports them
 	}
 )
+
+func TestJSONPbMarshalResponseBodies(t *testing.T) {
+	for i, spec := range []struct {
+		input        interface{}
+		emitDefaults bool
+		verifier     func(json string)
+	}{
+		{
+			input: &examplepb.ResponseBodyOut{
+				Response: &examplepb.ResponseBodyOut_Response{Data: "abcdef"},
+			},
+			verifier: func(json string) {
+				expected := `{"response":{"data":"abcdef"}}`
+				if json != expected {
+					t.Errorf("json not equal (%q, %q)", json, expected)
+				}
+			},
+		},
+		{
+			emitDefaults: true,
+			input:        &examplepb.ResponseBodyOut{},
+			verifier: func(json string) {
+				expected := `{"response":null}`
+				if json != expected {
+					t.Errorf("json not equal (%q, %q)", json, expected)
+				}
+			},
+		},
+		{
+			input: &examplepb.RepeatedResponseBodyOut_Response{},
+			verifier: func(json string) {
+				expected := `{}`
+				if json != expected {
+					t.Errorf("json not equal (%q, %q)", json, expected)
+				}
+			},
+		},
+		{
+			emitDefaults: true,
+			input:        &examplepb.RepeatedResponseBodyOut_Response{},
+			verifier: func(json string) {
+				expected := `{"data":"","type":"UNKNOWN"}`
+				if json != expected {
+					t.Errorf("json not equal (%q, %q)", json, expected)
+				}
+			},
+		},
+		{
+			input: ([]*examplepb.RepeatedResponseBodyOut_Response)(nil),
+			verifier: func(json string) {
+				expected := `null`
+				if json != expected {
+					t.Errorf("json not equal (%q, %q)", json, expected)
+				}
+			},
+		},
+		{
+			emitDefaults: true,
+			input:        ([]*examplepb.RepeatedResponseBodyOut_Response)(nil),
+			verifier: func(json string) {
+				expected := `[]`
+				if json != expected {
+					t.Errorf("json not equal (%q, %q)", json, expected)
+				}
+			},
+		},
+		{
+			input: []*examplepb.RepeatedResponseBodyOut_Response{},
+			verifier: func(json string) {
+				expected := `[]`
+				if json != expected {
+					t.Errorf("json not equal (%q, %q)", json, expected)
+				}
+			},
+		},
+		{
+			input: []string{"something"},
+			verifier: func(json string) {
+				expected := `["something"]`
+				if json != expected {
+					t.Errorf("json not equal (%q, %q)", json, expected)
+				}
+			},
+		},
+		{
+			input: []string{},
+			verifier: func(json string) {
+				expected := `[]`
+				if json != expected {
+					t.Errorf("json not equal (%q, %q)", json, expected)
+				}
+			},
+		},
+		{
+			input: ([]string)(nil),
+			verifier: func(json string) {
+				expected := `null`
+				if json != expected {
+					t.Errorf("json not equal (%q, %q)", json, expected)
+				}
+			},
+		},
+		{
+			emitDefaults: true,
+			input:        ([]string)(nil),
+			verifier: func(json string) {
+				expected := `[]`
+				if json != expected {
+					t.Errorf("json not equal (%q, %q)", json, expected)
+				}
+			},
+		},
+		{
+			input: []*examplepb.RepeatedResponseBodyOut_Response{
+				&examplepb.RepeatedResponseBodyOut_Response{},
+				&examplepb.RepeatedResponseBodyOut_Response{
+					Data: "abc",
+					Type: examplepb.RepeatedResponseBodyOut_Response_A,
+				},
+			},
+			verifier: func(json string) {
+				expected := `[{},{"data":"abc","type":"A"}]`
+				if json != expected {
+					t.Errorf("json not equal (%q, %q)", json, expected)
+				}
+			},
+		},
+		{
+			emitDefaults: true,
+			input: []*examplepb.RepeatedResponseBodyOut_Response{
+				&examplepb.RepeatedResponseBodyOut_Response{},
+				&examplepb.RepeatedResponseBodyOut_Response{
+					Data: "abc",
+					Type: examplepb.RepeatedResponseBodyOut_Response_B,
+				},
+			},
+			verifier: func(json string) {
+				expected := `[{"data":"","type":"UNKNOWN"},{"data":"abc","type":"B"}]`
+				if json != expected {
+					t.Errorf("json not equal (%q, %q)", json, expected)
+				}
+			},
+		},
+	} {
+
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
+			m := runtime.JSONPb{
+				EmitDefaults: spec.emitDefaults,
+			}
+			val := spec.input
+			buf, err := m.Marshal(val)
+			if err != nil {
+				t.Errorf("m.Marshal(%v) failed with %v; want success; spec=%v", val, err, spec)
+			}
+			if spec.verifier != nil {
+				spec.verifier(string(buf))
+			}
+		})
+	}
+}

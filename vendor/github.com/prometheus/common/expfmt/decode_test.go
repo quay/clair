@@ -205,7 +205,7 @@ func TestProtoDecoder(t *testing.T) {
 				&model.Sample{
 					Metric: model.Metric{
 						model.MetricNameLabel: "request_duration_microseconds_bucket",
-						"le": "100",
+						"le":                  "100",
 					},
 					Value:     123,
 					Timestamp: testTime,
@@ -213,7 +213,7 @@ func TestProtoDecoder(t *testing.T) {
 				&model.Sample{
 					Metric: model.Metric{
 						model.MetricNameLabel: "request_duration_microseconds_bucket",
-						"le": "120",
+						"le":                  "120",
 					},
 					Value:     412,
 					Timestamp: testTime,
@@ -221,7 +221,7 @@ func TestProtoDecoder(t *testing.T) {
 				&model.Sample{
 					Metric: model.Metric{
 						model.MetricNameLabel: "request_duration_microseconds_bucket",
-						"le": "144",
+						"le":                  "144",
 					},
 					Value:     592,
 					Timestamp: testTime,
@@ -229,7 +229,7 @@ func TestProtoDecoder(t *testing.T) {
 				&model.Sample{
 					Metric: model.Metric{
 						model.MetricNameLabel: "request_duration_microseconds_bucket",
-						"le": "172.8",
+						"le":                  "172.8",
 					},
 					Value:     1524,
 					Timestamp: testTime,
@@ -237,7 +237,7 @@ func TestProtoDecoder(t *testing.T) {
 				&model.Sample{
 					Metric: model.Metric{
 						model.MetricNameLabel: "request_duration_microseconds_bucket",
-						"le": "+Inf",
+						"le":                  "+Inf",
 					},
 					Value:     2693,
 					Timestamp: testTime,
@@ -254,6 +254,65 @@ func TestProtoDecoder(t *testing.T) {
 						model.MetricNameLabel: "request_duration_microseconds_count",
 					},
 					Value:     2693,
+					Timestamp: testTime,
+				},
+			},
+		},
+		{
+			in: "\u007f\n\x1drequest_duration_microseconds\x12\x15The response latency.\x18\x04\"E:C\b\x85\x15\x11\xcd\xcc\xccL\x8f\xcb:A\x1a\v\b{\x11\x00\x00\x00\x00\x00\x00Y@\x1a\f\b\x9c\x03\x11\x00\x00\x00\x00\x00\x00^@\x1a\f\b\xd0\x04\x11\x00\x00\x00\x00\x00\x00b@\x1a\f\b\xf4\v\x11\x9a\x99\x99\x99\x99\x99e@",
+			expected: model.Vector{
+				&model.Sample{
+					Metric: model.Metric{
+						model.MetricNameLabel: "request_duration_microseconds_count",
+					},
+					Value:     2693,
+					Timestamp: testTime,
+				},
+				&model.Sample{
+					Metric: model.Metric{
+						"le":                  "+Inf",
+						model.MetricNameLabel: "request_duration_microseconds_bucket",
+					},
+					Value:     2693,
+					Timestamp: testTime,
+				},
+				&model.Sample{
+					Metric: model.Metric{
+						model.MetricNameLabel: "request_duration_microseconds_sum",
+					},
+					Value:     1756047.3,
+					Timestamp: testTime,
+				},
+				&model.Sample{
+					Metric: model.Metric{
+						"le":                  "172.8",
+						model.MetricNameLabel: "request_duration_microseconds_bucket",
+					},
+					Value:     1524,
+					Timestamp: testTime,
+				},
+				&model.Sample{
+					Metric: model.Metric{
+						"le":                  "144",
+						model.MetricNameLabel: "request_duration_microseconds_bucket",
+					},
+					Value:     592,
+					Timestamp: testTime,
+				},
+				&model.Sample{
+					Metric: model.Metric{
+						"le":                  "120",
+						model.MetricNameLabel: "request_duration_microseconds_bucket",
+					},
+					Value:     412,
+					Timestamp: testTime,
+				},
+				&model.Sample{
+					Metric: model.Metric{
+						"le":                  "100",
+						model.MetricNameLabel: "request_duration_microseconds_bucket",
+					},
+					Value:     123,
 					Timestamp: testTime,
 				},
 			},

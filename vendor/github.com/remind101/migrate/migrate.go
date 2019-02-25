@@ -59,13 +59,13 @@ type Migration struct {
 	Down func(tx *sql.Tx) error
 }
 
-// byID implements the sort.Interface interface for sorting migrations by
+// ByID implements the sort.Interface interface for sorting migrations by
 // ID.
-type byID []Migration
+type ByID []Migration
 
-func (m byID) Len() int           { return len(m) }
-func (m byID) Less(i, j int) bool { return m[i].ID < m[j].ID }
-func (m byID) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
+func (m ByID) Len() int           { return len(m) }
+func (m ByID) Less(i, j int) bool { return m[i].ID < m[j].ID }
+func (m ByID) Swap(i, j int)      { m[i], m[j] = m[j], m[i] }
 
 // Migrator performs migrations.
 type Migrator struct {
@@ -277,16 +277,16 @@ func Queries(queries []string) func(*sql.Tx) error {
 // When the direction is "Up", the migrations will be sorted by ID ascending.
 // When the direction is "Down", the migrations will be sorted by ID descending.
 func sortMigrations(dir MigrationDirection, migrations []Migration) []Migration {
-	var m byID
+	var m ByID
 	for _, migration := range migrations {
 		m = append(m, migration)
 	}
 
 	switch dir {
 	case Up:
-		sort.Sort(byID(m))
+		sort.Sort(ByID(m))
 	default:
-		sort.Sort(sort.Reverse(byID(m)))
+		sort.Sort(sort.Reverse(ByID(m)))
 	}
 
 	return m

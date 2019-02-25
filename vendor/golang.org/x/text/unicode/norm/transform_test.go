@@ -41,11 +41,18 @@ func TestTransform(t *testing.T) {
 		{NFC, "qx", "", true, 1, transform.ErrShortDst},
 		{NFC, "a\u0300abc", "\u00e0a", true, 4, transform.ErrShortDst},
 
-		// We cannot write a segment if succesive runes could still change the result.
+		// We cannot write a segment if successive runes could still change the result.
 		{NFD, "ö", "", false, 3, transform.ErrShortSrc},
 		{NFC, "a\u0300", "", false, 4, transform.ErrShortSrc},
 		{NFD, "a\u0300", "", false, 4, transform.ErrShortSrc},
 		{NFC, "ö", "", false, 3, transform.ErrShortSrc},
+
+		{NFD, "abc", "", false, 1, transform.ErrShortDst},
+		{NFC, "abc", "", false, 1, transform.ErrShortDst},
+		{NFC, "abc", "a", false, 2, transform.ErrShortDst},
+		{NFD, "éfff", "", false, 2, transform.ErrShortDst},
+		{NFC, "e\u0301fffff", "\u00e9fff", false, 6, transform.ErrShortDst},
+		{NFD, "ééééé", "e\u0301e\u0301e\u0301", false, 15, transform.ErrShortDst},
 
 		{NFC, "a\u0300", "", true, 1, transform.ErrShortDst},
 		// Theoretically could fit, but won't due to simplified checks.
@@ -62,14 +69,16 @@ func TestTransform(t *testing.T) {
 	}
 	b := make([]byte, 100)
 	for i, tt := range tests {
-		nDst, _, err := tt.f.Transform(b[:tt.dstSize], []byte(tt.in), tt.eof)
-		out := string(b[:nDst])
-		if out != tt.out || err != tt.err {
-			t.Errorf("%d: was %+q (%v); want %+q (%v)", i, out, err, tt.out, tt.err)
-		}
-		if want := tt.f.String(tt.in)[:nDst]; want != out {
-			t.Errorf("%d: incorect normalization: was %+q; want %+q", i, out, want)
-		}
+		t.Run(fmt.Sprintf("%d:%s", i, tt.in), func(t *testing.T) {
+			nDst, _, err := tt.f.Transform(b[:tt.dstSize], []byte(tt.in), tt.eof)
+			out := string(b[:nDst])
+			if out != tt.out || err != tt.err {
+				t.Errorf("was %+q (%v); want %+q (%v)", out, err, tt.out, tt.err)
+			}
+			if want := tt.f.String(tt.in)[:nDst]; want != out {
+				t.Errorf("incorrect normalization: was %+q; want %+q", out, want)
+			}
+		})
 	}
 }
 

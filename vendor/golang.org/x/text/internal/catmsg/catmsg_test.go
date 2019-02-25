@@ -71,6 +71,10 @@ func TestCodec(t *testing.T) {
 		m:     String("foo"),
 		tests: single("foo", ""),
 	}, {
+		desc:  "affix",
+		m:     &Affix{String("foo"), "\t", "\n"},
+		tests: single("\t|foo|\n", ""),
+	}, {
 		desc:   "missing var",
 		m:      String("foo${bar}"),
 		enc:    "\x03\x03foo\x02\x03bar",
@@ -101,6 +105,13 @@ func TestCodec(t *testing.T) {
 		},
 		tests: single("foo|baz", ""),
 	}, {
+		desc: "affix with substitution",
+		m: &Affix{seq{
+			&Var{"bar", String("baz")},
+			String("foo${bar}"),
+		}, "\t", "\n"},
+		tests: single("\t|foo|baz|\n", ""),
+	}, {
 		desc: "shadowed variable",
 		m: seq{
 			&Var{"bar", String("baz")},
@@ -110,6 +121,10 @@ func TestCodec(t *testing.T) {
 			},
 		},
 		tests: single("foo|BAZ", ""),
+	}, {
+		desc:  "nested value",
+		m:     nestedLang{nestedLang{empty{}}},
+		tests: single("nl|nl", ""),
 	}, {
 		desc: "not shadowed variable",
 		m: seq{
@@ -136,7 +151,7 @@ func TestCodec(t *testing.T) {
 			&Var{"bar", incomplete{}},
 			String("${bar}"),
 		},
-		enc: "\x00\t\b\x01\x01\x04\x04\x02bar\x03\x00\x00\x00",
+		enc: "\x00\t\b\x01\x01\x14\x04\x02bar\x03\x00\x00\x00",
 		// TODO: recognize that it is cheaper to substitute bar.
 		tests: single("bar", ""),
 	}, {
@@ -207,8 +222,9 @@ func TestCodec(t *testing.T) {
 	dec := NewDecoder(language.Und, r, macros)
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-
-			data, err := Compile(language.Und, macros, tc.m)
+			// Use a language other than Und so that we can test
+			// passing the language to nested values.
+			data, err := Compile(language.Dutch, macros, tc.m)
 			if failErr(err, tc.encErr) {
 				t.Errorf("encoding error: got %+q; want %+q", err, tc.encErr)
 			}
@@ -241,7 +257,7 @@ type seq []Message
 
 func (s seq) Compile(e *Encoder) (err error) {
 	err = ErrIncomplete
-	e.EncodeMessageType(First)
+	e.EncodeMessageType(msgFirst)
 	for _, m := range s {
 		// Pass only the last error, but allow erroneous or complete messages
 		// here to allow testing different scenarios.
@@ -263,6 +279,23 @@ type incomplete struct{}
 func (incomplete) Compile(e *Encoder) (err error) {
 	e.EncodeMessageType(msgIncomplete)
 	return ErrIncomplete
+}
+
+var msgNested = Register(
+	"golang.org/x/text/internal/catmsg.nested",
+	func(d *Decoder) bool {
+		d.Render(d.DecodeString())
+		d.ExecuteMessage()
+		return true
+	})
+
+type nestedLang struct{ Message }
+
+func (n nestedLang) Compile(e *Encoder) (err error) {
+	e.EncodeMessageType(msgNested)
+	e.EncodeString(e.Language().String())
+	e.EncodeMessage(n.Message)
+	return nil
 }
 
 type errorCompileMsg struct{}

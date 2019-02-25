@@ -1,12 +1,13 @@
 package runtime
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"net/textproto"
 	"strings"
 
 	"github.com/golang/protobuf/proto"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -19,13 +20,14 @@ type HandlerFunc func(w http.ResponseWriter, r *http.Request, pathParams map[str
 // It matches http requests to patterns and invokes the corresponding handler.
 type ServeMux struct {
 	// handlers maps HTTP method to a list of handlers.
-	handlers               map[string][]handler
-	forwardResponseOptions []func(context.Context, http.ResponseWriter, proto.Message) error
-	marshalers             marshalerRegistry
-	incomingHeaderMatcher  HeaderMatcherFunc
-	outgoingHeaderMatcher  HeaderMatcherFunc
-	metadataAnnotator      func(context.Context, *http.Request) metadata.MD
-	protoErrorHandler      ProtoErrorHandlerFunc
+	handlers                  map[string][]handler
+	forwardResponseOptions    []func(context.Context, http.ResponseWriter, proto.Message) error
+	marshalers                marshalerRegistry
+	incomingHeaderMatcher     HeaderMatcherFunc
+	outgoingHeaderMatcher     HeaderMatcherFunc
+	metadataAnnotators        []func(context.Context, *http.Request) metadata.MD
+	protoErrorHandler         ProtoErrorHandlerFunc
+	disablePathLengthFallback bool
 }
 
 // ServeMuxOption is an option that can be given to a ServeMux on construction.
@@ -86,7 +88,7 @@ func WithOutgoingHeaderMatcher(fn HeaderMatcherFunc) ServeMuxOption {
 // is reading token from cookie and adding it in gRPC context.
 func WithMetadata(annotator func(context.Context, *http.Request) metadata.MD) ServeMuxOption {
 	return func(serveMux *ServeMux) {
-		serveMux.metadataAnnotator = annotator
+		serveMux.metadataAnnotators = append(serveMux.metadataAnnotators, annotator)
 	}
 }
 
@@ -101,13 +103,19 @@ func WithProtoErrorHandler(fn ProtoErrorHandlerFunc) ServeMuxOption {
 	}
 }
 
+// WithDisablePathLengthFallback returns a ServeMuxOption for disable path length fallback.
+func WithDisablePathLengthFallback() ServeMuxOption {
+	return func(serveMux *ServeMux) {
+		serveMux.disablePathLengthFallback = true
+	}
+}
+
 // NewServeMux returns a new ServeMux whose internal mapping is empty.
 func NewServeMux(opts ...ServeMuxOption) *ServeMux {
 	serveMux := &ServeMux{
 		handlers:               make(map[string][]handler),
 		forwardResponseOptions: make([]func(context.Context, http.ResponseWriter, proto.Message) error, 0),
 		marshalers:             makeMarshalerMIMERegistry(),
-		incomingHeaderMatcher:  DefaultHeaderMatcher,
 	}
 
 	for _, opt := range opts {
@@ -126,6 +134,16 @@ func NewServeMux(opts ...ServeMuxOption) *ServeMux {
 		}
 	}
 
+	if serveMux.incomingHeaderMatcher == nil {
+		serveMux.incomingHeaderMatcher = DefaultHeaderMatcher
+	}
+
+	if serveMux.outgoingHeaderMatcher == nil {
+		serveMux.outgoingHeaderMatcher = func(key string) (string, bool) {
+			return fmt.Sprintf("%s%s", MetadataHeaderPrefix, key), true
+		}
+	}
+
 	return serveMux
 }
 
@@ -136,8 +154,7 @@ func (s *ServeMux) Handle(meth string, pat Pattern, h HandlerFunc) {
 
 // ServeHTTP dispatches the request to the first handler whose pattern matches to r.Method and r.Path.
 func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// TODO: use r.Context for go 1.7+
-	ctx := context.Background()
+	ctx := r.Context()
 
 	path := r.URL.Path
 	if !strings.HasPrefix(path, "/") {
@@ -168,7 +185,7 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		components[l-1], verb = c[:idx], c[idx+1:]
 	}
 
-	if override := r.Header.Get("X-HTTP-Method-Override"); override != "" && isPathLengthFallback(r) {
+	if override := r.Header.Get("X-HTTP-Method-Override"); override != "" && s.isPathLengthFallback(r) {
 		r.Method = strings.ToUpper(override)
 		if err := r.ParseForm(); err != nil {
 			if s.protoErrorHandler != nil {
@@ -202,7 +219,7 @@ func (s *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			// X-HTTP-Method-Override is optional. Always allow fallback to POST.
-			if isPathLengthFallback(r) {
+			if s.isPathLengthFallback(r) {
 				if err := r.ParseForm(); err != nil {
 					if s.protoErrorHandler != nil {
 						_, outboundMarshaler := MarshalerForRequest(s, r)
@@ -241,8 +258,8 @@ func (s *ServeMux) GetForwardResponseOptions() []func(context.Context, http.Resp
 	return s.forwardResponseOptions
 }
 
-func isPathLengthFallback(r *http.Request) bool {
-	return r.Method == "POST" && r.Header.Get("Content-Type") == "application/x-www-form-urlencoded"
+func (s *ServeMux) isPathLengthFallback(r *http.Request) bool {
+	return !s.disablePathLengthFallback && r.Method == "POST" && r.Header.Get("Content-Type") == "application/x-www-form-urlencoded"
 }
 
 type handler struct {

@@ -56,9 +56,14 @@ const (
 type Accepted uint32
 
 const (
-	AcceptStop             = Accepted(windows.SERVICE_ACCEPT_STOP)
-	AcceptShutdown         = Accepted(windows.SERVICE_ACCEPT_SHUTDOWN)
-	AcceptPauseAndContinue = Accepted(windows.SERVICE_ACCEPT_PAUSE_CONTINUE)
+	AcceptStop                  = Accepted(windows.SERVICE_ACCEPT_STOP)
+	AcceptShutdown              = Accepted(windows.SERVICE_ACCEPT_SHUTDOWN)
+	AcceptPauseAndContinue      = Accepted(windows.SERVICE_ACCEPT_PAUSE_CONTINUE)
+	AcceptParamChange           = Accepted(windows.SERVICE_ACCEPT_PARAMCHANGE)
+	AcceptNetBindChange         = Accepted(windows.SERVICE_ACCEPT_NETBINDCHANGE)
+	AcceptHardwareProfileChange = Accepted(windows.SERVICE_ACCEPT_HARDWAREPROFILECHANGE)
+	AcceptPowerEvent            = Accepted(windows.SERVICE_ACCEPT_POWEREVENT)
+	AcceptSessionChange         = Accepted(windows.SERVICE_ACCEPT_SESSIONCHANGE)
 )
 
 // Status combines State and Accepted commands to fully describe running service.
@@ -179,6 +184,21 @@ func (s *service) updateStatus(status *Status, ec *exitCode) error {
 	}
 	if status.Accepts&AcceptPauseAndContinue != 0 {
 		t.ControlsAccepted |= windows.SERVICE_ACCEPT_PAUSE_CONTINUE
+	}
+	if status.Accepts&AcceptParamChange != 0 {
+		t.ControlsAccepted |= windows.SERVICE_ACCEPT_PARAMCHANGE
+	}
+	if status.Accepts&AcceptNetBindChange != 0 {
+		t.ControlsAccepted |= windows.SERVICE_ACCEPT_NETBINDCHANGE
+	}
+	if status.Accepts&AcceptHardwareProfileChange != 0 {
+		t.ControlsAccepted |= windows.SERVICE_ACCEPT_HARDWAREPROFILECHANGE
+	}
+	if status.Accepts&AcceptPowerEvent != 0 {
+		t.ControlsAccepted |= windows.SERVICE_ACCEPT_POWEREVENT
+	}
+	if status.Accepts&AcceptSessionChange != 0 {
+		t.ControlsAccepted |= windows.SERVICE_ACCEPT_SESSIONCHANGE
 	}
 	if ec.errno == 0 {
 		t.Win32ExitCode = windows.NO_ERROR
@@ -314,8 +334,8 @@ func Run(name string, handler Handler) error {
 	var svcmain uintptr
 	getServiceMain(&svcmain)
 	t := []windows.SERVICE_TABLE_ENTRY{
-		{syscall.StringToUTF16Ptr(s.name), svcmain},
-		{nil, 0},
+		{ServiceName: syscall.StringToUTF16Ptr(s.name), ServiceProc: svcmain},
+		{ServiceName: nil, ServiceProc: 0},
 	}
 
 	goWaitsH = uintptr(s.goWaits.h)

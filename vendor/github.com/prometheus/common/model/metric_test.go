@@ -119,6 +119,10 @@ func TestMetricNameIsValid(t *testing.T) {
 			mn:    "colon:in:the:middle",
 			valid: true,
 		},
+		{
+			mn:    "",
+			valid: false,
+		},
 	}
 
 	for _, s := range scenarios {
@@ -128,5 +132,74 @@ func TestMetricNameIsValid(t *testing.T) {
 		if MetricNameRE.MatchString(string(s.mn)) != s.valid {
 			t.Errorf("Expected %v for %q using regexp matching", s.valid, s.mn)
 		}
+	}
+}
+
+func TestMetricClone(t *testing.T) {
+	m := Metric{
+		"first_name":   "electro",
+		"occupation":   "robot",
+		"manufacturer": "westinghouse",
+	}
+
+	m2 := m.Clone()
+
+	if len(m) != len(m2) {
+		t.Errorf("expected the length of the cloned metric to be equal to the input metric")
+	}
+
+	for ln, lv := range m2 {
+		expected := m[ln]
+		if expected != lv {
+			t.Errorf("expected label value %s but got %s for label name %s", expected, lv, ln)
+		}
+	}
+}
+
+func TestMetricToString(t *testing.T) {
+	scenarios := []struct {
+		name     string
+		input    Metric
+		expected string
+	}{
+		{
+			name: "valid metric without __name__ label",
+			input: Metric{
+				"first_name":   "electro",
+				"occupation":   "robot",
+				"manufacturer": "westinghouse",
+			},
+			expected: `{first_name="electro", manufacturer="westinghouse", occupation="robot"}`,
+		},
+		{
+			name: "valid metric with __name__ label",
+			input: Metric{
+				"__name__":     "electro",
+				"occupation":   "robot",
+				"manufacturer": "westinghouse",
+			},
+			expected: `electro{manufacturer="westinghouse", occupation="robot"}`,
+		},
+		{
+			name: "empty metric with __name__ label",
+			input: Metric{
+				"__name__": "fooname",
+			},
+			expected: "fooname",
+		},
+		{
+			name:     "empty metric",
+			input:    Metric{},
+			expected: "{}",
+		},
+	}
+
+	for _, scenario := range scenarios {
+		t.Run(scenario.name, func(t *testing.T) {
+			actual := scenario.input.String()
+			if actual != scenario.expected {
+				t.Errorf("expected string output %s but got %s", actual, scenario.expected)
+			}
+		})
 	}
 }

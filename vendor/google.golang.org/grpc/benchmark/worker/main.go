@@ -1,39 +1,25 @@
 /*
  *
- * Copyright 2016, Google Inc.
- * All rights reserved.
+ * Copyright 2016 gRPC authors.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *     * Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above
- * copyright notice, this list of conditions and the following disclaimer
- * in the documentation and/or other materials provided with the
- * distribution.
- *     * Neither the name of Google Inc. nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  */
 
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -44,11 +30,11 @@ import (
 	"strconv"
 	"time"
 
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	testpb "google.golang.org/grpc/benchmark/grpc_testing"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/grpclog"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -93,7 +79,7 @@ func (s *workerServer) RunServer(stream testpb.WorkerService_RunServerServer) er
 	var bs *benchmarkServer
 	defer func() {
 		// Close benchmark server when stream ends.
-		grpclog.Printf("closing benchmark server")
+		grpclog.Infof("closing benchmark server")
 		if bs != nil {
 			bs.closeFunc()
 		}
@@ -110,9 +96,9 @@ func (s *workerServer) RunServer(stream testpb.WorkerService_RunServerServer) er
 		var out *testpb.ServerStatus
 		switch argtype := in.Argtype.(type) {
 		case *testpb.ServerArgs_Setup:
-			grpclog.Printf("server setup received:")
+			grpclog.Infof("server setup received:")
 			if bs != nil {
-				grpclog.Printf("server setup received when server already exists, closing the existing server")
+				grpclog.Infof("server setup received when server already exists, closing the existing server")
 				bs.closeFunc()
 			}
 			bs, err = startBenchmarkServer(argtype.Setup, s.serverPort)
@@ -126,10 +112,10 @@ func (s *workerServer) RunServer(stream testpb.WorkerService_RunServerServer) er
 			}
 
 		case *testpb.ServerArgs_Mark:
-			grpclog.Printf("server mark received:")
-			grpclog.Printf(" - %v", argtype)
+			grpclog.Infof("server mark received:")
+			grpclog.Infof(" - %v", argtype)
 			if bs == nil {
-				return grpc.Errorf(codes.InvalidArgument, "server does not exist when mark received")
+				return status.Error(codes.InvalidArgument, "server does not exist when mark received")
 			}
 			out = &testpb.ServerStatus{
 				Stats: bs.getStats(argtype.Mark.Reset_),
@@ -148,7 +134,7 @@ func (s *workerServer) RunClient(stream testpb.WorkerService_RunClientServer) er
 	var bc *benchmarkClient
 	defer func() {
 		// Shut down benchmark client when stream ends.
-		grpclog.Printf("shuting down benchmark client")
+		grpclog.Infof("shuting down benchmark client")
 		if bc != nil {
 			bc.shutdown()
 		}
@@ -165,9 +151,9 @@ func (s *workerServer) RunClient(stream testpb.WorkerService_RunClientServer) er
 		var out *testpb.ClientStatus
 		switch t := in.Argtype.(type) {
 		case *testpb.ClientArgs_Setup:
-			grpclog.Printf("client setup received:")
+			grpclog.Infof("client setup received:")
 			if bc != nil {
-				grpclog.Printf("client setup received when client already exists, shuting down the existing client")
+				grpclog.Infof("client setup received when client already exists, shuting down the existing client")
 				bc.shutdown()
 			}
 			bc, err = startBenchmarkClient(t.Setup)
@@ -179,10 +165,10 @@ func (s *workerServer) RunClient(stream testpb.WorkerService_RunClientServer) er
 			}
 
 		case *testpb.ClientArgs_Mark:
-			grpclog.Printf("client mark received:")
-			grpclog.Printf(" - %v", t)
+			grpclog.Infof("client mark received:")
+			grpclog.Infof(" - %v", t)
 			if bc == nil {
-				return grpc.Errorf(codes.InvalidArgument, "client does not exist when mark received")
+				return status.Error(codes.InvalidArgument, "client does not exist when mark received")
 			}
 			out = &testpb.ClientStatus{
 				Stats: bc.getStats(t.Mark.Reset_),
@@ -196,12 +182,12 @@ func (s *workerServer) RunClient(stream testpb.WorkerService_RunClientServer) er
 }
 
 func (s *workerServer) CoreCount(ctx context.Context, in *testpb.CoreRequest) (*testpb.CoreResponse, error) {
-	grpclog.Printf("core count: %v", runtime.NumCPU())
+	grpclog.Infof("core count: %v", runtime.NumCPU())
 	return &testpb.CoreResponse{Cores: int32(runtime.NumCPU())}, nil
 }
 
 func (s *workerServer) QuitWorker(ctx context.Context, in *testpb.Void) (*testpb.Void, error) {
-	grpclog.Printf("quiting worker")
+	grpclog.Infof("quitting worker")
 	s.stop <- true
 	return &testpb.Void{}, nil
 }
@@ -214,7 +200,7 @@ func main() {
 	if err != nil {
 		grpclog.Fatalf("failed to listen: %v", err)
 	}
-	grpclog.Printf("worker listening at port %v", *driverPort)
+	grpclog.Infof("worker listening at port %v", *driverPort)
 
 	s := grpc.NewServer()
 	stop := make(chan bool)
@@ -235,8 +221,8 @@ func main() {
 
 	if *pprofPort >= 0 {
 		go func() {
-			grpclog.Println("Starting pprof server on port " + strconv.Itoa(*pprofPort))
-			grpclog.Println(http.ListenAndServe("localhost:"+strconv.Itoa(*pprofPort), nil))
+			grpclog.Infoln("Starting pprof server on port " + strconv.Itoa(*pprofPort))
+			grpclog.Infoln(http.ListenAndServe("localhost:"+strconv.Itoa(*pprofPort), nil))
 		}()
 	}
 

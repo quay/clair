@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// +build darwin dragonfly freebsd linux netbsd openbsd solaris
+// +build aix darwin dragonfly freebsd linux netbsd openbsd solaris
 
 package unix_test
 
@@ -47,4 +47,14 @@ func TestItoa(t *testing.T) {
 	if s != f {
 		t.Fatalf("itoa(%d) = %s, want %s", i, s, f)
 	}
+}
+
+func TestUname(t *testing.T) {
+	var utsname unix.Utsname
+	err := unix.Uname(&utsname)
+	if err != nil {
+		t.Fatalf("Uname: %v", err)
+	}
+
+	t.Logf("OS: %s/%s %s", utsname.Sysname[:], utsname.Machine[:], utsname.Release[:])
 }

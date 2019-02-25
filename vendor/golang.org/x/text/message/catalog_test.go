@@ -1,98 +1,46 @@
-// Copyright 2015 The Go Authors. All rights reserved.
+// Copyright 2017 The Go Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
 package message
 
 import (
-	"reflect"
+	"strings"
 	"testing"
 
-	"golang.org/x/text/internal"
 	"golang.org/x/text/language"
+	"golang.org/x/text/message/catalog"
 )
 
-type entry struct{ tag, key, msg string }
+func TestMatchLanguage(t *testing.T) {
+	c := catalog.NewBuilder(catalog.Fallback(language.English))
+	c.SetString(language.Bengali, "", "")
+	c.SetString(language.English, "", "")
+	c.SetString(language.German, "", "")
 
-var testCases = []struct {
-	desc   string
-	cat    []entry
-	lookup []entry
-}{{
-	desc: "empty catalog",
-	lookup: []entry{
-		{"en", "key", ""},
-		{"en", "", ""},
-		{"nl", "", ""},
-	},
-}, {
-	desc: "one entry",
-	cat: []entry{
-		{"en", "hello", "Hello!"},
-	},
-	lookup: []entry{
-		{"und", "hello", ""},
-		{"nl", "hello", ""},
-		{"en", "hello", "Hello!"},
-		{"en-US", "hello", "Hello!"},
-		{"en-GB", "hello", "Hello!"},
-		{"en-oxendict", "hello", "Hello!"},
-		{"en-oxendict-u-ms-metric", "hello", "Hello!"},
-	},
-}, {
-	desc: "hierarchical languages",
-	cat: []entry{
-		{"en", "hello", "Hello!"},
-		{"en-GB", "hello", "Hellø!"},
-		{"en-US", "hello", "Howdy!"},
-		{"en", "greetings", "Greetings!"},
-	},
-	lookup: []entry{
-		{"und", "hello", ""},
-		{"nl", "hello", ""},
-		{"en", "hello", "Hello!"},
-		{"en-US", "hello", "Howdy!"},
-		{"en-GB", "hello", "Hellø!"},
-		{"en-oxendict", "hello", "Hello!"},
-		{"en-US-oxendict-u-ms-metric", "hello", "Howdy!"},
+	saved := DefaultCatalog
+	defer func() { DefaultCatalog = saved }()
+	DefaultCatalog = c
 
-		{"und", "greetings", ""},
-		{"nl", "greetings", ""},
-		{"en", "greetings", "Greetings!"},
-		{"en-US", "greetings", "Greetings!"},
-		{"en-GB", "greetings", "Greetings!"},
-		{"en-oxendict", "greetings", "Greetings!"},
-		{"en-US-oxendict-u-ms-metric", "greetings", "Greetings!"},
-	},
-}}
-
-func initCat(entries []entry) (*Catalog, []language.Tag) {
-	tags := []language.Tag{}
-	cat := newCatalog()
-	for _, e := range entries {
-		tag := language.MustParse(e.tag)
-		tags = append(tags, tag)
-		cat.SetString(tag, e.key, e.msg)
-	}
-	return cat, internal.UniqueTags(tags)
-}
-
-func TestCatalog(t *testing.T) {
+	testCases := []struct {
+		args string // '|'-separated list
+		want string
+	}{{
+		args: "de-CH",
+		want: "de-u-rg-chzzzz",
+	}, {
+		args: "bn-u-nu-latn|en-US,en;q=0.9,de;q=0.8,nl;q=0.7",
+		want: "bn-u-nu-latn",
+	}, {
+		args: "gr",
+		want: "en",
+	}}
 	for _, tc := range testCases {
-		cat, wantTags := initCat(tc.cat)
-
-		// languages
-		if got := cat.Languages(); !reflect.DeepEqual(got, wantTags) {
-			t.Errorf("%s:Languages: got %v; want %v", tc.desc, got, wantTags)
-		}
-
-		// Lookup
-		for _, e := range tc.lookup {
-			tag := language.MustParse(e.tag)
-			msg, ok := cat.get(tag, e.key)
-			if okWant := e.msg != ""; ok != okWant || msg != e.msg {
-				t.Errorf("%s:Lookup(%s, %s) = %s, %v; want %s, %v", tc.desc, tag, e.key, msg, ok, e.msg, okWant)
+		t.Run(tc.args, func(t *testing.T) {
+			got := MatchLanguage(strings.Split(tc.args, "|")...)
+			if got != language.Make(tc.want) {
+				t.Errorf("got %q; want %q", got, tc.want)
 			}
-		}
+		})
 	}
 }

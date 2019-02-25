@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 // +build go1.9
-// +build !nacl,!plan9,!windows
+// +build darwin dragonfly freebsd linux netbsd openbsd solaris
 
 package ipv4
 
@@ -61,7 +61,7 @@ func (c *payloadHandler) writeTo(b []byte, cm *ControlMessage, dst net.Addr) (in
 	}
 	err := c.SendMsg(&m, 0)
 	if err != nil {
-		err = &net.OpError{Op: "write", Net: c.PacketConn.LocalAddr().Network(), Source: c.PacketConn.LocalAddr(), Err: err}
+		err = &net.OpError{Op: "write", Net: c.PacketConn.LocalAddr().Network(), Source: c.PacketConn.LocalAddr(), Addr: opAddr(dst), Err: err}
 	}
 	return m.N, err
 }

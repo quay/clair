@@ -138,3 +138,63 @@ func TestLabelNameIsValid(t *testing.T) {
 		}
 	}
 }
+
+func TestSortLabelPairs(t *testing.T) {
+	labelPairs := LabelPairs{
+		{
+			Name:  "FooName",
+			Value: "FooValue",
+		},
+		{
+			Name:  "FooName",
+			Value: "BarValue",
+		},
+		{
+			Name:  "BarName",
+			Value: "FooValue",
+		},
+		{
+			Name:  "BazName",
+			Value: "BazValue",
+		},
+		{
+			Name:  "BarName",
+			Value: "FooValue",
+		},
+		{
+			Name:  "BazName",
+			Value: "FazValue",
+		},
+	}
+
+	sort.Sort(labelPairs)
+
+	expectedLabelPairs := LabelPairs{
+		{
+			Name:  "BarName",
+			Value: "FooValue",
+		},
+		{
+			Name:  "BarName",
+			Value: "FooValue",
+		},
+		{
+			Name:  "BazName",
+			Value: "BazValue",
+		},
+		{
+			Name:  "BazName",
+			Value: "FazValue",
+		},
+		{
+			Name:  "FooName",
+			Value: "BarValue",
+		},
+	}
+
+	for i, expected := range expectedLabelPairs {
+		if expected.Name != labelPairs[i].Name || expected.Value != labelPairs[i].Value {
+			t.Errorf("%d expected %s, got %s", i, expected, labelPairs[i])
+		}
+	}
+}

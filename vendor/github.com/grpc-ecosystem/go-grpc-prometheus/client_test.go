@@ -12,12 +12,18 @@ import (
 	"io"
 
 	pb_testproto "github.com/grpc-ecosystem/go-grpc-prometheus/examples/testproto"
-	"github.com/stretchr/testify/assert"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+)
+
+var (
+	// client metrics must satisfy the Collector interface
+	_ prometheus.Collector = NewClientMetrics()
 )
 
 func TestClientInterceptorSuite(t *testing.T) {
@@ -64,6 +70,13 @@ func (s *ClientInterceptorTestSuite) SetupSuite() {
 func (s *ClientInterceptorTestSuite) SetupTest() {
 	// Make all RPC calls last at most 2 sec, meaning all async issues or deadlock will not kill tests.
 	s.ctx, _ = context.WithTimeout(context.TODO(), 2*time.Second)
+
+	// Make sure every test starts with same fresh, intialized metric state.
+	DefaultClientMetrics.clientStartedCounter.Reset()
+	DefaultClientMetrics.clientHandledCounter.Reset()
+	DefaultClientMetrics.clientHandledHistogram.Reset()
+	DefaultClientMetrics.clientStreamMsgReceived.Reset()
+	DefaultClientMetrics.clientStreamMsgSent.Reset()
 }
 
 func (s *ClientInterceptorTestSuite) TearDownSuite() {
@@ -78,120 +91,31 @@ func (s *ClientInterceptorTestSuite) TearDownSuite() {
 	}
 }
 
-func (s *ClientInterceptorTestSuite) TestUnaryIncrementsStarted() {
-	var before int
-	var after int
+func (s *ClientInterceptorTestSuite) TestUnaryIncrementsMetrics() {
+	_, err := s.testClient.PingEmpty(s.ctx, &pb_testproto.Empty{}) // should return with code=OK
+	require.NoError(s.T(), err)
+	requireValue(s.T(), 1, DefaultClientMetrics.clientStartedCounter.WithLabelValues("unary", "mwitkow.testproto.TestService", "PingEmpty"))
+	requireValue(s.T(), 1, DefaultClientMetrics.clientHandledCounter.WithLabelValues("unary", "mwitkow.testproto.TestService", "PingEmpty", "OK"))
+	requireValueHistCount(s.T(), 1, DefaultClientMetrics.clientHandledHistogram.WithLabelValues("unary", "mwitkow.testproto.TestService", "PingEmpty"))
 
-	before = sumCountersForMetricAndLabels(s.T(), "grpc_client_started_total", "PingEmpty", "unary")
-	s.testClient.PingEmpty(s.ctx, &pb_testproto.Empty{})
-	after = sumCountersForMetricAndLabels(s.T(), "grpc_client_started_total", "PingEmpty", "unary")
-	assert.EqualValues(s.T(), before+1, after, "grpc_client_started_total should be incremented for PingEmpty")
-
-	before = sumCountersForMetricAndLabels(s.T(), "grpc_client_started_total", "PingError", "unary")
-	s.testClient.PingError(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.Unavailable)})
-	after = sumCountersForMetricAndLabels(s.T(), "grpc_client_started_total", "PingError", "unary")
-	assert.EqualValues(s.T(), before+1, after, "grpc_client_started_total should be incremented for PingError")
+	_, err = s.testClient.PingError(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
+	require.Error(s.T(), err)
+	requireValue(s.T(), 1, DefaultClientMetrics.clientStartedCounter.WithLabelValues("unary", "mwitkow.testproto.TestService", "PingError"))
+	requireValue(s.T(), 1, DefaultClientMetrics.clientHandledCounter.WithLabelValues("unary", "mwitkow.testproto.TestService", "PingError", "FailedPrecondition"))
+	requireValueHistCount(s.T(), 1, DefaultClientMetrics.clientHandledHistogram.WithLabelValues("unary", "mwitkow.testproto.TestService", "PingError"))
 }
 
-func (s *ClientInterceptorTestSuite) TestUnaryIncrementsHandled() {
-	var before int
-	var after int
+func (s *ClientInterceptorTestSuite) TestStartedStreamingIncrementsStarted() {
+	_, err := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{})
+	require.NoError(s.T(), err)
+	requireValue(s.T(), 1, DefaultClientMetrics.clientStartedCounter.WithLabelValues("server_stream", "mwitkow.testproto.TestService", "PingList"))
 
-	before = sumCountersForMetricAndLabels(s.T(), "grpc_client_handled_total", "PingEmpty", "unary", "OK")
-	s.testClient.PingEmpty(s.ctx, &pb_testproto.Empty{}) // should return with code=OK
-	after = sumCountersForMetricAndLabels(s.T(), "grpc_client_handled_total", "PingEmpty", "unary", "OK")
-	assert.EqualValues(s.T(), before+1, after, "grpc_client_handled_count should be incremented for PingEmpty")
-
-	before = sumCountersForMetricAndLabels(s.T(), "grpc_client_handled_total", "PingError", "unary", "FailedPrecondition")
-	s.testClient.PingError(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
-	after = sumCountersForMetricAndLabels(s.T(), "grpc_client_handled_total", "PingError", "unary", "FailedPrecondition")
-	assert.EqualValues(s.T(), before+1, after, "grpc_client_handled_total should be incremented for PingError")
+	_, err = s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
+	require.NoError(s.T(), err, "PingList must not fail immediately")
+	requireValue(s.T(), 2, DefaultClientMetrics.clientStartedCounter.WithLabelValues("server_stream", "mwitkow.testproto.TestService", "PingList"))
 }
 
-func (s *ClientInterceptorTestSuite) TestUnaryIncrementsHistograms() {
-	var before int
-	var after int
-
-	before = sumCountersForMetricAndLabels(s.T(), "grpc_client_handling_seconds_count", "PingEmpty", "unary")
-	s.testClient.PingEmpty(s.ctx, &pb_testproto.Empty{}) // should return with code=OK
-	after = sumCountersForMetricAndLabels(s.T(), "grpc_client_handling_seconds_count", "PingEmpty", "unary")
-	assert.EqualValues(s.T(), before+1, after, "grpc_client_handled_count should be incremented for PingEmpty")
-
-	before = sumCountersForMetricAndLabels(s.T(), "grpc_client_handling_seconds_count", "PingError", "unary")
-	s.testClient.PingError(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
-	after = sumCountersForMetricAndLabels(s.T(), "grpc_client_handling_seconds_count", "PingError", "unary")
-	assert.EqualValues(s.T(), before+1, after, "grpc_client_handling_seconds_count should be incremented for PingError")
-}
-
-func (s *ClientInterceptorTestSuite) TestStreamingIncrementsStarted() {
-	var before int
-	var after int
-
-	before = sumCountersForMetricAndLabels(s.T(), "grpc_client_started_total", "PingList", "server_stream")
-	s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{})
-	after = sumCountersForMetricAndLabels(s.T(), "grpc_client_started_total", "PingList", "server_stream")
-	assert.EqualValues(s.T(), before+1, after, "grpc_client_started_total should be incremented for PingList")
-}
-
-func (s *ClientInterceptorTestSuite) TestStreamingIncrementsHistograms() {
-	var before int
-	var after int
-
-	before = sumCountersForMetricAndLabels(s.T(), "grpc_client_handling_seconds_count", "PingList", "server_stream")
-	ss, _ := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{}) // should return with code=OK
-	// Do a read, just for kicks.
-	for {
-		_, err := ss.Recv()
-		if err == io.EOF {
-			break
-		}
-		require.NoError(s.T(), err, "reading pingList shouldn't fail")
-	}
-	after = sumCountersForMetricAndLabels(s.T(), "grpc_client_handling_seconds_count", "PingList", "server_stream")
-	assert.EqualValues(s.T(), before+1, after, "grpc_client_handling_seconds_count should be incremented for PingList OK")
-
-	before = sumCountersForMetricAndLabels(s.T(), "grpc_client_handling_seconds_count", "PingList", "server_stream")
-	ss, err := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
-	require.NoError(s.T(), err, "PingList must not fail immedietely")
-	// Do a read, just to progate errors.
-	_, err = ss.Recv()
-	require.Equal(s.T(), codes.FailedPrecondition, grpc.Code(err), "Recv must return FailedPrecondition, otherwise the test is wrong")
-
-	after = sumCountersForMetricAndLabels(s.T(), "grpc_client_handling_seconds_count", "PingList", "server_stream")
-	assert.EqualValues(s.T(), before+1, after, "grpc_client_handling_seconds_count should be incremented for PingList FailedPrecondition")
-}
-
-func (s *ClientInterceptorTestSuite) TestStreamingIncrementsHandled() {
-	var before int
-	var after int
-
-	before = sumCountersForMetricAndLabels(s.T(), "grpc_client_handled_total", "PingList", "server_stream", "OK")
-	ss, _ := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{}) // should return with code=OK
-	// Do a read, just for kicks.
-	for {
-		_, err := ss.Recv()
-		if err == io.EOF {
-			break
-		}
-		require.NoError(s.T(), err, "reading pingList shouldn't fail")
-	}
-	after = sumCountersForMetricAndLabels(s.T(), "grpc_client_handled_total", "PingList", "server_stream", "OK")
-	assert.EqualValues(s.T(), before+1, after, "grpc_client_handled_total should be incremented for PingList OK")
-
-	before = sumCountersForMetricAndLabels(s.T(), "grpc_client_handled_total", "PingList", "server_stream", "FailedPrecondition")
-	ss, err := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
-	require.NoError(s.T(), err, "PingList must not fail immedietely")
-	// Do a read, just to progate errors.
-	_, err = ss.Recv()
-	require.Equal(s.T(), codes.FailedPrecondition, grpc.Code(err), "Recv must return FailedPrecondition, otherwise the test is wrong")
-
-	after = sumCountersForMetricAndLabels(s.T(), "grpc_client_handled_total", "PingList", "server_stream", "FailedPrecondition")
-	assert.EqualValues(s.T(), before+1, after, "grpc_client_handled_total should be incremented for PingList FailedPrecondition")
-}
-
-func (s *ClientInterceptorTestSuite) TestStreamingIncrementsMessageCounts() {
-	beforeRecv := sumCountersForMetricAndLabels(s.T(), "grpc_client_msg_received_total", "PingList", "server_stream")
-	beforeSent := sumCountersForMetricAndLabels(s.T(), "grpc_client_msg_sent_total", "PingList", "server_stream")
+func (s *ClientInterceptorTestSuite) TestStreamingIncrementsMetrics() {
 	ss, _ := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{}) // should return with code=OK
 	// Do a read, just for kicks.
 	count := 0
@@ -201,12 +125,25 @@ func (s *ClientInterceptorTestSuite) TestStreamingIncrementsMessageCounts() {
 			break
 		}
 		require.NoError(s.T(), err, "reading pingList shouldn't fail")
-		count += 1
+		count++
 	}
 	require.EqualValues(s.T(), countListResponses, count, "Number of received msg on the wire must match")
-	afterSent := sumCountersForMetricAndLabels(s.T(), "grpc_client_msg_sent_total", "PingList", "server_stream")
-	afterRecv := sumCountersForMetricAndLabels(s.T(), "grpc_client_msg_received_total", "PingList", "server_stream")
 
-	assert.EqualValues(s.T(), beforeSent+1, afterSent, "grpc_client_msg_sent_total should be incremented 20 times for PingList")
-	assert.EqualValues(s.T(), beforeRecv+countListResponses, afterRecv, "grpc_client_msg_sent_total should be incremented ones for PingList ")
+	requireValue(s.T(), 1, DefaultClientMetrics.clientStartedCounter.WithLabelValues("server_stream", "mwitkow.testproto.TestService", "PingList"))
+	requireValue(s.T(), 1, DefaultClientMetrics.clientHandledCounter.WithLabelValues("server_stream", "mwitkow.testproto.TestService", "PingList", "OK"))
+	requireValue(s.T(), countListResponses, DefaultClientMetrics.clientStreamMsgReceived.WithLabelValues("server_stream", "mwitkow.testproto.TestService", "PingList"))
+	requireValue(s.T(), 1, DefaultClientMetrics.clientStreamMsgSent.WithLabelValues("server_stream", "mwitkow.testproto.TestService", "PingList"))
+	requireValueHistCount(s.T(), 1, DefaultClientMetrics.clientHandledHistogram.WithLabelValues("server_stream", "mwitkow.testproto.TestService", "PingList"))
+
+	ss, err := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
+	require.NoError(s.T(), err, "PingList must not fail immediately")
+
+	// Do a read, just to progate errors.
+	_, err = ss.Recv()
+	st, _ := status.FromError(err)
+	require.Equal(s.T(), codes.FailedPrecondition, st.Code(), "Recv must return FailedPrecondition, otherwise the test is wrong")
+
+	requireValue(s.T(), 2, DefaultClientMetrics.clientStartedCounter.WithLabelValues("server_stream", "mwitkow.testproto.TestService", "PingList"))
+	requireValue(s.T(), 1, DefaultClientMetrics.clientHandledCounter.WithLabelValues("server_stream", "mwitkow.testproto.TestService", "PingList", "FailedPrecondition"))
+	requireValueHistCount(s.T(), 2, DefaultClientMetrics.clientHandledHistogram.WithLabelValues("server_stream", "mwitkow.testproto.TestService", "PingList"))
 }

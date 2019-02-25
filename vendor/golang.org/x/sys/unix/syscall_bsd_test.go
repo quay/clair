@@ -10,22 +10,19 @@ import (
 	"os/exec"
 	"runtime"
 	"testing"
+	"time"
 
 	"golang.org/x/sys/unix"
 )
 
-const MNT_WAIT = 1
-const MNT_NOWAIT = 2
-
 func TestGetfsstat(t *testing.T) {
-	const flags = MNT_NOWAIT // see golang.org/issue/16937
-	n, err := unix.Getfsstat(nil, flags)
+	n, err := unix.Getfsstat(nil, unix.MNT_NOWAIT)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	data := make([]unix.Statfs_t, n)
-	n2, err := unix.Getfsstat(data, flags)
+	n2, err := unix.Getfsstat(data, unix.MNT_NOWAIT)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,6 +47,28 @@ func TestGetfsstat(t *testing.T) {
 	}
 }
 
+func TestSelect(t *testing.T) {
+	err := unix.Select(0, nil, nil, nil, &unix.Timeval{Sec: 0, Usec: 0})
+	if err != nil {
+		t.Fatalf("Select: %v", err)
+	}
+
+	dur := 250 * time.Millisecond
+	tv := unix.NsecToTimeval(int64(dur))
+	start := time.Now()
+	err = unix.Select(0, nil, nil, nil, &tv)
+	took := time.Since(start)
+	if err != nil {
+		t.Fatalf("Select: %v", err)
+	}
+
+	// On some BSDs the actual timeout might also be slightly less than the requested.
+	// Add an acceptable margin to avoid flaky tests.
+	if took < dur*2/3 {
+		t.Errorf("Select: timeout should have been at least %v, got %v", dur, took)
+	}
+}
+
 func TestSysctlRaw(t *testing.T) {
 	if runtime.GOOS == "openbsd" {
 		t.Skip("kern.proc.pid does not exist on OpenBSD")
@@ -59,4 +78,12 @@ func TestSysctlRaw(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestSysctlUint32(t *testing.T) {
+	maxproc, err := unix.SysctlUint32("kern.maxproc")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("kern.maxproc: %v", maxproc)
 }

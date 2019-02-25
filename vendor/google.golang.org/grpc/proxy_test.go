@@ -1,33 +1,20 @@
+// +build !race
+
 /*
  *
- * Copyright 2017, Google Inc.
- * All rights reserved.
+ * Copyright 2017 gRPC authors.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *     * Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above
- * copyright notice, this list of conditions and the following disclaimer
- * in the documentation and/or other materials provided with the
- * distribution.
- *     * Neither the name of Google Inc. nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  */
 
@@ -35,14 +22,15 @@ package grpc
 
 import (
 	"bufio"
+	"context"
+	"encoding/base64"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"testing"
 	"time"
-
-	"golang.org/x/net/context"
 )
 
 const (
@@ -60,34 +48,13 @@ func overwrite(hpfe func(req *http.Request) (*url.URL, error)) func() {
 	}
 }
 
-func TestMapAddressEnv(t *testing.T) {
-	// Overwrite the function in the test and restore them in defer.
-	hpfe := func(req *http.Request) (*url.URL, error) {
-		if req.URL.Host == envTestAddr {
-			return &url.URL{
-				Scheme: "https",
-				Host:   envProxyAddr,
-			}, nil
-		}
-		return nil, nil
-	}
-	defer overwrite(hpfe)()
-
-	// envTestAddr should be handled by ProxyFromEnvironment.
-	got, err := mapAddress(context.Background(), envTestAddr)
-	if err != nil {
-		t.Error(err)
-	}
-	if got != envProxyAddr {
-		t.Errorf("want %v, got %v", envProxyAddr, got)
-	}
-}
-
 type proxyServer struct {
 	t   *testing.T
 	lis net.Listener
 	in  net.Conn
 	out net.Conn
+
+	requestCheck func(*http.Request) error
 }
 
 func (p *proxyServer) run() {
@@ -102,11 +69,11 @@ func (p *proxyServer) run() {
 		p.t.Errorf("failed to read CONNECT req: %v", err)
 		return
 	}
-	if req.Method != http.MethodConnect || req.UserAgent() != grpcUA {
+	if err := p.requestCheck(req); err != nil {
 		resp := http.Response{StatusCode: http.StatusMethodNotAllowed}
 		resp.Write(p.in)
 		p.in.Close()
-		p.t.Errorf("get wrong CONNECT req: %+v", req)
+		p.t.Errorf("get wrong CONNECT req: %+v, error: %v", req, err)
 		return
 	}
 
@@ -132,12 +99,16 @@ func (p *proxyServer) stop() {
 	}
 }
 
-func TestHTTPConnect(t *testing.T) {
+func testHTTPConnect(t *testing.T, proxyURLModify func(*url.URL) *url.URL, proxyReqCheck func(*http.Request) error) {
 	plis, err := net.Listen("tcp", "localhost:0")
 	if err != nil {
 		t.Fatalf("failed to listen: %v", err)
 	}
-	p := &proxyServer{t: t, lis: plis}
+	p := &proxyServer{
+		t:            t,
+		lis:          plis,
+		requestCheck: proxyReqCheck,
+	}
 	go p.run()
 	defer p.stop()
 
@@ -147,7 +118,7 @@ func TestHTTPConnect(t *testing.T) {
 	}
 
 	msg := []byte{4, 3, 5, 2}
-	recvBuf := make([]byte, len(msg), len(msg))
+	recvBuf := make([]byte, len(msg))
 	done := make(chan struct{})
 	go func() {
 		in, err := blis.Accept()
@@ -162,7 +133,7 @@ func TestHTTPConnect(t *testing.T) {
 
 	// Overwrite the function in the test and restore them in defer.
 	hpfe := func(req *http.Request) (*url.URL, error) {
-		return &url.URL{Host: plis.Addr().String()}, nil
+		return proxyURLModify(&url.URL{Host: plis.Addr().String()}), nil
 	}
 	defer overwrite(hpfe)()
 
@@ -188,5 +159,73 @@ func TestHTTPConnect(t *testing.T) {
 	// Check received msg.
 	if string(recvBuf) != string(msg) {
 		t.Fatalf("received msg: %v, want %v", recvBuf, msg)
+	}
+}
+
+func (s) TestHTTPConnect(t *testing.T) {
+	testHTTPConnect(t,
+		func(in *url.URL) *url.URL {
+			return in
+		},
+		func(req *http.Request) error {
+			if req.Method != http.MethodConnect {
+				return fmt.Errorf("unexpected Method %q, want %q", req.Method, http.MethodConnect)
+			}
+			if req.UserAgent() != grpcUA {
+				return fmt.Errorf("unexpect user agent %q, want %q", req.UserAgent(), grpcUA)
+			}
+			return nil
+		},
+	)
+}
+
+func (s) TestHTTPConnectBasicAuth(t *testing.T) {
+	const (
+		user     = "notAUser"
+		password = "notAPassword"
+	)
+	testHTTPConnect(t,
+		func(in *url.URL) *url.URL {
+			in.User = url.UserPassword(user, password)
+			return in
+		},
+		func(req *http.Request) error {
+			if req.Method != http.MethodConnect {
+				return fmt.Errorf("unexpected Method %q, want %q", req.Method, http.MethodConnect)
+			}
+			if req.UserAgent() != grpcUA {
+				return fmt.Errorf("unexpect user agent %q, want %q", req.UserAgent(), grpcUA)
+			}
+			wantProxyAuthStr := "Basic " + base64.StdEncoding.EncodeToString([]byte(user+":"+password))
+			if got := req.Header.Get(proxyAuthHeaderKey); got != wantProxyAuthStr {
+				gotDecoded, _ := base64.StdEncoding.DecodeString(got)
+				wantDecoded, _ := base64.StdEncoding.DecodeString(wantProxyAuthStr)
+				return fmt.Errorf("unexpected auth %q (%q), want %q (%q)", got, gotDecoded, wantProxyAuthStr, wantDecoded)
+			}
+			return nil
+		},
+	)
+}
+
+func (s) TestMapAddressEnv(t *testing.T) {
+	// Overwrite the function in the test and restore them in defer.
+	hpfe := func(req *http.Request) (*url.URL, error) {
+		if req.URL.Host == envTestAddr {
+			return &url.URL{
+				Scheme: "https",
+				Host:   envProxyAddr,
+			}, nil
+		}
+		return nil, nil
+	}
+	defer overwrite(hpfe)()
+
+	// envTestAddr should be handled by ProxyFromEnvironment.
+	got, err := mapAddress(context.Background(), envTestAddr)
+	if err != nil {
+		t.Error(err)
+	}
+	if got.Host != envProxyAddr {
+		t.Errorf("want %v, got %v", envProxyAddr, got)
 	}
 }

@@ -1,23 +1,25 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.10
 
 # Dependencies to get the git sources and go binaries
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y  --no-install-recommends \
+        ca-certificates \
         curl \
         git \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Get the git sources. If not cached, this takes O(5 minutes).
 WORKDIR /git
 RUN git config --global advice.detachedHead false
-# Linux Kernel: Released 19 Feb 2017
-RUN git clone --branch v4.10 --depth 1 https://kernel.googlesource.com/pub/scm/linux/kernel/git/torvalds/linux
-# GNU C library: Released 05 Feb 2017 (we should try to get a secure way to clone this)
-RUN git clone --branch glibc-2.25 --depth 1 git://sourceware.org/git/glibc.git
+# Linux Kernel: Released 23 Dec 2018
+RUN git clone --branch v4.20 --depth 1 https://kernel.googlesource.com/pub/scm/linux/kernel/git/torvalds/linux
+# GNU C library: Released 01 Feb 2019 (we should try to get a secure way to clone this)
+RUN git clone --branch release/2.29/master --depth 1 git://sourceware.org/git/glibc.git
 
-# Get Go 1.8 (https://github.com/docker-library/golang/blob/master/1.8/Dockerfile)
-ENV GOLANG_VERSION 1.8
+# Get Go
+ENV GOLANG_VERSION 1.12beta2
 ENV GOLANG_DOWNLOAD_URL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz
-ENV GOLANG_DOWNLOAD_SHA256 53ab94104ee3923e228a2cb2116e5e462ad3ebaeea06ff04463479d7f12d27ca
+ENV GOLANG_DOWNLOAD_SHA256 9e4884b46a72e0558187a8af6e8733e039432df1b755f14b361f18b63fa5a63e
 
 RUN curl -fsSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz \
     && echo "$GOLANG_DOWNLOAD_SHA256  golang.tar.gz" | sha256sum -c - \
@@ -26,20 +28,23 @@ RUN curl -fsSL "$GOLANG_DOWNLOAD_URL" -o golang.tar.gz \
 
 ENV PATH /usr/local/go/bin:$PATH
 
-# Linux and Glibc build dependencies
-RUN apt-get update && apt-get install -y \
-        gawk make python \
+# Linux and Glibc build dependencies and emulator
+RUN apt-get update && apt-get install -y  --no-install-recommends \
+        bison gawk make python3 \
         gcc gcc-multilib \
-        gettext  texinfo \
+        gettext texinfo \
+        qemu-user \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-# Emulator and cross compilers
+# Cross compilers (install recommended packages to get cross libc-dev)
 RUN apt-get update && apt-get install -y \
-        qemu \
         gcc-aarch64-linux-gnu       gcc-arm-linux-gnueabi     \
         gcc-mips-linux-gnu          gcc-mips64-linux-gnuabi64 \
         gcc-mips64el-linux-gnuabi64 gcc-mipsel-linux-gnu      \
         gcc-powerpc64-linux-gnu     gcc-powerpc64le-linux-gnu \
+	gcc-riscv64-linux-gnu                                 \
         gcc-s390x-linux-gnu         gcc-sparc64-linux-gnu     \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 # Let the scripts know they are in the docker environment

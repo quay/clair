@@ -1,33 +1,18 @@
 /*
  *
- * Copyright 2014, Google Inc.
- * All rights reserved.
+ * Copyright 2014 gRPC authors.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met:
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- *     * Redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer.
- *     * Redistributions in binary form must reproduce the above
- * copyright notice, this list of conditions and the following disclaimer
- * in the documentation and/or other materials provided with the
- * distribution.
- *     * Neither the name of Google Inc. nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  *
  */
 
@@ -35,6 +20,7 @@ package grpc
 
 import (
 	"bytes"
+	"compress/gzip"
 	"io"
 	"math"
 	"reflect"
@@ -42,9 +28,11 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/encoding"
+	protoenc "google.golang.org/grpc/encoding/proto"
+	"google.golang.org/grpc/internal/transport"
 	"google.golang.org/grpc/status"
 	perfpb "google.golang.org/grpc/test/codec_perf"
-	"google.golang.org/grpc/transport"
 )
 
 type fullReader struct {
@@ -57,7 +45,7 @@ func (f fullReader) Read(p []byte) (int, error) {
 
 var _ CallOption = EmptyCallOption{} // ensure EmptyCallOption implements the interface
 
-func TestSimpleParsing(t *testing.T) {
+func (s) TestSimpleParsing(t *testing.T) {
 	bigMsg := bytes.Repeat([]byte{'x'}, 1<<24)
 	for _, test := range []struct {
 		// input
@@ -84,7 +72,7 @@ func TestSimpleParsing(t *testing.T) {
 	}
 }
 
-func TestMultipleParsing(t *testing.T) {
+func (s) TestMultipleParsing(t *testing.T) {
 	// Set a byte stream consists of 3 messages with their headers.
 	p := []byte{0, 0, 0, 0, 1, 'a', 0, 0, 0, 0, 2, 'b', 'c', 0, 0, 0, 0, 1, 'd'}
 	b := fullReader{bytes.NewReader(p)}
@@ -113,25 +101,48 @@ func TestMultipleParsing(t *testing.T) {
 	}
 }
 
-func TestEncode(t *testing.T) {
+func (s) TestEncode(t *testing.T) {
 	for _, test := range []struct {
 		// input
 		msg proto.Message
-		cp  Compressor
 		// outputs
-		b   []byte
-		err error
+		hdr  []byte
+		data []byte
+		err  error
 	}{
-		{nil, nil, []byte{0, 0, 0, 0, 0}, nil},
+		{nil, []byte{0, 0, 0, 0, 0}, []byte{}, nil},
 	} {
-		b, err := encode(protoCodec{}, test.msg, nil, nil, nil)
-		if err != test.err || !bytes.Equal(b, test.b) {
-			t.Fatalf("encode(_, _, %v, _) = %v, %v\nwant %v, %v", test.cp, b, err, test.b, test.err)
+		data, err := encode(encoding.GetCodec(protoenc.Name), test.msg)
+		if err != test.err || !bytes.Equal(data, test.data) {
+			t.Errorf("encode(_, %v) = %v, %v; want %v, %v", test.msg, data, err, test.data, test.err)
+			continue
+		}
+		if hdr, _ := msgHeader(data, nil); !bytes.Equal(hdr, test.hdr) {
+			t.Errorf("msgHeader(%v, false) = %v; want %v", data, hdr, test.hdr)
 		}
 	}
 }
 
-func TestCompress(t *testing.T) {
+func (s) TestCompress(t *testing.T) {
+	bestCompressor, err := NewGZIPCompressorWithLevel(gzip.BestCompression)
+	if err != nil {
+		t.Fatalf("Could not initialize gzip compressor with best compression.")
+	}
+	bestSpeedCompressor, err := NewGZIPCompressorWithLevel(gzip.BestSpeed)
+	if err != nil {
+		t.Fatalf("Could not initialize gzip compressor with best speed compression.")
+	}
+
+	defaultCompressor, err := NewGZIPCompressorWithLevel(gzip.BestSpeed)
+	if err != nil {
+		t.Fatalf("Could not initialize gzip compressor with default compression.")
+	}
+
+	level5, err := NewGZIPCompressorWithLevel(5)
+	if err != nil {
+		t.Fatalf("Could not initialize gzip compressor with level 5 compression.")
+	}
+
 	for _, test := range []struct {
 		// input
 		data []byte
@@ -141,6 +152,10 @@ func TestCompress(t *testing.T) {
 		err error
 	}{
 		{make([]byte, 1024), NewGZIPCompressor(), NewGZIPDecompressor(), nil},
+		{make([]byte, 1024), bestCompressor, NewGZIPDecompressor(), nil},
+		{make([]byte, 1024), bestSpeedCompressor, NewGZIPDecompressor(), nil},
+		{make([]byte, 1024), defaultCompressor, NewGZIPDecompressor(), nil},
+		{make([]byte, 1024), level5, NewGZIPDecompressor(), nil},
 	} {
 		b := new(bytes.Buffer)
 		if err := test.cp.Do(b, test.data); err != test.err {
@@ -155,15 +170,15 @@ func TestCompress(t *testing.T) {
 	}
 }
 
-func TestToRPCErr(t *testing.T) {
+func (s) TestToRPCErr(t *testing.T) {
 	for _, test := range []struct {
 		// input
 		errIn error
 		// outputs
 		errOut error
 	}{
-		{transport.StreamError{Code: codes.Unknown, Desc: ""}, status.Error(codes.Unknown, "")},
-		{transport.ErrConnClosing, status.Error(codes.Internal, transport.ErrConnClosing.Desc)},
+		{transport.ErrConnClosing, status.Error(codes.Unavailable, transport.ErrConnClosing.Desc)},
+		{io.ErrUnexpectedEOF, status.Error(codes.Internal, io.ErrUnexpectedEOF.Error())},
 	} {
 		err := toRPCErr(test.errIn)
 		if _, ok := status.FromError(err); !ok {
@@ -175,16 +190,38 @@ func TestToRPCErr(t *testing.T) {
 	}
 }
 
+func (s) TestParseDialTarget(t *testing.T) {
+	for _, test := range []struct {
+		target, wantNet, wantAddr string
+	}{
+		{"unix:etcd:0", "unix", "etcd:0"},
+		{"unix:///tmp/unix-3", "unix", "/tmp/unix-3"},
+		{"unix://domain", "unix", "domain"},
+		{"unix://etcd:0", "unix", "etcd:0"},
+		{"unix:///etcd:0", "unix", "/etcd:0"},
+		{"passthrough://unix://domain", "tcp", "passthrough://unix://domain"},
+		{"https://google.com:443", "tcp", "https://google.com:443"},
+		{"dns:///google.com", "tcp", "dns:///google.com"},
+		{"/unix/socket/address", "tcp", "/unix/socket/address"},
+	} {
+		gotNet, gotAddr := parseDialTarget(test.target)
+		if gotNet != test.wantNet || gotAddr != test.wantAddr {
+			t.Errorf("parseDialTarget(%q) = %s, %s want %s, %s", test.target, gotNet, gotAddr, test.wantNet, test.wantAddr)
+		}
+	}
+}
+
 // bmEncode benchmarks encoding a Protocol Buffer message containing mSize
 // bytes.
 func bmEncode(b *testing.B, mSize int) {
+	cdc := encoding.GetCodec(protoenc.Name)
 	msg := &perfpb.Buffer{Body: make([]byte, mSize)}
-	encoded, _ := encode(protoCodec{}, msg, nil, nil, nil)
-	encodedSz := int64(len(encoded))
+	encodeData, _ := encode(cdc, msg)
+	encodedSz := int64(len(encodeData))
 	b.ReportAllocs()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		encode(protoCodec{}, msg, nil, nil, nil)
+		encode(cdc, msg)
 	}
 	b.SetBytes(encodedSz)
 }

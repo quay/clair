@@ -1,8 +1,9 @@
 language: go
 
 go:
-        - 1.5
-        - 1.6
+        - 1.9.x
+        - 1.10.x
+        - 1.11.x
         - tip
 
 script: make -f Makefile.TRAVIS

@@ -2,10 +2,6 @@
 
 Data model artifacts for the [Prometheus Ruby client][1].
 
-## Installation
-
-    gem install prometheus-client-model
-
 ## Usage
 
 Build the artifacts from the protobuf specification:
@@ -22,8 +18,10 @@ require 'prometheus/client/model'
 
 CONTENT_TYPE = 'application/vnd.google.protobuf; proto=io.prometheus.client.MetricFamily; encoding=delimited'
 
-stream = open('http://localhost:9090/metrics', 'Accept' => CONTENT_TYPE).read
-while family = Prometheus::Client::MetricFamily.read_delimited(stream)
+content = open('http://localhost:9100/metrics', 'Accept' => CONTENT_TYPE).read
+buffer = Beefcake::Buffer.new(content)
+
+while family = Prometheus::Client::MetricFamily.read_delimited(buffer)
   puts family
 end
 ```

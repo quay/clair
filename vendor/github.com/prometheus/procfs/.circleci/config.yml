@@ -1,0 +1,60 @@
+---
+version: 2.1
+
+commands:
+  default:
+    steps:
+    - run: make style check_license vet test staticcheck
+  no-style:
+    steps:
+    - run: make check_license vet test staticcheck
+  no-test:
+    steps:
+    - run: make style check_license vet staticcheck
+  no-style-test:
+    steps:
+    - run: go get -t ./...
+    - run: make check_license vet staticcheck
+
+jobs:
+  test:
+    parameters:
+      command:
+        type: string
+      go_version:
+        type: string
+      os:
+        type: string
+    docker:
+    - image: circleci/golang:<< parameters.go_version >>
+    environment:
+      GOOS: "<< parameters.os >>"
+    working_directory: /go/src/github.com/prometheus/procfs
+    steps:
+    - checkout
+    - << parameters.command >>
+
+workflows:
+  version: 2
+  procfs:
+    jobs:
+    - test:
+        command: no-style-test
+        name: linux-1-10
+        os: linux
+        go_version: "1.10"
+    - test:
+        command: default
+        name: linux-1-11
+        os: linux
+        go_version: "1.11"
+    - test:
+        command: no-style-test
+        name: windows-1-10
+        os: windows
+        go_version: "1.10"
+    - test:
+        command: no-test
+        name: windows-1-11
+        os: windows
+        go_version: "1.11"
