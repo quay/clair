@@ -30,9 +30,6 @@ import (
 	"github.com/coreos/clair"
 	"github.com/coreos/clair/api"
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/featurefmt"
-	"github.com/coreos/clair/ext/featurens"
-	"github.com/coreos/clair/ext/imagefmt"
 	"github.com/coreos/clair/ext/vulnsrc"
 	"github.com/coreos/clair/pkg/formatter"
 	"github.com/coreos/clair/pkg/stopper"
@@ -103,11 +100,10 @@ func stopCPUProfiling(f *os.File) {
 }
 
 func configClairVersion(config *Config) {
-	clair.EnabledDetectors = append(featurefmt.ListListers(), featurens.ListDetectors()...)
 	clair.EnabledUpdaters = strutil.Intersect(config.Updater.EnabledUpdaters, vulnsrc.ListUpdaters())
 
 	log.WithFields(log.Fields{
-		"Detectors": database.SerializeDetectors(clair.EnabledDetectors),
+		"Detectors": database.SerializeDetectors(clair.EnabledDetectors()),
 		"Updaters":  clair.EnabledUpdaters,
 	}).Info("enabled Clair extensions")
 }
@@ -134,7 +130,8 @@ func Boot(config *Config) {
 
 	defer db.Close()
 
-	clair.InitWorker(db)
+	clair.RegisterConfiguredDetectors(db)
+
 	// Start notifier
 	st.Begin()
 	go clair.RunNotifier(config.Notifier, db, st)
@@ -173,7 +170,6 @@ func main() {
 	flagConfigPath := flag.String("config", "/etc/clair/config.yaml", "Load configuration from the specified file.")
 	flagCPUProfilePath := flag.String("cpu-profile", "", "Write a CPU profile to the specified file before exiting.")
 	flagLogLevel := flag.String("log-level", "info", "Define the logging level.")
-	flagInsecureTLS := flag.Bool("insecure-tls", false, "Disable TLS server's certificate chain and hostname verification when pulling layers.")
 	flag.Parse()
 
 	configureLogger(flagLogLevel)
@@ -193,12 +189,6 @@ func main() {
 	// Enable CPU Profiling if specified
 	if *flagCPUProfilePath != "" {
 		defer stopCPUProfiling(startCPUProfiling(*flagCPUProfilePath))
-	}
-
-	// Enable TLS server's certificate chain and hostname verification
-	// when pulling layers if specified
-	if *flagInsecureTLS {
-		imagefmt.SetInsecureTLS(*flagInsecureTLS)
 	}
 
 	// configure updater and worker

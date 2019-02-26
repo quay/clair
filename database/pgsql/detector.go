@@ -119,13 +119,11 @@ func (tx *pgSession) insertAncestryDetectors(ancestryID int64, detectorIDs []int
 
 func (tx *pgSession) findAncestryDetectors(id int64) ([]database.Detector, error) {
 	detectors, err := tx.getDetectors(selectAncestryDetectors, id)
-	log.WithField("detectors", detectors).Debug("found ancestry detectors")
 	return detectors, err
 }
 
 func (tx *pgSession) findLayerDetectors(id int64) ([]database.Detector, error) {
 	detectors, err := tx.getDetectors(selectLayerDetectors, id)
-	log.WithField("detectors", detectors).Debug("found layer detectors")
 	return detectors, err
 }
 

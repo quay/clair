@@ -13,7 +13,7 @@ import (
 // protobuf struct.
 func GetClairStatus(store database.Datastore) (*pb.ClairStatus, error) {
 	status := &pb.ClairStatus{
-		Detectors: pb.DetectorsFromDatabaseModel(clair.EnabledDetectors),
+		Detectors: pb.DetectorsFromDatabaseModel(clair.EnabledDetectors()),
 	}
 
 	t, firstUpdate, err := clair.GetLastUpdateTime(store)

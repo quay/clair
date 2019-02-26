@@ -130,7 +130,6 @@ func (tx *pgSession) insertAncestry(name string) (int64, error) {
 		return 0, handleError("insertAncestry", err)
 	}
 
-	log.WithFields(log.Fields{"ancestry": name, "id": id}).Debug("database: inserted ancestry")
 	return id, nil
 }
 
@@ -176,7 +175,6 @@ func (tx *pgSession) findAncestryLayers(id int64) ([]database.AncestryLayer, err
 		return nil, err
 	}
 
-	log.WithField("map", layerMap).Debug("found layer hashes")
 	featureMap, err := tx.findAncestryFeatures(id, detectors)
 	if err != nil {
 		return nil, err
@@ -340,6 +338,10 @@ func (tx *pgSession) insertAncestryFeatures(ancestryLayerID int64, layer databas
 	defer stmt.Close()
 
 	for index, id := range nsFeatureIDs {
+		if !id.Valid {
+			return database.ErrMissingEntities
+		}
+
 		namespaceDetectorID, ok := detectors.byValue[layer.Features[index].NamespaceBy]
 		if !ok {
 			return database.ErrMissingEntities

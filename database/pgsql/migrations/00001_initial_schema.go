@@ -115,7 +115,7 @@ var (
 
 			`CREATE TABLE IF NOT EXISTS ancestry_layer (
 				id SERIAL PRIMARY KEY,
-				ancestry_id INT REFERENCES ancestry ON DELETE CASCADE,
+				ancestry_id INT NOT NULL REFERENCES ancestry ON DELETE CASCADE,
 				ancestry_index INT NOT NULL,
 				layer_id INT NOT NULL REFERENCES layer ON DELETE RESTRICT,
 				UNIQUE (ancestry_id, ancestry_index));`,
@@ -123,16 +123,16 @@ var (
 
 			`CREATE TABLE IF NOT EXISTS ancestry_feature(
 				id SERIAL PRIMARY KEY,
-				ancestry_layer_id INT REFERENCES ancestry_layer ON DELETE CASCADE,
-				namespaced_feature_id INT REFERENCES namespaced_feature ON DELETE CASCADE,
-				feature_detector_id INT REFERENCES detector ON DELETE CASCADE,
-				namespace_detector_id INT REFERENCES detector ON DELETE CASCADE,
+				ancestry_layer_id INT NOT NULL REFERENCES ancestry_layer ON DELETE CASCADE,
+				namespaced_feature_id INT NOT NULL REFERENCES namespaced_feature ON DELETE CASCADE,
+				feature_detector_id INT NOT NULL REFERENCES detector ON DELETE CASCADE,
+				namespace_detector_id INT NOT NULL REFERENCES detector ON DELETE CASCADE,
 				UNIQUE (ancestry_layer_id, namespaced_feature_id));`,
 
 			`CREATE TABLE IF NOT EXISTS ancestry_detector(
 				id SERIAL PRIMARY KEY,
-				ancestry_id INT REFERENCES ancestry ON DELETE CASCADE,
-				detector_id INT REFERENCES detector ON DELETE CASCADE,
+				ancestry_id INT NOT NULL REFERENCES ancestry ON DELETE CASCADE,
+				detector_id INT NOT NULL REFERENCES detector ON DELETE CASCADE,
 				UNIQUE(ancestry_id, detector_id));`,
 			`CREATE INDEX ON ancestry_detector(ancestry_id);`,
 		},
@@ -165,7 +165,7 @@ var (
 			// decoupling updater and the Clair main logic.
 			`CREATE TABLE IF NOT EXISTS vulnerability_affected_feature (
 				id SERIAL PRIMARY KEY, 
-				vulnerability_id INT REFERENCES vulnerability ON DELETE CASCADE,
+				vulnerability_id INT NOT NULL REFERENCES vulnerability ON DELETE CASCADE,
 				feature_name TEXT NOT NULL,
 				feature_type INT NOT NULL REFERENCES feature_type ON DELETE CASCADE,
 				affected_version TEXT,
@@ -174,9 +174,9 @@ var (
 
 			`CREATE TABLE IF NOT EXISTS vulnerability_affected_namespaced_feature(
 				id SERIAL PRIMARY KEY,
-				vulnerability_id INT REFERENCES vulnerability ON DELETE CASCADE,
-				namespaced_feature_id INT REFERENCES namespaced_feature ON DELETE CASCADE,
-				added_by INT REFERENCES vulnerability_affected_feature ON DELETE CASCADE,
+				vulnerability_id INT NOT NULL REFERENCES vulnerability ON DELETE CASCADE,
+				namespaced_feature_id INT NOT NULL REFERENCES namespaced_feature ON DELETE CASCADE,
+				added_by INT NOT NULL REFERENCES vulnerability_affected_feature ON DELETE CASCADE,
 				UNIQUE (vulnerability_id, namespaced_feature_id));`,
 			`CREATE INDEX ON vulnerability_affected_namespaced_feature(namespaced_feature_id);`,
 		},

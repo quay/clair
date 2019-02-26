@@ -15,7 +15,10 @@
 package database
 
 import (
+	"encoding/json"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/deckarep/golang-set"
 )
@@ -94,8 +97,11 @@ func PersistFeaturesAndCommit(datastore Datastore, features []Feature) error {
 	defer tx.Rollback()
 
 	if err := tx.PersistFeatures(features); err != nil {
+		serialized, _ := json.Marshal(features)
+		log.WithError(err).WithField("feature", string(serialized)).Error("failed to store features")
 		return err
 	}
+
 	return tx.Commit()
 }
 
@@ -129,14 +135,18 @@ func FindAncestryAndRollback(datastore Datastore, name string) (Ancestry, bool, 
 }
 
 // FindLayerAndRollback wraps session FindLayer function with begin and rollback.
-func FindLayerAndRollback(datastore Datastore, hash string) (layer Layer, ok bool, err error) {
+func FindLayerAndRollback(datastore Datastore, hash string) (layer *Layer, ok bool, err error) {
 	var tx Session
 	if tx, err = datastore.Begin(); err != nil {
 		return
 	}
 
 	defer tx.Rollback()
-	layer, ok, err = tx.FindLayer(hash)
+	// TODO(sidac): In order to make the session interface more idiomatic, we'll
+	// return the pointer value in the future.
+	var dereferencedLayer Layer
+	dereferencedLayer, ok, err = tx.FindLayer(hash)
+	layer = &dereferencedLayer
 	return
 }
 
@@ -168,13 +178,17 @@ func GetAncestryFeatures(ancestry Ancestry) []NamespacedFeature {
 }
 
 // UpsertAncestryAndCommit wraps session UpsertAncestry function with begin and commit.
-func UpsertAncestryAndCommit(datastore Datastore, ancestry Ancestry) error {
+func UpsertAncestryAndCommit(datastore Datastore, ancestry *Ancestry) error {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return err
 	}
 
-	if err = tx.UpsertAncestry(ancestry); err != nil {
+	if err = tx.UpsertAncestry(*ancestry); err != nil {
+		log.WithError(err).Error("failed to upsert the ancestry")
+		serialized, _ := json.Marshal(ancestry)
+		log.Debug(string(serialized))
+
 		tx.Rollback()
 		return err
 	}
@@ -349,4 +363,23 @@ func ReleaseLock(datastore Datastore, name, owner string) {
 	if err := tx.Commit(); err != nil {
 		return
 	}
+}
+
+// PersistDetectorsAndCommit stores the detectors in the data store.
+func PersistDetectorsAndCommit(store Datastore, detectors []Detector) error {
+	tx, err := store.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+	if err := tx.PersistDetectors(detectors); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
 }
