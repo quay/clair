@@ -17,6 +17,7 @@ package clair
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -25,14 +26,14 @@ import (
 )
 
 type layerIndexedFeature struct {
-	feature      *database.LayerFeature
-	namespace    *layerIndexedNamespace
-	introducedIn int
+	Feature      *database.LayerFeature
+	Namespace    *layerIndexedNamespace
+	IntroducedIn int
 }
 
 type layerIndexedNamespace struct {
-	namespace    database.LayerNamespace
-	introducedIn int
+	Namespace    database.LayerNamespace `json:"namespace"`
+	IntroducedIn int                     `json:"introducedIn"`
 }
 
 // AncestryBuilder builds an Ancestry, which contains an ordered list of layers
@@ -41,7 +42,7 @@ type AncestryBuilder struct {
 	layerIndex int
 	layerNames []string
 	detectors  []database.Detector
-	namespaces map[database.Detector]*layerIndexedNamespace
+	namespaces []layerIndexedNamespace // unique namespaces
 	features   map[database.Detector][]layerIndexedFeature
 }
 
@@ -53,7 +54,7 @@ func NewAncestryBuilder(detectors []database.Detector) *AncestryBuilder {
 	return &AncestryBuilder{
 		layerIndex: 0,
 		detectors:  detectors,
-		namespaces: make(map[database.Detector]*layerIndexedNamespace),
+		namespaces: make([]layerIndexedNamespace, 0),
 		features:   make(map[database.Detector][]layerIndexedFeature),
 	}
 }
@@ -105,7 +106,7 @@ func (b *AncestryBuilder) addLayerFeatures(detector database.Detector, features 
 	for i := range existingFeatures {
 		feature := existingFeatures[i]
 		for j := range features {
-			if features[j] == *feature.feature {
+			if features[j] == *feature.Feature {
 				currentFeatures = append(currentFeatures, feature)
 				break
 			}
@@ -116,7 +117,7 @@ func (b *AncestryBuilder) addLayerFeatures(detector database.Detector, features 
 	for i := range features {
 		found := false
 		for j := range existingFeatures {
-			if *existingFeatures[j].feature == features[i] {
+			if *existingFeatures[j].Feature == features[i] {
 				found = true
 				break
 			}
@@ -125,7 +126,6 @@ func (b *AncestryBuilder) addLayerFeatures(detector database.Detector, features 
 		if !found {
 			namespace, found := b.lookupNamespace(&features[i])
 			if !found {
-				log.WithField("Layer Hashes", b.layerNames).Error("skip, could not find the proper namespace for feature")
 				continue
 			}
 
@@ -143,15 +143,45 @@ func (b *AncestryBuilder) addLayerFeatures(detector database.Detector, features 
 // the new namespace.
 func (b *AncestryBuilder) updateNamespace(layerNamespace *database.LayerNamespace) {
 	var (
-		previous *layerIndexedNamespace
-		ok       bool
+		previous     *layerIndexedNamespace
+		foundUpgrade bool
 	)
 
-	if previous, ok = b.namespaces[layerNamespace.By]; !ok {
-		b.namespaces[layerNamespace.By] = &layerIndexedNamespace{
-			namespace:    *layerNamespace,
-			introducedIn: b.layerIndex,
+	newNSNames := strings.Split(layerNamespace.Name, ":")
+	if len(newNSNames) != 2 {
+		log.Error("invalid namespace name")
+	}
+
+	newNSName := newNSNames[0]
+	newNSVersion := newNSNames[1]
+	for i, ns := range b.namespaces {
+		nsNames := strings.Split(ns.Namespace.Name, ":")
+		if len(nsNames) != 2 {
+			log.Error("invalid namespace name")
+			continue
 		}
+
+		nsName := nsNames[0]
+		nsVersion := nsNames[1]
+		if ns.Namespace.VersionFormat == layerNamespace.VersionFormat && nsName == newNSName {
+			if nsVersion != newNSVersion {
+				previous = &b.namespaces[i]
+				foundUpgrade = true
+				break
+			} else {
+				// not changed
+				return
+			}
+		}
+	}
+
+	// we didn't found the namespace is a upgrade from another namespace, so we
+	// simply add it.
+	if !foundUpgrade {
+		b.namespaces = append(b.namespaces, layerIndexedNamespace{
+			Namespace:    *layerNamespace,
+			IntroducedIn: b.layerIndex,
+		})
 
 		return
 	}
@@ -159,13 +189,13 @@ func (b *AncestryBuilder) updateNamespace(layerNamespace *database.LayerNamespac
 	// All features referencing to this namespace are now pointing to the new namespace.
 	// Also those features are now treated as introduced in the same layer as
 	// when this new namespace is introduced.
-	previous.namespace = *layerNamespace
-	previous.introducedIn = b.layerIndex
+	previous.Namespace = *layerNamespace
+	previous.IntroducedIn = b.layerIndex
 
 	for _, features := range b.features {
 		for i, feature := range features {
-			if feature.namespace == previous {
-				features[i].introducedIn = previous.introducedIn
+			if feature.Namespace == previous {
+				features[i].IntroducedIn = previous.IntroducedIn
 			}
 		}
 	}
@@ -173,17 +203,35 @@ func (b *AncestryBuilder) updateNamespace(layerNamespace *database.LayerNamespac
 
 func (b *AncestryBuilder) createLayerIndexedFeature(namespace *layerIndexedNamespace, feature *database.LayerFeature) layerIndexedFeature {
 	return layerIndexedFeature{
-		feature:      feature,
-		namespace:    namespace,
-		introducedIn: b.layerIndex,
+		Feature:      feature,
+		Namespace:    namespace,
+		IntroducedIn: b.layerIndex,
 	}
 }
 
 func (b *AncestryBuilder) lookupNamespace(feature *database.LayerFeature) (*layerIndexedNamespace, bool) {
-	for _, namespace := range b.namespaces {
-		if namespace.namespace.VersionFormat == feature.VersionFormat {
-			return namespace, true
+	matchedNamespaces := []*layerIndexedNamespace{}
+	for i, namespace := range b.namespaces {
+		if namespace.Namespace.VersionFormat == feature.VersionFormat {
+			matchedNamespaces = append(matchedNamespaces, &b.namespaces[i])
 		}
+	}
+
+	if len(matchedNamespaces) == 1 {
+		return matchedNamespaces[0], true
+	}
+
+	serialized, _ := json.Marshal(matchedNamespaces)
+	fields := log.Fields{
+		"feature.Name":               feature.Name,
+		"feature.VersionFormat":      feature.VersionFormat,
+		"ancestryBuilder.namespaces": string(serialized),
+	}
+
+	if len(matchedNamespaces) > 1 {
+		log.WithFields(fields).Warn("skip features with ambiguous namespaces")
+	} else {
+		log.WithFields(fields).Warn("skip features with no matching namespace")
 	}
 
 	return nil, false
@@ -193,14 +241,14 @@ func (b *AncestryBuilder) ancestryFeatures(index int) []database.AncestryFeature
 	ancestryFeatures := []database.AncestryFeature{}
 	for detector, features := range b.features {
 		for _, feature := range features {
-			if feature.introducedIn == index {
+			if feature.IntroducedIn == index {
 				ancestryFeatures = append(ancestryFeatures, database.AncestryFeature{
 					NamespacedFeature: database.NamespacedFeature{
-						Feature:   feature.feature.Feature,
-						Namespace: feature.namespace.namespace.Namespace,
+						Feature:   feature.Feature.Feature,
+						Namespace: feature.Namespace.Namespace.Namespace,
 					},
 					FeatureBy:   detector,
-					NamespaceBy: feature.namespace.namespace.By,
+					NamespaceBy: feature.Namespace.Namespace.By,
 				})
 			}
 		}

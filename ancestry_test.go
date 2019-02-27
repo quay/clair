@@ -23,22 +23,53 @@ import (
 )
 
 var (
-	dpkg      = database.NewFeatureDetector("dpkg", "1.0")
-	rpm       = database.NewFeatureDetector("rpm", "1.0")
-	pip       = database.NewFeatureDetector("pip", "1.0")
-	python    = database.NewNamespaceDetector("python", "1.0")
-	osrelease = database.NewNamespaceDetector("os-release", "1.0")
-	ubuntu    = *database.NewNamespace("ubuntu:14.04", "dpkg")
-	ubuntu16  = *database.NewNamespace("ubuntu:16.04", "dpkg")
-	python2   = *database.NewNamespace("python:2", "pip")
-	sed       = *database.NewSourcePackage("sed", "4.4-2", "dpkg")
-	sedBin    = *database.NewBinaryPackage("sed", "4.4-2", "dpkg")
-	tar       = *database.NewBinaryPackage("tar", "1.29b-2", "dpkg")
-	scipy     = *database.NewSourcePackage("scipy", "3.0.0", "pip")
+	dpkg       = database.NewFeatureDetector("dpkg", "1.0")
+	rpm        = database.NewFeatureDetector("rpm", "1.0")
+	pip        = database.NewFeatureDetector("pip", "1.0")
+	python     = database.NewNamespaceDetector("python", "1.0")
+	osrelease  = database.NewNamespaceDetector("os-release", "1.0")
+	aptsources = database.NewNamespaceDetector("apt-sources", "1.0")
+	ubuntu     = *database.NewNamespace("ubuntu:14.04", "dpkg")
+	ubuntu16   = *database.NewNamespace("ubuntu:16.04", "dpkg")
+	debian     = *database.NewNamespace("debian:7", "dpkg")
+	python2    = *database.NewNamespace("python:2", "pip")
+	sed        = *database.NewSourcePackage("sed", "4.4-2", "dpkg")
+	sedByRPM   = *database.NewBinaryPackage("sed", "4.4-2", "rpm")
+	sedBin     = *database.NewBinaryPackage("sed", "4.4-2", "dpkg")
+	tar        = *database.NewBinaryPackage("tar", "1.29b-2", "dpkg")
+	scipy      = *database.NewSourcePackage("scipy", "3.0.0", "pip")
 
 	detectors               = []database.Detector{dpkg, osrelease, rpm}
 	multinamespaceDetectors = []database.Detector{dpkg, osrelease, pip}
 )
+
+type ancestryBuilder struct {
+	ancestry *database.Ancestry
+}
+
+func newAncestryBuilder(name string) *ancestryBuilder {
+	return &ancestryBuilder{&database.Ancestry{Name: name}}
+}
+
+func (b *ancestryBuilder) addDetectors(d ...database.Detector) *ancestryBuilder {
+	b.ancestry.By = append(b.ancestry.By, d...)
+	return b
+}
+
+func (b *ancestryBuilder) addLayer(hash string, f ...database.AncestryFeature) *ancestryBuilder {
+	l := database.AncestryLayer{Hash: hash}
+	l.Features = append(l.Features, f...)
+	b.ancestry.Layers = append(b.ancestry.Layers, l)
+	return b
+}
+
+func ancestryFeature(namespace database.Namespace, feature database.Feature, nsBy database.Detector, fBy database.Detector) database.AncestryFeature {
+	return database.AncestryFeature{
+		NamespacedFeature: database.NamespacedFeature{feature, namespace},
+		FeatureBy:         fBy,
+		NamespaceBy:       nsBy,
+	}
+}
 
 // layerBuilder is for helping constructing the layer test artifacts.
 type layerBuilder struct {
@@ -47,6 +78,15 @@ type layerBuilder struct {
 
 func newLayerBuilder(hash string) *layerBuilder {
 	return &layerBuilder{&database.Layer{Hash: hash, By: detectors}}
+}
+
+func newLayerBuilderWithoutDetector(hash string) *layerBuilder {
+	return &layerBuilder{&database.Layer{Hash: hash}}
+}
+
+func (b *layerBuilder) addDetectors(d ...database.Detector) *layerBuilder {
+	b.layer.By = append(b.layer.By, d...)
+	return b
 }
 
 func (b *layerBuilder) addNamespace(detector database.Detector, ns database.Namespace) *layerBuilder {
@@ -85,177 +125,155 @@ var testImage = []*database.Layer{
 	newLayerBuilder("7").addFeature(dpkg, sed).layer,
 }
 
-var clairLimit = []*database.Layer{
-	// TODO(sidac): how about install rpm package under ubuntu?
-	newLayerBuilder("1").addNamespace(osrelease, ubuntu).layer,
-	newLayerBuilder("2").addFeature(rpm, sed).layer,
-}
-
-var multipleNamespace = []*database.Layer{
-	// TODO(sidac): support for multiple namespaces
-}
-
 var invalidNamespace = []*database.Layer{
 	// add package without namespace, this indicates that the namespace detector
 	// could not detect the namespace.
 	newLayerBuilder("0").addFeature(dpkg, sed).layer,
 }
 
+var noMatchingNamespace = []*database.Layer{
+	newLayerBuilder("0").addFeature(rpm, sedByRPM).addFeature(dpkg, sed).addNamespace(osrelease, ubuntu).layer,
+}
+
 var multiplePackagesOnFirstLayer = []*database.Layer{
 	newLayerBuilder("0").addFeature(dpkg, sed).addFeature(dpkg, tar).addFeature(dpkg, sedBin).addNamespace(osrelease, ubuntu16).layer,
 }
 
+var twoNamespaceDetectorsWithSameResult = []*database.Layer{
+	newLayerBuilderWithoutDetector("0").addDetectors(dpkg, aptsources, osrelease).addFeature(dpkg, sed).addNamespace(aptsources, ubuntu).addNamespace(osrelease, ubuntu).layer,
+}
+
+var sameVersionFormatDiffName = []*database.Layer{
+	newLayerBuilder("0").addFeature(dpkg, sed).addNamespace(aptsources, ubuntu).addNamespace(osrelease, debian).layer,
+}
+
 func TestAddLayer(t *testing.T) {
 	cases := []struct {
-		title string
-		image []*database.Layer
-
-		expectedAncestry database.Ancestry
+		title               string
+		image               []*database.Layer
+		nonDefaultDetectors []database.Detector
+		expectedAncestry    database.Ancestry
 	}{
 		{
 			title:            "empty image",
-			expectedAncestry: database.Ancestry{Name: ancestryName([]string{}), By: detectors},
+			expectedAncestry: *newAncestryBuilder(ancestryName([]string{})).addDetectors(detectors...).ancestry,
 		},
 		{
-			title:            "empty layer",
-			image:            testImage[:1],
-			expectedAncestry: database.Ancestry{Name: ancestryName([]string{"0"}), By: detectors, Layers: []database.AncestryLayer{{Hash: "0"}}},
+			title: "empty layer",
+			image: testImage[:1],
+			expectedAncestry: *newAncestryBuilder(ancestryName([]string{"0"})).addDetectors(detectors...).
+				addLayer("0").ancestry,
 		},
 		{
 			title: "ubuntu",
 			image: testImage[:2],
-			expectedAncestry: database.Ancestry{
-				Name:   ancestryName([]string{"0", "1"}),
-				By:     detectors,
-				Layers: []database.AncestryLayer{{Hash: "0"}, {Hash: "1"}},
-			},
+			expectedAncestry: *newAncestryBuilder(ancestryName([]string{"0", "1"})).addDetectors(detectors...).
+				addLayer("0").
+				addLayer("1").ancestry,
 		},
 		{
 			title: "ubuntu install sed",
 			image: testImage[:3],
-			expectedAncestry: database.Ancestry{
-				Name: ancestryName([]string{"0", "1", "2"}),
-				By:   detectors,
-				Layers: []database.AncestryLayer{{Hash: "0"}, {Hash: "1"}, {Hash: "2", Features: []database.AncestryFeature{
-					{
-						NamespacedFeature: database.NamespacedFeature{Feature: sed, Namespace: ubuntu},
-						FeatureBy:         dpkg,
-						NamespaceBy:       osrelease,
-					},
-				}}},
-			},
+			expectedAncestry: *newAncestryBuilder(ancestryName([]string{"0", "1", "2"})).addDetectors(detectors...).
+				addLayer("0").
+				addLayer("1").
+				addLayer("2", ancestryFeature(ubuntu, sed, osrelease, dpkg)).ancestry,
 		},
 		{
 			title: "ubuntu install tar",
 			image: testImage[:4],
-			expectedAncestry: database.Ancestry{
-				Name: ancestryName([]string{"0", "1", "2", "3"}),
-				By:   detectors,
-				Layers: []database.AncestryLayer{{Hash: "0"}, {Hash: "1"}, {Hash: "2", Features: []database.AncestryFeature{
-					{
-						NamespacedFeature: database.NamespacedFeature{Feature: sed, Namespace: ubuntu},
-						FeatureBy:         dpkg,
-						NamespaceBy:       osrelease,
-					},
-				}}, {
-					Hash: "3", Features: []database.AncestryFeature{
-						{
-							NamespacedFeature: database.NamespacedFeature{Feature: tar, Namespace: ubuntu},
-							FeatureBy:         dpkg,
-							NamespaceBy:       osrelease,
-						},
-					},
-				}},
-			},
+			expectedAncestry: *newAncestryBuilder(ancestryName([]string{"0", "1", "2", "3"})).addDetectors(detectors...).
+				addLayer("0").
+				addLayer("1").
+				addLayer("2", ancestryFeature(ubuntu, sed, osrelease, dpkg)).
+				addLayer("3", ancestryFeature(ubuntu, tar, osrelease, dpkg)).ancestry,
 		}, {
 			title: "ubuntu uninstall tar",
 			image: testImage[:5],
-			expectedAncestry: database.Ancestry{
-				Name: ancestryName([]string{"0", "1", "2", "3", "4"}),
-				By:   detectors,
-				Layers: []database.AncestryLayer{{Hash: "0"}, {Hash: "1"}, {Hash: "2", Features: []database.AncestryFeature{
-					{
-						NamespacedFeature: database.NamespacedFeature{Feature: sed, Namespace: ubuntu},
-						FeatureBy:         dpkg,
-						NamespaceBy:       osrelease,
-					},
-				}}, {Hash: "3"}, {Hash: "4"}},
-			},
+			expectedAncestry: *newAncestryBuilder(ancestryName([]string{"0", "1", "2", "3", "4"})).addDetectors(detectors...).
+				addLayer("0").
+				addLayer("1").
+				addLayer("2", ancestryFeature(ubuntu, sed, osrelease, dpkg)).
+				addLayer("3").
+				addLayer("4").ancestry,
 		}, {
 			title: "ubuntu upgrade",
 			image: testImage[:6],
-			expectedAncestry: database.Ancestry{
-				Name: ancestryName([]string{"0", "1", "2", "3", "4", "5"}),
-				By:   detectors,
-				Layers: []database.AncestryLayer{{Hash: "0"}, {Hash: "1"}, {Hash: "2"}, {Hash: "3"}, {Hash: "4"}, {Hash: "5", Features: []database.AncestryFeature{
-					{
-						NamespacedFeature: database.NamespacedFeature{Feature: sed, Namespace: ubuntu16},
-						FeatureBy:         dpkg,
-						NamespaceBy:       osrelease,
-					}}},
-				},
-			},
+			expectedAncestry: *newAncestryBuilder(ancestryName([]string{"0", "1", "2", "3", "4", "5"})).addDetectors(detectors...).
+				addLayer("0").
+				addLayer("1").
+				addLayer("2").
+				addLayer("3").
+				addLayer("4").
+				addLayer("5", ancestryFeature(ubuntu16, sed, osrelease, dpkg)).ancestry,
 		}, {
 			title: "no change to the detectable files",
 			image: testImage[:7],
-			expectedAncestry: database.Ancestry{
-				Name: ancestryName([]string{"0", "1", "2", "3", "4", "5", "6"}),
-				By:   detectors,
-				Layers: []database.AncestryLayer{{Hash: "0"}, {Hash: "1"}, {Hash: "2"}, {Hash: "3"}, {Hash: "4"}, {Hash: "5", Features: []database.AncestryFeature{
-					{
-						NamespacedFeature: database.NamespacedFeature{Feature: sed, Namespace: ubuntu16},
-						FeatureBy:         dpkg,
-						NamespaceBy:       osrelease,
-					}}}, {Hash: "6"}},
-			},
+			expectedAncestry: *newAncestryBuilder(ancestryName([]string{"0", "1", "2", "3", "4", "5", "6"})).addDetectors(detectors...).
+				addLayer("0").
+				addLayer("1").
+				addLayer("2").
+				addLayer("3").
+				addLayer("4").
+				addLayer("5", ancestryFeature(ubuntu16, sed, osrelease, dpkg)).
+				addLayer("6").ancestry,
 		}, {
 			title: "change to the package installer database but no features are affected.",
 			image: testImage[:8],
-			expectedAncestry: database.Ancestry{
-				Name: ancestryName([]string{"0", "1", "2", "3", "4", "5", "6", "7"}),
-				By:   detectors,
-				Layers: []database.AncestryLayer{{Hash: "0"}, {Hash: "1"}, {Hash: "2"}, {Hash: "3"}, {Hash: "4"}, {Hash: "5", Features: []database.AncestryFeature{
-					{
-						NamespacedFeature: database.NamespacedFeature{Feature: sed, Namespace: ubuntu16},
-						FeatureBy:         dpkg,
-						NamespaceBy:       osrelease,
-					}}}, {Hash: "6"}, {Hash: "7"}},
-			},
+			expectedAncestry: *newAncestryBuilder(ancestryName([]string{"0", "1", "2", "3", "4", "5", "6", "7"})).addDetectors(detectors...).
+				addLayer("0").
+				addLayer("1").
+				addLayer("2").
+				addLayer("3").
+				addLayer("4").
+				addLayer("5", ancestryFeature(ubuntu16, sed, osrelease, dpkg)).
+				addLayer("6").
+				addLayer("7").ancestry,
 		}, {
 			title: "layers with features and namespace.",
 			image: multiplePackagesOnFirstLayer,
-			expectedAncestry: database.Ancestry{
-				Name: ancestryName([]string{"0"}),
-				By:   detectors,
-				Layers: []database.AncestryLayer{
-					{
-						Hash: "0",
-						Features: []database.AncestryFeature{
-							{
-								NamespacedFeature: database.NamespacedFeature{Feature: sed, Namespace: ubuntu16},
-								FeatureBy:         dpkg,
-								NamespaceBy:       osrelease,
-							},
-							{
-								NamespacedFeature: database.NamespacedFeature{Feature: sedBin, Namespace: ubuntu16},
-								FeatureBy:         dpkg,
-								NamespaceBy:       osrelease,
-							},
-							{
-								NamespacedFeature: database.NamespacedFeature{Feature: tar, Namespace: ubuntu16},
-								FeatureBy:         dpkg,
-								NamespaceBy:       osrelease,
-							},
-						},
-					},
-				},
-			},
+			expectedAncestry: *newAncestryBuilder(ancestryName([]string{"0"})).addDetectors(detectors...).
+				addLayer("0",
+					ancestryFeature(ubuntu16, sed, osrelease, dpkg),
+					ancestryFeature(ubuntu16, sedBin, osrelease, dpkg),
+					ancestryFeature(ubuntu16, tar, osrelease, dpkg)).
+				ancestry,
+		}, {
+			title:               "two namespace detectors giving same namespace.",
+			image:               twoNamespaceDetectorsWithSameResult,
+			nonDefaultDetectors: []database.Detector{osrelease, aptsources, dpkg},
+			expectedAncestry: *newAncestryBuilder(ancestryName([]string{"0"})).addDetectors(osrelease, aptsources, dpkg).
+				addLayer("0", ancestryFeature(ubuntu, sed, aptsources, dpkg)).
+				ancestry,
+		}, {
+			title: "feature without namespace",
+			image: invalidNamespace,
+			expectedAncestry: *newAncestryBuilder(ancestryName([]string{"0"})).addDetectors(detectors...).
+				addLayer("0").
+				ancestry,
+		}, {
+			title: "two namespaces with the same version format but different names",
+			image: sameVersionFormatDiffName,
+			// failure of matching a namespace will result in the package not being added.
+			expectedAncestry: *newAncestryBuilder(ancestryName([]string{"0"})).addDetectors(detectors...).
+				addLayer("0").
+				ancestry,
+		}, {
+			title:            "noMatchingNamespace",
+			image:            noMatchingNamespace,
+			expectedAncestry: *newAncestryBuilder(ancestryName([]string{"0"})).addDetectors(detectors...).addLayer("0", ancestryFeature(ubuntu, sed, osrelease, dpkg)).ancestry,
 		},
 	}
 
 	for _, test := range cases {
 		t.Run(test.title, func(t *testing.T) {
-			builder := NewAncestryBuilder(detectors)
+			var builder *AncestryBuilder
+			if len(test.nonDefaultDetectors) != 0 {
+				builder = NewAncestryBuilder(test.nonDefaultDetectors)
+			} else {
+				builder = NewAncestryBuilder(detectors)
+			}
+
 			for _, layer := range test.image {
 				builder.AddLeafLayer(layer)
 			}
