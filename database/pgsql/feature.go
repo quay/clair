@@ -163,6 +163,9 @@ func (tx *pgSession) CacheAffectedNamespacedFeatures(features []database.Namespa
 	}
 
 	cache, err := tx.searchAffectingVulnerabilities(features)
+	if err != nil {
+		return err
+	}
 
 	keys := make([]interface{}, 0, len(cache)*3)
 	for _, c := range cache {
