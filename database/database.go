@@ -1,4 +1,4 @@
-// Copyright 2017 clair authors
+// Copyright 2019 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -182,16 +182,22 @@ type Session interface {
 	// FindKeyValue retrieves a value from the given key.
 	FindKeyValue(key string) (value string, found bool, err error)
 
-	// Lock acquires or renews a lock in the database with the given name, owner
-	// and duration without blocking. After the specified duration, the lock
-	// expires if it hasn't already been unlocked in order to prevent a deadlock.
+	// AcquireLock acquires a brand new lock in the database with a given name
+	// for the given duration.
 	//
-	// If the acquisition of a lock is not successful, expiration should be
-	// the time that existing lock expires.
-	Lock(name string, owner string, duration time.Duration, renew bool) (success bool, expiration time.Time, err error)
+	// A lock can only have one owner.
+	// This method should NOT block until a lock is acquired.
+	AcquireLock(name, owner string, duration time.Duration) (acquired bool, expiration time.Time, err error)
 
-	// Unlock releases an existing Lock.
-	Unlock(name, owner string) error
+	// ExtendLock extends an existing lock such that the lock will expire at the
+	// current time plus the provided duration.
+	//
+	// This method should return immediately with an error if the lock does not
+	// exist.
+	ExtendLock(name, owner string, duration time.Duration) (extended bool, expiration time.Time, err error)
+
+	// ReleaseLock releases an existing lock.
+	ReleaseLock(name, owner string) error
 }
 
 // Datastore represents a persistent data store

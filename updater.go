@@ -124,7 +124,7 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 		if nextUpdate.Before(time.Now().UTC()) {
 			// Attempt to get a lock on the update.
 			log.Debug("attempting to obtain update lock")
-			acquiredLock, lockExpiration := database.AcquireLock(datastore, updaterLockName, whoAmI, updaterLockDuration, false)
+			acquiredLock, lockExpiration := database.AcquireLock(datastore, updaterLockName, whoAmI, updaterLockDuration)
 			if lockExpiration.IsZero() {
 				// Any failures to acquire the lock should instantly expire.
 				var instantExpiration time.Duration
@@ -167,7 +167,7 @@ func updateWhileRenewingLock(datastore database.Datastore, whoAmI string, isFirs
 		for {
 			select {
 			case <-time.After(timeutil.FractionalDuration(0.9, refreshDuration)):
-				success, lockExpiration := database.AcquireLock(datastore, updaterLockName, whoAmI, updaterLockRefreshDuration, true)
+				success, lockExpiration := database.ExtendLock(datastore, updaterLockName, whoAmI, updaterLockRefreshDuration)
 				if !success {
 					return errors.New("failed to extend lock")
 				}

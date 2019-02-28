@@ -322,19 +322,14 @@ func MergeLayers(l *Layer, new *Layer) *Layer {
 }
 
 // AcquireLock acquires a named global lock for a duration.
-//
-// If renewal is true, the lock is extended as long as the same owner is
-// attempting to renew the lock.
-func AcquireLock(datastore Datastore, name, owner string, duration time.Duration, renewal bool) (success bool, expiration time.Time) {
-	// any error will cause the function to catch the error and return false.
+func AcquireLock(datastore Datastore, name, owner string, duration time.Duration) (acquired bool, expiration time.Time) {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return false, time.Time{}
 	}
-
 	defer tx.Rollback()
 
-	locked, t, err := tx.Lock(name, owner, duration, renewal)
+	locked, t, err := tx.AcquireLock(name, owner, duration)
 	if err != nil {
 		return false, time.Time{}
 	}
@@ -348,16 +343,38 @@ func AcquireLock(datastore Datastore, name, owner string, duration time.Duration
 	return locked, t
 }
 
+// ExtendLock extends the duration of an existing global lock for the given
+// duration.
+func ExtendLock(ds Datastore, name, whoami string, desiredLockDuration time.Duration) (extended bool, expiration time.Time) {
+	tx, err := ds.Begin()
+	if err != nil {
+		return false, time.Time{}
+	}
+	defer tx.Rollback()
+
+	locked, expiration, err := tx.ExtendLock(name, whoami, desiredLockDuration)
+	if err != nil {
+		return false, time.Time{}
+	}
+
+	if locked {
+		if err := tx.Commit(); err == nil {
+			return
+		}
+	}
+
+	return false, time.Time{}
+}
+
 // ReleaseLock releases a named global lock.
 func ReleaseLock(datastore Datastore, name, owner string) {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return
 	}
-
 	defer tx.Rollback()
 
-	if err := tx.Unlock(name, owner); err != nil {
+	if err := tx.ReleaseLock(name, owner); err != nil {
 		return
 	}
 	if err := tx.Commit(); err != nil {
