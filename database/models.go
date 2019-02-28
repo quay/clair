@@ -166,22 +166,23 @@ func NewNamespace(name string, versionFormat string) *Namespace {
 // dpkg is the version format of the installer package manager, which in this
 // case could be dpkg or apk.
 type Feature struct {
-	Name          string      `json:"name"`
-	Version       string      `json:"version"`
-	VersionFormat string      `json:"versionFormat"`
-	Type          FeatureType `json:"type"`
+	Name               string      `json:"name"`
+	Version            string      `json:"version"`
+	VersionFormat      string      `json:"versionFormat"`
+	Type               FeatureType `json:"type"`
+	PotentialNamespace Namespace   `json:"potentialNamespace"`
 }
 
-func NewFeature(name string, version string, versionFormat string, featureType FeatureType) *Feature {
-	return &Feature{name, version, versionFormat, featureType}
+func NewFeature(name string, version string, versionFormat string, featureType FeatureType, namespace Namespace) *Feature {
+	return &Feature{name, version, versionFormat, featureType, namespace}
 }
 
-func NewBinaryPackage(name string, version string, versionFormat string) *Feature {
-	return &Feature{name, version, versionFormat, BinaryPackage}
+func NewBinaryPackage(name string, version string, versionFormat string, namespace Namespace) *Feature {
+	return &Feature{name, version, versionFormat, BinaryPackage, namespace}
 }
 
-func NewSourcePackage(name string, version string, versionFormat string) *Feature {
-	return &Feature{name, version, versionFormat, SourcePackage}
+func NewSourcePackage(name string, version string, versionFormat string, namespace Namespace) *Feature {
+	return &Feature{name, version, versionFormat, SourcePackage, namespace}
 }
 
 // NamespacedFeature is a feature with determined namespace and can be affected

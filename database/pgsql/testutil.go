@@ -38,11 +38,11 @@ import (
 // int keys must be the consistent with the database ID.
 var (
 	realFeatures = map[int]database.Feature{
-		1: {"ourchat", "0.5", "dpkg", "source"},
-		2: {"openssl", "1.0", "dpkg", "source"},
-		3: {"openssl", "2.0", "dpkg", "source"},
-		4: {"fake", "2.0", "rpm", "source"},
-		5: {"mount", "2.31.1-0.4ubuntu3.1", "dpkg", "binary"},
+		1: {"ourchat", "0.5", "dpkg", "source", database.Namespace{}},
+		2: {"openssl", "1.0", "dpkg", "source", database.Namespace{}},
+		3: {"openssl", "2.0", "dpkg", "source", database.Namespace{}},
+		4: {"fake", "2.0", "rpm", "source", database.Namespace{}},
+		5: {"mount", "2.31.1-0.4ubuntu3.1", "dpkg", "binary", database.Namespace{}},
 	}
 
 	realNamespaces = map[int]database.Namespace{

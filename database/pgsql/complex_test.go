@@ -65,7 +65,7 @@ func testGenRandomVulnerabilityAndNamespacedFeature(t *testing.T, store database
 	for i := 0; i < numFeatures; i++ {
 		version := rand.Intn(numFeatures)
 
-		features[i] = *database.NewSourcePackage(featureName, strconv.Itoa(version), featureVersionFormat)
+		features[i] = *database.NewSourcePackage(featureName, strconv.Itoa(version), featureVersionFormat, database.Namespace{})
 		nsFeatures[i] = database.NamespacedFeature{
 			Namespace: namespace,
 			Feature:   features[i],

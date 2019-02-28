@@ -122,7 +122,7 @@ func parseRPMOutput(raw string) (rpmPackage *database.Feature, srpmPackage *data
 		return
 	}
 
-	rpmPackage = &database.Feature{name, version, rpm.ParserName, database.BinaryPackage}
+	rpmPackage = &database.Feature{name, version, rpm.ParserName, database.BinaryPackage, database.Namespace{}}
 	srpmName, srpmVersion, srpmRelease, _, err := parseSourceRPM(srpm)
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{"name": name, "sourcerpm": srpm}).Warning("skipped unparseable package")
@@ -134,7 +134,7 @@ func parseRPMOutput(raw string) (rpmPackage *database.Feature, srpmPackage *data
 		return
 	}
 
-	srpmPackage = &database.Feature{srpmName, srpmVersion, rpm.ParserName, database.SourcePackage}
+	srpmPackage = &database.Feature{srpmName, srpmVersion, rpm.ParserName, database.SourcePackage, database.Namespace{}}
 	return
 }
 
