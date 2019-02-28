@@ -37,10 +37,11 @@ const (
 		SELECT id FROM layer WHERE hash = $1`
 
 	findLayerFeatures = `
-		SELECT f.name, f.version, f.version_format, t.name, lf.detector_id
-			FROM layer_feature AS lf, feature AS f, feature_type AS t
+		SELECT f.name, f.version, f.version_format, t.name, lf.detector_id, ns.name, ns.version_format
+			FROM layer_feature AS lf, feature AS f, feature_type AS t, namespace AS ns
 			WHERE lf.feature_id = f.id
 				AND t.id = f.type
+				AND lf.namespace_id = ns.id
 				AND lf.layer_id = $1`
 
 	findLayerNamespaces = `
@@ -61,9 +62,10 @@ type dbLayerNamespace struct {
 
 // dbLayerFeature represents the layer_feature table
 type dbLayerFeature struct {
-	layerID    int64
-	featureID  int64
-	detectorID int64
+	layerID     int64
+	featureID   int64
+	detectorID  int64
+	namespaceID int64
 }
 
 func (tx *pgSession) FindLayer(hash string) (database.Layer, bool, error) {
@@ -199,10 +201,16 @@ func (tx *pgSession) persistAllLayerFeatures(layerID int64, features []database.
 	if err != nil {
 		return err
 	}
-
+	var namespaces []database.Namespace
+	for _, feature := range features {
+		namespaces = append(namespaces, feature.PotentialNamespace)
+	}
+	nameSpaceIDs, _ := tx.findNamespaceIDs(namespaces)
+	featureNamespaceMap := map[database.Namespace]sql.NullInt64{}
 	rawFeatures := make([]database.Feature, 0, len(features))
-	for _, f := range features {
+	for i, f := range features {
 		rawFeatures = append(rawFeatures, f.Feature)
+		featureNamespaceMap[f.PotentialNamespace] = nameSpaceIDs[i]
 	}
 
 	featureIDs, err := tx.findFeatureIDs(rawFeatures)
@@ -213,12 +221,16 @@ func (tx *pgSession) persistAllLayerFeatures(layerID int64, features []database.
 	dbFeatures := make([]dbLayerFeature, 0, len(features))
 	for i, f := range features {
 		detectorID := detectorMap.byValue[f.By]
-		featureID := featureIDs[i].Int64
 		if !featureIDs[i].Valid {
 			return database.ErrMissingEntities
 		}
+		featureID := featureIDs[i].Int64
+		if !featureNamespaceMap[f.PotentialNamespace].Valid {
+			return database.ErrMissingEntities
+		}
+		namespaceID := featureNamespaceMap[f.PotentialNamespace].Int64
 
-		dbFeatures = append(dbFeatures, dbLayerFeature{layerID, featureID, detectorID})
+		dbFeatures = append(dbFeatures, dbLayerFeature{layerID, featureID, detectorID, namespaceID})
 	}
 
 	if err := tx.persistLayerFeatures(dbFeatures); err != nil {
@@ -236,9 +248,9 @@ func (tx *pgSession) persistLayerFeatures(features []dbLayerFeature) error {
 	sort.Slice(features, func(i, j int) bool {
 		return features[i].featureID < features[j].featureID
 	})
-	keys := make([]interface{}, 0, len(features)*3)
+	keys := make([]interface{}, 0, len(features)*4)
 	for _, f := range features {
-		keys = append(keys, f.layerID, f.featureID, f.detectorID)
+		keys = append(keys, f.layerID, f.featureID, f.detectorID, f.namespaceID)
 	}
 
 	_, err := tx.Exec(queryPersistLayerFeature(len(features)), keys...)
@@ -308,7 +320,7 @@ func (tx *pgSession) findLayerFeatures(layerID int64, detectors detectorMap) ([]
 			detectorID int64
 			feature    database.LayerFeature
 		)
-		if err := rows.Scan(&feature.Name, &feature.Version, &feature.VersionFormat, &feature.Type, &detectorID); err != nil {
+		if err := rows.Scan(&feature.Name, &feature.Version, &feature.VersionFormat, &feature.Type, &detectorID, &feature.PotentialNamespace.Name, &feature.PotentialNamespace.VersionFormat); err != nil {
 			return nil, handleError("findLayerFeatures", err)
 		}
 

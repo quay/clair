@@ -17,6 +17,7 @@ package database
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/coreos/clair/pkg/pagination"
@@ -123,9 +124,12 @@ func (l *Layer) GetFeatures() []Feature {
 }
 
 func (l *Layer) GetNamespaces() []Namespace {
-	namespaces := make([]Namespace, 0, len(l.Namespaces))
+	namespaces := make([]Namespace, 0, len(l.Namespaces)+len(l.Features))
 	for _, ns := range l.Namespaces {
 		namespaces = append(namespaces, ns.Namespace)
+	}
+	for _, f := range l.Features {
+		namespaces = append(namespaces, f.Feature.PotentialNamespace)
 	}
 
 	return namespaces
@@ -193,6 +197,10 @@ type NamespacedFeature struct {
 	Feature `json:"feature"`
 
 	Namespace Namespace `json:"namespace"`
+}
+
+func (nf *NamespacedFeature) Key() string {
+	return fmt.Sprintf("%s-%s-%s-%s-%s-%s", nf.Name, nf.Version, nf.VersionFormat, nf.Type, nf.Namespace.Name, nf.Namespace.VersionFormat)
 }
 
 func NewNamespacedFeature(namespace *Namespace, feature *Feature) *NamespacedFeature {

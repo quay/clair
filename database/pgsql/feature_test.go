@@ -182,7 +182,7 @@ func TestFindNamespacedFeatureIDs(t *testing.T) {
 	expectedIDs = append(expectedIDs, 1)
 
 	namespace := realNamespaces[1]
-	features = append(features, *database.NewNamespacedFeature(&namespace, database.NewBinaryPackage("not-found", "1.0", "dpkg"))) // test not found feature
+	features = append(features, *database.NewNamespacedFeature(&namespace, database.NewBinaryPackage("not-found", "1.0", "dpkg", database.Namespace{}))) // test not found feature
 
 	ids, err := tx.findNamespacedFeatureIDs(features)
 	require.Nil(t, err)

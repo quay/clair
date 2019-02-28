@@ -124,7 +124,8 @@ func queryPersistLayerFeature(count int) string {
 		"layer_feature_layer_id_feature_id_key",
 		"layer_id",
 		"feature_id",
-		"detector_id")
+		"detector_id",
+		"namespace_id")
 }
 
 func queryPersistNamespace(count int) string {

@@ -17,6 +17,7 @@ package pgsql
 import (
 	"database/sql"
 	"sort"
+	"strconv"
 
 	"github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
@@ -311,7 +312,7 @@ func (tx *pgSession) findNamespacedFeatureIDs(nfs []database.NamespacedFeature) 
 		return nil, nil
 	}
 
-	nfsMap := map[database.NamespacedFeature]int64{}
+	nfsMap := map[string]int64{}
 	keys := make([]interface{}, 0, len(nfs)*5)
 	for _, nf := range nfs {
 		keys = append(keys, nf.Name, nf.Version, nf.VersionFormat, nf.Type, nf.Namespace.Name)
@@ -334,12 +335,12 @@ func (tx *pgSession) findNamespacedFeatureIDs(nfs []database.NamespacedFeature) 
 		if err != nil {
 			return nil, handleError("searchNamespacedFeature", err)
 		}
-		nfsMap[nf] = id
+		nfsMap[nf.Key()] = id
 	}
 
 	ids := make([]sql.NullInt64, len(nfs))
 	for i, nf := range nfs {
-		if id, ok := nfsMap[nf]; ok {
+		if id, ok := nfsMap[nf.Key()]; ok {
 			ids[i] = sql.NullInt64{id, true}
 		} else {
 			ids[i] = sql.NullInt64{}
@@ -359,13 +360,14 @@ func (tx *pgSession) findFeatureIDs(fs []database.Feature) ([]sql.NullInt64, err
 		return nil, err
 	}
 
-	fMap := map[database.Feature]sql.NullInt64{}
+	fMap := map[string]sql.NullInt64{}
 
 	keys := make([]interface{}, 0, len(fs)*4)
 	for _, f := range fs {
 		typeID := types.byName[f.Type]
 		keys = append(keys, f.Name, f.Version, f.VersionFormat, typeID)
-		fMap[f] = sql.NullInt64{}
+		mapKey := f.Name + f.Version + f.VersionFormat + strconv.Itoa(typeID)
+		fMap[mapKey] = sql.NullInt64{}
 	}
 
 	rows, err := tx.Query(querySearchFeatureID(len(fs)), keys...)
@@ -386,12 +388,15 @@ func (tx *pgSession) findFeatureIDs(fs []database.Feature) ([]sql.NullInt64, err
 		}
 
 		f.Type = types.byID[typeID]
-		fMap[f] = id
+		mapKey := f.Name + f.Version + f.VersionFormat + strconv.Itoa(typeID)
+		fMap[mapKey] = id
 	}
 
 	ids := make([]sql.NullInt64, len(fs))
 	for i, f := range fs {
-		ids[i] = fMap[f]
+		typeID := types.byName[f.Type]
+		mapKey := f.Name + f.Version + f.VersionFormat + strconv.Itoa(typeID)
+		ids[i] = fMap[mapKey]
 	}
 
 	return ids, nil
