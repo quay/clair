@@ -28,52 +28,52 @@ func TestLock(t *testing.T) {
 	var l bool
 
 	// Create a first lock.
-	l, _, err := tx.Lock("test1", "owner1", time.Minute, false)
+	l, _, err := tx.AcquireLock("test1", "owner1", time.Minute)
 	assert.Nil(t, err)
 	assert.True(t, l)
 	tx = restartSession(t, datastore, tx, true)
 
 	// lock again by itself, the previous lock is not expired yet.
-	l, _, err = tx.Lock("test1", "owner1", time.Minute, false)
+	l, _, err = tx.AcquireLock("test1", "owner1", time.Minute)
 	assert.Nil(t, err)
 	assert.False(t, l)
 	tx = restartSession(t, datastore, tx, false)
 
 	// Try to renew the same lock with another owner.
-	l, _, err = tx.Lock("test1", "owner2", time.Minute, true)
+	l, _, err = tx.ExtendLock("test1", "owner2", time.Minute)
 	assert.Nil(t, err)
 	assert.False(t, l)
 	tx = restartSession(t, datastore, tx, false)
 
-	l, _, err = tx.Lock("test1", "owner2", time.Minute, false)
+	l, _, err = tx.AcquireLock("test1", "owner2", time.Minute)
 	assert.Nil(t, err)
 	assert.False(t, l)
 	tx = restartSession(t, datastore, tx, false)
 
 	// Renew the lock.
-	l, _, err = tx.Lock("test1", "owner1", 2*time.Minute, true)
+	l, _, err = tx.ExtendLock("test1", "owner1", 2*time.Minute)
 	assert.Nil(t, err)
 	assert.True(t, l)
 	tx = restartSession(t, datastore, tx, true)
 
 	// Unlock and then relock by someone else.
-	err = tx.Unlock("test1", "owner1")
+	err = tx.ReleaseLock("test1", "owner1")
 	assert.Nil(t, err)
 	tx = restartSession(t, datastore, tx, true)
 
-	l, _, err = tx.Lock("test1", "owner2", time.Minute, false)
+	l, _, err = tx.AcquireLock("test1", "owner2", time.Minute)
 	assert.Nil(t, err)
 	assert.True(t, l)
 	tx = restartSession(t, datastore, tx, true)
 
 	// Create a second lock which is actually already expired ...
-	l, _, err = tx.Lock("test2", "owner1", -time.Minute, false)
+	l, _, err = tx.AcquireLock("test2", "owner1", -time.Minute)
 	assert.Nil(t, err)
 	assert.True(t, l)
 	tx = restartSession(t, datastore, tx, true)
 
 	// Take over the lock
-	l, _, err = tx.Lock("test2", "owner2", time.Minute, false)
+	l, _, err = tx.AcquireLock("test2", "owner2", time.Minute)
 	assert.Nil(t, err)
 	assert.True(t, l)
 	tx = restartSession(t, datastore, tx, true)

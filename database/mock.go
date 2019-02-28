@@ -46,8 +46,9 @@ type MockSession struct {
 	FctDeleteNotification     func(name string) error
 	FctUpdateKeyValue         func(key, value string) error
 	FctFindKeyValue           func(key string) (string, bool, error)
-	FctLock                   func(name string, owner string, duration time.Duration, renew bool) (bool, time.Time, error)
-	FctUnlock                 func(name, owner string) error
+	FctAcquireLock            func(name, owner string, duration time.Duration) (bool, time.Time, error)
+	FctExtendLock             func(name, owner string, duration time.Duration) (bool, time.Time, error)
+	FctReleaseLock            func(name, owner string) error
 }
 
 func (ms *MockSession) Commit() error {
@@ -205,16 +206,23 @@ func (ms *MockSession) FindKeyValue(key string) (string, bool, error) {
 	panic("required mock function not implemented")
 }
 
-func (ms *MockSession) Lock(name string, owner string, duration time.Duration, renew bool) (bool, time.Time, error) {
-	if ms.FctLock != nil {
-		return ms.FctLock(name, owner, duration, renew)
+func (ms *MockSession) AcquireLock(name, owner string, duration time.Duration) (bool, time.Time, error) {
+	if ms.FctAcquireLock != nil {
+		return ms.FctAcquireLock(name, owner, duration)
 	}
 	panic("required mock function not implemented")
 }
 
-func (ms *MockSession) Unlock(name, owner string) error {
-	if ms.FctUnlock != nil {
-		return ms.FctUnlock(name, owner)
+func (ms *MockSession) ExtendLock(name, owner string, duration time.Duration) (bool, time.Time, error) {
+	if ms.FctExtendLock != nil {
+		return ms.FctExtendLock(name, owner, duration)
+	}
+	panic("required mock function not implemented")
+}
+
+func (ms *MockSession) ReleaseLock(name, owner string) error {
+	if ms.FctReleaseLock != nil {
+		return ms.FctReleaseLock(name, owner)
 	}
 	panic("required mock function not implemented")
 }

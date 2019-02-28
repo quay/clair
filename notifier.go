@@ -1,4 +1,4 @@
-// Copyright 2017 clair authors
+// Copyright 2019 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -113,7 +113,7 @@ func RunNotifier(config *notification.Config, datastore database.Datastore, stop
 			case <-done:
 				break outer
 			case <-time.After(notifierLockRefreshDuration):
-				database.AcquireLock(datastore, notification.Name, whoAmI, notifierLockDuration, true)
+				database.ExtendLock(datastore, notification.Name, whoAmI, notifierLockDuration)
 			case <-stopper.Chan():
 				running = false
 				break
@@ -141,7 +141,7 @@ func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoA
 		}
 
 		// Lock the notification.
-		if hasLock, _ := database.AcquireLock(datastore, notification.Name, whoAmI, notifierLockDuration, false); hasLock {
+		if hasLock, _ := database.AcquireLock(datastore, notification.Name, whoAmI, notifierLockDuration); hasLock {
 			log.WithField(logNotiName, notification.Name).Info("found and locked a notification")
 			return &notification
 		}
