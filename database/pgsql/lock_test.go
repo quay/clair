@@ -1,4 +1,4 @@
-// Copyright 2016 clair authors
+// Copyright 2019 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,22 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+func TestAcquireLockReturnsExistingLockDuration(t *testing.T) {
+	datastore, tx := openSessionForTest(t, "Lock", true)
+	defer datastore.Close()
+
+	acquired, originalExpiration, err := tx.AcquireLock("test1", "owner1", time.Minute)
+	require.Nil(t, err)
+	require.True(t, acquired)
+
+	acquired2, expiration, err := tx.AcquireLock("test1", "owner2", time.Hour)
+	require.Nil(t, err)
+	require.False(t, acquired2)
+	require.Equal(t, expiration, originalExpiration)
+}
 
 func TestLock(t *testing.T) {
 	datastore, tx := openSessionForTest(t, "Lock", true)
