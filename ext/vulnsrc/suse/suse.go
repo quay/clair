@@ -127,16 +127,10 @@ func init() {
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
 	log.WithField("package", u.Name).Info("Start fetching vulnerabilities")
 
-	tx, err := datastore.Begin()
-	if err != nil {
-		return resp, err
-	}
-	defer tx.Rollback()
-
 	// openSUSE and SUSE have one single xml file for all the products, there are no incremental
 	// xml files. We store into the database the value of the generation timestamp
 	// of the latest file we parsed.
-	flagValue, ok, err := tx.FindKeyValue(u.UpdaterFlag)
+	flagValue, ok, err := database.FindKeyValueAndRollback(datastore, u.UpdaterFlag)
 	if err != nil {
 		return resp, err
 	}

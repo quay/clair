@@ -33,7 +33,7 @@ func GetClairStatus(store database.Datastore) (*pb.ClairStatus, error) {
 
 // GetPbAncestryLayer retrieves an ancestry layer with vulnerabilities and
 // features in an ancestry based on the provided database layer.
-func GetPbAncestryLayer(tx database.Session, layer database.AncestryLayer) (*pb.GetAncestryResponse_AncestryLayer, error) {
+func (s *AncestryServer) GetPbAncestryLayer(layer database.AncestryLayer) (*pb.GetAncestryResponse_AncestryLayer, error) {
 	pbLayer := &pb.GetAncestryResponse_AncestryLayer{
 		Layer: &pb.Layer{
 			Hash: layer.Hash,
@@ -41,18 +41,14 @@ func GetPbAncestryLayer(tx database.Session, layer database.AncestryLayer) (*pb.
 	}
 
 	features := layer.GetFeatures()
-	affectedFeatures, err := tx.FindAffectedNamespacedFeatures(features)
+	affectedFeatures, err := database.FindAffectedNamespacedFeaturesAndRollback(s.Store, features)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, newRPCErrorWithClairError(codes.Internal, err)
 	}
 
-	// NOTE(sidac): It's quite inefficient, but the easiest way to implement
-	// this feature for now, we should refactor the implementation if there's
-	// any performance issue. It's expected that the number of features is less
-	// than 1000.
 	for _, feature := range affectedFeatures {
 		if !feature.Valid {
-			return nil, status.Error(codes.Internal, "ancestry feature is not found")
+			panic("feature is missing in the database, it indicates the database is corrupted.")
 		}
 
 		for _, detectedFeature := range layer.Features {

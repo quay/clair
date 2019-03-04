@@ -15,8 +15,6 @@
 package v3
 
 import (
-	"fmt"
-
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -25,7 +23,6 @@ import (
 	pb "github.com/coreos/clair/api/v3/clairpb"
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/imagefmt"
-	"github.com/coreos/clair/pkg/commonerr"
 	"github.com/coreos/clair/pkg/pagination"
 )
 
@@ -128,20 +125,13 @@ func (s *AncestryServer) GetAncestry(ctx context.Context, req *pb.GetAncestryReq
 		return nil, status.Errorf(codes.InvalidArgument, "ancestry name should not be empty")
 	}
 
-	tx, err := s.Store.Begin()
+	ancestry, ok, err := database.FindAncestryAndRollback(s.Store, name)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	defer tx.Rollback()
-
-	ancestry, ok, err := tx.FindAncestry(name)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, newRPCErrorWithClairError(codes.Internal, err)
 	}
 
 	if !ok {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("requested ancestry '%s' is not found", req.GetAncestryName()))
+		return nil, status.Errorf(codes.NotFound, "requested ancestry '%s' is not found", req.GetAncestryName())
 	}
 
 	pbAncestry := &pb.GetAncestryResponse_Ancestry{
@@ -150,7 +140,7 @@ func (s *AncestryServer) GetAncestry(ctx context.Context, req *pb.GetAncestryReq
 	}
 
 	for _, layer := range ancestry.Layers {
-		pbLayer, err := GetPbAncestryLayer(tx, layer)
+		pbLayer, err := s.GetPbAncestryLayer(layer)
 		if err != nil {
 			return nil, err
 		}
@@ -180,13 +170,8 @@ func (s *NotificationServer) GetNotification(ctx context.Context, req *pb.GetNot
 		return nil, status.Error(codes.InvalidArgument, "notification page limit should not be empty or less than 1")
 	}
 
-	tx, err := s.Store.Begin()
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-	defer tx.Rollback()
-
-	dbNotification, ok, err := tx.FindVulnerabilityNotification(
+	dbNotification, ok, err := database.FindVulnerabilityNotificationAndRollback(
+		s.Store,
 		req.GetName(),
 		int(req.GetLimit()),
 		pagination.Token(req.GetOldVulnerabilityPage()),
@@ -194,11 +179,11 @@ func (s *NotificationServer) GetNotification(ctx context.Context, req *pb.GetNot
 	)
 
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, newRPCErrorWithClairError(codes.Internal, err)
 	}
 
 	if !ok {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("requested notification '%s' is not found", req.GetName()))
+		return nil, status.Errorf(codes.NotFound, "requested notification '%s' is not found", req.GetName())
 	}
 
 	notification, err := pb.NotificationFromDatabaseModel(dbNotification)
@@ -216,21 +201,13 @@ func (s *NotificationServer) MarkNotificationAsRead(ctx context.Context, req *pb
 		return nil, status.Error(codes.InvalidArgument, "notification name should not be empty")
 	}
 
-	tx, err := s.Store.Begin()
+	found, err := database.MarkNotificationAsReadAndCommit(s.Store, req.GetName())
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, newRPCErrorWithClairError(codes.Internal, err)
 	}
 
-	defer tx.Rollback()
-	err = tx.DeleteNotification(req.GetName())
-	if err == commonerr.ErrNotFound {
-		return nil, status.Error(codes.NotFound, "requested notification \""+req.GetName()+"\" is not found")
-	} else if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	if err := tx.Commit(); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "requested notification '%s' is not found", req.GetName())
 	}
 
 	return &pb.MarkNotificationAsReadResponse{}, nil
