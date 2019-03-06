@@ -70,8 +70,6 @@ func genTemplateDatabase(name string, loadFixture bool) (sourceURL string, dbNam
 	}
 
 	if loadFixture {
-		log.Info("pgsql: loading fixtures")
-
 		d, err := ioutil.ReadFile(fixturePath)
 		if err != nil {
 			panic(err)
@@ -219,8 +217,6 @@ func generateTestConfig(testName string, loadFixture bool, manageLife bool) data
 		source = fmt.Sprintf(sourceEnv, dbName)
 	}
 
-	log.Infof("pagination key for current test: %s", testPaginationKey.String())
-
 	return database.RegistrableComponentConfig{
 		Options: map[string]interface{}{
 			"source":                  source,
@@ -254,7 +250,6 @@ func openSessionForTest(t *testing.T, name string, loadFixture bool) (*pgSQL, *p
 		t.FailNow()
 	}
 
-	log.Infof("transaction pagination key: '%s'", tx.(*pgSession).key.String())
 	return store, tx.(*pgSession)
 }
 

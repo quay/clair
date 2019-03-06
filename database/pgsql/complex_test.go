@@ -15,7 +15,6 @@
 package pgsql
 
 import (
-	"fmt"
 	"math/rand"
 	"runtime"
 	"strconv"
@@ -108,34 +107,29 @@ func testGenRandomVulnerabilityAndNamespacedFeature(t *testing.T, store database
 }
 
 func TestConcurrency(t *testing.T) {
-	store, err := openDatabaseForTest("Concurrency", false)
-	if !assert.Nil(t, err) {
-		t.FailNow()
-	}
-	defer store.Close()
-	start := time.Now()
+	store, cleanup := createTestPgSQL(t, "concurrency")
+	defer cleanup()
+
 	var wg sync.WaitGroup
-	wg.Add(100)
-	for i := 0; i < 100; i++ {
+	// there's a limit on the number of concurrent connections in the pool
+	wg.Add(30)
+	for i := 0; i < 30; i++ {
 		go func() {
 			defer wg.Done()
 			nsNamespaces := genRandomNamespaces(t, 100)
 			tx, err := store.Begin()
-			if !assert.Nil(t, err) {
-				t.FailNow()
-			}
-			assert.Nil(t, tx.PersistNamespaces(nsNamespaces))
-			tx.Commit()
+			require.Nil(t, err)
+			require.Nil(t, tx.PersistNamespaces(nsNamespaces))
+			require.Nil(t, tx.Commit())
 		}()
 	}
+
 	wg.Wait()
-	fmt.Println("total", time.Since(start))
 }
 
 func TestCaching(t *testing.T) {
-	store, err := openDatabaseForTest("Caching", false)
-	require.Nil(t, err)
-	defer store.Close()
+	store, cleanup := createTestPgSQL(t, "caching")
+	defer cleanup()
 
 	nsFeatures, vulnerabilities := testGenRandomVulnerabilityAndNamespacedFeature(t, store)
 	tx, err := store.Begin()
@@ -145,8 +139,6 @@ func TestCaching(t *testing.T) {
 	require.Nil(t, tx.Commit())
 
 	tx, err = store.Begin()
-	require.Nil(t, tx.Commit())
-
 	require.Nil(t, tx.InsertVulnerabilities(vulnerabilities))
 	require.Nil(t, tx.Commit())
 

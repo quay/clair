@@ -15,7 +15,6 @@
 package pgsql
 
 import (
-	"errors"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -25,21 +24,18 @@ const (
 	searchLock        = `SELECT until FROM Lock WHERE name = $1`
 	updateLock        = `UPDATE Lock SET until = $3 WHERE name = $1 AND owner = $2`
 	removeLock        = `DELETE FROM Lock WHERE name = $1 AND owner = $2`
-	removeLockExpired = `DELETE FROM LOCK WHERE until < CURRENT_TIMESTAMP`
+	removeLockExpired = `DELETE FROM LOCK WHERE until < $1`
 
-	soiLock = `WITH new_lock AS (
+	soiLock = `
+	WITH new_lock AS (
 		INSERT INTO lock (name, owner, until) 
-		          VALUES (  $1,    $2,    $3)
-		          WHERE NOT EXISTS (SELECT id FROM lock WHERE name = $1)
-		          RETURNING owner, until
+		SELECT CAST ($1 AS TEXT), CAST ($2 AS TEXT), CAST ($3 AS TIMESTAMP)
+		WHERE NOT EXISTS (SELECT id FROM lock WHERE name = $1)
+		RETURNING owner, until
 	)
 	SELECT * FROM new_lock
 	UNION
 	SELECT owner, until FROM lock WHERE name = $1`
-)
-
-var (
-	errLockNotFound = errors.New("lock is not in database")
 )
 
 func (tx *pgSession) AcquireLock(lockName, whoami string, desiredDuration time.Duration) (bool, time.Time, error) {
@@ -52,7 +48,7 @@ func (tx *pgSession) AcquireLock(lockName, whoami string, desiredDuration time.D
 	}
 
 	var (
-		desiredLockedUntil = time.Now().Add(desiredDuration)
+		desiredLockedUntil = time.Now().UTC().Add(desiredDuration)
 
 		lockedUntil time.Time
 		lockOwner   string
@@ -98,7 +94,7 @@ func (tx *pgSession) ReleaseLock(name, owner string) error {
 func (tx *pgSession) pruneLocks() error {
 	defer observeQueryTime("pruneLocks", "all", time.Now())
 
-	if r, err := tx.Exec(removeLockExpired); err != nil {
+	if r, err := tx.Exec(removeLockExpired, time.Now().UTC()); err != nil {
 		return handleError("removeLockExpired", err)
 	} else if affected, err := r.RowsAffected(); err != nil {
 		return handleError("removeLockExpired", err)

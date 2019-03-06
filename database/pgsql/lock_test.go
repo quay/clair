@@ -23,8 +23,8 @@ import (
 )
 
 func TestAcquireLockReturnsExistingLockDuration(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "Lock", true)
-	defer datastore.Close()
+	tx, cleanup := createTestPgSessionWithFixtures(t, "Lock")
+	defer cleanup()
 
 	acquired, originalExpiration, err := tx.AcquireLock("test1", "owner1", time.Minute)
 	require.Nil(t, err)
@@ -51,7 +51,7 @@ func TestLock(t *testing.T) {
 	// lock again by itself, the previous lock is not expired yet.
 	l, _, err = tx.AcquireLock("test1", "owner1", time.Minute)
 	assert.Nil(t, err)
-	assert.False(t, l)
+	assert.True(t, l) // acquire lock no-op when owner already has the lock.
 	tx = restartSession(t, datastore, tx, false)
 
 	// Try to renew the same lock with another owner.
