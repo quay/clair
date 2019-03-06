@@ -12,38 +12,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pgsql
+package keyvalue
 
 import (
 	"testing"
 
+	"github.com/coreos/clair/database/pgsql/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestKeyValue(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "KeyValue", true)
-	defer closeTest(t, datastore, tx)
+	tx, cleanup := testutil.CreateTestTxWithFixtures(t, "KeyValue")
+	defer cleanup()
 
 	// Get non-existing key/value
-	f, ok, err := tx.FindKeyValue("test")
+	f, ok, err := FindKeyValue(tx, "test")
 	assert.Nil(t, err)
 	assert.False(t, ok)
 
 	// Try to insert invalid key/value.
-	assert.Error(t, tx.UpdateKeyValue("test", ""))
-	assert.Error(t, tx.UpdateKeyValue("", "test"))
-	assert.Error(t, tx.UpdateKeyValue("", ""))
+	assert.Error(t, UpdateKeyValue(tx, "test", ""))
+	assert.Error(t, UpdateKeyValue(tx, "", "test"))
+	assert.Error(t, UpdateKeyValue(tx, "", ""))
 
 	// Insert and verify.
-	assert.Nil(t, tx.UpdateKeyValue("test", "test1"))
-	f, ok, err = tx.FindKeyValue("test")
+	assert.Nil(t, UpdateKeyValue(tx, "test", "test1"))
+	f, ok, err = FindKeyValue(tx, "test")
 	assert.Nil(t, err)
 	assert.True(t, ok)
 	assert.Equal(t, "test1", f)
 
 	// Update and verify.
-	assert.Nil(t, tx.UpdateKeyValue("test", "test2"))
-	f, ok, err = tx.FindKeyValue("test")
+	assert.Nil(t, UpdateKeyValue(tx, "test", "test2"))
+	f, ok, err = FindKeyValue(tx, "test")
 	assert.Nil(t, err)
 	assert.True(t, ok)
 	assert.Equal(t, "test2", f)

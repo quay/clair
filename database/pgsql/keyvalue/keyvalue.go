@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pgsql
+package keyvalue
 
 import (
 	"database/sql"
@@ -20,6 +20,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/coreos/clair/database/pgsql/monitoring"
+	"github.com/coreos/clair/database/pgsql/util"
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
@@ -32,24 +34,24 @@ const (
 				DO UPDATE SET key=$1, value=$2`
 )
 
-func (tx *pgSession) UpdateKeyValue(key, value string) (err error) {
+func UpdateKeyValue(tx *sql.Tx, key, value string) (err error) {
 	if key == "" || value == "" {
 		log.Warning("could not insert a flag which has an empty name or value")
 		return commonerr.NewBadRequestError("could not insert a flag which has an empty name or value")
 	}
 
-	defer observeQueryTime("PersistKeyValue", "all", time.Now())
+	defer monitoring.ObserveQueryTime("PersistKeyValue", "all", time.Now())
 
 	_, err = tx.Exec(upsertKeyValue, key, value)
 	if err != nil {
-		return handleError("insertKeyValue", err)
+		return util.HandleError("insertKeyValue", err)
 	}
 
 	return nil
 }
 
-func (tx *pgSession) FindKeyValue(key string) (string, bool, error) {
-	defer observeQueryTime("FindKeyValue", "all", time.Now())
+func FindKeyValue(tx *sql.Tx, key string) (string, bool, error) {
+	defer monitoring.ObserveQueryTime("FindKeyValue", "all", time.Now())
 
 	var value string
 	err := tx.QueryRow(searchKeyValue, key).Scan(&value)
@@ -59,7 +61,7 @@ func (tx *pgSession) FindKeyValue(key string) (string, bool, error) {
 	}
 
 	if err != nil {
-		return "", false, handleError("searchKeyValue", err)
+		return "", false, util.HandleError("searchKeyValue", err)
 	}
 
 	return value, true, nil

@@ -18,6 +18,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/coreos/clair/database/pgsql/keyvalue"
 	"github.com/coreos/clair/database/pgsql/vulnerability"
 
 	"github.com/coreos/clair/database"
@@ -152,12 +153,12 @@ func (tx *pgSession) DeleteNotification(name string) error {
 
 // UpdateKeyValue stores or updates a simple key/value pair.
 func (tx *pgSession) UpdateKeyValue(key, value string) error {
-	return lock.UpdateKeyValue(tx.Tx, key, value)
+	return keyvalue.UpdateKeyValue(tx.Tx, key, value)
 }
 
 // FindKeyValue retrieves a value from the given key.
 func (tx *pgSession) FindKeyValue(key string) (value string, found bool, err error) {
-	return lock.FindKeyValue(tx.Tx, key)
+	return keyvalue.FindKeyValue(tx.Tx, key)
 }
 
 // AcquireLock acquires a brand new lock in the database with a given name
