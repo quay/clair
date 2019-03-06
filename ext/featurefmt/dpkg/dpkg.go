@@ -45,10 +45,10 @@ func init() {
 	featurefmt.RegisterLister("dpkg", "1.0", &lister{})
 }
 
-func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {
+func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.LayerFeature, error) {
 	f, hasFile := files["var/lib/dpkg/status"]
 	if !hasFile {
-		return []database.Feature{}, nil
+		return []database.LayerFeature{}, nil
 	}
 
 	packages := mapset.NewSet()
@@ -69,7 +69,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 		}
 	}
 
-	return database.ConvertFeatureSetToFeatures(packages), nil
+	return database.ConvertFeatureSerToLayerFeatures(packages), nil
 }
 
 // parseDpkgDB consumes the status file scanner exactly one package info, until
@@ -123,7 +123,7 @@ func parseDpkgDB(scanner *bufio.Scanner) (binaryPackage *database.Feature, sourc
 		if err := versionfmt.Valid(dpkg.ParserName, version); err != nil {
 			log.WithError(err).WithFields(log.Fields{"name": name, "version": version}).Warning("skipped unparseable package")
 		} else {
-			binaryPackage = &database.Feature{name, version, dpkg.ParserName, database.BinaryPackage, database.Namespace{}}
+			binaryPackage = &database.Feature{name, version, dpkg.ParserName, database.BinaryPackage}
 		}
 	}
 
@@ -145,7 +145,7 @@ func parseDpkgDB(scanner *bufio.Scanner) (binaryPackage *database.Feature, sourc
 		if err := versionfmt.Valid(dpkg.ParserName, version); err != nil {
 			log.WithError(err).WithFields(log.Fields{"name": name, "version": version}).Warning("skipped unparseable package")
 		} else {
-			sourcePackage = &database.Feature{sourceName, sourceVersion, dpkg.ParserName, database.SourcePackage, database.Namespace{}}
+			sourcePackage = &database.Feature{sourceName, sourceVersion, dpkg.ParserName, database.SourcePackage}
 		}
 	}
 

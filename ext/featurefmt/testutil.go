@@ -54,7 +54,7 @@ func loadTestFiles(testFilePaths map[string]string) tarutil.FilesMap {
 type TestCase struct {
 	Name           string
 	FilePaths      map[string]string
-	ExpectedResult []database.Feature
+	ExpectedResult []database.LayerFeature
 }
 
 // RunTest runs a featurefmt test by loading the package info database files and
@@ -65,7 +65,7 @@ func RunTest(t *testing.T, test TestCase, lister Lister, expectedVersionFormat s
 		expected := test.ExpectedResult
 		features, err := lister.ListFeatures(filesMap)
 		require.Nil(t, err)
-		visited := map[database.Feature]bool{}
+		visited := map[database.LayerFeature]bool{}
 		// we only enforce the unique packages to match, the result features
 		// should be always deduplicated.
 		for _, pkg := range expected {
@@ -84,7 +84,7 @@ func RunTest(t *testing.T, test TestCase, lister Lister, expectedVersionFormat s
 			visited[f] = true
 		}
 
-		missingPackages := []database.Feature{}
+		missingPackages := []database.LayerFeature{}
 		for pkg, ok := range visited {
 			if !ok {
 				missingPackages = append(missingPackages, pkg)

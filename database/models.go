@@ -129,7 +129,9 @@ func (l *Layer) GetNamespaces() []Namespace {
 		namespaces = append(namespaces, ns.Namespace)
 	}
 	for _, f := range l.Features {
-		namespaces = append(namespaces, f.Feature.PotentialNamespace)
+		if f.PotentialNamespace.Valid() {
+			namespaces = append(namespaces, f.PotentialNamespace)
+		}
 	}
 
 	return namespaces
@@ -148,7 +150,8 @@ type LayerFeature struct {
 	Feature `json:"feature"`
 
 	// By is the detector found the feature.
-	By Detector `json:"by"`
+	By                 Detector  `json:"by"`
+	PotentialNamespace Namespace `json:"potentialNamespace"`
 }
 
 // Namespace is the contextual information around features.
@@ -163,6 +166,13 @@ func NewNamespace(name string, versionFormat string) *Namespace {
 	return &Namespace{name, versionFormat}
 }
 
+func (ns *Namespace) Valid() bool {
+	if ns.Name == "" || ns.VersionFormat == "" {
+		return false
+	}
+	return true
+}
+
 // Feature represents a package detected in a layer but the namespace is not
 // determined.
 //
@@ -170,23 +180,22 @@ func NewNamespace(name string, versionFormat string) *Namespace {
 // dpkg is the version format of the installer package manager, which in this
 // case could be dpkg or apk.
 type Feature struct {
-	Name               string      `json:"name"`
-	Version            string      `json:"version"`
-	VersionFormat      string      `json:"versionFormat"`
-	Type               FeatureType `json:"type"`
-	PotentialNamespace Namespace   `json:"potentialNamespace"`
+	Name          string      `json:"name"`
+	Version       string      `json:"version"`
+	VersionFormat string      `json:"versionFormat"`
+	Type          FeatureType `json:"type"`
 }
 
-func NewFeature(name string, version string, versionFormat string, featureType FeatureType, namespace Namespace) *Feature {
-	return &Feature{name, version, versionFormat, featureType, namespace}
+func NewFeature(name string, version string, versionFormat string, featureType FeatureType) *Feature {
+	return &Feature{name, version, versionFormat, featureType}
 }
 
-func NewBinaryPackage(name string, version string, versionFormat string, namespace Namespace) *Feature {
-	return &Feature{name, version, versionFormat, BinaryPackage, namespace}
+func NewBinaryPackage(name string, version string, versionFormat string) *Feature {
+	return &Feature{name, version, versionFormat, BinaryPackage}
 }
 
-func NewSourcePackage(name string, version string, versionFormat string, namespace Namespace) *Feature {
-	return &Feature{name, version, versionFormat, SourcePackage, namespace}
+func NewSourcePackage(name string, version string, versionFormat string) *Feature {
+	return &Feature{name, version, versionFormat, SourcePackage}
 }
 
 // NamespacedFeature is a feature with determined namespace and can be affected

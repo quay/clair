@@ -38,11 +38,11 @@ import (
 // int keys must be the consistent with the database ID.
 var (
 	realFeatures = map[int]database.Feature{
-		1: {"ourchat", "0.5", "dpkg", "source", database.Namespace{}},
-		2: {"openssl", "1.0", "dpkg", "source", database.Namespace{}},
-		3: {"openssl", "2.0", "dpkg", "source", database.Namespace{}},
-		4: {"fake", "2.0", "rpm", "source", database.Namespace{}},
-		5: {"mount", "2.31.1-0.4ubuntu3.1", "dpkg", "binary", database.Namespace{}},
+		1: {"ourchat", "0.5", "dpkg", "source"},
+		2: {"openssl", "1.0", "dpkg", "source"},
+		3: {"openssl", "2.0", "dpkg", "source"},
+		4: {"fake", "2.0", "rpm", "source"},
+		5: {"mount", "2.31.1-0.4ubuntu3.1", "dpkg", "binary"},
 	}
 
 	realNamespaces = map[int]database.Namespace{
@@ -70,8 +70,8 @@ var (
 			Hash: "layer-1",
 			By:   []database.Detector{realDetectors[1], realDetectors[2]},
 			Features: []database.LayerFeature{
-				{realFeatures[1], realDetectors[2]},
-				{realFeatures[2], realDetectors[2]},
+				{realFeatures[1], realDetectors[2], database.Namespace{}},
+				{realFeatures[2], realDetectors[2], database.Namespace{}},
 			},
 			Namespaces: []database.LayerNamespace{
 				{realNamespaces[1], realDetectors[1]},
@@ -81,8 +81,8 @@ var (
 			Hash: "layer-4",
 			By:   []database.Detector{realDetectors[1], realDetectors[2], realDetectors[3], realDetectors[4]},
 			Features: []database.LayerFeature{
-				{realFeatures[4], realDetectors[3]},
-				{realFeatures[3], realDetectors[2]},
+				{realFeatures[4], realDetectors[3], database.Namespace{}},
+				{realFeatures[3], realDetectors[2], database.Namespace{}},
 			},
 			Namespaces: []database.LayerNamespace{
 				{realNamespaces[1], realDetectors[1]},

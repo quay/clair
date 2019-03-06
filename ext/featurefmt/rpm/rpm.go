@@ -59,10 +59,10 @@ func isIgnored(packageName string) bool {
 	return false
 }
 
-func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {
+func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.LayerFeature, error) {
 	f, hasFile := files["var/lib/rpm/Packages"]
 	if !hasFile {
-		return []database.Feature{}, nil
+		return []database.LayerFeature{}, nil
 	}
 
 	// Write the required "Packages" file to disk
@@ -70,13 +70,13 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 	defer os.RemoveAll(tmpDir)
 	if err != nil {
 		log.WithError(err).Error("could not create temporary folder for RPM detection")
-		return []database.Feature{}, commonerr.ErrFilesystem
+		return []database.LayerFeature{}, commonerr.ErrFilesystem
 	}
 
 	err = ioutil.WriteFile(tmpDir+"/Packages", f, 0700)
 	if err != nil {
 		log.WithError(err).Error("could not create temporary file for RPM detection")
-		return []database.Feature{}, commonerr.ErrFilesystem
+		return []database.LayerFeature{}, commonerr.ErrFilesystem
 	}
 
 	// Extract binary package names because RHSA refers to binary package names.
@@ -85,7 +85,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 		log.WithError(err).WithField("output", string(out)).Error("failed to query RPM")
 		// Do not bubble up because we probably won't be able to fix it,
 		// the database must be corrupted
-		return []database.Feature{}, nil
+		return []database.LayerFeature{}, nil
 	}
 
 	packages := mapset.NewSet()
@@ -101,7 +101,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 		}
 	}
 
-	return database.ConvertFeatureSetToFeatures(packages), nil
+	return database.ConvertFeatureSerToLayerFeatures(packages), nil
 }
 
 func parseRPMOutput(raw string) (rpmPackage *database.Feature, srpmPackage *database.Feature) {
@@ -122,7 +122,7 @@ func parseRPMOutput(raw string) (rpmPackage *database.Feature, srpmPackage *data
 		return
 	}
 
-	rpmPackage = &database.Feature{name, version, rpm.ParserName, database.BinaryPackage, database.Namespace{}}
+	rpmPackage = &database.Feature{name, version, rpm.ParserName, database.BinaryPackage}
 	srpmName, srpmVersion, srpmRelease, _, err := parseSourceRPM(srpm)
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{"name": name, "sourcerpm": srpm}).Warning("skipped unparseable package")
@@ -134,7 +134,7 @@ func parseRPMOutput(raw string) (rpmPackage *database.Feature, srpmPackage *data
 		return
 	}
 
-	srpmPackage = &database.Feature{srpmName, srpmVersion, rpm.ParserName, database.SourcePackage, database.Namespace{}}
+	srpmPackage = &database.Feature{srpmName, srpmVersion, rpm.ParserName, database.SourcePackage}
 	return
 }
 

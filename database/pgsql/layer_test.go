@@ -41,7 +41,7 @@ var persistLayerTests = []struct {
 		name:  "random-forest",
 		by:    []database.Detector{realDetectors[2]},
 		features: []database.LayerFeature{
-			{realFeatures[1], realDetectors[1]},
+			{realFeatures[1], realDetectors[1], database.Namespace{}},
 		},
 		err: "parameters are not valid",
 	},
@@ -51,7 +51,7 @@ var persistLayerTests = []struct {
 		err:   "associated immutable entities are missing in the database",
 		by:    []database.Detector{realDetectors[2]},
 		features: []database.LayerFeature{
-			{fakeFeatures[1], realDetectors[2]},
+			{fakeFeatures[1], realDetectors[2], database.Namespace{}},
 		},
 	},
 	{
@@ -74,8 +74,8 @@ var persistLayerTests = []struct {
 		name:  "hamsterhouse",
 		by:    []database.Detector{realDetectors[1], realDetectors[2]},
 		features: []database.LayerFeature{
-			{realFeatures[1], realDetectors[2]},
-			{realFeatures[2], realDetectors[2]},
+			{realFeatures[1], realDetectors[2], database.Namespace{}},
+			{realFeatures[2], realDetectors[2], database.Namespace{}},
 		},
 		namespaces: []database.LayerNamespace{
 			{realNamespaces[1], realDetectors[1]},
@@ -84,8 +84,8 @@ var persistLayerTests = []struct {
 			Hash: "hamsterhouse",
 			By:   []database.Detector{realDetectors[1], realDetectors[2]},
 			Features: []database.LayerFeature{
-				{realFeatures[1], realDetectors[2]},
-				{realFeatures[2], realDetectors[2]},
+				{realFeatures[1], realDetectors[2], database.Namespace{}},
+				{realFeatures[2], realDetectors[2], database.Namespace{}},
 			},
 			Namespaces: []database.LayerNamespace{
 				{realNamespaces[1], realDetectors[1]},
@@ -97,7 +97,7 @@ var persistLayerTests = []struct {
 		name:  "layer-1",
 		by:    []database.Detector{realDetectors[3], realDetectors[4]},
 		features: []database.LayerFeature{
-			{realFeatures[4], realDetectors[3]},
+			{realFeatures[4], realDetectors[3], database.Namespace{}},
 		},
 		namespaces: []database.LayerNamespace{
 			{realNamespaces[3], realDetectors[4]},
@@ -106,9 +106,9 @@ var persistLayerTests = []struct {
 			Hash: "layer-1",
 			By:   []database.Detector{realDetectors[1], realDetectors[2], realDetectors[3], realDetectors[4]},
 			Features: []database.LayerFeature{
-				{realFeatures[1], realDetectors[2]},
-				{realFeatures[2], realDetectors[2]},
-				{realFeatures[4], realDetectors[3]},
+				{realFeatures[1], realDetectors[2], database.Namespace{}},
+				{realFeatures[2], realDetectors[2], database.Namespace{}},
+				{realFeatures[4], realDetectors[3], database.Namespace{}},
 			},
 			Namespaces: []database.LayerNamespace{
 				{realNamespaces[1], realDetectors[1]},

@@ -28,7 +28,7 @@ func TestPersistFeatures(t *testing.T) {
 	defer cleanup()
 
 	invalid := database.Feature{}
-	valid := *database.NewBinaryPackage("mount", "2.31.1-0.4ubuntu3.1", "dpkg", database.Namespace{})
+	valid := *database.NewBinaryPackage("mount", "2.31.1-0.4ubuntu3.1", "dpkg")
 
 	// invalid
 	require.NotNil(t, tx.PersistFeatures([]database.Feature{invalid}))
@@ -45,9 +45,9 @@ func TestPersistNamespacedFeatures(t *testing.T) {
 	defer cleanup()
 
 	// existing features
-	f1 := database.NewSourcePackage("ourchat", "0.5", "dpkg", database.Namespace{})
+	f1 := database.NewSourcePackage("ourchat", "0.5", "dpkg")
 	// non-existing features
-	f2 := database.NewSourcePackage("fake!", "", "", database.Namespace{})
+	f2 := database.NewSourcePackage("fake!", "", "")
 	// exising namespace
 	n1 := database.NewNamespace("debian:7", "dpkg")
 	// non-existing namespace
@@ -182,7 +182,7 @@ func TestFindNamespacedFeatureIDs(t *testing.T) {
 	expectedIDs = append(expectedIDs, 1)
 
 	namespace := realNamespaces[1]
-	features = append(features, *database.NewNamespacedFeature(&namespace, database.NewBinaryPackage("not-found", "1.0", "dpkg", database.Namespace{}))) // test not found feature
+	features = append(features, *database.NewNamespacedFeature(&namespace, database.NewBinaryPackage("not-found", "1.0", "dpkg"))) // test not found feature
 
 	ids, err := tx.findNamespacedFeatureIDs(features)
 	require.Nil(t, err)
