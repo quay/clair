@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pgsql
+package lock
 
 import (
+	"database/sql"
 	"time"
 
+	"github.com/coreos/clair/database/pgsql/monitoring"
+	"github.com/coreos/clair/database/pgsql/util"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -38,12 +41,12 @@ const (
 	SELECT owner, until FROM lock WHERE name = $1`
 )
 
-func (tx *pgSession) AcquireLock(lockName, whoami string, desiredDuration time.Duration) (bool, time.Time, error) {
+func AcquireLock(tx *sql.Tx, lockName, whoami string, desiredDuration time.Duration) (bool, time.Time, error) {
 	if lockName == "" || whoami == "" || desiredDuration == 0 {
 		panic("invalid lock parameters")
 	}
 
-	if err := tx.pruneLocks(); err != nil {
+	if err := PruneLocks(tx); err != nil {
 		return false, time.Time{}, err
 	}
 
@@ -54,22 +57,22 @@ func (tx *pgSession) AcquireLock(lockName, whoami string, desiredDuration time.D
 		lockOwner   string
 	)
 
-	defer observeQueryTime("Lock", "soiLock", time.Now())
+	defer monitoring.ObserveQueryTime("Lock", "soiLock", time.Now())
 	err := tx.QueryRow(soiLock, lockName, whoami, desiredLockedUntil).Scan(&lockOwner, &lockedUntil)
-	return lockOwner == whoami, lockedUntil, err
+	return lockOwner == whoami, lockedUntil, util.HandleError("AcquireLock", err)
 }
 
-func (tx *pgSession) ExtendLock(lockName, whoami string, desiredDuration time.Duration) (bool, time.Time, error) {
+func ExtendLock(tx *sql.Tx, lockName, whoami string, desiredDuration time.Duration) (bool, time.Time, error) {
 	if lockName == "" || whoami == "" || desiredDuration == 0 {
 		panic("invalid lock parameters")
 	}
 
 	desiredLockedUntil := time.Now().Add(desiredDuration)
 
-	defer observeQueryTime("Lock", "update", time.Now())
+	defer monitoring.ObserveQueryTime("Lock", "update", time.Now())
 	result, err := tx.Exec(updateLock, lockName, whoami, desiredLockedUntil)
 	if err != nil {
-		return false, time.Time{}, handleError("updateLock", err)
+		return false, time.Time{}, util.HandleError("updateLock", err)
 	}
 
 	if numRows, err := result.RowsAffected(); err == nil {
@@ -77,27 +80,27 @@ func (tx *pgSession) ExtendLock(lockName, whoami string, desiredDuration time.Du
 		return numRows > 0, desiredLockedUntil, nil
 	}
 
-	return false, time.Time{}, handleError("updateLock", err)
+	return false, time.Time{}, util.HandleError("updateLock", err)
 }
 
-func (tx *pgSession) ReleaseLock(name, owner string) error {
+func ReleaseLock(tx *sql.Tx, name, owner string) error {
 	if name == "" || owner == "" {
 		panic("invalid lock parameters")
 	}
 
-	defer observeQueryTime("Unlock", "all", time.Now())
+	defer monitoring.ObserveQueryTime("Unlock", "all", time.Now())
 	_, err := tx.Exec(removeLock, name, owner)
 	return err
 }
 
 // pruneLocks removes every expired locks from the database
-func (tx *pgSession) pruneLocks() error {
-	defer observeQueryTime("pruneLocks", "all", time.Now())
+func PruneLocks(tx *sql.Tx) error {
+	defer monitoring.ObserveQueryTime("pruneLocks", "all", time.Now())
 
 	if r, err := tx.Exec(removeLockExpired, time.Now().UTC()); err != nil {
-		return handleError("removeLockExpired", err)
+		return util.HandleError("removeLockExpired", err)
 	} else if affected, err := r.RowsAffected(); err != nil {
-		return handleError("removeLockExpired", err)
+		return util.HandleError("removeLockExpired", err)
 	} else {
 		log.Debugf("Pruned %d Locks", affected)
 	}
