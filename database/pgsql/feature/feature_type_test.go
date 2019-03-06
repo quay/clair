@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pgsql
+package feature
 
 import (
 	"testing"
@@ -20,19 +20,20 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/database/pgsql/testutil"
 )
 
 func TestGetFeatureTypeMap(t *testing.T) {
-	tx, cleanup := createTestPgSession(t, "TestGetFeatureTypeMap")
+	tx, cleanup := testutil.CreateTestTx(t, "TestGetFeatureTypeMap")
 	defer cleanup()
 
-	types, err := tx.getFeatureTypeMap()
+	types, err := GetFeatureTypeMap(tx)
 	if err != nil {
 		require.Nil(t, err, err.Error())
 	}
 
-	require.Equal(t, database.SourcePackage, types.byID[1])
-	require.Equal(t, database.BinaryPackage, types.byID[2])
-	require.Equal(t, 1, types.byName[database.SourcePackage])
-	require.Equal(t, 2, types.byName[database.BinaryPackage])
+	require.Equal(t, database.SourcePackage, types.ByID[1])
+	require.Equal(t, database.BinaryPackage, types.ByID[2])
+	require.Equal(t, 1, types.ByName[database.SourcePackage])
+	require.Equal(t, 2, types.ByName[database.BinaryPackage])
 }

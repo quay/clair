@@ -12,24 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pgsql
+package feature
 
-import "github.com/coreos/clair/database"
+import (
+	"database/sql"
+
+	"github.com/coreos/clair/database"
+)
 
 const (
 	selectAllFeatureTypes = `SELECT id, name FROM feature_type`
 )
 
-type featureTypes struct {
-	byID   map[int]database.FeatureType
-	byName map[database.FeatureType]int
+type FeatureTypes struct {
+	ByID   map[int]database.FeatureType
+	ByName map[database.FeatureType]int
 }
 
-func newFeatureTypes() *featureTypes {
-	return &featureTypes{make(map[int]database.FeatureType), make(map[database.FeatureType]int)}
+func newFeatureTypes() *FeatureTypes {
+	return &FeatureTypes{make(map[int]database.FeatureType), make(map[database.FeatureType]int)}
 }
 
-func (tx *pgSession) getFeatureTypeMap() (*featureTypes, error) {
+func GetFeatureTypeMap(tx *sql.Tx) (*FeatureTypes, error) {
 	rows, err := tx.Query(selectAllFeatureTypes)
 	if err != nil {
 		return nil, err
@@ -45,8 +49,8 @@ func (tx *pgSession) getFeatureTypeMap() (*featureTypes, error) {
 			return nil, err
 		}
 
-		types.byID[id] = name
-		types.byName[name] = id
+		types.ByID[id] = name
+		types.ByName[name] = id
 	}
 
 	return types, nil
