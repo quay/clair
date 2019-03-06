@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pgsql
+package layer
 
 import (
 	"testing"
@@ -20,6 +20,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/database/pgsql/testutil"
 )
 
 var persistLayerTests = []struct {
@@ -39,9 +40,9 @@ var persistLayerTests = []struct {
 	{
 		title: "layer with inconsistent feature and detectors",
 		name:  "random-forest",
-		by:    []database.Detector{realDetectors[2]},
+		by:    []database.Detector{testutil.RealDetectors[2]},
 		features: []database.LayerFeature{
-			{realFeatures[1], realDetectors[1], database.Namespace{}},
+			{testutil.RealFeatures[1], testutil.RealDetectors[1], database.Namespace{}},
 		},
 		err: "parameters are not valid",
 	},
@@ -49,70 +50,71 @@ var persistLayerTests = []struct {
 		title: "layer with non-existing feature",
 		name:  "random-forest",
 		err:   "associated immutable entities are missing in the database",
-		by:    []database.Detector{realDetectors[2]},
+		by:    []database.Detector{testutil.RealDetectors[2]},
 		features: []database.LayerFeature{
-			{fakeFeatures[1], realDetectors[2], database.Namespace{}},
+			{testutil.FakeFeatures[1], testutil.RealDetectors[2], database.Namespace{}},
 		},
 	},
 	{
 		title: "layer with non-existing namespace",
 		name:  "random-forest2",
 		err:   "associated immutable entities are missing in the database",
-		by:    []database.Detector{realDetectors[1]},
+		by:    []database.Detector{testutil.RealDetectors[1]},
 		namespaces: []database.LayerNamespace{
-			{fakeNamespaces[1], realDetectors[1]},
+			{testutil.FakeNamespaces[1], testutil.RealDetectors[1]},
 		},
 	},
 	{
 		title: "layer with non-existing detector",
 		name:  "random-forest3",
 		err:   "associated immutable entities are missing in the database",
-		by:    []database.Detector{fakeDetector[1]},
+		by:    []database.Detector{testutil.FakeDetector[1]},
 	},
 	{
+
 		title: "valid layer",
 		name:  "hamsterhouse",
-		by:    []database.Detector{realDetectors[1], realDetectors[2]},
+		by:    []database.Detector{testutil.RealDetectors[1], testutil.RealDetectors[2]},
 		features: []database.LayerFeature{
-			{realFeatures[1], realDetectors[2], database.Namespace{}},
-			{realFeatures[2], realDetectors[2], database.Namespace{}},
+			{testutil.RealFeatures[1], testutil.RealDetectors[2], database.Namespace{}},
+			{testutil.RealFeatures[2], testutil.RealDetectors[2], database.Namespace{}},
 		},
 		namespaces: []database.LayerNamespace{
-			{realNamespaces[1], realDetectors[1]},
+			{testutil.RealNamespaces[1], testutil.RealDetectors[1]},
 		},
 		layer: &database.Layer{
 			Hash: "hamsterhouse",
-			By:   []database.Detector{realDetectors[1], realDetectors[2]},
+			By:   []database.Detector{testutil.RealDetectors[1], testutil.RealDetectors[2]},
 			Features: []database.LayerFeature{
-				{realFeatures[1], realDetectors[2], database.Namespace{}},
-				{realFeatures[2], realDetectors[2], database.Namespace{}},
+				{testutil.RealFeatures[1], testutil.RealDetectors[2], database.Namespace{}},
+				{testutil.RealFeatures[2], testutil.RealDetectors[2], database.Namespace{}},
 			},
 			Namespaces: []database.LayerNamespace{
-				{realNamespaces[1], realDetectors[1]},
+				{testutil.RealNamespaces[1], testutil.RealDetectors[1]},
 			},
 		},
 	},
 	{
 		title: "update existing layer",
 		name:  "layer-1",
-		by:    []database.Detector{realDetectors[3], realDetectors[4]},
+		by:    []database.Detector{testutil.RealDetectors[3], testutil.RealDetectors[4]},
 		features: []database.LayerFeature{
-			{realFeatures[4], realDetectors[3], database.Namespace{}},
+			{testutil.RealFeatures[4], testutil.RealDetectors[3], database.Namespace{}},
 		},
 		namespaces: []database.LayerNamespace{
-			{realNamespaces[3], realDetectors[4]},
+			{testutil.RealNamespaces[3], testutil.RealDetectors[4]},
 		},
 		layer: &database.Layer{
 			Hash: "layer-1",
-			By:   []database.Detector{realDetectors[1], realDetectors[2], realDetectors[3], realDetectors[4]},
+			By:   []database.Detector{testutil.RealDetectors[1], testutil.RealDetectors[2], testutil.RealDetectors[3], testutil.RealDetectors[4]},
 			Features: []database.LayerFeature{
-				{realFeatures[1], realDetectors[2], database.Namespace{}},
-				{realFeatures[2], realDetectors[2], database.Namespace{}},
-				{realFeatures[4], realDetectors[3], database.Namespace{}},
+				{testutil.RealFeatures[1], testutil.RealDetectors[2], database.Namespace{}},
+				{testutil.RealFeatures[2], testutil.RealDetectors[2], database.Namespace{}},
+				{testutil.RealFeatures[4], testutil.RealDetectors[3], database.Namespace{}},
 			},
 			Namespaces: []database.LayerNamespace{
-				{realNamespaces[1], realDetectors[1]},
-				{realNamespaces[3], realDetectors[4]},
+				{testutil.RealNamespaces[1], testutil.RealDetectors[1]},
+				{testutil.RealNamespaces[3], testutil.RealDetectors[4]},
 			},
 		},
 	},
@@ -120,33 +122,33 @@ var persistLayerTests = []struct {
 	{
 		title: "layer with potential namespace",
 		name:  "layer-potential-namespace",
-		by:    []database.Detector{realDetectors[3]},
+		by:    []database.Detector{testutil.RealDetectors[3]},
 		features: []database.LayerFeature{
-			{realFeatures[4], realDetectors[3], realNamespaces[4]},
+			{testutil.RealFeatures[4], testutil.RealDetectors[3], testutil.RealNamespaces[4]},
 		},
 		namespaces: []database.LayerNamespace{
-			{realNamespaces[3], realDetectors[3]},
+			{testutil.RealNamespaces[3], testutil.RealDetectors[3]},
 		},
 		layer: &database.Layer{
 			Hash: "layer-potential-namespace",
-			By:   []database.Detector{realDetectors[3]},
+			By:   []database.Detector{testutil.RealDetectors[3]},
 			Features: []database.LayerFeature{
-				{realFeatures[4], realDetectors[3], realNamespaces[4]},
+				{testutil.RealFeatures[4], testutil.RealDetectors[3], testutil.RealNamespaces[4]},
 			},
 			Namespaces: []database.LayerNamespace{
-				{realNamespaces[3], realDetectors[3]},
+				{testutil.RealNamespaces[3], testutil.RealDetectors[3]},
 			},
 		},
 	},
 }
 
 func TestPersistLayer(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "PersistLayer", true)
-	defer closeTest(t, datastore, tx)
+	tx, cleanup := testutil.CreateTestTxWithFixtures(t, "PersistLayer")
+	defer cleanup()
 
 	for _, test := range persistLayerTests {
 		t.Run(test.title, func(t *testing.T) {
-			err := tx.PersistLayer(test.name, test.features, test.namespaces, test.by)
+			err := PersistLayer(tx, test.name, test.features, test.namespaces, test.by)
 			if test.err != "" {
 				assert.EqualError(t, err, test.err, "unexpected error")
 				return
@@ -154,7 +156,7 @@ func TestPersistLayer(t *testing.T) {
 
 			assert.Nil(t, err)
 			if test.layer != nil {
-				layer, ok, err := tx.FindLayer(test.name)
+				layer, ok, err := FindLayer(tx, test.name)
 				assert.Nil(t, err)
 				assert.True(t, ok)
 				database.AssertLayerEqual(t, test.layer, &layer)
@@ -186,17 +188,17 @@ var findLayerTests = []struct {
 		title: "existing layer",
 		in:    "layer-4",
 		ok:    true,
-		out:   takeLayerPointerFromMap(realLayers, 6),
+		out:   testutil.TakeLayerPointerFromMap(testutil.RealLayers, 6),
 	},
 }
 
 func TestFindLayer(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "FindLayer", true)
-	defer closeTest(t, datastore, tx)
+	tx, cleanup := testutil.CreateTestTxWithFixtures(t, "FindLayer")
+	defer cleanup()
 
 	for _, test := range findLayerTests {
 		t.Run(test.title, func(t *testing.T) {
-			layer, ok, err := tx.FindLayer(test.in)
+			layer, ok, err := FindLayer(tx, test.in)
 			if test.err != "" {
 				assert.EqualError(t, err, test.err, "unexpected error")
 				return
