@@ -90,7 +90,7 @@ var (
 				feature_id INT REFERENCES feature ON DELETE CASCADE,
 				detector_id INT REFERENCES detector ON DELETE CASCADE,
 				namespace_id INT REFERENCES namespace ON DELETE CASCADE,
-				UNIQUE (layer_id, feature_id));`,
+				UNIQUE (layer_id, feature_id, namespace_id));`,
 			`CREATE INDEX ON layer_feature(layer_id);`,
 
 			`CREATE TABLE IF NOT EXISTS layer_namespace (

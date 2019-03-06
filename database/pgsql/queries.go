@@ -121,7 +121,7 @@ func queryPersistFeature(count int) string {
 func queryPersistLayerFeature(count int) string {
 	return queryPersist(count,
 		"layer_feature",
-		"layer_feature_layer_id_feature_id_key",
+		"layer_feature_layer_id_feature_id_namespace_id_key",
 		"layer_id",
 		"feature_id",
 		"detector_id",
