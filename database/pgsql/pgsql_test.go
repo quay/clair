@@ -117,10 +117,11 @@ func TestMain(m *testing.M) {
 	withFixtureName = fName
 	withoutFixtureName = nfName
 
-	m.Run()
+	rc := m.Run()
 
 	dropTemplateDatabase(fURL, fName)
 	dropTemplateDatabase(nfURL, nfName)
+	os.Exit(rc)
 }
 
 func openCopiedDatabase(testConfig database.RegistrableComponentConfig, fixture bool) (database.Datastore, error) {
