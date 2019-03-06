@@ -21,13 +21,10 @@ import (
 	"io/ioutil"
 	"net/url"
 	"strings"
-	"time"
 
 	"gopkg.in/yaml.v2"
 
 	"github.com/hashicorp/golang-lru"
-	"github.com/lib/pq"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/remind101/migrate"
 	log "github.com/sirupsen/logrus"
 
@@ -37,48 +34,8 @@ import (
 	"github.com/coreos/clair/pkg/pagination"
 )
 
-var (
-	promErrorsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "clair_pgsql_errors_total",
-		Help: "Number of errors that PostgreSQL requests generated.",
-	}, []string{"request"})
-
-	promCacheHitsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "clair_pgsql_cache_hits_total",
-		Help: "Number of cache hits that the PostgreSQL backend did.",
-	}, []string{"object"})
-
-	promCacheQueriesTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "clair_pgsql_cache_queries_total",
-		Help: "Number of cache queries that the PostgreSQL backend did.",
-	}, []string{"object"})
-
-	promQueryDurationMilliseconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-		Name: "clair_pgsql_query_duration_milliseconds",
-		Help: "Time it takes to execute the database query.",
-	}, []string{"query", "subquery"})
-
-	promConcurrentLockVAFV = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "clair_pgsql_concurrent_lock_vafv_total",
-		Help: "Number of transactions trying to hold the exclusive Vulnerability_Affects_Feature lock.",
-	})
-)
-
 func init() {
-	prometheus.MustRegister(promErrorsTotal)
-	prometheus.MustRegister(promCacheHitsTotal)
-	prometheus.MustRegister(promCacheQueriesTotal)
-	prometheus.MustRegister(promQueryDurationMilliseconds)
-	prometheus.MustRegister(promConcurrentLockVAFV)
-
 	database.Register("pgsql", openDatabase)
-}
-
-// pgSessionCache is the session's cache, which holds the pgSQL's cache and the
-// individual session's cache. Only when session.Commit is called, all the
-// changes to pgSQL cache will be applied.
-type pgSessionCache struct {
-	c *lru.ARCCache
 }
 
 type pgSQL struct {
@@ -86,12 +43,6 @@ type pgSQL struct {
 
 	cache  *lru.ARCCache
 	config Config
-}
-
-type pgSession struct {
-	*sql.Tx
-
-	key pagination.Key
 }
 
 // Begin initiates a transaction to database.
@@ -107,10 +58,6 @@ func (pgSQL *pgSQL) Begin() (database.Session, error) {
 		Tx:  tx,
 		key: pagination.Must(pagination.KeyFromString(pgSQL.config.PaginationKey)),
 	}, nil
-}
-
-func (tx *pgSession) Commit() error {
-	return tx.Tx.Commit()
 }
 
 // Close closes the database and destroys if ManageDatabaseLifecycle has been specified in
@@ -129,15 +76,6 @@ func (pgSQL *pgSQL) Close() {
 // Ping verifies that the database is accessible.
 func (pgSQL *pgSQL) Ping() bool {
 	return pgSQL.DB.Ping() == nil
-}
-
-// Page is the representation of a page for the Postgres schema.
-type Page struct {
-	// StartID is the ID being used as the basis for pagination across database
-	// results. It is used to search for an ancestry with ID >= StartID.
-	//
-	// StartID is required to be unique to every ancestry and always increasing.
-	StartID int64
 }
 
 // Config is the configuration that is used by openDatabase.
@@ -312,43 +250,4 @@ func dropDatabase(source, dbName string) error {
 	}
 
 	return nil
-}
-
-// handleError logs an error with an extra description and masks the error if it's an SQL one.
-// The function ensures we never return plain SQL errors and leak anything.
-// The function should be used for every database query error.
-func handleError(desc string, err error) error {
-	if err == nil {
-		return nil
-	}
-
-	if err == sql.ErrNoRows {
-		return commonerr.ErrNotFound
-	}
-
-	log.WithError(err).WithField("Description", desc).Error("database: handled database error")
-	promErrorsTotal.WithLabelValues(desc).Inc()
-
-	if _, o := err.(*pq.Error); o || err == sql.ErrTxDone || strings.HasPrefix(err.Error(), "sql:") {
-		return database.ErrBackendException
-	}
-
-	return err
-}
-
-// isErrUniqueViolation determines is the given error is a unique contraint violation.
-func isErrUniqueViolation(err error) bool {
-	pqErr, ok := err.(*pq.Error)
-	return ok && pqErr.Code == "23505"
-}
-
-// observeQueryTime computes the time elapsed since `start` to represent the
-// query time.
-// 1. `query` is a pgSession function name.
-// 2. `subquery` is a specific query or a batched query.
-// 3. `start` is the time right before query is executed.
-func observeQueryTime(query, subquery string, start time.Time) {
-	promQueryDurationMilliseconds.
-		WithLabelValues(query, subquery).
-		Observe(float64(time.Since(start).Nanoseconds()) / float64(time.Millisecond))
 }
