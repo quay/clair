@@ -12,18 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pgsql
+package detector
 
 import (
+	"database/sql"
 	"testing"
 
 	"github.com/deckarep/golang-set"
 	"github.com/stretchr/testify/require"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/database/pgsql/testutil"
 )
 
-func testGetAllDetectors(tx *pgSession) []database.Detector {
+func testGetAllDetectors(tx *sql.Tx) []database.Detector {
 	query := `SELECT name, version, dtype FROM detector`
 	rows, err := tx.Query(query)
 	if err != nil {
@@ -90,12 +92,12 @@ var persistDetectorTests = []struct {
 }
 
 func TestPersistDetector(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "PersistDetector", true)
-	defer closeTest(t, datastore, tx)
+	tx, cleanup := testutil.CreateTestTxWithFixtures(t, "PersistDetector")
+	defer cleanup()
 
 	for _, test := range persistDetectorTests {
 		t.Run(test.title, func(t *testing.T) {
-			err := tx.PersistDetectors(test.in)
+			err := PersistDetectors(tx, test.in)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)
 				return
