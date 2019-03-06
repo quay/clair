@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pgsql
+package namespace
 
 import (
 	"testing"
@@ -20,25 +20,26 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/database/pgsql/testutil"
 )
 
 func TestPersistNamespaces(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "PersistNamespaces", false)
-	defer closeTest(t, datastore, tx)
+	tx, cleanup := testutil.CreateTestTx(t, "PersistNamespaces")
+	defer cleanup()
 
 	ns1 := database.Namespace{}
 	ns2 := database.Namespace{Name: "t", VersionFormat: "b"}
 
 	// Empty Case
-	assert.Nil(t, tx.PersistNamespaces([]database.Namespace{}))
+	assert.Nil(t, PersistNamespaces(tx, []database.Namespace{}))
 	// Invalid Case
-	assert.NotNil(t, tx.PersistNamespaces([]database.Namespace{ns1}))
+	assert.NotNil(t, PersistNamespaces(tx, []database.Namespace{ns1}))
 	// Duplicated Case
-	assert.Nil(t, tx.PersistNamespaces([]database.Namespace{ns2, ns2}))
+	assert.Nil(t, PersistNamespaces(tx, []database.Namespace{ns2, ns2}))
 	// Existing Case
-	assert.Nil(t, tx.PersistNamespaces([]database.Namespace{ns2}))
+	assert.Nil(t, PersistNamespaces(tx, []database.Namespace{ns2}))
 
-	nsList := listNamespaces(t, tx)
+	nsList := testutil.ListNamespaces(t, tx)
 	assert.Len(t, nsList, 1)
 	assert.Equal(t, ns2, nsList[0])
 }

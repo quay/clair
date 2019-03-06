@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pgsql
+package namespace
 
 import (
 	"database/sql"
+	"fmt"
 	"sort"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/database/pgsql/util"
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
@@ -26,8 +28,24 @@ const (
 	searchNamespaceID = `SELECT id FROM Namespace WHERE name = $1 AND version_format = $2`
 )
 
+func queryPersistNamespace(count int) string {
+	return util.QueryPersist(count,
+		"namespace",
+		"namespace_name_version_format_key",
+		"name",
+		"version_format")
+}
+
+func querySearchNamespace(nsCount int) string {
+	return fmt.Sprintf(
+		`SELECT id, name, version_format 
+		FROM namespace WHERE (name, version_format) IN (%s)`,
+		util.QueryString(2, nsCount),
+	)
+}
+
 // PersistNamespaces soi namespaces into database.
-func (tx *pgSession) PersistNamespaces(namespaces []database.Namespace) error {
+func PersistNamespaces(tx *sql.Tx, namespaces []database.Namespace) error {
 	if len(namespaces) == 0 {
 		return nil
 	}
@@ -49,12 +67,12 @@ func (tx *pgSession) PersistNamespaces(namespaces []database.Namespace) error {
 
 	_, err := tx.Exec(queryPersistNamespace(len(namespaces)), keys...)
 	if err != nil {
-		return handleError("queryPersistNamespace", err)
+		return util.HandleError("queryPersistNamespace", err)
 	}
 	return nil
 }
 
-func (tx *pgSession) findNamespaceIDs(namespaces []database.Namespace) ([]sql.NullInt64, error) {
+func FindNamespaceIDs(tx *sql.Tx, namespaces []database.Namespace) ([]sql.NullInt64, error) {
 	if len(namespaces) == 0 {
 		return nil, nil
 	}
@@ -69,7 +87,7 @@ func (tx *pgSession) findNamespaceIDs(namespaces []database.Namespace) ([]sql.Nu
 
 	rows, err := tx.Query(querySearchNamespace(len(namespaces)), keys...)
 	if err != nil {
-		return nil, handleError("searchNamespace", err)
+		return nil, util.HandleError("searchNamespace", err)
 	}
 
 	defer rows.Close()
@@ -81,7 +99,7 @@ func (tx *pgSession) findNamespaceIDs(namespaces []database.Namespace) ([]sql.Nu
 	for rows.Next() {
 		err := rows.Scan(&id, &ns.Name, &ns.VersionFormat)
 		if err != nil {
-			return nil, handleError("searchNamespace", err)
+			return nil, util.HandleError("searchNamespace", err)
 		}
 		nsMap[ns] = id
 	}
