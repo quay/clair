@@ -12,22 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pgsql
+package migrations_test
 
 import (
 	"testing"
 
+	"github.com/coreos/clair/database/pgsql/migrations"
+	"github.com/coreos/clair/database/pgsql/testutil"
 	_ "github.com/lib/pq"
 	"github.com/remind101/migrate"
 	"github.com/stretchr/testify/require"
-
-	"github.com/coreos/clair/database/pgsql/migrations"
 )
 
 var userTableCount = `SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public'`
 
 func TestMigration(t *testing.T) {
-	db, cleanup := createAndConnectTestDB(t, "TestMigration")
+	db, cleanup := testutil.CreateAndConnectTestDB(t, "TestMigration")
 	defer cleanup()
 
 	err := migrate.NewPostgresMigrator(db).Exec(migrate.Up, migrations.Migrations...)
