@@ -1,4 +1,4 @@
-// Copyright 2017 clair authors
+// Copyright 2019 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pgsql
+package ancestry
 
 import (
 	"testing"
@@ -20,6 +20,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/database/pgsql/testutil"
 )
 
 var upsertAncestryTests = []struct {
@@ -55,9 +56,9 @@ var upsertAncestryTests = []struct {
 		title: "ancestry with invalid feature",
 		in: &database.Ancestry{
 			Name: "a",
-			By:   []database.Detector{realDetectors[1], realDetectors[2]},
+			By:   []database.Detector{testutil.RealDetectors[1], testutil.RealDetectors[2]},
 			Layers: []database.AncestryLayer{{Hash: "layer-1", Features: []database.AncestryFeature{
-				{fakeNamespacedFeatures[1], fakeDetector[1], fakeDetector[2]},
+				{testutil.FakeNamespacedFeatures[1], testutil.FakeDetector[1], testutil.FakeDetector[2]},
 			}}},
 		},
 		err: database.ErrMissingEntities.Error(),
@@ -66,26 +67,27 @@ var upsertAncestryTests = []struct {
 		title: "replace old ancestry",
 		in: &database.Ancestry{
 			Name: "a",
-			By:   []database.Detector{realDetectors[1], realDetectors[2]},
+			By:   []database.Detector{testutil.RealDetectors[1], testutil.RealDetectors[2]},
 			Layers: []database.AncestryLayer{
-				{"layer-1", []database.AncestryFeature{{realNamespacedFeatures[1], realDetectors[2], realDetectors[1]}}},
+				{"layer-1", []database.AncestryFeature{{testutil.RealNamespacedFeatures[1], testutil.RealDetectors[2], testutil.RealDetectors[1]}}},
 			},
 		},
 	},
 }
 
 func TestUpsertAncestry(t *testing.T) {
-	store, tx := openSessionForTest(t, "UpsertAncestry", true)
-	defer closeTest(t, store, tx)
+	tx, cleanup := testutil.CreateTestTxWithFixtures(t, "TestUpsertAncestry")
+	defer cleanup()
+
 	for _, test := range upsertAncestryTests {
 		t.Run(test.title, func(t *testing.T) {
-			err := tx.UpsertAncestry(*test.in)
+			err := UpsertAncestry(tx, *test.in)
 			if test.err != "" {
 				assert.EqualError(t, err, test.err, "unexpected error")
 				return
 			}
 			assert.Nil(t, err)
-			actual, ok, err := tx.FindAncestry(test.in.Name)
+			actual, ok, err := FindAncestry(tx, test.in.Name)
 			assert.Nil(t, err)
 			assert.True(t, ok)
 			database.AssertAncestryEqual(t, test.in, &actual)
@@ -113,16 +115,17 @@ var findAncestryTests = []struct {
 		in:       "ancestry-2",
 		err:      "",
 		ok:       true,
-		ancestry: takeAncestryPointerFromMap(realAncestries, 2),
+		ancestry: testutil.TakeAncestryPointerFromMap(testutil.RealAncestries, 2),
 	},
 }
 
 func TestFindAncestry(t *testing.T) {
-	store, tx := openSessionForTest(t, "FindAncestry", true)
-	defer closeTest(t, store, tx)
+	tx, cleanup := testutil.CreateTestTxWithFixtures(t, "TestFindAncestry")
+	defer cleanup()
+
 	for _, test := range findAncestryTests {
 		t.Run(test.title, func(t *testing.T) {
-			ancestry, ok, err := tx.FindAncestry(test.in)
+			ancestry, ok, err := FindAncestry(tx, test.in)
 			if test.err != "" {
 				assert.EqualError(t, err, test.err, "unexpected error")
 				return
