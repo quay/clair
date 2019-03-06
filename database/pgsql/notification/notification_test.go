@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pgsql
+package notification
 
 import (
 	"testing"
@@ -22,6 +22,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/coreos/clair/database"
+	"github.com/coreos/clair/database/pgsql/page"
+	"github.com/coreos/clair/database/pgsql/testutil"
 	"github.com/coreos/clair/pkg/pagination"
 )
 
@@ -37,6 +39,8 @@ type findVulnerabilityNotificationOut struct {
 	ok           bool
 	err          string
 }
+
+var testPaginationKey = pagination.Must(pagination.NewKey())
 
 var findVulnerabilityNotificationTests = []struct {
 	title string
@@ -77,21 +81,21 @@ var findVulnerabilityNotificationTests = []struct {
 		},
 		out: findVulnerabilityNotificationOut{
 			&database.VulnerabilityNotificationWithVulnerable{
-				NotificationHook: realNotification[1].NotificationHook,
+				NotificationHook: testutil.RealNotification[1].NotificationHook,
 				Old: &database.PagedVulnerableAncestries{
-					Vulnerability: realVulnerability[2],
+					Vulnerability: testutil.RealVulnerability[2],
 					Limit:         1,
 					Affected:      make(map[int]string),
-					Current:       mustMarshalToken(testPaginationKey, Page{0}),
-					Next:          mustMarshalToken(testPaginationKey, Page{0}),
+					Current:       testutil.MustMarshalToken(testutil.TestPaginationKey, page.Page{0}),
+					Next:          testutil.MustMarshalToken(testutil.TestPaginationKey, page.Page{0}),
 					End:           true,
 				},
 				New: &database.PagedVulnerableAncestries{
-					Vulnerability: realVulnerability[1],
+					Vulnerability: testutil.RealVulnerability[1],
 					Limit:         1,
 					Affected:      map[int]string{3: "ancestry-3"},
-					Current:       mustMarshalToken(testPaginationKey, Page{0}),
-					Next:          mustMarshalToken(testPaginationKey, Page{4}),
+					Current:       testutil.MustMarshalToken(testutil.TestPaginationKey, page.Page{0}),
+					Next:          testutil.MustMarshalToken(testutil.TestPaginationKey, page.Page{4}),
 					End:           false,
 				},
 			},
@@ -100,32 +104,31 @@ var findVulnerabilityNotificationTests = []struct {
 			"",
 		},
 	},
-
 	{
 		title: "find existing notification of second page of new affected ancestry",
 		in: findVulnerabilityNotificationIn{
 			notificationName:        "test",
 			pageSize:                1,
 			oldAffectedAncestryPage: pagination.FirstPageToken,
-			newAffectedAncestryPage: mustMarshalToken(testPaginationKey, Page{4}),
+			newAffectedAncestryPage: testutil.MustMarshalToken(testutil.TestPaginationKey, page.Page{4}),
 		},
 		out: findVulnerabilityNotificationOut{
 			&database.VulnerabilityNotificationWithVulnerable{
-				NotificationHook: realNotification[1].NotificationHook,
+				NotificationHook: testutil.RealNotification[1].NotificationHook,
 				Old: &database.PagedVulnerableAncestries{
-					Vulnerability: realVulnerability[2],
+					Vulnerability: testutil.RealVulnerability[2],
 					Limit:         1,
 					Affected:      make(map[int]string),
-					Current:       mustMarshalToken(testPaginationKey, Page{0}),
-					Next:          mustMarshalToken(testPaginationKey, Page{0}),
+					Current:       testutil.MustMarshalToken(testutil.TestPaginationKey, page.Page{0}),
+					Next:          testutil.MustMarshalToken(testutil.TestPaginationKey, page.Page{0}),
 					End:           true,
 				},
 				New: &database.PagedVulnerableAncestries{
-					Vulnerability: realVulnerability[1],
+					Vulnerability: testutil.RealVulnerability[1],
 					Limit:         1,
 					Affected:      map[int]string{4: "ancestry-4"},
-					Current:       mustMarshalToken(testPaginationKey, Page{4}),
-					Next:          mustMarshalToken(testPaginationKey, Page{0}),
+					Current:       testutil.MustMarshalToken(testutil.TestPaginationKey, page.Page{4}),
+					Next:          testutil.MustMarshalToken(testutil.TestPaginationKey, page.Page{0}),
 					End:           true,
 				},
 			},
@@ -137,12 +140,12 @@ var findVulnerabilityNotificationTests = []struct {
 }
 
 func TestFindVulnerabilityNotification(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "pagination", true)
-	defer closeTest(t, datastore, tx)
+	tx, cleanup := testutil.CreateTestTxWithFixtures(t, "pagination")
+	defer cleanup()
 
 	for _, test := range findVulnerabilityNotificationTests {
 		t.Run(test.title, func(t *testing.T) {
-			notification, ok, err := tx.FindVulnerabilityNotification(test.in.notificationName, test.in.pageSize, test.in.oldAffectedAncestryPage, test.in.newAffectedAncestryPage)
+			notification, ok, err := FindVulnerabilityNotification(tx, test.in.notificationName, test.in.pageSize, test.in.oldAffectedAncestryPage, test.in.newAffectedAncestryPage, testutil.TestPaginationKey)
 			if test.out.err != "" {
 				require.EqualError(t, err, test.out.err)
 				return
@@ -155,13 +158,14 @@ func TestFindVulnerabilityNotification(t *testing.T) {
 			}
 
 			require.True(t, ok)
-			assertVulnerabilityNotificationWithVulnerableEqual(t, testPaginationKey, test.out.notification, &notification)
+			testutil.AssertVulnerabilityNotificationWithVulnerableEqual(t, testutil.TestPaginationKey, test.out.notification, &notification)
 		})
 	}
 }
 
 func TestInsertVulnerabilityNotifications(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "InsertVulnerabilityNotifications", true)
+	datastore, cleanup := testutil.CreateTestDBWithFixture(t, "InsertVulnerabilityNotifications")
+	defer cleanup()
 
 	n1 := database.VulnerabilityNotification{}
 	n3 := database.VulnerabilityNotification{
@@ -187,34 +191,37 @@ func TestInsertVulnerabilityNotifications(t *testing.T) {
 		},
 	}
 
+	tx, err := datastore.Begin()
+	require.Nil(t, err)
+
 	// invalid case
-	err := tx.InsertVulnerabilityNotifications([]database.VulnerabilityNotification{n1})
-	assert.NotNil(t, err)
+	err = InsertVulnerabilityNotifications(tx, []database.VulnerabilityNotification{n1})
+	require.NotNil(t, err)
 
 	// invalid case: unknown vulnerability
-	err = tx.InsertVulnerabilityNotifications([]database.VulnerabilityNotification{n3})
-	assert.NotNil(t, err)
+	err = InsertVulnerabilityNotifications(tx, []database.VulnerabilityNotification{n3})
+	require.NotNil(t, err)
 
 	// invalid case: duplicated input notification
-	err = tx.InsertVulnerabilityNotifications([]database.VulnerabilityNotification{n4, n4})
-	assert.NotNil(t, err)
-	tx = restartSession(t, datastore, tx, false)
+	err = InsertVulnerabilityNotifications(tx, []database.VulnerabilityNotification{n4, n4})
+	require.NotNil(t, err)
+	tx = testutil.RestartTransaction(datastore, tx, false)
 
 	// valid case
-	err = tx.InsertVulnerabilityNotifications([]database.VulnerabilityNotification{n4})
-	assert.Nil(t, err)
+	err = InsertVulnerabilityNotifications(tx, []database.VulnerabilityNotification{n4})
+	require.Nil(t, err)
 	// invalid case: notification is already in database
-	err = tx.InsertVulnerabilityNotifications([]database.VulnerabilityNotification{n4})
-	assert.NotNil(t, err)
+	err = InsertVulnerabilityNotifications(tx, []database.VulnerabilityNotification{n4})
+	require.NotNil(t, err)
 
-	closeTest(t, datastore, tx)
+	require.Nil(t, tx.Rollback())
 }
 
 func TestFindNewNotification(t *testing.T) {
-	tx, cleanup := createTestPgSessionWithFixtures(t, "TestFindNewNotification")
+	tx, cleanup := testutil.CreateTestTxWithFixtures(t, "TestFindNewNotification")
 	defer cleanup()
 
-	noti, ok, err := tx.FindNewNotification(time.Now())
+	noti, ok, err := FindNewNotification(tx, time.Now())
 	if assert.Nil(t, err) && assert.True(t, ok) {
 		assert.Equal(t, "test", noti.Name)
 		assert.Equal(t, time.Time{}, noti.Notified)
@@ -223,13 +230,13 @@ func TestFindNewNotification(t *testing.T) {
 	}
 
 	// can't find the notified
-	assert.Nil(t, tx.MarkNotificationAsRead("test"))
+	assert.Nil(t, MarkNotificationAsRead(tx, "test"))
 	// if the notified time is before
-	noti, ok, err = tx.FindNewNotification(time.Now().Add(-time.Duration(10 * time.Second)))
+	noti, ok, err = FindNewNotification(tx, time.Now().Add(-time.Duration(10*time.Second)))
 	assert.Nil(t, err)
 	assert.False(t, ok)
 	// can find the notified after a period of time
-	noti, ok, err = tx.FindNewNotification(time.Now().Add(time.Duration(10 * time.Second)))
+	noti, ok, err = FindNewNotification(tx, time.Now().Add(time.Duration(10*time.Second)))
 	if assert.Nil(t, err) && assert.True(t, ok) {
 		assert.Equal(t, "test", noti.Name)
 		assert.NotEqual(t, time.Time{}, noti.Notified)
@@ -237,37 +244,37 @@ func TestFindNewNotification(t *testing.T) {
 		assert.Equal(t, time.Time{}, noti.Deleted)
 	}
 
-	assert.Nil(t, tx.DeleteNotification("test"))
+	assert.Nil(t, DeleteNotification(tx, "test"))
 	// can't find in any time
-	noti, ok, err = tx.FindNewNotification(time.Now().Add(-time.Duration(1000)))
+	noti, ok, err = FindNewNotification(tx, time.Now().Add(-time.Duration(1000)))
 	assert.Nil(t, err)
 	assert.False(t, ok)
 
-	noti, ok, err = tx.FindNewNotification(time.Now().Add(time.Duration(1000)))
+	noti, ok, err = FindNewNotification(tx, time.Now().Add(time.Duration(1000)))
 	assert.Nil(t, err)
 	assert.False(t, ok)
 }
 
 func TestMarkNotificationAsRead(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "MarkNotificationAsRead", true)
-	defer closeTest(t, datastore, tx)
+	tx, cleanup := testutil.CreateTestTxWithFixtures(t, "MarkNotificationAsRead")
+	defer cleanup()
 
 	// invalid case: notification doesn't exist
-	assert.NotNil(t, tx.MarkNotificationAsRead("non-existing"))
+	assert.NotNil(t, MarkNotificationAsRead(tx, "non-existing"))
 	// valid case
-	assert.Nil(t, tx.MarkNotificationAsRead("test"))
+	assert.Nil(t, MarkNotificationAsRead(tx, "test"))
 	// valid case
-	assert.Nil(t, tx.MarkNotificationAsRead("test"))
+	assert.Nil(t, MarkNotificationAsRead(tx, "test"))
 }
 
 func TestDeleteNotification(t *testing.T) {
-	datastore, tx := openSessionForTest(t, "DeleteNotification", true)
-	defer closeTest(t, datastore, tx)
+	tx, cleanup := testutil.CreateTestTxWithFixtures(t, "DeleteNotification")
+	defer cleanup()
 
 	// invalid case: notification doesn't exist
-	assert.NotNil(t, tx.DeleteNotification("non-existing"))
+	assert.NotNil(t, DeleteNotification(tx, "non-existing"))
 	// valid case
-	assert.Nil(t, tx.DeleteNotification("test"))
+	assert.Nil(t, DeleteNotification(tx, "test"))
 	// invalid case: notification is already deleted
-	assert.NotNil(t, tx.DeleteNotification("test"))
+	assert.NotNil(t, DeleteNotification(tx, "test"))
 }
