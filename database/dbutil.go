@@ -20,6 +20,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/coreos/clair/pkg/pagination"
 	"github.com/deckarep/golang-set"
 )
 
@@ -399,4 +401,126 @@ func PersistDetectorsAndCommit(store Datastore, detectors []Detector) error {
 	}
 
 	return nil
+}
+
+// MarkNotificationAsReadAndCommit marks a notification as read.
+func MarkNotificationAsReadAndCommit(store Datastore, name string) (bool, error) {
+	tx, err := store.Begin()
+	if err != nil {
+		return false, err
+	}
+
+	defer tx.Rollback()
+	err = tx.DeleteNotification(name)
+	if err == commonerr.ErrNotFound {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+// FindAffectedNamespacedFeaturesAndRollback finds the vulnerabilities on each
+// feature.
+func FindAffectedNamespacedFeaturesAndRollback(store Datastore, features []NamespacedFeature) ([]NullableAffectedNamespacedFeature, error) {
+	tx, err := store.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	defer tx.Rollback()
+	nullableFeatures, err := tx.FindAffectedNamespacedFeatures(features)
+	if err != nil {
+		return nil, err
+	}
+
+	return nullableFeatures, nil
+}
+
+// FindVulnerabilityNotificationAndRollback finds the vulnerability notification
+// and rollback.
+func FindVulnerabilityNotificationAndRollback(store Datastore, name string, limit int, oldVulnerabilityPage pagination.Token, newVulnerabilityPage pagination.Token) (VulnerabilityNotificationWithVulnerable, bool, error) {
+	tx, err := store.Begin()
+	if err != nil {
+		return VulnerabilityNotificationWithVulnerable{}, false, err
+	}
+
+	defer tx.Rollback()
+	return tx.FindVulnerabilityNotification(name, limit, oldVulnerabilityPage, newVulnerabilityPage)
+}
+
+// FindNewNotification finds notifications either never notified or notified
+// before the given time.
+func FindNewNotification(store Datastore, notifiedBefore time.Time) (NotificationHook, bool, error) {
+	tx, err := store.Begin()
+	if err != nil {
+		return NotificationHook{}, false, err
+	}
+
+	defer tx.Rollback()
+	return tx.FindNewNotification(notifiedBefore)
+}
+
+// UpdateKeyValueAndCommit stores the key value to storage.
+func UpdateKeyValueAndCommit(store Datastore, key, value string) error {
+	tx, err := store.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+	if err = tx.UpdateKeyValue(key, value); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+// InsertVulnerabilityNotificationsAndCommit inserts the notifications into db
+// and commit.
+func InsertVulnerabilityNotificationsAndCommit(store Datastore, notifications []VulnerabilityNotification) error {
+	tx, err := store.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := tx.InsertVulnerabilityNotifications(notifications); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+// FindVulnerabilitiesAndRollback finds the vulnerabilities based on given ids.
+func FindVulnerabilitiesAndRollback(store Datastore, ids []VulnerabilityID) ([]NullableVulnerability, error) {
+	tx, err := store.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	defer tx.Rollback()
+	return tx.FindVulnerabilities(ids)
+}
+
+func UpdateVulnerabilitiesAndCommit(store Datastore, toRemove []VulnerabilityID, toAdd []VulnerabilityWithAffected) error {
+	tx, err := store.Begin()
+	if err != nil {
+		return err
+	}
+
+	if err := tx.DeleteVulnerabilities(toRemove); err != nil {
+		return err
+	}
+
+	if err := tx.InsertVulnerabilities(toAdd); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
