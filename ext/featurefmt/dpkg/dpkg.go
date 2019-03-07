@@ -69,7 +69,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.LayerFeature, e
 		}
 	}
 
-	return database.ConvertFeatureSerToLayerFeatures(packages), nil
+	return database.ConvertFeatureSetToLayerFeatures(packages), nil
 }
 
 // parseDpkgDB consumes the status file scanner exactly one package info, until

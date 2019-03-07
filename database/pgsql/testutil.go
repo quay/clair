@@ -49,6 +49,7 @@ var (
 		1: {"debian:7", "dpkg"},
 		2: {"debian:8", "dpkg"},
 		3: {"fake:1.0", "rpm"},
+		4: {"cpe:/o:redhat:enterprise_linux:7::server", "rpm"},
 	}
 
 	realNamespacedFeatures = map[int]database.NamespacedFeature{

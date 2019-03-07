@@ -60,7 +60,7 @@ func ConvertFeatureSetToFeatures(features mapset.Set) []Feature {
 	return uniqueFeatures
 }
 
-func ConvertFeatureSerToLayerFeatures(features mapset.Set) []LayerFeature {
+func ConvertFeatureSetToLayerFeatures(features mapset.Set) []LayerFeature {
 	uniqueLayerFeatures := make([]LayerFeature, 0, features.Cardinality())
 	for f := range features.Iter() {
 		feature := f.(Feature)

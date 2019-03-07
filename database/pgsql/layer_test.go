@@ -116,6 +116,28 @@ var persistLayerTests = []struct {
 			},
 		},
 	},
+
+	{
+		title: "layer with potential namespace",
+		name:  "layer-potential-namespace",
+		by:    []database.Detector{realDetectors[3]},
+		features: []database.LayerFeature{
+			{realFeatures[4], realDetectors[3], realNamespaces[4]},
+		},
+		namespaces: []database.LayerNamespace{
+			{realNamespaces[3], realDetectors[3]},
+		},
+		layer: &database.Layer{
+			Hash: "layer-potential-namespace",
+			By:   []database.Detector{realDetectors[3]},
+			Features: []database.LayerFeature{
+				{realFeatures[4], realDetectors[3], realNamespaces[4]},
+			},
+			Namespaces: []database.LayerNamespace{
+				{realNamespaces[3], realDetectors[3]},
+			},
+		},
+	},
 }
 
 func TestPersistLayer(t *testing.T) {

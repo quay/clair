@@ -101,7 +101,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.LayerFeature, e
 		}
 	}
 
-	return database.ConvertFeatureSerToLayerFeatures(packages), nil
+	return database.ConvertFeatureSetToLayerFeatures(packages), nil
 }
 
 func parseRPMOutput(raw string) (rpmPackage *database.Feature, srpmPackage *database.Feature) {

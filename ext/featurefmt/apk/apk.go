@@ -86,7 +86,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.LayerFeature, e
 		packages.Add(pkg)
 	}
 
-	return database.ConvertFeatureSerToLayerFeatures(packages), nil
+	return database.ConvertFeatureSetToLayerFeatures(packages), nil
 }
 
 func (l lister) RequiredFilenames() []string {

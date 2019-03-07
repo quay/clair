@@ -37,12 +37,15 @@ const (
 		SELECT id FROM layer WHERE hash = $1`
 
 	findLayerFeatures = `
-		SELECT f.name, f.version, f.version_format, t.name, lf.detector_id, ns.name, ns.version_format
-			FROM layer_feature AS lf, feature AS f, feature_type AS t, namespace AS ns
-			WHERE lf.feature_id = f.id
-				AND t.id = f.type
-				AND lf.namespace_id = ns.id
-				AND lf.layer_id = $1`
+		SELECT
+			f.name, f.version, f.version_format, ft.name, lf.detector_id, ns.name, ns.version_format
+		FROM
+			layer_feature AS lf
+		LEFT JOIN feature f on f.id = lf.feature_id
+		LEFT JOIN feature_type ft on ft.id = f.type
+		LEFT JOIN namespace ns ON ns.id = lf.namespace_id
+
+		WHERE lf.layer_id = $1`
 
 	findLayerNamespaces = `
 		SELECT ns.name, ns.version_format, ln.detector_id
@@ -320,9 +323,12 @@ func (tx *pgSession) findLayerFeatures(layerID int64, detectors detectorMap) ([]
 			detectorID int64
 			feature    database.LayerFeature
 		)
-		if err := rows.Scan(&feature.Name, &feature.Version, &feature.VersionFormat, &feature.Type, &detectorID, &feature.PotentialNamespace.Name, &feature.PotentialNamespace.VersionFormat); err != nil {
+		var namespaceName, namespaceVersion sql.NullString
+		if err := rows.Scan(&feature.Name, &feature.Version, &feature.VersionFormat, &feature.Type, &detectorID, &namespaceName, &namespaceVersion); err != nil {
 			return nil, handleError("findLayerFeatures", err)
 		}
+		feature.PotentialNamespace.Name = namespaceName.String
+		feature.PotentialNamespace.VersionFormat = namespaceVersion.String
 
 		feature.By = detectors.byID[detectorID]
 		features = append(features, feature)
