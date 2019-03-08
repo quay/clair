@@ -49,6 +49,7 @@ var (
 		1: {"debian:7", "dpkg"},
 		2: {"debian:8", "dpkg"},
 		3: {"fake:1.0", "rpm"},
+		4: {"cpe:/o:redhat:enterprise_linux:7::server", "rpm"},
 	}
 
 	realNamespacedFeatures = map[int]database.NamespacedFeature{
@@ -70,8 +71,8 @@ var (
 			Hash: "layer-1",
 			By:   []database.Detector{realDetectors[1], realDetectors[2]},
 			Features: []database.LayerFeature{
-				{realFeatures[1], realDetectors[2]},
-				{realFeatures[2], realDetectors[2]},
+				{realFeatures[1], realDetectors[2], database.Namespace{}},
+				{realFeatures[2], realDetectors[2], database.Namespace{}},
 			},
 			Namespaces: []database.LayerNamespace{
 				{realNamespaces[1], realDetectors[1]},
@@ -81,8 +82,8 @@ var (
 			Hash: "layer-4",
 			By:   []database.Detector{realDetectors[1], realDetectors[2], realDetectors[3], realDetectors[4]},
 			Features: []database.LayerFeature{
-				{realFeatures[4], realDetectors[3]},
-				{realFeatures[3], realDetectors[2]},
+				{realFeatures[4], realDetectors[3], database.Namespace{}},
+				{realFeatures[3], realDetectors[2], database.Namespace{}},
 			},
 			Namespaces: []database.LayerNamespace{
 				{realNamespaces[1], realDetectors[1]},

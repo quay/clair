@@ -60,6 +60,19 @@ func ConvertFeatureSetToFeatures(features mapset.Set) []Feature {
 	return uniqueFeatures
 }
 
+func ConvertFeatureSetToLayerFeatures(features mapset.Set) []LayerFeature {
+	uniqueLayerFeatures := make([]LayerFeature, 0, features.Cardinality())
+	for f := range features.Iter() {
+		feature := f.(Feature)
+		layerFeature := LayerFeature{
+			Feature: feature,
+		}
+		uniqueLayerFeatures = append(uniqueLayerFeatures, layerFeature)
+	}
+
+	return uniqueLayerFeatures
+}
+
 // FindKeyValueAndRollback wraps session FindKeyValue function with begin and
 // roll back.
 func FindKeyValueAndRollback(datastore Datastore, key string) (value string, ok bool, err error) {

@@ -33,7 +33,7 @@ var (
 // Lister represents an ability to list the features present in an image layer.
 type Lister interface {
 	// ListFeatures produces a list of Features present in an image layer.
-	ListFeatures(tarutil.FilesMap) ([]database.Feature, error)
+	ListFeatures(tarutil.FilesMap) ([]database.LayerFeature, error)
 
 	// RequiredFilenames returns the list of files required to be in the FilesMap
 	// provided to the ListFeatures method.
@@ -89,12 +89,10 @@ func ListFeatures(files tarutil.FilesMap, toUse []database.Detector) ([]database
 				return nil, err
 			}
 
-			for _, f := range fs {
-				features = append(features, database.LayerFeature{
-					Feature: f,
-					By:      lister.info,
-				})
+			for i := range fs {
+				fs[i].By = lister.info
 			}
+			features = append(features, fs...)
 
 		} else {
 			log.WithField("Name", d).Fatal("unknown feature detector")

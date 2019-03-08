@@ -39,10 +39,10 @@ func valid(pkg *database.Feature) bool {
 	return pkg.Name != "" && pkg.Version != ""
 }
 
-func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {
+func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.LayerFeature, error) {
 	file, exists := files["lib/apk/db/installed"]
 	if !exists {
-		return []database.Feature{}, nil
+		return []database.LayerFeature{}, nil
 	}
 
 	// Iterate over each line in the "installed" file attempting to parse each
@@ -86,7 +86,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 		packages.Add(pkg)
 	}
 
-	return database.ConvertFeatureSetToFeatures(packages), nil
+	return database.ConvertFeatureSetToLayerFeatures(packages), nil
 }
 
 func (l lister) RequiredFilenames() []string {

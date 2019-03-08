@@ -17,6 +17,7 @@ package database
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/coreos/clair/pkg/pagination"
@@ -123,9 +124,14 @@ func (l *Layer) GetFeatures() []Feature {
 }
 
 func (l *Layer) GetNamespaces() []Namespace {
-	namespaces := make([]Namespace, 0, len(l.Namespaces))
+	namespaces := make([]Namespace, 0, len(l.Namespaces)+len(l.Features))
 	for _, ns := range l.Namespaces {
 		namespaces = append(namespaces, ns.Namespace)
+	}
+	for _, f := range l.Features {
+		if f.PotentialNamespace.Valid() {
+			namespaces = append(namespaces, f.PotentialNamespace)
+		}
 	}
 
 	return namespaces
@@ -144,7 +150,8 @@ type LayerFeature struct {
 	Feature `json:"feature"`
 
 	// By is the detector found the feature.
-	By Detector `json:"by"`
+	By                 Detector  `json:"by"`
+	PotentialNamespace Namespace `json:"potentialNamespace"`
 }
 
 // Namespace is the contextual information around features.
@@ -157,6 +164,13 @@ type Namespace struct {
 
 func NewNamespace(name string, versionFormat string) *Namespace {
 	return &Namespace{name, versionFormat}
+}
+
+func (ns *Namespace) Valid() bool {
+	if ns.Name == "" || ns.VersionFormat == "" {
+		return false
+	}
+	return true
 }
 
 // Feature represents a package detected in a layer but the namespace is not
@@ -192,6 +206,10 @@ type NamespacedFeature struct {
 	Feature `json:"feature"`
 
 	Namespace Namespace `json:"namespace"`
+}
+
+func (nf *NamespacedFeature) Key() string {
+	return fmt.Sprintf("%s-%s-%s-%s-%s-%s", nf.Name, nf.Version, nf.VersionFormat, nf.Type, nf.Namespace.Name, nf.Namespace.VersionFormat)
 }
 
 func NewNamespacedFeature(namespace *Namespace, feature *Feature) *NamespacedFeature {

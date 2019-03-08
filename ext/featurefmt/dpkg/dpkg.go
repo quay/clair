@@ -45,10 +45,10 @@ func init() {
 	featurefmt.RegisterLister("dpkg", "1.0", &lister{})
 }
 
-func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error) {
+func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.LayerFeature, error) {
 	f, hasFile := files["var/lib/dpkg/status"]
 	if !hasFile {
-		return []database.Feature{}, nil
+		return []database.LayerFeature{}, nil
 	}
 
 	packages := mapset.NewSet()
@@ -69,7 +69,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.Feature, error)
 		}
 	}
 
-	return database.ConvertFeatureSetToFeatures(packages), nil
+	return database.ConvertFeatureSetToLayerFeatures(packages), nil
 }
 
 // parseDpkgDB consumes the status file scanner exactly one package info, until
