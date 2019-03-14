@@ -211,9 +211,20 @@ func (b *AncestryBuilder) createLayerIndexedFeature(namespace *layerIndexedNames
 
 func (b *AncestryBuilder) lookupNamespace(feature *database.LayerFeature) (*layerIndexedNamespace, bool) {
 	matchedNamespaces := []*layerIndexedNamespace{}
-	for i, namespace := range b.namespaces {
-		if namespace.Namespace.VersionFormat == feature.VersionFormat {
-			matchedNamespaces = append(matchedNamespaces, &b.namespaces[i])
+	if feature.PotentialNamespace.Name != "" {
+		a := &layerIndexedNamespace{
+			Namespace: database.LayerNamespace{
+				Namespace: feature.PotentialNamespace,
+			},
+			IntroducedIn: b.layerIndex,
+		}
+		matchedNamespaces = append(matchedNamespaces, a)
+	} else {
+
+		for i, namespace := range b.namespaces {
+			if namespace.Namespace.VersionFormat == feature.VersionFormat {
+				matchedNamespaces = append(matchedNamespaces, &b.namespaces[i])
+			}
 		}
 	}
 
