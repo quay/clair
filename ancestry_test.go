@@ -31,6 +31,7 @@ var (
 	aptsources = database.NewNamespaceDetector("apt-sources", "1.0")
 	ubuntu     = *database.NewNamespace("ubuntu:14.04", "dpkg")
 	ubuntu16   = *database.NewNamespace("ubuntu:16.04", "dpkg")
+	rhel7      = *database.NewNamespace("cpe:/o:redhat:enterprise_linux:7::computenode", "rpm")
 	debian     = *database.NewNamespace("debian:7", "dpkg")
 	python2    = *database.NewNamespace("python:2", "pip")
 	sed        = *database.NewSourcePackage("sed", "4.4-2", "dpkg")
@@ -38,6 +39,8 @@ var (
 	sedBin     = *database.NewBinaryPackage("sed", "4.4-2", "dpkg")
 	tar        = *database.NewBinaryPackage("tar", "1.29b-2", "dpkg")
 	scipy      = *database.NewSourcePackage("scipy", "3.0.0", "pip")
+
+	emptyNamespace = database.Namespace{}
 
 	detectors               = []database.Detector{dpkg, osrelease, rpm}
 	multinamespaceDetectors = []database.Detector{dpkg, osrelease, pip}
@@ -97,10 +100,11 @@ func (b *layerBuilder) addNamespace(detector database.Detector, ns database.Name
 	return b
 }
 
-func (b *layerBuilder) addFeature(detector database.Detector, f database.Feature) *layerBuilder {
+func (b *layerBuilder) addFeature(detector database.Detector, f database.Feature, ns database.Namespace) *layerBuilder {
 	b.layer.Features = append(b.layer.Features, database.LayerFeature{
-		Feature: f,
-		By:      detector,
+		Feature:            f,
+		By:                 detector,
+		PotentialNamespace: ns,
 	})
 
 	return b
@@ -112,39 +116,43 @@ var testImage = []*database.Layer{
 	// ubuntu namespace
 	newLayerBuilder("1").addNamespace(osrelease, ubuntu).layer,
 	// install sed
-	newLayerBuilder("2").addFeature(dpkg, sed).layer,
+	newLayerBuilder("2").addFeature(dpkg, sed, emptyNamespace).layer,
 	// install tar
-	newLayerBuilder("3").addFeature(dpkg, sed).addFeature(dpkg, tar).layer,
+	newLayerBuilder("3").addFeature(dpkg, sed, emptyNamespace).addFeature(dpkg, tar, emptyNamespace).layer,
 	// remove tar
-	newLayerBuilder("4").addFeature(dpkg, sed).layer,
+	newLayerBuilder("4").addFeature(dpkg, sed, emptyNamespace).layer,
 	// upgrade ubuntu
 	newLayerBuilder("5").addNamespace(osrelease, ubuntu16).layer,
 	// no change to the detectable files
 	newLayerBuilder("6").layer,
 	// change to the package installer database but no features are affected.
-	newLayerBuilder("7").addFeature(dpkg, sed).layer,
+	newLayerBuilder("7").addFeature(dpkg, sed, emptyNamespace).layer,
 }
 
 var invalidNamespace = []*database.Layer{
 	// add package without namespace, this indicates that the namespace detector
 	// could not detect the namespace.
-	newLayerBuilder("0").addFeature(dpkg, sed).layer,
+	newLayerBuilder("0").addFeature(dpkg, sed, emptyNamespace).layer,
 }
 
 var noMatchingNamespace = []*database.Layer{
-	newLayerBuilder("0").addFeature(rpm, sedByRPM).addFeature(dpkg, sed).addNamespace(osrelease, ubuntu).layer,
+	newLayerBuilder("0").addFeature(rpm, sedByRPM, emptyNamespace).addFeature(dpkg, sed, emptyNamespace).addNamespace(osrelease, ubuntu).layer,
 }
 
 var multiplePackagesOnFirstLayer = []*database.Layer{
-	newLayerBuilder("0").addFeature(dpkg, sed).addFeature(dpkg, tar).addFeature(dpkg, sedBin).addNamespace(osrelease, ubuntu16).layer,
+	newLayerBuilder("0").addFeature(dpkg, sed, emptyNamespace).addFeature(dpkg, tar, emptyNamespace).addFeature(dpkg, sedBin, emptyNamespace).addNamespace(osrelease, ubuntu16).layer,
 }
 
 var twoNamespaceDetectorsWithSameResult = []*database.Layer{
-	newLayerBuilderWithoutDetector("0").addDetectors(dpkg, aptsources, osrelease).addFeature(dpkg, sed).addNamespace(aptsources, ubuntu).addNamespace(osrelease, ubuntu).layer,
+	newLayerBuilderWithoutDetector("0").addDetectors(dpkg, aptsources, osrelease).addFeature(dpkg, sed, emptyNamespace).addNamespace(aptsources, ubuntu).addNamespace(osrelease, ubuntu).layer,
 }
 
 var sameVersionFormatDiffName = []*database.Layer{
-	newLayerBuilder("0").addFeature(dpkg, sed).addNamespace(aptsources, ubuntu).addNamespace(osrelease, debian).layer,
+	newLayerBuilder("0").addFeature(dpkg, sed, emptyNamespace).addNamespace(aptsources, ubuntu).addNamespace(osrelease, debian).layer,
+}
+
+var potentialFeatureNamespace = []*database.Layer{
+	newLayerBuilder("0").addFeature(rpm, sed, rhel7).layer,
 }
 
 func TestAddLayer(t *testing.T) {
@@ -262,6 +270,10 @@ func TestAddLayer(t *testing.T) {
 			title:            "noMatchingNamespace",
 			image:            noMatchingNamespace,
 			expectedAncestry: *newAncestryBuilder(ancestryName([]string{"0"})).addDetectors(detectors...).addLayer("0", ancestryFeature(ubuntu, sed, osrelease, dpkg)).ancestry,
+		}, {
+			title:            "featureWithPotentialNamespace",
+			image:            potentialFeatureNamespace,
+			expectedAncestry: *newAncestryBuilder(ancestryName([]string{"0"})).addDetectors(detectors...).addLayer("0", ancestryFeature(rhel7, sed, database.Detector{}, rpm)).ancestry,
 		},
 	}
 

@@ -50,7 +50,7 @@ func FindAncestryFeatures(tx *sql.Tx, ancestryID int64, detectors detector.Detec
 	for rows.Next() {
 		var (
 			featureDetectorID   int64
-			namespaceDetectorID int64
+			namespaceDetectorID sql.NullInt64
 			feature             database.NamespacedFeature
 			// index is used to determine which layer the feature belongs to.
 			index sql.NullInt64
@@ -81,9 +81,14 @@ func FindAncestryFeatures(tx *sql.Tx, ancestryID int64, detectors detector.Detec
 			return nil, database.ErrInconsistent
 		}
 
-		nsDetector, ok := detectors.ByID[namespaceDetectorID]
-		if !ok {
-			return nil, database.ErrInconsistent
+		var nsDetector database.Detector
+		if !namespaceDetectorID.Valid {
+			nsDetector = database.Detector{}
+		} else {
+			nsDetector, ok = detectors.ByID[namespaceDetectorID.Int64]
+			if !ok {
+				return nil, database.ErrInconsistent
+			}
 		}
 
 		featureMap[index.Int64] = append(featureMap[index.Int64], database.AncestryFeature{
@@ -120,9 +125,11 @@ func InsertAncestryFeatures(tx *sql.Tx, ancestryLayerID int64, layer database.An
 			return database.ErrMissingEntities
 		}
 
-		namespaceDetectorID, ok := detectors.ByValue[layer.Features[index].NamespaceBy]
-		if !ok {
-			return database.ErrMissingEntities
+		var namespaceDetectorID sql.NullInt64
+		var ok bool
+		namespaceDetectorID.Int64, ok = detectors.ByValue[layer.Features[index].NamespaceBy]
+		if ok {
+			namespaceDetectorID.Valid = true
 		}
 
 		featureDetectorID, ok := detectors.ByValue[layer.Features[index].FeatureBy]

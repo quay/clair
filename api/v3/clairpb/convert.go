@@ -153,6 +153,9 @@ func NamespacedFeatureFromDatabaseModel(feature database.AncestryFeature) *Featu
 
 // DetectorFromDatabaseModel converts database detector to api detector.
 func DetectorFromDatabaseModel(detector database.Detector) *Detector {
+	if !detector.Valid() {
+		return nil
+	}
 	return &Detector{
 		Name:    detector.Name,
 		Version: detector.Version,

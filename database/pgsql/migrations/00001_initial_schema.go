@@ -127,7 +127,7 @@ var (
 				ancestry_layer_id INT NOT NULL REFERENCES ancestry_layer ON DELETE CASCADE,
 				namespaced_feature_id INT NOT NULL REFERENCES namespaced_feature ON DELETE CASCADE,
 				feature_detector_id INT NOT NULL REFERENCES detector ON DELETE CASCADE,
-				namespace_detector_id INT NOT NULL REFERENCES detector ON DELETE CASCADE,
+				namespace_detector_id INT REFERENCES detector ON DELETE CASCADE,
 				UNIQUE (ancestry_layer_id, namespaced_feature_id));`,
 
 			`CREATE TABLE IF NOT EXISTS ancestry_detector(
