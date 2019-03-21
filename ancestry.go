@@ -101,12 +101,12 @@ func (b *AncestryBuilder) addLayerFeatures(detector database.Detector, features 
 	}
 
 	existingFeatures := b.features[detector]
-	currentFeatures := make([]layerIndexedFeature, 0, len(features))
+	currentFeatures := make([]layerIndexedFeature, 0, len(features)+len(existingFeatures))
 	// Features that are not in the current layer should be removed.
 	for i := range existingFeatures {
 		feature := existingFeatures[i]
 		for j := range features {
-			if features[j] == *feature.Feature {
+			if features[j].CompareWithoutNamespace(*feature.Feature) {
 				currentFeatures = append(currentFeatures, feature)
 				break
 			}

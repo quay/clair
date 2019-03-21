@@ -63,3 +63,11 @@ type LayerFeature struct {
 	By                 Detector  `json:"by"`
 	PotentialNamespace Namespace `json:"potentialNamespace"`
 }
+
+// CompareWithoutNamespace - compares Features and exclude PotentialNamespace
+func (l *LayerFeature) CompareWithoutNamespace(other LayerFeature) bool {
+	if l.Feature == other.Feature && l.By == other.By {
+		return true
+	}
+	return false
+}
