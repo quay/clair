@@ -41,6 +41,7 @@ import (
 	// Register extensions.
 	_ "github.com/coreos/clair/ext/featurefmt/apk"
 	_ "github.com/coreos/clair/ext/featurefmt/dpkg"
+	_ "github.com/coreos/clair/ext/featurefmt/python_egg"
 	_ "github.com/coreos/clair/ext/featurefmt/rpm"
 	_ "github.com/coreos/clair/ext/featurens/alpinerelease"
 	_ "github.com/coreos/clair/ext/featurens/aptsources"
