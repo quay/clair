@@ -79,7 +79,7 @@ func (lister) ListFeatures(files tarutil.FilesMap) ([]database.LayerFeature, err
 }
 
 func (lister) RequiredFilenames() []string {
-	return []string{}
+	return []string{`.+\.dist-info/METADATA`}
 }
 
 func init() {
