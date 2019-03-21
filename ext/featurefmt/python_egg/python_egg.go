@@ -79,7 +79,7 @@ func (lister) ListFeatures(files tarutil.FilesMap) ([]database.LayerFeature, err
 }
 
 func (lister) RequiredFilenames() []string {
-	return []string{}
+	return []string{`.+\.egg-info/PKG-INFO`}
 }
 
 func init() {
