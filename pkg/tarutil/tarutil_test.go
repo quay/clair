@@ -57,6 +57,26 @@ func TestExtract(t *testing.T) {
 	}
 }
 
+func TestExtractGlob(t *testing.T) {
+	for _, filename := range testTarballs {
+		f, err := os.Open(testfilepath(filename))
+		assert.Nil(t, err)
+		defer f.Close()
+
+		data, err := ExtractFiles(f, []string{`.+\.txt`})
+		assert.Nil(t, err)
+
+		if c, n := data["test/test.txt"]; !n {
+			assert.Fail(t, "test/test.txt should have been extracted")
+		} else {
+			assert.NotEqual(t, 0, len(c) > 0, "test/test.txt file is empty")
+		}
+		if _, n := data["test.txt"]; !n {
+			assert.Fail(t, "test.txt should also have been extracted")
+		}
+	}
+}
+
 func TestExtractUncompressedData(t *testing.T) {
 	for _, filename := range testTarballs {
 		f, err := os.Open(testfilepath(filename))
