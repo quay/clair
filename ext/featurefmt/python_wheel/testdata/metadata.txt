@@ -1,0 +1,12 @@
+Metadata-Version: 2.0
+Name: buildbot-www
+Version: 1.1.0
+Summary: Buildbot UI
+Home-page: http://buildbot.net/
+Author: Pierre Tardy
+Author-email: tardyp@gmail.com
+License: GNU GPL
+Description-Content-Type: UNKNOWN
+Platform: UNKNOWN
+
+UNKNOWN
