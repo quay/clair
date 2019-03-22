@@ -1,0 +1,334 @@
+---
+kind: Template
+apiVersion: v1
+metadata:
+  annotations:
+    description: The Clair OpenShift template
+    iconClass: fa fa-shield
+    openshift.io/display-name: Clair
+    openshift.io/documentation-url: https://coreos.com/clair/docs/latest/
+    openshift.io/long-description: This template deploys a Clair capable of scanning docker images for vulnerabilities.
+    openshift.io/provider-display-name: CoreOS
+    tags: clair, postgres
+  name: clair
+message: >-
+  Clair has been deployed, It will take almost an hour for the update to complete and namespace gets created.
+  Please see the pod logs for the update to complete.
+  You can use klar and other scanners afterwards.
+  CLAIR_ADDR=http://<clair-app-url>:80, port 80 has to be mentioned during klar scan.
+objects:
+### Service for clair
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: clair
+    labels:
+      app: clair
+  spec:
+    ports:
+    - name: clair
+      port: 6060
+      protocol: TCP
+      targetPort: 6060
+    - name: clair-healthcheck
+      port: 6061
+      protocol: TCP
+      targetPort: 6061
+    selector:
+      app: clair
+      deploymentconfig: clair
+    sessionAffinity: None
+    type: ClusterIP
+### Route for Clair to communicate outside OpenShfit
+- apiVersion: v1
+  kind: Route
+  metadata:
+    annotations:
+      description: Route for Clair's API service.
+    name: clair
+    labels:
+      app: clair
+  spec:
+    port:
+      targetPort: clair
+    to:
+      kind: Service
+      name: clair
+      weight: 100
+# Deployment configuration for Clair Application
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: clair
+      deploymentconfig: clair
+    name: clair
+  spec:
+    replicas: 1
+    selector:
+      app: clair
+      deploymentconfig: clair
+    strategy:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 100Mi
+        limits:
+          cpu: 100m
+          memory: 150Mi
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: Rolling
+    template:
+      metadata:
+        labels:
+          app: clair
+          deploymentconfig: clair
+      spec:
+        containers:
+        - env: []
+          image: "${CLAIR_IMAGE_URL}"
+          name: clair
+          ports:
+          - containerPort: 6060
+            protocol: TCP
+          - containerPort: 6061
+            protocol: TCP
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            successThreshold: 1
+            httpGet:
+              port: 6061
+              path: "/health"
+            timeoutSeconds: 5
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            successThreshold: 1
+            httpGet:
+              port: 6061
+              path: "/health"
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 1250Mi
+            limits:
+              cpu: 250m
+              memory: 1500Mi
+          terminationMessagePath: "/dev/termination-log"
+          volumeMounts:
+          - mountPath: "/etc/clair"
+            name: clair-config
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: clair-config
+          configMap:
+            name: clair-config
+    triggers:
+    - type: ConfigChange
+# Clair Configuration as configMap to Openshfit
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: clair-config
+    labels:
+      app: clair
+  type: kubernetes.io/dockerconfigjson
+  data:
+    config.yaml: |-
+      clair:
+        database:
+          type: pgsql
+          options:
+            source: "host=clair-postgresql port=5432 user=clair password=clair dbname=clair sslmode=disable statement_timeout=60000"
+            cachesize: 16384
+            paginationkey: "XxoPtCUzrUv4JV5dS+yQ+MdW7yLEJnRMwigVY/bpgtQ="
+        api:
+          addr: "0.0.0.0:6060"
+          healthaddr: "0.0.0.0:6061"
+          timeout: 900s
+          servername:
+          cafile:
+          keyfile:
+          certfile:
+        worker:
+          namespace_detectors:
+          - os-release
+          - lsb-release
+          - apt-sources
+          - alpine-release
+          - redhat-release
+          feature_listers:
+          - apk
+          - dpkg
+          - rpm
+        updater:
+          interval: 2h
+          enabledupdaters:
+          - debian
+          - ubuntu
+          - rhel
+          - oracle
+          - alpine
+        notifier:
+          attempts: 3
+          renotifyinterval: 2h
+          http:
+            endpoint:
+            servername:
+            cafile:
+            keyfile:
+            certfile:
+            proxy:
+# Postgresql service for Clair to communicate with Database
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: clair-postgresql
+    labels:
+      app: clair
+  spec:
+    ports:
+    - name: postgresql
+      port: 5432
+      protocol: TCP
+      targetPort: 5432
+    selector:
+      app: clair
+      deploymentconfig: clair-postgresql
+    sessionAffinity: None
+    type: ClusterIP
+# Deployment configuration for Clair Postgresql Database
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: clair
+      deploymentconfig: clair-postgresql
+    name: clair-postgresql
+  spec:
+    replicas: 1
+    selector:
+      app: clair
+      deploymentconfig: clair-postgresql
+    strategy:
+      recreateParams:
+        timeoutSeconds: 600
+      resources:
+        requests:
+          cpu: 50m
+          memory: 100Mi
+        limits:
+          cpu: 100m
+          memory: 150Mi
+      type: Recreate
+    template:
+      metadata:
+        labels:
+          app: clair
+          deploymentconfig: clair-postgresql
+      spec:
+        containers:
+        - env:
+          - name: POSTGRESQL_USER
+            value: clair
+          - name: POSTGRESQL_PASSWORD
+            value: clair
+          - name: POSTGRESQL_DATABASE
+            value: clair
+          image: " "
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            tcpSocket:
+              port: 5432
+            timeoutSeconds: 1
+          name: postgresql
+          ports:
+          - containerPort: 5432
+            protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+              - "/bin/sh"
+              - "-i"
+              - "-c"
+              - psql -h 127.0.0.1 -U $POSTGRESQL_USER -q -d $POSTGRESQL_DATABASE -c
+                'SELECT 1'
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            requests:
+              cpu: 100m
+              memory: 400Mi
+            limits:
+              cpu: 250m
+              memory: 512Mi
+          securityContext:
+            capabilities: {}
+            privileged: false
+          terminationMessagePath: "/dev/termination-log"
+          volumeMounts:
+          - mountPath: "/var/lib/pgsql/data"
+            name: postgresql-data
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: postgresql-data
+          persistentVolumeClaim:
+            claimName: clair-postgresql-data
+    test: false
+    triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+        - postgresql
+        from:
+          kind: ImageStreamTag
+          name: postgresql:9.5
+          namespace: openshift
+      type: ImageChange
+    - type: ConfigChange
+# Persistent Volume to store database
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: clair-postgresql-data
+    labels:
+      app: clair
+  spec:
+    accessModes:
+    - ReadWriteOnce
+    resources:
+      requests:
+        storage: "${POSTGRESQL_VOLUME_CAPACITY}"
+# Parameters which can be changed during the run
+parameters:
+- description: Volume space available for PostgreSQL
+  displayName: PostgreSQL Volume Capacity
+  name: POSTGRESQL_VOLUME_CAPACITY
+  required: true
+  value: 2Gi
+- description: Nexus Image URL for the docker image.
+  displayName: Nexus docker image URL
+  name: CLAIR_IMAGE_URL
+  required: true
+  value: quay.io/coreos/clair:latest
