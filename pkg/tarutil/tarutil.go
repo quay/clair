@@ -80,7 +80,7 @@ func ExtractFiles(r io.Reader, filenames []string) (FilesMap, error) {
 		// Determine if we should extract the element
 		toBeExtracted := false
 		for _, s := range filenames {
-			if match, err := regexp.MatchString("^"+s, filename); err == nil && match {
+			if match, err := regexp.MatchString(s, filename); err == nil && match {
 				toBeExtracted = true
 				break
 			}

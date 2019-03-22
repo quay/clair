@@ -57,7 +57,7 @@ func TestExtract(t *testing.T) {
 	}
 }
 
-func TestExtractGlob(t *testing.T) {
+func TestExtractRegex(t *testing.T) {
 	for _, filename := range testTarballs {
 		f, err := os.Open(testfilepath(filename))
 		assert.Nil(t, err)

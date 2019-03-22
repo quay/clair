@@ -94,5 +94,5 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 }
 
 func (d *detector) RequiredFilenames() []string {
-	return []string{"etc/lsb-release"}
+	return []string{"^etc/lsb-release"}
 }

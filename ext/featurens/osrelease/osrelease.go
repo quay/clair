@@ -34,6 +34,8 @@ var (
 	osReleaseOSRegexp      = regexp.MustCompile(`^ID=(.*)`)
 	osReleaseVersionRegexp = regexp.MustCompile(`^VERSION_ID=(.*)`)
 
+	filenames = []string{"etc/os-release", "usr/lib/os-release"}
+
 	// blacklistFilenames are files that should exclude this detector.
 	blacklistFilenames = []string{
 		"etc/oracle-release",
@@ -57,7 +59,7 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 		}
 	}
 
-	for _, filePath := range d.RequiredFilenames() {
+	for _, filePath := range filenames {
 		f, hasFile := files[filePath]
 		if !hasFile {
 			continue
@@ -100,5 +102,5 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 }
 
 func (d detector) RequiredFilenames() []string {
-	return []string{"etc/os-release", "usr/lib/os-release"}
+	return []string{"^(etc|usr/lib)/os-release"}
 }
