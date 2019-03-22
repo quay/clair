@@ -1,0 +1,25 @@
+{
+  "id": 477,
+  "title": "Embedded Malicious Code",
+  "overview": "flatmap-stream malicious package (distributed via the popular events-stream)",
+  "created_at": "2018-11-26",
+  "updated_at": "2018-11-26",
+  "publish_date": "2018-11-26",
+  "author": {
+    "name": "Danny Grander",
+    "website": "http://snyk.io",
+    "username": "danny_grander"
+  },
+  "module_name": "flatmap-stream",
+  "cves": [],
+  "vulnerable_versions": "*",
+  "patched_versions": null,
+  "recommendation": "No fix is currently available for this vulnerability.\n\nIt is our recommendation to not install or use this module at this time.",
+  "references": [
+    "https://hackerone.com/reports/450006",
+    "https://github.com/dominictarr/event-stream/issues/116"
+  ],
+  "cvss_vector": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H",
+  "cvss_score": 10,
+  "coordinating_vendor": null
+}

@@ -54,6 +54,7 @@ import (
 	_ "github.com/coreos/clair/ext/vulnmdsrc/nvd"
 	_ "github.com/coreos/clair/ext/vulnsrc/alpine"
 	_ "github.com/coreos/clair/ext/vulnsrc/debian"
+	_ "github.com/coreos/clair/ext/vulnsrc/npm"
 	_ "github.com/coreos/clair/ext/vulnsrc/oracle"
 	_ "github.com/coreos/clair/ext/vulnsrc/rhel"
 	_ "github.com/coreos/clair/ext/vulnsrc/suse"
