@@ -39,10 +39,11 @@ type Detector interface {
 	// layer.
 	Detect(tarutil.FilesMap) (*database.Namespace, error)
 
-	// RequiredFilenames returns the list of files required to be in the FilesMap
-	// provided to the Detect method.
+	// RequiredFilenames returns a list of patterns for filenames that will
+	// be in the FilesMap provided to the Detect method.
 	//
-	// Filenames must not begin with "/".
+	// The patterns are expressed as regexps, and will be matched against
+	// full paths that do not include the leading "/".
 	RequiredFilenames() []string
 }
 
@@ -108,8 +109,9 @@ func Detect(files tarutil.FilesMap, toUse []database.Detector) ([]database.Layer
 	return namespaces, nil
 }
 
-// RequiredFilenames returns all files required by the give extensions. Any
-// extension metadata that has non namespace-detector type will be skipped.
+// RequiredFilenames returns all file patterns that will be passed to the
+// given extensions. These patterns are expressed as regexps. Any extension
+// metadata that has non namespace-detector type will be skipped.
 func RequiredFilenames(toUse []database.Detector) (files []string) {
 	detectorsM.RLock()
 	defer detectorsM.RUnlock()

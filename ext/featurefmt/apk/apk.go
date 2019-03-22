@@ -90,5 +90,5 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.LayerFeature, e
 }
 
 func (l lister) RequiredFilenames() []string {
-	return []string{"lib/apk/db/installed"}
+	return []string{"^lib/apk/db/installed"}
 }

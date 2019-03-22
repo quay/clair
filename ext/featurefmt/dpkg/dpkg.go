@@ -38,7 +38,7 @@ var (
 type lister struct{}
 
 func (l lister) RequiredFilenames() []string {
-	return []string{"var/lib/dpkg/status"}
+	return []string{"^var/lib/dpkg/status"}
 }
 
 func init() {

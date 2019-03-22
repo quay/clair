@@ -88,5 +88,5 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 }
 
 func (d detector) RequiredFilenames() []string {
-	return []string{"etc/apt/sources.list"}
+	return []string{`^etc/apt/sources\.list`}
 }

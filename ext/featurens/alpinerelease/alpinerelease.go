@@ -62,5 +62,5 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 }
 
 func (d detector) RequiredFilenames() []string {
-	return []string{alpineReleasePath}
+	return []string{"^" + alpineReleasePath}
 }

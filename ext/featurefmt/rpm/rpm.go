@@ -46,7 +46,7 @@ func init() {
 }
 
 func (l lister) RequiredFilenames() []string {
-	return []string{"var/lib/rpm/Packages"}
+	return []string{"^var/lib/rpm/Packages"}
 }
 
 func isIgnored(packageName string) bool {
