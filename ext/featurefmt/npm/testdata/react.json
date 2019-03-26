@@ -1,0 +1,36 @@
+{
+  "name": "react",
+  "description": "React is a JavaScript library for building user interfaces.",
+  "version": "15.6.2",
+  "keywords": [
+    "react"
+  ],
+  "homepage": "https://facebook.github.io/react/",
+  "bugs": "https://github.com/facebook/react/issues",
+  "license": "MIT",
+  "files": [
+    "LICENSE",
+    "addons.js",
+    "react.js",
+    "addons/",
+    "dist/",
+    "lib/"
+  ],
+  "main": "react.js",
+  "repository": "facebook/react",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "dependencies": {
+    "create-react-class": "^15.6.0",
+    "fbjs": "^0.8.9",
+    "loose-envify": "^1.1.0",
+    "object-assign": "^4.1.0",
+    "prop-types": "^15.5.10"
+  },
+  "browserify": {
+    "transform": [
+      "loose-envify"
+    ]
+  }
+}
