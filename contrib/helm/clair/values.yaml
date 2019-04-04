@@ -27,13 +27,13 @@ ingress:
     # - secretName: chart-example-tls
     #   hosts:
     #     - chart-example.local
-resources:
-  limits:
-    cpu: 200m
-    memory: 1500Mi
-  requests:
-    cpu: 100m
-    memory: 500Mi
+resources: {}
+# limits:
+#   cpu: 200m
+#   memory: 1500Mi
+# requests:
+#   cpu: 100m
+#   memory: 500Mi
 config:
   # postgresURI: "postgres://user:password@host:5432/postgres?sslmode=disable"
   paginationKey: "XxoPtCUzrUv4JV5dS+yQ+MdW7yLEJnRMwigVY/bpgtQ="
