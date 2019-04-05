@@ -1,0 +1,7 @@
+<?xml version='1.0' standalone='yes'?>
+<opt>
+<CESA-2018--2881 description="Not available" from="centos-announce@centos.org" issue_date="2018-10-09 13:32:55" notes="Not available" product="CentOS Linux" references="https://access.redhat.com/errata/RHSA-2018:2881 https://lists.centos.org/pipermail/centos-announce/2018-October/023049.html" release="1" severity="Critical" solution="Not available" synopsis="Critical CentOS firefox Security Update" topic="Not available" type="Security Advisory">
+    <os_release>6</os_release>
+    <packages>firefox-60.2.2-1.el6.centos.src.rpm</packages>
+  </CESA-2018--2881>
+</opt>
