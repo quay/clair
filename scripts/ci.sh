@@ -2,39 +2,28 @@
 
 set -euo pipefail
 
-IMAGE='clair-ci:ci-0nQbHnN'
-
-build() {
-    echo "build: Building Clair Image ${IMAGE}"
-    docker build -t "${IMAGE}" .
-    echo "build: Finished"
-}
-
-lint(){
-    diff -u <(echo -n) <(gofmt -l -s $(go list -f '{{.Dir}}') | grep -v '/vendor/')
-    prototool format -d api/v3/clairpb/clair.proto
-    prototool lint api/v3/clairpb/clair.proto
-}
-
-unit(){
-    go test $(glide novendor | grep -v contrib)
+install(){
+    echo "GOPATH=$(cd $(pwd -P)/../../../..; pwd -P)"
+    GOPATH="$(cd $(pwd -P)/../../../..; pwd -P)" go install ./cmd/clair
+    echo "install: Installed to $GOBIN/clair"
 }
 
 case "$1" in
     build)
-        build_image
+        build $2
         ;;
 
-    lint)
+    install)
+        install
+        ;;
+
+    test)
         lint
-        ;;
-
-    unit)
-        unit
+        test $2
         ;;
 
     *)
-        echo "Usage: $0 {build|unit}"
+        echo "Usage: $0 {build <tag name> | install | test <test postgres db link>}"
         exit 1
         ;;
 esac
