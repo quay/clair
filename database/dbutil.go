@@ -15,8 +15,13 @@
 package database
 
 import (
+	"encoding/json"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
+	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/coreos/clair/pkg/pagination"
 	"github.com/deckarep/golang-set"
 )
 
@@ -53,6 +58,19 @@ func ConvertFeatureSetToFeatures(features mapset.Set) []Feature {
 	}
 
 	return uniqueFeatures
+}
+
+func ConvertFeatureSetToLayerFeatures(features mapset.Set) []LayerFeature {
+	uniqueLayerFeatures := make([]LayerFeature, 0, features.Cardinality())
+	for f := range features.Iter() {
+		feature := f.(Feature)
+		layerFeature := LayerFeature{
+			Feature: feature,
+		}
+		uniqueLayerFeatures = append(uniqueLayerFeatures, layerFeature)
+	}
+
+	return uniqueLayerFeatures
 }
 
 // FindKeyValueAndRollback wraps session FindKeyValue function with begin and
@@ -94,8 +112,11 @@ func PersistFeaturesAndCommit(datastore Datastore, features []Feature) error {
 	defer tx.Rollback()
 
 	if err := tx.PersistFeatures(features); err != nil {
+		serialized, _ := json.Marshal(features)
+		log.WithError(err).WithField("feature", string(serialized)).Error("failed to store features")
 		return err
 	}
+
 	return tx.Commit()
 }
 
@@ -129,14 +150,18 @@ func FindAncestryAndRollback(datastore Datastore, name string) (Ancestry, bool, 
 }
 
 // FindLayerAndRollback wraps session FindLayer function with begin and rollback.
-func FindLayerAndRollback(datastore Datastore, hash string) (layer Layer, ok bool, err error) {
+func FindLayerAndRollback(datastore Datastore, hash string) (layer *Layer, ok bool, err error) {
 	var tx Session
 	if tx, err = datastore.Begin(); err != nil {
 		return
 	}
 
 	defer tx.Rollback()
-	layer, ok, err = tx.FindLayer(hash)
+	// TODO(sidac): In order to make the session interface more idiomatic, we'll
+	// return the pointer value in the future.
+	var dereferencedLayer Layer
+	dereferencedLayer, ok, err = tx.FindLayer(hash)
+	layer = &dereferencedLayer
 	return
 }
 
@@ -168,13 +193,17 @@ func GetAncestryFeatures(ancestry Ancestry) []NamespacedFeature {
 }
 
 // UpsertAncestryAndCommit wraps session UpsertAncestry function with begin and commit.
-func UpsertAncestryAndCommit(datastore Datastore, ancestry Ancestry) error {
+func UpsertAncestryAndCommit(datastore Datastore, ancestry *Ancestry) error {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return err
 	}
 
-	if err = tx.UpsertAncestry(ancestry); err != nil {
+	if err = tx.UpsertAncestry(*ancestry); err != nil {
+		log.WithError(err).Error("failed to upsert the ancestry")
+		serialized, _ := json.Marshal(ancestry)
+		log.Debug(string(serialized))
+
 		tx.Rollback()
 		return err
 	}
@@ -308,19 +337,14 @@ func MergeLayers(l *Layer, new *Layer) *Layer {
 }
 
 // AcquireLock acquires a named global lock for a duration.
-//
-// If renewal is true, the lock is extended as long as the same owner is
-// attempting to renew the lock.
-func AcquireLock(datastore Datastore, name, owner string, duration time.Duration, renewal bool) (success bool, expiration time.Time) {
-	// any error will cause the function to catch the error and return false.
+func AcquireLock(datastore Datastore, name, owner string, duration time.Duration) (acquired bool, expiration time.Time) {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return false, time.Time{}
 	}
-
 	defer tx.Rollback()
 
-	locked, t, err := tx.Lock(name, owner, duration, renewal)
+	locked, t, err := tx.AcquireLock(name, owner, duration)
 	if err != nil {
 		return false, time.Time{}
 	}
@@ -334,19 +358,182 @@ func AcquireLock(datastore Datastore, name, owner string, duration time.Duration
 	return locked, t
 }
 
+// ExtendLock extends the duration of an existing global lock for the given
+// duration.
+func ExtendLock(ds Datastore, name, whoami string, desiredLockDuration time.Duration) (extended bool, expiration time.Time) {
+	tx, err := ds.Begin()
+	if err != nil {
+		return false, time.Time{}
+	}
+	defer tx.Rollback()
+
+	locked, expiration, err := tx.ExtendLock(name, whoami, desiredLockDuration)
+	if err != nil {
+		return false, time.Time{}
+	}
+
+	if locked {
+		if err := tx.Commit(); err == nil {
+			return
+		}
+	}
+
+	return false, time.Time{}
+}
+
 // ReleaseLock releases a named global lock.
 func ReleaseLock(datastore Datastore, name, owner string) {
 	tx, err := datastore.Begin()
 	if err != nil {
 		return
 	}
-
 	defer tx.Rollback()
 
-	if err := tx.Unlock(name, owner); err != nil {
+	if err := tx.ReleaseLock(name, owner); err != nil {
 		return
 	}
 	if err := tx.Commit(); err != nil {
 		return
 	}
+}
+
+// PersistDetectorsAndCommit stores the detectors in the data store.
+func PersistDetectorsAndCommit(store Datastore, detectors []Detector) error {
+	tx, err := store.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+	if err := tx.PersistDetectors(detectors); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// MarkNotificationAsReadAndCommit marks a notification as read.
+func MarkNotificationAsReadAndCommit(store Datastore, name string) (bool, error) {
+	tx, err := store.Begin()
+	if err != nil {
+		return false, err
+	}
+
+	defer tx.Rollback()
+	err = tx.DeleteNotification(name)
+	if err == commonerr.ErrNotFound {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+// FindAffectedNamespacedFeaturesAndRollback finds the vulnerabilities on each
+// feature.
+func FindAffectedNamespacedFeaturesAndRollback(store Datastore, features []NamespacedFeature) ([]NullableAffectedNamespacedFeature, error) {
+	tx, err := store.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	defer tx.Rollback()
+	nullableFeatures, err := tx.FindAffectedNamespacedFeatures(features)
+	if err != nil {
+		return nil, err
+	}
+
+	return nullableFeatures, nil
+}
+
+// FindVulnerabilityNotificationAndRollback finds the vulnerability notification
+// and rollback.
+func FindVulnerabilityNotificationAndRollback(store Datastore, name string, limit int, oldVulnerabilityPage pagination.Token, newVulnerabilityPage pagination.Token) (VulnerabilityNotificationWithVulnerable, bool, error) {
+	tx, err := store.Begin()
+	if err != nil {
+		return VulnerabilityNotificationWithVulnerable{}, false, err
+	}
+
+	defer tx.Rollback()
+	return tx.FindVulnerabilityNotification(name, limit, oldVulnerabilityPage, newVulnerabilityPage)
+}
+
+// FindNewNotification finds notifications either never notified or notified
+// before the given time.
+func FindNewNotification(store Datastore, notifiedBefore time.Time) (NotificationHook, bool, error) {
+	tx, err := store.Begin()
+	if err != nil {
+		return NotificationHook{}, false, err
+	}
+
+	defer tx.Rollback()
+	return tx.FindNewNotification(notifiedBefore)
+}
+
+// UpdateKeyValueAndCommit stores the key value to storage.
+func UpdateKeyValueAndCommit(store Datastore, key, value string) error {
+	tx, err := store.Begin()
+	if err != nil {
+		return err
+	}
+
+	defer tx.Rollback()
+	if err = tx.UpdateKeyValue(key, value); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+// InsertVulnerabilityNotificationsAndCommit inserts the notifications into db
+// and commit.
+func InsertVulnerabilityNotificationsAndCommit(store Datastore, notifications []VulnerabilityNotification) error {
+	tx, err := store.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := tx.InsertVulnerabilityNotifications(notifications); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+// FindVulnerabilitiesAndRollback finds the vulnerabilities based on given ids.
+func FindVulnerabilitiesAndRollback(store Datastore, ids []VulnerabilityID) ([]NullableVulnerability, error) {
+	tx, err := store.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	defer tx.Rollback()
+	return tx.FindVulnerabilities(ids)
+}
+
+func UpdateVulnerabilitiesAndCommit(store Datastore, toRemove []VulnerabilityID, toAdd []VulnerabilityWithAffected) error {
+	tx, err := store.Begin()
+	if err != nil {
+		return err
+	}
+
+	if err := tx.DeleteVulnerabilities(toRemove); err != nil {
+		return err
+	}
+
+	if err := tx.InsertVulnerabilities(toAdd); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }

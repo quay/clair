@@ -1,4 +1,4 @@
-// Copyright 2017 clair authors
+// Copyright 2019 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -93,7 +93,7 @@ func RunNotifier(config *notification.Config, datastore database.Datastore, stop
 		go func() {
 			success, interrupted := handleTask(*notification, stopper, config.Attempts)
 			if success {
-				err := markNotificationAsRead(datastore, notification.Name)
+				_, err := database.MarkNotificationAsReadAndCommit(datastore, notification.Name)
 				if err != nil {
 					log.WithError(err).Error("Failed to mark notification notified")
 				}
@@ -113,7 +113,7 @@ func RunNotifier(config *notification.Config, datastore database.Datastore, stop
 			case <-done:
 				break outer
 			case <-time.After(notifierLockRefreshDuration):
-				database.AcquireLock(datastore, notification.Name, whoAmI, notifierLockDuration, true)
+				database.ExtendLock(datastore, notification.Name, whoAmI, notifierLockDuration)
 			case <-stopper.Chan():
 				running = false
 				break
@@ -126,7 +126,7 @@ func RunNotifier(config *notification.Config, datastore database.Datastore, stop
 
 func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoAmI string, stopper *stopper.Stopper) *database.NotificationHook {
 	for {
-		notification, ok, err := findNewNotification(datastore, renotifyInterval)
+		notification, ok, err := database.FindNewNotification(datastore, time.Now().Add(-renotifyInterval))
 		if err != nil || !ok {
 			if !ok {
 				log.WithError(err).Warning("could not get notification to send")
@@ -141,7 +141,7 @@ func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoA
 		}
 
 		// Lock the notification.
-		if hasLock, _ := database.AcquireLock(datastore, notification.Name, whoAmI, notifierLockDuration, false); hasLock {
+		if hasLock, _ := database.AcquireLock(datastore, notification.Name, whoAmI, notifierLockDuration); hasLock {
 			log.WithField(logNotiName, notification.Name).Info("found and locked a notification")
 			return &notification
 		}
@@ -185,26 +185,4 @@ func handleTask(n database.NotificationHook, st *stopper.Stopper, maxAttempts in
 
 	log.WithField(logNotiName, n.Name).Info("successfully sent notification")
 	return true, false
-}
-
-func findNewNotification(datastore database.Datastore, renotifyInterval time.Duration) (database.NotificationHook, bool, error) {
-	tx, err := datastore.Begin()
-	if err != nil {
-		return database.NotificationHook{}, false, err
-	}
-	defer tx.Rollback()
-	return tx.FindNewNotification(time.Now().Add(-renotifyInterval))
-}
-
-func markNotificationAsRead(datastore database.Datastore, name string) error {
-	tx, err := datastore.Begin()
-	if err != nil {
-		log.WithError(err).Error("an error happens when beginning database transaction")
-	}
-	defer tx.Rollback()
-
-	if err := tx.MarkNotificationAsRead(name); err != nil {
-		return err
-	}
-	return tx.Commit()
 }

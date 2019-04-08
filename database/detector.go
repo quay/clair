@@ -93,12 +93,12 @@ func (s DetectorType) Valid() bool {
 type Detector struct {
 	// Name of an extension should be non-empty and uniquely identifies the
 	// extension.
-	Name string
+	Name string `json:"name"`
 	// Version of an extension should be non-empty.
-	Version string
+	Version string `json:"version"`
 	// DType is the type of the extension and should be one of the types in
 	// DetectorTypes.
-	DType DetectorType
+	DType DetectorType `json:"dtype"`
 }
 
 // Valid checks if all fields in the detector satisfies the spec.

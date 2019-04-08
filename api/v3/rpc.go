@@ -15,18 +15,23 @@
 package v3
 
 import (
-	"fmt"
+	"sync"
 
 	"golang.org/x/net/context"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/coreos/clair"
 	pb "github.com/coreos/clair/api/v3/clairpb"
 	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/coreos/clair/ext/imagefmt"
 	"github.com/coreos/clair/pkg/pagination"
 )
+
+func newRPCErrorWithClairError(code codes.Code, err error) error {
+	return status.Errorf(code, "clair error reason: '%s'", err.Error())
+}
 
 // NotificationServer implements NotificationService interface for serving RPC.
 type NotificationServer struct {
@@ -55,51 +60,77 @@ func (s *StatusServer) GetStatus(ctx context.Context, req *pb.GetStatusRequest) 
 
 // PostAncestry implements posting an ancestry via the Clair gRPC service.
 func (s *AncestryServer) PostAncestry(ctx context.Context, req *pb.PostAncestryRequest) (*pb.PostAncestryResponse, error) {
-	ancestryName := req.GetAncestryName()
-	if ancestryName == "" {
-		return nil, status.Error(codes.InvalidArgument, "ancestry name should not be empty")
-	}
-
-	layers := req.GetLayers()
-	if len(layers) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "ancestry should have at least one layer")
-	}
-
-	ancestryFormat := req.GetFormat()
-	if ancestryFormat == "" {
-		return nil, status.Error(codes.InvalidArgument, "ancestry format should not be empty")
-	}
-
-	ancestryLayers := []clair.LayerRequest{}
-	for _, layer := range layers {
-		if layer == nil {
-			err := status.Error(codes.InvalidArgument, "ancestry layer is invalid")
-			return nil, err
-		}
-
-		if layer.GetHash() == "" {
-			return nil, status.Error(codes.InvalidArgument, "ancestry layer hash should not be empty")
-		}
-
-		if layer.GetPath() == "" {
-			return nil, status.Error(codes.InvalidArgument, "ancestry layer path should not be empty")
-		}
-
-		ancestryLayers = append(ancestryLayers, clair.LayerRequest{
-			Hash:    layer.Hash,
-			Headers: layer.Headers,
-			Path:    layer.Path,
-		})
-	}
-
-	err := clair.ProcessAncestry(s.Store, ancestryFormat, ancestryName, ancestryLayers)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "ancestry is failed to be processed: "+err.Error())
+	blobFormat := req.GetFormat()
+	if !imagefmt.IsSupported(blobFormat) {
+		return nil, status.Error(codes.InvalidArgument, "image blob format is not supported")
 	}
 
 	clairStatus, err := GetClairStatus(s.Store)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	// check if the ancestry is already processed; if not we build the ancestry again.
+	layerHashes := make([]string, len(req.Layers))
+	for i, layer := range req.Layers {
+		layerHashes[i] = layer.GetHash()
+	}
+
+	found, err := clair.IsAncestryCached(s.Store, req.AncestryName, layerHashes)
+	if err != nil {
+		return nil, newRPCErrorWithClairError(codes.Internal, err)
+	}
+
+	if found {
+		return &pb.PostAncestryResponse{Status: clairStatus}, nil
+	}
+
+	builder := clair.NewAncestryBuilder(clair.EnabledDetectors())
+	layerMap := map[string]*database.Layer{}
+	layerMapLock := sync.RWMutex{}
+	g, analyzerCtx := errgroup.WithContext(ctx)
+	for i := range req.Layers {
+		layer := req.Layers[i]
+		if _, ok := layerMap[layer.Hash]; !ok {
+			layerMap[layer.Hash] = nil
+			if layer == nil {
+				err := status.Error(codes.InvalidArgument, "ancestry layer is invalid")
+				return nil, err
+			}
+
+			if layer.GetHash() == "" {
+				return nil, status.Error(codes.InvalidArgument, "ancestry layer hash should not be empty")
+			}
+
+			if layer.GetPath() == "" {
+				return nil, status.Error(codes.InvalidArgument, "ancestry layer path should not be empty")
+			}
+
+			g.Go(func() error {
+				clairLayer, err := clair.AnalyzeLayer(analyzerCtx, s.Store, layer.Hash, req.Format, layer.Path, layer.Headers)
+				if err != nil {
+					return err
+				}
+
+				layerMapLock.Lock()
+				layerMap[layer.Hash] = clairLayer
+				layerMapLock.Unlock()
+
+				return nil
+			})
+		}
+	}
+
+	if err = g.Wait(); err != nil {
+		return nil, newRPCErrorWithClairError(codes.Internal, err)
+	}
+
+	for _, layer := range req.Layers {
+		builder.AddLeafLayer(layerMap[layer.Hash])
+	}
+
+	if err := clair.SaveAncestry(s.Store, builder.Ancestry(req.AncestryName)); err != nil {
+		return nil, newRPCErrorWithClairError(codes.Internal, err)
 	}
 
 	return &pb.PostAncestryResponse{Status: clairStatus}, nil
@@ -112,20 +143,13 @@ func (s *AncestryServer) GetAncestry(ctx context.Context, req *pb.GetAncestryReq
 		return nil, status.Errorf(codes.InvalidArgument, "ancestry name should not be empty")
 	}
 
-	tx, err := s.Store.Begin()
+	ancestry, ok, err := database.FindAncestryAndRollback(s.Store, name)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	defer tx.Rollback()
-
-	ancestry, ok, err := tx.FindAncestry(name)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, newRPCErrorWithClairError(codes.Internal, err)
 	}
 
 	if !ok {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("requested ancestry '%s' is not found", req.GetAncestryName()))
+		return nil, status.Errorf(codes.NotFound, "requested ancestry '%s' is not found", req.GetAncestryName())
 	}
 
 	pbAncestry := &pb.GetAncestryResponse_Ancestry{
@@ -134,7 +158,7 @@ func (s *AncestryServer) GetAncestry(ctx context.Context, req *pb.GetAncestryReq
 	}
 
 	for _, layer := range ancestry.Layers {
-		pbLayer, err := GetPbAncestryLayer(tx, layer)
+		pbLayer, err := s.GetPbAncestryLayer(layer)
 		if err != nil {
 			return nil, err
 		}
@@ -164,13 +188,8 @@ func (s *NotificationServer) GetNotification(ctx context.Context, req *pb.GetNot
 		return nil, status.Error(codes.InvalidArgument, "notification page limit should not be empty or less than 1")
 	}
 
-	tx, err := s.Store.Begin()
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-	defer tx.Rollback()
-
-	dbNotification, ok, err := tx.FindVulnerabilityNotification(
+	dbNotification, ok, err := database.FindVulnerabilityNotificationAndRollback(
+		s.Store,
 		req.GetName(),
 		int(req.GetLimit()),
 		pagination.Token(req.GetOldVulnerabilityPage()),
@@ -178,11 +197,11 @@ func (s *NotificationServer) GetNotification(ctx context.Context, req *pb.GetNot
 	)
 
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, newRPCErrorWithClairError(codes.Internal, err)
 	}
 
 	if !ok {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("requested notification '%s' is not found", req.GetName()))
+		return nil, status.Errorf(codes.NotFound, "requested notification '%s' is not found", req.GetName())
 	}
 
 	notification, err := pb.NotificationFromDatabaseModel(dbNotification)
@@ -200,21 +219,13 @@ func (s *NotificationServer) MarkNotificationAsRead(ctx context.Context, req *pb
 		return nil, status.Error(codes.InvalidArgument, "notification name should not be empty")
 	}
 
-	tx, err := s.Store.Begin()
+	found, err := database.MarkNotificationAsReadAndCommit(s.Store, req.GetName())
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, newRPCErrorWithClairError(codes.Internal, err)
 	}
 
-	defer tx.Rollback()
-	err = tx.DeleteNotification(req.GetName())
-	if err == commonerr.ErrNotFound {
-		return nil, status.Error(codes.NotFound, "requested notification \""+req.GetName()+"\" is not found")
-	} else if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-
-	if err := tx.Commit(); err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+	if !found {
+		return nil, status.Errorf(codes.NotFound, "requested notification '%s' is not found", req.GetName())
 	}
 
 	return &pb.MarkNotificationAsReadResponse{}, nil

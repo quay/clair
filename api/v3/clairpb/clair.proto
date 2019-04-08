@@ -23,6 +23,38 @@ package coreos.clair;
 option go_package = "clairpb";
 option java_package = "com.coreos.clair.pb";
 
+service AncestryService {
+  // The RPC used to read the results of scanning for a particular ancestry.
+  rpc GetAncestry(GetAncestryRequest) returns (GetAncestryResponse) {
+    option (google.api.http) = { get: "/ancestry/{ancestry_name}" };
+  }
+  // The RPC used to create a new scan of an ancestry.
+  rpc PostAncestry(PostAncestryRequest) returns (PostAncestryResponse) {
+    option (google.api.http) = {
+      post: "/ancestry"
+      body: "*"
+    };
+  }
+}
+
+service StatusService {
+  // The RPC used to show the internal state of current Clair instance.
+  rpc GetStatus(GetStatusRequest) returns (GetStatusResponse) {
+    option (google.api.http) = { get: "/status" };
+  }
+}
+
+service NotificationService {
+  // The RPC used to get a particularly Notification.
+  rpc GetNotification(GetNotificationRequest) returns (GetNotificationResponse) {
+    option (google.api.http) = { get: "/notifications/{name}" };
+  }
+  // The RPC used to mark a Notification as read after it has been processed.
+  rpc MarkNotificationAsRead(MarkNotificationAsReadRequest) returns (MarkNotificationAsReadResponse) {
+    option (google.api.http) = { delete: "/notifications/{name}" };
+  }
+}
+
 message Vulnerability {
   // The name of the vulnerability.
   string name = 1;
@@ -90,20 +122,6 @@ message Layer {
   string hash = 1;
 }
 
-service AncestryService {
-  // The RPC used to read the results of scanning for a particular ancestry.
-  rpc GetAncestry(GetAncestryRequest) returns (GetAncestryResponse) {
-    option (google.api.http) = { get: "/ancestry/{ancestry_name}" };
-  }
-  // The RPC used to create a new scan of an ancestry.
-  rpc PostAncestry(PostAncestryRequest) returns (PostAncestryResponse) {
-    option (google.api.http) = {
-      post: "/ancestry"
-      body: "*"
-    };
-  }
-}
-
 message ClairStatus {
   // The implemented detectors in this Clair instance
   repeated Detector detectors = 1;
@@ -142,7 +160,7 @@ message PostAncestryRequest {
   message PostLayer {
     // The hash of the layer.
     string hash = 1;
-    // The location of the layer (URL or filepath).
+    // The location of the layer (URL or file path).
     string path = 2;
     // Any HTTP Headers that need to be used if requesting a layer over HTTP(S).
     map<string, string> headers = 3;
@@ -160,17 +178,6 @@ message PostAncestryRequest {
 message PostAncestryResponse {
   // The status of Clair at the time of the request.
   ClairStatus status = 1;
-}
-
-service NotificationService {
-  // The RPC used to get a particularly Notification.
-  rpc GetNotification(GetNotificationRequest) returns (GetNotificationResponse) {
-    option (google.api.http) = { get: "/notifications/{name}" };
-  }
-  // The RPC used to mark a Notification as read after it has been processed.
-  rpc MarkNotificationAsRead(MarkNotificationAsReadRequest) returns (MarkNotificationAsReadResponse) {
-    option (google.api.http) = { delete: "/notifications/{name}" };
-  }
 }
 
 message GetNotificationRequest {
@@ -238,11 +245,4 @@ message GetStatusRequest {}
 message GetStatusResponse {
   // The status of the current Clair instance.
   ClairStatus status = 1;
-}
-
-service StatusService {
-  // The RPC used to show the internal state of current Clair instance.
-  rpc GetStatus(GetStatusRequest) returns (GetStatusResponse) {
-    option (google.api.http) = { get: "/status" };
-  }
 }

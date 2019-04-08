@@ -124,7 +124,7 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 		if nextUpdate.Before(time.Now().UTC()) {
 			// Attempt to get a lock on the update.
 			log.Debug("attempting to obtain update lock")
-			acquiredLock, lockExpiration := database.AcquireLock(datastore, updaterLockName, whoAmI, updaterLockDuration, false)
+			acquiredLock, lockExpiration := database.AcquireLock(datastore, updaterLockName, whoAmI, updaterLockDuration)
 			if lockExpiration.IsZero() {
 				// Any failures to acquire the lock should instantly expire.
 				var instantExpiration time.Duration
@@ -167,7 +167,7 @@ func updateWhileRenewingLock(datastore database.Datastore, whoAmI string, isFirs
 		for {
 			select {
 			case <-time.After(timeutil.FractionalDuration(0.9, refreshDuration)):
-				success, lockExpiration := database.AcquireLock(datastore, updaterLockName, whoAmI, updaterLockRefreshDuration, true)
+				success, lockExpiration := database.ExtendLock(datastore, updaterLockName, whoAmI, updaterLockRefreshDuration)
 				if !success {
 					return errors.New("failed to extend lock")
 				}
@@ -431,13 +431,7 @@ func addMetadata(ctx context.Context, datastore database.Datastore, vulnerabilit
 // GetLastUpdateTime retrieves the latest successful time of update and whether
 // or not it's the first update.
 func GetLastUpdateTime(datastore database.Datastore) (time.Time, bool, error) {
-	tx, err := datastore.Begin()
-	if err != nil {
-		return time.Time{}, false, err
-	}
-	defer tx.Rollback()
-
-	lastUpdateTSS, ok, err := tx.FindKeyValue(updaterLastFlagName)
+	lastUpdateTSS, ok, err := database.FindKeyValueAndRollback(datastore, updaterLastFlagName)
 	if err != nil {
 		return time.Time{}, false, err
 	}
@@ -449,7 +443,7 @@ func GetLastUpdateTime(datastore database.Datastore) (time.Time, bool, error) {
 
 	lastUpdateTS, err := strconv.ParseInt(lastUpdateTSS, 10, 64)
 	if err != nil {
-		return time.Time{}, false, err
+		panic(err)
 	}
 
 	return time.Unix(lastUpdateTS, 0).UTC(), false, nil
@@ -539,40 +533,19 @@ func doVulnerabilitiesNamespacing(vulnerabilities []database.VulnerabilityWithAf
 	return response
 }
 
-// updateUpdaterFlags updates the flags specified by updaters, every transaction
-// is independent of each other.
 func updateUpdaterFlags(datastore database.Datastore, flags map[string]string) error {
 	for key, value := range flags {
-		tx, err := datastore.Begin()
-		if err != nil {
-			return err
-		}
-		defer tx.Rollback()
-
-		err = tx.UpdateKeyValue(key, value)
-		if err != nil {
-			return err
-		}
-		if err = tx.Commit(); err != nil {
+		if err := database.UpdateKeyValueAndCommit(datastore, key, value); err != nil {
 			return err
 		}
 	}
+
 	return nil
 }
 
 // setLastUpdateTime records the last successful date time in database.
 func setLastUpdateTime(datastore database.Datastore) error {
-	tx, err := datastore.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	err = tx.UpdateKeyValue(updaterLastFlagName, strconv.FormatInt(time.Now().UTC().Unix(), 10))
-	if err != nil {
-		return err
-	}
-	return tx.Commit()
+	return database.UpdateKeyValueAndCommit(datastore, updaterLastFlagName, strconv.FormatInt(time.Now().UTC().Unix(), 10))
 }
 
 // isVulnerabilityChange compares two vulnerabilities by their severity and
@@ -648,12 +621,6 @@ func createVulnerabilityNotifications(datastore database.Datastore, changes []vu
 		return nil
 	}
 
-	tx, err := datastore.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
 	notifications := make([]database.VulnerabilityNotification, 0, len(changes))
 	for _, change := range changes {
 		var oldVuln, newVuln *database.Vulnerability
@@ -675,11 +642,7 @@ func createVulnerabilityNotifications(datastore database.Datastore, changes []vu
 		})
 	}
 
-	if err := tx.InsertVulnerabilityNotifications(notifications); err != nil {
-		return err
-	}
-
-	return tx.Commit()
+	return database.InsertVulnerabilityNotificationsAndCommit(datastore, notifications)
 }
 
 // updateVulnerabilities upserts unique vulnerabilities into the database and
@@ -698,13 +661,7 @@ func updateVulnerabilities(ctx context.Context, datastore database.Datastore, vu
 		})
 	}
 
-	tx, err := datastore.Begin()
-	if err != nil {
-		return nil, err
-	}
-	defer tx.Rollback()
-
-	oldVulnNullable, err := tx.FindVulnerabilities(ids)
+	oldVulnNullable, err := database.FindVulnerabilitiesAndRollback(datastore, ids)
 	if err != nil {
 		return nil, err
 	}
@@ -748,21 +705,8 @@ func updateVulnerabilities(ctx context.Context, datastore database.Datastore, vu
 		}
 	}
 
-	log.WithField("count", len(toRemove)).Debug("marking vulnerabilities as outdated")
-	if err := tx.DeleteVulnerabilities(toRemove); err != nil {
-		return nil, err
-	}
-
-	log.WithField("count", len(toAdd)).Debug("inserting new vulnerabilities")
-	if err := tx.InsertVulnerabilities(toAdd); err != nil {
-		return nil, err
-	}
-
-	if err := tx.Commit(); err != nil {
-		return nil, err
-	}
-
-	return changes, nil
+	log.Debugf("there are %d vulnerability changes", len(changes))
+	return changes, database.UpdateVulnerabilitiesAndCommit(datastore, toRemove, toAdd)
 }
 
 func updaterEnabled(updaterName string) bool {

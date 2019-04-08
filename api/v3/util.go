@@ -1,3 +1,17 @@
+// Copyright 2019 clair authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package v3
 
 import (
@@ -13,7 +27,7 @@ import (
 // protobuf struct.
 func GetClairStatus(store database.Datastore) (*pb.ClairStatus, error) {
 	status := &pb.ClairStatus{
-		Detectors: pb.DetectorsFromDatabaseModel(clair.EnabledDetectors),
+		Detectors: pb.DetectorsFromDatabaseModel(clair.EnabledDetectors()),
 	}
 
 	t, firstUpdate, err := clair.GetLastUpdateTime(store)
@@ -33,7 +47,7 @@ func GetClairStatus(store database.Datastore) (*pb.ClairStatus, error) {
 
 // GetPbAncestryLayer retrieves an ancestry layer with vulnerabilities and
 // features in an ancestry based on the provided database layer.
-func GetPbAncestryLayer(tx database.Session, layer database.AncestryLayer) (*pb.GetAncestryResponse_AncestryLayer, error) {
+func (s *AncestryServer) GetPbAncestryLayer(layer database.AncestryLayer) (*pb.GetAncestryResponse_AncestryLayer, error) {
 	pbLayer := &pb.GetAncestryResponse_AncestryLayer{
 		Layer: &pb.Layer{
 			Hash: layer.Hash,
@@ -41,18 +55,14 @@ func GetPbAncestryLayer(tx database.Session, layer database.AncestryLayer) (*pb.
 	}
 
 	features := layer.GetFeatures()
-	affectedFeatures, err := tx.FindAffectedNamespacedFeatures(features)
+	affectedFeatures, err := database.FindAffectedNamespacedFeaturesAndRollback(s.Store, features)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, newRPCErrorWithClairError(codes.Internal, err)
 	}
 
-	// NOTE(sidac): It's quite inefficient, but the easiest way to implement
-	// this feature for now, we should refactor the implementation if there's
-	// any performance issue. It's expected that the number of features is less
-	// than 1000.
 	for _, feature := range affectedFeatures {
 		if !feature.Valid {
-			return nil, status.Error(codes.Internal, "ancestry feature is not found")
+			panic("feature is missing in the database, it indicates the database is corrupted.")
 		}
 
 		for _, detectedFeature := range layer.Features {

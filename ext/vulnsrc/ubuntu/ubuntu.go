@@ -94,13 +94,6 @@ func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, er
 		return resp, err
 	}
 
-	// Open a database transaction.
-	tx, err := db.Begin()
-	if err != nil {
-		return resp, err
-	}
-	defer tx.Rollback()
-
 	// Ask the database for the latest commit we successfully applied.
 	dbCommit, ok, err := database.FindKeyValueAndRollback(db, updaterFlag)
 	if err != nil {
