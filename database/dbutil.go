@@ -360,7 +360,7 @@ func AcquireLock(datastore Datastore, name, owner string, duration time.Duration
 
 // ExtendLock extends the duration of an existing global lock for the given
 // duration.
-func ExtendLock(ds Datastore, name, whoami string, desiredLockDuration time.Duration) (extended bool, expiration time.Time) {
+func ExtendLock(ds Datastore, name, whoami string, desiredLockDuration time.Duration) (bool, time.Time) {
 	tx, err := ds.Begin()
 	if err != nil {
 		return false, time.Time{}
@@ -374,7 +374,7 @@ func ExtendLock(ds Datastore, name, whoami string, desiredLockDuration time.Dura
 
 	if locked {
 		if err := tx.Commit(); err == nil {
-			return
+			return locked, expiration
 		}
 	}
 
