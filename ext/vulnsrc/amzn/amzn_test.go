@@ -67,7 +67,7 @@ func TestAmazonLinux1(t *testing.T) {
 			FeatureName:     "httpd-devel",
 			AffectedVersion: "2.2.21-1.18.amzn1",
 			FixedInVersion:  "2.2.21-1.18.amzn1",
-			AffectedType:    database.AffectBinaryPackage,
+			FeatureType:     database.BinaryPackage,
 		},
 		{
 			Namespace: database.Namespace{
@@ -77,7 +77,7 @@ func TestAmazonLinux1(t *testing.T) {
 			FeatureName:     "httpd-debuginfo",
 			AffectedVersion: "2.2.21-1.18.amzn1",
 			FixedInVersion:  "2.2.21-1.18.amzn1",
-			AffectedType:    database.AffectBinaryPackage,
+			FeatureType:     database.BinaryPackage,
 		},
 	}
 
@@ -100,7 +100,7 @@ func TestAmazonLinux1(t *testing.T) {
 			FeatureName:     "cyrus-imapd-debuginfo",
 			AffectedVersion: "2.3.16-6.4.amzn1",
 			FixedInVersion:  "2.3.16-6.4.amzn1",
-			AffectedType:    database.AffectBinaryPackage,
+			FeatureType:     database.BinaryPackage,
 		},
 		{
 			Namespace: database.Namespace{
@@ -110,7 +110,7 @@ func TestAmazonLinux1(t *testing.T) {
 			FeatureName:     "cyrus-imapd-utils",
 			AffectedVersion: "2.3.16-6.4.amzn1",
 			FixedInVersion:  "2.3.16-6.4.amzn1",
-			AffectedType:    database.AffectBinaryPackage,
+			FeatureType:     database.BinaryPackage,
 		},
 	}
 
@@ -160,7 +160,7 @@ func TestAmazonLinux2(t *testing.T) {
 			FeatureName:     "kernel",
 			AffectedVersion: "4.9.76-38.79.amzn2",
 			FixedInVersion:  "4.9.76-38.79.amzn2",
-			AffectedType:    database.AffectBinaryPackage,
+			FeatureType:     database.BinaryPackage,
 		},
 		{
 			Namespace: database.Namespace{
@@ -170,7 +170,7 @@ func TestAmazonLinux2(t *testing.T) {
 			FeatureName:     "kernel-headers",
 			AffectedVersion: "4.9.76-38.79.amzn2",
 			FixedInVersion:  "4.9.76-38.79.amzn2",
-			AffectedType:    database.AffectBinaryPackage,
+			FeatureType:     database.BinaryPackage,
 		},
 	}
 
@@ -193,7 +193,7 @@ func TestAmazonLinux2(t *testing.T) {
 			FeatureName:     "qemu-kvm",
 			AffectedVersion: "10:1.5.3-141.amzn2.5.3",
 			FixedInVersion:  "10:1.5.3-141.amzn2.5.3",
-			AffectedType:    database.AffectBinaryPackage,
+			FeatureType:     database.BinaryPackage,
 		},
 		{
 			Namespace: database.Namespace{
@@ -203,7 +203,7 @@ func TestAmazonLinux2(t *testing.T) {
 			FeatureName:     "qemu-img",
 			AffectedVersion: "10:1.5.3-141.amzn2.5.3",
 			FixedInVersion:  "10:1.5.3-141.amzn2.5.3",
-			AffectedType:    database.AffectBinaryPackage,
+			FeatureType:     database.BinaryPackage,
 		},
 	}
 

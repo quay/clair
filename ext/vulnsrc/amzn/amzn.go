@@ -27,7 +27,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/rpm"
@@ -325,7 +324,7 @@ func (u *updater) alasToFeatureVersions(alas ALAS) []database.AffectedFeature {
 			},
 			FeatureName:     p.Name,
 			AffectedVersion: version,
-			AffectedType:    database.AffectBinaryPackage,
+			FeatureType:     database.BinaryPackage,
 		}
 
 		if version != versionfmt.MaxVersion {
