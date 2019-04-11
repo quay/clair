@@ -1,4 +1,4 @@
-// Copyright 2017 clair authors
+// Copyright 2019 clair authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,13 +20,14 @@ import (
 	"bufio"
 	"compress/gzip"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"regexp"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 
-	"fmt"
+
 	"github.com/coreos/clair/database"
 	"github.com/coreos/clair/ext/versionfmt"
 	"github.com/coreos/clair/ext/versionfmt/rpm"
@@ -41,6 +42,7 @@ const (
 	amazonLinux1Name          = "Amazon Linux 2018.03"
 	amazonLinux1Namespace     = "amzn:2018.03"
 	amazonLinux1LinkFormat    = "https://alas.aws.amazon.com/%s.html"
+
 	amazonLinux2UpdaterFlag   = "amazonLinux2Updater"
 	amazonLinux2MirrorListURI = "https://cdn.amazonlinux.com/2/core/latest/x86_64/mirror.list"
 	amazonLinux2Name          = "Amazon Linux 2"
