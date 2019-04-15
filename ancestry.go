@@ -110,7 +110,7 @@ func (b *AncestryBuilder) addLayerFeatures(detector database.Detector, features 
 	for i := range features {
 		found := false
 		for j := range existingFeatures {
-			if *existingFeatures[j].Feature == features[i] {
+			if existingFeatures[j].Feature.Feature == features[i].Feature {
 				found = true
 				break
 			}
