@@ -326,53 +326,6 @@ func fetchUpdates(ctx context.Context, datastore database.Datastore) (success bo
 	return
 }
 
-// fetch get data from the registered fetchers, in parallel.
-func fetch(datastore database.Datastore) (bool, []database.VulnerabilityWithAffected, map[string]string, []string) {
-	var vulnerabilities []database.VulnerabilityWithAffected
-	var notes []string
-	status := true
-	flags := make(map[string]string)
-
-	// Fetch updates in parallel.
-	log.Info("fetching vulnerability updates")
-	var responseC = make(chan *vulnsrc.UpdateResponse, 0)
-	numUpdaters := 0
-	for n, u := range vulnsrc.Updaters() {
-		if !updaterEnabled(n) {
-			continue
-		}
-		numUpdaters++
-		go func(name string, u vulnsrc.Updater) {
-			response, err := u.Update(datastore)
-			if err != nil {
-				promUpdaterErrorsTotal.Inc()
-				log.WithError(err).WithField("updater name", name).Error("an error occurred when fetching update")
-				status = false
-				responseC <- nil
-				return
-			}
-
-			responseC <- &response
-			log.WithField("updater name", name).Info("finished fetching")
-		}(n, u)
-	}
-
-	// Collect results of updates.
-	for i := 0; i < numUpdaters; i++ {
-		resp := <-responseC
-		if resp != nil {
-			vulnerabilities = append(vulnerabilities, doVulnerabilitiesNamespacing(resp.Vulnerabilities)...)
-			notes = append(notes, resp.Notes...)
-			for flagKey, flagValue := range resp.Flags {
-				flags[flagKey] = flagValue
-			}
-		}
-	}
-
-	close(responseC)
-	return status, addMetadata(context.TODO(), datastore, vulnerabilities), flags, notes
-}
-
 // addMetadata asynchronously updates a list of vulnerabilities with metadata
 // from the vulnerability metadata sources.
 func addMetadata(ctx context.Context, datastore database.Datastore, vulnerabilities []database.VulnerabilityWithAffected) []database.VulnerabilityWithAffected {
