@@ -102,8 +102,8 @@ func buildResponse(jsonReader io.Reader, latestKnownHash string) (resp vulnsrc.U
 	// Defer the addition of flag information to the response.
 	defer func() {
 		if err == nil {
-			resp.FlagName = updaterFlag
-			resp.FlagValue = hash
+			resp.Flags = make(map[string]string)
+			resp.Flags[updaterFlag] = hash
 		}
 	}()
 

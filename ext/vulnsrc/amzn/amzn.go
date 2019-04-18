@@ -121,8 +121,8 @@ func (u *updater) Update(datastore database.Datastore) (vulnsrc.UpdateResponse, 
 
 	// Set the flag value.
 	if timestamp != "" {
-		response.FlagName = u.UpdaterFlag
-		response.FlagValue = timestamp
+		response.Flags = make(map[string]string)
+		response.Flags[u.UpdaterFlag] = timestamp
 	} else {
 		log.WithField("package", u.Name).Debug("no update")
 	}
