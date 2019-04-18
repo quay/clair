@@ -215,8 +215,8 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 
 	// Set the flag if we found anything.
 	if len(generationTimes) > 0 {
-		resp.FlagName = u.UpdaterFlag
-		resp.FlagValue = strconv.FormatInt(latest(generationTimes), 10)
+		resp.Flags = make(map[string]string)
+		resp.Flags[u.UpdaterFlag] = strconv.FormatInt(latest(generationTimes), 10)
 	} else {
 		log.WithField("package", u.Name).Debug("no update")
 	}

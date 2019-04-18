@@ -171,8 +171,8 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 
 	// Set the flag if we found anything.
 	if len(rhsaList) > 0 {
-		resp.FlagName = updaterFlag
-		resp.FlagValue = strconv.Itoa(rhsaList[len(rhsaList)-1])
+		resp.Flags = make(map[string]string)
+		resp.Flags[updaterFlag] = strconv.Itoa(rhsaList[len(rhsaList)-1])
 	} else {
 		log.WithField("package", "Red Hat").Debug("no update")
 	}

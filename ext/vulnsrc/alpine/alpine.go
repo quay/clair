@@ -67,8 +67,8 @@ func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, er
 	}
 
 	// Set the updaterFlag to equal the commit processed.
-	resp.FlagName = updaterFlag
-	resp.FlagValue = commit
+	resp.Flags = make(map[string]string)
+	resp.Flags[updaterFlag] = commit
 	if existingCommit, foundCommit, err = database.FindKeyValueAndRollback(db, updaterFlag); err != nil {
 		return
 	}

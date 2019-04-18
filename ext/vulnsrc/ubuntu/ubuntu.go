@@ -105,8 +105,8 @@ func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, er
 	}
 
 	// Set the updaterFlag to equal the commit processed.
-	resp.FlagName = updaterFlag
-	resp.FlagValue = commit
+	resp.Flags = make(map[string]string)
+	resp.Flags[updaterFlag] = commit
 
 	// Short-circuit if there have been no updates.
 	if commit == dbCommit {
@@ -130,7 +130,7 @@ func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, er
 	// The only notes we take are if we encountered unknown Ubuntu release.
 	// We don't want the commit to be considered as managed in that case.
 	if len(resp.Notes) != 0 {
-		resp.FlagValue = dbCommit
+		resp.Flags[updaterFlag] = dbCommit
 	}
 
 	return

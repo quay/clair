@@ -33,8 +33,7 @@ var (
 
 // UpdateResponse represents the sum of results of an update.
 type UpdateResponse struct {
-	FlagName        string
-	FlagValue       string
+	Flags           map[string]string
 	Notes           []string
 	Vulnerabilities []database.VulnerabilityWithAffected
 }
