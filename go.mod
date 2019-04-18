@@ -15,8 +15,6 @@ require (
 	github.com/deckarep/golang-set v1.7.1
 	github.com/fernet/fernet-go v0.0.0-20151007213151-1b2437bc582b
 	github.com/go-stomp/stomp v2.0.4+incompatible
-	github.com/google/go-cmp v0.3.0 // indirect
-	github.com/google/uuid v1.1.0 // indirect
 	github.com/golang/protobuf v1.3.2
 	github.com/grpc-ecosystem/go-grpc-prometheus v0.0.0-20170330212424-2500245aa611
 	github.com/grpc-ecosystem/grpc-gateway v1.2.3-0.20170531022852-2a40dd79571b

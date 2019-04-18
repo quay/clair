@@ -196,8 +196,8 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 
 	// Set the flag if we found anything.
 	if len(elsaList) > 0 {
-		resp.FlagName = updaterFlag
-		resp.FlagValue = strconv.Itoa(largest(elsaList))
+		resp.Flags = make(map[string]string)
+		resp.Flags[updaterFlag] = strconv.Itoa(largest(elsaList))
 	} else {
 		log.WithField("package", "Oracle Linux").Debug("no update")
 	}

@@ -18,6 +18,7 @@ package ubuntu
 
 import (
 	"bufio"
+	"compress/bzip2"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -26,7 +27,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"compress/bzip2"
 
 	log "github.com/sirupsen/logrus"
 
@@ -189,8 +189,8 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 
 	// Set the flag if we found anything.
 	if len(generationTimes) > 0 {
-		resp.FlagName = updaterFlag
-		resp.FlagValue = strconv.FormatInt(latest(generationTimes), 10)
+		resp.Flags = make(map[string]string)
+		resp.Flags[updaterFlag] = strconv.FormatInt(latest(generationTimes), 10)
 	} else {
 		log.WithField("package", "Ubuntu Linux").Debug("no update")
 	}

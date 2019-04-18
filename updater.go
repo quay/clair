@@ -319,8 +319,8 @@ func fetchUpdates(ctx context.Context, datastore database.Datastore) (success bo
 			mu.Lock()
 			vulns = append(vulns, namespacedVulns...)
 			notes = append(notes, response.Notes...)
-			if response.FlagName != "" && response.FlagValue != "" {
-				flags[response.FlagName] = response.FlagValue
+			for flagKey, flagValue := range response.Flags {
+				flags[flagKey] = flagValue
 			}
 			mu.Unlock()
 
@@ -374,8 +374,8 @@ func fetch(datastore database.Datastore) (bool, []database.VulnerabilityWithAffe
 		if resp != nil {
 			vulnerabilities = append(vulnerabilities, doVulnerabilitiesNamespacing(resp.Vulnerabilities)...)
 			notes = append(notes, resp.Notes...)
-			if resp.FlagName != "" && resp.FlagValue != "" {
-				flags[resp.FlagName] = resp.FlagValue
+			for flagKey, flagValue := range resp.Flags {
+				flags[flagKey] = flagValue
 			}
 		}
 	}
