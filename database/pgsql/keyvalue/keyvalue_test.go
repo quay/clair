@@ -31,7 +31,6 @@ func TestKeyValue(t *testing.T) {
 	assert.False(t, ok)
 
 	// Try to insert invalid key/value.
-	assert.Error(t, UpdateKeyValue(tx, "test", ""))
 	assert.Error(t, UpdateKeyValue(tx, "", "test"))
 	assert.Error(t, UpdateKeyValue(tx, "", ""))
 
@@ -48,4 +47,11 @@ func TestKeyValue(t *testing.T) {
 	assert.Nil(t, err)
 	assert.True(t, ok)
 	assert.Equal(t, "test2", f)
+
+	// Insert empty value
+	assert.Nil(t, UpdateKeyValue(tx, "testEmpty", ""))
+	f, ok, err = FindKeyValue(tx, "testEmpty")
+	assert.Nil(t, err)
+	assert.True(t, ok)
+	assert.Equal(t, "", f)
 }

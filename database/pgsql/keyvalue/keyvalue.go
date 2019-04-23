@@ -35,9 +35,9 @@ const (
 )
 
 func UpdateKeyValue(tx *sql.Tx, key, value string) (err error) {
-	if key == "" || value == "" {
-		log.Warning("could not insert a flag which has an empty name or value")
-		return commonerr.NewBadRequestError("could not insert a flag which has an empty name or value")
+	if key == "" {
+		log.Warning("could not insert a flag which has an empty name")
+		return commonerr.NewBadRequestError("could not insert a flag which has an empty name")
 	}
 
 	defer monitoring.ObserveQueryTime("PersistKeyValue", "all", time.Now())
