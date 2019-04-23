@@ -17,21 +17,23 @@ All of these components can be found in the `ext/` directory.
 
 ## Data Sources for the built-in drivers
 
-| Data Source                   | Data Collected                                                           | Format | License         |
-|-------------------------------|--------------------------------------------------------------------------|--------|-----------------|
-| [Debian Security Bug Tracker] | Debian 6, 7, 8, unstable namespaces                                      | [dpkg] | [Debian]        |
-| [Ubuntu CVE Tracker]          | Ubuntu 12.04, 12.10, 13.04, 14.04, 14.10, 15.04, 15.10, 16.04 namespaces | [dpkg] | [GPLv2]         |
-| [Red Hat Security Data]       | CentOS 5, 6, 7 namespaces                                                | [rpm]  | [CVRF]          |
-| [Oracle Linux Security Data]  | Oracle Linux 5, 6, 7 namespaces                                          | [rpm]  | [CVRF]          |
-| [SUSE OVAL Descriptions]      | openSUSE, SUSE Linux Enterprise namespaces                               | [rpm]  | [CC-BY-NC-4.0]  |
-| [Alpine SecDB]                | Alpine 3.3, Alpine 3.4, Alpine 3.5 namespaces                            | [apk]  | [MIT]           |
-| [NIST NVD]                    | Generic Vulnerability Metadata                                           | N/A    | [Public Domain] |
+| Data Source                        | Data Collected                                                           | Format | License         |
+|------------------------------------|--------------------------------------------------------------------------|--------|-----------------|
+| [Debian Security Bug Tracker]      | Debian 6, 7, 8, unstable namespaces                                      | [dpkg] | [Debian]        |
+| [Ubuntu CVE Tracker]               | Ubuntu 12.04, 12.10, 13.04, 14.04, 14.10, 15.04, 15.10, 16.04 namespaces | [dpkg] | [GPLv2]         |
+| [Red Hat Security Data]            | CentOS 5, 6, 7 namespaces                                                | [rpm]  | [CVRF]          |
+| [Oracle Linux Security Data]       | Oracle Linux 5, 6, 7 namespaces                                          | [rpm]  | [CVRF]          |
+| [Amazon Linux Security Advisories] | Amazon Linux 2018.03, 2 namespaces                                       | [rpm]  | [MIT-0]         |
+| [SUSE OVAL Descriptions]           | openSUSE, SUSE Linux Enterprise namespaces                               | [rpm]  | [CC-BY-NC-4.0]  |
+| [Alpine SecDB]                     | Alpine 3.3, Alpine 3.4, Alpine 3.5 namespaces                            | [apk]  | [MIT]           |
+| [NIST NVD]                         | Generic Vulnerability Metadata                                           | N/A    | [Public Domain] |
 
 [Debian Security Bug Tracker]: https://security-tracker.debian.org/tracker
 [Ubuntu CVE Tracker]: https://launchpad.net/ubuntu-cve-tracker
 [Red Hat Security Data]: https://www.redhat.com/security/data/metrics
 [Oracle Linux Security Data]: https://linux.oracle.com/security/
 [SUSE OVAL Descriptions]: https://www.suse.com/de-de/support/security/oval/
+[Amazon Linux Security Advisories]: https://alas.aws.amazon.com/
 [NIST NVD]: https://nvd.nist.gov
 [dpkg]: https://en.wikipedia.org/wiki/dpkg
 [rpm]: http://www.rpm.org
@@ -42,6 +44,7 @@ All of these components can be found in the `ext/` directory.
 [Alpine SecDB]: http://git.alpinelinux.org/cgit/alpine-secdb/
 [apk]: http://git.alpinelinux.org/cgit/apk-tools/
 [MIT]: https://gist.github.com/jzelinskie/6da1e2da728424d88518be2adbd76979
+[MIT-0]: https://spdx.org/licenses/MIT-0.html
 [CC-BY-NC-4.0]: https://creativecommons.org/licenses/by-nc/4.0/]
 
 ## Adding new drivers
