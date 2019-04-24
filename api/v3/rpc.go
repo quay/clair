@@ -15,10 +15,7 @@
 package v3
 
 import (
-	"sync"
-
 	"golang.org/x/net/context"
-	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -87,9 +84,9 @@ func (s *AncestryServer) PostAncestry(ctx context.Context, req *pb.PostAncestryR
 
 	builder := clair.NewAncestryBuilder(clair.EnabledDetectors())
 	layerMap := map[string]*database.Layer{}
-	layerMapLock := sync.RWMutex{}
-	g, analyzerCtx := errgroup.WithContext(ctx)
-	for i := range req.Layers {
+
+	for i := len(req.Layers) - 1; i >= 0; i-- {
+
 		layer := req.Layers[i]
 		if _, ok := layerMap[layer.Hash]; !ok {
 			layerMap[layer.Hash] = nil
@@ -106,23 +103,14 @@ func (s *AncestryServer) PostAncestry(ctx context.Context, req *pb.PostAncestryR
 				return nil, status.Error(codes.InvalidArgument, "ancestry layer path should not be empty")
 			}
 
-			g.Go(func() error {
-				clairLayer, err := clair.AnalyzeLayer(analyzerCtx, s.Store, layer.Hash, req.Format, layer.Path, layer.Headers)
-				if err != nil {
-					return err
-				}
+			clairLayer, err := clair.AnalyzeLayer(ctx, s.Store, layer.Hash, req.Format, layer.Path, layer.Headers)
+			if err != nil {
+				return nil, err
+			}
 
-				layerMapLock.Lock()
-				layerMap[layer.Hash] = clairLayer
-				layerMapLock.Unlock()
+			layerMap[layer.Hash] = clairLayer
 
-				return nil
-			})
 		}
-	}
-
-	if err = g.Wait(); err != nil {
-		return nil, newRPCErrorWithClairError(codes.Internal, err)
 	}
 
 	for _, layer := range req.Layers {
