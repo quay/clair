@@ -132,7 +132,7 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 			}
 
 			if acquiredLock {
-				sleepDuration, err = updateWhileRenewingLock(datastore, whoAmI, isFirstUpdate, st)
+				err = updateWhileRenewingLock(datastore, whoAmI, isFirstUpdate, st)
 				if err != nil {
 					if err == errReceivedStopSignal {
 						log.Debug("updater received stop signal")
@@ -140,6 +140,8 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 					}
 					log.WithError(err).Debug("failed to acquired lock")
 					sleepDuration = timeutil.ExpBackoff(sleepDuration, config.Interval)
+				} else {
+					sleepDuration = config.Interval
 				}
 			} else {
 				sleepDuration = updaterSleepBetweenLoopsDuration
@@ -156,9 +158,13 @@ func RunUpdater(config *UpdaterConfig, datastore database.Datastore, st *stopper
 
 var errReceivedStopSignal = errors.New("stopped")
 
-func updateWhileRenewingLock(datastore database.Datastore, whoAmI string, isFirstUpdate bool, st *stopper.Stopper) (sleepDuration time.Duration, err error) {
+func updateWhileRenewingLock(datastore database.Datastore, whoAmI string, isFirstUpdate bool, st *stopper.Stopper) (err error) {
 	g, ctx := errgroup.WithContext(context.Background())
+	// done context is used when updater finishes and all other
+	// go rutines in group should finish too
+	doneCtx, done := context.WithCancel(context.Background())
 	g.Go(func() error {
+		defer done()
 		return update(ctx, datastore, isFirstUpdate)
 	})
 
@@ -175,6 +181,9 @@ func updateWhileRenewingLock(datastore database.Datastore, whoAmI string, isFirs
 			case <-ctx.Done():
 				database.ReleaseLock(datastore, updaterLockName, whoAmI)
 				return ctx.Err()
+			case <-doneCtx.Done():
+				database.ReleaseLock(datastore, updaterLockName, whoAmI)
+				return nil
 			}
 		}
 	})
@@ -185,6 +194,8 @@ func updateWhileRenewingLock(datastore database.Datastore, whoAmI string, isFirs
 			return errReceivedStopSignal
 		case <-ctx.Done():
 			return ctx.Err()
+		case <-doneCtx.Done():
+			return nil
 		}
 	})
 
