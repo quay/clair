@@ -189,6 +189,7 @@ func main() {
 	if err != nil {
 		log.WithError(err).Fatal("failed to load configuration")
 	}
+	clair.ConfigureKafkaLogger(config.KafkaLogger)
 
 	// Enable CPU Profiling if specified
 	if *flagCPUProfilePath != "" {

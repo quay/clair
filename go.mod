@@ -9,6 +9,7 @@ replace (
 )
 
 require (
+	github.com/Shopify/sarama v1.26.1 // indirect
 	github.com/asottile/dockerfile v2.2.0+incompatible
 	github.com/buildkite/interpolate v0.0.0-20181028012610-973457fa2b4c
 	github.com/coreos/pkg v0.0.0-20160727233714-3ac0863d7acf
@@ -16,7 +17,6 @@ require (
 	github.com/fernet/fernet-go v0.0.0-20151007213151-1b2437bc582b
 	github.com/go-stomp/stomp v2.0.4+incompatible
 	github.com/golang/protobuf v1.2.0
-	github.com/google/go-cmp v0.3.0 // indirect
 	github.com/google/uuid v1.1.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v0.0.0-20170330212424-2500245aa611
 	github.com/grpc-ecosystem/grpc-gateway v1.2.3-0.20170531022852-2a40dd79571b
@@ -31,11 +31,11 @@ require (
 	github.com/remind101/migrate v0.0.0-20160423010909-d22d647232c2
 	github.com/sirupsen/logrus v1.4.1
 	github.com/soheilhy/cmux v0.1.4
-	github.com/stretchr/testify v1.3.0
-	golang.org/x/net v0.0.0-20190522155817-f3200d17e092
+	github.com/stretchr/testify v1.4.0
+	github.com/tracer0tong/kafkalogrus v0.0.0-20180816014403-290bb4d4d549
+	golang.org/x/net v0.0.0-20200202094626-16171245cfb2
 	golang.org/x/sync v0.0.0-20190423024810-112230192c58
-	golang.org/x/sys v0.0.0-20190403152447-81d4e9dc473e // indirect
 	google.golang.org/genproto v0.0.0-20180817151627-c66870c02cf8
 	google.golang.org/grpc v1.23.0
-	gopkg.in/yaml.v2 v2.2.2
+	gopkg.in/yaml.v2 v2.2.8
 )

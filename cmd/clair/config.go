@@ -43,10 +43,11 @@ type File struct {
 
 // Config is the global configuration for an instance of Clair.
 type Config struct {
-	Database database.RegistrableComponentConfig
-	Updater  *clair.UpdaterConfig
-	Notifier *notification.Config
-	API      *api.Config
+	Database    database.RegistrableComponentConfig
+	Updater     *clair.UpdaterConfig
+	Notifier    *notification.Config
+	API         *api.Config
+	KafkaLogger *clair.KafkaLoggerConfig
 }
 
 // DefaultConfig is a configuration that can be used as a fallback value.
