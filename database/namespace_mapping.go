@@ -47,4 +47,5 @@ var UbuntuReleasesMapping = map[string]string{
 	"artful":  "17.10",
 	"bionic":  "18.04",
 	"cosmic":  "18.10",
+	"disco":   "19.04",
 }
