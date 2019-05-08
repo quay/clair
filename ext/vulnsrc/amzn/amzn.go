@@ -89,6 +89,8 @@ func (u *updater) Update(datastore database.Datastore) (vulnsrc.UpdateResponse, 
 		return vulnsrc.UpdateResponse{}, err
 	}
 
+	// GetKeyValue returns "" if the key is not found. Coincidentally, the default flag
+	// value I want to use is also the empty string. This code makes the logic explicit.
 	if flagValue == "" {
 		flagValue = defaultUpdaterFlagValue
 	}
