@@ -55,7 +55,7 @@ func ConfigureKafkaLogger(kafkaConfig *KafkaLoggerConfig) {
 		hook, err = kafkalogrus.NewKafkaLogrusHook(
 			kafkaConfig.Topic,
 			log.AllLevels,
-			&formatter.JSONExtendedFormatter{ShowLn: true},
+			&formatter.KafkaFormater{ShowLn: true},
 			kafkaConfig.Brokers,
 			kafkaConfig.Topic,
 			false,
