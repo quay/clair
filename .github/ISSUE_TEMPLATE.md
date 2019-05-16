@@ -1,15 +1,12 @@
 <!--
 
-The Clair developers only support the Clair API.
-They do not support or operate any third party client (e.g. clairctl, klar, harbor).
-If you are using a third party client, please create issues on their respective repositories.
+Project discussion and other meta topics should be discussed on the mailing list.
+
+GitHub issues are ONLY for bugs and features for the Clair API.
+Please first create an issue on your client's repository before opening one here.
 
 Are you using a development build of Clair (e.g. quay.io/coreos/clair-git)?
 Your problem might be solved by switching to a stable release (e.g. quay.io/coreos/clair).
-
-Issues that do not contain the Environment section will be automatically closed.
-If you're making a feature request, please specify "N/A" under the environment section.
-Nobody can help you without context.
 
 -->
 
@@ -26,6 +23,13 @@ Nobody can help you without context.
 <!--- your content here --->
 
 ### Environment
+
+<!--
+
+Issues that do not contain the Environment section are AUTOMATICALLY CLOSED.
+If you're making a feature request, please specify "N/A" under the environment section.
+
+-->
 
 - Clair version/image: 
 - Clair client name/version: 

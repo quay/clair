@@ -44,8 +44,9 @@ Thus, the project was named `Clair` after the French term which translates to *c
 [CoreOS website]: https://coreos.com/clair/docs/latest/
 [Documentation directory]: /Documentation
 
-## Contact
+## Community
 
+- Mailing List: [clair-dev@googlegroups.com](https://groups.google.com/forum/#!forum/clair-dev)
 - IRC: #[clair](irc://irc.freenode.org:6667/#clair) on freenode.org
 - Bugs: [issues](https://github.com/coreos/clair/issues)
 
