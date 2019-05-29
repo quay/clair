@@ -1,7 +1,7 @@
 language: go
 
 go: 
-  - "1.11.x"
+- "1.12.x"
 
 sudo: required
 
@@ -10,10 +10,16 @@ env:
   - PATH=$HOME/.local/bin:$PATH
 
 install:
+- sudo lsof
 - curl https://glide.sh/get | sh
 - mkdir -p $HOME/.local/bin
 - curl -o $HOME/.local/bin/prototool -sSL https://github.com/uber/prototool/releases/download/v0.1.0/prototool-$(uname -s)-$(uname -m)
 - chmod +x $HOME/.local/bin/prototool
+
+before_script:
+- psql --version
+- psql -c 'CREATE DATABASE postgres;' -U postgres
+- psql -c 'CREATE ROLE travis SUPERUSER LOGIN CREATEDB;' -U postgres
 
 script:
 - diff -u <(echo -n) <(gofmt -l -s $(go list -f '{{.Dir}}') | grep -v '/vendor/')
@@ -24,7 +30,7 @@ script:
 dist: trusty
 
 services:
-  - postgresql
+- postgresql
 
 notifications:
   email: false
@@ -36,8 +42,26 @@ matrix:
         packages:
         - rpm
       postgresql: 9.5
+    env: CLAIR_TEST_PGSQL="postgres@127.0.0.1:5432"
   - addons:
       apt:
         packages:
         - rpm
       postgresql: 9.6
+    env: CLAIR_TEST_PGSQL="postgres@127.0.0.1:5432"
+  - addons:
+      apt:
+        packages:
+        - rpm
+        - postgresql-10
+        - postgresql-client-10
+      postgresql: 10
+    env: CLAIR_TEST_PGSQL="postgres@127.0.0.1:5433"
+  - addons:
+      apt:
+        packages:
+        - rpm
+        - postgresql-11
+        - postgresql-client-11
+      postgresql: 11
+    env: CLAIR_TEST_PGSQL="postgres@127.0.0.1:5433"

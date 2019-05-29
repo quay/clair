@@ -36,11 +36,11 @@ var userDBCount = `SELECT count(datname) FROM pg_database WHERE datistemplate = 
 
 func CreateAndConnectTestDB(t *testing.T, testName string) (*sql.DB, func()) {
 	uri := "postgres@127.0.0.1:5432"
-	connectionTemplate := "postgresql://%s?sslmode=disable"
 	if envURI := os.Getenv("CLAIR_TEST_PGSQL"); envURI != "" {
 		uri = envURI
 	}
 
+	connectionTemplate := "postgresql://%s?sslmode=disable"
 	db, err := sql.Open("postgres", fmt.Sprintf(connectionTemplate, uri))
 	if err != nil {
 		panic(err)
