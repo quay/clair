@@ -60,20 +60,25 @@ tolerations: []
 
 # Configuration values for the postgresql dependency.
 # ref: https://github.com/kubernetes/charts/blob/master/stable/postgresql/README.md
+# chartVersion: 5.1.2
+# if enabling a feature refer to the above link for full set of configuration info
 postgresql:
-# The dependant Postgres chart can be disabled, to connect to
-# an existing database by defining config.postgresURI
-  enabled: true
+  postgresqlUsername: clair
+  postgresqlPassword: clair
+  postgresqlDatabase: clair
 
-  imageTag: 9.6-alpine
+  replication:
+    enabled: false
 
-  cpu: 1000m
-  memory: 1Gi
-# These values are hardcoded until Helm supports secrets.
-# For more info see: https://github.com/kubernetes/helm/issues/2196
-  postgresUser: clair
-  postgresPassword: clair
-  postgresDatabase: clair
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
 
   persistence:
+    enabled: true
     size: 10Gi
+
+  metrics:
+    enabled: false
+
