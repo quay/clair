@@ -44,6 +44,20 @@ Thus, the project was named `Clair` after the French term which translates to *c
 [CoreOS website]: https://coreos.com/clair/docs/latest/
 [Documentation directory]: /Documentation
 
+## Local Development
+### Requirements
+* kubernetes (minikube or docker desktop suggested)
+* helm
+
+Local development is provided via kubernetes. Both minikube and docker desktop are supported without the developer needing to make any changes. If the developer is running their own kubernetes cluster in a differement manner then minikube or docker desktop the developer will need to configure their docker cli tool to build images utilizing the docker daemon residing on their kubernetes deployment. 
+
+To deploy the local dev environment first ensure you have helm initialized on your kubernetes instance. Usually this simply involves running `helm init` as long as your kubectl is pointed to the right context. Next run `make deploy-local`. This target builds the container `clair-local:latest` using the docker cli and then deploys a postgres helm chart and a clair helm chart which runs the `clair-local:latest` tag. You may run this command idempotently to deploy the latest code in your working directory.
+
+To teardown both the postgres database and the clair instance run `make teardown-local`.
+
+Caveats:
+You may see errors which do not necessarily mean there is anything wrong when running make targets. This is due to the fact that the Makefile targets are designed to be indempotent. Reference the makefile for lines prefixed with '-' to understand which commands are allowed to fail.
+
 ## Contact
 
 - IRC: #[clair](irc://irc.freenode.org:6667/#clair) on freenode.org
