@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "clair.fullname" . }}
+  labels:
+    heritage: {{ .Release.Service | quote }}
+    release: {{ .Release.Name | quote }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    app: {{ template "clair.fullname" . }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  - name: "{{ .Chart.Name }}-api"
+    port: {{ .Values.service.externalApiPort }}
+    targetPort: {{ .Values.service.internalApiPort }}
+    protocol: TCP
+{{- if and (.Values.service.apiNodePort) (eq .Values.service.type "NodePort") }}
+    nodePort: {{ .Values.service.apiNodePort }}
+{{- end }}
+  - name: "{{ .Chart.Name }}-health"
+    port: {{ .Values.service.externalHealthPort }}
+    targetPort: {{ .Values.service.internalHealthPort }}
+    protocol: TCP
+{{- if and (.Values.service.healthNodePort) (eq .Values.service.type "NodePort") }}
+    nodePort: {{ .Values.service.healthNodePort }}
+{{- end }}
+  selector:
+    app: {{ template "clair.fullname" . }}

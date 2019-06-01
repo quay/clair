@@ -1,0 +1,20 @@
+postgresql:
+  postgresqlUsername: clair
+  postgresqlPassword: clair
+  postgresqlDatabase: clair
+
+  replication:
+    enabled: false
+
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
+
+  persistence:
+    enabled: true
+    size: 10Gi
+
+  metrics:
+    enabled: false
+

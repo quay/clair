@@ -1,0 +1,11 @@
+name: clair
+home: https://coreos.com/clair
+version: 0.1.1
+appVersion: 3.0.0-pre
+description: Clair is an open source project for the static analysis of vulnerabilities in application containers.
+icon: https://cloud.githubusercontent.com/assets/343539/21630811/c5081e5c-d202-11e6-92eb-919d5999c77a.png
+sources:
+  - https://github.com/coreos/clair
+maintainers:
+  - name: Jimmy Zelinskie
+    email: jimmy.zelinskie@coreos.com

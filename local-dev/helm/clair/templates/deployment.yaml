@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "clair.fullname" . }}
+  labels:
+    heritage: {{ .Release.Service | quote }}
+    release: {{ .Release.Name | quote }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+    app: {{ template "clair.fullname" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "clair.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "clair.fullname" . }}
+    spec:
+      volumes:
+      - name: "{{ .Chart.Name }}-config"
+        secret:
+          secretName: {{ template "clair.fullname" . }}
+      {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+      {{- end }}
+      {{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+      {{- end }}
+      initContainers:
+      - name: pg-ready-wait
+        image: postgres:11.3
+        command: [ "sh", "-c",
+          "until pg_isready -h {{ .Values.config.postgresServiceName }} -p 5432;
+          do echo waiting for database; sleep 1; done;"]
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        args:
+        - "-log-level={{ .Values.logLevel }}"
+        {{ if .Values.insecureTls }}- "--insecure-tls" {{end}}
+        ports:
+        - name: "{{ .Chart.Name }}-api"
+          containerPort: {{ .Values.service.internalApiPort }}
+          protocol: TCP
+        - name: "{{ .Chart.Name }}-health"
+          containerPort: {{ .Values.service.internalHealthPort }}
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.service.internalHealthPort }}
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.service.internalHealthPort }}
+        volumeMounts:
+        - name: "{{ .Chart.Name }}-config"
+          mountPath: /etc/clair
+          readOnly: true
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
