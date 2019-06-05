@@ -34,6 +34,7 @@ Thus, the project was named `Clair` after the French term which translates to *c
 * Explore [the API] on SwaggerHub
 * Discover third party [integrations] that help integrate Clair with your infrastructure
 * Read the rest of the documentation on the [CoreOS website] or in the [Documentation directory]
+* Get up and running with [Local Development]
 
 [the terminology]: /Documentation/terminology.md
 [drivers and data sources]: /Documentation/drivers-and-data-sources.md
@@ -43,6 +44,7 @@ Thus, the project was named `Clair` after the French term which translates to *c
 [integrations]: /Documentation/integrations.md
 [CoreOS website]: https://coreos.com/clair/docs/latest/
 [Documentation directory]: /Documentation
+[Local Development]: /Documentation/local-development.md
 
 ## Community
 

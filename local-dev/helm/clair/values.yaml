@@ -5,9 +5,9 @@ replicaCount: 1
 logLevel: info
 insecureTls: false
 image:
-  repository: quay.io/coreos/clair-git
+  repository: clair-local
   tag: latest
-  pullPolicy: Always
+  pullPolicy: Never
 service:
   type: ClusterIP
   internalApiPort: 6060
@@ -35,7 +35,8 @@ resources:
     cpu: 100m
     memory: 500Mi
 config:
-  # postgresURI: "postgres://user:password@host:5432/postgres?sslmode=disable"
+  postgresServiceName: "clair-pg-postgresql"
+  postgresURI: "postgres://clair:clair@clair-pg-postgresql:5432/postgres?sslmode=disable"
   paginationKey: "XxoPtCUzrUv4JV5dS+yQ+MdW7yLEJnRMwigVY/bpgtQ="
   updateInterval: 2h
   notificationWebhookEndpoint: https://example.com/notify/me
@@ -57,23 +58,3 @@ config:
   - rpm
 nodeSelector: {}
 tolerations: []
-
-# Configuration values for the postgresql dependency.
-# ref: https://github.com/kubernetes/charts/blob/master/stable/postgresql/README.md
-postgresql:
-# The dependant Postgres chart can be disabled, to connect to
-# an existing database by defining config.postgresURI
-  enabled: true
-
-  imageTag: 9.6-alpine
-
-  cpu: 1000m
-  memory: 1Gi
-# These values are hardcoded until Helm supports secrets.
-# For more info see: https://github.com/kubernetes/helm/issues/2196
-  postgresUser: clair
-  postgresPassword: clair
-  postgresDatabase: clair
-
-  persistence:
-    size: 10Gi
