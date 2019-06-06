@@ -36,7 +36,7 @@ resources:
     memory: 500Mi
 config:
   postgresServiceName: "clair-pg-postgresql"
-  postgresURI: "postgres://clair:clair@clair-pg-postgresql:5432/postgres?sslmode=disable"
+  postgresURI: "postgres://clair:clair@clair-pg-postgresql:5432/clair?sslmode=disable"
   paginationKey: "XxoPtCUzrUv4JV5dS+yQ+MdW7yLEJnRMwigVY/bpgtQ="
   updateInterval: 2h
   notificationWebhookEndpoint: https://example.com/notify/me
