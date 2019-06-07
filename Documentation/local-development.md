@@ -35,6 +35,24 @@ When you are finished developing and would like to tear down the environment the
 This command removes both the current Clair instance along with the postgres database.
 Run this command only when you are willing to remove all the CVE data from your local development environment.
 
+# Interacting with Clair and Postgres
+
+Clair and the associated postgres instance are launched as pods on the local kubernetes cluster. 
+In order to interact with these two applications you may use the `kubectl port-forward` command to forward the associated k8 service port to a port on `localhost`.
+
+For example:
+```
+❯ kubectl port-forward clair-669775b7c7-hhf46 6060:6060 6061:6061
+Forwarding from 127.0.0.1:6060 -> 6060
+Forwarding from [::1]:6060 -> 6060
+Forwarding from 127.0.0.1:6061 -> 6061
+Forwarding from [::1]:6061 -> 6061
+
+❯ kubectl port-forward clair-pg-postgresql-0 5432:5432
+Forwarding from 127.0.0.1:5432 -> 5432
+Forwarding from [::1]:5432 -> 5432
+```
+
 # Caveats
 
 Due to the make targets being idempotent you may see errors which do not necessarily mean something went wrong.
