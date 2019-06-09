@@ -43,7 +43,7 @@ A [PostgreSQL 9.4+] database instance is required for all instructions.
 
 [Local Development]: ./local-development.md
 
-See [Local Development] for our kubernetes based local development environment.
+See [Local Development] for our Kubernetes based local development environment.
 
 ### Docker
 
