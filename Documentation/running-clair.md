@@ -56,7 +56,8 @@ $ docker run --net=host -d -p 6060-6061:6060-6061 -v $PWD/clair_config:/config q
 
 #### Source
 
-Clair currently uses glide as it's package management solution. The vendor folder is checked into this repository and running 'glide up' should not be necessary.
+Clair currently uses glide as it's package management solution.
+The vendor folder is checked into this repository and running 'glide up' should not be necessary.
 Find more information on glide here: [Glide]
 
 [Glide]: https://github.com/Masterminds/glide
