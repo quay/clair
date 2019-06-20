@@ -73,15 +73,8 @@ func (b *AncestryBuilder) AddLeafLayer(layer *database.Layer) {
 		allFeatureMap[layerFeature.By] = append(allFeatureMap[layerFeature.By], layerFeature)
 	}
 
-	// we only care about the ones specified by builder's detectors
-	featureMap := map[database.Detector][]database.LayerFeature{}
-	for i := range b.detectors {
-		detector := b.detectors[i]
-		featureMap[detector] = allFeatureMap[detector]
-	}
-
-	for detector := range featureMap {
-		b.addLayerFeatures(detector, featureMap[detector])
+	for _, detector := range b.detectors {
+		b.addLayerFeatures(detector, allFeatureMap[detector])
 	}
 
 	b.layerIndex++
