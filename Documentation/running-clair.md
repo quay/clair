@@ -62,7 +62,7 @@ helm install clair -f ~/my_custom_values.yaml
 #### Docker Compose
 
 ```sh
-$ curl -L https://raw.githubusercontent.com/coreos/clair/master/contrib/compose/docker-compose.yml -o $HOME/docker-compose.yml
+$ curl -L https://raw.githubusercontent.com/coreos/clair/v2.0.8/docker-compose.yml -o $HOME/docker-compose.yml
 $ mkdir $HOME/clair_config
 $ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.yaml.sample -o $HOME/clair_config/config.yaml
 $ $EDITOR $HOME/clair_config/config.yaml # Edit database source to be postgresql://postgres:password@postgres:5432?sslmode=disable
