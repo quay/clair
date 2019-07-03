@@ -153,8 +153,7 @@ func (s *AncestryServer) GetAncestry(ctx context.Context, req *pb.GetAncestryReq
 	}
 
 	pbAncestry := &pb.GetAncestryResponse_Ancestry{
-		Name:      ancestry.Name,
-		Detectors: pb.DetectorsFromDatabaseModel(ancestry.By),
+		Name: ancestry.Name,
 	}
 
 	for _, layer := range ancestry.Layers {

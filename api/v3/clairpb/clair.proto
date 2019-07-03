@@ -155,15 +155,12 @@ message GetAncestryResponse {
     message Ancestry {
         // The name of the desired ancestry.
         string name = 1;
-        // The detectors used to scan this Ancestry. It may not be the current
-        // set of detectors in clair status.
-        repeated Detector detectors = 2;
         // The list of layers along with detected features in each.
         repeated AncestryLayer layers = 3;
     }
     // The ancestry requested.
     Ancestry ancestry = 1;
-    // The status of Clair at the time of the request.
+    // The status of Clair at the time of the request
     ClairStatus status = 2;
 }
 

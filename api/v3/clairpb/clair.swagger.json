@@ -172,13 +172,6 @@
           "type": "string",
           "description": "The name of the desired ancestry."
         },
-        "detectors": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/clairDetector"
-          },
-          "description": "The detectors used to scan this Ancestry. It may not be the current set\nof detectors in clair status."
-        },
         "layers": {
           "type": "array",
           "items": {
@@ -225,11 +218,11 @@
         },
         "old": {
           "$ref": "#/definitions/clairPagedVulnerableAncestries",
-          "description": "The previous vulnerability and a paginated view of the ancestries it affects."
+          "description": "The previous vulnerability and a paginated view of the ancestries it\naffects."
         },
         "new": {
           "$ref": "#/definitions/clairPagedVulnerableAncestries",
-          "description": "The newly updated vulnerability and a paginated view of the ancestries it affects."
+          "description": "The newly updated vulnerability and a paginated view of the\nancestries it affects."
         }
       }
     },
@@ -239,7 +232,7 @@
         "index": {
           "type": "integer",
           "format": "int32",
-          "description": "The index is an ever increasing number associated with the particular ancestry.\nThis is useful if you're processing notifications, and need to keep track of the progress of paginating the results."
+          "description": "The index is an ever increasing number associated with the particular\nancestry. This is useful if you're processing notifications, and need\nto keep track of the progress of paginating the results."
         },
         "name": {
           "type": "string",
@@ -256,14 +249,14 @@
         },
         "path": {
           "type": "string",
-          "description": "The location of the layer (URL or filepath)."
+          "description": "The location of the layer (URL or file path)."
         },
         "headers": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Any HTTP Headers that need to be used if requesting a layer over HTTP(S)."
+          "description": "Any HTTP Headers that need to be used if requesting a layer over\nHTTP(S)."
         }
       }
     },
@@ -322,7 +315,7 @@
         },
         "detector": {
           "$ref": "#/definitions/clairDetector",
-          "description": "The detector used to detect this feature. This only exists when present in\nan Ancestry."
+          "description": "The detector used to detect this feature. This only exists when present\nin an Ancestry."
         },
         "vulnerabilities": {
           "type": "array",
@@ -346,7 +339,7 @@
         },
         "status": {
           "$ref": "#/definitions/clairClairStatus",
-          "description": "The status of Clair at the time of the request."
+          "title": "The status of Clair at the time of the request"
         }
       }
     },
@@ -389,7 +382,7 @@
         },
         "detector": {
           "$ref": "#/definitions/clairDetector",
-          "description": "The detector used to detect the namespace. This only exists when present in\nan Ancestry Feature."
+          "description": "The detector used to detect the namespace. This only exists when present\nin an Ancestry Feature."
         }
       }
     },
@@ -464,7 +457,7 @@
         },
         "description": {
           "type": "string",
-          "description": "A description of the vulnerability according to the source for the namespace."
+          "description": "A description of the vulnerability according to the source for the\nnamespace."
         },
         "link": {
           "type": "string",
