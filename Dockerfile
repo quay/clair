@@ -19,9 +19,10 @@ WORKDIR /go/src/github.com/coreos/clair/
 RUN export CLAIR_VERSION=$(git describe --tag --always --dirty) && \
 	go build -ldflags "-X github.com/coreos/clair/pkg/version.Version=$CLAIR_VERSION" github.com/coreos/clair/cmd/clair
 
-FROM alpine:3.8
+FROM alpine:3.10
 COPY --from=build /go/src/github.com/coreos/clair/clair /clair
 RUN apk add --no-cache git rpm xz ca-certificates dumb-init
+USER nobody
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/clair"]
 VOLUME /config
 EXPOSE 6060 6061
