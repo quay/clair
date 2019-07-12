@@ -22,6 +22,11 @@ RUN export CLAIR_VERSION=$(git describe --tag --always --dirty) && \
 FROM alpine:3.8
 COPY --from=build /go/src/github.com/coreos/clair/clair /clair
 RUN apk add --no-cache git rpm xz ca-certificates dumb-init
+
+# change ownership of ssl directory to allow custom cert in OpenShift
+RUN chgrp -R 0 /etc/ssl/certs && \
+    chmod -R g=u /etc/ssl/certs
+
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/clair"]
 VOLUME /config
 EXPOSE 6060 6061
