@@ -1,133 +1,184 @@
 ---
-kind: pipeline
-name: go-1.12-postgres9
-
-platform:
-  os: linux
-  arch: amd64
-
-clone:
-  depth: 50
-
-workspace:
-  base: /go
-  path: src/github.com/coreos/clair
-
-steps:
-- name: compile
-  image: golang:1.12-alpine
-  commands:
-  - apk add --no-cache build-base git rpm xz
-  - make build
-
-- name: unit tests
-  image: golang:1.12-alpine
-  commands:
-  - apk add --no-cache build-base git rpm xz
-  - "git config --global user.name \"Test\""
-  - "git config --global user.email \"test@coreos.com\""
-  - make unit-test
-
-- name: db tests
-  image: golang:1.12-alpine
-  commands:
-  - apk add --no-cache build-base git rpm xz
-  - make db-test
-  environment:
-    CLAIR_TEST_PGSQL: "postgres@postgres:5432"
-
-services:
-- name: postgres
-  image: postgres:9-alpine
-  ports:
-  - 5432
-
+{
+   "clone": {
+      "depth": 50
+   },
+   "kind": "pipeline",
+   "name": "go-1.12-postgres9",
+   "services": [
+      {
+         "image": "postgres:9-alpine",
+         "name": "postgres",
+         "ports": [
+            5432
+         ]
+      }
+   ],
+   "steps": [
+      {
+         "commands": [
+            "apk add --no-cache git build-base clang",
+            "make lint-proto",
+            "git diff --exit-code"
+         ],
+         "image": "golang:1.12-alpine",
+         "name": "lint"
+      },
+      {
+         "commands": [
+            "apk add --no-cache build-base git rpm xz",
+            "make build"
+         ],
+         "image": "golang:1.12-alpine",
+         "name": "compile"
+      },
+      {
+         "commands": [
+            "apk add --no-cache build-base git rpm xz",
+            "git config --global user.name \"Test\"",
+            "git config --global user.email \"test@coreos.com\"",
+            "make unit-test"
+         ],
+         "image": "golang:1.12-alpine",
+         "name": "unit tests"
+      },
+      {
+         "commands": [
+            "apk add --no-cache build-base git rpm xz",
+            "make db-test"
+         ],
+         "environment": {
+            "CLAIR_TEST_PGSQL": "postgres@postgres:5432"
+         },
+         "image": "golang:1.12-alpine",
+         "name": "db tests"
+      }
+   ],
+   "workspace": {
+      "base": "/go",
+      "path": "src/github.com/coreos/clair"
+   }
+}
 ---
-kind: pipeline
-name: go-1.12-postgres10
-
-platform:
-  os: linux
-  arch: amd64
-
-clone:
-  depth: 50
-
-workspace:
-  base: /go
-  path: src/github.com/coreos/clair
-
-steps:
-- name: compile
-  image: golang:1.12-alpine
-  commands:
-  - apk add --no-cache build-base git rpm xz
-  - make build
-
-- name: unit tests
-  image: golang:1.12-alpine
-  commands:
-  - apk add --no-cache build-base git rpm xz
-  - "git config --global user.name \"Test\""
-  - "git config --global user.email \"test@coreos.com\""
-  - make unit-test
-
-- name: db tests
-  image: golang:1.12-alpine
-  commands:
-  - apk add --no-cache build-base git rpm xz
-  - make db-test
-  environment:
-    CLAIR_TEST_PGSQL: "postgres@postgres:5432"
-
-services:
-- name: postgres
-  image: postgres:10-alpine
-  ports:
-  - 5432
-
+{
+   "clone": {
+      "depth": 50
+   },
+   "kind": "pipeline",
+   "name": "go-1.12-postgres10",
+   "services": [
+      {
+         "image": "postgres:10-alpine",
+         "name": "postgres",
+         "ports": [
+            5432
+         ]
+      }
+   ],
+   "steps": [
+      {
+         "commands": [
+            "apk add --no-cache git build-base clang",
+            "make lint-proto",
+            "git diff --exit-code"
+         ],
+         "image": "golang:1.12-alpine",
+         "name": "lint"
+      },
+      {
+         "commands": [
+            "apk add --no-cache build-base git rpm xz",
+            "make build"
+         ],
+         "image": "golang:1.12-alpine",
+         "name": "compile"
+      },
+      {
+         "commands": [
+            "apk add --no-cache build-base git rpm xz",
+            "git config --global user.name \"Test\"",
+            "git config --global user.email \"test@coreos.com\"",
+            "make unit-test"
+         ],
+         "image": "golang:1.12-alpine",
+         "name": "unit tests"
+      },
+      {
+         "commands": [
+            "apk add --no-cache build-base git rpm xz",
+            "make db-test"
+         ],
+         "environment": {
+            "CLAIR_TEST_PGSQL": "postgres@postgres:5432"
+         },
+         "image": "golang:1.12-alpine",
+         "name": "db tests"
+      }
+   ],
+   "workspace": {
+      "base": "/go",
+      "path": "src/github.com/coreos/clair"
+   }
+}
 ---
-kind: pipeline
-name: go-1.12-postgres11
-
-platform:
-  os: linux
-  arch: amd64
-
-clone:
-  depth: 50
-
-workspace:
-  base: /go
-  path: src/github.com/coreos/clair
-
-steps:
-- name: compile
-  image: golang:1.12-alpine
-  commands:
-  - apk add --no-cache build-base git rpm xz
-  - make build
-
-- name: unit tests
-  image: golang:1.12-alpine
-  commands:
-  - apk add --no-cache build-base git rpm xz
-  - "git config --global user.name \"Test\""
-  - "git config --global user.email \"test@coreos.com\""
-  - make unit-test
-
-- name: db tests
-  image: golang:1.12-alpine
-  commands:
-  - apk add --no-cache build-base git rpm xz
-  - make db-test
-  environment:
-    CLAIR_TEST_PGSQL: "postgres@postgres:5432"
-
-services:
-- name: postgres
-  image: postgres:11-alpine
-  ports:
-  - 5432
-
+{
+   "clone": {
+      "depth": 50
+   },
+   "kind": "pipeline",
+   "name": "go-1.12-postgres11",
+   "services": [
+      {
+         "image": "postgres:11-alpine",
+         "name": "postgres",
+         "ports": [
+            5432
+         ]
+      }
+   ],
+   "steps": [
+      {
+         "commands": [
+            "apk add --no-cache git build-base clang",
+            "make lint-proto",
+            "git diff --exit-code"
+         ],
+         "image": "golang:1.12-alpine",
+         "name": "lint"
+      },
+      {
+         "commands": [
+            "apk add --no-cache build-base git rpm xz",
+            "make build"
+         ],
+         "image": "golang:1.12-alpine",
+         "name": "compile"
+      },
+      {
+         "commands": [
+            "apk add --no-cache build-base git rpm xz",
+            "git config --global user.name \"Test\"",
+            "git config --global user.email \"test@coreos.com\"",
+            "make unit-test"
+         ],
+         "image": "golang:1.12-alpine",
+         "name": "unit tests"
+      },
+      {
+         "commands": [
+            "apk add --no-cache build-base git rpm xz",
+            "make db-test"
+         ],
+         "environment": {
+            "CLAIR_TEST_PGSQL": "postgres@postgres:5432"
+         },
+         "image": "golang:1.12-alpine",
+         "name": "db tests"
+      }
+   ],
+   "workspace": {
+      "base": "/go",
+      "path": "src/github.com/coreos/clair"
+   }
+}
 ...

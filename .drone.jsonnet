@@ -15,6 +15,15 @@ local pipeline(goVersion, postgresVersion) = {
 
   steps: [
     {
+      name: 'lint',
+      image: 'golang:' + goVersion + '-alpine',
+      commands: [
+        'apk add --no-cache git build-base clang',
+        'make lint-proto',
+        'git diff --exit-code',
+      ],
+    },
+    {
       name: 'compile',
       image: 'golang:' + goVersion + '-alpine',
       commands: [
