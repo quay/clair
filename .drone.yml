@@ -14,6 +14,13 @@ workspace:
   path: src/github.com/coreos/clair
 
 steps:
+- name: lint
+  image: golang:1.12-alpine
+  commands:
+  - apk add --no-cache git build-base clang
+  - make lint-proto
+  - git diff --exit-code
+
 - name: compile
   image: golang:1.12-alpine
   commands:
@@ -24,8 +31,8 @@ steps:
   image: golang:1.12-alpine
   commands:
   - apk add --no-cache build-base git rpm xz
-  - "git config --global user.name \"Test\""
-  - "git config --global user.email \"test@coreos.com\""
+  - git config --global user.name "Test"
+  - git config --global user.email "test@coreos.com"
   - make unit-test
 
 - name: db tests
@@ -34,7 +41,7 @@ steps:
   - apk add --no-cache build-base git rpm xz
   - make db-test
   environment:
-    CLAIR_TEST_PGSQL: "postgres@postgres:5432"
+    CLAIR_TEST_PGSQL: postgres@postgres:5432
 
 services:
 - name: postgres
@@ -58,6 +65,13 @@ workspace:
   path: src/github.com/coreos/clair
 
 steps:
+- name: lint
+  image: golang:1.12-alpine
+  commands:
+  - apk add --no-cache git build-base clang
+  - make lint-proto
+  - git diff --exit-code
+
 - name: compile
   image: golang:1.12-alpine
   commands:
@@ -68,8 +82,8 @@ steps:
   image: golang:1.12-alpine
   commands:
   - apk add --no-cache build-base git rpm xz
-  - "git config --global user.name \"Test\""
-  - "git config --global user.email \"test@coreos.com\""
+  - git config --global user.name "Test"
+  - git config --global user.email "test@coreos.com"
   - make unit-test
 
 - name: db tests
@@ -78,7 +92,7 @@ steps:
   - apk add --no-cache build-base git rpm xz
   - make db-test
   environment:
-    CLAIR_TEST_PGSQL: "postgres@postgres:5432"
+    CLAIR_TEST_PGSQL: postgres@postgres:5432
 
 services:
 - name: postgres
@@ -102,6 +116,13 @@ workspace:
   path: src/github.com/coreos/clair
 
 steps:
+- name: lint
+  image: golang:1.12-alpine
+  commands:
+  - apk add --no-cache git build-base clang
+  - make lint-proto
+  - git diff --exit-code
+
 - name: compile
   image: golang:1.12-alpine
   commands:
@@ -112,8 +133,8 @@ steps:
   image: golang:1.12-alpine
   commands:
   - apk add --no-cache build-base git rpm xz
-  - "git config --global user.name \"Test\""
-  - "git config --global user.email \"test@coreos.com\""
+  - git config --global user.name "Test"
+  - git config --global user.email "test@coreos.com"
   - make unit-test
 
 - name: db tests
@@ -122,7 +143,7 @@ steps:
   - apk add --no-cache build-base git rpm xz
   - make db-test
   environment:
-    CLAIR_TEST_PGSQL: "postgres@postgres:5432"
+    CLAIR_TEST_PGSQL: postgres@postgres:5432
 
 services:
 - name: postgres

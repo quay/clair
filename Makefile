@@ -49,3 +49,12 @@ teardown-local:
 	# This target tears down the environment deployed by deploy-local.
 	-helm delete --purge clair
 	-helm delete --purge clair-pg
+
+.PHONY: lint-proto
+lint-proto:
+	clang-format -i api/v3/clairpb/clair.proto
+
+
+.PHONY: gen-drone-config
+gen-drone-config:
+	drone jsonnet --stream .drone.jsonnet

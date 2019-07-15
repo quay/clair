@@ -26,7 +26,9 @@ option java_package = "com.coreos.clair.pb";
 service AncestryService {
   // The RPC used to read the results of scanning for a particular ancestry.
   rpc GetAncestry(GetAncestryRequest) returns (GetAncestryResponse) {
-    option (google.api.http) = { get: "/ancestry/{ancestry_name}" };
+    option (google.api.http) = {
+      get: "/ancestry/{ancestry_name}"
+    };
   }
   // The RPC used to create a new scan of an ancestry.
   rpc PostAncestry(PostAncestryRequest) returns (PostAncestryResponse) {
@@ -40,18 +42,26 @@ service AncestryService {
 service StatusService {
   // The RPC used to show the internal state of current Clair instance.
   rpc GetStatus(GetStatusRequest) returns (GetStatusResponse) {
-    option (google.api.http) = { get: "/status" };
+    option (google.api.http) = {
+      get: "/status"
+    };
   }
 }
 
 service NotificationService {
   // The RPC used to get a particularly Notification.
-  rpc GetNotification(GetNotificationRequest) returns (GetNotificationResponse) {
-    option (google.api.http) = { get: "/notifications/{name}" };
+  rpc GetNotification(GetNotificationRequest)
+      returns (GetNotificationResponse) {
+    option (google.api.http) = {
+      get: "/notifications/{name}"
+    };
   }
   // The RPC used to mark a Notification as read after it has been processed.
-  rpc MarkNotificationAsRead(MarkNotificationAsReadRequest) returns (MarkNotificationAsReadResponse) {
-    option (google.api.http) = { delete: "/notifications/{name}" };
+  rpc MarkNotificationAsRead(MarkNotificationAsReadRequest)
+      returns (MarkNotificationAsReadResponse) {
+    option (google.api.http) = {
+      delete: "/notifications/{name}"
+    };
   }
 }
 
@@ -60,7 +70,8 @@ message Vulnerability {
   string name = 1;
   // The name of the namespace in which the vulnerability was detected.
   string namespace_name = 2;
-  // A description of the vulnerability according to the source for the namespace.
+  // A description of the vulnerability according to the source for the
+  // namespace.
   string description = 3;
   // A link to the vulnerability according to the source for the namespace.
   string link = 4;
@@ -93,8 +104,8 @@ message Detector {
 message Namespace {
   // The name of the namespace.
   string name = 1;
-  // The detector used to detect the namespace. This only exists when present in
-  // an Ancestry Feature.
+  // The detector used to detect the namespace. This only exists when present
+  // in an Ancestry Feature.
   Detector detector = 2;
 }
 
@@ -107,8 +118,8 @@ message Feature {
   string version = 3;
   // The format used to parse version numbers for the feature.
   string version_format = 4;
-  // The detector used to detect this feature. This only exists when present in
-  // an Ancestry.
+  // The detector used to detect this feature. This only exists when present
+  // in an Ancestry.
   Detector detector = 5;
   // The list of vulnerabilities that affect the feature.
   repeated Vulnerability vulnerabilities = 6;
@@ -144,15 +155,12 @@ message GetAncestryResponse {
   message Ancestry {
     // The name of the desired ancestry.
     string name = 1;
-    // The detectors used to scan this Ancestry. It may not be the current set
-    // of detectors in clair status.
-    repeated Detector detectors = 2;
     // The list of layers along with detected features in each.
     repeated AncestryLayer layers = 3;
   }
   // The ancestry requested.
   Ancestry ancestry = 1;
-  // The status of Clair at the time of the request.
+  // The status of Clair at the time of the request
   ClairStatus status = 2;
 }
 
@@ -162,7 +170,8 @@ message PostAncestryRequest {
     string hash = 1;
     // The location of the layer (URL or file path).
     string path = 2;
-    // Any HTTP Headers that need to be used if requesting a layer over HTTP(S).
+    // Any HTTP Headers that need to be used if requesting a layer over
+    // HTTP(S).
     map<string, string> headers = 3;
   }
   // The name of the ancestry being scanned.
@@ -203,9 +212,11 @@ message GetNotificationResponse {
     string notified = 3;
     // The time at which a notification has been deleted.
     string deleted = 4;
-    // The previous vulnerability and a paginated view of the ancestries it affects.
+    // The previous vulnerability and a paginated view of the ancestries it
+    // affects.
     PagedVulnerableAncestries old = 5;
-    // The newly updated vulnerability and a paginated view of the ancestries it affects.
+    // The newly updated vulnerability and a paginated view of the
+    // ancestries it affects.
     PagedVulnerableAncestries new = 6;
   }
   // The notification as requested.
@@ -214,8 +225,9 @@ message GetNotificationResponse {
 
 message PagedVulnerableAncestries {
   message IndexedAncestryName {
-    // The index is an ever increasing number associated with the particular ancestry.
-    // This is useful if you're processing notifications, and need to keep track of the progress of paginating the results.
+    // The index is an ever increasing number associated with the particular
+    // ancestry. This is useful if you're processing notifications, and need
+    // to keep track of the progress of paginating the results.
     int32 index = 1;
     // The name of the ancestry.
     string name = 2;
