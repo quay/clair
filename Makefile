@@ -57,4 +57,4 @@ lint-proto:
 
 .PHONY: gen-drone-config
 gen-drone-config:
-	jsonnet -y .drone.jsonnet -o .drone.yml
+	drone jsonnet --stream .drone.jsonnet
