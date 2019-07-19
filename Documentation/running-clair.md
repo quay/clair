@@ -39,40 +39,13 @@ A [PostgreSQL 9.4+] database instance is required for all instructions.
 
 [PostgreSQL 9.4+]: https://www.postgresql.org
 
-### Cluster
-
-#### Kubernetes (Helm)
-
-If you don't have a local Kubernetes cluster already, check out [minikube].
-This assumes you've already ran `helm init`, you have access to a currently running instance of Tiller and that you are running the latest version of helm.
-
-[minikube]: https://github.com/kubernetes/minikube
-
-```
-git clone https://github.com/coreos/clair
-cd clair/contrib/helm
-cp clair/values.yaml ~/my_custom_values.yaml
-vi ~/my_custom_values.yaml
-helm dependency update clair
-helm install clair -f ~/my_custom_values.yaml
-```
-
 ### Local
 
-#### Docker Compose
+[Local Development]: ./local-development.md
 
-```sh
-$ curl -L https://raw.githubusercontent.com/coreos/clair/master/contrib/compose/docker-compose.yml -o $HOME/docker-compose.yml
-$ mkdir $HOME/clair_config
-$ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.yaml.sample -o $HOME/clair_config/config.yaml
-$ $EDITOR $HOME/clair_config/config.yaml # Edit database source to be postgresql://postgres:password@postgres:5432?sslmode=disable
-$ docker-compose -f $HOME/docker-compose.yml up -d
-```
+See [Local Development] for our Kubernetes based local development environment.
 
-Docker Compose may start Clair before Postgres which will raise an error.
-If this error is raised, manually execute `docker-compose start clair`.
-
-#### Docker
+### Docker
 
 ```sh
 $ mkdir $PWD/clair_config
@@ -82,6 +55,12 @@ $ docker run --net=host -d -p 6060-6061:6060-6061 -v $PWD/clair_config:/config q
 ```
 
 #### Source
+
+Clair currently uses glide as it's package management solution.
+The vendor folder is checked into this repository and running 'glide up' should not be necessary.
+Find more information on glide here: [Glide]
+
+[Glide]: https://github.com/Masterminds/glide
 
 To build Clair, you need the latest stable version of [Go] and a working [Go environment].
 In addition, Clair requires some additional binaries be installed on the system [$PATH] as runtime dependencies:
