@@ -140,11 +140,10 @@ func PersistNamespacesAndCommit(datastore Datastore, namespaces []Namespace) err
 // rollback.
 func FindAncestryAndRollback(datastore Datastore, name string) (Ancestry, bool, error) {
 	tx, err := datastore.Begin()
-	defer tx.Rollback()
-
 	if err != nil {
 		return Ancestry{}, false, err
 	}
+	defer tx.Rollback()
 
 	return tx.FindAncestry(name)
 }
