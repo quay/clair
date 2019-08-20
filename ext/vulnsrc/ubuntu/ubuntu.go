@@ -55,6 +55,7 @@ var (
 	ignoredCriterions          []string
 	ubuntuPackageCommentRegexp = regexp.MustCompile(`^(.*) package in ([a-z]+) (?:(?:was vulnerable|is related to the CVE in some way) but has been fixed \(note: '(.*)'\)|is affected and needs fixing).$`)
 	ubuntuOvalFileRegexp       = regexp.MustCompile(`com.ubuntu.([a-z]+).cve.oval.xml.bz2`)
+	ubuntuOvalIgnoredRegexp    = regexp.MustCompile(`(artful|cosmic|trusty|precise)`)
 )
 
 type oval struct {
@@ -135,8 +136,15 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		if len(r) != 2 {
 			continue
 		}
+		release := r[1]
 
-		ovalFile := ovalURI + ubuntuOvalFilePrefix + r[1] + ".cve.oval.xml.bz2"
+		// check if we should ignore this release
+		ignored := ubuntuOvalIgnoredRegexp.FindString(release)
+		if ignored != "" {
+			continue
+		}
+
+		ovalFile := ovalURI + ubuntuOvalFilePrefix + release + ".cve.oval.xml.bz2"
 		log.WithFields(log.Fields{
 			"ovalFile": ovalFile,
 			"updater":  "Ubuntu Linux",
