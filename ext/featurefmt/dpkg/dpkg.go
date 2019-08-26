@@ -20,7 +20,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
@@ -123,7 +123,7 @@ func parseDpkgDB(scanner *bufio.Scanner) (binaryPackage *database.Feature, sourc
 		if err := versionfmt.Valid(dpkg.ParserName, version); err != nil {
 			log.WithError(err).WithFields(log.Fields{"name": name, "version": version}).Warning("skipped unparseable package")
 		} else {
-			binaryPackage = &database.Feature{name, version, dpkg.ParserName, database.BinaryPackage}
+			binaryPackage = &database.Feature{name, version, dpkg.ParserName, database.BinaryPackage, nil}
 		}
 	}
 
@@ -145,7 +145,12 @@ func parseDpkgDB(scanner *bufio.Scanner) (binaryPackage *database.Feature, sourc
 		if err := versionfmt.Valid(dpkg.ParserName, version); err != nil {
 			log.WithError(err).WithFields(log.Fields{"name": name, "version": version}).Warning("skipped unparseable package")
 		} else {
-			sourcePackage = &database.Feature{sourceName, sourceVersion, dpkg.ParserName, database.SourcePackage}
+			sourcePackage = &database.Feature{sourceName, sourceVersion, dpkg.ParserName, database.SourcePackage, nil}
+			// associate this binary package with the source package. we will use this for mapping when
+			// persisting to the database
+			if binaryPackage != nil {
+				binaryPackage.Source = sourcePackage
+			}
 		}
 	}
 

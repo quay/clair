@@ -25,6 +25,8 @@ type Feature struct {
 	Version       string      `json:"version"`
 	VersionFormat string      `json:"versionFormat"`
 	Type          FeatureType `json:"type"`
+	// if the feature has a source affiliated with it bind it here
+	Source *Feature `json:"source"`
 }
 
 // NamespacedFeature is a feature with determined namespace and can be affected
@@ -79,15 +81,15 @@ type NullableAffectedNamespacedFeature struct {
 }
 
 func NewFeature(name string, version string, versionFormat string, featureType FeatureType) *Feature {
-	return &Feature{name, version, versionFormat, featureType}
+	return &Feature{name, version, versionFormat, featureType, nil}
 }
 
 func NewBinaryPackage(name string, version string, versionFormat string) *Feature {
-	return &Feature{name, version, versionFormat, BinaryPackage}
+	return &Feature{name, version, versionFormat, BinaryPackage, nil}
 }
 
 func NewSourcePackage(name string, version string, versionFormat string) *Feature {
-	return &Feature{name, version, versionFormat, SourcePackage}
+	return &Feature{name, version, versionFormat, SourcePackage, nil}
 }
 
 func NewNamespacedFeature(namespace *Namespace, feature *Feature) *NamespacedFeature {

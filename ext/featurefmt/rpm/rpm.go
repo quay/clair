@@ -23,7 +23,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/deckarep/golang-set"
+	mapset "github.com/deckarep/golang-set"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/coreos/clair/database"
@@ -98,6 +98,9 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.LayerFeature, e
 
 		if srpmPackage != nil {
 			packages.Add(*srpmPackage)
+			if rpmPackage != nil {
+				rpmPackage.Source = srpmPackage
+			}
 		}
 	}
 
@@ -122,7 +125,7 @@ func parseRPMOutput(raw string) (rpmPackage *database.Feature, srpmPackage *data
 		return
 	}
 
-	rpmPackage = &database.Feature{name, version, rpm.ParserName, database.BinaryPackage}
+	rpmPackage = &database.Feature{name, version, rpm.ParserName, database.BinaryPackage, nil}
 	srpmName, srpmVersion, srpmRelease, _, err := parseSourceRPM(srpm)
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{"name": name, "sourcerpm": srpm}).Warning("skipped unparseable package")
@@ -134,7 +137,7 @@ func parseRPMOutput(raw string) (rpmPackage *database.Feature, srpmPackage *data
 		return
 	}
 
-	srpmPackage = &database.Feature{srpmName, srpmVersion, rpm.ParserName, database.SourcePackage}
+	srpmPackage = &database.Feature{srpmName, srpmVersion, rpm.ParserName, database.SourcePackage, nil}
 	return
 }
 
