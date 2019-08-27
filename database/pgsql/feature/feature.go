@@ -24,6 +24,26 @@ import (
 	"github.com/coreos/clair/pkg/commonerr"
 )
 
+const (
+	linkSourceToBinary = `WITH source_feature AS (
+	SELECT id AS source_id FROM feature WHERE
+         name = $1 AND version = $2 AND version_format = $3 AND type = $4
+         ),
+
+	binary_feature AS (
+        SELECT id AS binary_id FROM feature WHERE 
+		name = $5 AND version = $6 AND version_format = $7 AND type = $8
+         )
+	      
+INSERT INTO source_binary_mapping (source_feature, binary_feature) VALUES 
+          (
+          	(SELECT source_id FROM source_feature),
+          	(SELECT binary_id FROM binary_feature)
+          )
+          ON CONFLICT DO NOTHING;
+		  `
+)
+
 func queryPersistFeature(count int) string {
 	return util.QueryPersist(count,
 		"feature",
@@ -52,6 +72,12 @@ func PersistFeatures(tx *sql.Tx, features []database.Feature) error {
 		return err
 	}
 
+	for _, f := range features {
+		if f.Source != nil {
+			features = append(features, f)
+		}
+	}
+
 	// Sorting is needed before inserting into database to prevent deadlock.
 	sort.Slice(features, func(i, j int) bool {
 		return features[i].Name < features[j].Name ||
@@ -60,7 +86,7 @@ func PersistFeatures(tx *sql.Tx, features []database.Feature) error {
 	})
 
 	// TODO(Sida): A better interface for bulk insertion is needed.
-	keys := make([]interface{}, 0, len(features)*3)
+	keys := make([]interface{}, 0)
 	for _, f := range features {
 		keys = append(keys, f.Name, f.Version, f.VersionFormat, types.ByName[f.Type])
 		if f.Name == "" || f.Version == "" || f.VersionFormat == "" {
@@ -69,7 +95,29 @@ func PersistFeatures(tx *sql.Tx, features []database.Feature) error {
 	}
 
 	_, err = tx.Exec(queryPersistFeature(len(features)), keys...)
-	return util.HandleError("queryPersistFeature", err)
+	if err != nil {
+		return util.HandleError("queryPersistFeature", err)
+	}
+
+	for _, f := range features {
+		if f.Source != nil {
+			_, err := tx.Exec(linkSourceToBinary,
+				f.Source.Name,
+				f.Source.Version,
+				f.Source.VersionFormat,
+				types.ByName[f.Source.Type],
+				f.Name,
+				f.Version,
+				f.VersionFormat,
+				types.ByName[f.Type],
+			)
+			if err != nil {
+				return util.HandleError("queryPersistFeature", err)
+			}
+		}
+	}
+
+	return nil
 }
 
 func FindFeatureIDs(tx *sql.Tx, fs []database.Feature) ([]sql.NullInt64, error) {
