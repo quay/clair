@@ -93,14 +93,14 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.LayerFeature, e
 	for scanner.Scan() {
 		rpmPackage, srpmPackage := parseRPMOutput(scanner.Text())
 		if rpmPackage != nil {
+			if srpmPackage != nil {
+				rpmPackage.Source = srpmPackage
+			}
 			packages.Add(*rpmPackage)
 		}
 
 		if srpmPackage != nil {
 			packages.Add(*srpmPackage)
-			if rpmPackage != nil {
-				rpmPackage.Source = srpmPackage
-			}
 		}
 	}
 
