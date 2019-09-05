@@ -239,7 +239,7 @@ func getHashFromMetaURL(metaURL string) (string, error) {
 	defer r.Body.Close()
 
 	if !httputil.Status2xx(r) {
-		return "", errors.New(metaURL + " failed status code: " + string(r.StatusCode))
+		return "", fmt.Errorf("%v failed status code: %d", metaURL, r.StatusCode)
 	}
 
 	scanner := bufio.NewScanner(r.Body)
