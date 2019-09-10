@@ -173,6 +173,9 @@ func (pgSQL *pgSQL) loadLayerIntroducingVulnerability(vulnerability *database.Vu
 	// allowing a small nested loop join instead.
 	tx, err := pgSQL.Begin()
 	if err != nil {
+		if tx != nil {
+			tx.Rollback()
+		}
 		return -1, handleError("searchNotificationLayerIntroducingVulnerability.Begin()", err)
 	}
 	defer tx.Commit()
