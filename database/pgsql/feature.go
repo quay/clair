@@ -112,7 +112,9 @@ func (pgSQL *pgSQL) insertFeatureVersion(fv database.FeatureVersion) (id int, er
 	// Begin transaction.
 	tx, err := pgSQL.Begin()
 	if err != nil {
-		tx.Rollback()
+		if tx != nil {
+			tx.Rollback()
+		}
 		return 0, handleError("insertFeatureVersion.Begin()", err)
 	}
 

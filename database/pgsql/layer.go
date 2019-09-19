@@ -87,6 +87,9 @@ func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities boo
 		// preferred to use a nested loop.
 		tx, err := pgSQL.Begin()
 		if err != nil {
+			if tx != nil {
+				tx.Rollback()
+			}
 			return layer, handleError("FindLayer.Begin()", err)
 		}
 		defer tx.Commit()
@@ -295,7 +298,9 @@ func (pgSQL *pgSQL) InsertLayer(layer database.Layer) error {
 	// Begin transaction.
 	tx, err := pgSQL.Begin()
 	if err != nil {
-		tx.Rollback()
+		if tx != nil {
+			tx.Rollback()
+		}
 		return handleError("InsertLayer.Begin()", err)
 	}
 
