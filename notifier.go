@@ -128,7 +128,7 @@ func findTask(datastore database.Datastore, renotifyInterval time.Duration, whoA
 	for {
 		notification, ok, err := database.FindNewNotification(datastore, time.Now().Add(-renotifyInterval))
 		if err != nil || !ok {
-			if !ok {
+			if err != nil {
 				log.WithError(err).Warning("could not get notification to send")
 			}
 
