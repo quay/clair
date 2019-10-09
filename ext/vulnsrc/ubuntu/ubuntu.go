@@ -205,6 +205,7 @@ func getLatestModifiedTime(url string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
+	defer resp.Body.Close()
 
 	last_modified := resp.Header.Get("Last-Modified")
 	if len(last_modified) == 0 {
