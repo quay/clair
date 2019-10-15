@@ -24,6 +24,13 @@ type Layer struct {
 	Features   []LayerFeature   `json:"features"`
 }
 
+// LayerScanResult is a layer struct which stores existing layer from DB
+// and new layer content detected by new detectors
+type LayerScanResult struct {
+	ExistingLayer      *Layer
+	NewScanResultLayer *Layer
+}
+
 func (l *Layer) GetFeatures() []Feature {
 	features := make([]Feature, 0, len(l.Features))
 	for _, f := range l.Features {
