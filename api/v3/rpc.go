@@ -26,6 +26,7 @@ import (
 	pb "github.com/quay/clair/v3/api/v3/clairpb"
 	"github.com/quay/clair/v3/database"
 	"github.com/quay/clair/v3/ext/imagefmt"
+	"github.com/quay/clair/v3/ext/imgpostprocessor"
 	"github.com/quay/clair/v3/pkg/pagination"
 	log "github.com/sirupsen/logrus"
 )
@@ -125,14 +126,19 @@ func (s *AncestryServer) PostAncestry(ctx context.Context, req *pb.PostAncestryR
 	if err = g.Wait(); err != nil {
 		return nil, newRPCErrorWithClairError(codes.Internal, err)
 	}
-
+	var scannedLayers []*database.LayerScanResult
 	for _, layerRequest := range req.Layers {
 		scannedLayer := layerMap[layerRequest.Hash]
+		scannedLayers = append(scannedLayers, scannedLayer)
+	}
+	scannedLayers, err = imgpostprocessor.PostProcessImage(scannedLayers)
+
+	for _, scannedLayer := range scannedLayers {
 		var layer *database.Layer
 		if scannedLayer.NewScanResultLayer != nil {
 			if err = clair.SaveLayerChange(s.Store, scannedLayer.NewScanResultLayer); err != nil {
 				log.WithFields(log.Fields{
-					"layer.Hash": layerRequest.Hash,
+					"layer.Hash": scannedLayer.NewScanResultLayer.Hash,
 				}).WithError(err).Error("failed to store layer change")
 				return nil, err
 			}
