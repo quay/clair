@@ -41,6 +41,7 @@ import (
 	// Register extensions.
 	_ "github.com/quay/clair/v3/ext/featurefmt/apk"
 	_ "github.com/quay/clair/v3/ext/featurefmt/dpkg"
+	_ "github.com/quay/clair/v3/ext/featurefmt/redhatrpm"
 	_ "github.com/quay/clair/v3/ext/featurefmt/rpm"
 	_ "github.com/quay/clair/v3/ext/featurens/alpinerelease"
 	_ "github.com/quay/clair/v3/ext/featurens/aptsources"
