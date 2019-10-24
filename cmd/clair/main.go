@@ -50,6 +50,7 @@ import (
 	_ "github.com/quay/clair/v3/ext/featurens/redhatrelease"
 	_ "github.com/quay/clair/v3/ext/imagefmt/aci"
 	_ "github.com/quay/clair/v3/ext/imagefmt/docker"
+	_ "github.com/quay/clair/v3/ext/imgpostprocessor/redhatcpe"
 	_ "github.com/quay/clair/v3/ext/notification/webhook"
 	_ "github.com/quay/clair/v3/ext/vulnmdsrc/nvd"
 	_ "github.com/quay/clair/v3/ext/vulnsrc/alpine"
