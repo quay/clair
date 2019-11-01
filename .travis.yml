@@ -1,11 +1,11 @@
 language: go
 sudo: required
 
-install:
-- curl https://glide.sh/get | sh
+env:
+- GO111MODULE=on
 
 script:
-- go test $(glide novendor | grep -v contrib)
+- go test ./...
 
 dist: trusty
 

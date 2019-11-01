@@ -24,12 +24,12 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/featurefmt"
-	"github.com/coreos/clair/ext/versionfmt"
-	"github.com/coreos/clair/ext/versionfmt/rpm"
-	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/pkg/tarutil"
+	"github.com/quay/clair/v2/database"
+	"github.com/quay/clair/v2/ext/featurefmt"
+	"github.com/quay/clair/v2/ext/versionfmt"
+	"github.com/quay/clair/v2/ext/versionfmt/rpm"
+	"github.com/quay/clair/v2/pkg/commonerr"
+	"github.com/quay/clair/v2/pkg/tarutil"
 )
 
 type lister struct{}

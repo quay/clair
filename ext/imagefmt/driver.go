@@ -32,8 +32,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/pkg/tarutil"
+	"github.com/quay/clair/v2/pkg/commonerr"
+	"github.com/quay/clair/v2/pkg/tarutil"
 )
 
 var (

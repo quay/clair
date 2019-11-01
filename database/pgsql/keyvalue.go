@@ -20,7 +20,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/quay/clair/v2/pkg/commonerr"
 )
 
 // InsertKeyValue stores (or updates) a single key / value tuple.

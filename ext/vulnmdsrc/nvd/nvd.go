@@ -32,10 +32,10 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/vulnmdsrc"
-	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/pkg/httputil"
+	"github.com/quay/clair/v2/database"
+	"github.com/quay/clair/v2/ext/vulnmdsrc"
+	"github.com/quay/clair/v2/pkg/commonerr"
+	"github.com/quay/clair/v2/pkg/httputil"
 )
 
 const (

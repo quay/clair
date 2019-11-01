@@ -20,7 +20,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/coreos/clair/pkg/version"
+	"github.com/quay/clair/v2/pkg/version"
 )
 
 // GetWithUserAgent performs an HTTP GET with the proper Clair User-Agent.
@@ -32,7 +32,7 @@ func GetWithUserAgent(url string) (*http.Response, error) {
 		return nil, err
 	}
 
-	req.Header.Set("User-Agent", "Clair/"+version.Version+" (https://github.com/coreos/clair)")
+	req.Header.Set("User-Agent", "Clair/"+version.Version+" (https://github.com/quay/clair/v2)")
 
 	resp, err := client.Do(req)
 	if err != nil {

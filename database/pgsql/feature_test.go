@@ -19,8 +19,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/versionfmt/dpkg"
+	"github.com/quay/clair/v2/database"
+	"github.com/quay/clair/v2/ext/versionfmt/dpkg"
 )
 
 func TestInsertFeature(t *testing.T) {
