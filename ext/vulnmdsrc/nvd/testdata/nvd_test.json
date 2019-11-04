@@ -1,0 +1,92 @@
+{
+  "CVE_Items" : [ {
+    "_comment": "A CVE without CVSSv2 or CVSSv3",
+    "cve" : {
+      "data_type" : "CVE",
+      "data_format" : "MITRE",
+      "data_version" : "4.0",
+      "CVE_data_meta" : {
+        "ID" : "CVE-2002-0001"
+      }
+    },
+    "impact" : { },
+    "publishedDate" : "2018-01-10T22:29Z"
+  }, {
+    "_comment": "A CVE with only CVSSv2",
+    "cve" : {
+      "CVE_data_meta" : {
+        "ID" : "CVE-2012-0001"
+      }
+    },
+    "impact" : {
+      "baseMetricV3" : { },
+      "baseMetricV2" : {
+        "cvssV2" : {
+          "version" : "2.0",
+          "vectorString" : "(AV:N/AC:L/Au:S/C:P/I:N/A:N)",
+          "accessVector" : "NETWORK",
+          "accessComplexity" : "LOW",
+          "authentication" : "SINGLE",
+          "confidentialityImpact" : "PARTIAL",
+          "integrityImpact" : "NONE",
+          "availabilityImpact" : "NONE",
+          "baseScore" : 4.0
+        },
+        "severity" : "MEDIUM",
+        "exploitabilityScore" : 8.0,
+        "impactScore" : 2.9,
+        "obtainAllPrivilege" : false,
+        "obtainUserPrivilege" : false,
+        "obtainOtherPrivilege" : false,
+        "userInteractionRequired" : false
+      }
+    }
+  }, {
+    "_comment": "A CVE with standard CVSSv2 and CVSSv3",
+    "cve" : {
+      "CVE_data_meta" : {
+        "ID" : "CVE-2018-0001"
+      }
+    },
+    "impact" : {
+      "baseMetricV3" : {
+        "cvssV3" : {
+          "version" : "3.0",
+          "vectorString" : "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+          "attackVector" : "NETWORK",
+          "attackComplexity" : "LOW",
+          "privilegesRequired" : "NONE",
+          "userInteraction" : "NONE",
+          "scope" : "UNCHANGED",
+          "confidentialityImpact" : "HIGH",
+          "integrityImpact" : "HIGH",
+          "availabilityImpact" : "HIGH",
+          "baseScore" : 9.8,
+          "baseSeverity" : "CRITICAL"
+        },
+        "exploitabilityScore" : 3.9,
+        "impactScore" : 5.9
+      },
+      "baseMetricV2" : {
+        "cvssV2" : {
+          "version" : "2.0",
+          "vectorString" : "(AV:N/AC:L/Au:N/C:P/I:P/A:P)",
+          "accessVector" : "NETWORK",
+          "accessComplexity" : "LOW",
+          "authentication" : "NONE",
+          "confidentialityImpact" : "PARTIAL",
+          "integrityImpact" : "PARTIAL",
+          "availabilityImpact" : "PARTIAL",
+          "baseScore" : 7.5
+        },
+        "severity" : "HIGH",
+        "exploitabilityScore" : 10.0,
+        "impactScore" : 6.4,
+        "obtainAllPrivilege" : false,
+        "obtainUserPrivilege" : false,
+        "obtainOtherPrivilege" : false,
+        "userInteractionRequired" : false
+      }
+    }
+  } ]
+}
