@@ -19,8 +19,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/database/pgsql/testutil"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/database/pgsql/testutil"
 )
 
 var persistLayerTests = []struct {

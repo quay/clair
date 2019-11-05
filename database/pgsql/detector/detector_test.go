@@ -21,8 +21,8 @@ import (
 	"github.com/deckarep/golang-set"
 	"github.com/stretchr/testify/require"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/database/pgsql/testutil"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/database/pgsql/testutil"
 )
 
 func testGetAllDetectors(tx *sql.Tx) []database.Detector {

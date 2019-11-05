@@ -22,9 +22,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/notification"
-	"github.com/coreos/clair/pkg/stopper"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/ext/notification"
+	"github.com/quay/clair/v3/pkg/stopper"
 )
 
 const (

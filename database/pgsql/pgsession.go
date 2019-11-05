@@ -18,18 +18,18 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/coreos/clair/database/pgsql/keyvalue"
-	"github.com/coreos/clair/database/pgsql/vulnerability"
+	"github.com/quay/clair/v3/database/pgsql/keyvalue"
+	"github.com/quay/clair/v3/database/pgsql/vulnerability"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/database/pgsql/ancestry"
-	"github.com/coreos/clair/database/pgsql/detector"
-	"github.com/coreos/clair/database/pgsql/feature"
-	"github.com/coreos/clair/database/pgsql/layer"
-	"github.com/coreos/clair/database/pgsql/lock"
-	"github.com/coreos/clair/database/pgsql/namespace"
-	"github.com/coreos/clair/database/pgsql/notification"
-	"github.com/coreos/clair/pkg/pagination"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/database/pgsql/ancestry"
+	"github.com/quay/clair/v3/database/pgsql/detector"
+	"github.com/quay/clair/v3/database/pgsql/feature"
+	"github.com/quay/clair/v3/database/pgsql/layer"
+	"github.com/quay/clair/v3/database/pgsql/lock"
+	"github.com/quay/clair/v3/database/pgsql/namespace"
+	"github.com/quay/clair/v3/database/pgsql/notification"
+	"github.com/quay/clair/v3/pkg/pagination"
 )
 
 // Enforce the interface at compile time.

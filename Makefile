@@ -18,10 +18,12 @@ UNIT_TEST_PACKAGES = $(shell go list ./... | grep -v 'database/')
 DB_TEST_PACKAGES = $(shell go list ./... | grep 'database/')
 
 CLAIR_TEST_PGSQL ?= postgres@127.0.0.1:5432
+GO111MODULE ?= on
+export GO111MODULE
 
 .PHONY: build
 build:
-	go build -v -ldflags "-X github.com/coreos/clair/pkg/version.Version=$(COMMIT)" ./cmd/clair
+	go build -v -ldflags "-X github.com/quay/clair/v3/pkg/version.Version=$(COMMIT)" ./cmd/clair
 
 .PHONY: unit-test
 unit-test:

@@ -18,9 +18,9 @@ import (
 	"database/sql"
 	"strings"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/database/pgsql/monitoring"
-	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/database/pgsql/monitoring"
+	"github.com/quay/clair/v3/pkg/commonerr"
 	"github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 )

@@ -17,7 +17,7 @@ package feature
 import (
 	"database/sql"
 
-	"github.com/coreos/clair/database"
+	"github.com/quay/clair/v3/database"
 )
 
 const (

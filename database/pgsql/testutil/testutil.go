@@ -20,9 +20,9 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/database/pgsql/page"
-	"github.com/coreos/clair/pkg/pagination"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/database/pgsql/page"
+	"github.com/quay/clair/v3/pkg/pagination"
 )
 
 func takeVulnerabilityPointerFromMap(m map[int]database.Vulnerability, id int) *database.Vulnerability {

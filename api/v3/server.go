@@ -23,9 +23,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
-	pb "github.com/coreos/clair/api/v3/clairpb"
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/pkg/grpcutil"
+	pb "github.com/quay/clair/v3/api/v3/clairpb"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/pkg/grpcutil"
 )
 
 var (

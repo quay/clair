@@ -20,9 +20,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/clair/database/pgsql/monitoring"
-	"github.com/coreos/clair/database/pgsql/util"
-	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/quay/clair/v3/database/pgsql/monitoring"
+	"github.com/quay/clair/v3/database/pgsql/util"
+	"github.com/quay/clair/v3/pkg/commonerr"
 )
 
 const (

@@ -20,8 +20,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/coreos/clair/database/pgsql/namespace"
-	"github.com/coreos/clair/database/pgsql/testutil"
+	"github.com/quay/clair/v3/database/pgsql/namespace"
+	"github.com/quay/clair/v3/database/pgsql/testutil"
 )
 
 const (

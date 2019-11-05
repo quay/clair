@@ -28,10 +28,10 @@ import (
 	"github.com/remind101/migrate"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/database/pgsql/migrations"
-	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/pkg/pagination"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/database/pgsql/migrations"
+	"github.com/quay/clair/v3/pkg/commonerr"
+	"github.com/quay/clair/v3/pkg/pagination"
 )
 
 func init() {

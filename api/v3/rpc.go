@@ -22,11 +22,11 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/coreos/clair"
-	pb "github.com/coreos/clair/api/v3/clairpb"
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/imagefmt"
-	"github.com/coreos/clair/pkg/pagination"
+	"github.com/quay/clair/v3"
+	pb "github.com/quay/clair/v3/api/v3/clairpb"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/ext/imagefmt"
+	"github.com/quay/clair/v3/pkg/pagination"
 )
 
 func newRPCErrorWithClairError(code codes.Code, err error) error {

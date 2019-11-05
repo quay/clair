@@ -27,11 +27,11 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/vulnmdsrc"
-	"github.com/coreos/clair/ext/vulnsrc"
-	"github.com/coreos/clair/pkg/stopper"
-	"github.com/coreos/clair/pkg/timeutil"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/ext/vulnmdsrc"
+	"github.com/quay/clair/v3/ext/vulnsrc"
+	"github.com/quay/clair/v3/pkg/stopper"
+	"github.com/quay/clair/v3/pkg/timeutil"
 )
 
 const (

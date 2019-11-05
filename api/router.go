@@ -19,7 +19,7 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/coreos/clair/database"
+	"github.com/quay/clair/v3/database"
 )
 
 // router is an HTTP router that forwards requests to the appropriate sub-router

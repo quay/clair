@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/coreos/clair/database"
+	"github.com/quay/clair/v3/database"
 	"github.com/stretchr/testify/assert"
 )
 

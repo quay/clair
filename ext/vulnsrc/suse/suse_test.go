@@ -21,8 +21,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/versionfmt/rpm"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/ext/versionfmt/rpm"
 	"github.com/stretchr/testify/assert"
 )
 

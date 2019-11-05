@@ -25,8 +25,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/coreos/clair/database/pgsql/migrations"
-	"github.com/coreos/clair/pkg/pagination"
+	"github.com/quay/clair/v3/database/pgsql/migrations"
+	"github.com/quay/clair/v3/pkg/pagination"
 	"github.com/remind101/migrate"
 )
 

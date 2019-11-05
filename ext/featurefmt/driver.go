@@ -21,8 +21,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/pkg/tarutil"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/pkg/tarutil"
 )
 
 var (

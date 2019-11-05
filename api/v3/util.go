@@ -15,10 +15,10 @@
 package v3
 
 import (
-	"github.com/coreos/clair"
-	pb "github.com/coreos/clair/api/v3/clairpb"
-	"github.com/coreos/clair/database"
 	"github.com/golang/protobuf/ptypes"
+	"github.com/quay/clair/v3"
+	pb "github.com/quay/clair/v3/api/v3/clairpb"
+	"github.com/quay/clair/v3/database"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

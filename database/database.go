@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/coreos/clair/pkg/pagination"
+	"github.com/quay/clair/v3/pkg/pagination"
 )
 
 var (

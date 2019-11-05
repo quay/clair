@@ -17,9 +17,9 @@ package redhatrelease
 import (
 	"testing"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/featurens"
-	"github.com/coreos/clair/pkg/tarutil"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/ext/featurens"
+	"github.com/quay/clair/v3/pkg/tarutil"
 )
 
 func TestDetector(t *testing.T) {

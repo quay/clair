@@ -24,7 +24,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/coreos/clair/pkg/version"
+	"github.com/quay/clair/v3/pkg/version"
 )
 
 // Middleware is a function used to wrap the logic of another http.Handler.
@@ -39,7 +39,7 @@ func GetWithUserAgent(url string) (*http.Response, error) {
 		return nil, err
 	}
 
-	req.Header.Set("User-Agent", "Clair/"+version.Version+" (https://github.com/coreos/clair)")
+	req.Header.Set("User-Agent", "Clair/"+version.Version+" (https://github.com/quay/clair)")
 
 	resp, err := client.Do(req)
 	if err != nil {

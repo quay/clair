@@ -17,8 +17,8 @@ package testutil
 import (
 	"testing"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/pkg/pagination"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/pkg/pagination"
 	"github.com/stretchr/testify/assert"
 )
 

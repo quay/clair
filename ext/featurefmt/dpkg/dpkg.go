@@ -23,11 +23,11 @@ import (
 	"github.com/deckarep/golang-set"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/featurefmt"
-	"github.com/coreos/clair/ext/versionfmt"
-	"github.com/coreos/clair/ext/versionfmt/dpkg"
-	"github.com/coreos/clair/pkg/tarutil"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/ext/featurefmt"
+	"github.com/quay/clair/v3/ext/versionfmt"
+	"github.com/quay/clair/v3/ext/versionfmt/dpkg"
+	"github.com/quay/clair/v3/pkg/tarutil"
 )
 
 var (

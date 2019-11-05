@@ -23,7 +23,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/clair/pkg/stopper"
+	"github.com/quay/clair/v3/pkg/stopper"
 )
 
 // ApproxSleep is a stoppable time.Sleep that adds a slight random variation to
