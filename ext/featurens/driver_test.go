@@ -19,15 +19,15 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/featurens"
-	"github.com/coreos/clair/pkg/tarutil"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/ext/featurens"
+	"github.com/quay/clair/v3/pkg/tarutil"
 
-	_ "github.com/coreos/clair/ext/featurens/alpinerelease"
-	_ "github.com/coreos/clair/ext/featurens/aptsources"
-	_ "github.com/coreos/clair/ext/featurens/lsbrelease"
-	_ "github.com/coreos/clair/ext/featurens/osrelease"
-	_ "github.com/coreos/clair/ext/featurens/redhatrelease"
+	_ "github.com/quay/clair/v3/ext/featurens/alpinerelease"
+	_ "github.com/quay/clair/v3/ext/featurens/aptsources"
+	_ "github.com/quay/clair/v3/ext/featurens/lsbrelease"
+	_ "github.com/quay/clair/v3/ext/featurens/osrelease"
+	_ "github.com/quay/clair/v3/ext/featurens/redhatrelease"
 )
 
 var namespaceDetectorTests = []struct {

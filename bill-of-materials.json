@@ -1,6 +1,6 @@
 [
 	{
-		"project": "github.com/coreos/clair",
+		"project": "github.com/quay/clair",
 		"license": "Apache License 2.0",
 		"confidence": 1
 	},

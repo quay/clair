@@ -26,8 +26,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/pkg/tarutil"
+	"github.com/quay/clair/v3/pkg/commonerr"
+	"github.com/quay/clair/v3/pkg/tarutil"
 )
 
 var (

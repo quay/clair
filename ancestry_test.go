@@ -19,7 +19,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/coreos/clair/database"
+	"github.com/quay/clair/v3/database"
 )
 
 var (

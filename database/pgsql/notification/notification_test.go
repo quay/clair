@@ -21,10 +21,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/database/pgsql/page"
-	"github.com/coreos/clair/database/pgsql/testutil"
-	"github.com/coreos/clair/pkg/pagination"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/database/pgsql/page"
+	"github.com/quay/clair/v3/database/pgsql/testutil"
+	"github.com/quay/clair/v3/pkg/pagination"
 )
 
 type findVulnerabilityNotificationIn struct {

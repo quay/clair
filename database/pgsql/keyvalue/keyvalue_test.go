@@ -17,7 +17,7 @@ package keyvalue
 import (
 	"testing"
 
-	"github.com/coreos/clair/database/pgsql/testutil"
+	"github.com/quay/clair/v3/database/pgsql/testutil"
 	"github.com/stretchr/testify/assert"
 )
 

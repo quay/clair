@@ -18,8 +18,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/ext/versionfmt"
 )
 
 // DatabaseDetectorTypeMapping maps the database detector type to the integer

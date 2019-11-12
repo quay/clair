@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/database/pgsql/namespace"
-	"github.com/coreos/clair/database/pgsql/util"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/database/pgsql/namespace"
+	"github.com/quay/clair/v3/database/pgsql/util"
 )
 
 var soiNamespacedFeature = `

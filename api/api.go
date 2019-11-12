@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package api
+package api // import "github.com/quay/clair/v3/api"
 
 import (
 	"context"
@@ -21,9 +21,9 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/clair/api/v3"
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/pkg/stopper"
+	v3 "github.com/quay/clair/v3/api/v3"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/pkg/stopper"
 )
 
 const timeoutResponse = `{"Error":{"Message":"Clair failed to respond within the configured timeout window.","Type":"Timeout"}}`

@@ -23,10 +23,10 @@ import (
 	"bufio"
 	"strings"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/featurens"
-	"github.com/coreos/clair/ext/versionfmt/dpkg"
-	"github.com/coreos/clair/pkg/tarutil"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/ext/featurens"
+	"github.com/quay/clair/v3/ext/versionfmt/dpkg"
+	"github.com/quay/clair/v3/pkg/tarutil"
 )
 
 type detector struct{}

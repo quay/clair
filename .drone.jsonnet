@@ -3,7 +3,7 @@ local pipeline(goVersion, postgresVersion) = {
   name: 'go-' + goVersion + '-postgres' + postgresVersion,
   workspace: {
     base: '/go',
-    path: 'src/github.com/coreos/clair',
+    path: 'clair',
   },
   clone: { depth: 50 },
 

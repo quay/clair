@@ -22,7 +22,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/clair/database"
+	"github.com/quay/clair/v3/database"
 )
 
 type layerIndexedFeature struct {

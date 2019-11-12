@@ -17,8 +17,8 @@ package migrations_test
 import (
 	"testing"
 
-	"github.com/coreos/clair/database/pgsql/migrations"
-	"github.com/coreos/clair/database/pgsql/testutil"
+	"github.com/quay/clair/v3/database/pgsql/migrations"
+	"github.com/quay/clair/v3/database/pgsql/testutil"
 	_ "github.com/lib/pq"
 	"github.com/remind101/migrate"
 	"github.com/stretchr/testify/require"

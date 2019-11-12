@@ -18,8 +18,8 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/coreos/clair/database/pgsql/monitoring"
-	"github.com/coreos/clair/database/pgsql/util"
+	"github.com/quay/clair/v3/database/pgsql/monitoring"
+	"github.com/quay/clair/v3/database/pgsql/util"
 	log "github.com/sirupsen/logrus"
 )
 

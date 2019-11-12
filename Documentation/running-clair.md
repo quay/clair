@@ -56,12 +56,6 @@ $ docker run --net=host -d -p 6060-6061:6060-6061 -v $PWD/clair_config:/config q
 
 #### Source
 
-Clair currently uses glide as it's package management solution.
-The vendor folder is checked into this repository and running 'glide up' should not be necessary.
-Find more information on glide here: [Glide]
-
-[Glide]: https://github.com/Masterminds/glide
-
 To build Clair, you need the latest stable version of [Go] and a working [Go environment].
 In addition, Clair requires some additional binaries be installed on the system [$PATH] as runtime dependencies:
 
@@ -77,8 +71,7 @@ In addition, Clair requires some additional binaries be installed on the system 
 [$PATH]: https://en.wikipedia.org/wiki/PATH_(variable)
 
 ```sh
-$ go get github.com/coreos/clair
-$ go install github.com/coreos/clair/cmd/clair
+$ go get github.com/quay/clair/cmd/clair
 $ $EDITOR config.yaml # Add the URI for your postgres database
 $ ./$GOPATH/bin/clair -config=config.yaml
 ```

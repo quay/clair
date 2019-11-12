@@ -24,7 +24,7 @@ import (
 
 	"github.com/cockroachdb/cmux"
 
-	"github.com/coreos/clair/pkg/httputil"
+	"github.com/quay/clair/v3/pkg/httputil"
 )
 
 // MuxedGRPCServer defines the parameters for running a gRPC Server alongside

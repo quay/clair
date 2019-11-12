@@ -23,12 +23,12 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
-	"github.com/coreos/clair"
-	"github.com/coreos/clair/api"
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/notification"
-	"github.com/coreos/clair/ext/vulnsrc"
-	"github.com/coreos/clair/pkg/pagination"
+	"github.com/quay/clair/v3"
+	"github.com/quay/clair/v3/api"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/ext/notification"
+	"github.com/quay/clair/v3/ext/vulnsrc"
+	"github.com/quay/clair/v3/pkg/pagination"
 )
 
 // ErrDatasourceNotLoaded is returned when the datasource variable in the

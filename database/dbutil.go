@@ -20,8 +20,8 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/pkg/pagination"
+	"github.com/quay/clair/v3/pkg/commonerr"
+	"github.com/quay/clair/v3/pkg/pagination"
 	"github.com/deckarep/golang-set"
 )
 

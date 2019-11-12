@@ -14,13 +14,13 @@
 
 FROM golang:1.13-alpine AS build
 RUN apk add --no-cache git build-base
-ADD .   /go/src/github.com/coreos/clair/
-WORKDIR /go/src/github.com/coreos/clair/
+ADD .   /go/clair/
+WORKDIR /go/clair/
 RUN export CLAIR_VERSION=$(git describe --tag --always --dirty) && \
-	go build -ldflags "-X github.com/coreos/clair/pkg/version.Version=$CLAIR_VERSION" github.com/coreos/clair/cmd/clair
+	go build -ldflags "-X github.com/quay/clair/v3/pkg/version.Version=$CLAIR_VERSION" ./cmd/clair
 
 FROM alpine:3.10
-COPY --from=build /go/src/github.com/coreos/clair/clair /clair
+COPY --from=build /go/clair/clair /clair
 RUN apk add --no-cache git rpm xz ca-certificates dumb-init
 
 # change ownership of ssl directory to allow custom cert in OpenShift

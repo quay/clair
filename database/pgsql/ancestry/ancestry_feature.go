@@ -17,11 +17,11 @@ package ancestry
 import (
 	"database/sql"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/database/pgsql/detector"
-	"github.com/coreos/clair/database/pgsql/feature"
-	"github.com/coreos/clair/database/pgsql/util"
-	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/database/pgsql/detector"
+	"github.com/quay/clair/v3/database/pgsql/feature"
+	"github.com/quay/clair/v3/database/pgsql/util"
+	"github.com/quay/clair/v3/pkg/commonerr"
 )
 
 const findAncestryFeatures = `

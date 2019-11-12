@@ -17,7 +17,7 @@ package database
 import (
 	"time"
 
-	"github.com/coreos/clair/pkg/pagination"
+	"github.com/quay/clair/v3/pkg/pagination"
 )
 
 // MockSession implements Session and enables overriding each available method.

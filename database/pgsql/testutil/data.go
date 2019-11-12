@@ -14,7 +14,7 @@
 
 package testutil
 
-import "github.com/coreos/clair/database"
+import "github.com/quay/clair/v3/database"
 
 // int keys must be the consistent with the database ID.
 var (

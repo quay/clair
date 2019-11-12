@@ -21,8 +21,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/database/pgsql/testutil"
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/database/pgsql/testutil"
 )
 
 func TestPersistFeatures(t *testing.T) {
