@@ -23,10 +23,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/featurens"
-	"github.com/coreos/clair/ext/versionfmt/rpm"
-	"github.com/coreos/clair/pkg/tarutil"
+	"github.com/quay/clair/v2/database"
+	"github.com/quay/clair/v2/ext/featurens"
+	"github.com/quay/clair/v2/ext/versionfmt/rpm"
+	"github.com/quay/clair/v2/pkg/tarutil"
 )
 
 var (
@@ -62,7 +62,7 @@ func (d detector) Detect(files tarutil.FilesMap) (*database.Namespace, error) {
 		// Attempt to match RHEL.
 		r = redhatReleaseRegexp.FindStringSubmatch(string(f))
 		if len(r) == 4 {
-			// TODO(vbatts): this is a hack until https://github.com/coreos/clair/pull/193
+			// TODO(vbatts): this is a hack until https://github.com/quay/clair/v2/pull/193
 			return &database.Namespace{
 				Name:          "centos" + ":" + r[3],
 				VersionFormat: rpm.ParserName,

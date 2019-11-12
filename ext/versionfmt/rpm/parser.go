@@ -24,7 +24,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/coreos/clair/ext/versionfmt"
+	"github.com/quay/clair/v2/ext/versionfmt"
 )
 
 // ParserName is the name by which the rpm parser is registered.

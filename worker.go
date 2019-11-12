@@ -19,12 +19,12 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/featurefmt"
-	"github.com/coreos/clair/ext/featurens"
-	"github.com/coreos/clair/ext/imagefmt"
-	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/pkg/tarutil"
+	"github.com/quay/clair/v2/database"
+	"github.com/quay/clair/v2/ext/featurefmt"
+	"github.com/quay/clair/v2/ext/featurens"
+	"github.com/quay/clair/v2/ext/imagefmt"
+	"github.com/quay/clair/v2/pkg/commonerr"
+	"github.com/quay/clair/v2/pkg/tarutil"
 )
 
 const (

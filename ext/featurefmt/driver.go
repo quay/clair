@@ -23,8 +23,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/pkg/tarutil"
+	"github.com/quay/clair/v2/database"
+	"github.com/quay/clair/v2/pkg/tarutil"
 	"github.com/stretchr/testify/assert"
 )
 

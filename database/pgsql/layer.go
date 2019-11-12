@@ -22,8 +22,8 @@ import (
 	"github.com/guregu/null/zero"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/quay/clair/v2/database"
+	"github.com/quay/clair/v2/pkg/commonerr"
 )
 
 func (pgSQL *pgSQL) FindLayer(name string, withFeatures, withVulnerabilities bool) (database.Layer, error) {

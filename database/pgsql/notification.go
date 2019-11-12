@@ -22,8 +22,8 @@ import (
 	"github.com/pborman/uuid"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/quay/clair/v2/database"
+	"github.com/quay/clair/v2/pkg/commonerr"
 )
 
 // do it in tx so we won't insert/update a vuln without notification and vice-versa.

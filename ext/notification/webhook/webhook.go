@@ -29,8 +29,8 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/notification"
+	"github.com/quay/clair/v2/database"
+	"github.com/quay/clair/v2/ext/notification"
 )
 
 const timeout = 5 * time.Second

@@ -17,8 +17,8 @@ package pgsql
 import (
 	"time"
 
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/pkg/commonerr"
+	"github.com/quay/clair/v2/database"
+	"github.com/quay/clair/v2/pkg/commonerr"
 )
 
 func (pgSQL *pgSQL) insertNamespace(namespace database.Namespace) (int, error) {

@@ -20,7 +20,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/coreos/clair/database"
+	"github.com/quay/clair/v2/database"
 )
 
 func TestDoVulnerabilitiesNamespacing(t *testing.T) {
