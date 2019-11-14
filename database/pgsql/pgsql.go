@@ -87,6 +87,7 @@ type Config struct {
 	FixturePath             string
 	PaginationKey           string
 	MaxOpenConnections      int
+	ReadOnly                bool
 }
 
 // openDatabase opens a PostgresSQL-backed Datastore using the given
@@ -146,10 +147,12 @@ func openDatabase(registrableComponentConfig database.RegistrableComponentConfig
 		pg.DB.SetMaxOpenConns(pg.config.MaxOpenConnections)
 	}
 
-	// Run migrations.
-	if err = migrateDatabase(pg.DB); err != nil {
-		pg.Close()
-		return nil, err
+	if !pg.config.ReadOnly {
+		// Run migrations.
+		if err = migrateDatabase(pg.DB); err != nil {
+			pg.Close()
+			return nil, err
+		}
 	}
 
 	// Load fixture data.
