@@ -1,10 +1,10 @@
-package main
+package config
 
 type Config struct {
-	HTTPListenAddr string `yaml:"http_listen_addr"`
-	LogLevel       string `yaml:"http_listen_addr"`
-	Indexer        *Indexer
-	Matcher        *Matcher
+	HTTPListenAddr string   `yaml:"http_listen_addr"`
+	LogLevel       string   `yaml:"log_level"`
+	Indexer        *Indexer `yaml: "indexer"`
+	Matcher        *Matcher `yaml: "matcher"`
 }
 
 type Indexer struct {
@@ -31,6 +31,6 @@ type Matcher struct {
 	MaxConnPool int `yaml: "max_conn_pool"`
 	// a regex pattern of updaters to run
 	Run string `yaml: "run"`
-	// the address where the indexer service can be reached
-	IndexerAddr `yaml: "indexer_addr"`
+	// // the address where the indexer service can be reached
+	// IndexerAddr `yaml: "indexer_addr"`
 }

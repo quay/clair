@@ -14,6 +14,18 @@
 
 # The values specified here are the default values that Clair uses if no configuration file is specified or if the keys are not defined.
 clair:
+  http_listen_addr: "localhost:8080"
+  log_level: "debug"
   indexer:
-
+    datastore: "postgres"  
+    connstring: "host=claircore-db port=5434 user=claircore dbname=claircore sslmode=disable"
+    scanlock: "postgres"
+    scanlock_retry: 10
+    layer_scan_concurrency: 5
   matcher:
+    datastore: "postgres"  
+    connstring: "host=claircore-db port=5434 user=claircore dbname=claircore sslmode=disable"
+    update_lock: "postgres"
+    max_conn_pool: 100
+    run: ""
+
