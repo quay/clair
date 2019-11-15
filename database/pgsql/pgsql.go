@@ -16,6 +16,7 @@
 package pgsql
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"io/ioutil"
@@ -50,7 +51,11 @@ type pgSQL struct {
 // The expected transaction isolation level in this implementation is "Read
 // Committed".
 func (pgSQL *pgSQL) Begin() (database.Session, error) {
-	tx, err := pgSQL.DB.Begin()
+	opts := &sql.TxOptions{
+		ReadOnly: pgSQL.config.ReadOnly,
+	}
+
+	tx, err := pgSQL.DB.BeginTx(context.Background(), opts)
 	if err != nil {
 		return nil, err
 	}
