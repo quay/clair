@@ -1,3 +1,0 @@
-protoc_version: 3.5.1
-protoc_includes:
-- ../../../vendor/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis
