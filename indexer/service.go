@@ -2,7 +2,9 @@ package indexer
 
 import (
 	"context"
+	"fmt"
 
+	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/config"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libscan"
@@ -10,15 +12,29 @@ import (
 
 // Service provides the interface for indexing manifests
 //
-// A Service is transport independent and may be passed into any
+// Service is transport independent and may be passed into any
 // tranport implementation.
-type Service struct {
+type Service interface {
+	Index(ctx context.Context, manifest *claircore.Manifest) (*claircore.ScanReport, error)
+	IndexReport(ctx context.Context, manifestHash string) (*claircore.ScanReport, error)
+}
+
+// service implements a local service implemented via the libscan api
+type service struct {
 	lib libscan.Libscan
 }
 
 // NewService is a constructor for a Service
-func NewService(conf config.Config) (*Service, error) {
-	opts := libscan.Op
+func NewService(ctx context.Context, conf config.Config) (Service, error) {
+	lib, err := libscan.New(ctx, &libscan.Opts{
+		ConnString:           conf.Indexer.ConnString,
+		ScanLockRetry:        conf.Indexer.ScanLockRetry,
+		LayerScanConcurrency: conf.Indexer.LayerScanConcurrency,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create indexer service: %w", err)
+	}
+	return &service{lib}, nil
 }
 
 // Index receives a Manifest and returns a ScanReport providing the indexed
@@ -27,12 +43,12 @@ func NewService(conf config.Config) (*Service, error) {
 // Index blocks until completion. An error is returned if the index operation
 // could not start. If an error occurs during the index operation the error will
 // be preset on the ScanReport.Err field of the returned ScanReport.
-func (s *Service) Index(ctx context.Context, manifest *claircore.Manifest) (*claircore.ScanReport, error) {
+func (s *service) Index(ctx context.Context, manifest *claircore.Manifest) (*claircore.ScanReport, error) {
 	// ToDo: manifest structure validation
 
 	resC, err := s.lib.Scan(ctx, manifest)
 	if err != nil {
-		return nil, &ErrIndexStart{err}
+		return nil, &clairerror.ErrIndexStart{err}
 	}
 
 	// block until completion
@@ -41,13 +57,14 @@ func (s *Service) Index(ctx context.Context, manifest *claircore.Manifest) (*cla
 	return scanReport, nil
 }
 
-func (s *Service) IndexReport(ctx context.Context, manifestHash string) (*claircore.ScanReport, error) {
+// IndexReport retrieves a IndexReport given a manifest hash string
+func (s *service) IndexReport(ctx context.Context, manifestHash string) (*claircore.ScanReport, error) {
 	report, ok, err := s.lib.ScanReport(ctx, manifestHash)
 	if err != nil {
-		return nil, &ErrIndexReportRetrieval{err}
+		return nil, &clairerror.ErrIndexReportRetrieval{err}
 	}
 	if !ok {
-		return nil, &ErrIndexReportNotFound{manifestHash}
+		return nil, &clairerror.ErrIndexReportNotFound{manifestHash}
 	}
 	return report, nil
 }
