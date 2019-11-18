@@ -24,7 +24,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/remind101/migrate"
 	log "github.com/sirupsen/logrus"
 
@@ -86,6 +86,7 @@ type Config struct {
 	ManageDatabaseLifecycle bool
 	FixturePath             string
 	PaginationKey           string
+	MaxOpenConnections      int
 }
 
 // openDatabase opens a PostgresSQL-backed Datastore using the given
@@ -139,6 +140,10 @@ func openDatabase(registrableComponentConfig database.RegistrableComponentConfig
 	if err = pg.DB.Ping(); err != nil {
 		pg.Close()
 		return nil, fmt.Errorf("pgsql: could not open database: %v", err)
+	}
+
+	if pg.config.MaxOpenConnections != 0 {
+		pg.DB.SetMaxOpenConns(pg.config.MaxOpenConnections)
 	}
 
 	// Run migrations.
