@@ -56,18 +56,19 @@ func Validate(conf Config) error {
 	switch strings.ToLower(conf.Mode) {
 	case DevMode:
 		if conf.HTTPListenAddr == "" {
-			return fmt.Errorf("all mode selected but no global http listen address")
+			return fmt.Errorf("dev mode selected but no global HTTPListenAddr")
 		}
 		_, err := url.Parse(conf.HTTPListenAddr)
 		if err != nil {
-			return fmt.Errorf("failed to parse all mode global http listen addr: %w", err)
+			return fmt.Errorf("failed to url parse dev mode HTTPListenAddr string: %w", err)
 		}
 
 		if conf.Indexer.ConnString == "" {
-			return fmt.Errorf("no connection string provided for indexer")
+			return fmt.Errorf("indexer mode requires a database connection string")
 		}
+
 		if conf.Matcher.ConnString == "" {
-			return fmt.Errorf("no connection string provided for matcher")
+			return fmt.Errorf("matcher mode requires a database connection string")
 		}
 	case IndexerMode:
 		if conf.Indexer.HTTPListenAddr == "" {
@@ -76,24 +77,33 @@ func Validate(conf Config) error {
 
 		_, err := url.Parse(conf.Indexer.HTTPListenAddr)
 		if err != nil {
-			return fmt.Errorf("failed to parse indexer mode http listen addr: %w", err)
+			return fmt.Errorf("failed to parse indexer HTTPListenAddr string: %w", err)
 		}
 
 		if conf.Indexer.ConnString == "" {
-			return fmt.Errorf("no connection string provided for indexer")
+			return fmt.Errorf("indexer mode requires a database connection string")
 		}
 	case MatcherMode:
 		if conf.Matcher.HTTPListenAddr == "" {
-			return fmt.Errorf("indexer mode selected but no http listen address")
+			return fmt.Errorf("matcher mode selected but no http listen address")
 		}
 
 		_, err := url.Parse(conf.Matcher.HTTPListenAddr)
 		if err != nil {
-			return fmt.Errorf("failed to parse all mode global http listen addr: %v", err)
+			return fmt.Errorf("failed to url parse matcher mode HTTPListenAddr string: %v", err)
 		}
 
 		if conf.Matcher.ConnString == "" {
-			return fmt.Errorf("no connection string provided for indexer")
+			return fmt.Errorf("matcher mode requires a database connection string")
+		}
+
+		if conf.Matcher.IndexerAddr == "" {
+			return fmt.Errorf("matcher mode requires a remote Indexer address")
+		}
+
+		_, err = url.Parse(conf.Matcher.HTTPListenAddr)
+		if err != nil {
+			return fmt.Errorf("failed to url parse matcher mode IndexAddr string: %v", err)
 		}
 	default:
 		return fmt.Errorf("unknown mode received: %v", conf.Mode)

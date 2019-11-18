@@ -44,9 +44,9 @@ func Test_Config_Validate_Failure(t *testing.T) {
 			},
 		},
 		// Indexer and Matcher modes require both a listen http addr and a database connection string
-		// other fields will use defaults defined in claircore
+		// other fields will use defaults defined in claircore. Matcher mode requires an address to a remote Indexer.
 		{
-			name: "IndexerMode, No HTTP Listen Addr",
+			name: "IndexerMode, No HTTPListenAddr",
 			conf: config.Config{
 				Mode: config.IndexerMode,
 				Indexer: config.Indexer{
@@ -56,7 +56,7 @@ func Test_Config_Validate_Failure(t *testing.T) {
 			},
 		},
 		{
-			name: "IndexerMode, No Conn String",
+			name: "IndexerMode, No ConnString",
 			conf: config.Config{
 				Mode: config.IndexerMode,
 				Indexer: config.Indexer{
@@ -66,7 +66,7 @@ func Test_Config_Validate_Failure(t *testing.T) {
 			},
 		},
 		{
-			name: "MatcherMode, No HTTP Listen Addr",
+			name: "MatcherMode, No HTTPListenAddr",
 			conf: config.Config{
 				Mode: config.MatcherMode,
 				Matcher: config.Matcher{
@@ -76,12 +76,23 @@ func Test_Config_Validate_Failure(t *testing.T) {
 			},
 		},
 		{
-			name: "MatcherMode, No Conn String",
+			name: "MatcherMode, No ConnString",
 			conf: config.Config{
 				Mode: config.MatcherMode,
 				Matcher: config.Matcher{
 					HTTPListenAddr: "localhost:8080",
 					ConnString:     "",
+				},
+			},
+		},
+		{
+			name: "MatcherMode, No IndexerAddr",
+			conf: config.Config{
+				Mode: config.MatcherMode,
+				Matcher: config.Matcher{
+					HTTPListenAddr: "localhost:8080",
+					ConnString:     "example@example/db",
+					IndexerAddr:    "",
 				},
 			},
 		},

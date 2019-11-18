@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	golog "log"
+	"net/http"
 	"os"
 	"os/signal"
 	"strings"
@@ -51,7 +52,7 @@ func main() {
 	logger := log.With().Str("version", Version).Logger()
 	lctx := logger.WithContext(ctx)
 
-	// returns an http server with the correct handlers given the config's Mode attribute.
+	// return a http server with the correct handlers given the config's Mode attribute.
 	server, err := httptransport(lctx, conf)
 	if err != nil {
 		logger.Fatal().Msgf("failed to create http transport: %v", err)
@@ -59,10 +60,10 @@ func main() {
 	logger.Info().Str("component", "clair-main").Msgf("launching http transport on %v", server.Addr)
 	go func() {
 		err := server.ListenAndServe()
-		if err != nil {
+		if err != nil && err != http.ErrServerClosed {
 			logger.Error().Str("component", "clair-main").Msgf("launching http transport failed %v", err)
+			cancel()
 		}
-		cancel()
 	}()
 
 	// register signal handler
