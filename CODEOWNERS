@@ -1,10 +1,1 @@
 *	@quentin-m @jzelinskie @keyboardnerd @ldelossa @hdonnay
-
-ext/vulnsrc/amzn/*	@ericysim
-
-ext/vulnsrc/oracle/*	@djelibeybi
-
-ext/vulnsrc/suse/*	@flavio
-
-ext/vulnsrc/rhel/*	@vbatts
-ext/featurens/redhatrelease/*	@vbatts

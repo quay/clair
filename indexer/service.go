@@ -3,6 +3,7 @@ package indexer
 import (
 	"context"
 	"fmt"
+	"time"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/config"
@@ -28,7 +29,7 @@ type service struct {
 func NewService(ctx context.Context, conf config.Config) (Service, error) {
 	lib, err := libscan.New(ctx, &libscan.Opts{
 		ConnString:           conf.Indexer.ConnString,
-		ScanLockRetry:        conf.Indexer.ScanLockRetry,
+		ScanLockRetry:        time.Duration(conf.Indexer.ScanLockRetry) * time.Second,
 		LayerScanConcurrency: conf.Indexer.LayerScanConcurrency,
 	})
 	if err != nil {

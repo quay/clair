@@ -48,7 +48,7 @@ func (s *service) Match(ctx context.Context, manifestHash string) (*claircore.Vu
 
 	vr, err := s.lib.Scan(ctx, report)
 	if err != nil {
-		return nil, &clairerror.ErrMatch{err}
+		return nil, &clairerror.ErrMatch{E: err}
 	}
 	return vr, nil
 }

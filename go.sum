@@ -8,6 +8,7 @@ github.com/coreos/go-systemd v0.0.0-20190719114852-fd7a80b32e1f/go.mod h1:F5haX7
 github.com/creack/pty v1.1.7/go.mod h1:lj5s0c3V2DBrqTV7llrYr5NG6My20zk30Fl46Y7DoTY=
 github.com/crgimenes/goconfig v1.2.1/go.mod h1:NLkiEPjGZF4p1jzt3S7stOW7z/MJqvCRwJuDmC7b8fw=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/docker/docker v1.13.1 h1:IkZjBSIc8hBjLpqeAbeE5mca5mNgeatLHBy3GO78BWo=
 github.com/docker/docker v1.13.1/go.mod h1:eEKB0N0r5NX/I1kEveEz05bcu8tLC/8azJZsviup8Sk=
@@ -94,6 +95,7 @@ github.com/onsi/gomega v1.7.0/go.mod h1:ex+gbHU/CVuBBDIJjb2X0qEXbFg53c61hWP/1Cpa
 github.com/opencontainers/runc v0.1.1 h1:GlxAyO6x8rfZYN9Tt0Kti5a/cP41iuiO2yYT0IJGY8Y=
 github.com/opencontainers/runc v0.1.1/go.mod h1:qT5XzbpPznkRYVz/mWwUaVBUv2rmF59PVA73FjuZG0U=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/quay/alas v1.0.1 h1:MuFpGGXyZlDD7+F/hrnMZmzhS8P2bjRzX9DyGmyLA+0=
 github.com/quay/alas v1.0.1/go.mod h1:pseepSrG9pwry1joG7RO/RNRFJaWqiqx9qeoomeYwEk=
@@ -101,6 +103,8 @@ github.com/quay/clair v2.1.0+incompatible h1:s9PmQRReHGAYFHt6G4wYPPr8WFKScFM6c6T
 github.com/quay/clair/v2 v2.1.1 h1:jvGAPaZD8N6yFaInWCkzPGG7g4GKWIs0eU0ZLXc5GEE=
 github.com/quay/claircore v0.0.4 h1:rNmxhztPWgKV68UPoXwdNqW82XeKeRE6v3hFjCpzqW4=
 github.com/quay/claircore v0.0.4/go.mod h1:ku/WVL3nevR+0JfUu0TMOwYj+pLfbTCB8A0cKitzQeQ=
+github.com/quay/claircore v0.0.5 h1:fQ29BTIij0ttERmIU8mKjBbN69rT5ck9d9DqftzA0jM=
+github.com/quay/claircore v0.0.5/go.mod h1:ku/WVL3nevR+0JfUu0TMOwYj+pLfbTCB8A0cKitzQeQ=
 github.com/quay/goval-parser v0.7.0 h1:QhJXufv2w5BUzfLJSfLz01yya9MS5SWGtyo8J/EAvkY=
 github.com/quay/goval-parser v0.7.0/go.mod h1:9mCSx+kqC0rq6bKyAWiplMUzTWLpr4HRlez+iuxEkhc=
 github.com/rs/xid v1.2.1/go.mod h1:+uKXf+4Djp6Md1KODXJxgGQPKngRmWyn10oCKFzNHOQ=
@@ -119,6 +123,7 @@ github.com/stretchr/objx v0.1.1/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+
 github.com/stretchr/objx v0.2.0/go.mod h1:qt09Ya8vawLte6SNmTgCsAVtYtaKzEcn8ATUoHMkEqE=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
+github.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJyk=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/tadasv/go-dpkg v0.0.0-20160704224136-c2cf9188b763 h1:9+CrSWP3mpB6e6sxXU5o/RIrf1A2DV/sOg9Cb9/+XNs=
 github.com/tadasv/go-dpkg v0.0.0-20160704224136-c2cf9188b763/go.mod h1:F1AdFgT4EQYvMcvrrWTQuX/25WmY7JCOs1Zxf0LevSw=

@@ -13,9 +13,11 @@ import (
 )
 
 const (
+	// VulnerabilityReportAPIPath is the http path for accessing vulnerability_report
 	VulnerabilityReportAPIPath = "/api/v1/vulnerability_report/"
 )
 
+// MatchHandler is an HTTP handler for matching IndexReports to VulnerabilityReports
 func MatchHandler(service Service) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {

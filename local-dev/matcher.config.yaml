@@ -1,0 +1,6 @@
+mode: matcher
+log_level: debug
+matcher:
+  connstring: host=clair-db port=5432 user=clair dbname=clair sslmode=disable
+  max_conn_pool: 100
+  run: ""
