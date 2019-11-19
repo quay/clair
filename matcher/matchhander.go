@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	VulnerabilityReportAPIPath = "/api/v1/vulnerability_report"
+	VulnerabilityReportAPIPath = "/api/v1/vulnerability_report/"
 )
 
 func MatchHandler(service Service) http.HandlerFunc {
@@ -28,7 +28,7 @@ func MatchHandler(service Service) http.HandlerFunc {
 		}
 
 		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) != 4 {
+		if len(parts) != 5 {
 			resp := &je.Response{
 				Code:    "bad-request",
 				Message: "malformed path. provide a single manifest hash",
@@ -36,7 +36,7 @@ func MatchHandler(service Service) http.HandlerFunc {
 			je.Error(w, resp, http.StatusBadRequest)
 			return
 		}
-		manifestHash := parts[3]
+		manifestHash := parts[4]
 
 		report, err := service.Match(context.Background(), manifestHash)
 		if err != nil {
@@ -50,7 +50,7 @@ func MatchHandler(service Service) http.HandlerFunc {
 			}
 			resp := &je.Response{
 				Code:    "match-error",
-				Message: fmt.Sprintf("failed to start scan: %w", err),
+				Message: fmt.Sprintf("failed to start scan: %v", err),
 			}
 			je.Error(w, resp, http.StatusInternalServerError)
 			return

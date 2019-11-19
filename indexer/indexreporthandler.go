@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	IndexReportAPIPath = "/api/v1/index_report"
+	IndexReportAPIPath = "/api/v1/index_report/"
 )
 
 func IndexReportHandler(service Service) http.HandlerFunc {
@@ -28,7 +28,7 @@ func IndexReportHandler(service Service) http.HandlerFunc {
 		}
 
 		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) != 4 {
+		if len(parts) != 5 {
 			resp := &je.Response{
 				Code:    "bad-request",
 				Message: "malformed path. provide a single manifest hash",
@@ -36,7 +36,7 @@ func IndexReportHandler(service Service) http.HandlerFunc {
 			je.Error(w, resp, http.StatusBadRequest)
 			return
 		}
-		manifestHash := parts[3]
+		manifestHash := parts[4]
 
 		report, err := service.IndexReport(context.Background(), manifestHash)
 		if err != nil {
