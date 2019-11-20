@@ -83,6 +83,20 @@ func (pgSQL *pgSQL) Ping() bool {
 	return pgSQL.DB.Ping() == nil
 }
 
+func (pgSQL *pgSQL) ReadOnly() bool {
+	return pgSQL.config.ReadOnly
+}
+
+func (pgSQL *pgSQL) migrateDatabase() error {
+	if !pgSQL.ReadOnly() {
+		return pgSQLMigrateFn(pgSQL.DB)
+	}
+
+	return nil
+}
+
+var pgSQLMigrateFn = migrateDatabase
+
 // Config is the configuration that is used by openDatabase.
 type Config struct {
 	Source    string

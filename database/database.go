@@ -42,6 +42,12 @@ var (
 	ErrMissingEntities = NewStorageError("associated immutable entities are missing in the database")
 )
 
+// ReadOnly defines the function that can be used to determine if we are in
+// read only mode for databases that can support read only operation
+type ReadOnly interface {
+	ReadOnly() bool
+}
+
 // RegistrableComponentConfig is a configuration block that can be used to
 // determine which registrable component should be initialized and pass custom
 // configuration to it.
