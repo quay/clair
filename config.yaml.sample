@@ -29,7 +29,11 @@ clair:
       # 32-bit URL-safe base64 key used to encrypt pagination tokens
       # If one is not provided, it will be generated.
       # Multiple clair instances in the same cluster need the same value.
-      paginationkey: 
+      paginationkey:
+
+      # Maximum number of open connections allowed to database
+      # If unspecified or <= 0 then no limit is enforced in Clair
+      maxopenconnections: 10
 
   api:
     # v3 grpc/RESTful API server address
@@ -55,7 +59,7 @@ clair:
     # Frequency the database will be updated with vulnerabilities from the default data sources
     # The value 0 disables the updater entirely.
     interval: 2h
-    enabledupdaters: 
+    enabledupdaters:
       - debian
       - ubuntu
       - rhel
@@ -79,9 +83,9 @@ clair:
       # https://github.com/cloudflare/cfssl
       # https://github.com/coreos/etcd-ca
       servername:
-      cafile: 
-      keyfile: 
-      certfile: 
+      cafile:
+      keyfile:
+      certfile:
 
       # Optional HTTP Proxy: must be a valid URL (including the scheme).
       proxy:
