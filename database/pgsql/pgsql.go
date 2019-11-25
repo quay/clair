@@ -166,12 +166,10 @@ func openDatabase(registrableComponentConfig database.RegistrableComponentConfig
 		pg.DB.SetMaxOpenConns(pg.config.MaxOpenConnections)
 	}
 
-	if !pg.config.ReadOnly {
-		// Run migrations.
-		if err = migrateDatabase(pg.DB); err != nil {
-			pg.Close()
-			return nil, err
-		}
+	// Run migrations.
+	if err = pg.migrateDatabase(); err != nil {
+		pg.Close()
+		return nil, err
 	}
 
 	// Load fixture data.
