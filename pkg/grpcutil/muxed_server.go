@@ -22,7 +22,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/cockroachdb/cmux"
+	"github.com/soheilhy/cmux"
 
 	"github.com/quay/clair/v3/pkg/httputil"
 )
@@ -50,7 +50,7 @@ func (srv *MuxedGRPCServer) ListenAndServe(mw httputil.Middleware) error {
 
 	tcpMux := cmux.New(l)
 
-	grpcListener := tcpMux.Match(cmux.HTTP2HeaderField("content-type", "application/grpc"))
+	grpcListener := tcpMux.MatchWithWriters(cmux.HTTP2MatchHeaderFieldSendSettings("content-type", "application/grpc"))
 	defer grpcListener.Close()
 
 	httpListener := tcpMux.Match(cmux.Any())
