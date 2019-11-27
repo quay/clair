@@ -1,0 +1,23 @@
+[
+  {
+    "cve_id": "CVE-2019-10164",
+    "pkg": "postgresql",
+    "cve_score": 7.5,
+    "aff_ver": "all versions before 9.6.14-1.ph1 are vulnerable",
+    "res_ver": "9.6.14-1.ph1"
+  },
+  {
+    "cve_id": "CVE-2018-6594",
+    "pkg": "pycrypto",
+    "cve_score": 7.5,
+    "aff_ver": "all versions before 2.6.1-5.ph1 are vulnerable",
+    "res_ver": "2.6.1-5.ph1"
+  },
+  {
+    "cve_id": "CVE-2019-5010",
+    "pkg": "python3",
+    "cve_score": 7.5,
+    "aff_ver": "all versions before 3.5.6-5.ph1 are vulnerable",
+    "res_ver": "3.5.6-5.ph1"
+  }
+]

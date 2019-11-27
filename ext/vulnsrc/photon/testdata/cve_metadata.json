@@ -1,0 +1,16 @@
+[
+  {
+    "cve_id": "CVE-2017-13078",
+    "pkg": "wpa_supplicant",
+    "cve_score": 5.3,
+    "aff_ver": "all versions before 2.7-1.ph3 are vulnerable",
+    "res_ver": "2.7-1.ph3"
+  },
+  {
+    "cve_id": "CVE-2019-5953",
+    "pkg": "wget",
+    "cve_score": 9.8,
+    "aff_ver": "all versions before 1.20.3-1.ph3 are vulnerable",
+    "res_ver": "1.20.3-1.ph3"
+  }
+]
