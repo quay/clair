@@ -66,6 +66,7 @@ clair:
       - oracle
       - alpine
       - suse
+      - photon
 
   notifier:
     # Number of attempts before the notification is marked as failed to be sent
