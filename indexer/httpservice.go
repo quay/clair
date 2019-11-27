@@ -32,13 +32,13 @@ func NewHTTPService(ctx context.Context, conf config.Config, client *http.Client
 	return &httpService{addr, client}, nil
 }
 
-// Index receives a Manifest and returns a ScanReport providing the indexed
+// Index receives a Manifest and returns a IndexReport providing the indexed
 // items in the resulting image.
 //
 // Index blocks until completion. An error is returned if the index operation
 // could not start. If an error occurs during the index operation the error will
-// be preset on the ScanReport.Err field of the returned ScanReport.
-func (s *httpService) Index(ctx context.Context, manifest *claircore.Manifest) (*claircore.ScanReport, error) {
+// be preset on the IndexReport.Err field of the returned IndexReport.
+func (s *httpService) Index(ctx context.Context, manifest *claircore.Manifest) (*claircore.IndexReport, error) {
 	buf := bytes.NewBuffer([]byte{})
 	err := json.NewEncoder(buf).Encode(manifest)
 	if err != nil {
@@ -62,7 +62,7 @@ func (s *httpService) Index(ctx context.Context, manifest *claircore.Manifest) (
 		return nil, &clairerror.ErrRequestFail{Code: resp.StatusCode, Status: resp.Status}
 	}
 
-	var sr *claircore.ScanReport
+	var sr *claircore.IndexReport
 	err = json.NewDecoder(resp.Body).Decode(sr)
 	if err != nil {
 		return nil, &clairerror.ErrBadIndexReport{err}
@@ -72,11 +72,11 @@ func (s *httpService) Index(ctx context.Context, manifest *claircore.Manifest) (
 }
 
 // IndexReport retrieves a IndexReport given a manifest hash string
-func (s *httpService) IndexReport(ctx context.Context, manifestHash string) (*claircore.ScanReport, error) {
+func (s *httpService) IndexReport(ctx context.Context, manifestHash string) (*claircore.IndexReport, error) {
 	url := url.URL{
 		Scheme: s.addr.Scheme,
 		Host:   s.addr.Hostname(),
-		Path:   IndexReportAPIPath + "/" + manifestHash,
+		Path:   IndexReportAPIPath + manifestHash,
 	}
 	req, err := http.NewRequestWithContext(ctx, "GET", url.String(), nil)
 	if err != nil {
@@ -93,7 +93,7 @@ func (s *httpService) IndexReport(ctx context.Context, manifestHash string) (*cl
 		return nil, &clairerror.ErrIndexReportRetrieval{&clairerror.ErrRequestFail{Code: resp.StatusCode, Status: resp.Status}}
 	}
 
-	var sr *claircore.ScanReport
+	sr := &claircore.IndexReport{}
 	err = json.NewDecoder(resp.Body).Decode(sr)
 	if err != nil {
 		return nil, &clairerror.ErrBadIndexReport{err}

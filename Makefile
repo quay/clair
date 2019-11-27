@@ -11,52 +11,36 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+docker ?= docker
+docker-compose ?= docker-compose
 
-COMMIT = $(shell git describe --tag --always --dirty)
+# start a local development environment. 
+# each services runs in it's own container to test service->service communication.
+.PHONY: local-dev-up
+local-dev-up:
+	$(docker-compose) up -d clair-db
+	$(docker) exec -it clair_clair-db_1 bash -c 'while ! pg_isready; do echo "waiting for postgres"; sleep 2; done'
+	go mod vendor
+	$(docker-compose) up -d indexer
+	$(docker-compose) up -d matcher
 
-UNIT_TEST_PACKAGES = $(shell go list ./... | grep -v 'database/')
-DB_TEST_PACKAGES = $(shell go list ./... | grep 'database/')
+# tear down the entire local development environment
+.PHONY: local-dev-down
+local-dev-down:
+	$(docker-compose) down
 
-CLAIR_TEST_PGSQL ?= postgres@127.0.0.1:5432
-GO111MODULE ?= on
-export GO111MODULE
+# restart the local development database, clearing all it's contents
+# often a service should be restarted as well to run migrations on the now schemaless database.
+.PHONY: local-dev-db-restart
+local-dev-db-restart:
+	$(docker-compose) up -d --force-recreate clair-db
 
-.PHONY: build
-build:
-	go build -v -ldflags "-X github.com/quay/clair/v3/pkg/version.Version=$(COMMIT)" ./cmd/clair
+# restart the local development indexer, any local code changes will take effect
+.PHONY: local-dev-indexer-restart
+local-dev-indexer-restart:
+	$(docker-compose) up -d --force-recreate indexer
 
-.PHONY: unit-test
-unit-test:
-	go test $(UNIT_TEST_PACKAGES)
-
-.PHONY: db-test
-db-test:
-	# The following executes integration tests with a live, but empty database.
-	@echo 'CLAIR_TEST_PGSQL: $(CLAIR_TEST_PGSQL)'
-	go test $(DB_TEST_PACKAGES)
-
-.PHONY: deploy-local
-deploy-local:
-	# This make target is designed to be ran idempotently.
-	# Each run deploys the latest code in the repository requires kubernetes.
-	# Both minikube and docker desktop is supported.
-	./local-dev/build.sh
-	-helm dependency update ./local-dev/helm/clair-pg
-	-helm install --name clair-pg ./local-dev/helm/clair-pg
-	-helm delete --purge clair
-	helm install --name clair ./local-dev/helm/clair
-
-.PHONY: teardown-local
-teardown-local:
-	# This target tears down the environment deployed by deploy-local.
-	-helm delete --purge clair
-	-helm delete --purge clair-pg
-
-.PHONY: lint-proto
-lint-proto:
-	clang-format -i api/v3/clairpb/clair.proto
-
-
-.PHONY: gen-drone-config
-gen-drone-config:
-	drone jsonnet --stream .drone.jsonnet
+# restart the local development matcher, any local code changes will take effect
+.PHONY: local-dev-matcher-restart
+local-dev-matcher-restart:
+	$(docker-compose) up -d --force-recreate matcher

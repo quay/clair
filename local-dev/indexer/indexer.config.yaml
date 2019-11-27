@@ -1,6 +1,7 @@
 mode: indexer
 log_level: debug
 indexer:
+  http_listen_addr: :80
   connstring: host=clair-db port=5432 user=clair dbname=clair sslmode=disable
   scanlock_retry: 10
   layer_scan_concurrency: 5

@@ -72,7 +72,7 @@ func matcherMode(ctx context.Context, conf config.Config) (*http.Server, error) 
 	mux.HandleFunc(indexer.IndexReportAPIPath, indexer.IndexReportHandler(indexerServ))
 	mux.HandleFunc(matcher.VulnerabilityReportAPIPath, matcher.MatchHandler(matcherServ))
 	return &http.Server{
-		Addr:    conf.HTTPListenAddr,
+		Addr:    conf.Matcher.HTTPListenAddr,
 		Handler: mux,
 	}, nil
 

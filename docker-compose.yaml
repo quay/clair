@@ -1,0 +1,37 @@
+version: "3.7"
+services:
+  clair-db:
+    image: postgres:12.1
+    environment:
+      POSTGRES_USER: "clair"
+      POSTGRES_DB: "clair"
+    ports:
+      - "5432:5432"
+    volumes:
+      # bootstrap initial schema
+      - "./local-dev/indexer/bootstrap.sql:/docker-entrypoint-initdb.d/indexer-bootstrap.sql"
+      - "./local-dev/matcher/bootstrap.sql:/docker-entrypoint-initdb.d/matcher-bootstrap.sql"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U clair -d clair" ]
+      interval: 10s
+      timeout: 9s
+      retries: 3
+      start_period: 10s
+
+  indexer:
+    image: quay.io/claircore/golang:1.13.3
+    ports:
+      - "8080:80"
+    volumes:
+      - "./:/src/clair/"
+    command:
+      [ "bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor . -conf /src/clair/local-dev/indexer/indexer.config.yaml" ]
+
+  matcher:
+    image: quay.io/claircore/golang:1.13.3
+    ports:
+      - "8081:80"
+    volumes:
+      - "./:/src/clair/"
+    command:
+      [ "bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor . -conf /src/clair/local-dev/matcher/matcher.config.yaml" ]
