@@ -1,0 +1,74 @@
+openapi: "3.0.2"
+info:
+  title: "ClairV4"
+  description: ""
+  version: "0.1"
+  termsOfService: ""
+  contact:
+    name: "Clair"
+    url: "http://github.com/quay/clair"
+    email: "quay-devel@redhat.com"
+  license:
+    name: "Apache License 2.0"
+    url:  "http://www.apache.org/licenses/"
+
+paths:
+  /index:
+    post:
+      tags:
+      - Indexer
+      operationId: "Index"
+      summary: "Index the contents of a Manifest"
+      description: "By submitting a Manifest object to this endpoint Clair will fetch the layers, scan each layer's contents, and provide an index of discovered packages, repository and distribution information"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Manifest'
+components:
+  schemas:
+    Manifest:
+      title: Manifest
+      type: object
+      description: "A manifest representing a container. The 'layers' array must preserve the original container's layer order for accurate usage"
+      properties:
+        hash:
+          description: "A content addressable hash uniqually identifying this manifest."
+          type: string
+          example: "2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36"
+        layers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Layer'
+  
+    Layer:
+      title: Layer
+      type: object
+      description: 
+      properties:
+        hash:
+          type: string
+          description: "A content addressable hash uniqually identifying this layer"
+          example: "2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36"
+        remote_path: 
+          $ref: '#/components/schemas/RemotePath'
+  
+    RemotePath:
+      title: RemotePath
+      type: object
+      properties:
+        uri:
+          type: string
+          description: "a web address where a layer maybe fetched"
+          example: "https://storage/35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
+        headers:
+          type: object
+          description: "scalar string keys maped to an array of string values"
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            "Authorization": [ "Bearer xyz" ]
+            "X-Header": [ "some-value" ]
