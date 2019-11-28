@@ -1,11 +1,11 @@
 openapi: "3.0.2"
 info:
   title: "ClairV4"
-  description: ""
+  description: "ClairV4 is a set of cooperating microservice which scan, index, and match your container's content with known vulnerabilities."
   version: "0.1"
   termsOfService: ""
   contact:
-    name: "Clair"
+    name: "Clair Team"
     url: "http://github.com/quay/clair"
     email: "quay-devel@redhat.com"
   license:
@@ -26,17 +26,191 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Manifest'
+      responses:
+        200:
+          description: Successful Index
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndexReport'
+              
 components:
+  examples:
+    Distribution:
+      value:
+        id: 1
+        did: "ubuntu"
+        name: "Ubuntu"
+        version: "18.04.3 LTS (Bionic Beaver)"
+        version_code_name: "bionic"
+        version_id: "18.04"
+        arch: ""
+        cpe: ""
+        pretty_name: "Ubuntu 18.04.3 LTS"
+
+    IndexedPackage:
+      value:
+        id: 10,
+        name: "libapt-pkg5.0"
+        version: "1.6.11"
+        kind: "binary"
+        source:
+          id: 9
+          name: "apt"
+          version: "1.6.11"
+          kind: "source"
+          source: null
+          package_db: ""
+          repository_hint: ""
+        package_db: "var/lib/dpkg/status"
+        repository_hint: "b0e3976b91845036e35cbfb01ec6d6eb"
+
+    Package:
+      value:
+        id: 10,
+        name: "libapt-pkg5.0"
+        version: "1.6.11"
+        kind: "binary"
+        source:
+          id: 9
+          name: "apt"
+          version: "1.6.11"
+          kind: "source"
+          source: null
+          package_db: ""
+          repository_hint: ""
+
+    RemotePath:
+      value:
+        uri: "https://storage/35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
+        headers:
+          Authorization:
+            - xyz
+          X-Header:
+            - some-value
+
   schemas:
+    IndexReport:
+      title: IndexReport
+      type: object
+      description: "A report of the Index process for a particular manifest. A client's usage of this is largely information. Clair uses this report for matching Vulnerabilities"
+      properties:
+        manifest_hash:
+          description: "A content addressable hash uniqually identifying the indexed manifest"
+          type: string
+          example: "2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36"
+        state:
+          description: "The current state of the index operation"
+          type: string
+          example: "IndexFinished"
+        packages:
+          type: object
+          description: "A map of IndexedPackage objects key'd by Package.id found in the Manifest"
+          example:
+            10:
+              $ref: '#/components/examples/IndexedPackage/value'
+          additionalProperties:
+            $ref: '#/components/schemas/IndexedPackage'
+        distributions:
+          type: object
+          description: "A map of Distribution objects key'd by their Distribution.id discovered in the manifest"
+          example:
+            1: 
+              $ref: '#/components/examples/Distribution/value'
+          additionalProperties:
+            $ref: '#/components/schemas/Distribution'
+        distributions_by_package:
+          type: object
+          description: "A map of Distribution.id key'd by Package.id. Exists to programatically link a package with it's distribution context"
+          example: 
+            10: 1
+            11: 1
+            12: 1
+          additionalProperties:
+            type: integer
+        package_introduced:
+          type: object
+          description: "A map of layer hashes key'd by Package.id. Exists to programatically identify in which layer a package was introduced"
+          example:
+            10: "35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
+            100: "35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
+          additionalProperties:
+            type: string
+            
+    Distribution:
+      title: Distribution
+      type: object
+      description: "An indexed distribution discovered in a layer. See https://www.freedesktop.org/software/systemd/man/os-release.html for explanations and example of fields."
+      example:
+        $ref: '#/components/examples/Distribution/value'
+      properties:
+        id: 
+          description: "A unique ID representing this distribution"
+          type: integer
+        did:
+          type: string
+        name:
+          type: string
+        version:
+          type: string
+        version_code_name:
+          type: string
+        version_id:
+          type: string
+        arch:
+          type: string
+        cpe:
+          type: string
+        pretty_name:
+          type: string
+    
+    IndexedPackage:
+      title: IndexedPackage
+      type: object
+      description: "An indexed package found in a layer"
+      example:
+        $ref: '#/components/examples/IndexedPackage/value'
+      properties:
+        package:
+          $ref: '#/components/schemas/Package'
+        package_db:
+          description: "The package database on the filesystem this package was found"
+          type: string
+        repository_hint:
+          description: "A hint to help match a package with the repository it came from"
+          type: string
+    
+    Package:
+      title: Package
+      type: object
+      description: "A package discovered by indexing a Manifest"
+      example: 
+        $ref: '#/components/examples/Package/value'
+      properties:
+        id:
+          description: "A unique ID representing this package"
+          type: integer
+        name:
+          description: "Name of the Package"
+          type: string
+        version:
+          description: "Version of the Package"
+          type: string
+        kind:
+          description: "Kind of package. Source | Binary"
+          type: string
+        source:
+          $ref: '#/components/schemas/Package'
+        
     Manifest:
       title: Manifest
       type: object
-      description: "A manifest representing a container. The 'layers' array must preserve the original container's layer order for accurate usage"
+      description: "A Manifest representing a container. The 'layers' array must preserve the original container's layer order for accurate usage"
       properties:
         hash:
           description: "A content addressable hash uniqually identifying this manifest."
           type: string
-          example: "2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36"
+          example: "251f5509d51d9e4119d4ffb70d4820f8e2d7dc72ad15df3ebd7cd755539e40fd"
         layers:
           type: array
           items:
@@ -45,7 +219,7 @@ components:
     Layer:
       title: Layer
       type: object
-      description: 
+      description: "A Layer within a Manifest and where Clair may retrieve it."
       properties:
         hash:
           type: string
@@ -57,6 +231,9 @@ components:
     RemotePath:
       title: RemotePath
       type: object
+      description: "A remote URI and Header information for retrieval"
+      example:
+        $ref: '#/components/examples/RemotePath/value'
       properties:
         uri:
           type: string
@@ -64,11 +241,9 @@ components:
           example: "https://storage/35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
         headers:
           type: object
-          description: "scalar string keys maped to an array of string values"
+          description: "map of arrays of header values key'd by header value. e.g. map[string][]string"
           additionalProperties:
             type: array
             items:
               type: string
-          example:
-            "Authorization": [ "Bearer xyz" ]
-            "X-Header": [ "some-value" ]
+
