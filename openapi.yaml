@@ -33,8 +33,73 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IndexReport'
-              
+        400:
+          $ref: '#/components/responses/BadRequest'
+        405:
+          $ref: '#/components/responses/MethodNotAllowed'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+  
+  /index_report/{manifest_hash}:
+    get:
+      tags:
+      - Indexer
+      operationId: "GetIndexReport"
+      summary: "Retrieve an IndexReport for a given Manifest hash"
+      description: "Given a Manifest's unique hash as a trailing path parameter an IndexReport will be retrieved if exists."
+      parameters:
+      - name: manifest_hash
+        in: path
+        description: "A content addressable hash which has been indexed previous to this request"
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: IndexReport Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IndexReport'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        405:
+          $ref: '#/components/responses/MethodNotAllowed'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
 components:
+  responses:
+    BadRequest:
+        description: Bad Request
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+
+    MethodNotAllowed:
+        description: Method Not Allowed
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+
+    InternalServerError:
+        description: Internal Server Error
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+
+    NotFound:
+        description: Not Found
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Error'
+
   examples:
     Distribution:
       value:
@@ -247,3 +312,14 @@ components:
             items:
               type: string
 
+    Error:
+      title: Error
+      type: object
+      description: "A general error schema returned when status is not 200 OK"
+      properties:
+        code:
+          type: string
+          description: "a code for this particular error"
+        message:
+          type: string
+          description: "a message with further detail"
