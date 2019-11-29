@@ -35,3 +35,12 @@ services:
       - "./:/src/clair/"
     command:
       [ "bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor . -conf /src/clair/local-dev/matcher/matcher.config.yaml" ]
+
+  swagger-ui:
+    image: swaggerapi/swagger-ui
+    ports:
+      - "8082:8080"
+    volumes:
+      - "./:/clair"
+    environment:
+      SWAGGER_JSON: "/clair/openapi.yaml"

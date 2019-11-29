@@ -27,8 +27,8 @@ func IndexReportHandler(service Service) http.HandlerFunc {
 			return
 		}
 
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) != 5 {
+		manifestHash := strings.TrimPrefix(r.URL.Path, IndexReportAPIPath)
+		if manifestHash == "" {
 			resp := &je.Response{
 				Code:    "bad-request",
 				Message: "malformed path. provide a single manifest hash",
@@ -36,11 +36,11 @@ func IndexReportHandler(service Service) http.HandlerFunc {
 			je.Error(w, resp, http.StatusBadRequest)
 			return
 		}
-		manifestHash := parts[4]
 
 		report, err := service.IndexReport(context.Background(), manifestHash)
 		if err != nil {
-			if errors.Is(err, &clairerror.ErrIndexReportNotFound{}) {
+			var e *clairerror.ErrIndexReportNotFound
+			if errors.As(err, &e) {
 				resp := &je.Response{
 					Code:    "not-found",
 					Message: fmt.Sprintf("index report for manifest %s not found", manifestHash),
@@ -48,7 +48,8 @@ func IndexReportHandler(service Service) http.HandlerFunc {
 				je.Error(w, resp, http.StatusNotFound)
 				return
 			}
-			if errors.Is(err, &clairerror.ErrIndexReportRetrieval{}) {
+			var ee *clairerror.ErrIndexReportRetrieval
+			if errors.As(err, &ee) {
 				resp := &je.Response{
 					Code:    "retrieval-failure",
 					Message: fmt.Sprintf("failed to retrieve manifest: %w", err),

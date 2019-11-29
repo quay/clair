@@ -29,8 +29,8 @@ func MatchHandler(service Service) http.HandlerFunc {
 			return
 		}
 
-		parts := strings.Split(r.URL.Path, "/")
-		if len(parts) != 5 {
+		manifestHash := strings.TrimPrefix(r.URL.Path, VulnerabilityReportAPIPath)
+		if manifestHash == "" {
 			resp := &je.Response{
 				Code:    "bad-request",
 				Message: "malformed path. provide a single manifest hash",
@@ -38,7 +38,6 @@ func MatchHandler(service Service) http.HandlerFunc {
 			je.Error(w, resp, http.StatusBadRequest)
 			return
 		}
-		manifestHash := parts[4]
 
 		report, err := service.Match(context.Background(), manifestHash)
 		if err != nil {

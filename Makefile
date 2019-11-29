@@ -23,6 +23,7 @@ local-dev-up:
 	go mod vendor
 	$(docker-compose) up -d indexer
 	$(docker-compose) up -d matcher
+	$(docker-compose) up -d swagger-ui
 
 # tear down the entire local development environment
 .PHONY: local-dev-down
@@ -44,3 +45,8 @@ local-dev-indexer-restart:
 .PHONY: local-dev-matcher-restart
 local-dev-matcher-restart:
 	$(docker-compose) up -d --force-recreate matcher
+
+# restart the local development swagger-ui, any local code changes will take effect
+.PHONY: local-dev-swagger-ui-restart
+local-dev-swagger-ui-restart:
+	$(docker-compose) up -d --force-recreate swagger-ui
