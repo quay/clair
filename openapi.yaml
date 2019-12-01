@@ -45,8 +45,8 @@ paths:
       tags:
       - Indexer
       operationId: "GetIndexReport"
-      summary: "Retrieve a VulnerabilityReport for a given IndexReport hash"
-      description: "Given an IndexReport comprising the details of a indexed Manifest this endpoint will return a VulnerabilityReport outlining the vulnerable packages within the Manifest."
+      summary: "Retrieve an IndexReport for the given Manifest hash if exists."
+      description: "Given a Manifest's content addressable hash an IndexReport will be retrieved if exists."
       parameters:
       - name: manifest_hash
         in: path
@@ -74,9 +74,9 @@ paths:
     get:
       tags:
       - Matcher
-      operationId: "Get"
+      operationId: "GetVulnerabilityReport"
       summary: "Retrieve a VulnerabilityReport for a given manifest's content addressable hash"
-      description: "Given a Manifest's content addressable hash as a trailing path parameter an IndexReport will be retrieved if exists."
+      description: "Given a Manifest's content addressable hash a VulnerabilityReport will be created. The Manifest **must** have been Indexed first via the Index endpoint"
       parameters:
       - name: manifest_hash
         in: path
@@ -357,7 +357,6 @@ components:
         dist:
           $ref: '#/components/schemas/Distribution'
         repo:
-          $ref: '#/components/schemas/Repository'
         fixed_in_version:
           description: "A unique ID representing this vulnerability."
           type: integer
