@@ -28,7 +28,7 @@ paths:
               $ref: '#/components/schemas/Manifest'
       responses:
         200:
-          description: Successful Index
+          description: IndexReport Created
           content:
             application/json:
               schema:
@@ -45,8 +45,8 @@ paths:
       tags:
       - Indexer
       operationId: "GetIndexReport"
-      summary: "Retrieve an IndexReport for a given Manifest hash"
-      description: "Given a Manifest's unique hash as a trailing path parameter an IndexReport will be retrieved if exists."
+      summary: "Retrieve a VulnerabilityReport for a given IndexReport hash"
+      description: "Given an IndexReport comprising the details of a indexed Manifest this endpoint will return a VulnerabilityReport outlining the vulnerable packages within the Manifest."
       parameters:
       - name: manifest_hash
         in: path
@@ -56,11 +56,41 @@ paths:
           type: string
       responses:
         200:
-          description: IndexReport Found
+          description: IndexReport retrieved
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/IndexReport'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        404:
+          $ref: '#/components/responses/NotFound'
+        405:
+          $ref: '#/components/responses/MethodNotAllowed'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
+  /vulnerability_report/{manifest_hash}:
+    get:
+      tags:
+      - Matcher
+      operationId: "Get"
+      summary: "Retrieve a VulnerabilityReport for a given manifest's content addressable hash"
+      description: "Given a Manifest's content addressable hash as a trailing path parameter an IndexReport will be retrieved if exists."
+      parameters:
+      - name: manifest_hash
+        in: path
+        description: "A content addressable hash which has been indexed previous to this request"
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: VulnerabilityReport Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VulnerabilityReport'
         400:
           $ref: '#/components/responses/BadRequest'
         404:
@@ -101,6 +131,59 @@ components:
               $ref: '#/components/schemas/Error'
 
   examples:
+    Details:
+      value:
+        affected_package: 
+          id: 16
+          name: "perl-base"
+          version: "5.26.1-6ubuntu0.3"
+          kind: "binary"
+          source: 
+            id: 15
+            name: perl
+            version: 5.26.1-6ubuntu0.3
+            kind: source
+            source: null
+            package_db: 
+            repository_hint: 
+          package_db: var/lib/dpkg/status
+          repository_hint: f17ad9208249962b7a52349494ce75ff
+        introduced_in: 35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a,
+        fixed_in_version: 5.26.2-7ubuntu0.1
+
+    Vulnerability:
+      value:
+        id: 356835
+        updater: ""
+        name: "CVE-2009-5155"
+        description: "In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match."
+        links: "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986"
+        severity: "Low"
+        package: 
+          id: 0
+          name: "glibc"
+          version: ""
+          kind: ""
+          source: null
+          package_db: ""
+          repository_hint: ""
+        dist: 
+          id: 0
+          did: "ubuntu"
+          name: "Ubuntu"
+          version: "18.04.3 LTS (Bionic Beaver)"
+          version_code_name: "bionic"
+          version_id: "18.04"
+          arch: ""
+          cpe: ""
+          pretty_name: ""
+        repo: 
+          id: 0
+          name: "Ubuntu 18.04.3 LTS"
+          key: ""
+          uri: ""
+        fixed_in_version: "2.28-0ubuntu1"
+
     Distribution:
       value:
         id: 1
@@ -201,6 +284,83 @@ components:
             100: "35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
           additionalProperties:
             type: string
+
+    VulnerabilityReport:
+      title: VulnerabilityReport
+      type: object
+      description: "A list of vulnerabilities affecting a particular manifest."
+      properties:
+        manifest_hash:
+          description: "The content addressable manifest hash this VulnerabilityReport is associated with."
+          type: string
+        vulnerabilities:
+          description: "A map of Vulnerabilities key'd by their Vulnerability.id"
+          type: object
+          example:
+            356835: 
+              $ref: '#/components/examples/Vulnerability/value'
+          additionalProperties:
+            $ref: '#/components/schemas/Vulnerability'
+        details:
+          description: "A map of an array of Details objects key'd by Vulnerability.id. Creates a one to many relationshp expressing found vulnerability to affected package details"
+          type: object
+          example:
+            356835:
+              - $ref: '#/components/examples/Details/value'
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/Details'
+
+    Details:
+      title: Details
+      type: object
+      example:
+        $ref: '#/components/examples/Details/value'
+      properties:
+        affected_package:
+          $ref: '#/components/schemas/Package'
+        introduced_in:
+          description: "The layer's content addressable hash in which this package was first introduced"
+          type: string
+        fixed_in_version:
+          description: "The version in which the package is no longer affected by this vulnerability"
+          type: string
+
+    Vulnerability:
+      title: Vulnerability
+      type: object
+      description: "A unique vulnerability indexed by Clair"
+      example:
+        $ref: '#/components/examples/Vulnerability/value'
+      properties:
+        id:
+          description: "A unique ID representing this vulnerability."
+          type: integer
+        updater:
+          description: "A unique ID representing this vulnerability."
+          type: integer
+        name:
+          description: "Name of this specific vulnerability."
+          type: string
+        description:
+          description: "A description of this specific vulnerability."
+          type: string
+        links:
+          description: "A space separate list of links to any external information."
+          type: string
+        severity:
+          description: "A severity keyword taken verbatim from the vulnerability source."
+          type: string
+        package:
+          $ref: '#/components/schemas/Package'
+        dist:
+          $ref: '#/components/schemas/Distribution'
+        repo:
+          $ref: '#/components/schemas/Repository'
+        fixed_in_version:
+          description: "A unique ID representing this vulnerability."
+          type: integer
             
     Distribution:
       title: Distribution
