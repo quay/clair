@@ -57,6 +57,7 @@ func MatchHandler(service Service) http.HandlerFunc {
 			return
 		}
 
+		w.WriteHeader(http.StatusCreated)
 		err = json.NewEncoder(w).Encode(report)
 		if err != nil {
 			resp := &je.Response{

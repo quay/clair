@@ -27,7 +27,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Manifest'
       responses:
-        200:
+        201:
           description: IndexReport Created
           content:
             application/json:
@@ -85,7 +85,7 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        201:
           description: VulnerabilityReport Created
           content:
             application/json:

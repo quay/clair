@@ -46,6 +46,7 @@ func IndexHandler(service Service) http.HandlerFunc {
 			return
 		}
 
+		w.WriteHeader(http.StatusCreated)
 		err = json.NewEncoder(w).Encode(report)
 		if err != nil {
 			resp := &je.Response{
@@ -55,7 +56,6 @@ func IndexHandler(service Service) http.HandlerFunc {
 			je.Error(w, resp, http.StatusInternalServerError)
 			return
 		}
-
 		return
 	}
 }
