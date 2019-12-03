@@ -13,14 +13,14 @@ import (
 	"github.com/quay/claircore"
 )
 
-// httpService implents the indexer Service via HTTP
-type httpService struct {
+// httpClient implents the indexer service via HTTP
+type httpClient struct {
 	addr *url.URL
 	c    *http.Client
 }
 
-// NewService is a constructor for a Service
-func NewHTTPService(ctx context.Context, conf config.Config, client *http.Client) (Service, error) {
+// NewClient is a constructor for a Client
+func NewHTTPClient(ctx context.Context, conf config.Config, client *http.Client) (*httpClient, error) {
 	addr, err := url.Parse(conf.Matcher.IndexerAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse configured url %s: %w", addr, err)
@@ -29,7 +29,7 @@ func NewHTTPService(ctx context.Context, conf config.Config, client *http.Client
 		client = &http.Client{}
 	}
 
-	return &httpService{addr, client}, nil
+	return &httpClient{addr, client}, nil
 }
 
 // Index receives a Manifest and returns a IndexReport providing the indexed
@@ -38,7 +38,7 @@ func NewHTTPService(ctx context.Context, conf config.Config, client *http.Client
 // Index blocks until completion. An error is returned if the index operation
 // could not start. If an error occurs during the index operation the error will
 // be preset on the IndexReport.Err field of the returned IndexReport.
-func (s *httpService) Index(ctx context.Context, manifest *claircore.Manifest) (*claircore.IndexReport, error) {
+func (s *httpClient) Index(ctx context.Context, manifest *claircore.Manifest) (*claircore.IndexReport, error) {
 	buf := bytes.NewBuffer([]byte{})
 	err := json.NewEncoder(buf).Encode(manifest)
 	if err != nil {
@@ -72,7 +72,7 @@ func (s *httpService) Index(ctx context.Context, manifest *claircore.Manifest) (
 }
 
 // IndexReport retrieves a IndexReport given a manifest hash string
-func (s *httpService) IndexReport(ctx context.Context, manifestHash string) (*claircore.IndexReport, error) {
+func (s *httpClient) IndexReport(ctx context.Context, manifestHash string) (*claircore.IndexReport, error) {
 	url := url.URL{
 		Scheme: s.addr.Scheme,
 		Host:   s.addr.Hostname(),

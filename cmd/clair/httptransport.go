@@ -59,8 +59,8 @@ func indexerMode(ctx context.Context, conf config.Config) (*http.Server, error) 
 
 func matcherMode(ctx context.Context, conf config.Config) (*http.Server, error) {
 	mux := http.NewServeMux()
-	// matcher mode needs a remote indexer service to contact
-	indexerServ, err := indexer.NewHTTPService(ctx, conf, nil)
+	// matcher mode needs a remote indexer client
+	indexerServ, err := indexer.NewHTTPClient(ctx, conf, nil)
 	if err != nil {
 		return nil, err
 	}
