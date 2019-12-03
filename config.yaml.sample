@@ -16,11 +16,13 @@ mode: dev
 http_listen_addr: localhost:8080
 log_level: debug
 indexer:
-  connstring: host=localhost port=5434 user=claircore dbname=claircore sslmode=disable
+  connstring: host=localhost port=5432 user=clair dbname=clair sslmode=disable
   scanlock_retry: 10
   layer_scan_concurrency: 5
+  migrations: true
 matcher:
-  connstring: host=localhost port=5434 user=claircore dbname=claircore sslmode=disable
+  connstring: host=localhost port=5432 user=clair dbname=clair sslmode=disable
   max_conn_pool: 100
   run: ""
+  migrations: true
 

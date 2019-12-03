@@ -5,3 +5,4 @@ matcher:
   indexer_addr: http://indexer/
   connstring: host=clair-db port=5432 user=clair dbname=clair sslmode=disable
   max_conn_pool: 100
+  migrations: true

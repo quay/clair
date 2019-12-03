@@ -7,10 +7,6 @@ services:
       POSTGRES_DB: "clair"
     ports:
       - "5432:5432"
-    volumes:
-      # bootstrap initial schema
-      - "./local-dev/indexer/bootstrap.sql:/docker-entrypoint-initdb.d/indexer-bootstrap.sql"
-      - "./local-dev/matcher/bootstrap.sql:/docker-entrypoint-initdb.d/matcher-bootstrap.sql"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U clair -d clair" ]
       interval: 10s

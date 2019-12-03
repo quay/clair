@@ -9,12 +9,12 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/grpc-ecosystem/grpc-gateway v1.12.1
 	github.com/quay/clair/v3 v3.0.0-pre1
-	github.com/quay/claircore v0.0.6
+	github.com/quay/claircore v0.0.7
 	github.com/rs/zerolog v1.16.0
-	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/net v0.0.0-20191002035440-2ec189313ef0
-	golang.org/x/tools v0.0.0-20191127154143-99399511c176 // indirect
+	golang.org/x/sys v0.0.0-20191128015809-6d18c012aee9 // indirect
+	golang.org/x/tools v0.0.0-20191203134012-c197fd4bf371 // indirect
 	google.golang.org/grpc v1.25.1
 	gopkg.in/yaml.v2 v2.2.5
 )

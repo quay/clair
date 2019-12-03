@@ -18,7 +18,7 @@ const (
 type Config struct {
 	// indicates a Clair node's operational mode
 	Mode string `yaml:"mode"`
-	// indicates the listening http address if mode is 'indexer'
+	// indicates the global listen address if running in "Dev"
 	HTTPListenAddr string `yaml:"http_listen_addr"`
 	// indicates log level for the process
 	LogLevel string `yaml:"log_level"`
@@ -37,6 +37,8 @@ type Indexer struct {
 	ScanLockRetry int `yaml:"scanlock_retry"`
 	// number of concurrent scans allowed on a manifest's layers. tunable for db performance
 	LayerScanConcurrency int `yaml:"layer_scan_concurrency"`
+	// should the Indexer be responsible for setting up the database
+	Migrations bool `yaml:"migrations"`
 }
 
 type Matcher struct {
@@ -50,6 +52,8 @@ type Matcher struct {
 	Run string `yaml:"run"`
 	// the address where the indexer service can be reached
 	IndexerAddr string `yaml:"indexer_addr"`
+	// should the Matcher be responsible for setting up the database
+	Migrations bool `yaml:"migrations"`
 }
 
 func Validate(conf Config) error {

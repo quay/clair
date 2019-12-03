@@ -5,3 +5,4 @@ indexer:
   connstring: host=clair-db port=5432 user=clair dbname=clair sslmode=disable
   scanlock_retry: 10
   layer_scan_concurrency: 5
+  migrations: true

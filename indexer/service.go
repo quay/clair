@@ -31,6 +31,7 @@ func NewService(ctx context.Context, conf config.Config) (Service, error) {
 		ConnString:           conf.Indexer.ConnString,
 		ScanLockRetry:        time.Duration(conf.Indexer.ScanLockRetry) * time.Second,
 		LayerScanConcurrency: conf.Indexer.LayerScanConcurrency,
+		Migrations:           conf.Indexer.Migrations,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create indexer service: %w", err)

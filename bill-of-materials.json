@@ -55,11 +55,6 @@
 		"confidence": 1
 	},
 	{
-		"project": "github.com/sirupsen/logrus",
-		"license": "MIT License",
-		"confidence": 1
-	},
-	{
 		"project": "github.com/stretchr/testify/assert",
 		"license": "MIT License",
 		"confidence": 0.943

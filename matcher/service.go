@@ -32,6 +32,7 @@ func NewService(ctx context.Context, conf config.Config, indexer indexer.Service
 		ConnString:  conf.Matcher.ConnString,
 		MaxConnPool: int32(conf.Matcher.MaxConnPool),
 		Run:         conf.Matcher.Run,
+		Migrations:  conf.Matcher.Migrations,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create matcher service: %w", err)
