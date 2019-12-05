@@ -195,7 +195,7 @@ func update(datastore database.Datastore, firstUpdate bool) (updateSuccessful bo
 	updateSuccessful, vulnerabilities, flags, notes := fetch(datastore)
 
 	// Insert vulnerabilities.
-	log.WithField("count", len(vulnerabilities)).Debug("inserting vulnerabilities for update")
+	log.WithField("count", len(vulnerabilities)).Info("inserting vulnerabilities for update")
 	err := datastore.InsertVulnerabilities(vulnerabilities, !firstUpdate)
 	if err != nil {
 		promUpdaterErrorsTotal.Inc()
@@ -313,6 +313,7 @@ func addMetadata(datastore database.Datastore, vulnerabilities []database.Vulner
 
 	wg.Wait()
 
+	log.Info("finished adding metadata to vulnerabilities")
 	return vulnerabilities
 }
 
