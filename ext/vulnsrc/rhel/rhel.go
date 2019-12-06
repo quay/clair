@@ -17,13 +17,14 @@
 package rhel
 
 import (
-	"bufio"
 	"encoding/xml"
 	"fmt"
 	"io"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -32,17 +33,12 @@ import (
 	"github.com/quay/clair/v2/ext/versionfmt/rpm"
 	"github.com/quay/clair/v2/ext/vulnsrc"
 	"github.com/quay/clair/v2/pkg/commonerr"
-	"github.com/quay/clair/v2/pkg/httputil"
 )
 
 const (
-	// Before this RHSA, it deals only with RHEL <= 4.
-	firstRHEL5RHSA      = 20070044
 	firstConsideredRHEL = 5
-
-	ovalURI        = "https://www.redhat.com/security/data/oval/"
-	rhsaFilePrefix = "com.redhat.rhsa-"
-	updaterFlag    = "rhelUpdater"
+	updaterFlag         = "rhelUpdater"
+	dbURL               = `https://www.redhat.com/security/data/oval/com.redhat.rhsa-RHEL%d.xml`
 )
 
 var (
@@ -54,6 +50,10 @@ var (
 	}
 
 	rhsaRegexp = regexp.MustCompile(`com.redhat.rhsa-(\d+).xml`)
+	releases   = []int{3, 4, 5, 6, 7, 8}
+	httpClient = http.Client{
+		Timeout: 5 * time.Minute,
+	}
 )
 
 type oval struct {
@@ -90,55 +90,41 @@ func init() {
 
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
 	log.WithField("package", "RHEL").Info("Start fetching vulnerabilities")
-	// Get the first RHSA we have to manage.
+
+	// flagValue is http.TimeFormat
+	var useLastModifiedHeader bool = true
 	flagValue, err := datastore.GetKeyValue(updaterFlag)
 	if err != nil {
 		return resp, err
 	}
-	firstRHSA, err := strconv.Atoi(flagValue)
-	if firstRHSA == 0 || err != nil {
-		firstRHSA = firstRHEL5RHSA
-	}
-
-	// Fetch the update list.
-	r, err := httputil.GetWithUserAgent(ovalURI)
+	// if we cannot parse the flag as a timestamp we'll fix it
+	// this time around.
+	_, err = time.Parse(http.TimeFormat, flagValue)
 	if err != nil {
-		log.WithError(err).Error("could not download RHEL's update list")
-		return resp, commonerr.ErrCouldNotDownload
-	}
-	defer r.Body.Close()
-
-	if !httputil.Status2xx(r) {
-		log.WithField("StatusCode", r.StatusCode).Error("Failed to update RHEL")
-		return resp, commonerr.ErrCouldNotDownload
+		useLastModifiedHeader = false
 	}
 
-	// Get the list of RHSAs that we have to process.
-	var rhsaList []int
-	scanner := bufio.NewScanner(r.Body)
-	for scanner.Scan() {
-		line := scanner.Text()
-		r := rhsaRegexp.FindStringSubmatch(line)
-		if len(r) == 2 {
-			rhsaNo, _ := strconv.Atoi(r[1])
-			if rhsaNo > firstRHSA {
-				rhsaList = append(rhsaList, rhsaNo)
-			}
-		}
-	}
-
-	for _, rhsa := range rhsaList {
-		// Download the RHSA's XML file.
-		r, err := httputil.GetWithUserAgent(ovalURI + rhsaFilePrefix + strconv.Itoa(rhsa) + ".xml")
+	ts := time.Now().UTC().Format(http.TimeFormat)
+	for _, release := range releases {
+		url := fmt.Sprintf(dbURL, release)
+		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
-			log.WithError(err).Error("could not download RHEL's update list")
-			return resp, commonerr.ErrCouldNotDownload
+			return resp, fmt.Errorf("failed to create request: %v", err)
 		}
-		defer r.Body.Close()
+		if useLastModifiedHeader {
+			req.Header.Set("If-Modified-Since", flagValue)
+		}
 
-		if !httputil.Status2xx(r) {
-			log.WithField("StatusCode", r.StatusCode).Error("Failed to update RHEL")
-			return resp, commonerr.ErrCouldNotDownload
+		r, err := httpClient.Do(req)
+		switch {
+		case err != nil:
+			return resp, fmt.Errorf("failed to download %s: %v", url, err)
+		case r.StatusCode == http.StatusNotModified:
+			log.WithField("package", "Red Hat").Infof("%s has not been modified since %v. no update necessary", url, flagValue)
+			continue
+		case r.StatusCode != http.StatusOK:
+			log.WithField("package", "Red Hat").Debugf("%s request failed with %s", url, r.Status)
+			return resp, fmt.Errorf("received %d code downloading %s", r.StatusCode, url)
 		}
 
 		// Parse the XML.
@@ -153,14 +139,8 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		}
 	}
 
-	// Set the flag if we found anything.
-	if len(rhsaList) > 0 {
-		resp.FlagName = updaterFlag
-		resp.FlagValue = strconv.Itoa(rhsaList[len(rhsaList)-1])
-	} else {
-		log.WithField("package", "Red Hat").Debug("no update")
-	}
-
+	resp.FlagName = updaterFlag
+	resp.FlagValue = ts
 	return resp, nil
 }
 
@@ -364,7 +344,7 @@ func severity(def definition) database.Severity {
 	case "Critical":
 		return database.CriticalSeverity
 	default:
-		log.Warningf("could not determine vulnerability severity from: %s.", def.Title)
+		log.Debugf("could not determine vulnerability severity from: %s.", def.Title)
 		return database.UnknownSeverity
 	}
 }
