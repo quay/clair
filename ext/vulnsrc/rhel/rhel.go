@@ -51,6 +51,9 @@ var (
 
 	rhsaRegexp = regexp.MustCompile(`com.redhat.rhsa-(\d+).xml`)
 	releases   = []int{3, 4, 5, 6, 7, 8}
+	httpClient = http.Client{
+		Timeout: 5 * time.Minute,
+	}
 )
 
 type oval struct {
@@ -88,7 +91,7 @@ func init() {
 func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateResponse, err error) {
 	log.WithField("package", "RHEL").Info("Start fetching vulnerabilities")
 
-	// flagValue is rfc1132 format timestamp of when this updater last ran
+	// flagValue is http.TimeFormat
 	var useLastModifiedHeader bool = true
 	flagValue, err := datastore.GetKeyValue(updaterFlag)
 	if err != nil {
@@ -96,11 +99,12 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	}
 	// if we cannot parse the flag as a timestamp we'll fix it
 	// this time around.
-	_, err = time.Parse(time.RFC1123, flagValue)
+	_, err = time.Parse(http.TimeFormat, flagValue)
 	if err != nil {
 		useLastModifiedHeader = false
 	}
 
+	ts := time.Now().UTC().Format(http.TimeFormat)
 	for _, release := range releases {
 		url := fmt.Sprintf(dbURL, release)
 		req, err := http.NewRequest("GET", url, nil)
@@ -111,8 +115,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 			req.Header.Set("If-Modified-Since", flagValue)
 		}
 
-		c := http.Client{}
-		r, err := c.Do(req)
+		r, err := httpClient.Do(req)
 		switch {
 		case err != nil:
 			return resp, fmt.Errorf("failed to download %s: %v", url, err)
@@ -136,7 +139,6 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		}
 	}
 
-	ts := time.Now().UTC().Format(http.TimeFormat)
 	resp.FlagName = updaterFlag
 	resp.FlagValue = ts
 	return resp, nil
