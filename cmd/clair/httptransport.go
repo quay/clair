@@ -4,10 +4,17 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
+	"github.com/quay/claircore/libindex"
+	"github.com/quay/claircore/libvuln"
+)
+
+const (
+	HealthApiPath = "/healthz"
 )
 
 // httptransport configures an http server according to Clair's operation mode.
@@ -25,18 +32,32 @@ func httptransport(ctx context.Context, conf config.Config) (*http.Server, error
 }
 
 func devMode(ctx context.Context, conf config.Config) (*http.Server, error) {
+	libI, err := libindex.New(ctx, &libindex.Opts{
+		ConnString:           conf.Indexer.ConnString,
+		ScanLockRetry:        time.Duration(conf.Indexer.ScanLockRetry) * time.Second,
+		LayerScanConcurrency: conf.Indexer.LayerScanConcurrency,
+		Migrations:           conf.Indexer.Migrations,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize libindex: %v", err)
+	}
+	libV, err := libvuln.New(ctx, &libvuln.Opts{
+		MaxConnPool: int32(conf.Matcher.MaxConnPool),
+		ConnString:  conf.Matcher.ConnString,
+		Migrations:  conf.Matcher.Migrations,
+	})
+
 	mux := http.NewServeMux()
-	indexerServ, err := indexer.NewService(ctx, conf)
+	indexer, err := indexer.NewHTTPTransport(libI)
 	if err != nil {
 		return nil, err
 	}
-	matcherServ, err := matcher.NewService(ctx, conf, indexerServ)
+	matcher, err := matcher.NewHTTPTransport(libV, libI)
 	if err != nil {
 		return nil, err
 	}
-	mux.HandleFunc(indexer.IndexAPIPath, indexer.IndexHandler(indexerServ))
-	mux.HandleFunc(indexer.IndexReportAPIPath, indexer.IndexReportHandler(indexerServ))
-	mux.HandleFunc(matcher.VulnerabilityReportAPIPath, matcher.MatchHandler(matcherServ))
+	indexer.Register(mux)
+	matcher.Register(mux)
 	return &http.Server{
 		Addr:    conf.HTTPListenAddr,
 		Handler: mux,
@@ -44,36 +65,46 @@ func devMode(ctx context.Context, conf config.Config) (*http.Server, error) {
 }
 
 func indexerMode(ctx context.Context, conf config.Config) (*http.Server, error) {
-	mux := http.NewServeMux()
-	indexerServ, err := indexer.NewService(ctx, conf)
+	libI, err := libindex.New(ctx, &libindex.Opts{
+		ConnString:           conf.Indexer.ConnString,
+		ScanLockRetry:        time.Duration(conf.Indexer.ScanLockRetry) * time.Second,
+		LayerScanConcurrency: conf.Indexer.LayerScanConcurrency,
+		Migrations:           conf.Indexer.Migrations,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize libindex: %v", err)
+	}
+
+	indexer, err := indexer.NewHTTPTransport(libI)
 	if err != nil {
 		return nil, err
 	}
-	mux.HandleFunc(indexer.IndexAPIPath, indexer.IndexHandler(indexerServ))
-	mux.HandleFunc(indexer.IndexReportAPIPath, indexer.IndexReportHandler(indexerServ))
 	return &http.Server{
 		Addr:    conf.Indexer.HTTPListenAddr,
-		Handler: mux,
+		Handler: indexer,
 	}, nil
 }
 
 func matcherMode(ctx context.Context, conf config.Config) (*http.Server, error) {
-	mux := http.NewServeMux()
+	libV, err := libvuln.New(ctx, &libvuln.Opts{
+		MaxConnPool: int32(conf.Matcher.MaxConnPool),
+		ConnString:  conf.Matcher.ConnString,
+		Migrations:  conf.Matcher.Migrations,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize libvuln: %v", err)
+	}
 	// matcher mode needs a remote indexer client
-	indexerServ, err := indexer.NewHTTPClient(ctx, conf, nil)
+	indexer, err := indexer.NewHTTPClient(ctx, conf, nil)
 	if err != nil {
 		return nil, err
 	}
-	matcherServ, err := matcher.NewService(ctx, conf, indexerServ)
+	matcher, err := matcher.NewHTTPTransport(libV, indexer)
 	if err != nil {
 		return nil, err
 	}
-	mux.HandleFunc(indexer.IndexAPIPath, indexer.IndexHandler(indexerServ))
-	mux.HandleFunc(indexer.IndexReportAPIPath, indexer.IndexReportHandler(indexerServ))
-	mux.HandleFunc(matcher.VulnerabilityReportAPIPath, matcher.MatchHandler(matcherServ))
 	return &http.Server{
 		Addr:    conf.Matcher.HTTPListenAddr,
-		Handler: mux,
+		Handler: matcher,
 	}, nil
-
 }

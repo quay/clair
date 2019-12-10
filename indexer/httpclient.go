@@ -13,6 +13,8 @@ import (
 	"github.com/quay/claircore"
 )
 
+var _ Service = &httpClient{}
+
 // httpClient implents the indexer service via HTTP
 type httpClient struct {
 	addr *url.URL
@@ -72,7 +74,7 @@ func (s *httpClient) Index(ctx context.Context, manifest *claircore.Manifest) (*
 }
 
 // IndexReport retrieves a IndexReport given a manifest hash string
-func (s *httpClient) IndexReport(ctx context.Context, manifestHash string) (*claircore.IndexReport, error) {
+func (s *httpClient) IndexReport(ctx context.Context, manifestHash string) (*claircore.IndexReport, bool, error) {
 	url := url.URL{
 		Scheme: s.addr.Scheme,
 		Host:   s.addr.Hostname(),
@@ -80,24 +82,24 @@ func (s *httpClient) IndexReport(ctx context.Context, manifestHash string) (*cla
 	}
 	req, err := http.NewRequestWithContext(ctx, "GET", url.String(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %v", err)
+		return nil, false, fmt.Errorf("failed to create request: %v", err)
 	}
 	resp, err := s.c.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to do request: %v", err)
+		return nil, false, fmt.Errorf("failed to do request: %v", err)
 	}
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, &clairerror.ErrIndexReportNotFound{manifestHash}
+		return nil, false, nil
 	}
 	if resp.StatusCode != http.StatusOK {
-		return nil, &clairerror.ErrIndexReportRetrieval{&clairerror.ErrRequestFail{Code: resp.StatusCode, Status: resp.Status}}
+		return nil, false, &clairerror.ErrIndexReportRetrieval{&clairerror.ErrRequestFail{Code: resp.StatusCode, Status: resp.Status}}
 	}
 
-	sr := &claircore.IndexReport{}
-	err = json.NewDecoder(resp.Body).Decode(sr)
+	ir := &claircore.IndexReport{}
+	err = json.NewDecoder(resp.Body).Decode(ir)
 	if err != nil {
-		return nil, &clairerror.ErrBadIndexReport{err}
+		return nil, false, &clairerror.ErrBadIndexReport{err}
 	}
 
-	return sr, nil
+	return ir, true, nil
 }
