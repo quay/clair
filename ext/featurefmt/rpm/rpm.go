@@ -88,7 +88,7 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.LayerFeature, e
 		}
 
 		// Extract binary package names because RHSA refers to binary package names.
-		out, err := exec.Command("rpm", "--dbpath", tmpDir, "-qa", "--qf", "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{SOURCERPM}\n").CombinedOutput()
+		out, err := exec.Command("rpm", "--dbpath", tmpDir, "-qa", "--qf", "%{NAME} %{EPOCH}:%{VERSION}-%{RELEASE} %{SOURCERPM} %{RPMTAG_MODULARITYLABEL}\n").CombinedOutput()
 		if err != nil {
 			log.WithError(err).WithField("output", string(out)).Error("failed to query RPM")
 			// Do not bubble up because we probably won't be able to fix it,
@@ -135,13 +135,13 @@ func (l lister) ListFeatures(files tarutil.FilesMap) ([]database.LayerFeature, e
 
 func parseRPMOutput(raw string) (rpmPackage *database.Feature, srpmPackage *database.Feature) {
 	line := strings.Split(raw, " ")
-	if len(line) != 3 {
+	if len(line) != 4 {
 		// We may see warnings on some RPM versions:
 		// "warning: Generating 12 missing index(es), please wait..."
 		return
 	}
 
-	if isIgnored(line[0]) {
+	if isIgnored(line[0]) || isModuleRpm(line) {
 		return
 	}
 
@@ -253,4 +253,9 @@ func parseSourceRPM(sourceRPM string) (name string, version string, release stri
 	}
 
 	return
+}
+
+// isModuleRPM checks if given rpm is modular rpms
+func isModuleRpm(rpmOut []string) bool {
+	return rpmOut[3] != "(none)"
 }
