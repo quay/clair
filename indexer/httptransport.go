@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/quay/claircore"
@@ -16,6 +17,7 @@ var _ http.Handler = &HTTP{}
 const (
 	IndexAPIPath       = "/api/v1/index"
 	IndexReportAPIPath = "/api/v1/index_report/"
+	StateAPIPath       = "/api/v1/state"
 )
 
 type HTTP struct {
@@ -24,12 +26,12 @@ type HTTP struct {
 }
 
 func NewHTTPTransport(service Service) (*HTTP, error) {
-	h := &HTTP{}
+	h := &HTTP{
+		serv: service,
+	}
 	mux := http.NewServeMux()
-	mux.HandleFunc(IndexAPIPath, h.IndexHandler)
-	mux.HandleFunc(IndexReportAPIPath, h.IndexReportHandler)
+	h.Register(mux)
 	h.ServeMux = mux
-	h.serv = service
 	return h, nil
 }
 
@@ -126,8 +128,31 @@ func (h *HTTP) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *HTTP) StateHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	s := h.serv.State()
+	tag := `"` + s + `"`
+	w.Header().Add("etag", tag)
+
+	es, ok := r.Header["If-None-Match"]
+	if ok {
+		if sort.Strings(es); sort.SearchStrings(es, tag) != -1 {
+			w.WriteHeader(http.StatusNotModified)
+			return
+		}
+	}
+	w.Header().Set("content-type", "text/plain")
+	// No trailing newline, so a client can't get confused about whether it
+	// counts or not.
+	fmt.Fprint(w, s)
+}
+
 // Register will register the api on a given mux.
 func (h *HTTP) Register(mux *http.ServeMux) {
 	mux.HandleFunc(IndexAPIPath, h.IndexHandler)
 	mux.HandleFunc(IndexReportAPIPath, h.IndexReportHandler)
+	mux.HandleFunc(StateAPIPath, h.StateHandler)
 }

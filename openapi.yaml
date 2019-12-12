@@ -99,6 +99,31 @@ paths:
           $ref: '#/components/responses/MethodNotAllowed'
         500:
           $ref: '#/components/responses/InternalServerError'
+  '/state':
+    get:
+      tags:
+        - Indexer
+      operationId: State
+      summary: Report the indexer's internal configuration and state.
+      description: |
+        The state endpoint returns an opaque string indicating the indexer's
+        internal configuration and state.
+        
+        A client may be interested in this as a signal that manifests may need
+        to be reindexed.
+      responses:
+        200:
+          description: Indexer State
+          headers:
+            Etag:
+              description: 'Entity Tag'
+              schema: {type: string}
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/State'
+        304:
+          description: Indexer State Unchanged
 
 components:
   responses:
@@ -148,7 +173,7 @@ components:
             repository_hint: 
           package_db: var/lib/dpkg/status
           repository_hint: f17ad9208249962b7a52349494ce75ff
-        introduced_in: 35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a,
+        introduced_in: 35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
         fixed_in_version: 5.26.2-7ubuntu0.1
 
     Vulnerability:
@@ -198,7 +223,7 @@ components:
 
     IndexedPackage:
       value:
-        id: 10,
+        id: 10
         name: "libapt-pkg5.0"
         version: "1.6.11"
         kind: "binary"
@@ -357,6 +382,7 @@ components:
         dist:
           $ref: '#/components/schemas/Distribution'
         repo:
+          type: object
         fixed_in_version:
           description: "A unique ID representing this vulnerability."
           type: integer
@@ -482,3 +508,8 @@ components:
         message:
           type: string
           description: "a message with further detail"
+    State:
+      title: State
+      type: string
+      description: an opaque identifier
+      example: deadbeefdeadbeefdeadbeefdeadbeef
