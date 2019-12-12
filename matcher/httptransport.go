@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/quay/clair/v4/indexer"
+	"github.com/quay/claircore"
 	je "github.com/quay/claircore/pkg/jsonerr"
 )
 
@@ -20,17 +20,22 @@ const (
 
 type HTTP struct {
 	*http.ServeMux
-	serv    Service
-	indexer indexer.Service
+	serv Service
+	r    Reporter
 }
 
-func NewHTTPTransport(service Service, indexer indexer.Service) (*HTTP, error) {
-	h := &HTTP{}
+type Reporter interface {
+	IndexReport(context.Context, string) (*claircore.IndexReport, bool, error)
+}
+
+func NewHTTPTransport(service Service, r Reporter) (*HTTP, error) {
+	h := &HTTP{
+		r:    r,
+		serv: service,
+	}
 	mux := http.NewServeMux()
-	mux.HandleFunc(VulnerabilityReportAPIPath, h.VulnerabilityReportHandler)
+	h.Register(mux)
 	h.ServeMux = mux
-	h.serv = service
-	h.indexer = indexer
 	return h, nil
 }
 
@@ -43,6 +48,8 @@ func (h *HTTP) VulnerabilityReportHandler(w http.ResponseWriter, r *http.Request
 		je.Error(w, resp, http.StatusMethodNotAllowed)
 		return
 	}
+	ctx, done := context.WithCancel(r.Context())
+	defer done()
 
 	manifestHash := strings.TrimPrefix(r.URL.Path, VulnerabilityReportAPIPath)
 	if manifestHash == "" {
@@ -54,7 +61,7 @@ func (h *HTTP) VulnerabilityReportHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	indexReport, ok, err := h.indexer.IndexReport(context.Background(), manifestHash)
+	indexReport, ok, err := h.r.IndexReport(ctx, manifestHash)
 	if !ok {
 		resp := &je.Response{
 			Code:    "not-found",
@@ -73,7 +80,7 @@ func (h *HTTP) VulnerabilityReportHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	vulnReport, err := h.serv.Scan(context.Background(), indexReport)
+	vulnReport, err := h.serv.Scan(ctx, indexReport)
 	if err != nil {
 		resp := &je.Response{
 			Code:    "match-error",

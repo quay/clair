@@ -7,15 +7,15 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"path"
+
+	"github.com/quay/claircore"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/config"
-	"github.com/quay/claircore"
 )
 
-var _ Service = &httpClient{}
-
-// httpClient implents the indexer service via HTTP
+// HttpClient implents the indexer service via HTTP
 type httpClient struct {
 	addr *url.URL
 	c    *http.Client
@@ -47,12 +47,11 @@ func (s *httpClient) Index(ctx context.Context, manifest *claircore.Manifest) (*
 		return nil, &clairerror.ErrBadManifest{err}
 	}
 
-	url := url.URL{
-		Scheme: s.addr.Scheme,
-		Host:   s.addr.Hostname(),
-		Path:   IndexAPIPath,
+	u, err := s.addr.Parse(IndexAPIPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
-	req, err := http.NewRequestWithContext(ctx, "POST", url.String(), buf)
+	req, err := http.NewRequestWithContext(ctx, "POST", u.String(), buf)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
@@ -60,6 +59,7 @@ func (s *httpClient) Index(ctx context.Context, manifest *claircore.Manifest) (*
 	if err != nil {
 		return nil, fmt.Errorf("failed to do request: %v", err)
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return nil, &clairerror.ErrRequestFail{Code: resp.StatusCode, Status: resp.Status}
 	}
@@ -75,12 +75,11 @@ func (s *httpClient) Index(ctx context.Context, manifest *claircore.Manifest) (*
 
 // IndexReport retrieves a IndexReport given a manifest hash string
 func (s *httpClient) IndexReport(ctx context.Context, manifestHash string) (*claircore.IndexReport, bool, error) {
-	url := url.URL{
-		Scheme: s.addr.Scheme,
-		Host:   s.addr.Hostname(),
-		Path:   IndexReportAPIPath + manifestHash,
+	u, err := s.addr.Parse(path.Join(IndexReportAPIPath, manifestHash))
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to create request: %v", err)
 	}
-	req, err := http.NewRequestWithContext(ctx, "GET", url.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to create request: %v", err)
 	}
@@ -88,6 +87,7 @@ func (s *httpClient) IndexReport(ctx context.Context, manifestHash string) (*cla
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to do request: %v", err)
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, false, nil
 	}
@@ -102,4 +102,26 @@ func (s *httpClient) IndexReport(ctx context.Context, manifestHash string) (*cla
 	}
 
 	return ir, true, nil
+}
+
+func (s *httpClient) State(ctx context.Context) (string, error) {
+	u, err := s.addr.Parse(StateAPIPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %v", err)
+	}
+	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %v", err)
+	}
+	resp, err := s.c.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to do request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	buf := &bytes.Buffer{}
+	if _, err := buf.ReadFrom(resp.Body); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
