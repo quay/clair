@@ -25,6 +25,18 @@ import (
 func TestDetector(t *testing.T) {
 	testData := []featurens.TestData{
 		{
+			ExpectedNamespace: &database.Namespace{Name: "amzn:2"},
+			Files: tarutil.FilesMap{
+				"etc/system-release": []byte(`Amazon Linux release 2 (Karoo)`),
+			},
+		},
+		{
+			ExpectedNamespace: &database.Namespace{Name: "amzn:2018.03"},
+			Files: tarutil.FilesMap{
+				"etc/system-release": []byte(`Amazon Linux AMI release 2018.03`),
+			},
+		},
+		{
 			ExpectedNamespace: &database.Namespace{Name: "oracle:6"},
 			Files: tarutil.FilesMap{
 				"etc/oracle-release": []byte(`Oracle Linux Server release 6.8`),
