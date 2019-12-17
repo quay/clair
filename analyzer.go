@@ -53,24 +53,27 @@ var (
 // AnalyzeLayer retrieves the clair layer with all extracted features and namespaces.
 // If a layer is already scanned by all enabled detectors in the Clair instance, it returns directly.
 // Otherwise, it re-download the layer blob and scan the features and namespaced again.
-func AnalyzeLayer(ctx context.Context, store database.Datastore, blobSha256 string, blobFormat string, downloadURI string, downloadHeaders map[string]string) (*database.Layer, error) {
-	layer, found, err := database.FindLayerAndRollback(store, blobSha256)
+func AnalyzeLayer(ctx context.Context, store database.Datastore, blobSha256 string, blobFormat string, downloadURI string, downloadHeaders map[string]string) (*database.LayerScanResult, error) {
+	existingLayer, found, err := database.FindLayerAndRollback(store, blobSha256)
 	logFields := log.Fields{"layer.Hash": blobSha256}
 	if err != nil {
 		log.WithError(err).WithFields(logFields).Error("failed to find layer in the storage")
 		return nil, StorageError
 	}
 
+	layer := &database.LayerScanResult{}
+	layer.ExistingLayer = existingLayer
+
 	var scannedBy []database.Detector
 	if found {
-		scannedBy = layer.By
+		scannedBy = existingLayer.By
 	}
 
 	// layer will be scanned by detectors not scanned the layer already.
 	toScan := database.DiffDetectors(EnabledDetectors(), scannedBy)
 	if len(toScan) != 0 {
-		log.WithFields(logFields).Debug("scan layer blob not already scanned")
-		newLayerScanResult := &database.Layer{Hash: blobSha256, By: toScan}
+		log.WithFields(logFields).Debug("layer blob hasn't been scanned yet")
+		layer.NewScanResultLayer = &database.Layer{Hash: blobSha256, By: toScan}
 		blob, err := retrieveLayerBlob(ctx, downloadURI, downloadHeaders)
 		if err != nil {
 			log.WithError(err).WithFields(logFields).Error("failed to retrieve layer blob")
@@ -90,26 +93,20 @@ func AnalyzeLayer(ctx context.Context, store database.Datastore, blobSha256 stri
 			return nil, ExtractBlobError
 		}
 
-		newLayerScanResult.Features, err = featurefmt.ListFeatures(fileMap, toScan)
+		layer.NewScanResultLayer.Features, err = featurefmt.ListFeatures(fileMap, toScan)
 		if err != nil {
 			log.WithFields(logFields).WithError(err).Error("failed to detect features")
 			return nil, FeatureDetectorError
 		}
 
-		newLayerScanResult.Namespaces, err = featurens.Detect(fileMap, toScan)
+		layer.NewScanResultLayer.Namespaces, err = featurens.Detect(fileMap, toScan)
 		if err != nil {
 			log.WithFields(logFields).WithError(err).Error("failed to detect namespaces")
 			return nil, NamespaceDetectorError
 		}
-
-		if err = saveLayerChange(store, newLayerScanResult); err != nil {
-			log.WithFields(logFields).WithError(err).Error("failed to store layer change")
-			return nil, StorageError
-		}
-
-		layer = database.MergeLayers(layer, newLayerScanResult)
 	} else {
 		log.WithFields(logFields).Debug("found scanned layer blob")
+		layer.NewScanResultLayer = &database.Layer{Hash: blobSha256}
 	}
 
 	return layer, nil
@@ -128,7 +125,7 @@ func RegisterConfiguredDetectors(store database.Datastore) {
 	}
 }
 
-func saveLayerChange(store database.Datastore, layer *database.Layer) error {
+func SaveLayerChange(store database.Datastore, layer *database.Layer) error {
 	if err := database.PersistFeaturesAndCommit(store, layer.GetFeatures()); err != nil {
 		return err
 	}

@@ -26,7 +26,9 @@ import (
 	pb "github.com/quay/clair/v3/api/v3/clairpb"
 	"github.com/quay/clair/v3/database"
 	"github.com/quay/clair/v3/ext/imagefmt"
+	"github.com/quay/clair/v3/ext/imgpostprocessor"
 	"github.com/quay/clair/v3/pkg/pagination"
+	log "github.com/sirupsen/logrus"
 )
 
 func newRPCErrorWithClairError(code codes.Code, err error) error {
@@ -86,7 +88,7 @@ func (s *AncestryServer) PostAncestry(ctx context.Context, req *pb.PostAncestryR
 	}
 
 	builder := clair.NewAncestryBuilder(clair.EnabledDetectors())
-	layerMap := map[string]*database.Layer{}
+	layerMap := map[string]*database.LayerScanResult{}
 	layerMapLock := sync.RWMutex{}
 	g, analyzerCtx := errgroup.WithContext(ctx)
 	for i := range req.Layers {
@@ -124,9 +126,28 @@ func (s *AncestryServer) PostAncestry(ctx context.Context, req *pb.PostAncestryR
 	if err = g.Wait(); err != nil {
 		return nil, newRPCErrorWithClairError(codes.Internal, err)
 	}
+	var scannedLayers []*database.LayerScanResult
+	for _, layerRequest := range req.Layers {
+		scannedLayer := layerMap[layerRequest.Hash]
+		scannedLayers = append(scannedLayers, scannedLayer)
+	}
+	scannedLayers, err = imgpostprocessor.PostProcessImage(scannedLayers)
 
-	for _, layer := range req.Layers {
-		builder.AddLeafLayer(layerMap[layer.Hash])
+	for _, scannedLayer := range scannedLayers {
+		var layer *database.Layer
+		if scannedLayer.NewScanResultLayer != nil {
+			if err = clair.SaveLayerChange(s.Store, scannedLayer.NewScanResultLayer); err != nil {
+				log.WithFields(log.Fields{
+					"layer.Hash": scannedLayer.NewScanResultLayer.Hash,
+				}).WithError(err).Error("failed to store layer change")
+				return nil, err
+			}
+
+			layer = database.MergeLayers(scannedLayer.ExistingLayer, scannedLayer.NewScanResultLayer)
+		} else {
+			layer = scannedLayer.ExistingLayer
+		}
+		builder.AddLeafLayer(layer)
 	}
 
 	if err := clair.SaveAncestry(s.Store, builder.Ancestry(req.AncestryName)); err != nil {
