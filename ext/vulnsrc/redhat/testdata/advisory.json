@@ -26,6 +26,44 @@
             "type": "security",
             "updated": "2019-01-22T16:22:20+00:00",
             "url": "https://access.redhat.com/errata/RHSA-2019:0139"
+        },
+        "RHSA-2019:2925": {
+            "synopsis": "Important: nodejs:10 security update",
+            "summary": "Fake summary",
+            "type": "security",
+            "severity": "Important",
+            "description": "Fake description",
+            "solution": "Fake solution",
+            "issued": "2019-09-30T07:07:29+00:00",
+            "updated": "2019-09-30T07:07:29+00:00",
+            "cve_list": [
+                "CVE-2019-9516"
+            ],
+            "package_list": [
+                "nodejs-1:10.16.3-2.module+el8.0.0+4214+49953fda.x86_64"
+            ],
+            "source_package_list": [
+                "nodejs-1:10.16.3-2.module+el8.0.0+4214+49953fda.src"
+            ],
+            "bugzilla_list": [
+                "1741868"
+            ],
+            "reference_list": [
+                "classification-RHSA-2019:2925"
+            ],
+            "modules_list": [{
+                "module_name": "nodejs",
+                "module_stream": "10",
+                "module_version": 8000020190911085529,
+                "module_context": "f8e95b4e",
+                "package_list": [
+                    "nodejs-1:10.16.3-2.module+el8.0.0+4214+49953fda.x86_64"
+                ],
+                "source_package_list": [
+                    "nodejs-1:10.16.3-2.module+el8.0.0+4214+49953fda.src"
+                ]
+            }],
+            "url": "https://access.redhat.com/errata/RHSA-2019:2925"
         }
     },
     "modified_since": "2019-01-22T16:01:41+01:00",

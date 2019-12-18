@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/ext/versionfmt/modulerpm"
 	"github.com/quay/clair/v3/ext/versionfmt/rpm"
 	"github.com/quay/clair/v3/ext/vulnsrc"
 	"github.com/quay/clair/v3/pkg/commonerr"
@@ -47,20 +48,27 @@ var rhsaFirstTime = time.Date(2000, 1, 1, 1, 1, 1, 0, time.UTC)
 
 // Advisory is struct for VMaaS advisory
 type Advisory struct {
-	Name          string    `json:"name"`
-	Synopsis      string    `json:"synopsis"`
-	Summary       string    `json:"summary"`
-	Type          string    `json:"type"`
-	Severity      string    `json:"severity"`
-	Description   string    `json:"description"`
-	Solution      string    `json:"solution"`
-	Issued        time.Time `json:"issued"`
-	Updated       time.Time `json:"updated"`
-	CveList       []string  `json:"cve_list"`
-	PackageList   []string  `json:"package_list"`
-	BugzillaList  []string  `json:"bugzilla_list"`
-	ReferenceList []string  `json:"reference_list"`
-	URL           string    `json:"url"`
+	Name          string       `json:"name"`
+	Synopsis      string       `json:"synopsis"`
+	Summary       string       `json:"summary"`
+	Type          string       `json:"type"`
+	Severity      string       `json:"severity"`
+	Description   string       `json:"description"`
+	Solution      string       `json:"solution"`
+	Issued        time.Time    `json:"issued"`
+	Updated       time.Time    `json:"updated"`
+	CveList       []string     `json:"cve_list"`
+	PackageList   []string     `json:"package_list"`
+	BugzillaList  []string     `json:"bugzilla_list"`
+	ReferenceList []string     `json:"reference_list"`
+	ModulesList   []ModuleInfo `json:"modules_list"`
+	URL           string       `json:"url"`
+}
+
+type ModuleInfo struct {
+	Name        string   `json:"module_name"`
+	Stream      string   `json:"module_stream"`
+	PackageList []string `json:"package_list"`
 }
 
 // RHSAdata is struct for VMaaS advisory response
@@ -279,18 +287,12 @@ func (u *updater) parseAdvisoryWorker(variantToCPEMapping map[string]string, adv
 
 // parseAdvisory - parse advisory metadata and create new Vulnerabilities objects
 func (u *updater) parseAdvisory(advisory Advisory, variantToCPEMapping map[string]string) (vulnerabilities []database.VulnerabilityWithAffected) {
-	if len(advisory.PackageList) == 0 || len(advisory.CveList) == 0 {
-		// text-only advisories
-		return
-	}
-	var advisoryPkgs map[string][]string
-
 	advisoryPkgs, err := u.EtClient.GetAdvisoryBuildsVariants(advisory.Name)
-
 	if err != nil {
 		log.Error("Failed to fetch advisory info: " + err.Error())
 		return
 	}
+
 	for _, cve := range advisory.CveList {
 		packageMap := make(map[string]bool)
 		vulnerability := database.VulnerabilityWithAffected{
@@ -302,48 +304,56 @@ func (u *updater) parseAdvisory(advisory Advisory, variantToCPEMapping map[strin
 			},
 		}
 		for _, nevra := range advisory.PackageList {
-			rpmNevraObj := parseRpm(nevra)
-			if rpmNevraObj.Arch != "x86_64" && rpmNevraObj.Arch != "noarch" {
+			rpmObj := parseRpm(nevra)
+			if !isAllowedArch(rpmObj.Arch) {
 				continue
 			}
-			var cpes []string
-			for advPkg := range advisoryPkgs {
-				if advPkg == (rpmNevraObj.toNVRA() + ".rpm") {
-					for _, variant := range advisoryPkgs[advPkg] {
+			epochVersionRelease := rpmObj.epochVersionRelease()
+			key := rpmObj.Name + epochVersionRelease
+			ok := packageMap[key]
+			if ok {
+				// filter out duplicated features (arch specific)
+				continue
+			}
+			packageMap[key] = true
+
+			feature := database.AffectedFeature{
+				FeatureName:     rpmObj.Name,
+				AffectedVersion: epochVersionRelease,
+				FixedInVersion:  epochVersionRelease,
+				FeatureType:     affectedType,
+			}
+			module := findModule(nevra, advisory)
+			if module != nil {
+				// modular rpm has namespace made of module_name:stream
+				feature.Namespace = database.Namespace{
+					Name:          fmt.Sprintf("%s:%s", module.Name, module.Stream),
+					VersionFormat: modulerpm.ParserName,
+				}
+				vulnerability.Affected = append(vulnerability.Affected, feature)
+			} else {
+				// normal rpm uses CPE namespaces
+				var cpes []string
+				if pkgVariants, ok := advisoryPkgs[rpmObj.rpmNVRA()]; ok {
+					for _, variant := range pkgVariants {
 						cpe, ok := variantToCPEMapping[variant]
 						if ok {
 							cpes = append(cpes, cpe)
 						} else {
-							log.Warning(fmt.Sprintf("No CPE for: %s %s %s", variant, advPkg, advisory.Name))
+							log.Warning(fmt.Sprintf("No CPE for: %s %s %s", variant, nevra, advisory.Name))
 						}
 					}
-					break
 				}
-			}
-			if len(cpes) == 0 {
-				log.Warning(fmt.Sprintf("No CPE for: %s %s", nevra, advisory.Name))
-			}
-			for _, cpe := range cpes {
-				epochVersionRelease := rpmNevraObj.EpochVersionRelease()
-				key := rpmNevraObj.Name + epochVersionRelease + cpe
-				ok := packageMap[key]
-				if ok {
-					// filter out duplicated features (arch specific)
-					continue
+				if len(cpes) == 0 {
+					log.Warning(fmt.Sprintf("No CPE for: %s %s", nevra, advisory.Name))
 				}
-				p := database.AffectedFeature{
-					FeatureName:     rpmNevraObj.Name,
-					AffectedVersion: epochVersionRelease,
-					FixedInVersion:  epochVersionRelease,
-					FeatureType:     affectedType,
-					Namespace: database.Namespace{
+				for _, cpe := range cpes {
+					feature.Namespace = database.Namespace{
 						Name:          cpe,
 						VersionFormat: rpm.ParserName,
-					},
+					}
+					vulnerability.Affected = append(vulnerability.Affected, feature)
 				}
-
-				packageMap[key] = true
-				vulnerability.Affected = append(vulnerability.Affected, p)
 			}
 
 		}
@@ -352,6 +362,17 @@ func (u *updater) parseAdvisory(advisory Advisory, variantToCPEMapping map[strin
 		}
 	}
 	return
+}
+
+func findModule(rpm string, advisory Advisory) *ModuleInfo {
+	for _, module := range advisory.ModulesList {
+		for _, moduleRpm := range module.PackageList {
+			if moduleRpm == rpm {
+				return &module
+			}
+		}
+	}
+	return nil
 }
 
 type NEVR struct {
@@ -404,7 +425,7 @@ func parseRpm(name string) RPM {
 	return rpm
 }
 
-func (rpm *RPM) EpochVersionRelease() string {
+func (rpm *RPM) epochVersionRelease() string {
 	if rpm.Epoch != nil {
 		return fmt.Sprintf("%d:%s-%s", *rpm.Epoch, rpm.Version, rpm.Release)
 	}
@@ -419,8 +440,22 @@ func (rpm *RPM) toNVR() string {
 	return fmt.Sprintf("%s-%s-%s", rpm.Name, rpm.Version, rpm.Release)
 }
 
+func (rpm *RPM) rpmNVRA() string {
+	return fmt.Sprintf("%s-%s-%s.%s.rpm", rpm.Name, rpm.Version, rpm.Release, rpm.Arch)
+}
+
 func (srpm *SRPM) toNVR() string {
 	return fmt.Sprintf("%s-%s-%s", srpm.Name, srpm.Version, srpm.Release)
+}
+
+func isAllowedArch(arch string) bool {
+	allowedArches := []string{"x86_64", "noarch"}
+	for _, allowedArch := range allowedArches {
+		if arch == allowedArch {
+			return true
+		}
+	}
+	return false
 }
 
 func severity(sev string) database.Severity {

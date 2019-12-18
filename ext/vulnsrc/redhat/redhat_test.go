@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/ext/versionfmt/modulerpm"
 	"github.com/quay/clair/v3/ext/versionfmt/rpm"
 	"github.com/quay/clair/v3/pkg/errata"
 	"github.com/stretchr/testify/assert"
@@ -52,7 +53,7 @@ func (c *MockEtClient) VariantToCPEMapping(variants []errata.Variant) map[string
 	return mapping
 }
 
-func TestRedHatParserOneCVE(t *testing.T) {
+func TestRedHatParserRPMAdvisory(t *testing.T) {
 	_, filename, _, _ := runtime.Caller(0)
 	path := filepath.Join(filepath.Dir(filename))
 
@@ -107,6 +108,44 @@ func TestRedHatParserOneCVE(t *testing.T) {
 			FeatureName:     "tomcat7-selinux",
 			AffectedVersion: "7.0.70-31.ep7.el6",
 			FixedInVersion:  "7.0.70-31.ep7.el6",
+		},
+	}
+
+	for _, expectedFeature := range expectedFeatures {
+		assert.Contains(t, vulnerabilities[0].Affected, expectedFeature)
+	}
+}
+
+func TestRedHatParserModuleAdvisory(t *testing.T) {
+	_, filename, _, _ := runtime.Caller(0)
+	path := filepath.Join(filepath.Dir(filename))
+
+	// Test parsing testdata/advisory.json
+	testFile, _ := os.Open(filepath.Join(path, "/testdata/advisory.json"))
+	var rhsaData RHSAdata
+	if err := json.NewDecoder(testFile).Decode(&rhsaData); err != nil {
+		panic(err)
+	}
+	rhUpdater := updater{&MockEtClient{}}
+	adv := rhsaData.ErrataList["RHSA-2019:2925"]
+	adv.Name = "RHSA-2019:2925"
+	vulnerabilities := rhUpdater.parseAdvisory(adv, map[string]string{})
+	fmt.Println(vulnerabilities)
+	assert.Equal(t, "CVE-2019-9516 - RHSA-2019:2925", vulnerabilities[0].Name)
+	assert.Equal(t, "https://access.redhat.com/security/cve/CVE-2019-9516", vulnerabilities[0].Link)
+	assert.Equal(t, database.HighSeverity, vulnerabilities[0].Severity)
+	assert.Equal(t, "Fake description", vulnerabilities[0].Description)
+
+	expectedFeatures := []database.AffectedFeature{
+		{
+			FeatureType: affectedType,
+			Namespace: database.Namespace{
+				Name:          "nodejs:10",
+				VersionFormat: modulerpm.ParserName,
+			},
+			FeatureName:     "nodejs",
+			AffectedVersion: "1:10.16.3-2.module+el8.0.0+4214+49953fda",
+			FixedInVersion:  "1:10.16.3-2.module+el8.0.0+4214+49953fda",
 		},
 	}
 
