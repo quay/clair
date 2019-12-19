@@ -106,8 +106,8 @@ paths:
       operationId: State
       summary: Report the indexer's internal configuration and state.
       description: |
-        The state endpoint returns an opaque string indicating the indexer's
-        internal configuration and state.
+        The state endpoint returns a json structure indicating the indexer's 
+        internal configuration state.
         
         A client may be interested in this as a signal that manifests may need
         to be reindexed.
@@ -508,8 +508,10 @@ components:
         message:
           type: string
           description: "a message with further detail"
+
     State:
       title: State
-      type: string
+      type: object
       description: an opaque identifier
-      example: deadbeefdeadbeefdeadbeefdeadbeef
+      example: 
+        state: "aae368a064d7c5a433d0bf2c4f5554cc"

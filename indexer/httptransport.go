@@ -145,9 +145,21 @@ func (h *HTTP) StateHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.Header().Set("content-type", "text/plain")
-	// No trailing newline, so a client can't get confused about whether it
-	// counts or not.
-	fmt.Fprint(w, s)
+
+	err := json.NewEncoder(w).Encode(struct {
+		State string `json:"state"`
+	}{
+		State: s,
+	})
+	if err != nil {
+		resp := &je.Response{
+			Code:    "encoding-error",
+			Message: fmt.Sprintf("failed to encode scan report: %v", err),
+		}
+		je.Error(w, resp, http.StatusInternalServerError)
+		return
+	}
+	return
 }
 
 // Register will register the api on a given mux.
