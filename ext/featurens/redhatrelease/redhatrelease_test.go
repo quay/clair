@@ -61,6 +61,12 @@ func TestDetector(t *testing.T) {
 			},
 		},
 		{
+			ExpectedNamespace: &database.Namespace{Name: "centos:8"},
+			Files: tarutil.FilesMap{
+				"etc/redhat-release": []byte(`Red Hat Enterprise Linux release 8.0 (Ootpa)`),
+			},
+		},
+		{
 			ExpectedNamespace: &database.Namespace{Name: "centos:7"},
 			Files: tarutil.FilesMap{
 				"etc/system-release": []byte(`CentOS Linux release 7.1.1503 (Core)`),
