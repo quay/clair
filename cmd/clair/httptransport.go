@@ -6,11 +6,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/quay/claircore/libindex"
+	"github.com/quay/claircore/libvuln"
+
 	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
-	"github.com/quay/claircore/libindex"
-	"github.com/quay/claircore/libvuln"
 )
 
 const (
@@ -60,7 +61,7 @@ func devMode(ctx context.Context, conf config.Config) (*http.Server, error) {
 	matcher.Register(mux)
 	return &http.Server{
 		Addr:    conf.HTTPListenAddr,
-		Handler: mux,
+		Handler: Compress(mux),
 	}, nil
 }
 
@@ -81,7 +82,7 @@ func indexerMode(ctx context.Context, conf config.Config) (*http.Server, error) 
 	}
 	return &http.Server{
 		Addr:    conf.Indexer.HTTPListenAddr,
-		Handler: indexer,
+		Handler: Compress(indexer),
 	}, nil
 }
 
@@ -105,6 +106,6 @@ func matcherMode(ctx context.Context, conf config.Config) (*http.Server, error) 
 	}
 	return &http.Server{
 		Addr:    conf.Matcher.HTTPListenAddr,
-		Handler: matcher,
+		Handler: Compress(matcher),
 	}, nil
 }
