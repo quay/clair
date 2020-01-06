@@ -11,7 +11,7 @@ import (
 	je "github.com/quay/claircore/pkg/jsonerr"
 )
 
-var _ http.Handler = &HTTP{}
+var _ http.Handler = (*HTTP)(nil)
 
 const (
 	// VulnerabilityReportAPIPath is the http path for accessing vulnerability_report

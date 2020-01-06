@@ -12,7 +12,7 @@ import (
 	je "github.com/quay/claircore/pkg/jsonerr"
 )
 
-var _ http.Handler = &HTTP{}
+var _ http.Handler = (*HTTP)(nil)
 
 const (
 	IndexAPIPath       = "/api/v1/index"
