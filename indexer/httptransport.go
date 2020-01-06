@@ -144,7 +144,7 @@ func (h *HTTP) StateHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	w.Header().Set("content-type", "text/plain")
+	w.Header().Set("content-type", "application/json")
 
 	err := json.NewEncoder(w).Encode(struct {
 		State string `json:"state"`
@@ -157,7 +157,6 @@ func (h *HTTP) StateHandler(w http.ResponseWriter, r *http.Request) {
 			Message: fmt.Sprintf("failed to encode scan report: %v", err),
 		}
 		je.Error(w, resp, http.StatusInternalServerError)
-		return
 	}
 	return
 }
