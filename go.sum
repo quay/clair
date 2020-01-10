@@ -264,6 +264,9 @@ github.com/quay/claircore v0.0.10-0.20191211195844-8a5a18affde1 h1:mJ6UWSSPKug2s
 github.com/quay/claircore v0.0.10-0.20191211195844-8a5a18affde1/go.mod h1:HzL8rrlmAF2D+GhuKqF7EwgBqDvvE9Au8gPi6ncw+CM=
 github.com/quay/claircore v0.0.10 h1:wELE1vucn9Ale2byeTMKVWpoCvqnX0AesZr3lLNRhKw=
 github.com/quay/claircore v0.0.10/go.mod h1:HzL8rrlmAF2D+GhuKqF7EwgBqDvvE9Au8gPi6ncw+CM=
+github.com/quay/claircore v0.0.11/go.mod h1:HzL8rrlmAF2D+GhuKqF7EwgBqDvvE9Au8gPi6ncw+CM=
+github.com/quay/claircore v0.0.12 h1:gGs5BIwyPrcURBOgocCyIEV8+gIYJERPUh9KjhnY9Ho=
+github.com/quay/claircore v0.0.12/go.mod h1:HzL8rrlmAF2D+GhuKqF7EwgBqDvvE9Au8gPi6ncw+CM=
 github.com/quay/goval-parser v0.7.0 h1:QhJXufv2w5BUzfLJSfLz01yya9MS5SWGtyo8J/EAvkY=
 github.com/quay/goval-parser v0.7.0/go.mod h1:9mCSx+kqC0rq6bKyAWiplMUzTWLpr4HRlez+iuxEkhc=
 github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319 h1:ukjThsA2ou7AmovpwtMVkNQSuoN/v5U16+JomTz3c7o=
