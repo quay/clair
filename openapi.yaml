@@ -156,36 +156,22 @@ components:
               $ref: '#/components/schemas/Error'
 
   examples:
-    Details:
+    Environment:
       value:
-        affected_package: 
-          id: 16
-          name: "perl-base"
-          version: "5.26.1-6ubuntu0.3"
-          kind: "binary"
-          source: 
-            id: 15
-            name: perl
-            version: 5.26.1-6ubuntu0.3
-            kind: source
-            source: null
-            package_db: 
-            repository_hint: 
-          package_db: var/lib/dpkg/status
-          repository_hint: f17ad9208249962b7a52349494ce75ff
-        introduced_in: 35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
-        fixed_in_version: 5.26.2-7ubuntu0.1
+        package_db: "var/lib/dpkg/status"
+        introduced_in: "35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
+        distribution_id: "1"
 
     Vulnerability:
       value:
-        id: 356835
+        id: "356835"
         updater: ""
         name: "CVE-2009-5155"
         description: "In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match."
         links: "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986"
         severity: "Low"
         package: 
-          id: 0
+          id: "0"
           name: "glibc"
           version: ""
           kind: ""
@@ -193,7 +179,7 @@ components:
           package_db: ""
           repository_hint: ""
         dist: 
-          id: 0
+          id: "0"
           did: "ubuntu"
           name: "Ubuntu"
           version: "18.04.3 LTS (Bionic Beaver)"
@@ -203,7 +189,7 @@ components:
           cpe: ""
           pretty_name: ""
         repo: 
-          id: 0
+          id: "0"
           name: "Ubuntu 18.04.3 LTS"
           key: ""
           uri: ""
@@ -211,7 +197,7 @@ components:
 
     Distribution:
       value:
-        id: 1
+        id: "1"
         did: "ubuntu"
         name: "Ubuntu"
         version: "18.04.3 LTS (Bionic Beaver)"
@@ -221,37 +207,18 @@ components:
         cpe: ""
         pretty_name: "Ubuntu 18.04.3 LTS"
 
-    IndexedPackage:
-      value:
-        id: 10
-        name: "libapt-pkg5.0"
-        version: "1.6.11"
-        kind: "binary"
-        source:
-          id: 9
-          name: "apt"
-          version: "1.6.11"
-          kind: "source"
-          source: null
-          package_db: ""
-          repository_hint: ""
-        package_db: "var/lib/dpkg/status"
-        repository_hint: "b0e3976b91845036e35cbfb01ec6d6eb"
-
     Package:
       value:
-        id: 10,
+        id: "10"
         name: "libapt-pkg5.0"
         version: "1.6.11"
         kind: "binary"
         source:
-          id: 9
+          id: "9"
           name: "apt"
           version: "1.6.11"
           kind: "source"
           source: null
-          package_db: ""
-          repository_hint: ""
 
     RemotePath:
       value:
@@ -263,6 +230,24 @@ components:
             - some-value
 
   schemas:
+    Environment:
+      title: Environment
+      type: object
+      description: "The environment a particular package was discovered in"
+      properties:
+        package_db:
+          description: "The filesystem path or unique identifier of a package database"
+          type: string
+          example: "var/lib/dpkg/status"
+        introduced_in:
+          description: "The container layer the associated package was introduced in"
+          type: string
+          example: "35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
+        distribution_id:
+          description: "The distribution ID found in an associated IndexReport or VulnerabilityReport"
+          type: string
+          example: "1"
+
     IndexReport:
       title: IndexReport
       type: object
@@ -278,79 +263,97 @@ components:
           example: "IndexFinished"
         packages:
           type: object
-          description: "A map of IndexedPackage objects key'd by Package.id found in the Manifest"
+          description: "A map of Package objects indexed by Package.id"
           example:
-            10:
-              $ref: '#/components/examples/IndexedPackage/value'
+            "10":
+              $ref: '#/components/examples/Package/value'
           additionalProperties:
-            $ref: '#/components/schemas/IndexedPackage'
+            $ref: '#/components/schemas/Package'
         distributions:
           type: object
           description: "A map of Distribution objects key'd by their Distribution.id discovered in the manifest"
           example:
-            1: 
+            "1": 
               $ref: '#/components/examples/Distribution/value'
           additionalProperties:
             $ref: '#/components/schemas/Distribution'
-        distributions_by_package:
+        environments:
           type: object
-          description: "A map of Distribution.id key'd by Package.id. Exists to programatically link a package with it's distribution context"
-          example: 
-            10: 1
-            11: 1
-            12: 1
-          additionalProperties:
-            type: integer
-        package_introduced:
-          type: object
-          description: "A map of layer hashes key'd by Package.id. Exists to programatically identify in which layer a package was introduced"
+          description: "A map of lists containing Environment objects keyed by the associated Package.id"
           example:
-            10: "35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
-            100: "35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
+            "10":
+              # - $ref: '#/components/examples/Environment/value' # swagger bug does not allow inline reference here -_-
+              - package_db: "var/lib/dpkg/status"
+                introduced_in: "35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
+                distribution_id: "1"
+              
           additionalProperties:
-            type: string
+            type: array
+            items:
+              $ref: '#/components/schemas/Environment'
+        success:
+          type: boolean
+          description: "A bool indicating succcessful index"
+          example: true
+        err:
+          type: string
+          description: "An error message on event of unsuccessful index"
+          example: ""
 
     VulnerabilityReport:
       title: VulnerabilityReport
       type: object
-      description: "A list of vulnerabilities affecting a particular manifest."
+      description: "A report expressing discovered packages, package environments, and package vulnerabilities within a Manifest"
       properties:
         manifest_hash:
           description: "The content addressable manifest hash this VulnerabilityReport is associated with."
           type: string
-        vulnerabilities:
-          description: "A map of Vulnerabilities key'd by their Vulnerability.id"
+        packages:
           type: object
+          description: "A map of Package objects indexed by Package.id"
           example:
-            356835: 
-              $ref: '#/components/examples/Vulnerability/value'
+            "10":
+              $ref: '#/components/examples/Package/value'
           additionalProperties:
-            $ref: '#/components/schemas/Vulnerability'
-        details:
-          description: "A map of an array of Details objects key'd by Vulnerability.id. Creates a one to many relationshp expressing found vulnerability to affected package details"
+            $ref: '#/components/schemas/Package'
+        distributions:
           type: object
+          description: "A map of Distribution objects indexed by Distribution.id"
           example:
-            356835:
-              - $ref: '#/components/examples/Details/value'
+            "1": 
+              $ref: '#/components/examples/Distribution/value'
+          additionalProperties:
+            $ref: '#/components/schemas/Distribution'
+        environments:
+          type: object
+          description: "A mapping of Environment lists indexed by Package.id"
+          example:
+            "10":
+              # - $ref: '#/components/examples/Environment/value' # swagger bug does not allow inline reference here -_-
+              - package_db: "var/lib/dpkg/status"
+                introduced_in: "35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
+                distribution_id: "1"
           additionalProperties:
             type: array
             items:
-              $ref: '#/components/schemas/Details'
-
-    Details:
-      title: Details
-      type: object
-      example:
-        $ref: '#/components/examples/Details/value'
-      properties:
-        affected_package:
-          $ref: '#/components/schemas/Package'
-        introduced_in:
-          description: "The layer's content addressable hash in which this package was first introduced"
-          type: string
-        fixed_in_version:
-          description: "The version in which the package is no longer affected by this vulnerability"
-          type: string
+              $ref: '#/components/schemas/Environment'
+        vulnerabilities:
+          description: "A map of Vulnerabilities indexed by Vulnerability.id"
+          type: object
+          example:
+            "356835": 
+              $ref: '#/components/examples/Vulnerability/value'
+          additionalProperties:
+            $ref: '#/components/schemas/Vulnerability'
+        package_vulnerabilities:
+          description: "A mapping of Vulnerability.id lists indexed by Package.id"
+          example:
+            "10":
+              - "356835"
+          additionalProperties:
+            type: array
+            items:
+              type: string
 
     Vulnerability:
       title: Vulnerability
@@ -361,7 +364,7 @@ components:
       properties:
         id:
           description: "A unique ID representing this vulnerability."
-          type: integer
+          type: string
         updater:
           description: "A unique ID representing this vulnerability."
           type: integer
@@ -381,11 +384,9 @@ components:
           $ref: '#/components/schemas/Package'
         dist:
           $ref: '#/components/schemas/Distribution'
-        repo:
-          type: object
         fixed_in_version:
           description: "A unique ID representing this vulnerability."
-          type: integer
+          type: string
             
     Distribution:
       title: Distribution
@@ -396,7 +397,7 @@ components:
       properties:
         id: 
           description: "A unique ID representing this distribution"
-          type: integer
+          type: string
         did:
           type: string
         name:
@@ -414,32 +415,16 @@ components:
         pretty_name:
           type: string
     
-    IndexedPackage:
-      title: IndexedPackage
+    SourcePackage:
+      title: SourcePackage
       type: object
-      description: "An indexed package found in a layer"
-      example:
-        $ref: '#/components/examples/IndexedPackage/value'
-      properties:
-        package:
-          $ref: '#/components/schemas/Package'
-        package_db:
-          description: "The package database on the filesystem this package was found"
-          type: string
-        repository_hint:
-          description: "A hint to help match a package with the repository it came from"
-          type: string
-    
-    Package:
-      title: Package
-      type: object
-      description: "A package discovered by indexing a Manifest"
+      description: "A source package affiliated with a Package"
       example: 
         $ref: '#/components/examples/Package/value'
       properties:
         id:
           description: "A unique ID representing this package"
-          type: integer
+          type: string
         name:
           description: "Name of the Package"
           type: string
@@ -450,7 +435,29 @@ components:
           description: "Kind of package. Source | Binary"
           type: string
         source:
-          $ref: '#/components/schemas/Package'
+          type: null
+
+    Package:
+      title: Package
+      type: object
+      description: "A package discovered by indexing a Manifest"
+      example: 
+        $ref: '#/components/examples/Package/value'
+      properties:
+        id:
+          description: "A unique ID representing this package"
+          type: string
+        name:
+          description: "Name of the Package"
+          type: string
+        version:
+          description: "Version of the Package"
+          type: string
+        kind:
+          description: "Kind of package. Source | Binary"
+          type: string
+        source:
+          $ref: '#/components/schemas/SourcePackage'
         
     Manifest:
       title: Manifest
