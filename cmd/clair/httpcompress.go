@@ -64,16 +64,19 @@ func (c *compressHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case "gzip":
 			w.Header().Set("content-encoding", "gzip")
 			gz := c.gzip.Get().(*gzip.Writer)
+			gz.Reset(w)
 			defer c.gzip.Put(gz)
 			cw = gz
 		case "deflate":
 			w.Header().Set("content-encoding", "deflate")
 			z := c.flate.Get().(*flate.Writer)
+			z.Reset(w)
 			defer c.flate.Put(z)
 			cw = z
 		case "snappy": // Nonstandard
 			w.Header().Set("content-encoding", "snappy")
 			s := c.snappy.Get().(*snappy.Writer)
+			s.Reset(w)
 			defer c.snappy.Put(s)
 			cw = s
 		case "identity":
