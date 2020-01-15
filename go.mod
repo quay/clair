@@ -4,7 +4,6 @@ go 1.13
 
 require (
 	github.com/klauspost/compress v1.9.4
-	github.com/markusthoemmes/goautoneg v0.0.0-20190713162725-c6008fefa5b1
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/quay/claircore v0.0.13
 	github.com/rs/zerolog v1.16.0

@@ -3,13 +3,16 @@ package main
 import (
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
+	"sort"
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/klauspost/compress/flate"
 	"github.com/klauspost/compress/gzip"
 	"github.com/klauspost/compress/snappy"
-	"github.com/markusthoemmes/goautoneg"
 )
 
 // Compress wraps the provided http.Handler and provides transparent body
@@ -48,8 +51,59 @@ type header interface {
 	WriteHeader(int)
 }
 
+// ParseAccept parses an "Accept-Encoding" header.
+//
+// Reports a sorted list of encodings and a map of disallowed encodings.
+// Reports nil if no selections were present.
+func parseAccept(h string) ([]accept, map[string]struct{}) {
+	if h == "" {
+		return nil, nil
+	}
+
+	segs := strings.Split(h, ",")
+	ret := make([]accept, 0, len(segs))
+	nok := make(map[string]struct{})
+	for _, s := range segs {
+		a := accept{}
+		t, param, err := mime.ParseMediaType(s)
+		if err != nil {
+			continue
+		}
+		a.Type = t
+		if q, ok := param["q"]; ok {
+			if q == "0" {
+				nok[t] = struct{}{}
+				continue
+			}
+			qv, err := strconv.ParseFloat(param["q"], 64)
+			if err != nil {
+				nok[t] = struct{}{}
+				continue
+			}
+			a.Q = qv
+		}
+		ret = append(ret, a)
+	}
+
+	sort.SliceStable(ret, func(i, j int) bool {
+		return ret[i].Q > ret[j].Q
+	})
+	return ret, nok
+}
+
+type accept struct {
+	Type string
+	Q    float64
+}
+
 // ServeHTTP implements http.Handler.
 func (c *compressHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	ae, nok := parseAccept(r.Header.Get("accept-encoding"))
+	if ae == nil {
+		// If there was no header, play it cool.
+		c.next.ServeHTTP(w, r)
+		return
+	}
 	var (
 		flusher http.Flusher
 		pusher  http.Pusher
@@ -59,7 +113,9 @@ func (c *compressHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	pusher, _ = w.(http.Pusher)
 
 	// Find the first accept-encoding we support.
-	for _, a := range goautoneg.ParseAccept(r.Header.Get("accept-encoding")) {
+	// See https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.1 for
+	// all the sematics.
+	for _, a := range ae {
 		switch a.Type {
 		case "gzip":
 			w.Header().Set("content-encoding", "gzip")
@@ -82,6 +138,27 @@ func (c *compressHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case "identity":
 			w.Header().Set("content-encoding", "identity")
 		case "*":
+			// If we hit a star, it's technically OK to return any encoding not
+			// already specified. So, attempt to use gzip and then identity and
+			// give up.
+			// Clients that do extremely weird things like
+			//	*;q=1.0, gzip;q=0.1, identity;q=0.1"
+			// deserve extremely weird replies.
+			_, gznok := nok["gzip"]
+			_, idnok := nok["identity"]
+			switch {
+			case !gznok:
+				w.Header().Set("content-encoding", "gzip")
+				gz := c.gzip.Get().(*gzip.Writer)
+				gz.Reset(w)
+				defer c.gzip.Put(gz)
+				cw = gz
+			case !idnok:
+				w.Header().Set("content-encoding", "identity")
+			default:
+				w.WriteHeader(http.StatusNotAcceptable)
+				return
+			}
 		default:
 			continue
 		}
@@ -103,7 +180,7 @@ func (c *compressHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// This is a giant truth table to make anonymous types that satisfy as many
 	// optional interfaces as possible.
 	//
-	// We care about 3 interfaces, so there are 2^3 == 8 combinations
+	// We care about 3 interfaces, so there are 2^3 == 8 combinations.
 	switch {
 	case flusher == nil && pusher == nil && cw == nil:
 		nw = w
@@ -148,7 +225,7 @@ func (c *compressHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Pusher
 		}{w, cw, flusher, pusher}
 	default:
-		panic(fmt.Sprintf("unexpect type combination: %T/%T/%T", flusher, pusher, cw))
+		panic(fmt.Sprintf("unexpected type combination: %T/%T/%T", flusher, pusher, cw))
 	}
 	c.next.ServeHTTP(nw, r)
 }
