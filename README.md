@@ -33,7 +33,6 @@ Thus, the project was named `Clair` after the French term which translates to *c
 * Follow instructions to get Clair [up and running]
 * Explore [the API] on SwaggerHub
 * Discover third party [integrations] that help integrate Clair with your infrastructure
-* Read the rest of the documentation on the [CoreOS website] or in the [Documentation directory]
 * Get up and running with [Local Development]
 
 [the terminology]: /Documentation/terminology.md
