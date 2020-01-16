@@ -1,7 +1,10 @@
+---
 openapi: "3.0.2"
 info:
   title: "ClairV4"
-  description: "ClairV4 is a set of cooperating microservice which scan, index, and match your container's content with known vulnerabilities."
+  description: |
+    ClairV4 is a set of cooperating microservice which scan, index, and
+    match your container's content with known vulnerabilities.
   version: "0.1"
   termsOfService: ""
   contact:
@@ -10,16 +13,19 @@ info:
     email: "quay-devel@redhat.com"
   license:
     name: "Apache License 2.0"
-    url:  "http://www.apache.org/licenses/"
+    url: "http://www.apache.org/licenses/"
 
 paths:
   /index:
     post:
       tags:
-      - Indexer
+        - Indexer
       operationId: "Index"
       summary: "Index the contents of a Manifest"
-      description: "By submitting a Manifest object to this endpoint Clair will fetch the layers, scan each layer's contents, and provide an index of discovered packages, repository and distribution information"
+      description: |
+        By submitting a Manifest object to this endpoint Clair will fetch the
+        layers, scan each layer's contents, and provide an index of discovered
+        packages, repository and distribution information.
       requestBody:
         required: true
         content:
@@ -39,21 +45,25 @@ paths:
           $ref: '#/components/responses/MethodNotAllowed'
         500:
           $ref: '#/components/responses/InternalServerError'
-  
+
   /index_report/{manifest_hash}:
     get:
       tags:
-      - Indexer
+        - Indexer
       operationId: "GetIndexReport"
       summary: "Retrieve an IndexReport for the given Manifest hash if exists."
-      description: "Given a Manifest's content addressable hash an IndexReport will be retrieved if exists."
+      description: |
+        Given a Manifest's content addressable hash an IndexReport will
+        be retrieved if exists.
       parameters:
-      - name: manifest_hash
-        in: path
-        description: "A content addressable hash which has been indexed previous to this request"
-        required: true
-        schema:
-          type: string
+        - name: manifest_hash
+          in: path
+          description: |
+            A content addressable hash which has been indexed previous
+            to this request.
+          required: true
+          schema:
+            type: string
       responses:
         200:
           description: IndexReport retrieved
@@ -73,17 +83,24 @@ paths:
   /vulnerability_report/{manifest_hash}:
     get:
       tags:
-      - Matcher
+        - Matcher
       operationId: "GetVulnerabilityReport"
-      summary: "Retrieve a VulnerabilityReport for a given manifest's content addressable hash"
-      description: "Given a Manifest's content addressable hash a VulnerabilityReport will be created. The Manifest **must** have been Indexed first via the Index endpoint"
+      summary: |
+        Retrieve a VulnerabilityReport for a given manifest's content
+        addressable hash.
+      description: |
+        Given a Manifest's content addressable hash a VulnerabilityReport
+        will be created. The Manifest **must** have been Indexed first
+        via the Index endpoint.
       parameters:
-      - name: manifest_hash
-        in: path
-        description: "A content addressable hash which has been indexed previous to this request"
-        required: true
-        schema:
-          type: string
+        - name: manifest_hash
+          in: path
+          description: |
+            A content addressable hash which has been indexed previous
+            to this request.
+          required: true
+          schema:
+            type: string
       responses:
         201:
           description: VulnerabilityReport Created
@@ -106,9 +123,9 @@ paths:
       operationId: State
       summary: Report the indexer's internal configuration and state.
       description: |
-        The state endpoint returns a json structure indicating the indexer's 
+        The state endpoint returns a json structure indicating the indexer's
         internal configuration state.
-        
+
         A client may be interested in this as a signal that manifests may need
         to be reindexed.
       responses:
@@ -119,7 +136,7 @@ paths:
               description: 'Entity Tag'
               schema: {type: string}
           content:
-            text/plain:
+            application/json:
               schema:
                 $ref: '#/components/schemas/State'
         304:
@@ -128,38 +145,39 @@ paths:
 components:
   responses:
     BadRequest:
-        description: Bad Request
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Error'
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
 
     MethodNotAllowed:
-        description: Method Not Allowed
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Error'
+      description: Method Not Allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
 
     InternalServerError:
-        description: Internal Server Error
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Error'
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
 
     NotFound:
-        description: Not Found
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Error'
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
 
   examples:
     Environment:
       value:
         package_db: "var/lib/dpkg/status"
-        introduced_in: "35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
+        introduced_in: |
+          35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
         distribution_id: "1"
 
     Vulnerability:
@@ -167,10 +185,22 @@ components:
         id: "356835"
         updater: ""
         name: "CVE-2009-5155"
-        description: "In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match."
-        links: "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986"
+        description: |
+          In the GNU C Library (aka glibc or libc6) before 2.28,
+          parse_reg_exp in posix/regcomp.c misparses alternatives,
+          which allows attackers to cause a denial of service (assertion
+          failure and application exit) or trigger an incorrect result
+          by attempting a regular-expression match."
+        links: |
+          https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155
+          http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html
+          https://sourceware.org/bugzilla/show_bug.cgi?id=11053
+          https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793
+          https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806
+          https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238
+          https://sourceware.org/bugzilla/show_bug.cgi?id=18986"
         severity: "Low"
-        package: 
+        package:
           id: "0"
           name: "glibc"
           version: ""
@@ -178,7 +208,7 @@ components:
           source: null
           package_db: ""
           repository_hint: ""
-        dist: 
+        dist:
           id: "0"
           did: "ubuntu"
           name: "Ubuntu"
@@ -188,7 +218,7 @@ components:
           arch: ""
           cpe: ""
           pretty_name: ""
-        repo: 
+        repo:
           id: "0"
           name: "Ubuntu 18.04.3 LTS"
           key: ""
@@ -220,43 +250,45 @@ components:
           kind: "source"
           source: null
 
-    RemotePath:
-      value:
-        uri: "https://storage/35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
-        headers:
-          Authorization:
-            - xyz
-          X-Header:
-            - some-value
-
   schemas:
     Environment:
       title: Environment
       type: object
-      description: "The environment a particular package was discovered in"
+      description: "The environment a particular package was discovered in."
       properties:
         package_db:
-          description: "The filesystem path or unique identifier of a package database"
+          description: |
+            The filesystem path or unique identifier of a package database.
           type: string
           example: "var/lib/dpkg/status"
         introduced_in:
-          description: "The container layer the associated package was introduced in"
+          description: |
+            The container layer the associated package was introduced in.
           type: string
-          example: "35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
+          example: |
+            35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
         distribution_id:
-          description: "The distribution ID found in an associated IndexReport or VulnerabilityReport"
+          description: |
+            The distribution ID found in an associated IndexReport or
+            VulnerabilityReport.
           type: string
           example: "1"
 
     IndexReport:
       title: IndexReport
       type: object
-      description: "A report of the Index process for a particular manifest. A client's usage of this is largely information. Clair uses this report for matching Vulnerabilities"
+      description: |
+        A report of the Index process for a particular manifest. A
+        client's usage of this is largely information. Clair uses this
+        report for matching Vulnerabilities.
       properties:
         manifest_hash:
-          description: "A content addressable hash uniqually identifying the indexed manifest"
+          description: |
+            A content addressable hash uniqually identifying the indexed
+            manifest.
           type: string
-          example: "2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36"
+          example: |
+            2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36
         state:
           description: "The current state of the index operation"
           type: string
@@ -271,22 +303,28 @@ components:
             $ref: '#/components/schemas/Package'
         distributions:
           type: object
-          description: "A map of Distribution objects key'd by their Distribution.id discovered in the manifest"
+          description: |
+            A map of Distribution objects key'd by their Distribution.id
+            discovered in the manifest.
           example:
-            "1": 
+            "1":
               $ref: '#/components/examples/Distribution/value'
           additionalProperties:
             $ref: '#/components/schemas/Distribution'
         environments:
           type: object
-          description: "A map of lists containing Environment objects keyed by the associated Package.id"
+          description: |
+            A map of lists containing Environment objects keyed by the
+            associated Package.id.
           example:
             "10":
-              # - $ref: '#/components/examples/Environment/value' # swagger bug does not allow inline reference here -_-
+              # swagger bug does not allow inline reference here -_-
+              # - $ref: '#/components/examples/Environment/value'
               - package_db: "var/lib/dpkg/status"
-                introduced_in: "35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
+                introduced_in: |
+                  35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
                 distribution_id: "1"
-              
+
           additionalProperties:
             type: array
             items:
@@ -303,10 +341,14 @@ components:
     VulnerabilityReport:
       title: VulnerabilityReport
       type: object
-      description: "A report expressing discovered packages, package environments, and package vulnerabilities within a Manifest"
+      description: |
+        A report expressing discovered packages, package environments,
+        and package vulnerabilities within a Manifest.
       properties:
         manifest_hash:
-          description: "The content addressable manifest hash this VulnerabilityReport is associated with."
+          description: |
+            The content addressable manifest hash this VulnerabilityReport
+            is associated with.
           type: string
         packages:
           type: object
@@ -318,9 +360,10 @@ components:
             $ref: '#/components/schemas/Package'
         distributions:
           type: object
-          description: "A map of Distribution objects indexed by Distribution.id"
+          description: |
+            A map of Distribution objects indexed by Distribution.id.
           example:
-            "1": 
+            "1":
               $ref: '#/components/examples/Distribution/value'
           additionalProperties:
             $ref: '#/components/schemas/Distribution'
@@ -329,9 +372,11 @@ components:
           description: "A mapping of Environment lists indexed by Package.id"
           example:
             "10":
-              # - $ref: '#/components/examples/Environment/value' # swagger bug does not allow inline reference here -_-
+              # swagger bug does not allow inline reference here -_-
+              # - $ref: '#/components/examples/Environment/value'
               - package_db: "var/lib/dpkg/status"
-                introduced_in: "35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
+                introduced_in: |
+                  35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
                 distribution_id: "1"
           additionalProperties:
             type: array
@@ -341,12 +386,13 @@ components:
           description: "A map of Vulnerabilities indexed by Vulnerability.id"
           type: object
           example:
-            "356835": 
+            "356835":
               $ref: '#/components/examples/Vulnerability/value'
           additionalProperties:
             $ref: '#/components/schemas/Vulnerability'
         package_vulnerabilities:
-          description: "A mapping of Vulnerability.id lists indexed by Package.id"
+          description: |
+            A mapping of Vulnerability.id lists indexed by Package.id.
           example:
             "10":
               - "356835"
@@ -375,10 +421,12 @@ components:
           description: "A description of this specific vulnerability."
           type: string
         links:
-          description: "A space separate list of links to any external information."
+          description: |
+            A space separate list of links to any external information.
           type: string
         severity:
-          description: "A severity keyword taken verbatim from the vulnerability source."
+          description: |
+            A severity keyword taken verbatim from the vulnerability source.
           type: string
         package:
           $ref: '#/components/schemas/Package'
@@ -387,15 +435,18 @@ components:
         fixed_in_version:
           description: "A unique ID representing this vulnerability."
           type: string
-            
+
     Distribution:
       title: Distribution
       type: object
-      description: "An indexed distribution discovered in a layer. See https://www.freedesktop.org/software/systemd/man/os-release.html for explanations and example of fields."
+      description: |
+        An indexed distribution discovered in a layer. See
+        https://www.freedesktop.org/software/systemd/man/os-release.html
+        for explanations and example of fields.
       example:
         $ref: '#/components/examples/Distribution/value'
       properties:
-        id: 
+        id:
           description: "A unique ID representing this distribution"
           type: string
         did:
@@ -414,12 +465,12 @@ components:
           type: string
         pretty_name:
           type: string
-    
+
     SourcePackage:
       title: SourcePackage
       type: object
       description: "A source package affiliated with a Package"
-      example: 
+      example:
         $ref: '#/components/examples/Package/value'
       properties:
         id:
@@ -435,13 +486,13 @@ components:
           description: "Kind of package. Source | Binary"
           type: string
         source:
-          type: null
+          type: string
 
     Package:
       title: Package
       type: object
       description: "A package discovered by indexing a Manifest"
-      example: 
+      example:
         $ref: '#/components/examples/Package/value'
       properties:
         id:
@@ -458,21 +509,26 @@ components:
           type: string
         source:
           $ref: '#/components/schemas/SourcePackage'
-        
+
     Manifest:
       title: Manifest
       type: object
-      description: "A Manifest representing a container. The 'layers' array must preserve the original container's layer order for accurate usage"
+      description: |
+        A Manifest representing a container. The 'layers' array must
+        preserve the original container's layer order for accurate usage.
       properties:
         hash:
-          description: "A content addressable hash uniqually identifying this manifest."
+          description: |
+            A content addressable hash uniqually identifying this
+            manifest.
           type: string
-          example: "251f5509d51d9e4119d4ffb70d4820f8e2d7dc72ad15df3ebd7cd755539e40fd"
+          example: |
+            251f5509d51d9e4119d4ffb70d4820f8e2d7dc72ad15df3ebd7cd755539e40fd
         layers:
           type: array
           items:
             $ref: '#/components/schemas/Layer'
-  
+
     Layer:
       title: Layer
       type: object
@@ -480,25 +536,23 @@ components:
       properties:
         hash:
           type: string
-          description: "A content addressable hash uniqually identifying this layer"
-          example: "2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36"
-        remote_path: 
-          $ref: '#/components/schemas/RemotePath'
-  
-    RemotePath:
-      title: RemotePath
-      type: object
-      description: "A remote URI and Header information for retrieval"
-      example:
-        $ref: '#/components/examples/RemotePath/value'
-      properties:
+          description: |
+            A content addressable hash uniqually identifying this layer
+          example: |
+            2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36
         uri:
           type: string
-          description: "a web address where a layer maybe fetched"
-          example: "https://storage/35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
+          description: |
+            A URI decribing where the layer may be found. Implementions
+            MUST support http(s) schemes and MAY support additional
+            schemes.
+          example: |
+            https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36
         headers:
           type: object
-          description: "map of arrays of header values key'd by header value. e.g. map[string][]string"
+          description: |
+            map of arrays of header values keyed by header
+            value. e.g. map[string][]string
           additionalProperties:
             type: array
             items:
@@ -520,5 +574,5 @@ components:
       title: State
       type: object
       description: an opaque identifier
-      example: 
+      example:
         state: "aae368a064d7c5a433d0bf2c4f5554cc"
