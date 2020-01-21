@@ -26,6 +26,12 @@ type Config struct {
 	Indexer Indexer `yaml:"indexer"`
 	// matcher mode specific config
 	Matcher Matcher `yaml:"matcher"`
+	Auth    Auth    `yaml:"auth"`
+}
+
+type Auth struct {
+	Name   string            `yaml:"name"`
+	Params map[string]string `yaml:"params"`
 }
 
 type Indexer struct {
