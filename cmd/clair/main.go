@@ -10,10 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/quay/clair/v4/config"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	yaml "gopkg.in/yaml.v2"
+
+	"github.com/quay/clair/v4/config"
 )
 
 const (

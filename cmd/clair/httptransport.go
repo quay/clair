@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 	"time"
@@ -20,16 +21,25 @@ const (
 
 // httptransport configures an http server according to Clair's operation mode.
 func httptransport(ctx context.Context, conf config.Config) (*http.Server, error) {
+	var srv *http.Server
+	var err error
 	switch {
 	case conf.Mode == config.DevMode:
-		return devMode(ctx, conf)
+		srv, err = devMode(ctx, conf)
 	case conf.Mode == config.IndexerMode:
-		return indexerMode(ctx, conf)
+		srv, err = indexerMode(ctx, conf)
 	case conf.Mode == config.MatcherMode:
-		return matcherMode(ctx, conf)
+		srv, err = matcherMode(ctx, conf)
 	default:
 		return nil, fmt.Errorf("mode not implemented: %v", conf.Mode)
 	}
+	if err != nil {
+		return nil, err
+	}
+	if err := setAuth(srv, conf); err != nil {
+		return nil, err
+	}
+	return srv, nil
 }
 
 func devMode(ctx context.Context, conf config.Config) (*http.Server, error) {
@@ -108,4 +118,46 @@ func matcherMode(ctx context.Context, conf config.Config) (*http.Server, error) 
 		Addr:    conf.Matcher.HTTPListenAddr,
 		Handler: Compress(matcher),
 	}, nil
+}
+
+func setAuth(srv *http.Server, conf config.Config) error {
+	switch conf.Auth.Name {
+	case "keyserver":
+		const param = "api"
+		api, ok := conf.Auth.Params[param]
+		if !ok {
+			return fmt.Errorf("missing needed config key: %q", param)
+		}
+		ks, err := QuayKeyserver(api)
+		if err != nil {
+			return err
+		}
+		srv.Handler = AuthHandler(srv.Handler, ks)
+	case "psk":
+		const (
+			iss = "issuer"
+			key = "key"
+		)
+		ek, ok := conf.Auth.Params[key]
+		if !ok {
+			return fmt.Errorf("missing needed config key: %q", key)
+		}
+		k, err := base64.StdEncoding.DecodeString(ek)
+		if err != nil {
+			return err
+		}
+		i, ok := conf.Auth.Params[iss]
+		if !ok {
+			return fmt.Errorf("missing needed config key: %q", iss)
+		}
+		psk, err := PSKAuth(k, i)
+		if err != nil {
+			return err
+		}
+		srv.Handler = AuthHandler(srv.Handler, psk)
+	case "":
+	default:
+		return fmt.Errorf("unknown auth kind %q", conf.Auth.Name)
+	}
+	return nil
 }
