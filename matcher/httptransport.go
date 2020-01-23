@@ -9,6 +9,8 @@ import (
 
 	"github.com/quay/claircore"
 	je "github.com/quay/claircore/pkg/jsonerr"
+	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/plugin/othttp"
 )
 
 var _ http.Handler = (*HTTP)(nil)
@@ -113,5 +115,8 @@ func (h *HTTP) VulnerabilityReportHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (h *HTTP) Register(mux *http.ServeMux) {
-	mux.HandleFunc(VulnerabilityReportAPIPath, h.VulnerabilityReportHandler)
+	hf := http.HandlerFunc(h.VulnerabilityReportHandler)
+	tr := othttp.WithTracer(global.TraceProvider().Tracer("clair"))
+	nh := othttp.NewHandler(hf, "matcher/VulnerabilityReport", tr)
+	mux.Handle(VulnerabilityReportAPIPath, othttp.WithRouteTag(VulnerabilityReportAPIPath+":manifest", nh))
 }

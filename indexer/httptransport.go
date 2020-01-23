@@ -11,6 +11,8 @@ import (
 
 	"github.com/quay/claircore"
 	je "github.com/quay/claircore/pkg/jsonerr"
+	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/plugin/othttp"
 )
 
 var _ http.Handler = (*HTTP)(nil)
@@ -178,7 +180,33 @@ func (h *HTTP) StateHandler(w http.ResponseWriter, r *http.Request) {
 
 // Register will register the api on a given mux.
 func (h *HTTP) Register(mux *http.ServeMux) {
-	mux.HandleFunc(IndexAPIPath, h.IndexHandler)
-	mux.HandleFunc(IndexReportAPIPath, h.IndexReportHandler)
-	mux.HandleFunc(StateAPIPath, h.StateHandler)
+	tr := othttp.WithTracer(global.TraceProvider().Tracer("clair"))
+	for _, spec := range []struct {
+		Path      string
+		Tag       string
+		Operation string
+		Handler   http.Handler
+	}{
+		{
+			Path:      IndexAPIPath,
+			Tag:       IndexAPIPath,
+			Operation: "indexer/Index",
+			Handler:   http.HandlerFunc(h.IndexHandler),
+		},
+		{
+			Path:      IndexReportAPIPath,
+			Tag:       IndexReportAPIPath + ":manifest",
+			Operation: "indexer/IndexReport",
+			Handler:   http.HandlerFunc(h.IndexReportHandler),
+		},
+		{
+			Path:      StateAPIPath,
+			Tag:       StateAPIPath,
+			Operation: "indexer/State",
+			Handler:   http.HandlerFunc(h.StateHandler),
+		},
+	} {
+		nh := othttp.NewHandler(spec.Handler, spec.Operation, tr)
+		mux.Handle(spec.Path, othttp.WithRouteTag(spec.Tag, nh))
+	}
 }
