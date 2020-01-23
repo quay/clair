@@ -79,7 +79,6 @@ func main() {
 		tctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 		defer cancel()
 		server.Shutdown(tctx)
-		os.Exit(0)
 	case <-ctx.Done():
 		// main cancel func called indicating error initializing
 		logger.Fatal().Msgf("initialization of clair failed. view log entries for details")
