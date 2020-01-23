@@ -16,7 +16,7 @@ info:
     url: "http://www.apache.org/licenses/"
 
 paths:
-  /index:
+  /index_report:
     post:
       tags:
         - Indexer
