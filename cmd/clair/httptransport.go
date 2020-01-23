@@ -9,14 +9,11 @@ import (
 
 	"github.com/quay/claircore/libindex"
 	"github.com/quay/claircore/libvuln"
+	"go.opentelemetry.io/otel/plugin/othttp"
 
 	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
-)
-
-const (
-	HealthApiPath = "/healthz"
 )
 
 // httptransport configures an http server according to Clair's operation mode.
@@ -71,7 +68,7 @@ func devMode(ctx context.Context, conf config.Config) (*http.Server, error) {
 	matcher.Register(mux)
 	return &http.Server{
 		Addr:    conf.HTTPListenAddr,
-		Handler: Compress(mux),
+		Handler: othttp.NewHandler(Compress(mux), "server"),
 	}, nil
 }
 
@@ -92,7 +89,7 @@ func indexerMode(ctx context.Context, conf config.Config) (*http.Server, error) 
 	}
 	return &http.Server{
 		Addr:    conf.Indexer.HTTPListenAddr,
-		Handler: Compress(indexer),
+		Handler: othttp.NewHandler(Compress(indexer), "server"),
 	}, nil
 }
 
@@ -116,7 +113,7 @@ func matcherMode(ctx context.Context, conf config.Config) (*http.Server, error) 
 	}
 	return &http.Server{
 		Addr:    conf.Matcher.HTTPListenAddr,
-		Handler: Compress(matcher),
+		Handler: othttp.NewHandler(Compress(matcher), "server"),
 	}, nil
 }
 
