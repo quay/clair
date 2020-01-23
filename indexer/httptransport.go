@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"path"
 	"sort"
 	"strings"
 
@@ -15,7 +16,7 @@ import (
 var _ http.Handler = (*HTTP)(nil)
 
 const (
-	IndexAPIPath       = "/api/v1/index"
+	IndexAPIPath       = "/api/v1/index_report"
 	IndexReportAPIPath = "/api/v1/index_report/"
 	StateAPIPath       = "/api/v1/state"
 )
@@ -36,6 +37,7 @@ func NewHTTPTransport(service Service) (*HTTP, error) {
 }
 
 func (h *HTTP) IndexReportHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	if r.Method != http.MethodGet {
 		resp := &je.Response{
 			Code:    "method-not-allowed",
@@ -64,7 +66,7 @@ func (h *HTTP) IndexReportHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	report, ok, err := h.serv.IndexReport(context.Background(), manifest)
+	report, ok, err := h.serv.IndexReport(ctx, manifest)
 	if !ok {
 		resp := &je.Response{
 			Code:    "not-found",
@@ -114,8 +116,11 @@ func (h *HTTP) IndexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ToDo: manifest structure validation
-	report, err := h.serv.Index(context.Background(), &m)
+	// TODO Validate manifest structure.
+
+	// TODO Do we need some sort of background context embedded in the HTTP
+	// struct?
+	report, err := h.serv.Index(context.TODO(), &m)
 	if err != nil {
 		resp := &je.Response{
 			Code:    "index-error",
@@ -126,6 +131,7 @@ func (h *HTTP) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
+	w.Header().Set("location", path.Join(IndexReportAPIPath, m.Hash.String()))
 	err = json.NewEncoder(w).Encode(report)
 	if err != nil {
 		resp := &je.Response{
