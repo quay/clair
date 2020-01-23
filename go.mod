@@ -8,6 +8,8 @@ require (
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/quay/claircore v0.0.16
 	github.com/rs/zerolog v1.16.0
+	go.opentelemetry.io/otel v0.2.1
+	go.opentelemetry.io/otel/exporter/metric/prometheus v0.2.1
 	golang.org/x/tools v0.0.0-20191210200704-1bcf67c9cb49 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.1
 	gopkg.in/yaml.v2 v2.2.5

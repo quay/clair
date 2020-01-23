@@ -20,6 +20,9 @@ type Config struct {
 	Mode string `yaml:"mode"`
 	// indicates the global listen address if running in "Dev"
 	HTTPListenAddr string `yaml:"http_listen_addr"`
+	// IntrospectionAddr is an address to listen on for introspection http
+	// endpoints, e.g. metrics and profiling.
+	IntrospectionAddr string `yaml:"introspection_addr"`
 	// indicates log level for the process
 	LogLevel string `yaml:"log_level"`
 	// indexer mode specific config

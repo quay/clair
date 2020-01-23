@@ -67,6 +67,18 @@ func main() {
 		}
 	}()
 
+	intro, err := introspection(lctx, &conf, func() bool { return true })
+	if err != nil {
+		logger.Error().Err(err).Msg("failed to create introspection server")
+	} else {
+		go func() {
+			if err := intro.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+				logger.Error().Err(err).Msg("unable to start introspection server")
+			}
+			defer intro.Shutdown(lctx)
+		}()
+	}
+
 	// register signal handler
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
