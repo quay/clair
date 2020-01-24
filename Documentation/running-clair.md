@@ -45,6 +45,15 @@ A [PostgreSQL 9.4+] database instance is required for all instructions.
 
 See [Local Development] for our Kubernetes based local development environment.
 
+### Docker-compose
+
+```sh
+$ curl -L https://raw.githubusercontent.com/coreos/clair/master/docker-compose.yaml.sample -o $PWD/docker-compose.yaml
+$ mkdir $PWD/clair_config
+$ curl -L https://raw.githubusercontent.com/coreos/clair/master/config.yaml.sample -o $PWD/clair_config/config.yaml
+$ docker-compose -f docker-compose.yaml up -d
+```
+
 ### Docker
 
 ```sh
