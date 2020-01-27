@@ -166,7 +166,7 @@ func (c *compressHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	// Do some setup so we can see the error, albeit as a trailer.
 	if cw != nil {
-		const errHeader = `clair-error`
+		const errHeader = `Clair-Error`
 		w.Header().Add("trailer", errHeader)
 		defer func() {
 			if err := cw.Close(); err != nil {
