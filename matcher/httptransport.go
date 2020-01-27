@@ -5,35 +5,56 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/http/httptrace"
 	"strings"
+	"time"
 
 	"github.com/quay/claircore"
 	je "github.com/quay/claircore/pkg/jsonerr"
 	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/api/key"
+	"go.opentelemetry.io/otel/api/metric"
+	"go.opentelemetry.io/otel/api/unit"
+	oteltrace "go.opentelemetry.io/otel/plugin/httptrace"
 	"go.opentelemetry.io/otel/plugin/othttp"
 )
 
 var _ http.Handler = (*HTTP)(nil)
 
 const (
+	v1Root = "/api/v1/"
 	// VulnerabilityReportAPIPath is the http path for accessing vulnerability_report
-	VulnerabilityReportAPIPath = "/api/v1/vulnerability_report/"
+	VulnerabilityReportAPIPath = v1Root + "vulnerability_report/"
 )
 
 type HTTP struct {
 	*http.ServeMux
 	serv Service
 	r    Reporter
+
+	meter   metric.Meter
+	latency *metric.Int64Measure
 }
 
 type Reporter interface {
 	IndexReport(context.Context, claircore.Digest) (*claircore.IndexReport, bool, error)
 }
 
+var pathKey = key.New("http.path")
+
 func NewHTTPTransport(service Service, r Reporter) (*HTTP, error) {
+	meter := global.MeterProvider().Meter("projectquay.io/clair")
+	late := meter.NewInt64Measure("projectquay.io.clair.matcher.latency",
+		metric.WithDescription("Latency of matcher requests."),
+		metric.WithUnit(unit.Milliseconds),
+		metric.WithAbsolute(true),
+		metric.WithKeys(pathKey),
+	)
 	h := &HTTP{
-		r:    r,
-		serv: service,
+		r:       r,
+		serv:    service,
+		meter:   meter,
+		latency: &late,
 	}
 	mux := http.NewServeMux()
 	h.Register(mux)
@@ -42,6 +63,13 @@ func NewHTTPTransport(service Service, r Reporter) (*HTTP, error) {
 }
 
 func (h *HTTP) VulnerabilityReportHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	start := time.Now()
+	labels := h.meter.Labels(pathKey.String(VulnerabilityReportAPIPath))
+	defer func() {
+		h.latency.Record(ctx, time.Now().Sub(start).Milliseconds(), labels)
+	}()
+	w.Header().Set("content-type", "application/json")
 	if r.Method != http.MethodGet {
 		resp := &je.Response{
 			Code:    "method-not-allowed",
@@ -50,8 +78,9 @@ func (h *HTTP) VulnerabilityReportHandler(w http.ResponseWriter, r *http.Request
 		je.Error(w, resp, http.StatusMethodNotAllowed)
 		return
 	}
-	ctx, done := context.WithCancel(r.Context())
+	ctx, done := context.WithCancel(ctx)
 	defer done()
+	ctx = httptrace.WithClientTrace(ctx, oteltrace.NewClientTrace(ctx))
 
 	manifestStr := strings.TrimPrefix(r.URL.Path, VulnerabilityReportAPIPath)
 	if manifestStr == "" {
