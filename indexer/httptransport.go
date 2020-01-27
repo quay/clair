@@ -7,10 +7,14 @@ import (
 	"path"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/quay/claircore"
 	je "github.com/quay/claircore/pkg/jsonerr"
 	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/api/key"
+	"go.opentelemetry.io/otel/api/metric"
+	"go.opentelemetry.io/otel/api/unit"
 	"go.opentelemetry.io/otel/plugin/othttp"
 )
 
@@ -26,11 +30,25 @@ const (
 type HTTP struct {
 	*http.ServeMux
 	serv Service
+
+	meter   metric.Meter
+	latency *metric.Int64Measure
 }
 
+var pathKey = key.New("http.path")
+
 func NewHTTPTransport(service Service) (*HTTP, error) {
+	meter := global.MeterProvider().Meter("projectquay.io/clair")
+	late := meter.NewInt64Measure("projectquay.io.clair.indexer.latency",
+		metric.WithDescription("Latency of indexer requests."),
+		metric.WithUnit(unit.Milliseconds),
+		metric.WithAbsolute(true),
+		metric.WithKeys(pathKey),
+	)
 	h := &HTTP{
-		serv: service,
+		serv:    service,
+		meter:   meter,
+		latency: &late,
 	}
 	mux := http.NewServeMux()
 	h.Register(mux)
@@ -48,6 +66,11 @@ func unmodified(r *http.Request, v string) bool {
 
 func (h *HTTP) IndexReportHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	start := time.Now()
+	labels := h.meter.Labels(pathKey.String(IndexReportAPIPath))
+	defer func() {
+		h.latency.Record(ctx, time.Now().Sub(start).Milliseconds(), labels)
+	}()
 	w.Header().Set("content-type", "application/json")
 	if r.Method != http.MethodGet {
 		resp := &je.Response{
@@ -119,6 +142,11 @@ const (
 
 func (h *HTTP) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	start := time.Now()
+	labels := h.meter.Labels(pathKey.String(IndexAPIPath))
+	defer func() {
+		h.latency.Record(ctx, time.Now().Sub(start).Milliseconds(), labels)
+	}()
 	w.Header().Set("content-type", "application/json")
 	if r.Method != http.MethodPost {
 		resp := &je.Response{
@@ -165,6 +193,12 @@ func (h *HTTP) IndexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HTTP) StateHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	start := time.Now()
+	labels := h.meter.Labels(pathKey.String(StateAPIPath))
+	defer func() {
+		h.latency.Record(ctx, time.Now().Sub(start).Milliseconds(), labels)
+	}()
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
