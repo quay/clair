@@ -30,6 +30,8 @@ type Config struct {
 	// matcher mode specific config
 	Matcher Matcher `yaml:"matcher"`
 	Auth    Auth    `yaml:"auth"`
+	// Tracing config
+	Trace Trace `yaml:"trace"`
 }
 
 type Auth struct {
@@ -63,6 +65,12 @@ type Matcher struct {
 	IndexerAddr string `yaml:"indexer_addr"`
 	// should the Matcher be responsible for setting up the database
 	Migrations bool `yaml:"migrations"`
+	// Updaters is a regexp used to determine which enabled updaters to run.
+	Updaters *string `yaml:"updaters"`
+}
+
+type Trace struct {
+	Probability *float64 `yaml:probability`
 }
 
 func Validate(conf Config) error {
