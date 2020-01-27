@@ -38,8 +38,17 @@ func NewHTTPTransport(service Service) (*HTTP, error) {
 	return h, nil
 }
 
+func unmodified(r *http.Request, v string) bool {
+	if vs, ok := r.Header["If-None-Match"]; ok {
+		sort.Strings(vs)
+		return sort.SearchStrings(vs, v) != -1
+	}
+	return false
+}
+
 func (h *HTTP) IndexReportHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+	w.Header().Set("content-type", "application/json")
 	if r.Method != http.MethodGet {
 		resp := &je.Response{
 			Code:    "method-not-allowed",
@@ -65,6 +74,11 @@ func (h *HTTP) IndexReportHandler(w http.ResponseWriter, r *http.Request) {
 			Message: "malformed path: " + err.Error(),
 		}
 		je.Error(w, resp, http.StatusBadRequest)
+	}
+
+	validator := fmt.Sprintf(`"%s|%s"`, h.serv.State(), manifest.String())
+	if unmodified(r, validator) {
+		w.WriteHeader(http.StatusNotModified)
 		return
 	}
 
@@ -86,6 +100,7 @@ func (h *HTTP) IndexReportHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Add("etag", validator)
 	err = json.NewEncoder(w).Encode(report)
 	if err != nil {
 		resp := &je.Response{
@@ -98,6 +113,7 @@ func (h *HTTP) IndexReportHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HTTP) IndexHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "application/json")
 	if r.Method != http.MethodPost {
 		resp := &je.Response{
 			Code:    "method-not-allowed",
@@ -132,8 +148,9 @@ func (h *HTTP) IndexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	next := path.Join(IndexReportAPIPath, m.Hash.String())
+	w.Header().Set("location", next)
 	w.WriteHeader(http.StatusCreated)
-	w.Header().Set("location", path.Join(IndexReportAPIPath, m.Hash.String()))
 	err = json.NewEncoder(w).Encode(report)
 	if err != nil {
 		resp := &je.Response{
@@ -150,16 +167,14 @@ func (h *HTTP) StateHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+	w.Header().Set("content-type", "application/json")
 	s := h.serv.State()
 	tag := `"` + s + `"`
 	w.Header().Add("etag", tag)
 
-	es, ok := r.Header["If-None-Match"]
-	if ok {
-		if sort.Strings(es); sort.SearchStrings(es, tag) != -1 {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
+	if unmodified(r, tag) {
+		w.WriteHeader(http.StatusNotModified)
+		return
 	}
 	w.Header().Set("content-type", "application/json")
 
