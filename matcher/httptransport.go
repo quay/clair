@@ -101,7 +101,7 @@ func (h *HTTP) VulnerabilityReportHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	err = json.NewEncoder(w).Encode(vulnReport)
 	if err != nil {
 		resp := &je.Response{
