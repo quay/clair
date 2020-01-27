@@ -49,11 +49,18 @@ func devMode(ctx context.Context, conf config.Config) (*http.Server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize libindex: %v", err)
 	}
-	libV, err := libvuln.New(ctx, &libvuln.Opts{
+	vopt := libvuln.Opts{
 		MaxConnPool: int32(conf.Matcher.MaxConnPool),
 		ConnString:  conf.Matcher.ConnString,
 		Migrations:  conf.Matcher.Migrations,
-	})
+	}
+	if conf.Matcher.Updaters != nil {
+		vopt.Run = *conf.Matcher.Updaters
+	}
+	libV, err := libvuln.New(ctx, &vopt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize libvuln: %v", err)
+	}
 
 	mux := http.NewServeMux()
 	indexer, err := indexer.NewHTTPTransport(libI)
