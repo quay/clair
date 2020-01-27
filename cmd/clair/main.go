@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"flag"
+	"io"
 	golog "log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -42,58 +44,87 @@ func main() {
 	}
 
 	// setup global log level
-	level := logLevel(conf)
-	zerolog.SetGlobalLevel(level)
+	var out io.Writer = os.Stderr
+	if conf.Mode == config.DevMode {
+		out = zerolog.ConsoleWriter{
+			Out: os.Stderr,
+		}
+	}
+	log := zerolog.New(out).With().
+		Timestamp().
+		Logger().
+		Level(logLevel(conf))
 
 	// create global application context
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-
 	// derive ctx with logger attached. we will propagate a logger via context to all long living components
-	logger := log.With().Str("version", Version).Logger()
-	lctx := logger.WithContext(ctx)
-
-	// return a http server with the correct handlers given the config's Mode attribute.
-	server, err := httptransport(lctx, conf)
-	if err != nil {
-		logger.Fatal().Msgf("failed to create http transport: %v", err)
+	ctx = log.WithContext(ctx)
+	logger := log.With().
+		Str("component", "cmd/clair/main").
+		Str("version", Version).
+		Logger()
+	logfunc := func(_ net.Listener) context.Context {
+		return ctx
 	}
-	logger.Info().Str("component", "clair-main").Msgf("launching http transport on %v", server.Addr)
-	go func() {
-		err := server.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
-			logger.Error().Str("component", "clair-main").Msgf("launching http transport failed %v", err)
-			cancel()
-		}
-	}()
 
-	intro, err := introspection(lctx, &conf, func() bool { return true })
+	// Make sure to configure our metrics and tracing providers before creating
+	// any package objects that may close over a provider.
+	intro, err := introspection(ctx, &conf, func() bool { return true })
 	if err != nil {
 		logger.Error().Err(err).Msg("failed to create introspection server")
 	} else {
+		intro.BaseContext = logfunc
+		logger.Info().
+			Str("addr", intro.Addr).
+			Msgf("launching introspection via http")
 		go func() {
 			if err := intro.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				logger.Error().Err(err).Msg("unable to start introspection server")
+				logger.Error().Err(err).Msg("launching introspection via http failed")
 			}
-			defer intro.Shutdown(lctx)
+			defer intro.Shutdown(ctx)
 		}()
 	}
+
+	// return a http server with the correct handlers given the config's Mode attribute.
+	server, err := httptransport(ctx, conf)
+	if err != nil {
+		logger.Fatal().
+			Err(err).
+			Msgf("failed to create api server")
+	}
+	server.BaseContext = logfunc
+	logger.Info().
+		Str("addr", server.Addr).
+		Msgf("launching api via http")
+	go func() {
+		err := server.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			logger.Error().
+				Err(err).
+				Msg("launching api via http failed")
+			cancel()
+		}
+	}()
 
 	// register signal handler
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
+	logger.Info().Msg("🆙")
 	// block
 	select {
 	case sig := <-c:
 		// received a SIGINT for graceful shutdown
-		logger.Info().Str("component", "clair-main").Msgf("received signal %v... gracefully shutting down. 10 second timeout", sig)
+		logger.Info().
+			Str("signal", sig.String()).
+			Msg("gracefully shutting down")
 		tctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 		defer cancel()
 		server.Shutdown(tctx)
 	case <-ctx.Done():
 		// main cancel func called indicating error initializing
-		logger.Fatal().Msgf("initialization of clair failed. view log entries for details")
+		logger.Fatal().Msg("initialization failed")
 	}
 }
 
