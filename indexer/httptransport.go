@@ -1,7 +1,6 @@
 package indexer
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -18,9 +17,10 @@ import (
 var _ http.Handler = (*HTTP)(nil)
 
 const (
-	IndexAPIPath       = "/api/v1/index_report"
-	IndexReportAPIPath = "/api/v1/index_report/"
-	StateAPIPath       = "/api/v1/state"
+	v1Root             = "/api/v1/"
+	IndexAPIPath       = v1Root + "index_report"
+	IndexReportAPIPath = v1Root + "index_report/"
+	StateAPIPath       = v1Root + "state"
 )
 
 type HTTP struct {
@@ -112,7 +112,13 @@ func (h *HTTP) IndexReportHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+const (
+	linkIndex  = `<%s>; rel="https://projectquay.io/clair/v1/index_report"`
+	linkReport = `<%s>; rel="https://projectquay.io/clair/v1/vulnerability_report"`
+)
+
 func (h *HTTP) IndexHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	w.Header().Set("content-type", "application/json")
 	if r.Method != http.MethodPost {
 		resp := &je.Response{
@@ -138,7 +144,7 @@ func (h *HTTP) IndexHandler(w http.ResponseWriter, r *http.Request) {
 
 	// TODO Do we need some sort of background context embedded in the HTTP
 	// struct?
-	report, err := h.serv.Index(context.TODO(), &m)
+	report, err := h.serv.Index(ctx, &m)
 	if err != nil {
 		resp := &je.Response{
 			Code:    "index-error",
@@ -149,16 +155,12 @@ func (h *HTTP) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	next := path.Join(IndexReportAPIPath, m.Hash.String())
+	w.Header().Add("link", fmt.Sprintf(linkReport, path.Join(v1Root, "vulnerabilty_report", m.Hash.String())))
+	w.Header().Add("link", fmt.Sprintf(linkIndex, next))
 	w.Header().Set("location", next)
 	w.WriteHeader(http.StatusCreated)
-	err = json.NewEncoder(w).Encode(report)
-	if err != nil {
-		resp := &je.Response{
-			Code:    "encoding-error",
-			Message: fmt.Sprintf("failed to encode scan report: %v", err),
-		}
-		je.Error(w, resp, http.StatusInternalServerError)
-		return
+	if err := json.NewEncoder(w).Encode(report); err != nil {
+		w.Header().Set("clair-error", err.Error())
 	}
 }
 
@@ -176,21 +178,14 @@ func (h *HTTP) StateHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotModified)
 		return
 	}
-	w.Header().Set("content-type", "application/json")
-
-	err := json.NewEncoder(w).Encode(struct {
-		State string `json:"state"`
-	}{
-		State: s,
-	})
+	err := json.NewEncoder(w).Encode(stateSuccess{s})
 	if err != nil {
-		resp := &je.Response{
-			Code:    "encoding-error",
-			Message: fmt.Sprintf("failed to encode scan report: %v", err),
-		}
-		je.Error(w, resp, http.StatusInternalServerError)
+		w.Header().Set("clair-error", err.Error())
 	}
-	return
+}
+
+type stateSuccess struct {
+	State string `json:"state"`
 }
 
 // Register will register the api on a given mux.
