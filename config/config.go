@@ -32,6 +32,8 @@ type Config struct {
 	Auth    Auth    `yaml:"auth"`
 	// Tracing config
 	Trace Trace `yaml:"trace"`
+	// Metrics config
+	Metrics Metrics `yaml:"metrics"`
 }
 
 type Auth struct {
@@ -70,7 +72,37 @@ type Matcher struct {
 }
 
 type Trace struct {
-	Probability *float64 `yaml:probability`
+	Name        string   `yaml:"name"`
+	Probability *float64 `yaml:"probability"`
+	Jaeger      Jaeger   `yaml:",inline"`
+}
+
+type Jaeger struct {
+	Agent struct {
+		Endpoint string `yaml:"agent_endpoint"`
+	} `yaml:",inline"`
+	Collector struct {
+		Endpoint string  `yaml:"collector_endpoint"`
+		Username *string `yaml:"username"`
+		Password *string `yaml:"password"`
+	} `yaml:",inline"`
+	ServiceName string            `yaml:"service_name"`
+	Tags        map[string]string `yaml:"tags"`
+	BufferMax   int               `yaml:"buffer_max"`
+}
+
+type Metrics struct {
+	Name       string     `yaml:"name"`
+	Prometheus Prometheus `yaml:",inline"`
+	Dogstatsd  Dogstatsd  `yaml:",inline"`
+}
+
+type Prometheus struct {
+	Endpoint *string `yaml:"endpoint"`
+}
+
+type Dogstatsd struct {
+	URL string `yaml:"url"`
 }
 
 func Validate(conf Config) error {
