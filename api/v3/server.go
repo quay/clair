@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
@@ -43,7 +44,7 @@ func init() {
 func prometheusHandler(h http.Handler) http.Handler {
 	mux := http.NewServeMux()
 	mux.Handle("/", h)
-	mux.Handle("/metrics", prometheus.Handler())
+	mux.Handle("/metrics", promhttp.Handler())
 	return mux
 }
 
