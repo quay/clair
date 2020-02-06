@@ -1,0 +1,5 @@
+from testimage:1
+
+ENV PREFIX=rh
+LABEL com.redhat.component="${PREFIX}-pkg"
+LABEL architecture=x86_64

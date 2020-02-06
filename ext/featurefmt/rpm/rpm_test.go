@@ -378,7 +378,7 @@ func TestParseSourceRPM(t *testing.T) {
 		// actual expected: name="lua", version="5.3.4", release="10.fc-28"
 		{"lua-5.3.4-10.fc-28.src.rpm", "lua-5.3.4", "10.fc-28", ""},
 	} {
-		name, version, release, _, err := parseSourceRPM(test.sourceRPM)
+		name, version, release, err := parseSourceRPM(test.sourceRPM)
 		if test.expectedErr != "" {
 			require.EqualError(t, err, test.expectedErr)
 			continue

@@ -23,10 +23,11 @@ FROM alpine:3.10
 COPY --from=build /go/clair/clair /clair
 RUN apk add --no-cache git rpm xz ca-certificates dumb-init
 
+RUN mkdir /etc/clair
 # change ownership of ssl directory to allow custom cert in OpenShift
-RUN chgrp -R 0 /etc/ssl/certs && \
-    chmod -R g=u /etc/ssl/certs
-    
+RUN chgrp -R 0 /etc/ssl/certs /etc/clair && \
+    chmod -R g=u /etc/ssl/certs /etc/clair
+
 ENTRYPOINT ["/usr/bin/dumb-init", "--", "/clair"]
 VOLUME /config
 EXPOSE 6060 6061
