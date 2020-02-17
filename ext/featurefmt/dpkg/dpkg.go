@@ -142,8 +142,8 @@ func parseDpkgDB(scanner *bufio.Scanner) (binaryPackage *database.Feature, sourc
 	}
 
 	if sourceName != "" && sourceVersion != "" {
-		if err := versionfmt.Valid(dpkg.ParserName, version); err != nil {
-			log.WithError(err).WithFields(log.Fields{"name": name, "version": version}).Warning("skipped unparseable package")
+		if err := versionfmt.Valid(dpkg.ParserName, sourceVersion); err != nil {
+			log.WithError(err).WithFields(log.Fields{"name": sourceName, "version": sourceVersion}).Warning("skipped unparseable package")
 		} else {
 			sourcePackage = &database.Feature{sourceName, sourceVersion, dpkg.ParserName, database.SourcePackage}
 		}
