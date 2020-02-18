@@ -17,9 +17,9 @@ RUN apk add --no-cache git build-base
 ADD .   /go/clair/
 WORKDIR /go/clair/
 RUN export CLAIR_VERSION=$(git describe --tag --always --dirty) && \
-	go build -ldflags "-X github.com/quay/clair/v3/pkg/version.Version=$CLAIR_VERSION" ./cmd/clair
+    go build -ldflags "-X github.com/quay/clair/v3/pkg/version.Version=$CLAIR_VERSION" ./cmd/clair
 
-FROM alpine:3.10
+FROM alpine:3.11
 COPY --from=build /go/clair/clair /clair
 RUN apk add --no-cache git rpm xz ca-certificates dumb-init
 
