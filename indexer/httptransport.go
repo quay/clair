@@ -45,8 +45,8 @@ func (h *HTTP) IndexReportHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	manifestHash := strings.TrimPrefix(r.URL.Path, IndexReportAPIPath)
-	if manifestHash == "" {
+	manifestStr := strings.TrimPrefix(r.URL.Path, IndexReportAPIPath)
+	if manifestStr == "" {
 		resp := &je.Response{
 			Code:    "bad-request",
 			Message: "malformed path. provide a single manifest hash",
@@ -54,12 +54,21 @@ func (h *HTTP) IndexReportHandler(w http.ResponseWriter, r *http.Request) {
 		je.Error(w, resp, http.StatusBadRequest)
 		return
 	}
+	manifest, err := claircore.ParseDigest(manifestStr)
+	if err != nil {
+		resp := &je.Response{
+			Code:    "bad-request",
+			Message: "malformed path: " + err.Error(),
+		}
+		je.Error(w, resp, http.StatusBadRequest)
+		return
+	}
 
-	report, ok, err := h.serv.IndexReport(context.Background(), manifestHash)
+	report, ok, err := h.serv.IndexReport(context.Background(), manifest)
 	if !ok {
 		resp := &je.Response{
 			Code:    "not-found",
-			Message: fmt.Sprintf("index report for manifest %s not found", manifestHash),
+			Message: fmt.Sprintf("index report for manifest %q not found", manifest.String()),
 		}
 		je.Error(w, resp, http.StatusNotFound)
 		return
@@ -67,7 +76,7 @@ func (h *HTTP) IndexReportHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		resp := &je.Response{
 			Code:    "internal-server-error",
-			Message: fmt.Sprintf("%w", err),
+			Message: err.Error(),
 		}
 		je.Error(w, resp, http.StatusInternalServerError)
 		return

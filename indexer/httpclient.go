@@ -74,8 +74,8 @@ func (s *httpClient) Index(ctx context.Context, manifest *claircore.Manifest) (*
 }
 
 // IndexReport retrieves a IndexReport given a manifest hash string
-func (s *httpClient) IndexReport(ctx context.Context, manifestHash string) (*claircore.IndexReport, bool, error) {
-	u, err := s.addr.Parse(path.Join(IndexReportAPIPath, manifestHash))
+func (s *httpClient) IndexReport(ctx context.Context, manifest claircore.Digest) (*claircore.IndexReport, bool, error) {
+	u, err := s.addr.Parse(path.Join(IndexReportAPIPath, manifest.String()))
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to create request: %v", err)
 	}

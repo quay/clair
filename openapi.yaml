@@ -3,7 +3,7 @@ openapi: "3.0.2"
 info:
   title: "ClairV4"
   description: |
-    ClairV4 is a set of cooperating microservice which scan, index, and
+    ClairV4 is a set of cooperating microservices which scan, index, and
     match your container's content with known vulnerabilities.
   version: "0.1"
   termsOfService: ""
@@ -59,11 +59,11 @@ paths:
         - name: manifest_hash
           in: path
           description: |
-            A content addressable hash which has been indexed previous
-            to this request.
+            A digest of a manifest that has been indexed previous to this
+            request.
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/Digest'
       responses:
         200:
           description: IndexReport retrieved
@@ -96,11 +96,11 @@ paths:
         - name: manifest_hash
           in: path
           description: |
-            A content addressable hash which has been indexed previous
-            to this request.
+            A digest of a manifest that has been indexed previous to this
+            request.
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/Digest'
       responses:
         201:
           description: VulnerabilityReport Created
@@ -127,7 +127,7 @@ paths:
         internal configuration state.
 
         A client may be interested in this as a signal that manifests may need
-        to be reindexed.
+        to be re-indexed.
       responses:
         200:
           description: Indexer State
@@ -176,8 +176,8 @@ components:
     Environment:
       value:
         package_db: "var/lib/dpkg/status"
-        introduced_in: |
-          35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
+        introduced_in: |-
+          sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
         distribution_id: "1"
 
     Vulnerability:
@@ -262,11 +262,7 @@ components:
           type: string
           example: "var/lib/dpkg/status"
         introduced_in:
-          description: |
-            The container layer the associated package was introduced in.
-          type: string
-          example: |
-            35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
+          $ref: '#/components/schemas/Digest'
         distribution_id:
           description: |
             The distribution ID found in an associated IndexReport or
@@ -283,12 +279,7 @@ components:
         report for matching Vulnerabilities.
       properties:
         manifest_hash:
-          description: |
-            A content addressable hash uniqually identifying the indexed
-            manifest.
-          type: string
-          example: |
-            2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36
+          $ref: '#/components/schemas/Digest'
         state:
           description: "The current state of the index operation"
           type: string
@@ -304,7 +295,7 @@ components:
         distributions:
           type: object
           description: |
-            A map of Distribution objects key'd by their Distribution.id
+            A map of Distribution objects keyed by their Distribution.id
             discovered in the manifest.
           example:
             "1":
@@ -321,8 +312,8 @@ components:
               # swagger bug does not allow inline reference here -_-
               # - $ref: '#/components/examples/Environment/value'
               - package_db: "var/lib/dpkg/status"
-                introduced_in: |
-                  35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
+                introduced_in: |-
+                  sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
                 distribution_id: "1"
 
           additionalProperties:
@@ -346,10 +337,7 @@ components:
         and package vulnerabilities within a Manifest.
       properties:
         manifest_hash:
-          description: |
-            The content addressable manifest hash this VulnerabilityReport
-            is associated with.
-          type: string
+          $ref: '#/components/schemas/Digest'
         packages:
           type: object
           description: "A map of Package objects indexed by Package.id"
@@ -375,8 +363,8 @@ components:
               # swagger bug does not allow inline reference here -_-
               # - $ref: '#/components/examples/Environment/value'
               - package_db: "var/lib/dpkg/status"
-                introduced_in: |
-                  35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
+                introduced_in: |-
+                  sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
                 distribution_id: "1"
           additionalProperties:
             type: array
@@ -518,12 +506,7 @@ components:
         preserve the original container's layer order for accurate usage.
       properties:
         hash:
-          description: |
-            A content addressable hash uniqually identifying this
-            manifest.
-          type: string
-          example: |
-            251f5509d51d9e4119d4ffb70d4820f8e2d7dc72ad15df3ebd7cd755539e40fd
+          $ref: '#/components/schemas/Digest'
         layers:
           type: array
           items:
@@ -535,15 +518,11 @@ components:
       description: "A Layer within a Manifest and where Clair may retrieve it."
       properties:
         hash:
-          type: string
-          description: |
-            A content addressable hash uniqually identifying this layer
-          example: |
-            2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36
+          $ref: '#/components/schemas/Digest'
         uri:
           type: string
           description: |
-            A URI decribing where the layer may be found. Implementions
+            A URI describing where the layer may be found. Implementations
             MUST support http(s) schemes and MAY support additional
             schemes.
           example: |
@@ -576,3 +555,14 @@ components:
       description: an opaque identifier
       example:
         state: "aae368a064d7c5a433d0bf2c4f5554cc"
+
+    Digest:
+      title: Digest
+      type: string
+      description: |
+        A digest string with prefixed algorithm. The format is described here:
+        https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests
+
+        Digests are used throughout the API to identify Layers and Manifests.
+      example: |-
+        sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3

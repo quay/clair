@@ -25,7 +25,7 @@ type HTTP struct {
 }
 
 type Reporter interface {
-	IndexReport(context.Context, string) (*claircore.IndexReport, bool, error)
+	IndexReport(context.Context, claircore.Digest) (*claircore.IndexReport, bool, error)
 }
 
 func NewHTTPTransport(service Service, r Reporter) (*HTTP, error) {
@@ -51,8 +51,8 @@ func (h *HTTP) VulnerabilityReportHandler(w http.ResponseWriter, r *http.Request
 	ctx, done := context.WithCancel(r.Context())
 	defer done()
 
-	manifestHash := strings.TrimPrefix(r.URL.Path, VulnerabilityReportAPIPath)
-	if manifestHash == "" {
+	manifestStr := strings.TrimPrefix(r.URL.Path, VulnerabilityReportAPIPath)
+	if manifestStr == "" {
 		resp := &je.Response{
 			Code:    "bad-request",
 			Message: "malformed path. provide a single manifest hash",
@@ -60,12 +60,21 @@ func (h *HTTP) VulnerabilityReportHandler(w http.ResponseWriter, r *http.Request
 		je.Error(w, resp, http.StatusBadRequest)
 		return
 	}
+	manifest, err := claircore.ParseDigest(manifestStr)
+	if err != nil {
+		resp := &je.Response{
+			Code:    "bad-request",
+			Message: "malformed path: " + err.Error(),
+		}
+		je.Error(w, resp, http.StatusBadRequest)
+		return
+	}
 
-	indexReport, ok, err := h.r.IndexReport(ctx, manifestHash)
+	indexReport, ok, err := h.r.IndexReport(ctx, manifest)
 	if !ok {
 		resp := &je.Response{
 			Code:    "not-found",
-			Message: fmt.Sprintf("index report for manifest %s not found", manifestHash),
+			Message: fmt.Sprintf("index report for manifest %q not found", manifest.String()),
 		}
 		je.Error(w, resp, http.StatusNotFound)
 		return
