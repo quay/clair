@@ -1,0 +1,35 @@
+{
+    "errata_list": {
+        "RHSA-2019:0139": {
+            "bugzilla_list": [
+                "1410481"
+            ],
+            "cve_list": [
+                "CVE-2017-2582"
+            ],
+            "description": "Red Hat JBoss Enterprise Application Platform is a platform for Java applications based on the JBoss Application Server.\n\nThis release serves as a replacement for Red Hat JBoss Enterprise Application Platform 7.1, and includes bug fixes and enhancements. Refer to the Red Hat JBoss Enterprise Application Platform 7.2.0 Release Notes for information on the most significant bug fixes and enhancements included in this release.\n\nSecurity Fix(es):\n\n* picketlink: SAML request parser replaces special strings with system properties (CVE-2017-2582)\n\nFor more details about the security issue(s), including the impact, a CVSS\nscore, and other related information, refer to the CVE page(s) listed in\nthe References section.\n\nThe CVE-2017-2582 issue was discovered by Hynek Mlnarik (Red Hat).",
+            "issued": "2019-01-22T16:22:20+00:00",
+            "package_list": [
+                "tomcat7-docs-webapp-7.0.70-31.ep7.el7.noarch",
+                "tomcat7-selinux-7.0.70-31.ep7.el6.noarch"
+            ],
+            "reference_list": [
+                "classification-RHSA-2019:0139",
+                "ref_0-RHSA-2019:0139",
+                "ref_1-RHSA-2019:0139",
+                "ref_2-RHSA-2019:0139"
+            ],
+            "severity": "Moderate",
+            "solution": "Before applying this update, back up your existing Red Hat JBoss Enterprise Application Platform installation and deployed applications.\n\nThe References section of this erratum contains a download link (you must log in to download the update).\n\nThe JBoss server process must be restarted for the update to take effect.",
+            "summary": "Red Hat JBoss Enterprise Application Platform 7.2.0 is now available.\n\nRed Hat Product Security has rated this update as having a security impact of Moderate. A Common Vulnerability Scoring System (CVSS) base score, which gives a detailed severity rating, is available for each vulnerability from the CVE link(s) in the References section.",
+            "synopsis": "Moderate: Red Hat JBoss Enterprise Application Platform 7.2.0 security update",
+            "type": "security",
+            "updated": "2019-01-22T16:22:20+00:00",
+            "url": "https://access.redhat.com/errata/RHSA-2019:0139"
+        }
+    },
+    "modified_since": "2019-01-22T16:01:41+01:00",
+    "page": 1,
+    "page_size": 1,
+    "pages": 1
+}

@@ -16,8 +16,10 @@
 package httputil
 
 import (
+	"bytes"
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -40,6 +42,29 @@ func GetWithUserAgent(url string) (*http.Response, error) {
 	}
 
 	req.Header.Set("User-Agent", "Clair/"+version.Version+" (https://github.com/quay/clair)")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+// PostWithUserAgent performs an HTTP POST with the proper Clair User-Agent.
+func PostWithUserAgent(url string, data interface{}) (*http.Response, error) {
+	client := &http.Client{}
+	postData, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(postData))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", "Clair/"+version.Version+" (https://github.com/coreos/clair)")
 
 	resp, err := client.Do(req)
 	if err != nil {
