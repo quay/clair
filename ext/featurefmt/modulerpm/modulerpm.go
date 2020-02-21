@@ -121,7 +121,6 @@ func parseRPMOutput(raw string) (rpmPackage *database.LayerFeature) {
 		log.WithError(err).WithFields(log.Fields{"name": name, "version": version}).Warning("skipped unparseable package")
 		return
 	}
-	log.Warning(line)
 	// module format: name:stream:version:context
 	moduleSplit := strings.Split(line[2], ":")
 	if len(moduleSplit) < 2 {
