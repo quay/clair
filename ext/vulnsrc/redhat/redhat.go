@@ -338,7 +338,7 @@ func (u *updater) parseAdvisory(advisory Advisory, variantToCPEMapping map[strin
 					for _, variant := range pkgVariants {
 						cpe, ok := variantToCPEMapping[variant]
 						if ok {
-							cpes = append(cpes, cpe)
+							cpes = appendUnique(cpes, cpe)
 						} else {
 							log.Warning(fmt.Sprintf("No CPE for: %s %s %s", variant, nevra, advisory.Name))
 						}
@@ -472,6 +472,16 @@ func severity(sev string) database.Severity {
 		log.Warningf("could not determine vulnerability severity from: %s.", sev)
 		return database.UnknownSeverity
 	}
+}
+
+func appendUnique(items []string, item string) []string {
+	for _, value := range items {
+		if value == item {
+			return items
+		}
+	}
+	items = append(items, item)
+	return items
 }
 
 func (u *updater) Clean() {}
