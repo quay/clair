@@ -12,21 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.13-alpine AS build
-RUN apk add --no-cache git build-base
-ADD .   /go/clair/
-WORKDIR /go/clair/
-RUN export CLAIR_VERSION=$(git describe --tag --always --dirty) && \
-	go build -ldflags "-X github.com/quay/clair/v3/pkg/version.Version=$CLAIR_VERSION" ./cmd/clair
+FROM golang:1.14-alpine AS build
+RUN apk add --no-cache build-base
+ARG CLAIR_VERSION=dev
+WORKDIR /build/
+ADD . /build/
+RUN go build \
+	-mod=vendor \
+	-ldflags="-X github.com/quay/clair/v4/cmd/clair/main.Version=${CLAIR_VERSION}" \
+	./cmd/clair
 
-FROM alpine:3.10
-COPY --from=build /go/clair/clair /clair
-RUN apk add --no-cache git rpm xz ca-certificates dumb-init
-
+FROM alpine:3.10 AS final
+RUN apk add --no-cache tar rpm ca-certificates dumb-init
 # change ownership of ssl directory to allow custom cert in OpenShift
 RUN chgrp -R 0 /etc/ssl/certs && \
     chmod -R g=u /etc/ssl/certs
-    
-ENTRYPOINT ["/usr/bin/dumb-init", "--", "/clair"]
+ENTRYPOINT ["/usr/bin/dumb-init", "--", "/bin/clair", "-conf"]
+CMD ["/config/config.yaml"]
 VOLUME /config
-EXPOSE 6060 6061
+EXPOSE 6060
+WORKDIR /run
+
+COPY --from=build /build/clair /bin/clair
