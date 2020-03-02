@@ -200,7 +200,8 @@ components:
           https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238
           https://sourceware.org/bugzilla/show_bug.cgi?id=18986"
         severity: "Low"
-        package:
+        normalized_severity: "Low"
+        package: 
           id: "0"
           name: "glibc"
           version: ""
@@ -416,6 +417,10 @@ components:
           description: |
             A severity keyword taken verbatim from the vulnerability source.
           type: string
+        normalized_severity:
+          description: "A well defined set of severity strings guaranteed to be present."
+          type: string
+          enum: [Unkonwn, Negligible, Low, Medium, High, Critical, Defcon1]
         package:
           $ref: '#/components/schemas/Package'
         dist:
