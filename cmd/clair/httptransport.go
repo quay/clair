@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/quay/clair/v4/middleware/auth"
+	"github.com/quay/clair/v4/middleware/compress"
 	"github.com/quay/claircore/libindex"
 	"github.com/quay/claircore/libvuln"
 	"go.opentelemetry.io/otel/plugin/othttp"
@@ -75,7 +77,7 @@ func devMode(ctx context.Context, conf config.Config) (*http.Server, error) {
 	matcher.Register(mux)
 	return &http.Server{
 		Addr:    conf.HTTPListenAddr,
-		Handler: othttp.NewHandler(Compress(mux), "server"),
+		Handler: othttp.NewHandler(compress.Handler(mux), "server"),
 	}, nil
 }
 
@@ -96,7 +98,7 @@ func indexerMode(ctx context.Context, conf config.Config) (*http.Server, error) 
 	}
 	return &http.Server{
 		Addr:    conf.Indexer.HTTPListenAddr,
-		Handler: othttp.NewHandler(Compress(indexer), "server"),
+		Handler: othttp.NewHandler(compress.Handler(indexer), "server"),
 	}, nil
 }
 
@@ -120,7 +122,7 @@ func matcherMode(ctx context.Context, conf config.Config) (*http.Server, error) 
 	}
 	return &http.Server{
 		Addr:    conf.Matcher.HTTPListenAddr,
-		Handler: othttp.NewHandler(Compress(matcher), "server"),
+		Handler: othttp.NewHandler(compress.Handler(matcher), "server"),
 	}, nil
 }
 
@@ -132,11 +134,11 @@ func setAuth(srv *http.Server, conf config.Config) error {
 		if !ok {
 			return fmt.Errorf("missing needed config key: %q", param)
 		}
-		ks, err := QuayKeyserver(api)
+		ks, err := auth.NewQuayKeyserver(api)
 		if err != nil {
 			return err
 		}
-		srv.Handler = AuthHandler(srv.Handler, ks)
+		srv.Handler = auth.Handler(srv.Handler, ks)
 	case "psk":
 		const (
 			iss = "issuer"
@@ -154,11 +156,11 @@ func setAuth(srv *http.Server, conf config.Config) error {
 		if !ok {
 			return fmt.Errorf("missing needed config key: %q", iss)
 		}
-		psk, err := PSKAuth(k, i)
+		psk, err := auth.NewPSK(k, i)
 		if err != nil {
 			return err
 		}
-		srv.Handler = AuthHandler(srv.Handler, psk)
+		srv.Handler = auth.Handler(srv.Handler, psk)
 	case "":
 	default:
 		return fmt.Errorf("unknown auth kind %q", conf.Auth.Name)

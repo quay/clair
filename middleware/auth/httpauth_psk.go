@@ -1,4 +1,4 @@
-package main
+package auth
 
 import (
 	"context"
@@ -8,12 +8,25 @@ import (
 	"gopkg.in/square/go-jose.v2/jwt"
 )
 
-type psk struct {
+// PSK implements the AuthCheck interface.
+//
+// When Check is called the JWT on the incoming http request
+// will be validated against a pre-shared-key.
+type PSK struct {
 	key []byte
 	iss string
 }
 
-func (p *psk) Check(_ context.Context, r *http.Request) bool {
+// NewPSK returns an instance of a PSK
+func NewPSK(key []byte, issuer string) (*PSK, error) {
+	return &PSK{
+		key: key,
+		iss: issuer,
+	}, nil
+}
+
+// Check implements AuthCheck
+func (p *PSK) Check(_ context.Context, r *http.Request) bool {
 	wt, ok := fromHeader(r)
 	if !ok {
 		return false
@@ -33,13 +46,4 @@ func (p *psk) Check(_ context.Context, r *http.Request) bool {
 		return false
 	}
 	return true
-}
-
-// PSKAuth returns an AuthCheck that validates a JWT with the supplied key and
-// ensures the issuer claim matches.
-func PSKAuth(key []byte, issuer string) (AuthCheck, error) {
-	return &psk{
-		key: key,
-		iss: issuer,
-	}, nil
 }
