@@ -17,13 +17,19 @@ docker-compose ?= docker-compose
 # start a local development environment. 
 # each services runs in it's own container to test service->service communication.
 .PHONY: local-dev-up
-local-dev-up:
+local-dev-up: vendor
+	$(docker-compose) up -d jaeger
+	$(docker-compose) up -d prometheus
 	$(docker-compose) up -d clair-db
 	$(docker) exec -it clair_clair-db_1 bash -c 'while ! pg_isready; do echo "waiting for postgres"; sleep 2; done'
-	go mod vendor
 	$(docker-compose) up -d indexer
 	$(docker-compose) up -d matcher
 	$(docker-compose) up -d swagger-ui
+
+vendor: vendor/modules.txt
+
+vendor/modules.txt: go.mod
+	go mod vendor
 
 # tear down the entire local development environment
 .PHONY: local-dev-down
@@ -50,3 +56,4 @@ local-dev-matcher-restart:
 .PHONY: local-dev-swagger-ui-restart
 local-dev-swagger-ui-restart:
 	$(docker-compose) up -d --force-recreate swagger-ui
+	 

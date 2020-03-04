@@ -8,7 +8,7 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U clair -d clair" ]
+      test: ["CMD-SHELL", "pg_isready -U clair -d clair"]
       interval: 10s
       timeout: 9s
       retries: 3
@@ -18,19 +18,21 @@ services:
     image: quay.io/claircore/golang:1.13.3
     ports:
       - "8080:80"
+      - "8089:8089"
     volumes:
       - "./:/src/clair/"
     command:
-      [ "bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor . -conf /src/clair/local-dev/indexer/indexer.config.yaml" ]
+      ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor . -conf /src/clair/local-dev/indexer/indexer.config.yaml"]
 
   matcher:
     image: quay.io/claircore/golang:1.13.3
     ports:
       - "8081:80"
+      - "8090:8089"
     volumes:
       - "./:/src/clair/"
     command:
-      [ "bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor . -conf /src/clair/local-dev/matcher/matcher.config.yaml" ]
+      ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor . -conf /src/clair/local-dev/matcher/matcher.config.yaml"]
 
   swagger-ui:
     image: swaggerapi/swagger-ui
@@ -40,3 +42,29 @@ services:
       - "./:/clair"
     environment:
       SWAGGER_JSON: "/clair/openapi.yaml"
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.17
+    ports:
+        - "5775:5775/udp" 
+        - "6831:6831/udp" 
+        - "6832:6832/udp"
+        - "5778:5778"
+        - "16686:16686"
+        - "14268:14268"
+        - "14250:14250"
+        - "9411:9411"
+    environment:
+      COLLECTOR_ZIPKIN_HTTP_PORT: 9411
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - "./local-dev/prometheus:/etc/prometheus/"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - "9090:9090"
