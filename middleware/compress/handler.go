@@ -1,4 +1,4 @@
-package main
+package compress
 
 import (
 	"fmt"
@@ -15,10 +15,10 @@ import (
 	"github.com/klauspost/compress/snappy"
 )
 
-// Compress wraps the provided http.Handler and provides transparent body
+// Handler wraps the provided http.Handler and provides transparent body
 // compression based on a Request's "Accept-Encoding" header.
-func Compress(next http.Handler) http.Handler {
-	h := compressHandler{
+func Handler(next http.Handler) http.Handler {
+	h := handler{
 		next: next,
 	}
 	h.snappy.New = func() interface{} {
@@ -36,10 +36,10 @@ func Compress(next http.Handler) http.Handler {
 	return &h
 }
 
-var _ http.Handler = (*compressHandler)(nil)
+var _ http.Handler = (*handler)(nil)
 
-// CompressHandler performs transparent HTTP body compression.
-type compressHandler struct {
+// handler performs transparent HTTP body compression.
+type handler struct {
 	snappy, gzip, flate sync.Pool
 	next                http.Handler
 }
@@ -97,7 +97,7 @@ type accept struct {
 }
 
 // ServeHTTP implements http.Handler.
-func (c *compressHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (c *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	ae, nok := parseAccept(r.Header.Get("accept-encoding"))
 	if ae == nil {
 		// If there was no header, play it cool.

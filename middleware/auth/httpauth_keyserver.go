@@ -1,4 +1,4 @@
-package main
+package auth
 
 import (
 	"context"
@@ -15,15 +15,38 @@ import (
 	"gopkg.in/square/go-jose.v2/jwt"
 )
 
-type ks struct {
+// QuayKS implements the AuthCheck interface.
+//
+// When Check is called the JWT on the incoming http request
+// will be validated against the Quay Keyserver
+//
+// It follows the algorithm outlined here:
+// https://github.com/quay/jwtproxy/tree/master/jwt/keyserver/keyregistry#verifier
+type QuayKeyserver struct {
 	root   *url.URL
 	client *http.Client
 	mu     sync.RWMutex
 	cache  map[string]*jose.JSONWebKey
 }
 
+// NewQuayKeyserver returns an instance of a QuayKeyserver
+func NewQuayKeyserver(api string) (*QuayKeyserver, error) {
+	root, err := url.Parse(api)
+	if err != nil {
+		return nil, err
+	}
+
+	t := httpcache.NewMemoryCacheTransport()
+	t.MarkCachedResponses = true
+	return &QuayKeyserver{
+		client: t.Client(),
+		root:   root,
+		cache:  make(map[string]*jose.JSONWebKey),
+	}, nil
+}
+
 // Check implements AuthCheck.
-func (s *ks) Check(ctx context.Context, r *http.Request) bool {
+func (s *QuayKeyserver) Check(ctx context.Context, r *http.Request) bool {
 	wt, ok := fromHeader(r)
 	if !ok {
 		return false
@@ -112,24 +135,4 @@ func (s *ks) Check(ctx context.Context, r *http.Request) bool {
 		return false
 	}
 	return true
-}
-
-// QuayKeyserver returns an AuthCheck that validates JWTs by fetching keys from the
-// Quay at "api".
-//
-// It follows the algorithm outlined here:
-// https://github.com/quay/jwtproxy/tree/master/jwt/keyserver/keyregistry#verifier
-func QuayKeyserver(api string) (AuthCheck, error) {
-	root, err := url.Parse(api)
-	if err != nil {
-		return nil, err
-	}
-
-	t := httpcache.NewMemoryCacheTransport()
-	t.MarkCachedResponses = true
-	return &ks{
-		client: t.Client(),
-		root:   root,
-		cache:  make(map[string]*jose.JSONWebKey),
-	}, nil
 }

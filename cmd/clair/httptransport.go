@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/quay/clair/v4/middleware/auth"
+	"github.com/quay/clair/v4/middleware/compress"
 	"github.com/quay/claircore/libindex"
 	"github.com/quay/claircore/libvuln"
 
@@ -71,7 +73,7 @@ func devMode(ctx context.Context, conf config.Config) (*http.Server, error) {
 	matcher.Register(mux)
 	return &http.Server{
 		Addr:    conf.HTTPListenAddr,
-		Handler: Compress(mux),
+		Handler: compress.Handler(mux),
 	}, nil
 }
 
@@ -92,7 +94,7 @@ func indexerMode(ctx context.Context, conf config.Config) (*http.Server, error) 
 	}
 	return &http.Server{
 		Addr:    conf.Indexer.HTTPListenAddr,
-		Handler: Compress(indexer),
+		Handler: compress.Handler(indexer),
 	}, nil
 }
 
@@ -116,7 +118,7 @@ func matcherMode(ctx context.Context, conf config.Config) (*http.Server, error) 
 	}
 	return &http.Server{
 		Addr:    conf.Matcher.HTTPListenAddr,
-		Handler: Compress(matcher),
+		Handler: compress.Handler(matcher),
 	}, nil
 }
 
@@ -128,11 +130,11 @@ func setAuth(srv *http.Server, conf config.Config) error {
 		if !ok {
 			return fmt.Errorf("missing needed config key: %q", param)
 		}
-		ks, err := QuayKeyserver(api)
+		ks, err := auth.NewQuayKeyserver(api)
 		if err != nil {
 			return err
 		}
-		srv.Handler = AuthHandler(srv.Handler, ks)
+		srv.Handler = auth.Handler(srv.Handler, ks)
 	case "psk":
 		const (
 			iss = "issuer"
@@ -150,11 +152,11 @@ func setAuth(srv *http.Server, conf config.Config) error {
 		if !ok {
 			return fmt.Errorf("missing needed config key: %q", iss)
 		}
-		psk, err := PSKAuth(k, i)
+		psk, err := auth.NewPSK(k, i)
 		if err != nil {
 			return err
 		}
-		srv.Handler = AuthHandler(srv.Handler, psk)
+		srv.Handler = auth.Handler(srv.Handler, psk)
 	case "":
 	default:
 		return fmt.Errorf("unknown auth kind %q", conf.Auth.Name)
