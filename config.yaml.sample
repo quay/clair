@@ -13,6 +13,7 @@
 # limitations under the License.
 
 mode: dev
+inrospection_addr: localhost:8089
 http_listen_addr: localhost:8080
 log_level: debug
 indexer:
@@ -26,3 +27,12 @@ matcher:
   run: ""
   migrations: true
 
+# tracing and metrics 
+trace:
+  name: "jaeger"
+  probability: 1
+  jaeger:
+    agent_endpoint: "addr"
+
+metrics:
+  name: "prometheus"

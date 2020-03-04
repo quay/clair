@@ -1,0 +1,16 @@
+# global config
+---
+global:
+  scrape_interval: 4s
+  evaluation_interval: 30s
+  # scrape_timeout is set to the global default (10s).
+scrape_configs:
+  - job_name: indexer
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ['indexer:8089']
+
+  - job_name: matcher
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ['matcher:8089']
