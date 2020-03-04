@@ -37,14 +37,15 @@ func introspection(ctx context.Context, cfg *config.Config, healthCheck func() b
 	switch cfg.Metrics.Name {
 	case "":
 		log.Info().Str("sink", "default").Msg("configuring metrics sink")
-		fallthrough
+		fallthrough // will default to prometheus
 	case "prometheus":
+		log.Info().Str("sink", "prometheus").Msg("configuring metrics sink")
 		endpoint := "/metrics"
 		if cfg.Metrics.Prometheus.Endpoint != nil {
 			endpoint = *cfg.Metrics.Prometheus.Endpoint
 		}
 		log.Info().
-			Str("endpoint", endpoint).
+			Str("url", srv.Addr+endpoint).
 			Msg("configuring prometheus")
 		promlog := log.With().
 			Str("component", "metrics-exporter").
@@ -60,6 +61,7 @@ func introspection(ctx context.Context, cfg *config.Config, healthCheck func() b
 		srv.RegisterOnShutdown(pipeline.Stop)
 		mux.HandleFunc(endpoint, hf)
 	case "dogstatsd":
+		log.Info().Str("sink", "dogstatsd").Msg("configuring metrics sink")
 		log.Info().
 			Str("endpoint", cfg.Metrics.Dogstatsd.URL).
 			Msg("configuring dogstatsd")
