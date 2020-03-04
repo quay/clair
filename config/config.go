@@ -74,7 +74,7 @@ type Matcher struct {
 type Trace struct {
 	Name        string   `yaml:"name"`
 	Probability *float64 `yaml:"probability"`
-	Jaeger      Jaeger   `yaml:",inline"`
+	Jaeger      Jaeger   `yaml:"jaeger"`
 }
 
 type Jaeger struct {
@@ -93,8 +93,8 @@ type Jaeger struct {
 
 type Metrics struct {
 	Name       string     `yaml:"name"`
-	Prometheus Prometheus `yaml:",inline"`
-	Dogstatsd  Dogstatsd  `yaml:",inline"`
+	Prometheus Prometheus `yaml:"prometheus"`
+	Dogstatsd  Dogstatsd  `yaml:"dogstatsd"`
 }
 
 type Prometheus struct {
