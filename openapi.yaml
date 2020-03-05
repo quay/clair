@@ -502,6 +502,18 @@ components:
           type: string
         source:
           $ref: '#/components/schemas/SourcePackage'
+        normalized_version:
+          $ref: '#/components/schemas/Version'
+
+    Version:
+      title: Version
+      type: string
+      description: |
+        Version is a normalized claircore version, composed of a "kind" and an
+        array of integers such that two versions of the same kind have the
+        correct ordering when the integers are compared pair-wise.
+      example: |-
+        pep440:0.0.0.0.0.0.0.0.0
 
     Manifest:
       title: Manifest
