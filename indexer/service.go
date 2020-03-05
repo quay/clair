@@ -6,9 +6,27 @@ import (
 	"github.com/quay/claircore"
 )
 
-// Service creates an interface around claircore.Libindex
+// Service is an aggregate interface wrapping claircore.Libindex functionality.
+//
+// Implementation may use a local instance of claircore.Libindex or a remote
+// instance via http or grpc client.
 type Service interface {
+	Indexer
+	Reporter
+	Stater
+}
+
+// Indexer is an interface providing a claircore.IndexReport given a claircore.Manifest
+type Indexer interface {
 	Index(ctx context.Context, manifest *claircore.Manifest) (*claircore.IndexReport, error)
-	IndexReport(ctx context.Context, manifes claircore.Digest) (*claircore.IndexReport, bool, error)
-	State() string
+}
+
+// Reporter is an interface providing a claircore.IndexReport provided a claircore.Digest which represents a manifest hash.
+type Reporter interface {
+	IndexReport(ctx context.Context, digest claircore.Digest) (*claircore.IndexReport, bool, error)
+}
+
+// Stater is an interface which provides a unique token symbolizing a Clair's state.
+type Stater interface {
+	State(ctx context.Context) (string, error)
 }
