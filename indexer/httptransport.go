@@ -97,9 +97,19 @@ func (h *HTTP) IndexReportHandler(w http.ResponseWriter, r *http.Request) {
 			Message: "malformed path: " + err.Error(),
 		}
 		je.Error(w, resp, http.StatusBadRequest)
+		return
 	}
 
-	validator := fmt.Sprintf(`"%s|%s"`, h.serv.State(), manifest.String())
+	state, err := h.serv.State(ctx)
+	if err != nil {
+		resp := &je.Response{
+			Code:    "internal error",
+			Message: "could not retrieve indexer state " + err.Error(),
+		}
+		je.Error(w, resp, http.StatusInternalServerError)
+		return
+	}
+	validator := fmt.Sprintf(`"%s|%s"`, state, manifest.String())
 	if unmodified(r, validator) {
 		w.WriteHeader(http.StatusNotModified)
 		return
@@ -204,7 +214,15 @@ func (h *HTTP) StateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("content-type", "application/json")
-	s := h.serv.State()
+	s, err := h.serv.State(ctx)
+	if err != nil {
+		resp := &je.Response{
+			Code:    "internal error",
+			Message: "could not retrieve indexer state " + err.Error(),
+		}
+		je.Error(w, resp, http.StatusInternalServerError)
+		return
+	}
 	tag := `"` + s + `"`
 	w.Header().Add("etag", tag)
 
@@ -212,7 +230,7 @@ func (h *HTTP) StateHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotModified)
 		return
 	}
-	err := json.NewEncoder(w).Encode(stateSuccess{s})
+	err = json.NewEncoder(w).Encode(stateSuccess{s})
 	if err != nil {
 		w.Header().Set("clair-error", err.Error())
 	}
