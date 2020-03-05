@@ -97,6 +97,7 @@ func (h *HTTP) IndexReportHandler(w http.ResponseWriter, r *http.Request) {
 			Message: "malformed path: " + err.Error(),
 		}
 		je.Error(w, resp, http.StatusBadRequest)
+		return
 	}
 
 	state, err := h.serv.State(ctx)
@@ -106,6 +107,7 @@ func (h *HTTP) IndexReportHandler(w http.ResponseWriter, r *http.Request) {
 			Message: "could not retrieve indexer state " + err.Error(),
 		}
 		je.Error(w, resp, http.StatusInternalServerError)
+		return
 	}
 	validator := fmt.Sprintf(`"%s|%s"`, state, manifest.String())
 	if unmodified(r, validator) {
@@ -219,6 +221,7 @@ func (h *HTTP) StateHandler(w http.ResponseWriter, r *http.Request) {
 			Message: "could not retrieve indexer state " + err.Error(),
 		}
 		je.Error(w, resp, http.StatusInternalServerError)
+		return
 	}
 	tag := `"` + s + `"`
 	w.Header().Add("etag", tag)
