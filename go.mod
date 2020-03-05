@@ -9,6 +9,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/prometheus/client_golang v0.9.4 // indirect
 	github.com/prometheus/procfs v0.0.8 // indirect
+	github.com/quay/claircore v0.0.17
 	github.com/rs/zerolog v1.16.0
 	go.opentelemetry.io/otel v0.2.1
 	go.opentelemetry.io/otel/exporter/metric/prometheus v0.2.2-0.20200111012159-d85178b63b15
