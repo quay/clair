@@ -4,17 +4,15 @@ import (
 	"context"
 	"flag"
 	golog "log"
-	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/quay/clair/v4/config"
+	initialize "github.com/quay/clair/v4/init"
 )
 
 const (
@@ -41,68 +39,39 @@ func main() {
 		golog.Fatalf("failed to validate config: %v", err)
 	}
 
-	// setup global log level
-	level := logLevel(conf)
-	zerolog.SetGlobalLevel(level)
-
-	// create global application context
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// derive ctx with logger attached. we will propagate a logger via context to all long living components
-	logger := log.With().Str("version", Version).Logger()
-	lctx := logger.WithContext(ctx)
-
-	// return a http server with the correct handlers given the config's Mode attribute.
-	server, err := httptransport(lctx, conf)
+	// initialize
+	init, err := initialize.New(conf)
 	if err != nil {
-		logger.Fatal().Msgf("failed to create http transport: %v", err)
+		golog.Fatalf("failed to initialize Clair: %v", err)
 	}
-	logger.Info().Str("component", "clair-main").Msgf("launching http transport on %v", server.Addr)
+	log := zerolog.Ctx(init.GlobalCTX).With().Str("component", "main").Logger()
+
+	// launch transport
+	log.Info().Msgf("launching http transport on %v", init.HttpTransport.Addr)
 	go func() {
-		err := server.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
-			logger.Error().Str("component", "clair-main").Msgf("launching http transport failed %v", err)
-			cancel()
+		err := init.HttpTransport.ListenAndServe()
+		if err != nil {
+			log.Err(err).Err(err).Msg("http transport failed to servce. canceling global context")
+			init.GlobalCancel()
 		}
 	}()
 
 	// register signal handler
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
+	log.Info().Msg("registered signal handler for os.Interrupt")
 
 	// block
 	select {
 	case sig := <-c:
 		// received a SIGINT for graceful shutdown
-		logger.Info().Str("component", "clair-main").Msgf("received signal %v... gracefully shutting down. 10 second timeout", sig)
-		tctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		log.Info().Str("component", "clair-main").Msgf("received signal %v... gracefully shutting down. 10 second timeout", sig)
+		tctx, cancel := context.WithTimeout(init.GlobalCTX, 10*time.Second)
 		defer cancel()
-		server.Shutdown(tctx)
+		init.HttpTransport.Shutdown(tctx)
 		os.Exit(0)
-	case <-ctx.Done():
+	case <-init.GlobalCTX.Done():
 		// main cancel func called indicating error initializing
-		logger.Fatal().Msgf("initialization of clair failed. view log entries for details")
-	}
-}
-
-func logLevel(conf config.Config) zerolog.Level {
-	level := strings.ToLower(conf.LogLevel)
-	switch level {
-	case "debug":
-		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-		return zerolog.DebugLevel
-	case "info":
-		return zerolog.InfoLevel
-	case "warn":
-		return zerolog.WarnLevel
-	case "error":
-		return zerolog.ErrorLevel
-	case "fatal":
-		return zerolog.FatalLevel
-	case "panic":
-		return zerolog.PanicLevel
-	default:
-		return zerolog.InfoLevel
+		log.Fatal().Msgf("initialization of clair failed. view log entries for details")
 	}
 }

@@ -85,3 +85,13 @@ func (e *ErrMatch) Error() string {
 func (e *ErrMatch) Unwrap() error {
 	return e.E
 }
+
+// ErrNotInitialized indicates an issue where a resource was expected
+// to be initialized but is not.
+type ErrNotInitialized struct {
+	Msg string
+}
+
+func (e ErrNotInitialized) Error() string {
+	return e.Msg
+}
