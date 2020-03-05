@@ -10,5 +10,5 @@ import (
 type Service interface {
 	Index(ctx context.Context, manifest *claircore.Manifest) (*claircore.IndexReport, error)
 	IndexReport(ctx context.Context, manifes claircore.Digest) (*claircore.IndexReport, bool, error)
-	State() string
+	State(ctx context.Context) (string, error)
 }
