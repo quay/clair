@@ -63,11 +63,11 @@ type Matcher struct {
 }
 
 func Validate(conf Config) error {
+	if conf.HTTPListenAddr == "" {
+		return fmt.Errorf("no http listen addr configured")
+	}
 	switch strings.ToLower(conf.Mode) {
 	case DevMode:
-		if conf.HTTPListenAddr == "" {
-			return fmt.Errorf("dev mode selected but no global HTTPListenAddr")
-		}
 		if conf.Indexer.ConnString == "" {
 			return fmt.Errorf("indexer mode requires a database connection string")
 		}
@@ -75,16 +75,10 @@ func Validate(conf Config) error {
 			return fmt.Errorf("matcher mode requires a database connection string")
 		}
 	case IndexerMode:
-		if conf.Indexer.HTTPListenAddr == "" {
-			return fmt.Errorf("indexer mode selected but no http listen address")
-		}
 		if conf.Indexer.ConnString == "" {
 			return fmt.Errorf("indexer mode requires a database connection string")
 		}
 	case MatcherMode:
-		if conf.Matcher.HTTPListenAddr == "" {
-			return fmt.Errorf("matcher mode selected but no http listen address")
-		}
 		if conf.Matcher.ConnString == "" {
 			return fmt.Errorf("matcher mode requires a database connection string")
 		}
