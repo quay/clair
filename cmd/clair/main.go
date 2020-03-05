@@ -70,20 +70,34 @@ func main() {
 
 	// Make sure to configure our metrics and tracing providers before creating
 	// any package objects that may close over a provider.
+	//
+	// This is structured in a non-idiomatic way because we don't want a failure
+	// to stop the program.
 	intro, err := introspection(ctx, &conf, func() bool { return true })
 	if err != nil {
 		logger.Error().Err(err).Msg("failed to create introspection server")
 	} else {
 		intro.BaseContext = logfunc
-		logger.Info().
-			Str("addr", intro.Addr).
-			Msgf("launching introspection via http")
-		go func() {
-			if err := intro.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				logger.Error().Err(err).Msg("launching introspection via http failed")
-			}
-			defer intro.Shutdown(ctx)
-		}()
+		addr := conf.IntrospectionAddr
+		if addr == "" {
+			addr = ":0"
+		}
+		l, err := net.Listen("tcp", addr)
+		if err != nil {
+			l.Close()
+			logger.Error().Err(err).Msg("failed to create introspection server")
+		} else {
+			logger.Info().
+				Str("addr", l.Addr().String()).
+				Msgf("launching introspection via http")
+			// The Serve method closes the net.Listener.
+			go func() {
+				if err := intro.Serve(l); err != nil && err != http.ErrServerClosed {
+					logger.Error().Err(err).Msg("launching introspection via http failed")
+				}
+				defer intro.Shutdown(ctx)
+			}()
+		}
 	}
 
 	// return a http server with the correct handlers given the config's Mode attribute.
