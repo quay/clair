@@ -15,6 +15,12 @@ import (
 	"github.com/quay/clair/v4/config"
 )
 
+const (
+	IndexAPIPath       = "/api/v1/index"
+	IndexReportAPIPath = "/api/v1/index_report/"
+	StateAPIPath       = "/api/v1/state"
+)
+
 // HttpClient implents the indexer service via HTTP
 type httpClient struct {
 	addr *url.URL
