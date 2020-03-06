@@ -11,25 +11,22 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-mode: dev
+---
 introspection_addr: localhost:8089
 http_listen_addr: localhost:8080
 log_level: debug
 indexer:
-  http_listen_addr: localhost:8080
   connstring: host=localhost port=5432 user=clair dbname=clair sslmode=disable
   scanlock_retry: 10
   layer_scan_concurrency: 5
   migrations: true
 matcher:
-  http_listen_addr: localhost:8080
   connstring: host=localhost port=5432 user=clair dbname=clair sslmode=disable
   max_conn_pool: 100
   run: ""
   migrations: true
 
-# tracing and metrics 
+# tracing and metrics
 trace:
   name: "jaeger"
   probability: 1
