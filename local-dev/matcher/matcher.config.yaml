@@ -1,8 +1,9 @@
+---
 mode: matcher
 log_level: debug
 introspection_addr: ":8089"
+http_listen_addr: ":80"
 matcher:
-  http_listen_addr: ":80"
   indexer_addr: http://indexer/
   connstring: host=clair-db port=5432 user=clair dbname=clair sslmode=disable
   max_conn_pool: 100
