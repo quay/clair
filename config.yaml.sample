@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-mode: dev
-inrospection_addr: localhost:8089
+mode: indexer
+introspection_addr: ":8089"
 http_listen_addr: localhost:8080
 log_level: debug
 indexer:
+  http_listen_addr: localhost:8080
   connstring: host=localhost port=5432 user=clair dbname=clair sslmode=disable
   scanlock_retry: 10
   layer_scan_concurrency: 5

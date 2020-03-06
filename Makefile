@@ -40,6 +40,7 @@ local-dev-down:
 # often a service should be restarted as well to run migrations on the now schemaless database.
 .PHONY: local-dev-db-restart
 local-dev-db-restart:
+	$(docker) kill clair_clair-db_1 && $(docker) rm clair_clair-db_1
 	$(docker-compose) up -d --force-recreate clair-db
 
 # restart the local development indexer, any local code changes will take effect
