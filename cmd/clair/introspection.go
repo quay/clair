@@ -78,8 +78,8 @@ func introspection(ctx context.Context, cfg *config.Config, healthCheck func() b
 		// tracing.
 		DefaultSampler: sdktrace.NeverSample(),
 	}
-	if cfg.Mode == config.DevMode {
-		// Unless we're in dev mode, then go ham.
+	if logLevel(cfg) == zerolog.DebugLevel {
+		// Unless we're debugging, then go ham.
 		traceCfg.DefaultSampler = sdktrace.AlwaysSample()
 	}
 	if p := cfg.Trace.Probability; p != nil {

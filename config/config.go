@@ -6,22 +6,30 @@ import (
 	"strings"
 )
 
+// These are the mode arguments that calling code can use in the Mode member of
+// a Config struct. They're called out here for documentation.
 const (
-	// receives claircore.Manifest(s), indexes their contents, and returns claircore.IndexReport(s)
+	// IndexerMode receives claircore.Manifests, indexes their contents, and
+	// returns claircore.IndexReports.
 	IndexerMode = "indexer"
-	// populates and updates the vulnerability database and creates claircore.VulnerabilityReport(s) from claircore.IndexReport(s)
+	// MatcherMode populates and updates the vulnerability database and creates
+	// claircore.VulnerabilityReports from claircore.IndexReports.
 	MatcherMode = "matcher"
-	// runs both indexer and matcher in a single process communicating over local api
-	DevMode = "dev"
+	// ComboMode runs all services in a single process.
+	ComboMode = "combo"
 )
 
 type Config struct {
-	// indicates a Clair node's operational mode
-	Mode string `yaml:"mode"`
-	// indicates the global listen address if running in "Dev"
+	// Mode indicates a Clair node's operational mode.
+	//
+	// This should be set by code that's populating and validating a config.
+	Mode string `yaml:"-"`
+	// indicates the HTTP listen address
 	HTTPListenAddr string `yaml:"http_listen_addr"`
 	// IntrospectionAddr is an address to listen on for introspection http
 	// endpoints, e.g. metrics and profiling.
+	//
+	// If not provided, a random port will be chosen.
 	IntrospectionAddr string `yaml:"introspection_addr"`
 	// indicates log level for the process
 	LogLevel string `yaml:"log_level"`
@@ -42,8 +50,6 @@ type Auth struct {
 }
 
 type Indexer struct {
-	// indicates the listening http address if mode is 'indexer'
-	HTTPListenAddr string `yaml:"http_listen_addr"`
 	// the conn string to the datastore
 	ConnString string `yaml:"connstring"`
 	// the interval in seconds to retry a manifest scan if the lock was not acquired
@@ -55,14 +61,10 @@ type Indexer struct {
 }
 
 type Matcher struct {
-	// indicates the listening http address if mode is 'matcher'
-	HTTPListenAddr string `yaml:"http_listen_addr"`
 	// the conn string to the datastore
 	ConnString string `yaml:"connstring"`
 	// if sql usage, the connection pool size
 	MaxConnPool int `yaml:"max_conn_pool"`
-	// a regex pattern of updaters to run
-	Run string `yaml:"run"`
 	// the address where the indexer service can be reached
 	IndexerAddr string `yaml:"indexer_addr"`
 	// should the Matcher be responsible for setting up the database
@@ -107,7 +109,7 @@ type Dogstatsd struct {
 
 func Validate(conf Config) error {
 	switch strings.ToLower(conf.Mode) {
-	case DevMode:
+	case ComboMode:
 		if conf.HTTPListenAddr == "" {
 			return fmt.Errorf("dev mode selected but no global HTTPListenAddr")
 		}
@@ -118,14 +120,14 @@ func Validate(conf Config) error {
 			return fmt.Errorf("matcher mode requires a database connection string")
 		}
 	case IndexerMode:
-		if conf.Indexer.HTTPListenAddr == "" {
+		if conf.HTTPListenAddr == "" {
 			return fmt.Errorf("indexer mode selected but no http listen address")
 		}
 		if conf.Indexer.ConnString == "" {
 			return fmt.Errorf("indexer mode requires a database connection string")
 		}
 	case MatcherMode:
-		if conf.Matcher.HTTPListenAddr == "" {
+		if conf.HTTPListenAddr == "" {
 			return fmt.Errorf("matcher mode selected but no http listen address")
 		}
 		if conf.Matcher.ConnString == "" {
