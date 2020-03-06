@@ -1,4 +1,4 @@
-package main
+package auth
 
 import (
 	"context"
@@ -12,12 +12,12 @@ type AuthCheck interface {
 	Check(context.Context, *http.Request) bool
 }
 
-type authHandler struct {
+type handler struct {
 	auth AuthCheck
 	next http.Handler
 }
 
-func (h *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if !h.auth.Check(r.Context(), r) {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -25,10 +25,10 @@ func (h *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.next.ServeHTTP(w, r)
 }
 
-// AuthHandler returns a Handler that gates access to the passed Handler behind
+// Handler returns a http.Handler that gates access to the passed Handler behind
 // the passed AuthCheck.
-func AuthHandler(h http.Handler, f AuthCheck) http.Handler {
-	return &authHandler{
+func Handler(h http.Handler, f AuthCheck) http.Handler {
+	return &handler{
 		auth: f,
 		next: h,
 	}
