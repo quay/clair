@@ -17,6 +17,8 @@ import (
 	"go.opentelemetry.io/otel/api/unit"
 	oteltrace "go.opentelemetry.io/otel/plugin/httptrace"
 	"go.opentelemetry.io/otel/plugin/othttp"
+
+	"github.com/quay/clair/v4/indexer"
 )
 
 var _ http.Handler = (*HTTP)(nil)
@@ -30,19 +32,15 @@ const (
 type HTTP struct {
 	*http.ServeMux
 	serv Service
-	r    Reporter
+	r    indexer.Reporter
 
 	meter   metric.Meter
 	latency *metric.Int64Measure
 }
 
-type Reporter interface {
-	IndexReport(context.Context, claircore.Digest) (*claircore.IndexReport, bool, error)
-}
-
 var pathKey = key.New("http.path")
 
-func NewHTTPTransport(service Service, r Reporter) (*HTTP, error) {
+func NewHTTPTransport(service Service, r indexer.Reporter) (*HTTP, error) {
 	meter := global.MeterProvider().Meter("projectquay.io/clair")
 	late := meter.NewInt64Measure("projectquay.io.clair.matcher.latency",
 		metric.WithDescription("Latency of matcher requests."),
