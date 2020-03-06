@@ -17,6 +17,8 @@ import (
 	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
+	"github.com/quay/clair/v4/middleware/auth"
+	"github.com/quay/clair/v4/middleware/compress"
 )
 
 // httptransport configures an http server according to Clair's operation mode.
@@ -24,8 +26,8 @@ func httptransport(ctx context.Context, conf config.Config) (*http.Server, error
 	var srv *http.Server
 	var err error
 	switch {
-	case conf.Mode == config.DevMode:
-		srv, err = devMode(ctx, conf)
+	case conf.Mode == config.ComboMode:
+		srv, err = comboMode(ctx, conf)
 	case conf.Mode == config.IndexerMode:
 		srv, err = indexerMode(ctx, conf)
 	case conf.Mode == config.MatcherMode:
@@ -42,7 +44,7 @@ func httptransport(ctx context.Context, conf config.Config) (*http.Server, error
 	return srv, nil
 }
 
-func devMode(ctx context.Context, conf config.Config) (*http.Server, error) {
+func comboMode(ctx context.Context, conf config.Config) (*http.Server, error) {
 	libI, err := libindex.New(ctx, &libindex.Opts{
 		ConnString:           conf.Indexer.ConnString,
 		ScanLockRetry:        time.Duration(conf.Indexer.ScanLockRetry) * time.Second,
@@ -98,17 +100,21 @@ func indexerMode(ctx context.Context, conf config.Config) (*http.Server, error) 
 		return nil, err
 	}
 	return &http.Server{
-		Addr:    conf.Indexer.HTTPListenAddr,
+		Addr:    conf.HTTPListenAddr,
 		Handler: othttp.NewHandler(compress.Handler(indexer), "server"),
 	}, nil
 }
 
 func matcherMode(ctx context.Context, conf config.Config) (*http.Server, error) {
-	libV, err := libvuln.New(ctx, &libvuln.Opts{
+	vopt := libvuln.Opts{
 		MaxConnPool: int32(conf.Matcher.MaxConnPool),
 		ConnString:  conf.Matcher.ConnString,
 		Migrations:  conf.Matcher.Migrations,
-	})
+	}
+	if conf.Matcher.Updaters != nil {
+		vopt.Run = *conf.Matcher.Updaters
+	}
+	libV, err := libvuln.New(ctx, &vopt)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize libvuln: %v", err)
 	}
@@ -122,7 +128,7 @@ func matcherMode(ctx context.Context, conf config.Config) (*http.Server, error) 
 		return nil, err
 	}
 	return &http.Server{
-		Addr:    conf.Matcher.HTTPListenAddr,
+		Addr:    conf.HTTPListenAddr,
 		Handler: othttp.NewHandler(compress.Handler(matcher), "server"),
 	}, nil
 }

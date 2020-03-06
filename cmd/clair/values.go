@@ -34,3 +34,56 @@ func (v *ConfValue) Set(s string) error {
 	v.file = f
 	return nil
 }
+
+const (
+	_ ConfMode = iota
+	ModeCombo
+	ModeIndexer
+	ModeMatcher
+	ModeNotifier
+)
+
+// ConfMode enumerates the arguments that are acceptable "modes".
+type ConfMode int
+
+func (v *ConfMode) String() string {
+	if v == nil {
+		return ""
+	}
+	switch *v {
+	case ModeCombo:
+		return "combo"
+	case ModeIndexer:
+		return "indexer"
+	case ModeMatcher:
+		return "matcher"
+	case ModeNotifier:
+		return "notifier"
+	default:
+	}
+	return "invalid"
+}
+
+// Get implements flag.Getter
+func (v *ConfMode) Get() interface{} {
+	return *v
+}
+
+// Set implements flag.Value
+func (v *ConfMode) Set(s string) error {
+	switch s {
+	case "", "dev":
+		fallthrough
+	case "combo", "combination", "pizza": // "Pizza", of course, being the best Combos flavor.
+		*v = ModeCombo
+	case "index", "indexer":
+		*v = ModeIndexer
+	case "match", "matcher":
+		*v = ModeMatcher
+	case "notify", "notifier":
+		*v = ModeNotifier
+	default:
+		return fmt.Errorf("unknown mode argument %q", s)
+	}
+	return nil
+}

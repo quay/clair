@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/quay/clair/v4/config"
@@ -22,21 +21,33 @@ import (
 // Version is a version string, optionally injected at build time.
 var Version string
 
+const (
+	envConfig = `CLAIR_CONF`
+	envMode   = `CLAIR_MODE`
+)
+
 func main() {
 	// parse conf cli
-	var confv ConfValue
-	flag.Var(&confv, "conf", "The file system path to Clair's config file.")
+	var (
+		confFile ConfValue
+		conf     config.Config
+		runMode  ConfMode
+	)
+	confFile.Set(os.Getenv(envConfig))
+	runMode.Set(os.Getenv(envMode))
+	flag.Var(&confFile, "conf", "The file system path to Clair's config file.")
+	flag.Var(&runMode, "mode", "The operation mode for this server.")
 	flag.Parse()
-	if confv.String() == "" {
-		golog.Fatalf("must provide a -conf flag")
+	if confFile.String() == "" {
+		golog.Fatalf("must provide a -conf flag or set %q in the environment", envConfig)
 	}
 
 	// validate config
-	var conf config.Config
-	err := yaml.NewDecoder(confv.file).Decode(&conf)
+	err := yaml.NewDecoder(confFile.file).Decode(&conf)
 	if err != nil {
 		golog.Fatalf("failed to decode yaml config: %v", err)
 	}
+	conf.Mode = runMode.String()
 	err = config.Validate(conf)
 	if err != nil {
 		golog.Fatalf("failed to validate config: %v", err)
@@ -44,7 +55,8 @@ func main() {
 
 	// setup global log level
 	var out io.Writer = os.Stderr
-	if conf.Mode == config.DevMode {
+	ll := logLevel(&conf)
+	if ll == zerolog.DebugLevel {
 		out = zerolog.ConsoleWriter{
 			Out: os.Stderr,
 		}
@@ -52,7 +64,7 @@ func main() {
 	log := zerolog.New(out).With().
 		Timestamp().
 		Logger().
-		Level(logLevel(conf))
+		Level(ll)
 
 	// create global application context
 	ctx, cancel := context.WithCancel(context.Background())
@@ -65,6 +77,10 @@ func main() {
 	logfunc := func(_ net.Listener) context.Context {
 		return ctx
 	}
+	log.Info().
+		Str("mode", runMode.String()).
+		Str("config", confFile.String()).
+		Msg("start")
 
 	// Make sure to configure our metrics and tracing providers before creating
 	// any package objects that may close over a provider.
@@ -144,11 +160,10 @@ func main() {
 	}
 }
 
-func logLevel(conf config.Config) zerolog.Level {
+func logLevel(conf *config.Config) zerolog.Level {
 	level := strings.ToLower(conf.LogLevel)
 	switch level {
 	case "debug":
-		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 		return zerolog.DebugLevel
 	case "info":
 		return zerolog.InfoLevel
