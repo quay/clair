@@ -25,28 +25,26 @@ const (
 
 func introspection(ctx context.Context, cfg *config.Config, healthCheck func() bool) (*http.Server, error) {
 	mux := http.NewServeMux()
-	srv := http.Server{
-		Addr: cfg.IntrospectionAddr,
-	}
+	srv := http.Server{}
 	log := zerolog.Ctx(ctx).With().Logger()
 
 	// Metrics config
-	if n := cfg.Metrics.Name; n != "" {
-		log.Info().Str("sink", n).Msg("configuring metrics sink")
+	if cfg.Metrics.Name == "" {
+		cfg.Metrics.Name = "default"
 	}
+	log.Info().Str("sink", cfg.Metrics.Name).Msg("configuring metrics sink")
 	switch cfg.Metrics.Name {
-	case "":
-		log.Info().Str("sink", "default").Msg("configuring metrics sink")
-		fallthrough // will default to prometheus
+	case "default":
+		log.Info().Str("sink", "default").Msg("defaulting to prometheus")
+		fallthrough
 	case "prometheus":
-		log.Info().Str("sink", "prometheus").Msg("configuring metrics sink")
 		endpoint := "/metrics"
 		if cfg.Metrics.Prometheus.Endpoint != nil {
 			endpoint = *cfg.Metrics.Prometheus.Endpoint
 		}
 		log.Info().
-			Str("url", srv.Addr+endpoint).
-			Msg("configuring prometheus")
+			Str("endpoint", endpoint).
+			Msg("configuring prometheus on introspection server")
 		promlog := log.With().
 			Str("component", "metrics-exporter").
 			Logger()
@@ -61,7 +59,6 @@ func introspection(ctx context.Context, cfg *config.Config, healthCheck func() b
 		srv.RegisterOnShutdown(pipeline.Stop)
 		mux.HandleFunc(endpoint, hf)
 	case "dogstatsd":
-		log.Info().Str("sink", "dogstatsd").Msg("configuring metrics sink")
 		log.Info().
 			Str("endpoint", cfg.Metrics.Dogstatsd.URL).
 			Msg("configuring dogstatsd")
