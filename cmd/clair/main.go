@@ -19,9 +19,8 @@ import (
 	"github.com/quay/clair/v4/config"
 )
 
-const (
-	Version = "v4.0.0-rc01"
-)
+// Version is a version string, optionally injected at build time.
+var Version string
 
 func main() {
 	// parse conf cli
@@ -62,7 +61,6 @@ func main() {
 	ctx = log.WithContext(ctx)
 	logger := log.With().
 		Str("component", "cmd/clair/main").
-		Str("version", Version).
 		Logger()
 	logfunc := func(_ net.Listener) context.Context {
 		return ctx
@@ -125,7 +123,11 @@ func main() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
-	logger.Info().Msg("🆙")
+	up := logger.Info()
+	if Version != "" {
+		up = up.Str("version", Version)
+	}
+	up.Msg("ready")
 	// block
 	select {
 	case sig := <-c:

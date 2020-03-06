@@ -14,12 +14,12 @@
 
 FROM golang:1.14-alpine AS build
 RUN apk add --no-cache build-base
-ARG CLAIR_VERSION=dev
 WORKDIR /build/
 ADD . /build/
+ARG CLAIR_VERSION=dev
 RUN go build \
 	-mod=vendor \
-	-ldflags="-X github.com/quay/clair/v4/cmd/clair/main.Version=${CLAIR_VERSION}" \
+	-ldflags="-X main.Version=${CLAIR_VERSION}" \
 	./cmd/clair
 
 FROM alpine:3.10 AS final
