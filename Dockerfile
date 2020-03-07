@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.13-alpine AS build
+FROM golang:1.14.0-alpine3.11 AS build
 RUN apk add --no-cache git build-base
 ADD .   /go/clair/
 WORKDIR /go/clair/
