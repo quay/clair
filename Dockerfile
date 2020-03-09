@@ -27,10 +27,10 @@ RUN apk add --no-cache tar rpm ca-certificates dumb-init
 # change ownership of ssl directory to allow custom cert in OpenShift
 RUN chgrp -R 0 /etc/ssl/certs && \
     chmod -R g=u /etc/ssl/certs
-ENTRYPOINT ["/usr/bin/dumb-init", "--", "/bin/clair", "-conf"]
-CMD ["/config/config.yaml"]
+ENTRYPOINT ["/usr/bin/dumb-init", "--", "/bin/clair"]
 VOLUME /config
 EXPOSE 6060
 WORKDIR /run
+ENV CLAIR_CONF=/config/config.yaml CLAIR_MODE=combo
 
 COPY --from=build /build/clair /bin/clair
