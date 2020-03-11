@@ -196,6 +196,18 @@ func (h *HTTP) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("link", fmt.Sprintf(linkReport, path.Join(v1Root, "vulnerabilty_report", m.Hash.String())))
 	w.Header().Add("link", fmt.Sprintf(linkIndex, next))
 	w.Header().Set("location", next)
+
+	s, err := h.serv.State(ctx)
+	if err != nil {
+		resp := &je.Response{
+			Code:    "internal error",
+			Message: "could not retrieve indexer state " + err.Error(),
+		}
+		je.Error(w, resp, http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("x-indexer-state", s)
+
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(report); err != nil {
 		w.Header().Set("clair-error", err.Error())
