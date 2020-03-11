@@ -1,4 +1,4 @@
-package indexer
+package client
 
 import (
 	"bytes"
@@ -13,6 +13,7 @@ import (
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/config"
+	"github.com/quay/clair/v4/httptransport"
 )
 
 // HttpClient implents the indexer service via HTTP
@@ -47,7 +48,7 @@ func (s *httpClient) Index(ctx context.Context, manifest *claircore.Manifest) (*
 		return nil, &clairerror.ErrBadManifest{err}
 	}
 
-	u, err := s.addr.Parse(IndexAPIPath)
+	u, err := s.addr.Parse(httptransport.IndexAPIPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
@@ -75,7 +76,7 @@ func (s *httpClient) Index(ctx context.Context, manifest *claircore.Manifest) (*
 
 // IndexReport retrieves a IndexReport given a manifest hash string
 func (s *httpClient) IndexReport(ctx context.Context, manifest claircore.Digest) (*claircore.IndexReport, bool, error) {
-	u, err := s.addr.Parse(path.Join(IndexReportAPIPath, manifest.String()))
+	u, err := s.addr.Parse(path.Join(httptransport.IndexReportAPIPath, manifest.String()))
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to create request: %v", err)
 	}
@@ -105,7 +106,7 @@ func (s *httpClient) IndexReport(ctx context.Context, manifest claircore.Digest)
 }
 
 func (s *httpClient) State(ctx context.Context) (string, error) {
-	u, err := s.addr.Parse(StateAPIPath)
+	u, err := s.addr.Parse(httptransport.StateAPIPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %v", err)
 	}

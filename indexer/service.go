@@ -16,6 +16,20 @@ type Service interface {
 	Stater
 }
 
+// StateReporter is an aggregate interface providing both a Reporter and
+// a Stater method set
+type StateReporter interface {
+	Reporter
+	Stater
+}
+
+// StateIndexer is an aggregate interface providing both a Indexer
+// and a Stater method set
+type StateIndexer interface {
+	Indexer
+	Stater
+}
+
 // Indexer is an interface providing a claircore.IndexReport given a claircore.Manifest
 type Indexer interface {
 	Index(ctx context.Context, manifest *claircore.Manifest) (*claircore.IndexReport, error)
