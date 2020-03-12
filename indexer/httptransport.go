@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"path"
-	"sort"
 	"strings"
 	"time"
 
@@ -58,8 +57,11 @@ func NewHTTPTransport(service Service) (*HTTP, error) {
 
 func unmodified(r *http.Request, v string) bool {
 	if vs, ok := r.Header["If-None-Match"]; ok {
-		sort.Strings(vs)
-		return sort.SearchStrings(vs, v) != -1
+		for _, rv := range vs {
+			if rv == v {
+				return true
+			}
+		}
 	}
 	return false
 }
@@ -109,7 +111,7 @@ func (h *HTTP) IndexReportHandler(w http.ResponseWriter, r *http.Request) {
 		je.Error(w, resp, http.StatusInternalServerError)
 		return
 	}
-	validator := fmt.Sprintf(`"%s|%s"`, state, manifest.String())
+	validator := `"` + state + `"`
 	if unmodified(r, validator) {
 		w.WriteHeader(http.StatusNotModified)
 		return
@@ -166,10 +168,18 @@ func (h *HTTP) IndexHandler(w http.ResponseWriter, r *http.Request) {
 		je.Error(w, resp, http.StatusMethodNotAllowed)
 		return
 	}
+	state, err := h.serv.State(ctx)
+	if err != nil {
+		resp := &je.Response{
+			Code:    "internal error",
+			Message: "could not retrieve indexer state " + err.Error(),
+		}
+		je.Error(w, resp, http.StatusInternalServerError)
+		return
+	}
 
 	var m claircore.Manifest
-	err := json.NewDecoder(r.Body).Decode(&m)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
 		resp := &je.Response{
 			Code:    "bad-request",
 			Message: fmt.Sprintf("failed to deserialize manifest: %v", err),
@@ -177,8 +187,23 @@ func (h *HTTP) IndexHandler(w http.ResponseWriter, r *http.Request) {
 		je.Error(w, resp, http.StatusBadRequest)
 		return
 	}
+	if m.Hash.String() == "" || len(m.Layers) == 0 {
+		resp := &je.Response{
+			Code:    "bad-request",
+			Message: "bogus manifest",
+		}
+		je.Error(w, resp, http.StatusBadRequest)
+		return
+	}
+	next := path.Join(IndexReportAPIPath, m.Hash.String())
 
-	// TODO Validate manifest structure.
+	w.Header().Add("link", fmt.Sprintf(linkIndex, next))
+	w.Header().Add("link", fmt.Sprintf(linkReport, path.Join(v1Root, "vulnerabilty_report", m.Hash.String())))
+	validator := `"` + state + `"`
+	if unmodified(r, validator) {
+		w.WriteHeader(http.StatusPreconditionFailed)
+		return
+	}
 
 	// TODO Do we need some sort of background context embedded in the HTTP
 	// struct?
@@ -188,13 +213,12 @@ func (h *HTTP) IndexHandler(w http.ResponseWriter, r *http.Request) {
 			Code:    "index-error",
 			Message: fmt.Sprintf("failed to start scan: %v", err),
 		}
+		w.Header().Del("link")
 		je.Error(w, resp, http.StatusInternalServerError)
 		return
 	}
 
-	next := path.Join(IndexReportAPIPath, m.Hash.String())
-	w.Header().Add("link", fmt.Sprintf(linkReport, path.Join(v1Root, "vulnerabilty_report", m.Hash.String())))
-	w.Header().Add("link", fmt.Sprintf(linkIndex, next))
+	w.Header().Set("etag", validator)
 	w.Header().Set("location", next)
 	w.WriteHeader(http.StatusCreated)
 	if err := json.NewEncoder(w).Encode(report); err != nil {

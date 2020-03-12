@@ -11,9 +11,6 @@ import (
 	"github.com/quay/claircore/libvuln"
 	"go.opentelemetry.io/otel/plugin/othttp"
 
-	"github.com/quay/clair/v4/middleware/auth"
-	"github.com/quay/clair/v4/middleware/compress"
-
 	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
