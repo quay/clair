@@ -1,5 +1,4 @@
 ---
-mode: matcher
 log_level: debug
 introspection_addr: ":8089"
 http_listen_addr: ":80"

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/quay/clair/v4/config"
 )
 
 // ConfValue implements the flag.Value interface
@@ -52,11 +54,11 @@ func (v *ConfMode) String() string {
 	}
 	switch *v {
 	case ModeCombo:
-		return "combo"
+		return config.ComboMode
 	case ModeIndexer:
-		return "indexer"
+		return config.IndexerMode
 	case ModeMatcher:
-		return "matcher"
+		return config.MatcherMode
 	case ModeNotifier:
 		return "notifier"
 	default:

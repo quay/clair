@@ -64,7 +64,7 @@ func New(conf config.Config) (*Init, error) {
 	}
 
 	// init http transport.
-	// init will either suceed or fail.
+	// init will either succeed or fail.
 	i.HttpTransport, err = httptransport.New(i.GlobalCTX, conf, i.Indexer, i.Matcher)
 	if err != nil {
 		return nil, err

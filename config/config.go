@@ -17,6 +17,9 @@ const (
 	MatcherMode = "matcher"
 	// ComboMode runs all services in a single process.
 	ComboMode = "combo"
+	// NofitierMode runs a notifier to provide notifications for upstream
+	// clients.
+	NotifierMode = "notifier"
 )
 
 type Config struct {
