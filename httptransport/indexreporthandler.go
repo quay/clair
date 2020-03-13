@@ -89,6 +89,7 @@ func IndexReportHandler(serv indexer.StateReporter) http.HandlerFunc {
 			return
 		}
 
+		w.Header().Add("etag", validator)
 		err = json.NewEncoder(w).Encode(report)
 		if err != nil {
 			resp := &je.Response{

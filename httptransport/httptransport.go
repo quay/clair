@@ -12,29 +12,32 @@ import (
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
 	"github.com/quay/clair/v4/middleware/auth"
+	intromw "github.com/quay/clair/v4/middleware/introspection"
 	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/plugin/othttp"
 )
 
 const (
 	apiRoot                 = "/api/v1/"
 	VulnerabilityReportPath = apiRoot + "vulnerability_report/"
-	IndexAPIPath            = apiRoot + "index"
+	IndexAPIPath            = apiRoot + "index_report"
 	IndexReportAPIPath      = apiRoot + "index_report/"
 	StateAPIPath            = apiRoot + "state"
 )
 
 // HttpTransport is the primary http server
 // Clair exposes it's functionality on.
-//
-// HttpTransport embeds a http.Server and http.ServeMux.
-// The http.Server will be configured with the ServeMux on successful
-// initialization.
 type HttpTransport struct {
+	// HttpTransport embeds a http.Server and http.ServeMux.
+	// The http.Server will be configured with the ServeMux on successful
+	// initialization.
 	conf config.Config
 	*http.Server
 	*http.ServeMux
-	indexer indexer.Service
-	matcher matcher.Service
+	indexer  indexer.Service
+	matcher  matcher.Service
+	traceOpt othttp.Option
 }
 
 func New(ctx context.Context, conf config.Config, indexer indexer.Service, matcher matcher.Service) (*HttpTransport, error) {
@@ -56,11 +59,12 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 		ServeMux: mux,
 		indexer:  indexer,
 		matcher:  matcher,
+		traceOpt: othttp.WithTracer(global.TraceProvider().Tracer("clair")),
 	}
 
 	switch conf.Mode {
 	case config.ComboMode:
-		t.configureDevMode()
+		t.configureComboMode()
 	case config.IndexerMode:
 		t.configureIndexerMode()
 	case config.MatcherMode:
@@ -82,20 +86,37 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 	return t, nil
 }
 
+// ConfigureWithLatency enables latency measurements on http endpoints
+//
+// Introspection must be initialized before this method is called.
+// Thus this method is exported and the caller may choose if/when to invoke.
+func (t *HttpTransport) ConfigureWithLatency() error {
+	t.Server.Handler = intromw.Handler(t.Server.Handler)
+	return nil
+}
+
 // configureDevMode configures the HttpTrasnport for
 // DevMode.
 //
 // This mode runs both Indexer and Matcher in a single process.
-func (t *HttpTransport) configureDevMode() error {
+func (t *HttpTransport) configureComboMode() error {
 	// requires both indexer and matcher services
 	if t.indexer == nil || t.matcher == nil {
 		return clairerror.ErrNotInitialized{"DevMode requires both indexer and macher services"}
 	}
 
-	t.Handle(VulnerabilityReportPath, VulnerabilityReportHandler(t.matcher, t.indexer))
-	t.Handle(IndexAPIPath, IndexHandler(t.indexer))
-	t.Handle(IndexReportAPIPath, IndexReportHandler(t.indexer))
-	t.Handle(StateAPIPath, StateHandler(t.indexer))
+	vulnReportH := othttp.NewHandler(VulnerabilityReportHandler(t.matcher, t.indexer), VulnerabilityReportPath, t.traceOpt)
+	t.Handle(VulnerabilityReportPath, othttp.WithRouteTag(VulnerabilityReportPath, vulnReportH))
+
+	indexH := othttp.NewHandler(IndexHandler(t.indexer), IndexAPIPath, t.traceOpt)
+	t.Handle(IndexAPIPath, othttp.WithRouteTag(IndexAPIPath, indexH))
+
+	indexReportH := othttp.NewHandler(IndexReportHandler(t.indexer), IndexAPIPath, t.traceOpt)
+	t.Handle(IndexReportAPIPath, othttp.WithRouteTag(IndexReportAPIPath, indexReportH))
+
+	stateH := othttp.NewHandler(StateHandler(t.indexer), StateAPIPath, t.traceOpt)
+	t.Handle(StateAPIPath, othttp.WithRouteTag(StateAPIPath, stateH))
+
 	return nil
 }
 
@@ -108,9 +129,15 @@ func (t *HttpTransport) configureIndexerMode() error {
 		return clairerror.ErrNotInitialized{"IndexerMode requires an indexer service"}
 	}
 
-	t.Handle(IndexAPIPath, IndexHandler(t.indexer))
-	t.Handle(IndexReportAPIPath, IndexReportHandler(t.indexer))
-	t.Handle(StateAPIPath, StateHandler(t.indexer))
+	indexH := othttp.NewHandler(IndexHandler(t.indexer), IndexAPIPath, t.traceOpt)
+	t.Handle(IndexAPIPath, othttp.WithRouteTag(IndexAPIPath, indexH))
+
+	indexReportH := othttp.NewHandler(IndexReportHandler(t.indexer), IndexAPIPath, t.traceOpt)
+	t.Handle(IndexReportAPIPath, othttp.WithRouteTag(IndexReportAPIPath, indexReportH))
+
+	stateH := othttp.NewHandler(StateHandler(t.indexer), StateAPIPath, t.traceOpt)
+	t.Handle(StateAPIPath, othttp.WithRouteTag(StateAPIPath, stateH))
+
 	return nil
 }
 
@@ -121,7 +148,10 @@ func (t *HttpTransport) configureMatcherMode() error {
 	if t.indexer == nil || t.matcher == nil {
 		return clairerror.ErrNotInitialized{"MatcherMode requires both indexer and matcher services"}
 	}
-	t.Handle(VulnerabilityReportPath, VulnerabilityReportHandler(t.matcher, t.indexer))
+
+	vulnReportH := othttp.NewHandler(VulnerabilityReportHandler(t.matcher, t.indexer), VulnerabilityReportPath, t.traceOpt)
+	t.Handle(VulnerabilityReportPath, othttp.WithRouteTag(VulnerabilityReportPath, vulnReportH))
+
 	return nil
 }
 

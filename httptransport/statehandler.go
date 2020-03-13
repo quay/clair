@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sort"
 
 	"github.com/quay/clair/v4/indexer"
 	je "github.com/quay/claircore/pkg/jsonerr"
@@ -23,20 +22,27 @@ func StateHandler(service indexer.Stater) http.HandlerFunc {
 			return
 		}
 		ctx := r.Context()
-		s, _ := service.State(ctx)
+		s, err := service.State(ctx)
+		if err != nil {
+			resp := &je.Response{
+				Code:    "internal error",
+				Message: "could not retrieve indexer state " + err.Error(),
+			}
+			je.Error(w, resp, http.StatusInternalServerError)
+			return
+		}
+
 		tag := `"` + s + `"`
 		w.Header().Add("etag", tag)
 
-		es, ok := r.Header["If-None-Match"]
-		if ok {
-			if sort.Strings(es); sort.SearchStrings(es, tag) != -1 {
-				w.WriteHeader(http.StatusNotModified)
-				return
-			}
+		if unmodified(r, tag) {
+			w.WriteHeader(http.StatusNotModified)
+			return
 		}
+
 		w.Header().Set("content-type", "application/json")
 
-		err := json.NewEncoder(w).Encode(struct {
+		err = json.NewEncoder(w).Encode(struct {
 			State string `json:"state"`
 		}{
 			State: s,
@@ -44,7 +50,7 @@ func StateHandler(service indexer.Stater) http.HandlerFunc {
 		if err != nil {
 			resp := &je.Response{
 				Code:    "encoding-error",
-				Message: fmt.Sprintf("failed to encode scan report: %v", err),
+				Message: fmt.Sprintf("failed to encode state: %v", err),
 			}
 			je.Error(w, resp, http.StatusInternalServerError)
 		}

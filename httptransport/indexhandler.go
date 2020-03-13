@@ -11,6 +11,11 @@ import (
 	je "github.com/quay/claircore/pkg/jsonerr"
 )
 
+const (
+	linkIndex  = `<%s>; rel="https://projectquay.io/clair/v1/index_report"`
+	linkReport = `<%s>; rel="https://projectquay.io/clair/v1/vulnerability_report"`
+)
+
 // IndexHandler utilizes an Indexer to begin a
 // Index of a manifest.
 func IndexHandler(serv indexer.StateIndexer) http.HandlerFunc {
