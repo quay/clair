@@ -8,7 +8,6 @@ import (
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/introspection"
 	"github.com/quay/clair/v4/matcher"
-	"github.com/rs/zerolog"
 )
 
 type Init struct {
@@ -44,9 +43,6 @@ func New(conf config.Config) (*Init, error) {
 	if err != nil {
 		return nil, err
 	}
-	log := zerolog.Ctx(i.GlobalCTX).With().
-		Str("component", "initialize/New").
-		Logger()
 
 	// init services. Indexer and Matcher
 	// fields will be initialized here.
@@ -68,15 +64,6 @@ func New(conf config.Config) (*Init, error) {
 	i.HttpTransport, err = httptransport.New(i.GlobalCTX, conf, i.Indexer, i.Matcher)
 	if err != nil {
 		return nil, err
-	}
-
-	// http latency metrics if introspection enabled
-	if i.Introspection != nil {
-		log.Info().Msg("introspection initialized, enabling http latency metrics")
-		err := i.HttpTransport.ConfigureWithLatency()
-		if err != nil {
-			log.Warn().Err(err).Msg("enabling http latency metrics failed")
-		}
 	}
 
 	return i, nil
