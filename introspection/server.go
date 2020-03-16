@@ -7,9 +7,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 
-	"github.com/quay/clair/v4/config"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/api/key"
 	"go.opentelemetry.io/otel/exporter/metric/dogstatsd"
@@ -17,47 +15,47 @@ import (
 	"go.opentelemetry.io/otel/exporter/trace/jaeger"
 	"go.opentelemetry.io/otel/exporter/trace/stdout"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+
+	"github.com/quay/clair/v4/config"
 )
 
 const (
 	Prom                     = "prometheus"
 	DefaultPromEndpoint      = "/metrics"
 	DogStatsD                = "dogstatsd"
-	STDOut                   = "stdout"
+	Stdout                   = "stdout"
 	Jaeger                   = "jaeger"
 	DefaultJaegerEndpoint    = "localhost:6831"
 	HealthEndpoint           = "/healthz"
 	DefaultIntrospectionAddr = ":8089"
 )
 
-// Introspection provides an http server
+// Server provides an http server
 // exposing Clair metrics and traces
-type Introspection struct {
+type Server struct {
 	// configuration provided when starting Clair
 	conf config.Config
-	// Introspection embeds a http.Server and http.ServeMux.
+	// Server embeds a http.Server and http.ServeMux.
 	// The http.Server will be configured with the ServeMux on successful
 	// initialization.
 	*http.Server
 	*http.ServeMux
-	// logger with context
-	logger zerolog.Logger
 	// a health check function
 	health func() bool
 }
 
-func New(ctx context.Context, conf config.Config, health func() bool) (*Introspection, error) {
+func New(ctx context.Context, conf config.Config, health func() bool) (*Server, error) {
 	logger := zerolog.Ctx(ctx).With().Str("component", "introspection").Logger()
 
 	var addr string
 	if conf.IntrospectionAddr == "" {
 		addr = DefaultIntrospectionAddr
-		logger.Info().Str("address", addr).Msg("no introspection address provied. using default addr")
+		logger.Info().Str("address", addr).Msg("no introspection address provied. using default")
 	} else {
 		addr = conf.IntrospectionAddr
 	}
 
-	i := &Introspection{
+	i := &Server{
 		conf: conf,
 		Server: &http.Server{
 			Addr:        addr,
@@ -65,11 +63,10 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Introspe
 		},
 		ServeMux: http.NewServeMux(),
 	}
-	i.logger = logger
 
 	// check for health
 	if health == nil {
-		i.logger.Warn().Msg("no health check configured. a default one will be used which simply returns OK")
+		logger.Warn().Msg("no health check configured; unconditionally reporting OK")
 		health = func() bool { return true }
 	}
 
@@ -79,12 +76,12 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Introspe
 	case "", "default":
 		logger.Info().Msg("no metrics sync enabled")
 	case Prom:
-		err := i.withPrometheus()
+		err := i.withPrometheus(ctx)
 		if err != nil {
 			return nil, err
 		}
 	case DogStatsD:
-		err := i.withDogStatsD()
+		err := i.withDogStatsD(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -111,13 +108,13 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Introspe
 		sdktrace.WithConfig(traceCfg),
 	}
 	switch conf.Trace.Name {
-	case STDOut:
-		err := i.withStdOut(traceOpts)
+	case Stdout:
+		err := i.withStdOut(ctx, traceOpts)
 		if err != nil {
 			return nil, fmt.Errorf("error configuring stdout tracing: %v", err)
 		}
 	case Jaeger:
-		err := i.withJaeger(traceOpts)
+		err := i.withJaeger(ctx, traceOpts)
 		if err != nil {
 			return nil, fmt.Errorf("error configuring jaeger tracing: %v", err)
 		}
@@ -126,7 +123,7 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Introspe
 	}
 
 	// configure diagnostics
-	err := i.withDiagnostics()
+	err := i.withDiagnostics(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error configuring diagnostics: %v", err)
 	}
@@ -138,7 +135,7 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Introspe
 }
 
 // withDiagnotics enables healthz and pprof endpoints
-func (i *Introspection) withDiagnostics() error {
+func (i *Server) withDiagnostics(_ context.Context) error {
 	health := i.health
 	i.HandleFunc(HealthEndpoint, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
@@ -158,7 +155,7 @@ func (i *Introspection) withDiagnostics() error {
 }
 
 // withStdOut configures the stdout exporter for distributed tracing
-func (i *Introspection) withStdOut(traceOpts []sdktrace.ProviderOption) error {
+func (i *Server) withStdOut(_ context.Context, traceOpts []sdktrace.ProviderOption) error {
 	exporter, err := stdout.NewExporter(stdout.Options{})
 	if err != nil {
 		return err
@@ -173,7 +170,10 @@ func (i *Introspection) withStdOut(traceOpts []sdktrace.ProviderOption) error {
 }
 
 // withJaeger configures the Jaeger exporter for distributed tracing.
-func (i *Introspection) withJaeger(traceOpts []sdktrace.ProviderOption) error {
+func (i *Server) withJaeger(ctx context.Context, traceOpts []sdktrace.ProviderOption) error {
+	logger := zerolog.Ctx(ctx).With().
+		Str("component", "introspection/Introspection.withJaeger").
+		Logger()
 	conf := i.conf.Trace.Jaeger
 	var mode string
 	var endpoint string
@@ -195,10 +195,10 @@ func (i *Introspection) withJaeger(traceOpts []sdktrace.ProviderOption) error {
 	var e jaeger.EndpointOption
 	switch mode {
 	case "agent":
-		i.logger.Info().Str("endpoint", endpoint).Msg("configuring jaeger exporter to push to agent")
+		logger.Info().Str("endpoint", endpoint).Msg("configuring jaeger exporter to push to agent")
 		e = jaeger.WithAgentEndpoint(endpoint)
 	case "collector":
-		i.logger.Info().Str("endpoint", endpoint).Msg("configuring jaeger exporter to push to collector")
+		logger.Info().Str("endpoint", endpoint).Msg("configuring jaeger exporter to push to collector")
 		var opt []jaeger.CollectorEndpointOption
 		u, p := conf.Collector.Username, conf.Collector.Password
 		if u != nil {
@@ -212,7 +212,8 @@ func (i *Introspection) withJaeger(traceOpts []sdktrace.ProviderOption) error {
 
 	// configure the exporter
 	component := fmt.Sprintf("jaeger-exporter:%v", endpoint)
-	jaegerLog := log.With().Str("component", component).Logger()
+	// jaegerLog := log.With().Str("component", component).Logger()
+	jaegerLog := zerolog.Ctx(ctx).With().Str("component", component).Logger()
 	opts := []jaeger.Option{
 		jaeger.WithOnError(func(err error) {
 			jaegerLog.Error().Err(err).Msg("jaeger-exporter error")
@@ -248,13 +249,18 @@ func (i *Introspection) withJaeger(traceOpts []sdktrace.ProviderOption) error {
 
 // withDogStatsD configures a dogstatsd open telemetry
 // pipeline.
-func (i *Introspection) withDogStatsD() error {
+func (i *Server) withDogStatsD(ctx context.Context) error {
 	if i.conf.Metrics.Dogstatsd.URL == "" {
 		return fmt.Errorf("dogstatsd metrics were specified but no url was configured")
 	}
-	log.Info().
+	logger := zerolog.Ctx(ctx).With().
+		Str("component", "introspection/Introspection.withDogStatsD").
+		Logger()
+
+	logger.Info().
 		Str("endpoint", i.conf.Metrics.Dogstatsd.URL).
 		Msg("configuring dogstatsd")
+
 	pipeline, err := dogstatsd.InstallNewPipeline(dogstatsd.Config{
 		URL: i.conf.Metrics.Dogstatsd.URL,
 	})
@@ -268,17 +274,23 @@ func (i *Introspection) withDogStatsD() error {
 // withPrometheus configures a prometheus open telemetry
 // pipeline, registers it with the server, and adds the prometheus
 // endpoint to i's servemux.
-func (i *Introspection) withPrometheus() error {
+func (i *Server) withPrometheus(ctx context.Context) error {
+	logger := zerolog.Ctx(ctx).With().
+		Str("component", "introspection/Introspection.withPrometheus").
+		Logger()
+
 	endpoint := DefaultPromEndpoint
 	if i.conf.Metrics.Prometheus.Endpoint != nil {
 		endpoint = *i.conf.Metrics.Prometheus.Endpoint
 	}
-
-	i.logger.Info().Str("endpoint", endpoint).
+	logger.Info().Str("endpoint", endpoint).
 		Str("server", i.Addr).
-		Msg("configuring prometheus with endpoint")
+		Msg("configuring prometheus")
 
-	promlog := log.With().Str("component", "promtheus-metrics-exporter").Logger()
+	promlog := zerolog.Ctx(ctx).With().
+		Str("component", "prometheus-metrics-exporter").
+		Logger()
+
 	pipeline, hr, err := prometheus.InstallNewPipeline(prometheus.Config{
 		OnError: func(err error) {
 			promlog.Error().Err(err).Msg("prometheus error")

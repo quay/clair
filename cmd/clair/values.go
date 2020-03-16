@@ -60,7 +60,7 @@ func (v *ConfMode) String() string {
 	case ModeMatcher:
 		return config.MatcherMode
 	case ModeNotifier:
-		return "notifier"
+		return config.NotifierMode
 	default:
 	}
 	return "invalid"

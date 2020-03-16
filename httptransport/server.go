@@ -7,15 +7,16 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/api/global"
+	"go.opentelemetry.io/otel/plugin/othttp"
+
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
 	"github.com/quay/clair/v4/middleware/auth"
 	intromw "github.com/quay/clair/v4/middleware/introspection"
-	"github.com/rs/zerolog"
-	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/plugin/othttp"
 )
 
 const (
@@ -26,10 +27,10 @@ const (
 	StateAPIPath            = apiRoot + "state"
 )
 
-// HttpTransport is the primary http server
+// Server is the primary http server
 // Clair exposes it's functionality on.
-type HttpTransport struct {
-	// HttpTransport embeds a http.Server and http.ServeMux.
+type Server struct {
+	// Server embeds a http.Server and http.ServeMux.
 	// The http.Server will be configured with the ServeMux on successful
 	// initialization.
 	conf config.Config
@@ -40,7 +41,7 @@ type HttpTransport struct {
 	traceOpt othttp.Option
 }
 
-func New(ctx context.Context, conf config.Config, indexer indexer.Service, matcher matcher.Service) (*HttpTransport, error) {
+func New(ctx context.Context, conf config.Config, indexer indexer.Service, matcher matcher.Service) (*Server, error) {
 	log := zerolog.Ctx(ctx).With().
 		Str("component", "init/NewHttpTransport").
 		Logger()
@@ -53,7 +54,7 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 		BaseContext: func(net.Listener) context.Context { return ctx },
 	}
 	mux := http.NewServeMux()
-	t := &HttpTransport{
+	t := &Server{
 		conf:     conf,
 		Server:   serv,
 		ServeMux: mux,
@@ -90,7 +91,7 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 // DevMode.
 //
 // This mode runs both Indexer and Matcher in a single process.
-func (t *HttpTransport) configureComboMode() error {
+func (t *Server) configureComboMode() error {
 	// requires both indexer and matcher services
 	if t.indexer == nil || t.matcher == nil {
 		return clairerror.ErrNotInitialized{"DevMode requires both indexer and macher services"}
@@ -146,7 +147,7 @@ func (t *HttpTransport) configureComboMode() error {
 // configureIndexerMode configures the HttpTransport for IndexerMode.
 //
 // This mode runs only an Indexer in a single process.
-func (t *HttpTransport) configureIndexerMode() error {
+func (t *Server) configureIndexerMode() error {
 	// requires only indexer service
 	if t.indexer == nil {
 		return clairerror.ErrNotInitialized{"IndexerMode requires an indexer service"}
@@ -189,7 +190,7 @@ func (t *HttpTransport) configureIndexerMode() error {
 }
 
 // configureMatcherMode configures HttpTransport
-func (t *HttpTransport) configureMatcherMode() error {
+func (t *Server) configureMatcherMode() error {
 	// requires both an indexer and matcher service. indexer service
 	// is assumed to be a remote call over the network
 	if t.indexer == nil || t.matcher == nil {
@@ -214,7 +215,7 @@ func (t *HttpTransport) configureMatcherMode() error {
 // in an Auth middleware handler.
 //
 // must be ran after the config*Mode method of choice.
-func (t *HttpTransport) configureWithAuth() error {
+func (t *Server) configureWithAuth() error {
 	switch t.conf.Auth.Name {
 	case "keyserver":
 		const param = "api"
@@ -227,7 +228,7 @@ func (t *HttpTransport) configureWithAuth() error {
 			return fmt.Errorf("failed to initialize quay keyserver: %v", err)
 		}
 		t.Server.Handler = auth.Handler(t.Server.Handler, ks)
-	case "pks":
+	case "psk":
 		const (
 			iss = "issuer"
 			key = "key"

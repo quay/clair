@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/claircore"
 	je "github.com/quay/claircore/pkg/jsonerr"
+
+	"github.com/quay/clair/v4/indexer"
 )
 
 // unmodified determines whether to return a conditonal response

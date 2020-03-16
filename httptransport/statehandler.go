@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/quay/clair/v4/indexer"
 	je "github.com/quay/claircore/pkg/jsonerr"
+
+	"github.com/quay/clair/v4/indexer"
 )
 
 // StateHandler utilizes a Stater to report the

@@ -24,10 +24,10 @@ type Init struct {
 	// A local or remote Matcher service
 	Matcher matcher.Service
 	// The primary http server implementing Clair's functionality
-	HttpTransport *httptransport.HttpTransport
+	HttpTransport *httptransport.Server
 	// Introspection provides metrics and trace exporters,
 	// a pprof diagnostics server, and a healthz endpoint
-	Introspection *introspection.Introspection
+	Introspection *introspection.Server
 }
 
 // New wil begin an init process and return

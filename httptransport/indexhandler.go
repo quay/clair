@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"path"
 
-	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/claircore"
 	je "github.com/quay/claircore/pkg/jsonerr"
+
+	"github.com/quay/clair/v4/indexer"
 )
 
 const (
@@ -69,7 +70,7 @@ func IndexHandler(serv indexer.StateIndexer) http.HandlerFunc {
 		next := path.Join(IndexReportAPIPath, m.Hash.String())
 
 		w.Header().Add("link", fmt.Sprintf(linkIndex, next))
-		w.Header().Add("link", fmt.Sprintf(linkReport, path.Join(apiRoot, "vulnerabilty_report", m.Hash.String())))
+		w.Header().Add("link", fmt.Sprintf(linkReport, path.Join(VulnerabilityReportPath, m.Hash.String())))
 		validator := `"` + state + `"`
 		if unmodified(r, validator) {
 			w.WriteHeader(http.StatusPreconditionFailed)

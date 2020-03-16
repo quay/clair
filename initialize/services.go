@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	clairerror "github.com/quay/clair/v4/clair-error"
-	"github.com/quay/clair/v4/config"
-	"github.com/quay/clair/v4/httptransport/client"
 	"github.com/quay/claircore/libindex"
 	"github.com/quay/claircore/libvuln"
 	"github.com/rs/zerolog"
+
+	clairerror "github.com/quay/clair/v4/clair-error"
+	"github.com/quay/clair/v4/config"
+	"github.com/quay/clair/v4/httptransport/client"
 )
 
 // Services will initialize the correct ClairCore services
