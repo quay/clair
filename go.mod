@@ -12,6 +12,7 @@ require (
 	github.com/prometheus/procfs v0.0.8 // indirect
 	github.com/quay/claircore v0.0.18
 	github.com/rs/zerolog v1.16.0
+	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/urfave/cli/v2 v2.2.0
 	go.opentelemetry.io/otel v0.2.1
 	go.opentelemetry.io/otel/exporter/metric/prometheus v0.2.2-0.20200111012159-d85178b63b15

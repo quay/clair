@@ -11,10 +11,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
-	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/quay/claircore"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sync/errgroup"
@@ -53,7 +51,7 @@ func manifestAction(c *cli.Context) error {
 		eg.Go(func() error {
 			m, err := Inspect(ctx, name)
 			if err != nil {
-				debug.Printf("%s: err: %v", name)
+				debug.Printf("%s: err: %v", name, err)
 				return err
 			}
 			debug.Printf("%s: ok", name)
@@ -70,20 +68,15 @@ func manifestAction(c *cli.Context) error {
 }
 
 func Inspect(ctx context.Context, r string) (*claircore.Manifest, error) {
-	ref, err := name.ParseReference(r)
-	if err != nil {
-		return nil, err
-	}
-	repo := ref.Context()
-	auth, err := authn.DefaultKeychain.Resolve(repo)
-	if err != nil {
-		return nil, err
-	}
-	rt, err := transport.New(repo.Registry, auth, http.DefaultTransport, []string{repo.Scope("pull")})
+	rt, err := rt(r)
 	if err != nil {
 		return nil, err
 	}
 
+	ref, err := name.ParseReference(r)
+	if err != nil {
+		return nil, err
+	}
 	desc, err := remote.Get(ref, remote.WithTransport(rt))
 	if err != nil {
 		return nil, err
@@ -92,18 +85,15 @@ func Inspect(ctx context.Context, r string) (*claircore.Manifest, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	h, err := img.Digest()
+	dig, err := img.Digest()
 	if err != nil {
 		return nil, err
 	}
-	ccd, err := claircore.ParseDigest(h.String())
+	ccd, err := claircore.ParseDigest(dig.String())
 	if err != nil {
 		return nil, err
 	}
-	out := claircore.Manifest{
-		Hash: ccd,
-	}
+	out := claircore.Manifest{Hash: ccd}
 	debug.Printf("%s: found manifest %v", r, ccd)
 
 	ls, err := img.Layers()
@@ -112,6 +102,7 @@ func Inspect(ctx context.Context, r string) (*claircore.Manifest, error) {
 	}
 	debug.Printf("%s: found %d layers", r, len(ls))
 
+	repo := ref.Context()
 	rURL := url.URL{
 		Scheme: repo.Scheme(),
 		Host:   repo.RegistryStr(),
