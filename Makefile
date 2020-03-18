@@ -14,6 +14,13 @@
 docker ?= docker
 docker-compose ?= docker-compose
 
+# formats all imports to place local modules
+# below out of tree modules
+.PHONY: goimports-local
+goimports-local:
+	go list -f '{{$$d := .Dir}}{{range .GoFiles}}{{printf "%s/%s\n" $$d .}}{{end}}' ./... | xargs sed -i'' '/import (/,/)/{ /^$$/d }'
+	go list -f '{{.Dir}}' ./... | xargs goimports -local "$(go list -m)" -w
+
 # start a local development environment. 
 # each services runs in it's own container to test service->service communication.
 .PHONY: local-dev-up

@@ -21,6 +21,9 @@ services:
       - "8089:8089"
     volumes:
       - "./:/src/clair/"
+    environment:
+      CLAIR_CONF: "/src/clair/local-dev/indexer/indexer.config.yaml"
+      CLAIR_MODE: "indexer"
     command:
       ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor . -conf /src/clair/local-dev/indexer/indexer.config.yaml"]
 
@@ -31,6 +34,9 @@ services:
       - "8090:8089"
     volumes:
       - "./:/src/clair/"
+    environment:
+      CLAIR_CONF: "/src/clair/local-dev/indexer/indexer.config.yaml"
+      CLAIR_MODE: "matcher"
     command:
       ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor . -conf /src/clair/local-dev/matcher/matcher.config.yaml"]
 

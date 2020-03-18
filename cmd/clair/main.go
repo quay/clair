@@ -3,19 +3,16 @@ package main
 import (
 	"context"
 	"flag"
-	"io"
 	golog "log"
-	"net"
-	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
 	yaml "gopkg.in/yaml.v2"
 
 	"github.com/quay/clair/v4/config"
+	"github.com/quay/clair/v4/initialize"
 )
 
 // Version is a version string, optionally injected at build time.
@@ -27,7 +24,7 @@ const (
 )
 
 func main() {
-	// parse conf cli
+	// parse conf from cli
 	var (
 		confFile ConfValue
 		conf     config.Config
@@ -53,129 +50,54 @@ func main() {
 		golog.Fatalf("failed to validate config: %v", err)
 	}
 
-	// setup global log level
-	var out io.Writer = os.Stderr
-	ll := logLevel(&conf)
-	if ll == zerolog.DebugLevel {
-		out = zerolog.ConsoleWriter{
-			Out: os.Stderr,
-		}
-	}
-	log := zerolog.New(out).With().
-		Timestamp().
-		Logger().
-		Level(ll)
-
-	// create global application context
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	// derive ctx with logger attached. we will propagate a logger via context to all long living components
-	ctx = log.WithContext(ctx)
-	logger := log.With().
-		Str("component", "cmd/clair/main").
-		Logger()
-	logfunc := func(_ net.Listener) context.Context {
-		return ctx
-	}
-	log.Info().
-		Str("mode", runMode.String()).
-		Str("config", confFile.String()).
-		Msg("start")
-
-	// Make sure to configure our metrics and tracing providers before creating
-	// any package objects that may close over a provider.
-	//
-	// This is structured in a non-idiomatic way because we don't want a failure
-	// to stop the program.
-	intro, err := introspection(ctx, &conf, func() bool { return true })
+	// initialize performs all Clair initialization tasks.
+	init, err := initialize.New(conf)
 	if err != nil {
-		logger.Error().Err(err).Msg("failed to create introspection server")
-	} else {
-		intro.BaseContext = logfunc
-		addr := conf.IntrospectionAddr
-		if addr == "" {
-			addr = ":0"
-		}
-		l, err := net.Listen("tcp", addr)
-		if err != nil {
-			l.Close()
-			logger.Error().Err(err).Msg("failed to create introspection server")
-		} else {
-			logger.Info().
-				Str("addr", l.Addr().String()).
-				Msgf("launching introspection via http")
-			// The Serve method closes the net.Listener.
-			go func() {
-				if err := intro.Serve(l); err != nil && err != http.ErrServerClosed {
-					logger.Error().Err(err).Msg("launching introspection via http failed")
-				}
-				defer intro.Shutdown(ctx)
-			}()
-		}
+		golog.Fatalf("initialized failed: %v", err)
 	}
-
-	// return a http server with the correct handlers given the config's Mode attribute.
-	server, err := httptransport(ctx, conf)
-	if err != nil {
-		logger.Fatal().
-			Err(err).
-			Msgf("failed to create api server")
-	}
-	server.BaseContext = logfunc
-	logger.Info().
-		Str("addr", server.Addr).
-		Msgf("launching api via http")
-	go func() {
-		err := server.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
-			logger.Error().
-				Err(err).
-				Msg("launching api via http failed")
-			cancel()
-		}
-	}()
+	logger := zerolog.Ctx(init.GlobalCTX).With().Str("component", "main").Logger()
 
 	// register signal handler
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
+	logger.Info().Msg("registered signal handler")
 
-	up := logger.Info()
-	if Version != "" {
-		up = up.Str("version", Version)
+	// introspection server
+	if init.Introspection != nil {
+		logger.Info().Msg("launching introspection server")
+		go func() {
+			err := init.Introspection.ListenAndServe()
+			if err != nil {
+				logger.Err(err).Msg("introspection server failed to launch. continuing anyway")
+			}
+		}()
 	}
-	up.Msg("ready")
-	// block
+
+	// http transport
+	logger.Info().Msg("launching http transport")
+	go func() {
+		err := init.HttpTransport.ListenAndServe()
+		if err != nil {
+			logger.Err(err).Msg("http transport failed to listen and serve")
+			init.GlobalCancel()
+		}
+	}()
+
+	// block on signal
+	logger.Info().Str("version", Version).Msg("ready")
 	select {
 	case sig := <-c:
 		// received a SIGINT for graceful shutdown
 		logger.Info().
 			Str("signal", sig.String()).
 			Msg("gracefully shutting down")
-		tctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		tctx, cancel := context.WithTimeout(init.GlobalCTX, 10*time.Second)
 		defer cancel()
-		server.Shutdown(tctx)
-	case <-ctx.Done():
+		init.HttpTransport.Shutdown(tctx)
+		// cancel the entire application root ctx
+		init.GlobalCancel()
+	case <-init.GlobalCTX.Done():
 		// main cancel func called indicating error initializing
 		logger.Fatal().Msg("initialization failed")
-	}
-}
-
-func logLevel(conf *config.Config) zerolog.Level {
-	level := strings.ToLower(conf.LogLevel)
-	switch level {
-	case "debug":
-		return zerolog.DebugLevel
-	case "info":
-		return zerolog.InfoLevel
-	case "warn":
-		return zerolog.WarnLevel
-	case "error":
-		return zerolog.ErrorLevel
-	case "fatal":
-		return zerolog.FatalLevel
-	case "panic":
-		return zerolog.PanicLevel
-	default:
-		return zerolog.InfoLevel
 	}
 }

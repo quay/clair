@@ -85,3 +85,11 @@ func (e *ErrMatch) Error() string {
 func (e *ErrMatch) Unwrap() error {
 	return e.E
 }
+
+type ErrNotInitialized struct {
+	Msg string
+}
+
+func (e ErrNotInitialized) Error() string {
+	return e.Msg
+}
