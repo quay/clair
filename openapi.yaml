@@ -270,6 +270,10 @@ components:
             VulnerabilityReport.
           type: string
           example: "1"
+      required:
+        - package_db
+        - introduced_in
+        - distribution_id
 
     IndexReport:
       title: IndexReport
@@ -329,6 +333,14 @@ components:
           type: string
           description: "An error message on event of unsuccessful index"
           example: ""
+      required:
+        - manifest_hash
+        - state
+        - packages
+        - distributions
+        - environments
+        - success
+        - err
 
     VulnerabilityReport:
       title: VulnerabilityReport
@@ -389,6 +401,14 @@ components:
             type: array
             items:
               type: string
+      required:
+        - manifest_hash
+        - state
+        - packages
+        - distributions
+        - environments
+        - vulnerabilities
+        - package_vulnerabilities
 
     Vulnerability:
       title: Vulnerability
@@ -428,6 +448,17 @@ components:
         fixed_in_version:
           description: "A unique ID representing this vulnerability."
           type: string
+      required:
+        - id
+        - updater
+        - name
+        - description
+        - links
+        - severity
+        - normalized_severity
+        - package
+        - dist
+        - fixed_in_version
 
     Distribution:
       title: Distribution
@@ -458,6 +489,16 @@ components:
           type: string
         pretty_name:
           type: string
+      required:
+        - id
+        - did
+        - name
+        - version
+        - version_code_name
+        - version_id
+        - arch
+        - cpe
+        - pretty_name
 
     SourcePackage:
       title: SourcePackage
@@ -480,6 +521,12 @@ components:
           type: string
         source:
           type: string
+      required:
+        - id
+        - name
+        - version
+        - kind
+        - source
 
     Package:
       title: Package
@@ -504,6 +551,13 @@ components:
           $ref: '#/components/schemas/SourcePackage'
         normalized_version:
           $ref: '#/components/schemas/Version'
+      required:
+        - id
+        - name
+        - version
+        - kind
+        - source
+        - normalized_version
 
     Version:
       title: Version
@@ -528,6 +582,9 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Layer'
+      required:
+        - hash
+        - layers
 
     Layer:
       title: Layer
@@ -553,6 +610,10 @@ components:
             type: array
             items:
               type: string
+      required:
+        - hash
+        - uri
+        - headers
 
     Error:
       title: Error
@@ -572,6 +633,12 @@ components:
       description: an opaque identifier
       example:
         state: "aae368a064d7c5a433d0bf2c4f5554cc"
+      properties:
+        state:
+          type: string
+          description: an opaque identifier
+      required:
+        - state
 
     Digest:
       title: Digest
