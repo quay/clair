@@ -28,7 +28,7 @@ jobs:
         run: |
           go mod vendor
           git archive --prefix "${PREFIX}" -o clair.tar "${GITHUB_REF}"
-          tar -af clair.tar --transform "s,^,${PREFIX}," vendor
+          tar -rf clair.tar --transform "s,^,${PREFIX}," vendor
           gzip clair.tar
       - name: Upload Release Archive
         uses: actions/upload-release-asset@v1
