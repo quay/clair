@@ -1,0 +1,31 @@
+---
+name: Deploy Master Documentation
+
+on:
+  push:
+    branches:
+      - master
+      - development-4.0  # Remove this when the branch switch happens.
+    paths:
+      - 'Documentation/**'
+
+jobs:
+  deploy-documentation:
+    name: Deploy Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup
+        uses: peaceiris/actions-mdbook@v1
+        with:
+          mdbook-version: 'latest'
+      - run: mdbook build
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./book
+          keepFiles: true
