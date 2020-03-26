@@ -17,10 +17,11 @@ jobs:
         uses: actions/checkout@v2
       - name: Prepare Environment
         run: |
+          : "${tag:=${GITHUB_REF#refs/tags/}}"
           cat <<.
-          ::set-env name=CLAIR_VERSION::${GITHUB_REF}
-          ::set-env name=PREFIX::clair-${GITHUB_REF}/
-          ::set-env name=TAG::quay.io/projectquay/clair:${GITHUB_REF#v}
+          ::set-env name=CLAIR_VERSION::${tag}
+          ::set-env name=PREFIX::clair-${tag}/
+          ::set-env name=TAG::quay.io/projectquay/clair:${tag#v}
           ::set-env name=QUAY_USER::projectquay+clair_github
           ::add-mask::${{ secrets.QUAY_TOKEN }}
           .
