@@ -31,21 +31,21 @@ jobs:
           git archive --prefix "${PREFIX}" -o clair.tar "${GITHUB_REF}"
           tar -rf clair.tar --transform "s,^,${PREFIX}," vendor
           gzip clair.tar
-      - name: Upload Release Archive
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./clair.tar.gz
-          asset_name: clair-${{ github.ref }}.tar.gz
-          asset_content_type: application/gzip
       - name: Build Release Container
         run: |
           build=$(mktemp -d)
           trap "rm -rf '${build}'" EXIT
           tar -xzf clair.tar.gz -C "${build}" --strip-components 1
           docker build --build-arg CLAIR_VERSION --tag "${TAG}" "${build}"
+      - name: Publish Release Archive
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./clair.tar.gz
+          asset_name: clair-${{ env.CLAIR_VERSION }}.tar.gz
+          asset_content_type: application/gzip
       - name: Publish Release Container
         run: |
           docker login -u "${QUAY_USER}" -p '${{ secrets.QUAY_TOKEN }}' quay.io
