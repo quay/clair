@@ -19,27 +19,17 @@ func Test_Config_Validate_Failure(t *testing.T) {
 				Mode: "",
 			},
 		},
-		// A mode must be defined in the conf file
 		{
-			name: "DevMode, No Global HTTP Listen Addr",
+			name: "ComboMode, No Global HTTP Listen Addr",
 			conf: config.Config{
-				Mode:           config.DevMode,
+				Mode:           config.ComboMode,
 				HTTPListenAddr: "",
 			},
 		},
-		// DevMode requires a global http listen addr in order for
-		// all services to listen on one address:port tuple
 		{
-			name: "DevMode, Malformed Global HTTP Listen Addr",
+			name: "ComboMode, Malformed Global HTTP Listen Addr",
 			conf: config.Config{
-				Mode:           config.DevMode,
-				HTTPListenAddr: "xyz",
-			},
-		},
-		{
-			name: "DevMode, Malformed Global HTTP Listen Addr",
-			conf: config.Config{
-				Mode:           config.DevMode,
+				Mode:           config.ComboMode,
 				HTTPListenAddr: "xyz",
 			},
 		},
@@ -48,51 +38,51 @@ func Test_Config_Validate_Failure(t *testing.T) {
 		{
 			name: "IndexerMode, No HTTPListenAddr",
 			conf: config.Config{
-				Mode: config.IndexerMode,
+				Mode:           config.IndexerMode,
+				HTTPListenAddr: "",
 				Indexer: config.Indexer{
-					HTTPListenAddr: "",
-					ConnString:     "example@exampl/db",
+					ConnString: "example@example/db",
 				},
 			},
 		},
 		{
 			name: "IndexerMode, No ConnString",
 			conf: config.Config{
-				Mode: config.IndexerMode,
+				Mode:           config.IndexerMode,
+				HTTPListenAddr: "localhost:8080",
 				Indexer: config.Indexer{
-					HTTPListenAddr: "localhost:8080",
-					ConnString:     "",
+					ConnString: "",
 				},
 			},
 		},
 		{
 			name: "MatcherMode, No HTTPListenAddr",
 			conf: config.Config{
-				Mode: config.MatcherMode,
+				Mode:           config.MatcherMode,
+				HTTPListenAddr: "",
 				Matcher: config.Matcher{
-					HTTPListenAddr: "",
-					ConnString:     "example@exampl/db",
+					ConnString: "example@example/db",
 				},
 			},
 		},
 		{
 			name: "MatcherMode, No ConnString",
 			conf: config.Config{
-				Mode: config.MatcherMode,
+				Mode:           config.MatcherMode,
+				HTTPListenAddr: "localhost:8080",
 				Matcher: config.Matcher{
-					HTTPListenAddr: "localhost:8080",
-					ConnString:     "",
+					ConnString: "",
 				},
 			},
 		},
 		{
 			name: "MatcherMode, No IndexerAddr",
 			conf: config.Config{
-				Mode: config.MatcherMode,
+				Mode:           config.MatcherMode,
+				HTTPListenAddr: "localhost:8080",
 				Matcher: config.Matcher{
-					HTTPListenAddr: "localhost:8080",
-					ConnString:     "example@example/db",
-					IndexerAddr:    "",
+					ConnString:  "example@example/db",
+					IndexerAddr: "",
 				},
 			},
 		},

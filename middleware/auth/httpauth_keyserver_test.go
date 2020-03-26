@@ -244,7 +244,7 @@ Install:
 	}
 
 	now := time.Now()
-	ks, err := QuayKeyserver(root.String())
+	ks, err := NewQuayKeyserver(root.String())
 	if err != nil {
 		t.Fatal(err)
 	}

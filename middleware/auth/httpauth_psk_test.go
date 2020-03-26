@@ -73,14 +73,14 @@ func (tc *pskTestcase) Generate(rand *rand.Rand, sz int) reflect.Value {
 }
 
 func (tc *pskTestcase) Handler() (http.Handler, error) {
-	af, err := PSKAuth(tc.key, tc.issuer)
+	af, err := NewPSK(tc.key, tc.issuer)
 	if err != nil {
 		return nil, err
 	}
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, tc.nonce)
 	})
-	return AuthHandler(h, af), nil
+	return Handler(h, af), nil
 }
 
 // Roundtrips returns a function suitable for passing to quick.Check.
