@@ -1,0 +1,51 @@
+---
+on:
+  release:
+    types:
+      - published
+    tags:
+      - v4.*
+
+name: Upload Release Assets
+
+jobs:
+  build:
+    name: Upload Release Assets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Prepare Environment
+        run: |
+          cat <<.
+          ::set-env name=CLAIR_VERSION::${GITHUB_REF}
+          ::set-env name=PREFIX::clair-${GITHUB_REF}/
+          ::set-env name=TAG::quay.io/projectquay/clair:${GITHUB_REF#v}
+          ::set-env name=QUAY_USER::projectquay+clair_github
+          ::add-mask::${{ secrets.QUAY_TOKEN }}
+          .
+      - name: Create Release Archive
+        run: |
+          go mod vendor
+          git archive --prefix "${PREFIX}" -o clair.tar "${GITHUB_REF}"
+          tar -af clair.tar --transform "s,^,${PREFIX}," vendor
+          gzip clair.tar
+      - name: Upload Release Archive
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./clair.tar.gz
+          asset_name: clair-${{ github.ref }}.tar.gz
+          asset_content_type: application/gzip
+      - name: Build Release Container
+        run: |
+          build=$(mktemp -d)
+          trap "rm -rf '${build}'" EXIT
+          tar -xzf clair.tar.gz -C "${build}" --strip-components 1
+          docker build --build-arg CLAIR_VERSION --tag "${TAG}" "${build}"
+      - name: Publish Release Container
+        run: |
+          docker login -u "${QUAY_USER}" -p '${{ secrets.QUAY_TOKEN }}' quay.io
+          docker push "${TAG}"
