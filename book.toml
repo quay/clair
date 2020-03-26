@@ -1,0 +1,14 @@
+[book]
+title = "Clair Documentation"
+authors = ["Clair Authors"]
+description = "Documentation for Clair."
+src = "Documentation"
+language = "en"
+
+[build]
+build-dir = "book"
+create-missing = true
+
+[output.html]
+git-repository-url= "https://github.com/quay/clair"
+preferred-dark-theme = "coal"
