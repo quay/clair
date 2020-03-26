@@ -422,7 +422,7 @@ components:
           type: string
         updater:
           description: "A unique ID representing this vulnerability."
-          type: integer
+          type: string
         name:
           description: "Name of this specific vulnerability."
           type: string
@@ -441,10 +441,6 @@ components:
           description: "A well defined set of severity strings guaranteed to be present."
           type: string
           enum: [Unkonwn, Negligible, Low, Medium, High, Critical, Defcon1]
-        package:
-          $ref: '#/components/schemas/Package'
-        dist:
-          $ref: '#/components/schemas/Distribution'
         fixed_in_version:
           description: "A unique ID representing this vulnerability."
           type: string
@@ -456,8 +452,6 @@ components:
         - links
         - severity
         - normalized_severity
-        - package
-        - dist
         - fixed_in_version
 
     Distribution:
@@ -525,8 +519,6 @@ components:
         - id
         - name
         - version
-        - kind
-        - source
 
     Package:
       title: Package
@@ -555,9 +547,6 @@ components:
         - id
         - name
         - version
-        - kind
-        - source
-        - normalized_version
 
     Version:
       title: Version
