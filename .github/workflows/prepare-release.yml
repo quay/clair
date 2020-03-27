@@ -1,0 +1,65 @@
+---
+name: Prepare Release
+
+on:
+  push:
+    tags:
+      - 'v4.*'
+
+jobs:
+  create:
+    name: Create Release
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Setup
+        run: |
+          : "${tag:=${GITHUB_REF#refs/tags/}}"
+          cat <<.
+          ::set-env name=CLAIR_VERSION::${tag}
+          .
+      - name: Create Release
+        uses: actions/create-release@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ env.CLAIR_VERSION}} Release
+          body: |
+            Coming Soon...
+          draft: true
+          prerelease: ${{ contains(env.CLAIR_VERSION, 'alpha') || contains(env.CLAIR_VERSION, 'beta') || contains(env.CLAIR_VERSION, 'rc') }}
+  stable:
+    if: endsWith(github.ref, '.0')
+    name: Create Stable Helpers
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Create Branch
+        uses: actions/github-script@0.9.0
+        with:
+          script: |
+            const tag = context.ref.replace("refs/tags/", "");
+            github.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: 'refs/heads/release-' + tag,
+              sha: context.sha
+            });
+      - name: Create Labels
+        uses: actions/github-script@0.9.0
+        with:
+          script: |
+            const tag = context.ref.replace("refs/tags/", "").slice(0, -2);
+            github.issues.createLabel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'NeedsBackport-' + tag,
+              color: '790604',
+              description: `This needs to be backported to ${tag}`
+            });
+            github.issues.createLabel({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              name: 'PossibleBackport-' + tag,
+              color: '008000',
+              description: `This may need to be backported to ${tag}`
+            });
