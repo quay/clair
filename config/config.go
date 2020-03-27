@@ -110,11 +110,14 @@ type Dogstatsd struct {
 	URL string `yaml:"url"`
 }
 
+// DefaultAddress is used if an http_listen_addr is not provided in the config.
+const DefaultAddress = ":6060"
+
 func Validate(conf Config) error {
 	switch strings.ToLower(conf.Mode) {
 	case ComboMode:
 		if conf.HTTPListenAddr == "" {
-			return fmt.Errorf("dev mode selected but no global HTTPListenAddr")
+			conf.HTTPListenAddr = DefaultAddress
 		}
 		if conf.Indexer.ConnString == "" {
 			return fmt.Errorf("indexer mode requires a database connection string")
@@ -124,14 +127,14 @@ func Validate(conf Config) error {
 		}
 	case IndexerMode:
 		if conf.HTTPListenAddr == "" {
-			return fmt.Errorf("indexer mode selected but no http listen address")
+			conf.HTTPListenAddr = DefaultAddress
 		}
 		if conf.Indexer.ConnString == "" {
 			return fmt.Errorf("indexer mode requires a database connection string")
 		}
 	case MatcherMode:
 		if conf.HTTPListenAddr == "" {
-			return fmt.Errorf("matcher mode selected but no http listen address")
+			conf.HTTPListenAddr = DefaultAddress
 		}
 		if conf.Matcher.ConnString == "" {
 			return fmt.Errorf("matcher mode requires a database connection string")

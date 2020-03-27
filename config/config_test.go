@@ -20,29 +20,10 @@ func Test_Config_Validate_Failure(t *testing.T) {
 			},
 		},
 		{
-			name: "ComboMode, No Global HTTP Listen Addr",
-			conf: config.Config{
-				Mode:           config.ComboMode,
-				HTTPListenAddr: "",
-			},
-		},
-		{
 			name: "ComboMode, Malformed Global HTTP Listen Addr",
 			conf: config.Config{
 				Mode:           config.ComboMode,
 				HTTPListenAddr: "xyz",
-			},
-		},
-		// Indexer and Matcher modes require both a listen http addr and a database connection string
-		// other fields will use defaults defined in claircore. Matcher mode requires an address to a remote Indexer.
-		{
-			name: "IndexerMode, No HTTPListenAddr",
-			conf: config.Config{
-				Mode:           config.IndexerMode,
-				HTTPListenAddr: "",
-				Indexer: config.Indexer{
-					ConnString: "example@example/db",
-				},
 			},
 		},
 		{
@@ -52,16 +33,6 @@ func Test_Config_Validate_Failure(t *testing.T) {
 				HTTPListenAddr: "localhost:8080",
 				Indexer: config.Indexer{
 					ConnString: "",
-				},
-			},
-		},
-		{
-			name: "MatcherMode, No HTTPListenAddr",
-			conf: config.Config{
-				Mode:           config.MatcherMode,
-				HTTPListenAddr: "",
-				Matcher: config.Matcher{
-					ConnString: "example@example/db",
 				},
 			},
 		},
