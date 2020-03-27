@@ -1,0 +1,38 @@
+---
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - development-4.0  # Remove this when the branch switch happens.
+  pull_request:
+    branches:
+      - master
+      - development-4.0  # Remove this when the branch switch happens.
+
+jobs:
+  documentation:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup
+        uses: peaceiris/actions-mdbook@v1
+        with:
+          mdbook-version: 'latest'
+      - run: mdbook build
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    container: docker.io/library/golang:1.14-alpine
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: OS Dependencies
+        run: apk add --no-cache tar rpm build-base
+      - name: Go Dependencies
+        run: go mod vendor
+      - name: Tests
+        run: go test ./...

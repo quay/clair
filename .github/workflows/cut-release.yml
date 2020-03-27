@@ -9,17 +9,12 @@ on:
 name: Upload Release Assets
 
 jobs:
-  checkout:
-    name: Checkout Code
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v2
   build:
     name: Upload Release Assets
     runs-on: ubuntu-latest
-    needs: checkout
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: Prepare Environment
         run: |
           : "${tag:=${GITHUB_REF#refs/tags/}}"
@@ -58,8 +53,9 @@ jobs:
   deploy-documentation:
     name: Deploy Documentation
     runs-on: ubuntu-latest
-    needs: checkout
     steps:
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: Setup
         uses: peaceiris/actions-mdbook@v1
         with:
