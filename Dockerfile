@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM golang:1.14-alpine AS build
+FROM docker.io/library/golang:1.14-alpine AS build
 RUN apk add --no-cache build-base
 WORKDIR /build/
 ADD . /build/
@@ -21,8 +21,11 @@ RUN go build \
 	-mod=vendor \
 	-ldflags="-X main.Version=${CLAIR_VERSION}" \
 	./cmd/clair
+RUN go build \
+	-mod=vendor \
+	./cmd/clairctl
 
-FROM alpine:3.10 AS final
+FROM docker.io/library/alpine:3.10 AS final
 RUN apk add --no-cache tar rpm ca-certificates dumb-init
 # change ownership of ssl directory to allow custom cert in OpenShift
 RUN chgrp -R 0 /etc/ssl/certs && \
@@ -32,5 +35,7 @@ VOLUME /config
 EXPOSE 6060
 WORKDIR /run
 ENV CLAIR_CONF=/config/config.yaml CLAIR_MODE=combo
+USER nobody:nobody
 
 COPY --from=build /build/clair /bin/clair
+COPY --from=build /build/clairctl /bin/clairctl
