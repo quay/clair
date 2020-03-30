@@ -255,3 +255,19 @@ func (t *Server) configureWithAuth() error {
 	}
 	panic("should not reach")
 }
+
+// WriterError is a helper that closes over an error that may be returned after
+// writing a response body starts.
+//
+// The normal error flow can't be used, because the HTTP status code will have
+// been sent and some amount of body data may have been written.
+func writerError(w http.ResponseWriter, e *error) func() {
+	const errHeader = `Clair-Error`
+	w.Header().Add("trailer", errHeader)
+	return func() {
+		if *e == nil {
+			return
+		}
+		w.Header().Add(errHeader, (*e).Error())
+	}
+}

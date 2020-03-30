@@ -92,15 +92,8 @@ func IndexHandler(serv indexer.StateIndexer) http.HandlerFunc {
 
 		w.Header().Set("etag", validator)
 		w.Header().Set("location", next)
+		defer writerError(w, &err)()
 		w.WriteHeader(http.StatusCreated)
 		err = json.NewEncoder(w).Encode(report)
-		if err != nil {
-			resp := &je.Response{
-				Code:    "encoding-error",
-				Message: fmt.Sprintf("failed to encode scan report: %v", err),
-			}
-			je.Error(w, resp, http.StatusInternalServerError)
-			return
-		}
 	}
 }

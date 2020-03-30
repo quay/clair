@@ -2,7 +2,6 @@ package httptransport
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	je "github.com/quay/claircore/pkg/jsonerr"
@@ -43,18 +42,11 @@ func StateHandler(service indexer.Stater) http.HandlerFunc {
 
 		w.Header().Set("content-type", "application/json")
 
+		defer writerError(w, &err)()
 		err = json.NewEncoder(w).Encode(struct {
 			State string `json:"state"`
 		}{
 			State: s,
 		})
-		if err != nil {
-			resp := &je.Response{
-				Code:    "encoding-error",
-				Message: fmt.Sprintf("failed to encode state: %v", err),
-			}
-			je.Error(w, resp, http.StatusInternalServerError)
-		}
-		return
 	}
 }
