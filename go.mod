@@ -8,11 +8,14 @@ require (
 	github.com/google/go-containerregistry v0.0.0-20191206185556-eb7c14b719c6
 	github.com/google/uuid v1.1.1
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
+	github.com/jackc/pgx/v4 v4.0.0
+	github.com/jmoiron/sqlx v1.2.0
 	github.com/klauspost/compress v1.9.4
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/prometheus/client_golang v0.9.4 // indirect
 	github.com/prometheus/procfs v0.0.8 // indirect
 	github.com/quay/claircore v0.0.25
+	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
 	github.com/rs/zerolog v1.16.0
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/urfave/cli/v2 v2.2.0

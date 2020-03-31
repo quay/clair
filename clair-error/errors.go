@@ -1,6 +1,8 @@
 package clairerror
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // ErrRequestFail indicates an http request failure
 type ErrRequestFail struct {
