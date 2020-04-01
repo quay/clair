@@ -33,3 +33,5 @@ This document tracks projects that integrate with Clair. [Join the community](ht
 [sqs]: https://aws.amazon.com/sqs/
 
 [clair-singularity](https://github.com/dctrud/clair-singularity): a command-line tool to scan [Singularity](http://singularity.lbl.gov/) container images using Clair.
+
+[Sonatype's Lifecycle](https://www.sonatype.com/container-health): Sonatype's Lifecycle product can consume Clair data for complete, top-to-bottom, scanning of a container.
