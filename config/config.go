@@ -47,9 +47,37 @@ type Config struct {
 	Metrics Metrics `yaml:"metrics"`
 }
 
+// Auth holds the specific configs for different authentication methods.
+//
+// These should be pointers to structs, so that it's possible to distinguish
+// between "absent" and "present and misconfigured."
 type Auth struct {
-	Name   string            `yaml:"name"`
-	Params map[string]string `yaml:"params"`
+	PSK       *AuthPSK       `yaml:"psk,omitempty"`
+	Keyserver *AuthKeyserver `yaml:"keyserver,omitempty"`
+}
+
+// Any reports whether any sort of authentication is configured.
+func (a Auth) Any() bool {
+	return a.PSK != nil ||
+		a.Keyserver != nil
+}
+
+// AuthKeyserver is the configuration for doing authentication with the Quay
+// keyserver protocol.
+//
+// The "Intraservice" key is only needed when the overall config mode is not
+// "combo".
+type AuthKeyserver struct {
+	API          string `yaml:"api"`
+	Intraservice []byte `yaml:"intraservice"`
+}
+
+// AuthPSK is the configuration for doing pre-shared key based authentication.
+//
+// The "Issuer" key is what the service expects to verify as the "issuer claim.
+type AuthPSK struct {
+	Key    []byte `yaml:"key"`
+	Issuer string `yaml:"iss"`
 }
 
 type Indexer struct {

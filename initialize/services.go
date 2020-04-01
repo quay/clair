@@ -67,7 +67,19 @@ func (i *Init) Services() error {
 			return fmt.Errorf("failed to initialize libvuln: %v", err)
 		}
 		// matcher mode needs a remote indexer client
-		remoteIndexer, err := client.NewHTTP(i.GlobalCTX, client.WithAddr(i.conf.Matcher.IndexerAddr))
+		c, auth, err := i.conf.Client(nil)
+		switch {
+		case err != nil:
+			return err
+		case !auth && i.conf.Auth.Any():
+			return &clairerror.ErrNotInitialized{
+				Msg: "client authorization required but not provided",
+			}
+		default: // OK
+		}
+		remoteIndexer, err := client.NewHTTP(i.GlobalCTX,
+			client.WithAddr(i.conf.Matcher.IndexerAddr),
+			client.WithClient(c))
 		if err != nil {
 			return err
 		}

@@ -2,7 +2,6 @@ package httptransport
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"net"
 	"net/http"
@@ -85,7 +84,7 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 
 	// add endpoint authentication if configured add auth. must happen after
 	// mux was configured for given mode.
-	if conf.Auth.Name != "" {
+	if conf.Auth.Any() {
 		err := t.configureWithAuth()
 		if err != nil {
 			log.Warn().Err(err).Msg("received error configuring auth middleware")
@@ -234,49 +233,47 @@ func (t *Server) configureUpdateEndpoints() error {
 	return nil
 }
 
+// IntraserviceIssuer is the issuer that will be used if Clair is configured to
+// mint its own JWTs.
+const IntraserviceIssuer = `clair-intraservice`
+
 // configureWithAuth will take the current serve mux and wrap it
 // in an Auth middleware handler.
 //
 // must be ran after the config*Mode method of choice.
 func (t *Server) configureWithAuth() error {
-	switch t.conf.Auth.Name {
-	case "keyserver":
-		const param = "api"
-		api, ok := t.conf.Auth.Params[param]
-		if !ok {
-			return fmt.Errorf("missing needed config key: %q", param)
-		}
-		ks, err := auth.NewQuayKeyserver(api)
+	// Keep this ordered "best" to "worst".
+	switch {
+	case t.conf.Auth.Keyserver != nil:
+		cfg := t.conf.Auth.Keyserver
+		checks := []auth.Checker{}
+		ks, err := auth.NewQuayKeyserver(cfg.API)
 		if err != nil {
 			return fmt.Errorf("failed to initialize quay keyserver: %v", err)
 		}
-		t.Server.Handler = auth.Handler(t.Server.Handler, ks)
-	case "psk":
-		const (
-			iss = "issuer"
-			key = "key"
-		)
-		ek, ok := t.conf.Auth.Params[key]
-		if !ok {
-			return fmt.Errorf("missing needed config key: %q", key)
+		checks = append(checks, ks)
+		if cfg.Intraservice != nil {
+			psk, err := auth.NewPSK(cfg.Intraservice, IntraserviceIssuer)
+			if err != nil {
+				return fmt.Errorf("failed to initialize quay keyserver: %w", err)
+			}
+			checks = append(checks, psk)
 		}
-		k, err := base64.StdEncoding.DecodeString(ek)
+		t.Server.Handler = auth.Handler(t.Server.Handler, checks...)
+	case t.conf.Auth.PSK != nil:
+		cfg := t.conf.Auth.PSK
+		intra, err := auth.NewPSK(cfg.Key, IntraserviceIssuer)
 		if err != nil {
 			return err
 		}
-		i, ok := t.conf.Auth.Params[iss]
-		if !ok {
-			return fmt.Errorf("missing needed config key: %q", iss)
-		}
-		psk, err := auth.NewPSK(k, i)
+		psk, err := auth.NewPSK(cfg.Key, cfg.Issuer)
 		if err != nil {
 			return err
 		}
-		t.Server.Handler = auth.Handler(t.Server.Handler, psk)
+		t.Server.Handler = auth.Handler(t.Server.Handler, intra, psk)
 	default:
-		return fmt.Errorf("failed to recognize auth middle type: %v", t.conf.Auth.Name)
 	}
-	panic("should not reach")
+	return nil
 }
 
 // WriterError is a helper that closes over an error that may be returned after
