@@ -6,14 +6,14 @@ import (
 	"strings"
 )
 
-// AuthCheck is an interface that reports whether the passed request should be
+// Checker is an interface that reports whether the passed request should be
 // allowed to continue.
-type AuthCheck interface {
+type Checker interface {
 	Check(context.Context, *http.Request) bool
 }
 
 type handler struct {
-	auth AuthCheck
+	auth Checker
 	next http.Handler
 }
 
@@ -26,13 +26,38 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handler returns a http.Handler that gates access to the passed Handler behind
-// the passed AuthCheck.
-func Handler(h http.Handler, f AuthCheck) http.Handler {
-	return &handler{
-		auth: f,
+// the passed Checker.
+func Handler(h http.Handler, f ...Checker) http.Handler {
+	r := &handler{
+		auth: fail{},
 		next: h,
 	}
+	if len(f) == 1 {
+		r.auth = f[0]
+	} else {
+		r.auth = any(f)
+	}
+	return r
 }
+
+// Any attempts all Checkers in order and reports true if any succeeds.
+type any []Checker
+
+// Check implements Checker.
+func (a any) Check(ctx context.Context, r *http.Request) bool {
+	for _, c := range a {
+		if ok := c.Check(ctx, r); ok {
+			return true
+		}
+	}
+	return false
+}
+
+// Fail is a Checker that always fails.
+type fail struct{}
+
+// Check implements Checker.
+func (fail) Check(_ context.Context, _ *http.Request) bool { return false }
 
 func fromHeader(r *http.Request) (string, bool) {
 	hs, ok := r.Header["Authorization"]
