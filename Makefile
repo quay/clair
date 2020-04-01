@@ -28,7 +28,7 @@ local-dev-up: vendor
 	$(docker-compose) up -d jaeger
 	$(docker-compose) up -d prometheus
 	$(docker-compose) up -d clair-db
-	$(docker) exec -it clair_clair-db_1 bash -c 'while ! pg_isready; do echo "waiting for postgres"; sleep 2; done'
+	$(docker) exec -it clair-db bash -c 'while ! pg_isready; do echo "waiting for postgres"; sleep 2; done'
 	$(docker-compose) up -d indexer
 	$(docker-compose) up -d matcher
 	$(docker-compose) up -d swagger-ui
@@ -47,7 +47,7 @@ local-dev-down:
 # often a service should be restarted as well to run migrations on the now schemaless database.
 .PHONY: local-dev-db-restart
 local-dev-db-restart:
-	$(docker) kill clair_clair-db_1 && $(docker) rm clair_clair-db_1
+	$(docker) kill clair-db && $(docker) rm clair-db
 	$(docker-compose) up -d --force-recreate clair-db
 
 # restart the local development indexer, any local code changes will take effect

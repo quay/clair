@@ -1,6 +1,7 @@
 version: "3.7"
 services:
   clair-db:
+    container_name: clair-db
     image: postgres:12.1
     environment:
       POSTGRES_USER: "clair"
@@ -15,7 +16,9 @@ services:
       start_period: 10s
 
   indexer:
-    image: quay.io/claircore/golang:1.13.3
+    container_name: clair-indexer
+    build: .
+    image: clair-local:latest
     ports:
       - "8080:80"
       - "8089:8089"
@@ -28,7 +31,9 @@ services:
       ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor . -conf /src/clair/local-dev/indexer/indexer.config.yaml"]
 
   matcher:
-    image: quay.io/claircore/golang:1.13.3
+    container_name: matcher-indexer
+    image: clair-local:latest
+    build: .
     ports:
       - "8081:80"
       - "8090:8089"
@@ -41,6 +46,7 @@ services:
       ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor . -conf /src/clair/local-dev/matcher/matcher.config.yaml"]
 
   swagger-ui:
+    container_name: clair-swagger
     image: swaggerapi/swagger-ui
     ports:
       - "8082:8080"
@@ -50,6 +56,7 @@ services:
       SWAGGER_JSON: "/clair/openapi.yaml"
 
   jaeger:
+    container_name: clair-jaeger
     image: jaegertracing/all-in-one:1.17
     ports:
         - "5775:5775/udp" 
@@ -64,6 +71,7 @@ services:
       COLLECTOR_ZIPKIN_HTTP_PORT: 9411
 
   prometheus:
+    container_name: clair-prometheus
     image: prom/prometheus:latest
     volumes:
       - "./local-dev/prometheus:/etc/prometheus/"
