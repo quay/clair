@@ -70,3 +70,7 @@ local-dev-swagger-ui-restart:
 .PHONY: local-dev-traefik-restart
 local-dev-traefik-restart:
 	$(docker-compose) up -d --force-recreate traefik
+
+.PHONY: container-build
+container-build:
+	$(docker) build -t clair-local:latest .
