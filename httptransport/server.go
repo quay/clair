@@ -25,6 +25,8 @@ const (
 	IndexAPIPath            = apiRoot + "index_report"
 	IndexReportAPIPath      = apiRoot + "index_report/"
 	StateAPIPath            = apiRoot + "state"
+	internalRoot            = apiRoot + "internal/"
+	UpdatesAPIPath          = internalRoot + "updates/"
 )
 
 // Server is the primary http server
@@ -66,10 +68,16 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 	switch conf.Mode {
 	case config.ComboMode:
 		t.configureComboMode()
+		if err := t.configureUpdateEndpoints(); err != nil {
+			return nil, err
+		}
 	case config.IndexerMode:
 		t.configureIndexerMode()
 	case config.MatcherMode:
 		t.configureMatcherMode()
+		if err := t.configureUpdateEndpoints(); err != nil {
+			return nil, err
+		}
 	}
 
 	// attach HttpTransport to server, this works because we embed http.ServeMux
@@ -207,6 +215,21 @@ func (t *Server) configureMatcherMode() error {
 		VulnerabilityReportPath,
 	)
 	t.Handle(VulnerabilityReportPath, othttp.WithRouteTag(VulnerabilityReportPath, vulnReportH))
+
+	return nil
+}
+
+func (t *Server) configureUpdateEndpoints() error {
+	if t.matcher == nil {
+		return clairerror.ErrNotInitialized{"matcher service required for update inspection endpoints"}
+	}
+
+	h, err := UpdateDiffHandler(t.matcher)
+	if err != nil {
+		return err
+	}
+	wh := intromw.Handler(othttp.NewHandler(h, UpdatesAPIPath, t.traceOpt), UpdatesAPIPath)
+	t.ServeMux.Handle(UpdatesAPIPath, othttp.WithRouteTag(UpdatesAPIPath, wh))
 
 	return nil
 }

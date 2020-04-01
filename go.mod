@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/google/go-containerregistry v0.0.0-20191206185556-eb7c14b719c6
+	github.com/google/uuid v1.1.1
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/klauspost/compress v1.9.4
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
