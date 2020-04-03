@@ -1,128 +1,81 @@
 package client
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
-	"path"
-
-	"github.com/quay/claircore"
-
-	clairerror "github.com/quay/clair/v4/clair-error"
-	"github.com/quay/clair/v4/config"
-	"github.com/quay/clair/v4/httptransport"
+	"sync/atomic"
 )
 
-// HttpClient implents the indexer service via HTTP
+// HTTP implements access to clair interfaces over HTTP
+type HTTP = *httpClient
+
+// httpClient has this weird two-step where it's an unexported type and an
+// exported alias so that we can return something that's impossible for another
+// package to construct, but is still a concrete type.
+//
+// This has the small rub that all the methods need to be defined on the
+// exported alias so they appear correctly in the documentation.
 type httpClient struct {
 	addr *url.URL
 	c    *http.Client
+
+	diffValidator atomic.Value
 }
 
-// NewClient is a constructor for a Client
-func NewHTTPClient(ctx context.Context, conf config.Config, client *http.Client) (*httpClient, error) {
-	addr, err := url.Parse(conf.Matcher.IndexerAddr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse configured url %s: %w", addr, err)
-	}
-	if client == nil {
-		client = &http.Client{}
-	}
-
-	return &httpClient{addr, client}, nil
-}
-
-// Index receives a Manifest and returns a IndexReport providing the indexed
-// items in the resulting image.
+// DefaultAddr is used if the WithAddr Option isn't provided to New.
 //
-// Index blocks until completion. An error is returned if the index operation
-// could not start. If an error occurs during the index operation the error will
-// be preset on the IndexReport.Err field of the returned IndexReport.
-func (s *httpClient) Index(ctx context.Context, manifest *claircore.Manifest) (*claircore.IndexReport, error) {
-	buf := bytes.NewBuffer([]byte{})
-	err := json.NewEncoder(buf).Encode(manifest)
+// This uses the default service port, and should just work if a containerized
+// deployment has a service configured that hairpins and routes correctly.
+const DefaultAddr = `http://clair:6060/`
+
+// NewHTTP is a constructor for an HTTP client.
+func NewHTTP(ctx context.Context, opt ...Option) (HTTP, error) {
+	addr, err := url.Parse(DefaultAddr)
 	if err != nil {
-		return nil, &clairerror.ErrBadManifest{err}
+		panic("programmer error") // Why didn't the DefaultAddr parse?
 	}
 
-	u, err := s.addr.Parse(httptransport.IndexAPIPath)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %v", err)
+	c := httpClient{
+		addr: addr,
+		c:    http.DefaultClient,
 	}
-	req, err := http.NewRequestWithContext(ctx, "POST", u.String(), buf)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %v", err)
-	}
-	resp, err := s.c.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to do request: %v", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return nil, &clairerror.ErrRequestFail{Code: resp.StatusCode, Status: resp.Status}
-	}
+	c.diffValidator.Store("")
 
-	var sr *claircore.IndexReport
-	err = json.NewDecoder(resp.Body).Decode(sr)
-	if err != nil {
-		return nil, &clairerror.ErrBadIndexReport{err}
+	for _, o := range opt {
+		if err := o(&c); err != nil {
+			return nil, err
+		}
 	}
-
-	return sr, nil
+	return &c, nil
 }
 
-// IndexReport retrieves a IndexReport given a manifest hash string
-func (s *httpClient) IndexReport(ctx context.Context, manifest claircore.Digest) (*claircore.IndexReport, bool, error) {
-	u, err := s.addr.Parse(path.Join(httptransport.IndexReportAPIPath, manifest.String()))
-	if err != nil {
-		return nil, false, fmt.Errorf("failed to create request: %v", err)
-	}
-	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
-	if err != nil {
-		return nil, false, fmt.Errorf("failed to create request: %v", err)
-	}
-	resp, err := s.c.Do(req)
-	if err != nil {
-		return nil, false, fmt.Errorf("failed to do request: %v", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode == http.StatusNotFound {
-		return nil, false, nil
-	}
-	if resp.StatusCode != http.StatusOK {
-		return nil, false, &clairerror.ErrIndexReportRetrieval{&clairerror.ErrRequestFail{Code: resp.StatusCode, Status: resp.Status}}
-	}
+// Option sets an option on an HTTP.
+type Option func(HTTP) error
 
-	ir := &claircore.IndexReport{}
-	err = json.NewDecoder(resp.Body).Decode(ir)
-	if err != nil {
-		return nil, false, &clairerror.ErrBadIndexReport{err}
+// WithAddr sets the address to talk to.
+//
+// The client doesn't support providing multiple addresses, so the provided
+// address should most likely have some form of load balancing or routing.
+//
+// The provided URL should not include the `/api/v1` prefix.
+func WithAddr(root string) Option {
+	u, err := url.Parse(root)
+	return func(s *httpClient) error {
+		if err != nil {
+			return err
+		}
+		s.addr = u
+		return nil
 	}
-
-	return ir, true, nil
 }
 
-func (s *httpClient) State(ctx context.Context) (string, error) {
-	u, err := s.addr.Parse(httptransport.StateAPIPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to create request: %v", err)
+// WithClient sets the http.Client used for requests.
+//
+// If WithClient is not supplied to NewHTTP, http.DefaultClient is used.
+func WithClient(c *http.Client) Option {
+	return func(s *httpClient) error {
+		s.c = c
+		return nil
 	}
-	req, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
-	if err != nil {
-		return "", fmt.Errorf("failed to create request: %v", err)
-	}
-	resp, err := s.c.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("failed to do request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	buf := &bytes.Buffer{}
-	if _, err := buf.ReadFrom(resp.Body); err != nil {
-		return "", err
-	}
-	return buf.String(), nil
 }
