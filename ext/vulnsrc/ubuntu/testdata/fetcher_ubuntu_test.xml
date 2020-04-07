@@ -1,0 +1,102 @@
+<oval_definitions
+    xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5"
+    xmlns:ind-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent"
+    xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+    xmlns:unix-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix"
+    xmlns:linux-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-common-5 oval-common-schema.xsd   http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd   http://oval.mitre.org/XMLSchema/oval-definitions-5#independent independent-definitions-schema.xsd   http://oval.mitre.org/XMLSchema/oval-definitions-5#unix unix-definitions-schema.xsd   http://oval.mitre.org/XMLSchema/oval-definitions-5#macos linux-definitions-schema.xsd">
+
+    <generator>
+        <oval:product_name>Canonical CVE OVAL Generator</oval:product_name>
+        <oval:product_version>1.1</oval:product_version>
+        <oval:schema_version>5.11.1</oval:schema_version>
+        <oval:timestamp>2019-08-16T06:09:10</oval:timestamp>
+    </generator>
+
+    <definitions>
+        <definition class="inventory" id="oval:com.ubuntu.xenial:def:100" version="1">
+            <metadata>
+                <title>Check that Ubuntu 16.04 LTS (xenial) is installed.</title>
+                <description></description>
+            </metadata>
+            <criteria>
+                <criterion test_ref="oval:com.ubuntu.xenial:tst:100" comment="The host is part of the unix family." />
+                <criterion test_ref="oval:com.ubuntu.xenial:tst:101" comment="The host is running Ubuntu xenial." />
+            </criteria>
+        </definition>
+        <definition class="vulnerability" id="oval:com.ubuntu.xenial:def:201544710000000" version="1">
+            <metadata>
+                <title>CVE-2015-4471 on Ubuntu 16.04 LTS (xenial) - medium.</title>
+                <description>Off-by-one error in the lzxd_decompress function in lzxd.c in libmspack before 0.5 allows remote attackers to cause a denial of service (buffer under-read and application crash) via a crafted CAB archive. It was discovered that cabextract incorrectly handled certain malformed CAB files. A remote attacker could use this issue to cause cabextract to crash, resulting in a denial of service.</description>
+                <affected family="unix">
+                    <platform>Ubuntu 16.04 LTS</platform>
+                </affected>
+                <reference source="CVE" ref_id="CVE-2015-4471" ref_url="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-4471" />
+                <advisory>
+                    <severity>Medium</severity>
+                    <rights>Copyright (C) 2015 Canonical Ltd.</rights>
+                    <public_date>2015-06-11</public_date>
+                    <bug>http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=775499</bug>
+                    <ref>http://people.canonical.com/~ubuntu-security/cve/2015/CVE-2015-4471.html</ref>
+                    <ref>http://www.openwall.com/lists/oss-security/2015/02/03/11</ref>
+                    <ref>https://github.com/kyz/libmspack/commit/18b6a2cc0b87536015bedd4f7763e6b02d5aa4f3</ref>
+                    <ref>https://bugs.debian.org/775499</ref>
+                    <ref>http://openwall.com/lists/oss-security/2015/02/03/11</ref>
+                </advisory>
+            </metadata>
+            <criteria>
+                <extend_definition definition_ref="oval:com.ubuntu.xenial:def:100" comment="Ubuntu 16.04 LTS (xenial) is installed." applicability_check="true" />
+                <criteria operator="OR">
+                    <criterion test_ref="oval:com.ubuntu.xenial:tst:201544710000000" comment="cabextract package in xenial is affected and needs fixing." />
+                    <criterion test_ref="oval:com.ubuntu.xenial:tst:201544710000010" comment="libmspack package in xenial was vulnerable but has been fixed (note: '0.4-3')." />
+                </criteria>
+            </criteria>
+        </definition>
+    </definitions>
+    <tests>
+        <ind-def:family_test id="oval:com.ubuntu.xenial:tst:100" check="at least one" check_existence="at_least_one_exists" version="1" comment="Is the host part of the unix family?">
+            <ind-def:object object_ref="oval:com.ubuntu.xenial:obj:100"/>
+            <ind-def:state state_ref="oval:com.ubuntu.xenial:ste:100"/>
+        </ind-def:family_test>
+
+        <ind-def:textfilecontent54_test id="oval:com.ubuntu.xenial:tst:101" check="at least one" check_existence="at_least_one_exists" version="1" comment="Is the host running Ubuntu xenial?">
+            <ind-def:object object_ref="oval:com.ubuntu.xenial:obj:101"/>
+            <ind-def:state state_ref="oval:com.ubuntu.xenial:ste:101"/>
+        </ind-def:textfilecontent54_test>
+        <linux-def:dpkginfo_test id="oval:com.ubuntu.xenial:tst:201544710000000" version="1" check_existence="at_least_one_exists" check="at least one" comment="Does the 'cabextract' package exist?">
+            <linux-def:object object_ref="oval:com.ubuntu.xenial:obj:201544710000000"/>
+        </linux-def:dpkginfo_test>
+        <linux-def:dpkginfo_test id="oval:com.ubuntu.xenial:tst:201544710000010" version="1" check_existence="at_least_one_exists" check="at least one" comment="Does the 'libmspack' package exist and is the version less than '0.4-3'?">
+            <linux-def:object object_ref="oval:com.ubuntu.xenial:obj:201544710000010"/>
+            <linux-def:state state_ref="oval:com.ubuntu.xenial:ste:201544710000010" />
+        </linux-def:dpkginfo_test>
+    </tests>
+    <objects>
+        <ind-def:family_object id="oval:com.ubuntu.xenial:obj:100" version="1" comment="The singleton family object."/>
+
+        <ind-def:textfilecontent54_object id="oval:com.ubuntu.xenial:obj:101" version="1" comment="The singleton release codename object.">
+            <ind-def:path>/etc</ind-def:path>
+            <ind-def:filename>lsb-release</ind-def:filename>
+            <ind-def:pattern operation="pattern match">^[\s\S]*DISTRIB_CODENAME=([a-z]+)$</ind-def:pattern>
+            <ind-def:instance datatype="int">1</ind-def:instance>
+        </ind-def:textfilecontent54_object>
+        <linux-def:dpkginfo_object id="oval:com.ubuntu.xenial:obj:201544710000000" version="1" comment="The 'cabextract' package binary.">
+            <linux-def:name>cabextract</linux-def:name>
+        </linux-def:dpkginfo_object>
+        <linux-def:dpkginfo_object id="oval:com.ubuntu.xenial:obj:201544710000010" version="1" comment="The 'libmspack' package binary.">
+            <linux-def:name>libmspack0</linux-def:name>
+        </linux-def:dpkginfo_object>
+    </objects>
+    <states>
+        <ind-def:family_state id="oval:com.ubuntu.xenial:ste:100" version="1" comment="The singleton family object.">
+            <ind-def:family>unix</ind-def:family>
+        </ind-def:family_state>
+
+        <ind-def:textfilecontent54_state id="oval:com.ubuntu.xenial:ste:101" version="1" comment="Ubuntu 16.04 LTS">
+            <ind-def:subexpression>xenial</ind-def:subexpression>
+        </ind-def:textfilecontent54_state>
+        <linux-def:dpkginfo_state id="oval:com.ubuntu.xenial:ste:201544710000010" version="1" comment="The package version is less than '0.4-3'.">
+            <linux-def:evr datatype="debian_evr_string" operation="less than">0.4-3</linux-def:evr>
+        </linux-def:dpkginfo_state>
+    </states>
+</oval_definitions>
