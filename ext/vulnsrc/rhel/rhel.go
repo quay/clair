@@ -104,6 +104,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		useLastModifiedHeader = false
 	}
 
+	notModified := false
 	ts := time.Now().UTC().Format(http.TimeFormat)
 	for _, release := range releases {
 		url := fmt.Sprintf(dbURL, release)
@@ -120,11 +121,12 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		case err != nil:
 			return resp, fmt.Errorf("failed to download %s: %v", url, err)
 		case r.StatusCode == http.StatusNotModified:
+			notModified = true
 			log.WithField("package", "Red Hat").Infof("%s has not been modified since %v. no update necessary", url, flagValue)
 			continue
 		case r.StatusCode != http.StatusOK:
 			log.WithField("package", "Red Hat").Debugf("%s request failed with %s", url, r.Status)
-			return resp, fmt.Errorf("received %d code downloading %s", r.StatusCode, url)
+			continue
 		}
 
 		// Parse the XML.
@@ -139,8 +141,10 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		}
 	}
 
-	resp.FlagName = updaterFlag
-	resp.FlagValue = ts
+	if notModified || len(resp.Vulnerabilities) != 0 {
+		resp.FlagName = updaterFlag
+		resp.FlagValue = ts
+	}
 	return resp, nil
 }
 
