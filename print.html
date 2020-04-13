@@ -82,8 +82,8 @@
         </script>
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
-            <div id="sidebar-scrollbox" class="sidebar-scrollbox">
-                <ol class="chapter"><li class="expanded "><a href="TODO.html"><strong aria-hidden="true">1.</strong> Operation</a></li><li class="expanded "><a href="TODO.html"><strong aria-hidden="true">2.</strong> API</a></li><li class="expanded "><a href="TODO.html"><strong aria-hidden="true">3.</strong> Contribution</a></li><li><ol class="section"><li class="expanded "><a href="contribution/releases.html"><strong aria-hidden="true">3.1.</strong> Releases</a></li></ol></li></ol>
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="TODO.html"><strong aria-hidden="true">1.</strong> About</a></li><li class="chapter-item expanded "><a href="TODO.html"><strong aria-hidden="true">2.</strong> Operation</a></li><li class="chapter-item expanded "><a href="TODO.html"><strong aria-hidden="true">3.</strong> API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="api_internal.html"><strong aria-hidden="true">3.1.</strong> Internal Endpoints</a></li></ol></li><li class="chapter-item expanded "><a href="TODO.html"><strong aria-hidden="true">4.</strong> Contribution</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="contribution/releases.html"><strong aria-hidden="true">4.1.</strong> Releases</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -156,6 +156,15 @@
                         <h1><a class="header" href="#contribution" id="contribution">Contribution</a></h1>
 <h1><a class="header" href="#contribution-1" id="contribution-1">Contribution</a></h1>
 <h1><a class="header" href="#contribution-2" id="contribution-2">Contribution</a></h1>
+<h1><a class="header" href="#internal" id="internal">Internal</a></h1>
+<p>Internal endpoints are underneath <code>/api/v1/internal</code> and are meant for
+communication between Clair microservices. If Clair is operating in combo mode,
+these endpoints may not exist. Any sort of API ingress should disallow clients
+to talk to these endpoints.</p>
+<h2><a class="header" href="#updates" id="updates">Updates</a></h2>
+<p>The <code>updates/</code> endpoints expose information about updater operations for use by the
+notifier process.</p>
+<h1><a class="header" href="#contribution-3" id="contribution-3">Contribution</a></h1>
 <h1><a class="header" href="#releases" id="releases">Releases</a></h1>
 <p>Clair releases are cut roughly every three months and actively maintained for
 six.</p>

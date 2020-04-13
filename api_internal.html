@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Contribution - Clair Documentation</title>
+        <title>Internal Endpoints - Clair Documentation</title>
         
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="TODO.html" class="active"><strong aria-hidden="true">1.</strong> About</a></li><li class="chapter-item expanded "><a href="TODO.html" class="active"><strong aria-hidden="true">2.</strong> Operation</a></li><li class="chapter-item expanded "><a href="TODO.html" class="active"><strong aria-hidden="true">3.</strong> API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="api_internal.html"><strong aria-hidden="true">3.1.</strong> Internal Endpoints</a></li></ol></li><li class="chapter-item expanded "><a href="TODO.html" class="active"><strong aria-hidden="true">4.</strong> Contribution</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="contribution/releases.html"><strong aria-hidden="true">4.1.</strong> Releases</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="TODO.html"><strong aria-hidden="true">1.</strong> About</a></li><li class="chapter-item expanded "><a href="TODO.html"><strong aria-hidden="true">2.</strong> Operation</a></li><li class="chapter-item expanded "><a href="TODO.html"><strong aria-hidden="true">3.</strong> API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="api_internal.html" class="active"><strong aria-hidden="true">3.1.</strong> Internal Endpoints</a></li></ol></li><li class="chapter-item expanded "><a href="TODO.html"><strong aria-hidden="true">4.</strong> Contribution</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="contribution/releases.html"><strong aria-hidden="true">4.1.</strong> Releases</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -151,7 +151,14 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#contribution" id="contribution">Contribution</a></h1>
+                        <h1><a class="header" href="#internal" id="internal">Internal</a></h1>
+<p>Internal endpoints are underneath <code>/api/v1/internal</code> and are meant for
+communication between Clair microservices. If Clair is operating in combo mode,
+these endpoints may not exist. Any sort of API ingress should disallow clients
+to talk to these endpoints.</p>
+<h2><a class="header" href="#updates" id="updates">Updates</a></h2>
+<p>The <code>updates/</code> endpoints expose information about updater operations for use by the
+notifier process.</p>
 
                     </main>
 

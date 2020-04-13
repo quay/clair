@@ -143,6 +143,11 @@ function playpen_text(playpen) {
         languages: [],      // Languages used for auto-detection
     });
 
+    let code_nodes = Array
+        .from(document.querySelectorAll('code'))
+        // Don't highlight `inline code` blocks in headers.
+        .filter(function (node) {return !node.parentElement.classList.contains("header"); });
+
     if (window.ace) {
         // language-rust class needs to be removed for editable
         // blocks or highlightjs will capture events
@@ -154,16 +159,12 @@ function playpen_text(playpen) {
             .from(document.querySelectorAll('code:not(.editable)'))
             .forEach(function (block) { hljs.highlightBlock(block); });
     } else {
-        Array
-            .from(document.querySelectorAll('code'))
-            .forEach(function (block) { hljs.highlightBlock(block); });
+        code_nodes.forEach(function (block) { hljs.highlightBlock(block); });
     }
 
     // Adding the hljs class gives code blocks the color css
     // even if highlighting doesn't apply
-    Array
-        .from(document.querySelectorAll('code'))
-        .forEach(function (block) { block.classList.add('hljs'); });
+    code_nodes.forEach(function (block) { block.classList.add('hljs'); });
 
     Array.from(document.querySelectorAll("code.language-rust")).forEach(function (block) {
 
@@ -284,13 +285,23 @@ function playpen_text(playpen) {
     function showThemes() {
         themePopup.style.display = 'block';
         themeToggleButton.setAttribute('aria-expanded', true);
-        themePopup.querySelector("button#" + document.body.className).focus();
+        themePopup.querySelector("button#" + get_theme()).focus();
     }
 
     function hideThemes() {
         themePopup.style.display = 'none';
         themeToggleButton.setAttribute('aria-expanded', false);
         themeToggleButton.focus();
+    }
+
+    function get_theme() {
+        var theme;
+        try { theme = localStorage.getItem('mdbook-theme'); } catch (e) { }
+        if (theme === null || theme === undefined) {
+            return default_theme;
+        } else {
+            return theme;
+        }
     }
 
     function set_theme(theme, store = true) {
@@ -324,9 +335,7 @@ function playpen_text(playpen) {
             });
         }
 
-        var previousTheme;
-        try { previousTheme = localStorage.getItem('mdbook-theme'); } catch (e) { }
-        if (previousTheme === null || previousTheme === undefined) { previousTheme = default_theme; }
+        var previousTheme = get_theme();
 
         if (store) {
             try { localStorage.setItem('mdbook-theme', theme); } catch (e) { }
@@ -337,9 +346,7 @@ function playpen_text(playpen) {
     }
 
     // Set theme
-    var theme;
-    try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
-    if (theme === null || theme === undefined) { theme = default_theme; }
+    var theme = get_theme();
 
     set_theme(theme, false);
 
@@ -408,7 +415,6 @@ function playpen_text(playpen) {
 (function sidebar() {
     var html = document.querySelector("html");
     var sidebar = document.getElementById("sidebar");
-    var sidebarScrollBox = document.querySelector(".sidebar-scrollbox");
     var sidebarLinks = document.querySelectorAll('#sidebar a');
     var sidebarToggleButton = document.getElementById("sidebar-toggle");
     var sidebarResizeHandle = document.getElementById("sidebar-resize-handle");
@@ -507,7 +513,8 @@ function playpen_text(playpen) {
     // Scroll sidebar to current active section
     var activeSection = document.getElementById("sidebar").querySelector(".active");
     if (activeSection) {
-        sidebarScrollBox.scrollTop = activeSection.offsetTop;
+        // https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollIntoView
+        activeSection.scrollIntoView({ block: 'center' });
     }
 })();
 
