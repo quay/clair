@@ -67,7 +67,7 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Server, 
 	// check for health
 	if health == nil {
 		logger.Warn().Msg("no health check configured; unconditionally reporting OK")
-		health = func() bool { return true }
+		i.health = func() bool { return true }
 	}
 
 	// configure metrics

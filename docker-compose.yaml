@@ -17,33 +17,31 @@ services:
 
   indexer:
     container_name: clair-indexer
-    build: .
-    image: clair-local:latest
+    image: quay.io/claircore/golang:1.13.5
     ports:
-      - "8080:80"
+      - "8080:8080"
       - "8089:8089"
     volumes:
       - "./:/src/clair/"
     environment:
-      CLAIR_CONF: "/src/clair/local-dev/indexer/indexer.config.yaml"
+      CLAIR_CONF: "/src/clair/local-dev/clair/config.yaml"
       CLAIR_MODE: "indexer"
     command:
-      ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor . -conf /src/clair/local-dev/indexer/indexer.config.yaml"]
+      ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor ."]
 
   matcher:
-    container_name: matcher-indexer
-    image: clair-local:latest
-    build: .
+    container_name: clair-matcher
+    image: quay.io/claircore/golang:1.13.5
     ports:
-      - "8081:80"
+      - "8081:8080"
       - "8090:8089"
     volumes:
       - "./:/src/clair/"
     environment:
-      CLAIR_CONF: "/src/clair/local-dev/indexer/indexer.config.yaml"
+      CLAIR_CONF: "/src/clair/local-dev/clair/config.yaml"
       CLAIR_MODE: "matcher"
     command:
-      ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor . -conf /src/clair/local-dev/matcher/matcher.config.yaml"]
+      ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor ."]
 
   swagger-ui:
     container_name: clair-swagger
