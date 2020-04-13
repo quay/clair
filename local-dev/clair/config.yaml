@@ -1,11 +1,16 @@
 ---
 log_level: debug
 introspection_addr: ":8089"
-http_listen_addr: ":80"
+http_listen_addr: ":8080"
 indexer:
   connstring: host=clair-db port=5432 user=clair dbname=clair sslmode=disable
   scanlock_retry: 10
   layer_scan_concurrency: 5
+  migrations: true
+matcher:
+  indexer_addr: http://clair-indexer/
+  connstring: host=clair-db port=5432 user=clair dbname=clair sslmode=disable
+  max_conn_pool: 100
   migrations: true
 # tracing and metrics config
 trace:
@@ -16,3 +21,4 @@ trace:
     service_name: "clair"
 metrics:
   name: "prometheus"
+
