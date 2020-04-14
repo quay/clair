@@ -5,4 +5,4 @@ import (
 	"log"
 )
 
-var debug = log.New(ioutil.Discard, "debug: ", log.LstdFlags|log.Lmsgprefix)
+var debug = log.New(ioutil.Discard, "debug: ", log.LstdFlags)
