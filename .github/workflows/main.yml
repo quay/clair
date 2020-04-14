@@ -26,7 +26,10 @@ jobs:
   tests:
     name: Tests
     runs-on: ubuntu-latest
-    container: docker.io/library/golang:1.14-alpine
+    container: docker.io/library/golang:${{ matrix.go }}-alpine
+    strategy:
+      matrix:
+        go: ['1.13', '1.14']
     steps:
       - name: Checkout
         uses: actions/checkout@v2
