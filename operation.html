@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Internal Endpoints - Clair Documentation</title>
+        <title>Operation - Clair Documentation</title>
         
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
@@ -81,7 +81,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="TODO.html"><strong aria-hidden="true">1.</strong> About</a></li><li class="chapter-item expanded "><a href="operation.html"><strong aria-hidden="true">2.</strong> Operation</a></li><li class="chapter-item expanded "><a href="TODO.html"><strong aria-hidden="true">3.</strong> API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="api_internal.html" class="active"><strong aria-hidden="true">3.1.</strong> Internal Endpoints</a></li></ol></li><li class="chapter-item expanded "><a href="TODO.html"><strong aria-hidden="true">4.</strong> Contribution</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="contribution/releases.html"><strong aria-hidden="true">4.1.</strong> Releases</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="TODO.html"><strong aria-hidden="true">1.</strong> About</a></li><li class="chapter-item expanded "><a href="operation.html" class="active"><strong aria-hidden="true">2.</strong> Operation</a></li><li class="chapter-item expanded "><a href="TODO.html"><strong aria-hidden="true">3.</strong> API</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="api_internal.html"><strong aria-hidden="true">3.1.</strong> Internal Endpoints</a></li></ol></li><li class="chapter-item expanded "><a href="TODO.html"><strong aria-hidden="true">4.</strong> Contribution</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="contribution/releases.html"><strong aria-hidden="true">4.1.</strong> Releases</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -151,14 +151,69 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#internal" id="internal">Internal</a></h1>
-<p>Internal endpoints are underneath <code>/api/v1/internal</code> and are meant for
-communication between Clair microservices. If Clair is operating in combo mode,
-these endpoints may not exist. Any sort of API ingress should disallow clients
-to talk to these endpoints.</p>
-<h2><a class="header" href="#updates" id="updates">Updates</a></h2>
-<p>The <code>updates/</code> endpoints expose information about updater operations for use by the
-notifier process.</p>
+                        <h1><a class="header" href="#operation" id="operation">Operation</a></h1>
+<h2><a class="header" href="#releases" id="releases">Releases</a></h2>
+<p>All of the source code needed to build clair is packaged as an archive and
+attached to the release. Releases are tracked at the <a href="https://github.com/quay/clair/releases">github releases</a>.</p>
+<h2><a class="header" href="#official-containers" id="official-containers">Official Containers</a></h2>
+<p>Clair is officially packaged and released as a container at
+<a href="https://quay.io/repository/projectquay/clair">quay.io/projectquay/clair</a>. The <code>latest</code> tag tracks the git development branch,
+and version tags are built from the corresponding release.</p>
+<h2><a class="header" href="#architecture" id="architecture">Architecture</a></h2>
+<p>Clair is structured so that it can be easily scaled with demand. It can be
+broken up into up to 3 microservices as needed (<a href="#indexer">Indexer</a>, <a href="#matcher">Matcher</a>, and
+<a href="#notifier">Notifier</a>) or run as a single monolith. Each process talks to separate tables
+in the database and is responsible for disparate API endpoints.</p>
+<h3><a class="header" href="#indexer" id="indexer">Indexer</a></h3>
+<p>Responsible for ...</p>
+<h3><a class="header" href="#matcher" id="matcher">Matcher</a></h3>
+<p>Responsible for ...</p>
+<h3><a class="header" href="#notifier" id="notifier">Notifier</a></h3>
+<p>Responsible for ...</p>
+<h2><a class="header" href="#ingress" id="ingress">Ingress</a></h2>
+<p>One recommended configuration is to use some sort of service ingress to route
+API endpoints to the component responsible for servicing it.</p>
+<h2><a class="header" href="#authentication" id="authentication">Authentication</a></h2>
+<p>Previous versions of Clair used <a href="https://github.com/quay/jwtproxy">jwtproxy</a> to gate authentication. For ease of
+building and deployment, v4 handles authentication itself.</p>
+<p>Authentication is configured by specifying configuration objects underneath the
+<code>auth</code> key of the configuration. Multiple authentication configurations may be
+present, but they will be used preferentially in the order laid out below.</p>
+<h3><a class="header" href="#quay-integration" id="quay-integration">Quay Integration</a></h3>
+<p>Quay implements a keyserver protocol that allows for publishing and rotating
+keys in an automated fashion. Any process that has successfully enrolled in the
+keyserver that Clair is configured to talk to should be able to sign requests to
+Clair.</p>
+<h4><a class="header" href="#configuration" id="configuration">Configuration</a></h4>
+<p>The <code>auth</code> stanza of the configuration file requires one parameter, <code>api</code>, which
+is the API endpoint of keyserver protocol.</p>
+<pre><code class="language-yaml">auth:
+  keyserver:
+    api: 'https://quay.example.com/keys/'
+</code></pre>
+<h5><a class="header" href="#intraservice" id="intraservice">Intraservice</a></h5>
+<p>When Clair instances are configured with keyserver authentication and run in any
+other mode besides &quot;combo&quot;, an additional <code>intraservice</code> key is
+required. This key is used for signing and verifying requests within the
+Clair service cluster.</p>
+<pre><code class="language-yaml">auth:
+  keyserver:
+    api: 'https://quay.example.com/keys/'
+    intraservice: &gt;-
+      MDQ4ODBlNDAtNDc0ZC00MWUxLThhMzAtOTk0MzEwMGQwYTMxCg==
+</code></pre>
+<h3><a class="header" href="#psk" id="psk">PSK</a></h3>
+<p>Clair implements JWT-based authentication using a pre-shared key.</p>
+<h4><a class="header" href="#configuration-1" id="configuration-1">Configuration</a></h4>
+<p>The <code>auth</code> stanza of the configuration file requires two parameters: <code>iss</code>, which
+is the issuer to validate on all incoming requests; and <code>key</code>, which is a base64
+encoded symmetric key for validating the requests.</p>
+<pre><code class="language-yaml">auth:
+  psk:
+    key: &gt;-
+      MDQ4ODBlNDAtNDc0ZC00MWUxLThhMzAtOTk0MzEwMGQwYTMxCg==
+    iss: 'issuer'
+</code></pre>
 
                     </main>
 
