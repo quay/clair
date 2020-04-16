@@ -64,15 +64,31 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 		traceOpt: othttp.WithTracer(global.TraceProvider().Tracer("clair")),
 	}
 
+	var e error
 	switch conf.Mode {
 	case config.ComboMode:
-		t.configureComboMode()
-		t.configureUpdateEndpoints()
+		e = t.configureComboMode()
+		if e != nil {
+			return nil, e
+		}
+		e = t.configureUpdateEndpoints()
+		if e != nil {
+			return nil, e
+		}
 	case config.IndexerMode:
-		t.configureIndexerMode()
+		e = t.configureIndexerMode()
+		if e != nil {
+			return nil, e
+		}
 	case config.MatcherMode:
-		t.configureMatcherMode()
-		t.configureUpdateEndpoints()
+		e = t.configureMatcherMode()
+		if e != nil {
+			return nil, e
+		}
+		e = t.configureUpdateEndpoints()
+		if e != nil {
+			return nil, e
+		}
 	}
 
 	// attach HttpTransport to server, this works because we embed http.ServeMux
