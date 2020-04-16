@@ -15,7 +15,7 @@ import (
 // configured for authentication, or an error that occurred during construction.
 func (cfg *Config) Client(next *http.Transport) (c *http.Client, authed bool, err error) {
 	if next == nil {
-		next = &http.Transport{}
+		next = http.DefaultTransport.(*http.Transport).Clone()
 	}
 	authed = false
 	sk := jose.SigningKey{Algorithm: jose.HS256}
