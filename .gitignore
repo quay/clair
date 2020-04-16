@@ -1,2 +1,4 @@
 vendor/
 book/
+clairctl
+!clairctl/

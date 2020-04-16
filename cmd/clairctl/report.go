@@ -25,9 +25,9 @@ var ReportCmd = &cli.Command{
 	ArgsUsage:   "container...",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
-			Name:  "api",
+			Name:  "host",
 			Usage: "URL for the clairv4 v1 API.",
-			Value: "http://localhost:6060/api/v1/",
+			Value: "http://localhost:6060/",
 		},
 		&cli.GenericFlag{
 			Name:        "out",
@@ -107,7 +107,7 @@ func reportAction(c *cli.Context) error {
 		return errors.New("missing needed arguments")
 	}
 
-	cc, err := NewClient(c.String("api"))
+	cc, err := NewClient(c.String("host"))
 	if err != nil {
 		return err
 	}

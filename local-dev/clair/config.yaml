@@ -8,7 +8,7 @@ indexer:
   layer_scan_concurrency: 5
   migrations: true
 matcher:
-  indexer_addr: http://clair-indexer/
+  indexer_addr: http://clair-indexer:8080/
   connstring: host=clair-db port=5432 user=clair dbname=clair sslmode=disable
   max_conn_pool: 100
   migrations: true

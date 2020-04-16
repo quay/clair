@@ -20,11 +20,11 @@ import (
 
 const (
 	apiRoot                 = "/api/v1/"
+	internalRoot            = apiRoot + "internal/"
 	VulnerabilityReportPath = apiRoot + "vulnerability_report/"
 	IndexAPIPath            = apiRoot + "index_report"
 	IndexReportAPIPath      = apiRoot + "index_report/"
-	StateAPIPath            = apiRoot + "state"
-	internalRoot            = apiRoot + "internal/"
+	StateAPIPath            = apiRoot + "index_state"
 	UpdatesAPIPath          = internalRoot + "updates/"
 )
 
@@ -67,16 +67,12 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 	switch conf.Mode {
 	case config.ComboMode:
 		t.configureComboMode()
-		if err := t.configureUpdateEndpoints(); err != nil {
-			return nil, err
-		}
+		t.configureUpdateEndpoints()
 	case config.IndexerMode:
 		t.configureIndexerMode()
 	case config.MatcherMode:
 		t.configureMatcherMode()
-		if err := t.configureUpdateEndpoints(); err != nil {
-			return nil, err
-		}
+		t.configureUpdateEndpoints()
 	}
 
 	// attach HttpTransport to server, this works because we embed http.ServeMux

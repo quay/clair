@@ -21,6 +21,7 @@ indexer:
   layer_scan_concurrency: 5
   migrations: true
 matcher:
+  indexer_addr: "localhost:8080"
   connstring: host=localhost port=5432 user=clair dbname=clair sslmode=disable
   max_conn_pool: 100
   run: ""
