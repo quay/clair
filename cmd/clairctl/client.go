@@ -15,6 +15,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
+	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/claircore"
 	"github.com/tomnomnom/linkheader"
 )
@@ -55,7 +56,7 @@ func rt(ref string) (http.RoundTripper, error) {
 
 // TODO Maybe turn this into a real client, once it's proved useful.
 type Client struct {
-	api    *url.URL
+	host   *url.URL
 	client *http.Client
 
 	mu        sync.RWMutex
@@ -63,12 +64,12 @@ type Client struct {
 }
 
 func NewClient(root string) (*Client, error) {
-	api, err := url.Parse(root)
+	host, err := url.Parse(root)
 	if err != nil {
 		return nil, err
 	}
 	return &Client{
-		api:       api,
+		host:      host,
 		client:    &http.Client{},
 		validator: make(map[string]string),
 	}, nil
@@ -94,7 +95,7 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 		req *http.Request
 		res *http.Response
 	)
-	fp, err := c.api.Parse(path.Join("index_report", id.String()))
+	fp, err := c.host.Parse(path.Join(httptransport.IndexReportAPIPath, id.String()))
 	if err != nil {
 		debug.Printf("unable to construct index_report url: %v", err)
 		return err
@@ -128,7 +129,7 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 		debug.Printf("unable to encode json payload: %v", err)
 		return err
 	}
-	ru, err := c.api.Parse("index_report")
+	ru, err := c.host.Parse(httptransport.IndexAPIPath)
 	if err != nil {
 		debug.Printf("unable to construct index_report url: %v", err)
 		return err
@@ -179,7 +180,7 @@ func (c *Client) VulnerabilityReport(ctx context.Context, id claircore.Digest) (
 		req *http.Request
 		res *http.Response
 	)
-	u, err := c.api.Parse(path.Join("vulnerability_report", id.String()))
+	u, err := c.host.Parse(path.Join(httptransport.VulnerabilityReportPath, id.String()))
 	if err != nil {
 		debug.Printf("unable to construct vulnerability_report url: %v", err)
 		return nil, err

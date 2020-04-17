@@ -25,6 +25,7 @@ goimports-local:
 # each services runs in it's own container to test service->service communication.
 .PHONY: local-dev-up
 local-dev-up: vendor
+	$(docker-compose) up -d traefik
 	$(docker-compose) up -d jaeger
 	$(docker-compose) up -d prometheus
 	$(docker-compose) up -d clair-db
@@ -65,3 +66,7 @@ local-dev-matcher-restart:
 local-dev-swagger-ui-restart:
 	$(docker-compose) up -d --force-recreate swagger-ui
 	 
+# restart the local development swagger-ui, any local code changes will take effect
+.PHONY: local-dev-traefik-restart
+local-dev-traefik-restart:
+	$(docker-compose) up -d --force-recreate traefik

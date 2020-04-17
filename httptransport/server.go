@@ -20,11 +20,11 @@ import (
 
 const (
 	apiRoot                 = "/api/v1/"
+	internalRoot            = apiRoot + "internal/"
 	VulnerabilityReportPath = apiRoot + "vulnerability_report/"
 	IndexAPIPath            = apiRoot + "index_report"
 	IndexReportAPIPath      = apiRoot + "index_report/"
-	StateAPIPath            = apiRoot + "state"
-	internalRoot            = apiRoot + "internal/"
+	StateAPIPath            = apiRoot + "index_state"
 	UpdatesAPIPath          = internalRoot + "updates/"
 )
 
@@ -64,18 +64,30 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 		traceOpt: othttp.WithTracer(global.TraceProvider().Tracer("clair")),
 	}
 
+	var e error
 	switch conf.Mode {
 	case config.ComboMode:
-		t.configureComboMode()
-		if err := t.configureUpdateEndpoints(); err != nil {
-			return nil, err
+		e = t.configureComboMode()
+		if e != nil {
+			return nil, e
+		}
+		e = t.configureUpdateEndpoints()
+		if e != nil {
+			return nil, e
 		}
 	case config.IndexerMode:
-		t.configureIndexerMode()
+		e = t.configureIndexerMode()
+		if e != nil {
+			return nil, e
+		}
 	case config.MatcherMode:
-		t.configureMatcherMode()
-		if err := t.configureUpdateEndpoints(); err != nil {
-			return nil, err
+		e = t.configureMatcherMode()
+		if e != nil {
+			return nil, e
+		}
+		e = t.configureUpdateEndpoints()
+		if e != nil {
+			return nil, e
 		}
 	}
 

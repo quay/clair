@@ -15,6 +15,21 @@ services:
       retries: 3
       start_period: 10s
 
+  traefik:
+    container_name: clair-traefik
+    image: traefik:v2.2
+    command: 
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--entrypoints.clair.address=:6060"
+      - "--providers.docker.exposedbydefault=false"
+      - "--accesslog=true"
+    ports: 
+      - "6060:6060"
+      - "8079:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
   indexer:
     container_name: clair-indexer
     image: quay.io/claircore/golang:1.13.5
@@ -28,6 +43,12 @@ services:
       CLAIR_MODE: "indexer"
     command:
       ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor ."]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.index_report.entrypoints=clair"
+      - "traefik.http.routers.index_report.rule=PathPrefix(`/api/v1/index_report`)"
+      - "traefik.http.routers.index_state.entrypoints=clair"
+      - "traefik.http.routers.index_state.rule=PathPrefix(`/api/v1/index_state`)"
 
   matcher:
     container_name: clair-matcher
@@ -42,6 +63,10 @@ services:
       CLAIR_MODE: "matcher"
     command:
       ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor ."]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.vulnerability_report.entrypoints=clair"
+      - "traefik.http.routers.vulnerability_report.rule=PathPrefix(`/api/v1/vulnerability_report`)"
 
   swagger-ui:
     container_name: clair-swagger
