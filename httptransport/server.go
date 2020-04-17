@@ -26,6 +26,7 @@ const (
 	IndexReportAPIPath      = apiRoot + "index_report/"
 	StateAPIPath            = apiRoot + "index_state"
 	UpdatesAPIPath          = internalRoot + "updates/"
+	OpenAPIV1Path           = "/openapi/v1"
 )
 
 // Server is the primary http server
@@ -62,6 +63,12 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 		indexer:  indexer,
 		matcher:  matcher,
 		traceOpt: othttp.WithTracer(global.TraceProvider().Tracer("clair")),
+	}
+
+	if err := t.configureDiscovery(); err != nil {
+		log.Warn().Err(err).Msg("configuring openapi discovery failed")
+	} else {
+		log.Info().Str("path", OpenAPIV1Path).Msg("openapi discovery configured")
 	}
 
 	var e error
@@ -104,6 +111,21 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 	}
 
 	return t, nil
+}
+
+// configureDiscovery() creates a discovery handler
+// for serving the v1 open api specification
+func (t *Server) configureDiscovery() error {
+	h := intromw.Handler(
+		othttp.NewHandler(
+			DiscoveryHandler(),
+			OpenAPIV1Path,
+			t.traceOpt,
+		),
+		OpenAPIV1Path,
+	)
+	t.Handle(OpenAPIV1Path, othttp.WithRouteTag(OpenAPIV1Path, h))
+	return nil
 }
 
 // configureDevMode configures the HttpTrasnport for
@@ -293,6 +315,13 @@ func (t *Server) configureWithAuth() error {
 //
 // The normal error flow can't be used, because the HTTP status code will have
 // been sent and some amount of body data may have been written.
+//
+// To use this, make sure an error variable is predeclared and the returned
+// function is deferred:
+//
+//	var err error
+//	defer writerError(w, &err)()
+//	_, err = fallibleWrite(w)
 func writerError(w http.ResponseWriter, e *error) func() {
 	const errHeader = `Clair-Error`
 	w.Header().Add("trailer", errHeader)

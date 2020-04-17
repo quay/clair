@@ -16,7 +16,7 @@ info:
     url: "http://www.apache.org/licenses/"
 
 paths:
-  /index_report:
+  /api/v1/index_report:
     post:
       tags:
         - Indexer
@@ -46,7 +46,7 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /index_report/{manifest_hash}:
+  /api/v1/index_report/{manifest_hash}:
     get:
       tags:
         - Indexer
@@ -80,7 +80,7 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /vulnerability_report/{manifest_hash}:
+  /api/v1/vulnerability_report/{manifest_hash}:
     get:
       tags:
         - Matcher
@@ -116,15 +116,15 @@ paths:
           $ref: '#/components/responses/MethodNotAllowed'
         500:
           $ref: '#/components/responses/InternalServerError'
-  '/state':
+  '/index_state':
     get:
       tags:
         - Indexer
-      operationId: State
+      operationId: IndexState
       summary: Report the indexer's internal configuration and state.
       description: |
-        The state endpoint returns a json structure indicating the indexer's
-        internal configuration state.
+        The index state endpoint returns a json structure indicating the
+        indexer's internal configuration state.
 
         A client may be interested in this as a signal that manifests may need
         to be re-indexed.
@@ -201,7 +201,7 @@ components:
           https://sourceware.org/bugzilla/show_bug.cgi?id=18986"
         severity: "Low"
         normalized_severity: "Low"
-        package: 
+        package:
           id: "0"
           name: "glibc"
           version: ""
@@ -244,6 +244,8 @@ components:
         name: "libapt-pkg5.0"
         version: "1.6.11"
         kind: "binary"
+        arch: "x86"
+        module: ""
         source:
           id: "9"
           name: "apt"
@@ -438,9 +440,10 @@ components:
             A severity keyword taken verbatim from the vulnerability source.
           type: string
         normalized_severity:
-          description: "A well defined set of severity strings guaranteed to be present."
+          description: |
+            A well defined set of severity strings guaranteed to be present.
           type: string
-          enum: [Unkonwn, Negligible, Low, Medium, High, Critical, Defcon1]
+          enum: [Unknown, Negligible, Low, Medium, High, Critical, Defcon1]
         fixed_in_version:
           description: "A unique ID representing this vulnerability."
           type: string
@@ -515,6 +518,12 @@ components:
           type: string
         source:
           type: string
+        normalized_version:
+          $ref: '#/components/schemas/Version'
+        arch:
+          type: string
+        module:
+          type: string
       required:
         - id
         - name
@@ -543,6 +552,12 @@ components:
           $ref: '#/components/schemas/SourcePackage'
         normalized_version:
           $ref: '#/components/schemas/Version'
+        arch:
+          description: "The package's target system architecture"
+          type: string
+        module:
+          description: "A module further defining a namespace for a package"
+          type: string
       required:
         - id
         - name
