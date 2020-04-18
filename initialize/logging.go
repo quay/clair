@@ -29,9 +29,11 @@ func (i *Init) Logging() error {
 func LogLevel(level string) zerolog.Level {
 	level = strings.ToLower(level)
 	switch level {
-	case "debug":
+	case "debug-color":
 		// set global logger to use ConsoleWriter for colorized output
 		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+		return zerolog.DebugLevel
+	case "debug":
 		return zerolog.DebugLevel
 	case "info":
 		return zerolog.InfoLevel
