@@ -38,9 +38,9 @@ type Config struct {
 	//
 	// exposes Clair's metrics and health endpoints.
 	IntrospectionAddr string `yaml:"introspection_addr"`
-	// One of the following srings
-	// Sets the logging level
+	// Set the logging level.
 	//
+	// One of the following strings:
 	// "debug-color"
 	// "debug"
 	// "info"
