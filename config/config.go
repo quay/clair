@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// Clair MODES
+// Clair Modes
 const (
 	// Run this mode to create receive Manifests and create IndexReports.
 	IndexerMode = "indexer"
@@ -25,29 +25,29 @@ type Config struct {
 	// One of the following strings
 	// Sets which mode the clair instances will run in
 	//
-	//	"indexer": runs just the indexer node
-	//	"matcher": runs just the matcher node
-	//	"combo":	will run both indexer and matcher on the same node.
+	// "indexer": runs just the indexer node
+	// "matcher": runs just the matcher node
+	// "combo":	will run both indexer and matcher on the same node.
 	Mode string `yaml:"-"`
 	// A string in <host>:<port> format where <host> can be an empty string.
 	//
-	//	exposes Clair node's functionality to the network.
-	//  see /openapi/v1 for api spec.
+	// exposes Clair node's functionality to the network.
+	// see /openapi/v1 for api spec.
 	HTTPListenAddr string `yaml:"http_listen_addr"`
 	// A string in <host>:<port> format where <host> can be an empty string.
 	//
-	//	exposes Clair's metrics and health endpoints.
+	// exposes Clair's metrics and health endpoints.
 	IntrospectionAddr string `yaml:"introspection_addr"`
 	// One of the following srings
 	// Sets the logging level
 	//
-	//	"debug-color"
-	//	"debug"
-	//	"info"
-	//	"warn"
-	//	"error"
-	//	"fatal"
-	//	"panic"
+	// "debug-color"
+	// "debug"
+	// "info"
+	// "warn"
+	// "error"
+	// "fatal"
+	// "panic"
 	LogLevel string `yaml:"log_level"`
 	// See Indexer for details
 	Indexer Indexer `yaml:"indexer"`
@@ -62,58 +62,58 @@ type Config struct {
 type Indexer struct {
 	// A POSTGRES connection string
 	//
-	//  formats
-	//	url: "postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"
-	//	or
-	//  string: "user=pqgotest dbname=pqgotest sslmode=verify-full"
+	// formats
+	// url: "postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"
+	// or
+	// string: "user=pqgotest dbname=pqgotest sslmode=verify-full"
 	ConnString string `yaml:"connstring"`
 	// A positive value representing seconds.
 	//
-	//	Concurrent Indexers lock on manifest scans to avoid clobbering.
-	//	This value tunes how often a waiting Indexer will poll for the lock.
-	//  TODO: Move to async operating mode
+	// Concurrent Indexers lock on manifest scans to avoid clobbering.
+	// This value tunes how often a waiting Indexer will poll for the lock.
+	// TODO: Move to async operating mode
 	ScanLockRetry int `yaml:"scanlock_retry"`
 	// A positive values represeting quantity.
 	//
-	//  Indexers will index a Manifest's layers concurrently.
-	//  This value tunes the number of layers an Indexer will scan in parallel.
+	// Indexers will index a Manifest's layers concurrently.
+	// This value tunes the number of layers an Indexer will scan in parallel.
 	LayerScanConcurrency int `yaml:"layer_scan_concurrency"`
 	// A "true" or "false" value
 	//
-	//	Whether Indexer nodes handle migrations to their database.
+	// Whether Indexer nodes handle migrations to their database.
 	Migrations bool `yaml:"migrations"`
 }
 
 type Matcher struct {
 	// A POSTGRES connection string
 	//
-	//  formats
-	//  url: "postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"
-	//  or
-	//  string: "user=pqgotest dbname=pqgotest sslmode=verify-full"
+	// Formats:
+	// url: "postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"
+	// or
+	// string: "user=pqgotest dbname=pqgotest sslmode=verify-full"
 	ConnString string `yaml:"connstring"`
 	// A positive integer
 	//
-	//  Clair allows for a custom connection pool size.
-	//  This number will directly set how many active sql
-	//  connections are allowed concurrently.
+	// Clair allows for a custom connection pool size.
+	// This number will directly set how many active sql
+	// connections are allowed concurrently.
 	MaxConnPool int `yaml:"max_conn_pool"`
 	// A string in <host>:<port> format where <host> can be an empty string.
 	//
-	//  A Matcher contacts an Indexer to create a VulnerabilityReport.
-	//  The location of this Indexer is required.
+	// A Matcher contacts an Indexer to create a VulnerabilityReport.
+	// The location of this Indexer is required.
 	IndexerAddr string `yaml:"indexer_addr"`
 	// A "true" or "false" value
 	//
-	//	Whether Matcher nodes handle migrations to their databases.
+	// Whether Matcher nodes handle migrations to their databases.
 	Migrations bool `yaml:"migrations"`
 	// A Regex string
 	//
-	//  When the Matcher is provided a regex string it will use
-	//  this string to limit the created updaters.
+	// When the Matcher is provided a regex string it will use
+	// this string to limit the created updaters.
 	//
-	//	If the provided string matches no updaters no updaters
-	//  will be running.
+	// If the provided string matches no updaters no updaters
+	// will be running.
 	Updaters *string `yaml:"updaters"`
 }
 
