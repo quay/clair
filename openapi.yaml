@@ -116,7 +116,7 @@ paths:
           $ref: '#/components/responses/MethodNotAllowed'
         500:
           $ref: '#/components/responses/InternalServerError'
-  '/index_state':
+  '/api/v1/index_state':
     get:
       tags:
         - Indexer
