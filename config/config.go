@@ -6,45 +6,115 @@ import (
 	"strings"
 )
 
-// These are the mode arguments that calling code can use in the Mode member of
-// a Config struct. They're called out here for documentation.
+// Clair Modes
 const (
-	// IndexerMode receives claircore.Manifests, indexes their contents, and
-	// returns claircore.IndexReports.
+	// Run this mode to create receive Manifests and create IndexReports.
 	IndexerMode = "indexer"
-	// MatcherMode populates and updates the vulnerability database and creates
-	// claircore.VulnerabilityReports from claircore.IndexReports.
+	// Run this mode to retrieve IndexReports and create VulnerabilityReports.
 	MatcherMode = "matcher"
-	// ComboMode runs all services in a single process.
+	// Run this mode to run all modes in a single Clair instance.
 	ComboMode = "combo"
-	// NofitierMode runs a notifier to provide notifications for upstream
-	// clients.
+	// Run this mode to listen for Updates and send notifications when they occur.
 	NotifierMode = "notifier"
 )
 
+// DefaultAddress is used if an http_listen_addr is not provided in the config.
+const DefaultAddress = ":6060"
+
 type Config struct {
-	// Mode indicates a Clair node's operational mode.
+	// One of the following strings
+	// Sets which mode the clair instances will run in
 	//
-	// This should be set by code that's populating and validating a config.
+	// "indexer": runs just the indexer node
+	// "matcher": runs just the matcher node
+	// "combo":	will run both indexer and matcher on the same node.
 	Mode string `yaml:"-"`
-	// indicates the HTTP listen address
-	HTTPListenAddr string `yaml:"http_listen_addr"`
-	// IntrospectionAddr is an address to listen on for introspection http
-	// endpoints, e.g. metrics and profiling.
+	// A string in <host>:<port> format where <host> can be an empty string.
 	//
-	// If not provided, a random port will be chosen.
+	// exposes Clair node's functionality to the network.
+	// see /openapi/v1 for api spec.
+	HTTPListenAddr string `yaml:"http_listen_addr"`
+	// A string in <host>:<port> format where <host> can be an empty string.
+	//
+	// exposes Clair's metrics and health endpoints.
 	IntrospectionAddr string `yaml:"introspection_addr"`
-	// indicates log level for the process
+	// Set the logging level.
+	//
+	// One of the following strings:
+	// "debug-color"
+	// "debug"
+	// "info"
+	// "warn"
+	// "error"
+	// "fatal"
+	// "panic"
 	LogLevel string `yaml:"log_level"`
-	// indexer mode specific config
+	// See Indexer for details
 	Indexer Indexer `yaml:"indexer"`
-	// matcher mode specific config
+	// See Matcher for details
 	Matcher Matcher `yaml:"matcher"`
 	Auth    Auth    `yaml:"auth"`
-	// Tracing config
-	Trace Trace `yaml:"trace"`
-	// Metrics config
+	Trace   Trace   `yaml:"trace"`
 	Metrics Metrics `yaml:"metrics"`
+}
+
+// Indexer provides Clair Indexer node configuration
+type Indexer struct {
+	// A POSTGRES connection string
+	//
+	// formats
+	// url: "postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"
+	// or
+	// string: "user=pqgotest dbname=pqgotest sslmode=verify-full"
+	ConnString string `yaml:"connstring"`
+	// A positive value representing seconds.
+	//
+	// Concurrent Indexers lock on manifest scans to avoid clobbering.
+	// This value tunes how often a waiting Indexer will poll for the lock.
+	// TODO: Move to async operating mode
+	ScanLockRetry int `yaml:"scanlock_retry"`
+	// A positive values represeting quantity.
+	//
+	// Indexers will index a Manifest's layers concurrently.
+	// This value tunes the number of layers an Indexer will scan in parallel.
+	LayerScanConcurrency int `yaml:"layer_scan_concurrency"`
+	// A "true" or "false" value
+	//
+	// Whether Indexer nodes handle migrations to their database.
+	Migrations bool `yaml:"migrations"`
+}
+
+type Matcher struct {
+	// A POSTGRES connection string
+	//
+	// Formats:
+	// url: "postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"
+	// or
+	// string: "user=pqgotest dbname=pqgotest sslmode=verify-full"
+	ConnString string `yaml:"connstring"`
+	// A positive integer
+	//
+	// Clair allows for a custom connection pool size.
+	// This number will directly set how many active sql
+	// connections are allowed concurrently.
+	MaxConnPool int `yaml:"max_conn_pool"`
+	// A string in <host>:<port> format where <host> can be an empty string.
+	//
+	// A Matcher contacts an Indexer to create a VulnerabilityReport.
+	// The location of this Indexer is required.
+	IndexerAddr string `yaml:"indexer_addr"`
+	// A "true" or "false" value
+	//
+	// Whether Matcher nodes handle migrations to their databases.
+	Migrations bool `yaml:"migrations"`
+	// A Regex string
+	//
+	// When the Matcher is provided a regex string it will use
+	// this string to limit the created updaters.
+	//
+	// If the provided string matches no updaters no updaters
+	// will be running.
+	Updaters *string `yaml:"updaters"`
 }
 
 // Auth holds the specific configs for different authentication methods.
@@ -78,30 +148,6 @@ type AuthKeyserver struct {
 type AuthPSK struct {
 	Key    []byte `yaml:"key"`
 	Issuer string `yaml:"iss"`
-}
-
-type Indexer struct {
-	// the conn string to the datastore
-	ConnString string `yaml:"connstring"`
-	// the interval in seconds to retry a manifest scan if the lock was not acquired
-	ScanLockRetry int `yaml:"scanlock_retry"`
-	// number of concurrent scans allowed on a manifest's layers. tunable for db performance
-	LayerScanConcurrency int `yaml:"layer_scan_concurrency"`
-	// should the Indexer be responsible for setting up the database
-	Migrations bool `yaml:"migrations"`
-}
-
-type Matcher struct {
-	// the conn string to the datastore
-	ConnString string `yaml:"connstring"`
-	// if sql usage, the connection pool size
-	MaxConnPool int `yaml:"max_conn_pool"`
-	// the address where the indexer service can be reached
-	IndexerAddr string `yaml:"indexer_addr"`
-	// should the Matcher be responsible for setting up the database
-	Migrations bool `yaml:"migrations"`
-	// Updaters is a regexp used to determine which enabled updaters to run.
-	Updaters *string `yaml:"updaters"`
 }
 
 type Trace struct {
@@ -138,9 +184,8 @@ type Dogstatsd struct {
 	URL string `yaml:"url"`
 }
 
-// DefaultAddress is used if an http_listen_addr is not provided in the config.
-const DefaultAddress = ":6060"
-
+// Validate confirms the required config values are present
+// and sets defaults where sane to do so.
 func Validate(conf Config) error {
 	switch strings.ToLower(conf.Mode) {
 	case ComboMode:
