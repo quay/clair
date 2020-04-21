@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/base64"
 	"fmt"
 	"net/url"
 	"strings"
@@ -60,7 +61,7 @@ type Config struct {
 
 // Indexer provides Clair Indexer node configuration
 type Indexer struct {
-	// A POSTGRES connection string
+	// A Postgres connection string.
 	//
 	// formats
 	// url: "postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"
@@ -85,7 +86,7 @@ type Indexer struct {
 }
 
 type Matcher struct {
-	// A POSTGRES connection string
+	// A Postgres connection string.
 	//
 	// Formats:
 	// url: "postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"
@@ -142,12 +143,48 @@ type AuthKeyserver struct {
 	Intraservice []byte `yaml:"intraservice"`
 }
 
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (a *AuthKeyserver) UnmarshalYAML(f func(interface{}) error) error {
+	var m struct {
+		API          string `yaml:"api"`
+		Intraservice string `yaml:"intraservice"`
+	}
+	if err := f(&m); err != nil {
+		return nil
+	}
+	a.API = m.API
+	s, err := base64.StdEncoding.DecodeString(m.Intraservice)
+	if err != nil {
+		return err
+	}
+	a.Intraservice = s
+	return nil
+}
+
 // AuthPSK is the configuration for doing pre-shared key based authentication.
 //
 // The "Issuer" key is what the service expects to verify as the "issuer claim.
 type AuthPSK struct {
 	Key    []byte `yaml:"key"`
 	Issuer string `yaml:"iss"`
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (a *AuthPSK) UnmarshalYAML(f func(interface{}) error) error {
+	var m struct {
+		Issuer string `yaml:"iss"`
+		Key    string `yaml:"key"`
+	}
+	if err := f(&m); err != nil {
+		return nil
+	}
+	a.Issuer = m.Issuer
+	s, err := base64.StdEncoding.DecodeString(m.Key)
+	if err != nil {
+		return err
+	}
+	a.Key = s
+	return nil
 }
 
 type Trace struct {
