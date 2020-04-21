@@ -405,7 +405,6 @@ components:
               type: string
       required:
         - manifest_hash
-        - state
         - packages
         - distributions
         - environments
