@@ -50,4 +50,5 @@ var UbuntuReleasesMapping = map[string]string{
 	"cosmic":  "18.10",
 	"disco":   "19.04",
 	"eoan":    "19.10",
+	"focal":   "20.04",
 }
