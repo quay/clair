@@ -42,9 +42,8 @@ deploy-local:
 	# Both minikube and docker desktop is supported.
 	./local-dev/build.sh
 	-helm dependency update ./local-dev/helm/clair-pg
-	-helm install --name clair-pg ./local-dev/helm/clair-pg
-	-helm delete --purge clair
-	helm install --name clair ./local-dev/helm/clair
+	-helm upgrade --install clair-pg ./local-dev/helm/clair-pg
+	helm upgrade --install clair ./local-dev/helm/clair
 
 .PHONY: teardown-local
 teardown-local:
