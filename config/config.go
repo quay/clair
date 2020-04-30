@@ -108,14 +108,22 @@ type Matcher struct {
 	//
 	// Whether Matcher nodes handle migrations to their databases.
 	Migrations bool `yaml:"migrations"`
-	// A Regex string
+	// A slice of strings representing which
+	// updaters matcher will create.
 	//
-	// When the Matcher is provided a regex string it will use
-	// this string to limit the created updaters.
+	// If nil all default UpdaterSets will be used
 	//
-	// If the provided string matches no updaters no updaters
-	// will be running.
-	Updaters *string `yaml:"updaters"`
+	// The following sets are supported:
+	// "alpine"
+	// "aws"
+	// "debian"
+	// "oracle"
+	// "photon"
+	// "pyupio"
+	// "rhel"
+	// "suse"
+	// "ubuntu"
+	UpdaterSets []string `yaml:"updater_sets"`
 }
 
 // Auth holds the specific configs for different authentication methods.

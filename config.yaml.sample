@@ -26,8 +26,16 @@ matcher:
   max_conn_pool: 100
   run: ""
   migrations: true
-
-# tracing and metrics
+  updater_sets: 
+	- "alpine"
+	- "aws"
+	- "debian"
+	- "oracle"
+	- "photon"
+	- "pyupio"
+	- "rhel"
+	- "suse"
+	- "ubuntu"
 trace:
   name: "jaeger"
   probability: 1
