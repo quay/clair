@@ -37,6 +37,7 @@ func (i *Init) Services() error {
 			MaxConnPool: int32(i.conf.Matcher.MaxConnPool),
 			ConnString:  i.conf.Matcher.ConnString,
 			Migrations:  i.conf.Matcher.Migrations,
+			UpdaterSets: i.conf.Matcher.UpdaterSets,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to initialize libvuln: %v", err)
@@ -62,6 +63,7 @@ func (i *Init) Services() error {
 			MaxConnPool: int32(i.conf.Matcher.MaxConnPool),
 			ConnString:  i.conf.Matcher.ConnString,
 			Migrations:  i.conf.Matcher.Migrations,
+			UpdaterSets: i.conf.Matcher.UpdaterSets,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to initialize libvuln: %v", err)
