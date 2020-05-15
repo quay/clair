@@ -25,7 +25,7 @@ RUN go build \
 	-mod=vendor \
 	./cmd/clairctl
 
-FROM docker.io/library/alpine:3.10 AS final
+FROM docker.io/library/alpine:3.11 AS final
 RUN apk add --no-cache tar rpm ca-certificates dumb-init
 # change ownership of ssl directory to allow custom cert in OpenShift
 RUN chgrp -R 0 /etc/ssl/certs && \
