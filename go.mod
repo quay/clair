@@ -22,5 +22,5 @@ require (
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	golang.org/x/tools v0.0.0-20191210200704-1bcf67c9cb49 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.1
-	gopkg.in/yaml.v2 v2.2.5
+	gopkg.in/yaml.v3 v3.0.0-20200506231410-2ff61e1afc86
 )

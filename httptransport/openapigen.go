@@ -15,7 +15,7 @@ import (
 	"log"
 	"os"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func main() {
@@ -105,6 +105,10 @@ func convert(i interface{}) interface{} {
 	case []interface{}:
 		for i, v := range x {
 			x[i] = convert(v)
+		}
+	case map[string]interface{}:
+		for k, v := range x {
+			x[k] = convert(v)
 		}
 	}
 	return i
