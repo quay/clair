@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 // Clair Modes
@@ -83,6 +85,8 @@ type Indexer struct {
 	//
 	// Whether Indexer nodes handle migrations to their database.
 	Migrations bool `yaml:"migrations"`
+	// Scanner allows for passing configuration options to layer scanners.
+	Scanner map[string]yaml.Node `yaml:"scanner"`
 }
 
 type Matcher struct {
