@@ -49,6 +49,25 @@ func GetWithUserAgent(url string) (*http.Response, error) {
 	return resp, nil
 }
 
+// HeadWithUserAgent performs an HTTP HEAD with the propper Clair User-Agent.
+func HeadWithUserAgent(url string) (*http.Response, error) {
+	client := &http.Client{}
+
+	req, err := http.NewRequest("HEAD", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("User-Agent", "Clair/"+version.Version+" (https://github.com/quay/clair)")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 // GetClientAddr returns the first value in X-Forwarded-For if it exists
 // otherwise fall back to use RemoteAddr
 func GetClientAddr(r *http.Request) string {
