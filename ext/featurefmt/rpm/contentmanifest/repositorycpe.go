@@ -1,6 +1,9 @@
 package contentmanifest
 
-import "github.com/quay/clair/v3/pkg/envutil"
+import (
+	"github.com/quay/clair/v3/pkg/envutil"
+	log "github.com/sirupsen/logrus"
+)
 
 // RepoCPEUpdater provides interface for providing a mapping
 // between repositories and CPEs
@@ -24,6 +27,7 @@ var (
 
 // RepositoryToCPE translates repositories into CPEs
 func (mapping *RepoCPEMapping) RepositoryToCPE(repositories []string) ([]string, error) {
+	log.WithField("repositories", repositories).Debug("Translating repositories into CPEs")
 	if len(repositories) == 0 {
 		return []string{}, nil
 	}

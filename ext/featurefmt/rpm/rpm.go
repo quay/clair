@@ -28,6 +28,7 @@ import (
 
 	"github.com/quay/clair/v3/database"
 	"github.com/quay/clair/v3/ext/featurefmt"
+	"github.com/quay/clair/v3/ext/featurefmt/rpm/contentmanifest"
 	"github.com/quay/clair/v3/ext/versionfmt"
 	"github.com/quay/clair/v3/ext/versionfmt/rpm"
 	"github.com/quay/clair/v3/pkg/commonerr"
@@ -47,10 +48,22 @@ var NamespaceHolderPackage = database.Feature{
 
 type lister struct {
 	namespaceFetcher CpeNamespaceFetcher
+	contentmanifest  *contentmanifest.RepoCPEMapping
 }
 
 func init() {
-	featurefmt.RegisterLister("rpm", "1.1", &lister{&ContainerApiCpeNamespaceFetcher{}})
+	featurefmt.RegisterLister(
+		"rpm",
+		"1.1",
+		&lister{
+			&ContainerApiCpeNamespaceFetcher{},
+			&contentmanifest.RepoCPEMapping{
+				&contentmanifest.LocalUpdaterJob{
+					LocalPath: "/tmp/repository-cpe.json",
+					URL:       contentmanifest.MappingFileURL,
+				},
+			},
+		})
 }
 
 func (l lister) RequiredFilenames() []string {
