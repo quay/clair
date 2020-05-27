@@ -50,7 +50,7 @@ var (
 	}
 
 	rhsaRegexp = regexp.MustCompile(`com.redhat.rhsa-(\d+).xml`)
-	releases   = []int{3, 4, 5, 6, 7, 8}
+	releases   = []int{4, 5, 6, 7, 8}
 	httpClient = http.Client{
 		Timeout: 5 * time.Minute,
 	}
