@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<cvrfdoc xmlns:cvrf="http://www.icasi.org/CVRF/schema/cvrf/1.1" xmlns="http://www.icasi.org/CVRF/schema/cvrf/1.1"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.icasi.org/CVRF/schema/cvrf/1.1 http://www.icasi.org/CVRF/schema/cvrf/1.1/cvrf.xsd">
+<DocumentTitle xml:lang="en">CVE Output in CVRF 1.1: 20190111</DocumentTitle>
+<DocumentType>CVE List</DocumentType>
+<DocumentPublisher Type="Other">
+<ContactDetails>cve@mitre.org</ContactDetails>
+<IssuingAuthority>The MITRE Corporation</IssuingAuthority>
+</DocumentPublisher>
+<DocumentTracking>
+<Identification><ID>20190111-210431</ID></Identification>
+<Status>Interim</Status>
+<Version>2019.1.11.21</Version>
+<RevisionHistory>
+<Revision>
+<Number>1</Number>
+<Date>2019-01-11T21:04:31</Date>
+<Description>initial public release</Description></Revision>
+</RevisionHistory>
+<InitialReleaseDate>2019-01-11T21:04:31</InitialReleaseDate>
+<CurrentReleaseDate>2019-01-11T21:04:31</CurrentReleaseDate>
+<Generator><Engine>MITRE Custom CVE-to-CVRF Converter 1.3</Engine></Generator>
+</DocumentTracking>
+<DocumentNotes>
+<Note Type="General" Ordinal="1" Title="CVE List" Audience="All">List</Note>
+<Note Type="General" Ordinal="2" Title="License" Audience="All">License</Note>
+<Note Type="General" Ordinal="3" Title="Disclaimers" Audience="All">Disclaimers</Note>
+</DocumentNotes>
+<Vulnerability xmlns="http://www.icasi.org/CVRF/schema/vuln/1.1" Ordinal="1234">
+<Title>CVE-2000-0002</Title>
+<Notes><Note Type="Description" Ordinal="1">It is all over.</Note>
+<Note Type="Other" Ordinal="2" Title="Published">2001-01-01</Note>
+<Note Type="Other" Ordinal="3" Title="Modified">2010-10-09</Note>
+</Notes>
+<CVE>CVE-2001-0001</CVE>
+<References>
+	<Reference>
+		<URL>https://www.example.com/index.html?id=3333</URL>
+		<Description>VULNTRACKER:3333</Description>
+	</Reference>
+	<Reference>
+		<URL>https://www.example.net/2001/vuln-0012</URL>
+		<Description>MAVT:00012</Description>
+	</Reference>
+</References>
+</Vulnerability>
+<Vulnerability xmlns="http://www.icasi.org/CVRF/schema/vuln/1.1" Ordinal="1235">
+<Title>CVE-2000-0002</Title>
+<Notes><Note Type="Description" Ordinal="1">Hardly a vulnerability.</Note>
+<Note Type="Other" Ordinal="2" Title="Published">2001-01-03</Note>
+<Note Type="Other" Ordinal="3" Title="Modified">2011-07-31</Note>
+</Notes>
+<CVE>CVE-2001-0002</CVE>
+<References>
+	<Reference>
+		<URL>https://www.example.org/some/path/index.html?id=5222</URL>
+		<Description>FAANG:5222</Description>
+	</Reference>
+</References>
+</Vulnerability>
+<Vulnerability>
+<Title>CVE-2000-0003</Title>
+<Notes><Note Type="Description" Ordinal="1">Is this a vulnerability?</Note>
+<Note Type="Other" Ordinal="2" Title="Published">2001-01-04</Note>
+<Note Type="Other" Ordinal="3" Title="Modified">2001-01-04</Note>
+</Notes>
+<CVE>CVE-2001-0003</CVE>
+</Vulnerability>
+<Vulnerability>
+<Title>CVE-2000-0004</Title>
+<Notes><Note Type="Description" Ordinal="1">How about this one?</Note>
+<Note Type="Other" Ordinal="2" Title="Published">2001-01-04</Note>
+<Note Type="Other" Ordinal="3" Title="Modified">2001-01-04</Note>
+</Notes>
+<CVE>CVE-2001-0004</CVE>
+<References>
+</References>
+</Vulnerability>
+</cvrfdoc>

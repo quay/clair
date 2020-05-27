@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<cvrfdoc xmlns:cvrf="http://www.icasi.org/CVRF/schema/cvrf/1.1" xmlns="http://www.icasi.org/CVRF/schema/cvrf/1.1"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.icasi.org/CVRF/schema/cvrf/1.1 http://www.icasi.org/CVRF/schema/cvrf/1.1/cvrf.xsd">
+<DocumentTitle xml:lang="en">CVE Output in CVRF 1.1: 20190111</DocumentTitle>
+<DocumentType>CVE List</DocumentType>
+<DocumentPublisher Type="Other">
+<ContactDetails>cve@mitre.org</ContactDetails>
+<IssuingAuthority>The MITRE Corporation</IssuingAuthority>
+</DocumentPublisher>
+<DocumentTracking>
+<Identification><ID>20190111-210431</ID></Identification>
+<Status>Interim</Status>
+<Version>2019.1.11.21</Version>
+<RevisionHistory>
+<Revision>
+<Number>1</Number>
+<Date>2019-01-11T21:04:31</Date>
+<Description>initial public release</Description></Revision>
+</RevisionHistory>
+<InitialReleaseDate>2019-01-11T21:04:31</InitialReleaseDate>
+<CurrentReleaseDate>2019-01-11T21:04:31</CurrentReleaseDate>
+<Generator><Engine>MITRE Custom CVE-to-CVRF Converter 1.3</Engine></Generator>
+<DocumentNotes>
+<Note Type="General" Ordinal="1" Title="CVE List" Audience="All">This is a list of CVE Identifiers as published by MITRE.</Note>
+<Note Type="General" Ordinal="2" Title="License" Audience="All">The MITRE Corporation (MITRE) hereby grants you a non-exclusive,
+royalty-free license to use Common Vulnerabilities and Exposures (CVE
+(R)) for research, development, and commercial purposes. Any copy you
+make for such purposes is authorized provided that you reproduce
+MITRE&apos;s copyright designation and this license in any such copy.</Note>
+<Note Type="General" Ordinal="3" Title="Disclaimers" Audience="All">ALL DOCUMENTS AND THE INFORMATION CONTAINED THEREIN ARE PROVIDED ON
+AN &quot;AS IS&quot; BASIS AND THE CONTRIBUTOR, THE ORGANIZATION HE/SHE
+REPRESENTS OR IS SPONSORED BY (IF ANY), THE MITRE CORPORATION, ITS
+BOARD OF TRUSTEES, OFFICERS, AGENTS, AND EMPLOYEES, DISCLAIM ALL
+WARRANTIES, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY
+WARRANTY THAT THE USE OF THE INFORMATION THEREIN WILL NOT INFRINGE ANY
+RIGHTS OR ANY IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A
+PARTICULAR PURPOSE.</Note>
+</DocumentNotes>
+<Vulnerability xmlns="http://www.icasi.org/CVRF/schema/vuln/1.1" Ordinal="86648">
+<Title>CVE-2016-0001</Title>
+<Notes><Note Type="Description" Ordinal="1">** REJECT **
+
+DO NOT USE THIS CANDIDATE NUMBER. ConsultIDs: none. Reason: The CNA or
+individual who requested this candidate did not associate it with any
+vulnerability during 2016. Notes: none.
+</Note>
+<Note Type="Other" Ordinal="2" Title="Published">2017-05-11</Note>
+<Note Type="Other" Ordinal="3" Title="Modified">2017-05-11</Note>
+</Notes>
+<CVE>CVE-2016-0001</CVE>
+</Vulnerability>
+<Vulnerability xmlns="http://www.icasi.org/CVRF/schema/vuln/1.1" Ordinal="86649">
+<Title>CVE-2016-0002</Title>
+<Notes><Note Type="Description" Ordinal="1">The Microsoft (1) VBScript 5.7 and 5.8 and (2) JScript 5.7 and 5.8
+engines, as used in Internet Explorer 8 through 11 and other products,
+allow remote attackers to execute arbitrary code via a crafted web
+site, aka &quot;Scripting Engine Memory Corruption Vulnerability.&quot;
+</Note>
+<Note Type="Other" Ordinal="2" Title="Published">2016-01-12</Note>
+<Note Type="Other" Ordinal="3" Title="Modified">2018-10-12</Note>
+</Notes>
+<CVE>CVE-2016-0002</CVE>
+	<References>
+	<Reference>
+		<URL>https://www.verisign.com/en_US/security-services/security-intelligence/vulnerability-reports/articles/index.xhtml?id=1215</URL>
+		<Description>IDEFENSE:20160112 Microsoft Internet Explorer VBScript &quot;Assignvar&quot; Use-After-Free Vulnerability</Description>
+	</Reference>
+	<Reference>
+		<URL>https://docs.microsoft.com/en-us/security-updates/securitybulletins/2016/ms16-001</URL>
+		<Description>MS:MS16-001</Description>
+	</Reference>
+	<Reference>
+		<URL>https://docs.microsoft.com/en-us/security-updates/securitybulletins/2016/ms16-003</URL>
+		<Description>MS:MS16-003</Description>
+	</Reference>
+	<Reference>
+		<URL>http://www.securitytracker.com/id/1034648</URL>
+		<Description>SECTRACK:1034648</Description>
+	</Reference>
+	<Reference>
+		<URL>http://www.securitytracker.com/id/1034650</URL>
+		<Description>SECTRACK:1034650</Description>
+	</Reference>
+</References>
+</Vulnerability>
+</cvrfdoc>

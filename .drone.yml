@@ -48,6 +48,8 @@ services:
   image: postgres:9-alpine
   ports:
   - 5432
+  environment:
+  - "POSTGRES_HOST_AUTH_METHOD=trust"
 
 ---
 kind: pipeline
@@ -99,6 +101,8 @@ services:
   image: postgres:10-alpine
   ports:
   - 5432
+  environment:
+  - "POSTGRES_HOST_AUTH_METHOD=trust"
 
 ---
 kind: pipeline
@@ -150,5 +154,7 @@ services:
   image: postgres:11-alpine
   ports:
   - 5432
+  environment:
+  - "POSTGRES_HOST_AUTH_METHOD=trust"
 
 ...
