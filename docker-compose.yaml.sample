@@ -1,0 +1,26 @@
+version: '3.7'
+
+services:
+  clair:
+    image: quay.io/coreos/clair:latest
+    command: -config=/config/config.yaml
+    ports:
+      - "6060:6060"
+      - "6061:6061"
+    depends_on:
+      - clairdb
+    volumes:
+      - type: bind
+        source: $PWD/clair_config
+        target: /config
+    networks:
+      - clairnet
+    restart: on-failure
+  clairdb:
+    image: postgres:9.6
+    networks:
+      - clairnet
+
+networks:
+  clairnet:
+    driver: bridge
