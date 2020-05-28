@@ -1,0 +1,314 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  name: clair
+  labels:
+    app: clair
+objects:
+  #
+  # indexer deployment
+  #
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: clair-indexer
+      labels:
+        service: indexer
+        app: clair
+    spec:
+      replicas: ${{INDEXER_DEPLOYMENT_REPLICAS}}
+      selector:
+        matchLabels:
+          service: indexer
+          app: clair
+      template:
+        metadata:
+          name: clair-indexer
+          labels:
+            service: indexer
+            app: clair
+        spec:
+          volumes:
+            - name: clair-config
+              secret:
+                secretName: ${{CLAIR_SECRET}}
+                items:
+                  - key: config
+                    path: clair.conf
+          containers:
+            - name: clair-indexer
+              resources:
+                limits:
+                  cpu: ${{INDEXER_CPU_LIMITS}}
+                  memory: ${{INDEXER_MEM_LIMITS}}
+                requests:
+                  cpu: ${{INDEXER_CPU_REQS}}
+                  memory: ${{INDEXER_MEM_REQS}}
+              command: [clair]
+              env:
+                - name: CLAIR_CONF
+                  value: '/etc/clair/clair.conf'
+                - name: CLAIR_MODE
+                  value: indexer
+              image: ${CLAIR_IMAGE}:${IMAGE_TAG}
+              ports:
+                - containerPort: ${{HTTP_TRANSPORT_PORT}}
+                  name: http-transport
+                - containerPort: ${{INTROSPECTION_PORT}}
+                  name: introspection
+              livenessProbe:
+                httpGet:
+                  path: ${{HEALTH_PATH}}
+                  port: ${{HEALTH_PORT}}
+              readinessProbe:
+                httpGet:
+                  path: ${{HEALTH_PATH}}
+                  port: ${{HEALTH_PORT}}
+              startupProbe:
+                httpGet:
+                  path: ${{HEALTH_PATH}}
+                  port: ${{HEALTH_PORT}}
+              volumeMounts:
+                - name: clair-config
+                  mountPath: /etc/clair
+  #
+  # matcher deployment
+  #
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: clair-matcher
+      labels:
+        service: matcher
+        app: clair
+    spec:
+      replicas: ${{MATCHER_DEPLOYMENT_REPLICAS}}
+      selector:
+        matchLabels:
+          service: matcher
+          app: clair
+      template:
+        metadata:
+          name: clair-matcher
+          labels:
+            service: matcher
+            app: clair
+        spec:
+          volumes:
+            - name: clair-config
+              secret:
+                secretName: ${{CLAIR_SECRET}}
+                items:
+                  - key: config
+                    path: clair.conf
+          containers:
+            - name: clair-matcher
+              resources:
+                limits:
+                  cpu: ${{MATCHER_CPU_LIMITS}}
+                  memory: ${{MATCHER_MEM_LIMITS}}
+                requests:
+                  cpu: ${{MATCHER_CPU_REQS}}
+                  memory: ${{MATCHER_MEM_REQS}}
+              command: [clair]
+              env:
+                - name: CLAIR_CONF
+                  value: '/etc/clair/clair.conf'
+                - name: CLAIR_MODE
+                  value: matcher
+              image: ${CLAIR_IMAGE}:${IMAGE_TAG}
+              ports:
+                - containerPort: ${{HTTP_TRANSPORT_PORT}}
+                  name: http-transport
+                - containerPort: ${{INTROSPECTION_PORT}}
+                  name: introspection
+              livenessProbe:
+                httpGet:
+                  path: ${{HEALTH_PATH}}
+                  port: ${{HEALTH_PORT}}
+              readinessProbe:
+                httpGet:
+                  path: ${{HEALTH_PATH}}
+                  port: ${{HEALTH_PORT}}
+              startupProbe:
+                httpGet:
+                  path: ${{HEALTH_PATH}}
+                  port: ${{HEALTH_PORT}}
+              volumeMounts:
+                - name: clair-config
+                  mountPath: /etc/clair
+  #
+  # indexer service
+  #
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: clair-indexer
+      labels:
+        service: indexer
+        app: clair
+      annotations:
+        prometheus.io/scrape: 'true'
+    spec:
+      ports:
+        - name: http-transport
+          protocol: TCP
+          port: 80
+          targetPort: ${{HTTP_TRANSPORT_PORT}}
+        - name: introspection
+          protocol: TCP
+          port: 8089
+          targetPort: ${{INTROSPECTION_PORT}}
+      selector:
+        service: indexer
+        app: clair
+  #
+  # matcher service
+  #
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: clair-matcher
+      labels:
+        service: matcher
+        app: clair
+      annotations:
+        prometheus.io/scrape: 'true'
+    spec:
+      ports:
+        - name: http-transport
+          protocol: TCP
+          port: 80
+          targetPort: ${{HTTP_TRANSPORT_PORT}}
+        - name: introspection
+          protocol: TCP
+          port: 8089
+          targetPort: ${{INTROSPECTION_PORT}}
+      selector:
+        service: matcher
+        app: clair
+  #
+  # index_report route
+  #
+  - kind: Route
+    apiVersion: route.openshift.io/v1
+    metadata:
+      name: clair-index-report
+      namespace: clair
+      labels:
+        app: clair
+        component: indexer
+    spec:
+      host: clair.stage.quay.io
+      path: /api/v1/index_report
+      to:
+        kind: Service
+        name: clair-indexer
+        weight: 100
+      port:
+        targetPort: ${{INTROSPECTION_PORT}}
+      wildcardPolicy: None
+  #
+  # index_state route
+  #
+  - kind: Route
+    apiVersion: route.openshift.io/v1
+    metadata:
+      name: clair-index-state
+      namespace: clair
+      labels:
+        app: clair
+        component: indexer
+    spec:
+      host: clair.stage.quay.io
+      path: /api/v1/index_state
+      to:
+        kind: Service
+        name: clair-indexer
+        weight: 100
+      port:
+        targetPort: ${{INTROSPECTION_PORT}}
+      wildcardPolicy: None
+  #
+  # vulnerability_report route
+  #
+  - kind: Route
+    apiVersion: route.openshift.io/v1
+    metadata:
+      name: clair-vulnerability-report
+      namespace: clair
+      labels:
+        app: clair
+        component: matcher
+    spec:
+      host: clair.stage.quay.io
+      path: /api/v1/vulnerability_report
+      to:
+        kind: Service
+        name: clair-matcher
+        weight: 100
+      port:
+        targetPort: ${{INTROSPECTION_PORT}}
+      wildcardPolicy: None
+parameters:
+  #
+  # indexer params
+  #
+  - name: INDEXER_DEPLOYMENT_REPLICAS
+    value: "4"
+    displayName: the number of indexers deployed
+  - name: INDEXER_CPU_LIMITS
+    value: "4"
+    displayName: the indexer's cpu limits in vCPUs
+  - name: INDEXER_CPU_REQS
+    value: "2"
+    displayName: the indexer's cpu requests in vCPUs
+  - name: INDEXER_MEM_LIMITS
+    value: "8192Mi"
+    displayName: the indexer's memory limits in vCPUs
+  - name: INDEXER_MEM_REQS
+    value: "4096Mi"
+    displayName: the indexer's memory requests in vCPUs
+  #
+  # matcher params
+  #
+  - name: MATCHER_DEPLOYMENT_REPLICAS
+    value: "4"
+    displayName: the number of matchers deployed
+  - name: MATCHER_CPU_LIMITS
+    value: "4"
+    displayName: the matcher's cpu limits in vCPUs
+  - name: MATCHER_CPU_REQS
+    value: "2"
+    displayName: the matcher's cpu requests in vCPUs
+  - name: MATCHER_MEM_LIMITS
+    value: "8192Mi"
+    displayName: the matcher's memory limits in vCPUs
+  - name: MATCHER_MEM_REQS
+    value: "4096Mi"
+    displayName: the matcher's memory requests in vCPUs
+  #
+  # shared params
+  #
+  - name: CLAIR_SECRET
+    value: "clair"
+    displayName: the vault secret containing clair's config
+  - name: CLAIR_IMAGE
+    value: "quay.io/app-sre/clair"
+    displayName: the image of clair v4 to deploy
+  - name: IMAGE_TAG
+    value: "latest"
+    displayName: the image tag of clair v4 to deploy
+  - name: HTTP_TRANSPORT_PORT
+    value: "8080"
+    displayName: http port where clair's main functionality is provided
+  - name: INTROSPECTION_PORT
+    value: "8089"
+    displayName: http port where clair's health/metrics endpoints are provided
+  - name: HEALTH_PATH
+    value: "/healthz"
+    displayName: the http path to clair's health check endpoint
+  - name: HEALTH_PORT
+    value: "8089"
+    displayName: the port to clair's health check endpoint
