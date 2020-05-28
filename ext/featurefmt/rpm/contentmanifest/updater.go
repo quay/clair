@@ -17,6 +17,7 @@ var (
 	lastHeaderQuery = time.Time{}
 
 	mappingFileMutex = sync.Mutex{}
+	updaterMutex     = sync.Mutex{}
 )
 
 // LocalUpdaterJob periodically updates mapping file and store it in local storage
@@ -49,6 +50,8 @@ func (updater *LocalUpdaterJob) Get(repositories []string) ([]string, error) {
 			for _, cpe := range repoCPEs.CPEs {
 				cpes = appendUnique(cpes, cpe)
 			}
+		} else {
+			log.WithField("repository", repo).Debug("The repository is not present in a mapping file")
 		}
 	}
 	return cpes, nil
@@ -56,6 +59,8 @@ func (updater *LocalUpdaterJob) Get(repositories []string) ([]string, error) {
 
 // Update fetches mapping file using HTTP and store it locally in regular intervals
 func (updater *LocalUpdaterJob) Update() error {
+	updaterMutex.Lock()
+	defer updaterMutex.Unlock()
 	if updater.shouldBeUpdated() {
 		log.Info("The repo2cpe mapping has newer version. Updating...")
 		data, lastModified, err := updater.fetch()
