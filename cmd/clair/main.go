@@ -133,7 +133,9 @@ func Boot(config *Config) {
 
 	defer db.Close()
 
-	clair.RegisterConfiguredDetectors(db)
+	if ro, ok := db.(database.ReadOnly); !ok || !ro.ReadOnly() {
+		clair.RegisterConfiguredDetectors(db)
+	}
 
 	// Start notifier
 	st.Begin()

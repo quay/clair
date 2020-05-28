@@ -16,6 +16,7 @@
 package pgsql
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"io/ioutil"
@@ -50,7 +51,11 @@ type pgSQL struct {
 // The expected transaction isolation level in this implementation is "Read
 // Committed".
 func (pgSQL *pgSQL) Begin() (database.Session, error) {
-	tx, err := pgSQL.DB.Begin()
+	opts := &sql.TxOptions{
+		ReadOnly: pgSQL.config.ReadOnly,
+	}
+
+	tx, err := pgSQL.DB.BeginTx(context.Background(), opts)
 	if err != nil {
 		return nil, err
 	}
@@ -78,6 +83,20 @@ func (pgSQL *pgSQL) Ping() bool {
 	return pgSQL.DB.Ping() == nil
 }
 
+func (pgSQL *pgSQL) ReadOnly() bool {
+	return pgSQL.config.ReadOnly
+}
+
+func (pgSQL *pgSQL) migrateDatabase() error {
+	if !pgSQL.ReadOnly() {
+		return pgSQLMigrateFn(pgSQL.DB)
+	}
+
+	return nil
+}
+
+var pgSQLMigrateFn = migrateDatabase
+
 // Config is the configuration that is used by openDatabase.
 type Config struct {
 	Source    string
@@ -87,6 +106,7 @@ type Config struct {
 	FixturePath             string
 	PaginationKey           string
 	MaxOpenConnections      int
+	ReadOnly                bool
 }
 
 // openDatabase opens a PostgresSQL-backed Datastore using the given
@@ -147,7 +167,7 @@ func openDatabase(registrableComponentConfig database.RegistrableComponentConfig
 	}
 
 	// Run migrations.
-	if err = migrateDatabase(pg.DB); err != nil {
+	if err = pg.migrateDatabase(); err != nil {
 		pg.Close()
 		return nil, err
 	}
