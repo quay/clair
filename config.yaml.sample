@@ -89,3 +89,17 @@ clair:
 
       # Optional HTTP Proxy: must be a valid URL (including the scheme).
       proxy:
+
+    stomp:
+      # Brokers array/list - with failover support
+      brokers:
+
+      # Virtual topic where a notification is sent
+      destination:
+      # Failover delay in ms
+      FailoverRetryDelay:
+
+      # Path to certificate, key and ca certificate files
+      cafile:
+      keyfile:
+      certfile:
