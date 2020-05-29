@@ -17,7 +17,9 @@ package rpm
 
 import (
 	"bytes"
+	"encoding/json"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -25,32 +27,31 @@ import (
 	"github.com/asottile/dockerfile"
 	"github.com/buildkite/interpolate"
 	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/ext/featurefmt/rpm/contentmanifest"
 	"github.com/quay/clair/v3/ext/versionfmt/rpm"
 	"github.com/quay/clair/v3/pkg/tarutil"
 )
 
+var contentManifestRegex = regexp.MustCompile(`^root/buildinfo/content_manifests/.*\.json`)
+var dockerfileRegex = regexp.MustCompile(`^root/buildinfo/Dockerfile-.*`)
+
+// CpeNamespaceFetcher provides inferface for fetching CPEs from remote API
 type CpeNamespaceFetcher interface {
 	GetCPEs(nvr, arch string) ([]string, error)
 }
 
 // getPotentialNamespace - potential namespaces is based on CPEs strings.
-// Based on NVRa of the image we find corresponding image in Red Hat's image
-// metadata API and extract CPEs from there
+// There are 2 ways how to get CPEs:
+//	 1) using embedded content-sets + mapping file
+//		this option is applicable for images built after May 2020 by OSBS
+//	 2) using container metadata API
 // CPEs are used to identify Red Hat's products
 func (l lister) getPotentialNamespace(files tarutil.FilesMap) (namespaces []database.Namespace) {
-	dockerfilePath := findDockerfile(files)
-	var nvr, arch string
-	if dockerfilePath != "" {
-		nvr, arch = extractBuildNVR(dockerfilePath, files)
-	}
-	if nvr == "" || arch == "" {
-		return
-	}
-	log.WithField("nvr", nvr).Debug("Found layer identification")
-	cpes, err := l.namespaceFetcher.GetCPEs(nvr, arch)
-	if err != nil {
-		log.WithError(err).WithField("nvr", nvr).Warning("Unable to get image CPEs")
-		return
+	// first check if CPEs can be extracted using content manifest file
+	cpes := l.getCPEsFromContentManifestFile(files)
+	if len(cpes) == 0 {
+		// no luck with previous method - let's use fallback option
+		cpes = l.getCPEsFromContainerAPI(files)
 	}
 	log.WithField("cpes", cpes).Debug("Found CPEs for given layer")
 	for _, cpe := range cpes {
@@ -63,15 +64,65 @@ func (l lister) getPotentialNamespace(files tarutil.FilesMap) (namespaces []data
 	return
 }
 
+func findContentManifestFile(files tarutil.FilesMap) string {
+	for filePath := range files {
+		if contentManifestRegex.MatchString(filePath) {
+			return filePath
+		}
+	}
+	return ""
+}
+
 // findDockerfile in filemap - RedHat stores Dockerfiles into /root/buildinfo/
 func findDockerfile(files tarutil.FilesMap) string {
 	for filePath := range files {
-		if !strings.HasPrefix(filePath, "root/buildinfo/Dockerfile-") {
-			continue
+		if dockerfileRegex.MatchString(filePath) {
+			return filePath
 		}
-		return filePath
 	}
 	return ""
+}
+
+func (l lister) getCPEsFromContentManifestFile(files tarutil.FilesMap) []string {
+	manifestFilePath := findContentManifestFile(files)
+	if manifestFilePath == "" {
+		return []string{}
+	}
+	log.WithField("path", manifestFilePath).Debug("Found content manifest in layer")
+	contentManifestBytes := files[manifestFilePath]
+	contentManifestData := contentmanifest.ContentManifest{}
+	err := json.Unmarshal(contentManifestBytes, &contentManifestData)
+	if err != nil {
+		log.WithError(err).WithField("path", manifestFilePath).Warning("Failed to parse content manifest file")
+		return []string{}
+	}
+	CPEs, err := l.contentmanifest.RepositoryToCPE(contentManifestData.ContentSets)
+	if err != nil {
+		log.WithError(err).WithField("repositories", contentManifestData.ContentSets).Warning("Failed to parse map repositories into CPEs")
+		return []string{}
+	}
+	return CPEs
+}
+
+func (l lister) getCPEsFromContainerAPI(files tarutil.FilesMap) []string {
+	// Based on NVRa of the image we find corresponding image in Red Hat's image
+	// metadata API and extract CPEs from there
+	dockerfilePath := findDockerfile(files)
+	var nvr, arch string
+	if dockerfilePath == "" {
+		return []string{}
+	}
+	nvr, arch = extractBuildNVR(dockerfilePath, files)
+	if nvr == "" || arch == "" {
+		return []string{}
+	}
+	log.WithField("nvr", nvr).Debug("Found layer identification")
+	cpes, err := l.namespaceFetcher.GetCPEs(nvr, arch)
+	if err != nil {
+		log.WithError(err).WithField("nvr", nvr).Warning("Unable to get image CPEs")
+		return []string{}
+	}
+	return cpes
 }
 
 // extractBuildNVR - extract build NVR (name-version-release) from Dockerfile
