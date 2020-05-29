@@ -46,12 +46,9 @@ func (updater *LocalUpdaterJob) Get(repositories []string) ([]string, error) {
 		return []string{}, err
 	}
 	defer f.Close()
-	fileContent, err := ioutil.ReadAll(f)
-	if err != nil {
-		return []string{}, err
-	}
+
 	mappingContent := MappingFile{}
-	err = json.Unmarshal(fileContent, &mappingContent)
+	err = json.NewDecoder(f).Decode(&mappingContent)
 	if err != nil {
 		return []string{}, err
 	}
