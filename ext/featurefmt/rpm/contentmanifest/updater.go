@@ -12,24 +12,35 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var (
-	lastUpdateDate  = time.Time{}
-	lastHeaderQuery = time.Time{}
-
-	mappingFileMutex = sync.Mutex{}
-	updaterMutex     = sync.Mutex{}
-)
-
 // LocalUpdaterJob periodically updates mapping file and store it in local storage
 type LocalUpdaterJob struct {
 	LocalPath string
 	URL       string
+
+	lastUpdateDate  time.Time
+	lastHeaderQuery time.Time
+
+	mappingFileMutex sync.Mutex
+	updaterMutex     sync.Mutex
+}
+
+// NewLocalUpdaterJob creates new LocalUpdaterJob
+func NewLocalUpdaterJob(localPath string, url string) *LocalUpdaterJob {
+	updater := LocalUpdaterJob{
+		LocalPath:        localPath,
+		URL:              url,
+		lastUpdateDate:   time.Time{},
+		lastHeaderQuery:  time.Time{},
+		mappingFileMutex: sync.Mutex{},
+		updaterMutex:     sync.Mutex{},
+	}
+	return &updater
 }
 
 // Get translate repositories into CPEs using a mapping file
 func (updater *LocalUpdaterJob) Get(repositories []string) ([]string, error) {
-	mappingFileMutex.Lock()
-	defer mappingFileMutex.Unlock()
+	updater.mappingFileMutex.Lock()
+	defer updater.mappingFileMutex.Unlock()
 	f, err := os.Open(updater.LocalPath)
 	if err != nil {
 		return []string{}, err
@@ -59,8 +70,8 @@ func (updater *LocalUpdaterJob) Get(repositories []string) ([]string, error) {
 
 // Update fetches mapping file using HTTP and store it locally in regular intervals
 func (updater *LocalUpdaterJob) Update() error {
-	updaterMutex.Lock()
-	defer updaterMutex.Unlock()
+	updater.updaterMutex.Lock()
+	defer updater.updaterMutex.Unlock()
 	if updater.shouldBeUpdated() {
 		log.Info("The repo2cpe mapping has newer version. Updating...")
 		data, lastModified, err := updater.fetch()
@@ -75,25 +86,25 @@ func (updater *LocalUpdaterJob) Update() error {
 		if lastModified != "" {
 			lastModifiedDate, err := time.Parse(time.RFC1123, lastModified)
 			if err != nil {
-				log.WithField("lastUpdateDate", lastUpdateDate).WithError(err).Error("Failed to parse lastUpdateDate")
+				log.WithField("lastUpdateDate", updater.lastUpdateDate).WithError(err).Error("Failed to parse lastUpdateDate")
 				return err
 			}
 			// update local timestamp with latest date
-			lastUpdateDate = lastModifiedDate
+			updater.lastUpdateDate = lastModifiedDate
 		}
 	}
 	return nil
 }
 
 func (updater *LocalUpdaterJob) shouldBeUpdated() bool {
-	if time.Now().Add(-8 * time.Hour).Before(lastUpdateDate) {
+	if time.Now().Add(-8 * time.Hour).Before(updater.lastUpdateDate) {
 		// mapping has been updated in past 8 hours
 		// no need to query file headers
 		log.Debug("The repo2cpe has been updated in past 8 hours. Skipping...")
 		return false
 	}
 	// if it is more than 10 hours let's check file last-modified every 15 minutes
-	if time.Now().Add(-15 * time.Minute).Before(lastHeaderQuery) {
+	if time.Now().Add(-15 * time.Minute).Before(updater.lastHeaderQuery) {
 		// last header query has been done less than 15 minutes ago
 		return false
 	}
@@ -117,8 +128,8 @@ func (updater *LocalUpdaterJob) shouldBeUpdated() bool {
 	if err != nil {
 		return true
 	}
-	lastHeaderQuery = time.Now()
-	return lastModifiedTime.After(lastUpdateDate)
+	updater.lastHeaderQuery = time.Now()
+	return lastModifiedTime.After(updater.lastUpdateDate)
 }
 
 func (updater *LocalUpdaterJob) fetch() ([]byte, string, error) {
@@ -145,8 +156,8 @@ func (updater *LocalUpdaterJob) fetch() ([]byte, string, error) {
 }
 
 func (updater *LocalUpdaterJob) store(data []byte) error {
-	mappingFileMutex.Lock()
-	defer mappingFileMutex.Unlock()
+	updater.mappingFileMutex.Lock()
+	defer updater.mappingFileMutex.Unlock()
 	f, err := os.OpenFile(updater.LocalPath, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		return err

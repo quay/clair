@@ -58,10 +58,10 @@ func init() {
 		&lister{
 			&ContainerApiCpeNamespaceFetcher{},
 			&contentmanifest.RepoCPEMapping{
-				&contentmanifest.LocalUpdaterJob{
-					LocalPath: "/tmp/repository-cpe.json",
-					URL:       contentmanifest.MappingFileURL,
-				},
+				RepoCPEUpdater: contentmanifest.NewLocalUpdaterJob(
+					"/tmp/repository-cpe.json",
+					contentmanifest.MappingFileURL,
+				),
 			},
 		})
 }
