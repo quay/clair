@@ -18,11 +18,11 @@ WORKDIR /build/
 ADD . /build/
 ARG CLAIR_VERSION=dev
 RUN go build \
-	-mod=vendor \
+	`test -d vendor && echo -mod=vendor` \
 	-ldflags="-X main.Version=${CLAIR_VERSION}" \
 	./cmd/clair
 RUN go build \
-	-mod=vendor \
+	`test -d vendor && echo -mod=vendor` \
 	./cmd/clairctl
 
 FROM docker.io/library/alpine:3.11 AS final
