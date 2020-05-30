@@ -20,6 +20,8 @@ services:
     image: postgres:9.6
     networks:
       - clairnet
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
 
 networks:
   clairnet:
