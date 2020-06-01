@@ -224,6 +224,7 @@ components:
           name: "Ubuntu 18.04.3 LTS"
           key: ""
           uri: ""
+        issued: "2019-10-12T07:20:50.52Z"
         fixed_in_version: "2.28-0ubuntu1"
 
     Distribution:
@@ -244,8 +245,10 @@ components:
         name: "libapt-pkg5.0"
         version: "1.6.11"
         kind: "binary"
+        normalized_version: ""
         arch: "x86"
         module: ""
+        cpe: ""
         source:
           id: "9"
           name: "apt"
@@ -443,6 +446,20 @@ components:
             A well defined set of severity strings guaranteed to be present.
           type: string
           enum: [Unknown, Negligible, Low, Medium, High, Critical, Defcon1]
+        package:
+          $ref: '#/components/schemas/Package'
+        distribution:
+          $ref: '#/components/schemas/Distribution'
+        repository:
+          $ref: '#/components/schemas/Repository'
+        issued:
+          description: |
+            The timestamp in which the vulnerability was issued
+          type: string
+        range:
+          description: |
+            The range of package versions that are affected by this vulnerability
+          type: string
         fixed_in_version:
           description: "A unique ID representing this vulnerability."
           type: string
@@ -523,6 +540,9 @@ components:
           type: string
         module:
           type: string
+        cpe:
+          description: "A CPE identifying the package"
+          type: string
       required:
         - id
         - name
@@ -557,10 +577,29 @@ components:
         module:
           description: "A module further defining a namespace for a package"
           type: string
+        cpe:
+          description: "A CPE identifying the package"
+          type: string
       required:
         - id
         - name
         - version
+
+    Repository:
+      title: Repository
+      type: object
+      description: "A package repository"
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        key:
+          type: string
+        uri:
+          type: string
+        cpe:
+          type: string
 
     Version:
       title: Version
