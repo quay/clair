@@ -114,6 +114,32 @@ func (h *updateDiffHandler) getUpdates(w http.ResponseWriter, r *http.Request) {
 	err = json.NewEncoder(w).Encode(u)
 }
 
+// NOTE(hank) This doc comment doesn't talk about the constant that's used in
+// code, because that'd just be annoying to read. So if the constant changes,
+// make sure to make changes here, too.
+
+/*
+UpdateDiffHandler returns a Handler that services the following endpoints rooted
+at "/api/v1/internal/updates".
+
+   /api/v1/internal/updates
+   /api/v1/internal/updates/
+
+These endpoints return the set of the latest update operations per-updater.
+GET is the only allowed method.
+
+   /api/v1/internal/updates/$ref
+
+This endpoint is used with DELETE to mark a ref as no longer being needed. No
+other methods are allowed.
+
+   /api/v1/internal/updates/diff
+
+This endpoint reports the difference of two update operations. It is used with
+two query parameters, "prev" and "cur", which are update operation references.
+"Prev" may be omitted, in which case the first known operation will be used.
+GET is the only allowed method.
+*/
 func UpdateDiffHandler(d matcher.Differ) (http.Handler, error) {
 	h := &updateDiffHandler{d}
 	mux := http.NewServeMux()
