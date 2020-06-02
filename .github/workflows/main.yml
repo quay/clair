@@ -12,6 +12,17 @@ on:
       - development-4.0  # Remove this when the branch switch happens.
 
 jobs:
+  tidy:
+    name: Tidy
+    runs-on: ubuntu-latest
+    container: docker.io/library/golang:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Go Tidy
+        run: go mod tidy
+      - name: Git Diff
+        run: git diff --exit-code
   documentation:
     name: Documentation
     runs-on: ubuntu-latest
