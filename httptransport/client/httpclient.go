@@ -8,15 +8,7 @@ import (
 )
 
 // HTTP implements access to clair interfaces over HTTP
-type HTTP = *httpClient
-
-// httpClient has this weird two-step where it's an unexported type and an
-// exported alias so that we can return something that's impossible for another
-// package to construct, but is still a concrete type.
-//
-// This has the small rub that all the methods need to be defined on the
-// exported alias so they appear correctly in the documentation.
-type httpClient struct {
+type HTTP struct {
 	addr *url.URL
 	c    *http.Client
 
@@ -30,28 +22,28 @@ type httpClient struct {
 const DefaultAddr = `http://clair:6060/`
 
 // NewHTTP is a constructor for an HTTP client.
-func NewHTTP(ctx context.Context, opt ...Option) (HTTP, error) {
+func NewHTTP(ctx context.Context, opt ...Option) (*HTTP, error) {
 	addr, err := url.Parse(DefaultAddr)
 	if err != nil {
 		panic("programmer error") // Why didn't the DefaultAddr parse?
 	}
 
-	c := httpClient{
+	c := &HTTP{
 		addr: addr,
 		c:    http.DefaultClient,
 	}
 	c.diffValidator.Store("")
 
 	for _, o := range opt {
-		if err := o(&c); err != nil {
+		if err := o(c); err != nil {
 			return nil, err
 		}
 	}
-	return &c, nil
+	return c, nil
 }
 
 // Option sets an option on an HTTP.
-type Option func(HTTP) error
+type Option func(*HTTP) error
 
 // WithAddr sets the address to talk to.
 //
@@ -61,7 +53,7 @@ type Option func(HTTP) error
 // The provided URL should not include the `/api/v1` prefix.
 func WithAddr(root string) Option {
 	u, err := url.Parse(root)
-	return func(s *httpClient) error {
+	return func(s *HTTP) error {
 		if err != nil {
 			return err
 		}
@@ -74,7 +66,7 @@ func WithAddr(root string) Option {
 //
 // If WithClient is not supplied to NewHTTP, http.DefaultClient is used.
 func WithClient(c *http.Client) Option {
-	return func(s *httpClient) error {
+	return func(s *HTTP) error {
 		s.c = c
 		return nil
 	}

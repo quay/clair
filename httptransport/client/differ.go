@@ -17,10 +17,10 @@ import (
 	"github.com/quay/clair/v4/matcher"
 )
 
-var _ matcher.Differ = (HTTP)(nil)
+var _ matcher.Differ = (*HTTP)(nil)
 
 // DeleteUpdateOperations attempts to delete the referenced update operations.
-func (c HTTP) DeleteUpdateOperations(ctx context.Context, ref ...uuid.UUID) error {
+func (c *HTTP) DeleteUpdateOperations(ctx context.Context, ref ...uuid.UUID) error {
 	u, err := c.addr.Parse(httptransport.UpdatesAPIPath)
 	if err != nil {
 		return err
@@ -91,7 +91,7 @@ func (c HTTP) DeleteUpdateOperations(ctx context.Context, ref ...uuid.UUID) erro
 
 // LatestUpdateOperation shouldn't be used by client code and is implemented
 // only to satisfy the matcher.Differ interface.
-func (c HTTP) LatestUpdateOperation(_ context.Context) (uuid.UUID, error) {
+func (c *HTTP) LatestUpdateOperation(_ context.Context) (uuid.UUID, error) {
 	return uuid.Nil, nil
 }
 
@@ -101,7 +101,7 @@ var ErrUnchanged = errors.New("response unchanged from last call")
 
 // LatestUpdateOperations returns a map of updater name to ref of its latest
 // update.
-func (c HTTP) LatestUpdateOperations(ctx context.Context) (map[string]uuid.UUID, error) {
+func (c *HTTP) LatestUpdateOperations(ctx context.Context) (map[string]uuid.UUID, error) {
 	u, err := c.addr.Parse(httptransport.UpdatesAPIPath)
 	if err != nil {
 		return nil, err
@@ -142,7 +142,7 @@ func (c HTTP) LatestUpdateOperations(ctx context.Context) (map[string]uuid.UUID,
 //
 // "Prev" may be passed uuid.Nil if the client's last known state has been
 // forgotten by the server.
-func (c HTTP) UpdateDiff(ctx context.Context, prev, cur uuid.UUID) (*driver.UpdateDiff, error) {
+func (c *HTTP) UpdateDiff(ctx context.Context, prev, cur uuid.UUID) (*driver.UpdateDiff, error) {
 	u, err := c.addr.Parse(path.Join(httptransport.UpdatesAPIPath, "diff"))
 	if err != nil {
 		return nil, err
