@@ -107,7 +107,17 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	log.WithField("flagvalue", flagValue).Debug("Generation timestamp of latest parsed file")
 
 	if !ok {
-		flagValue = "0"
+		dbCommit = ""
+	}
+
+	// Set the updaterFlag to equal the commit processed.
+	resp.Flags = make(map[string]string)
+	resp.Flags[updaterFlag] = commit
+
+	// Short-circuit if there have been no updates.
+	if commit == dbCommit {
+		log.WithField("package", "ubuntu").Debug("no update")
+		return
 	}
 
 	// this contains the modification time of the most recent
@@ -121,8 +131,13 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	// Fetch the update list.
 	r, err := http.Get(ovalURI)
 	if err != nil {
-		err = fmt.Errorf("Cannot download Ubuntu update list: %v", err)
-		return resp, err
+		return
+	}
+
+	// The only notes we take are if we encountered unknown Ubuntu release.
+	// We don't want the commit to be considered as managed in that case.
+	if len(resp.Notes) != 0 {
+		resp.Flags[updaterFlag] = dbCommit
 	}
 	defer r.Body.Close()
 

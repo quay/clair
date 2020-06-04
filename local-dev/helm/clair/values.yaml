@@ -46,6 +46,7 @@ config:
   - rhel
   - oracle
   - alpine
+  - redhat
   enabledNamespaceDetectors:
   - os-release
   - lsb-release

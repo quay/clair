@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<oval_definitions xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:ind-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:red-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" xmlns:unix-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-common-5 oval-common-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#unix unix-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#linux linux-definitions-schema.xsd">
+ <generator>
+  <oval:product_name>Red Hat OVAL Patch Definition Merger</oval:product_name>
+  <oval:product_version>3</oval:product_version>
+  <oval:schema_version>5.10</oval:schema_version>
+  <oval:timestamp>2020-03-19T15:44:09</oval:timestamp>
+  <oval:content_version>1584632649</oval:content_version>
+ </generator>
+ <definitions>
+  <definition class="patch" id="oval:com.redhat.rhba:def:20194268" version="632">
+   <metadata>
+    <title>RHBA-2019:4268: idm:DL1 bug fix update (None)</title>
+    <affected family="unix">
+     <platform>Red Hat Enterprise Linux 8</platform>
+    </affected>
+    <reference ref_id="RHBA-2019:4268" ref_url="https://access.redhat.com/errata/RHBA-2019:4268" source="RHSA"/>
+    <reference ref_id="CVE-2019-10195" ref_url="https://access.redhat.com/security/cve/CVE-2019-10195" source="CVE"/>
+    <reference ref_id="CVE-2019-14867" ref_url="https://access.redhat.com/security/cve/CVE-2019-14867" source="CVE"/>
+    <description>Bug Fix(es):
+
+* IPA upgrade fails for latest ipa package when adtrust is installed (BZ#1773516)</description>
+    <advisory from="secalert@redhat.com">
+     <severity>None</severity>
+     <rights>Copyright 2019 Red Hat, Inc.</rights>
+     <issued date="2019-12-17"/>
+     <updated date="2019-12-17"/>
+     <cve cvss3="5.7/CVSS:3.0/AV:N/AC:L/PR:L/UI:R/S:U/C:H/I:N/A:N" cwe="CWE-532 CWE-200" href="https://access.redhat.com/security/cve/CVE-2019-10195" impact="moderate" public="20191126">CVE-2019-10195</cve>
+     <cve cvss3="8.8/CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H" cwe="CWE-94 CWE-400" href="https://access.redhat.com/security/cve/CVE-2019-14867" impact="important" public="20190826">CVE-2019-14867</cve>
+     <bugzilla href="https://bugzilla.redhat.com/1773516" id="1773516">IPA upgrade fails for latest ipa package when adtrust is installed [rhel-8.1.0.z]</bugzilla>
+     <affected_cpe_list>
+      <cpe>cpe:/a:redhat:enterprise_linux:8</cpe>
+      <cpe>cpe:/a:redhat:enterprise_linux:8::appstream</cpe>
+     </affected_cpe_list>
+    </advisory>
+   </metadata>
+   <criteria operator="OR">
+    <criterion comment="Red Hat Enterprise Linux must be installed" test_ref="oval:com.redhat.rhba:tst:20194268067"/>
+    <criteria operator="AND">
+     <criterion comment="Red Hat Enterprise Linux 8 is installed" test_ref="oval:com.redhat.rhba:tst:20194268066"/>
+     <criterion comment="Module idm:DL1 is enabled" test_ref="oval:com.redhat.rhba:tst:20194268065"/>
+     <criteria operator="OR">
+      <criteria operator="AND">
+       <criterion comment="softhsm-devel is earlier than 0:2.4.0-2.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268001"/>
+       <criterion comment="softhsm-devel is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268002"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="softhsm-debugsource is earlier than 0:2.4.0-2.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268003"/>
+       <criterion comment="softhsm-debugsource is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268004"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="softhsm is earlier than 0:2.4.0-2.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268005"/>
+       <criterion comment="softhsm is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268006"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="slapi-nis-debugsource is earlier than 0:0.56.3-2.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268007"/>
+       <criterion comment="slapi-nis-debugsource is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268008"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="slapi-nis is earlier than 0:0.56.3-2.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268009"/>
+       <criterion comment="slapi-nis is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268010"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="opendnssec-debugsource is earlier than 0:1.4.14-1.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268011"/>
+       <criterion comment="opendnssec-debugsource is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268012"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="opendnssec is earlier than 0:1.4.14-1.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268013"/>
+       <criterion comment="opendnssec is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268014"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="ipa-server-trust-ad is earlier than 0:4.8.0-13.module+el8.1.0+4923+c6efe041" test_ref="oval:com.redhat.rhba:tst:20194268015"/>
+       <criterion comment="ipa-server-trust-ad is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268016"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="ipa-server is earlier than 0:4.8.0-13.module+el8.1.0+4923+c6efe041" test_ref="oval:com.redhat.rhba:tst:20194268017"/>
+       <criterion comment="ipa-server is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268018"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="ipa-idoverride-memberof-plugin is earlier than 0:0.0.4-6.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268019"/>
+       <criterion comment="ipa-idoverride-memberof-plugin is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268020"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="ipa-debugsource is earlier than 0:4.8.0-13.module+el8.1.0+4923+c6efe041" test_ref="oval:com.redhat.rhba:tst:20194268021"/>
+       <criterion comment="ipa-debugsource is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268022"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="ipa-client-samba is earlier than 0:4.8.0-13.module+el8.1.0+4923+c6efe041" test_ref="oval:com.redhat.rhba:tst:20194268023"/>
+       <criterion comment="ipa-client-samba is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268024"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="ipa-client is earlier than 0:4.8.0-13.module+el8.1.0+4923+c6efe041" test_ref="oval:com.redhat.rhba:tst:20194268025"/>
+       <criterion comment="ipa-client is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268026"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="bind-dyndb-ldap-debugsource is earlier than 0:11.1-14.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268027"/>
+       <criterion comment="bind-dyndb-ldap-debugsource is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268028"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="bind-dyndb-ldap is earlier than 0:11.1-14.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268029"/>
+       <criterion comment="bind-dyndb-ldap is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268030"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="python3-yubico is earlier than 0:1.3.2-9.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268031"/>
+       <criterion comment="python3-yubico is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268032"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="python3-qrcode-core is earlier than 0:5.1-12.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268033"/>
+       <criterion comment="python3-qrcode-core is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268034"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="python3-qrcode is earlier than 0:5.1-12.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268035"/>
+       <criterion comment="python3-qrcode is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268036"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="python3-pyusb is earlier than 0:1.0.0-9.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268037"/>
+       <criterion comment="python3-pyusb is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268038"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="python3-kdcproxy is earlier than 0:0.4-3.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268039"/>
+       <criterion comment="python3-kdcproxy is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268040"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="python3-jwcrypto is earlier than 0:0.5.0-1.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268041"/>
+       <criterion comment="python3-jwcrypto is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268042"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="python3-ipaserver is earlier than 0:4.8.0-13.module+el8.1.0+4923+c6efe041" test_ref="oval:com.redhat.rhba:tst:20194268043"/>
+       <criterion comment="python3-ipaserver is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268044"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="python3-ipalib is earlier than 0:4.8.0-13.module+el8.1.0+4923+c6efe041" test_ref="oval:com.redhat.rhba:tst:20194268045"/>
+       <criterion comment="python3-ipalib is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268046"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="python3-ipaclient is earlier than 0:4.8.0-13.module+el8.1.0+4923+c6efe041" test_ref="oval:com.redhat.rhba:tst:20194268047"/>
+       <criterion comment="python3-ipaclient is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268048"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="python3-custodia is earlier than 0:0.6.0-3.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268049"/>
+       <criterion comment="python3-custodia is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268050"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="ipa-server-dns is earlier than 0:4.8.0-13.module+el8.1.0+4923+c6efe041" test_ref="oval:com.redhat.rhba:tst:20194268051"/>
+       <criterion comment="ipa-server-dns is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268052"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="ipa-server-common is earlier than 0:4.8.0-13.module+el8.1.0+4923+c6efe041" test_ref="oval:com.redhat.rhba:tst:20194268053"/>
+       <criterion comment="ipa-server-common is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268054"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="ipa-python-compat is earlier than 0:4.8.0-13.module+el8.1.0+4923+c6efe041" test_ref="oval:com.redhat.rhba:tst:20194268055"/>
+       <criterion comment="ipa-python-compat is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268056"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="ipa-healthcheck is earlier than 0:0.3-4.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268057"/>
+       <criterion comment="ipa-healthcheck is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268058"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="ipa-common is earlier than 0:4.8.0-13.module+el8.1.0+4923+c6efe041" test_ref="oval:com.redhat.rhba:tst:20194268059"/>
+       <criterion comment="ipa-common is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268060"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="ipa-client-common is earlier than 0:4.8.0-13.module+el8.1.0+4923+c6efe041" test_ref="oval:com.redhat.rhba:tst:20194268061"/>
+       <criterion comment="ipa-client-common is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268062"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="custodia is earlier than 0:0.6.0-3.module+el8.1.0+4098+f286395e" test_ref="oval:com.redhat.rhba:tst:20194268063"/>
+       <criterion comment="custodia is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhba:tst:20194268064"/>
+      </criteria>
+     </criteria>
+    </criteria>
+   </criteria>
+  </definition>
+  <definition class="patch" id="oval:com.redhat.rhea:def:20200330" version="631">
+   <metadata>
+    <title>RHEA-2020:0330: nodejs:12 enhancement update (None)</title>
+    <affected family="unix">
+     <platform>Red Hat Enterprise Linux 8</platform>
+    </affected>
+    <reference ref_id="RHEA-2020:0330" ref_url="https://access.redhat.com/errata/RHEA-2020:0330" source="RHSA"/>
+    <reference ref_id="CVE-2019-16775" ref_url="https://access.redhat.com/security/cve/CVE-2019-16775" source="CVE"/>
+    <reference ref_id="CVE-2019-16776" ref_url="https://access.redhat.com/security/cve/CVE-2019-16776" source="CVE"/>
+    <reference ref_id="CVE-2019-16777" ref_url="https://access.redhat.com/security/cve/CVE-2019-16777" source="CVE"/>
+    <description>The following packages have been upgraded to a later upstream version: nodejs (12.14.1). (BZ#1791067)</description>
+    <advisory from="secalert@redhat.com">
+     <severity>None</severity>
+     <rights>Copyright 2020 Red Hat, Inc.</rights>
+     <issued date="2020-02-04"/>
+     <updated date="2020-02-04"/>
+     <cve cvss3="4.8/CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:N/I:H/A:N" cwe="CWE-20" href="https://access.redhat.com/security/cve/CVE-2019-16775" impact="low" public="20191212">CVE-2019-16775</cve>
+     <cve cvss3="4.8/CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:N/I:H/A:N" cwe="CWE-20" href="https://access.redhat.com/security/cve/CVE-2019-16776" impact="low" public="20191212">CVE-2019-16776</cve>
+     <cve cvss3="4.8/CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:N/I:H/A:N" cwe="CWE-20" href="https://access.redhat.com/security/cve/CVE-2019-16777" impact="low" public="20191212">CVE-2019-16777</cve>
+     <bugzilla href="https://bugzilla.redhat.com/1791067" id="1791067">New version of Node.js is available (12.14.1) [rhel-8] [rhel-8.1.0.z]</bugzilla>
+     <affected_cpe_list>
+      <cpe>cpe:/a:redhat:enterprise_linux:8</cpe>
+      <cpe>cpe:/a:redhat:enterprise_linux:8::appstream</cpe>
+     </affected_cpe_list>
+    </advisory>
+   </metadata>
+   <criteria operator="OR">
+    <criterion comment="Red Hat Enterprise Linux must be installed" test_ref="oval:com.redhat.rhba:tst:20194268067"/>
+    <criteria operator="AND">
+     <criterion comment="Red Hat Enterprise Linux 8 is installed" test_ref="oval:com.redhat.rhba:tst:20194268066"/>
+     <criterion comment="Module nodejs:12 is enabled" test_ref="oval:com.redhat.rhea:tst:20200330015"/>
+     <criteria operator="OR">
+      <criteria operator="AND">
+       <criterion comment="npm is earlier than 1:6.13.4-1.12.14.1.1.module+el8.1.0+5466+30f75629" test_ref="oval:com.redhat.rhea:tst:20200330001"/>
+       <criterion comment="npm is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhea:tst:20200330002"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="nodejs-devel is earlier than 1:12.14.1-1.module+el8.1.0+5466+30f75629" test_ref="oval:com.redhat.rhea:tst:20200330003"/>
+       <criterion comment="nodejs-devel is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhea:tst:20200330004"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="nodejs-debugsource is earlier than 1:12.14.1-1.module+el8.1.0+5466+30f75629" test_ref="oval:com.redhat.rhea:tst:20200330005"/>
+       <criterion comment="nodejs-debugsource is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhea:tst:20200330006"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="nodejs is earlier than 1:12.14.1-1.module+el8.1.0+5466+30f75629" test_ref="oval:com.redhat.rhea:tst:20200330007"/>
+       <criterion comment="nodejs is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhea:tst:20200330008"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="nodejs-packaging is earlier than 0:17-3.module+el8.1.0+3369+37ae6a45" test_ref="oval:com.redhat.rhea:tst:20200330009"/>
+       <criterion comment="nodejs-packaging is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhea:tst:20200330010"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="nodejs-nodemon is earlier than 0:1.18.3-1.module+el8.1.0+3369+37ae6a45" test_ref="oval:com.redhat.rhea:tst:20200330011"/>
+       <criterion comment="nodejs-nodemon is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhea:tst:20200330012"/>
+      </criteria>
+      <criteria operator="AND">
+       <criterion comment="nodejs-docs is earlier than 1:12.14.1-1.module+el8.1.0+5466+30f75629" test_ref="oval:com.redhat.rhea:tst:20200330013"/>
+       <criterion comment="nodejs-docs is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhea:tst:20200330014"/>
+      </criteria>
+     </criteria>
+    </criteria>
+   </criteria>
+  </definition>
+ </definitions>
+</oval_definitions>

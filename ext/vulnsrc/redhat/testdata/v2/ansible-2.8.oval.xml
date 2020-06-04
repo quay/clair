@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="utf-8"?>
+<oval_definitions xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:ind-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:red-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" xmlns:unix-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-common-5 oval-common-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#unix unix-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#linux linux-definitions-schema.xsd">
+ <generator>
+  <oval:product_name>Red Hat OVAL Patch Definition Merger</oval:product_name>
+  <oval:product_version>3</oval:product_version>
+  <oval:schema_version>5.10</oval:schema_version>
+  <oval:timestamp>2020-01-23T19:19:23</oval:timestamp>
+  <oval:content_version>1579807163</oval:content_version>
+ </generator>
+ <definitions>
+  <definition class="patch" id="oval:com.redhat.rhsa:def:20191708" version="632">
+   <metadata>
+    <title>RHSA-2019:1708: ansible security and bug fix update (Moderate)</title>
+    <affected family="unix">
+     <platform>Red Hat Ansible Engine 2.8 for RHEL 8</platform>
+    </affected>
+    <reference ref_id="RHSA-2019:1708" ref_url="https://access.redhat.com/errata/RHSA-2019:1708" source="RHSA"/>
+    <reference ref_id="CVE-2019-10156" ref_url="https://access.redhat.com/security/cve/CVE-2019-10156" source="CVE"/>
+    <description>Ansible is a simple model-driven configuration management, multi-node
+deployment, and remote-task execution system. Ansible works over SSH and
+does
+not require any software or daemons to be installed on remote nodes.
+Extension
+modules can be written in any language and are transferred to managed
+machines
+automatically.
+
+The following packages have been upgraded to a newer upstream version:
+ansible
+(2.8.2)
+
+Security fix(es):
+
+* ansible: unsafe template evaluation of returned module data can lead to information disclosure (CVE-2019-10156)
+
+For more details about the security issue(s), including the impact, a CVSS
+score, and other related information, refer to the CVE page(s) listed in the
+References section.
+
+Bug Fix(es):
+
+See:
+https://github.com/ansible/ansible/blob/v2.8.2/changelogs/CHANGELOG-v2.8.rst
+for details on bug fixes in this release.</description>
+    <advisory from="secalert@redhat.com">
+     <severity>Moderate</severity>
+     <rights>Copyright 2019 Red Hat, Inc.</rights>
+     <issued date="2019-07-09"/>
+     <updated date="2019-07-09"/>
+     <cve cvss3="4.6/CVSS:3.0/AV:N/AC:L/PR:L/UI:R/S:U/C:L/I:L/A:N" cwe="CWE-200" href="https://access.redhat.com/security/cve/CVE-2019-10156" public="20190604">CVE-2019-10156</cve>
+     <bugzilla href="https://bugzilla.redhat.com/1717311" id="1717311">CVE-2019-10156 ansible: unsafe template evaluation of returned module data can lead to information disclosure</bugzilla>
+     <affected_cpe_list>
+      <cpe>cpe:/a:redhat:ansible_engine:2.8</cpe>
+      <cpe>cpe:/a:redhat:ansible_engine:2.8::el8</cpe>
+     </affected_cpe_list>
+    </advisory>
+   </metadata>
+   <criteria operator="OR">
+    <criterion comment="Red Hat Enterprise Linux must be installed" test_ref="oval:com.redhat.rhsa:tst:20191708004"/>
+    <criteria operator="AND">
+     <criterion comment="Red Hat Enterprise Linux 8 is installed" test_ref="oval:com.redhat.rhsa:tst:20191708003"/>
+     <criterion comment="ansible is earlier than 0:2.8.2-1.el8ae" test_ref="oval:com.redhat.rhsa:tst:20191708001"/>
+     <criterion comment="ansible is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhsa:tst:20191708002"/>
+    </criteria>
+   </criteria>
+  </definition>
+  <definition class="patch" id="oval:com.redhat.rhsa:def:20192542" version="637">
+   <metadata>
+    <title>RHSA-2019:2542: Ansible security and bug fix update (Moderate)</title>
+    <affected family="unix">
+     <platform>Red Hat Ansible Engine 2.8 for RHEL 8</platform>
+    </affected>
+    <reference ref_id="RHSA-2019:2542" ref_url="https://access.redhat.com/errata/RHSA-2019:2542" source="RHSA"/>
+    <reference ref_id="CVE-2019-10206" ref_url="https://access.redhat.com/security/cve/CVE-2019-10206" source="CVE"/>
+    <reference ref_id="CVE-2019-10217" ref_url="https://access.redhat.com/security/cve/CVE-2019-10217" source="CVE"/>
+    <description>Ansible is a simple model-driven configuration management, multi-node deployment, and remote-task execution system. Ansible works over SSH and does not require any software or daemons to be installed on remote nodes. Extension modules can be written in any language and are transferred to managed machines automatically.
+
+The following packages have been upgraded to a newer upstream version: ansible (2.8.4)
+
+Security fix(es):
+
+* Ansible: data disclosure when a password from the prompt contains template characters (CVE-2019-10206)
+* Ansible: gcp modules do not flag sensitive data fields properly (CVE-2019-10217)
+
+For more details about the security issue(s), including the impact, a CVSS score, and other related information, refer to the CVE page(s) listed in the References section.
+
+Bug Fix(es):
+
+For details on bug fixes in this release see:
+
+https://github.com/ansible/ansible/blob/v2.8.4/changelogs/CHANGELOG-v2.8.rst</description>
+    <advisory from="secalert@redhat.com">
+     <severity>Moderate</severity>
+     <rights>Copyright 2019 Red Hat, Inc.</rights>
+     <issued date="2019-08-21"/>
+     <updated date="2019-08-21"/>
+     <cve cvss3="6.4/CVSS:3.0/AV:N/AC:H/PR:L/UI:R/S:U/C:H/I:H/A:N" cwe="CWE-20" href="https://access.redhat.com/security/cve/CVE-2019-10206" public="20190724">CVE-2019-10206</cve>
+     <cve cvss3="5.7/CVSS:3.0/AV:N/AC:L/PR:L/UI:R/S:U/C:H/I:N/A:N" cwe="CWE-200" href="https://access.redhat.com/security/cve/CVE-2019-10217" public="20190726">CVE-2019-10217</cve>
+     <bugzilla href="https://bugzilla.redhat.com/1732623" id="1732623">CVE-2019-10206 Ansible: disclosure data when prompted for password and template characters are passed</bugzilla>
+     <bugzilla href="https://bugzilla.redhat.com/1733509" id="1733509">CVE-2019-10217 Ansible: gcp modules do not flag sensitive data fields properly</bugzilla>
+     <affected_cpe_list>
+      <cpe>cpe:/a:redhat:ansible_engine:2.8</cpe>
+      <cpe>cpe:/a:redhat:ansible_engine:2.8::el8</cpe>
+     </affected_cpe_list>
+    </advisory>
+   </metadata>
+   <criteria operator="OR">
+    <criterion comment="Red Hat Enterprise Linux must be installed" test_ref="oval:com.redhat.rhsa:tst:20191708004"/>
+    <criteria operator="AND">
+     <criterion comment="Red Hat Enterprise Linux 8 is installed" test_ref="oval:com.redhat.rhsa:tst:20191708003"/>
+     <criterion comment="ansible is earlier than 0:2.8.4-1.el8ae" test_ref="oval:com.redhat.rhsa:tst:20192542001"/>
+     <criterion comment="ansible is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhsa:tst:20191708002"/>
+    </criteria>
+   </criteria>
+  </definition>
+  <definition class="patch" id="oval:com.redhat.rhsa:def:20193203" version="633">
+   <metadata>
+    <title>RHSA-2019:3203: Ansible security and bug fix update (Important)</title>
+    <affected family="unix">
+     <platform>Red Hat Ansible Engine 2.8 for RHEL 8</platform>
+    </affected>
+    <reference ref_id="RHSA-2019:3203" ref_url="https://access.redhat.com/errata/RHSA-2019:3203" source="RHSA"/>
+    <reference ref_id="CVE-2019-14846" ref_url="https://access.redhat.com/security/cve/CVE-2019-14846" source="CVE"/>
+    <reference ref_id="CVE-2019-14856" ref_url="https://access.redhat.com/security/cve/CVE-2019-14856" source="CVE"/>
+    <reference ref_id="CVE-2019-14858" ref_url="https://access.redhat.com/security/cve/CVE-2019-14858" source="CVE"/>
+    <description>Ansible is a simple model-driven configuration management, multi-node deployment, and remote-task execution system. Ansible works over SSH and does not require any software or daemons to be installed on remote nodes. Extension modules can be written in any language and are transferred to managed machines automatically.
+
+The following packages have been upgraded to a newer upstream version:
+ansible (2.8.6)
+
+Bug Fix(es):
+
+* ansible: incomplete fix for CVE-2019-10206 (CVE-2019-14856)
+* ansible: sub parameters marked as no_log are not masked in certain failure scenarios (CVE-2019-14858)
+* ansible: secrets disclosed on logs when no_log enabled (CVE-2019-14846)
+
+See:
+
+https://github.com/ansible/ansible/blob/v2.8.6/changelogs/CHANGELOG-v2.8.rst
+
+for details on bug fixes in this release.</description>
+    <advisory from="secalert@redhat.com">
+     <severity>Important</severity>
+     <rights>Copyright 2019 Red Hat, Inc.</rights>
+     <issued date="2019-10-24"/>
+     <updated date="2019-10-24"/>
+     <cve cvss3="7.3/CVSS:3.0/AV:L/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:H" cwe="CWE-117 CWE-532" href="https://access.redhat.com/security/cve/CVE-2019-14846" impact="moderate" public="20191008">CVE-2019-14846</cve>
+     <cve cvss3="6.4/CVSS:3.0/AV:N/AC:H/PR:L/UI:R/S:U/C:H/I:H/A:N" cwe="CWE-20" href="https://access.redhat.com/security/cve/CVE-2019-14856" impact="moderate" public="20191008">CVE-2019-14856</cve>
+     <cve cvss3="7.3/CVSS:3.0/AV:L/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:H" cwe="CWE-117 CWE-532" href="https://access.redhat.com/security/cve/CVE-2019-14858" impact="moderate" public="20191011">CVE-2019-14858</cve>
+     <bugzilla href="https://bugzilla.redhat.com/1755373" id="1755373">CVE-2019-14846 ansible: secrets disclosed on logs when no_log enabled</bugzilla>
+     <bugzilla href="https://bugzilla.redhat.com/1760593" id="1760593">CVE-2019-14858 ansible: sub parameters marked as no_log are not masked in certain failure scenarios</bugzilla>
+     <bugzilla href="https://bugzilla.redhat.com/1760829" id="1760829">CVE-2019-14856 ansible: Incomplete fix for CVE-2019-10206</bugzilla>
+     <affected_cpe_list>
+      <cpe>cpe:/a:redhat:ansible_engine:2.8</cpe>
+      <cpe>cpe:/a:redhat:ansible_engine:2.8::el8</cpe>
+     </affected_cpe_list>
+    </advisory>
+   </metadata>
+   <criteria operator="OR">
+    <criterion comment="Red Hat Enterprise Linux must be installed" test_ref="oval:com.redhat.rhsa:tst:20191708004"/>
+    <criteria operator="AND">
+     <criterion comment="Red Hat Enterprise Linux 8 is installed" test_ref="oval:com.redhat.rhsa:tst:20191708003"/>
+     <criterion comment="ansible is earlier than 0:2.8.6-1.el8ae" test_ref="oval:com.redhat.rhsa:tst:20193203001"/>
+     <criterion comment="ansible is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhsa:tst:20191708002"/>
+    </criteria>
+   </criteria>
+  </definition>
+  <definition class="patch" id="oval:com.redhat.rhsa:def:20193926" version="632">
+   <metadata>
+    <title>RHSA-2019:3926: ansible security and bug fix update (Moderate)</title>
+    <affected family="unix">
+     <platform>Red Hat Ansible Engine 2.8 for RHEL 8</platform>
+    </affected>
+    <reference ref_id="RHSA-2019:3926" ref_url="https://access.redhat.com/errata/RHSA-2019:3926" source="RHSA"/>
+    <reference ref_id="CVE-2019-14864" ref_url="https://access.redhat.com/security/cve/CVE-2019-14864" source="CVE"/>
+    <description>Ansible is a simple model-driven configuration management, multi-node
+deployment, and remote-task execution system. Ansible works over SSH and
+does not require any software or daemons to be installed on remote nodes.
+Extension modules can be written in any language and are transferred to
+managed machines automatically.
+
+Security Fix(es):
+
+Ansible: Splunk and Sumologic callback plugins leak sensitive data in logs
+(CVE-2019-14864)
+
+For more details about the security issue(s), including the impact, a CVSS
+score, acknowledgments, and other related information, refer to the CVE
+page(s) listed in the References section.
+
+The following packages have been upgraded to a newer upstream version:
+ansible (2.8.7)
+
+Bug Fix(es):
+
+See:
+https://github.com/ansible/ansible/blob/v2.8.7/changelogs/CHANGELOG-v2.8.rst
+for details on bug fixes in this release.</description>
+    <advisory from="secalert@redhat.com">
+     <severity>Moderate</severity>
+     <rights>Copyright 2019 Red Hat, Inc.</rights>
+     <issued date="2019-11-20"/>
+     <updated date="2019-11-20"/>
+     <cve cvss3="5.7/CVSS:3.0/AV:N/AC:L/PR:L/UI:R/S:U/C:H/I:N/A:N" cwe="CWE-117 CWE-532" href="https://access.redhat.com/security/cve/CVE-2019-14864" public="20191022">CVE-2019-14864</cve>
+     <bugzilla href="https://bugzilla.redhat.com/1764148" id="1764148">CVE-2019-14864 Ansible: Splunk and Sumologic callback plugins leak sensitive data in logs</bugzilla>
+     <affected_cpe_list>
+      <cpe>cpe:/a:redhat:ansible_engine:2.8</cpe>
+      <cpe>cpe:/a:redhat:ansible_engine:2.8::el8</cpe>
+     </affected_cpe_list>
+    </advisory>
+   </metadata>
+   <criteria operator="OR">
+    <criterion comment="Red Hat Enterprise Linux must be installed" test_ref="oval:com.redhat.rhsa:tst:20191708004"/>
+    <criteria operator="AND">
+     <criterion comment="Red Hat Enterprise Linux 8 is installed" test_ref="oval:com.redhat.rhsa:tst:20191708003"/>
+     <criterion comment="ansible is earlier than 0:2.8.7-1.el8ae" test_ref="oval:com.redhat.rhsa:tst:20193926001"/>
+     <criterion comment="ansible is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhsa:tst:20191708002"/>
+    </criteria>
+   </criteria>
+  </definition>
+  <definition class="patch" id="oval:com.redhat.rhsa:def:20200216" version="632">
+   <metadata>
+    <title>RHSA-2020:0216: Ansible security and bug fix update (2.8.8) (Moderate)</title>
+    <affected family="unix">
+     <platform>Red Hat Ansible Engine 2.8 for RHEL 8</platform>
+    </affected>
+    <reference ref_id="RHSA-2020:0216" ref_url="https://access.redhat.com/errata/RHSA-2020:0216" source="RHSA"/>
+    <reference ref_id="CVE-2019-14904" ref_url="https://access.redhat.com/security/cve/CVE-2019-14904" source="CVE"/>
+    <reference ref_id="CVE-2019-14905" ref_url="https://access.redhat.com/security/cve/CVE-2019-14905" source="CVE"/>
+    <description>Ansible is a simple model-driven configuration management, multi-node
+deployment, and remote-task execution system. Ansible works over SSH and
+does not require any software or daemons to be installed on remote nodes.
+Extension modules can be written in any language and are transferred to
+managed machines automatically.
+
+The following packages have been upgraded to a newer upstream version:
+ansible (2.8.8)
+
+Bug Fix(es):
+* CVE-2019-14904 Ansible: vulnerability in solaris_zone module via crafted
+solaris zone
+* CVE-2019-14905 Ansible: malicious code could craft filename in
+nxos_file_copy module
+
+See:
+https://github.com/ansible/ansible/blob/v2.8.8/changelogs/CHANGELOG-v2.8.rst
+for details on bug fixes in this release.</description>
+    <advisory from="secalert@redhat.com">
+     <severity>Moderate</severity>
+     <rights>Copyright 2020 Red Hat, Inc.</rights>
+     <issued date="2020-01-23"/>
+     <updated date="2020-01-23"/>
+     <cve cvss3="7.3/CVSS:3.0/AV:L/AC:L/PR:H/UI:N/S:C/C:H/I:L/A:L" cwe="CWE-20 CWE-78" href="https://access.redhat.com/security/cve/CVE-2019-14904" public="20191127">CVE-2019-14904</cve>
+     <cve cvss3="7.3/CVSS:3.0/AV:L/AC:L/PR:H/UI:N/S:C/C:H/I:L/A:L" cwe="CWE-20 CWE-73" href="https://access.redhat.com/security/cve/CVE-2019-14905" public="20191127">CVE-2019-14905</cve>
+     <bugzilla href="https://bugzilla.redhat.com/1776943" id="1776943">CVE-2019-14905 Ansible: malicious code could craft filename in nxos_file_copy module</bugzilla>
+     <bugzilla href="https://bugzilla.redhat.com/1776944" id="1776944">CVE-2019-14904 Ansible: vulnerability in solaris_zone module via crafted solaris zone</bugzilla>
+     <affected_cpe_list>
+      <cpe>cpe:/a:redhat:ansible_engine:2.8</cpe>
+      <cpe>cpe:/a:redhat:ansible_engine:2.8::el8</cpe>
+     </affected_cpe_list>
+    </advisory>
+   </metadata>
+   <criteria operator="OR">
+    <criterion comment="Red Hat Enterprise Linux must be installed" test_ref="oval:com.redhat.rhsa:tst:20191708004"/>
+    <criteria operator="AND">
+     <criterion comment="Red Hat Enterprise Linux 8 is installed" test_ref="oval:com.redhat.rhsa:tst:20191708003"/>
+     <criterion comment="ansible is earlier than 0:2.8.8-1.el8ae" test_ref="oval:com.redhat.rhsa:tst:20200216001"/>
+     <criterion comment="ansible is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhsa:tst:20191708002"/>
+    </criteria>
+   </criteria>
+  </definition>
+ </definitions>
+ <tests>
+  <red-def:rpminfo_test check="at least one" comment="ansible is earlier than 0:2.8.2-1.el8ae" id="oval:com.redhat.rhsa:tst:20191708001" version="632">
+   <red-def:object object_ref="oval:com.redhat.rhsa:obj:20191708001"/>
+   <red-def:state state_ref="oval:com.redhat.rhsa:ste:20191708001"/>
+  </red-def:rpminfo_test>
+  <red-def:rpminfo_test check="at least one" comment="ansible is signed with Red Hat redhatrelease2 key" id="oval:com.redhat.rhsa:tst:20191708002" version="632">
+   <red-def:object object_ref="oval:com.redhat.rhsa:obj:20191708001"/>
+   <red-def:state state_ref="oval:com.redhat.rhsa:ste:20191708002"/>
+  </red-def:rpminfo_test>
+  <red-def:rpmverifyfile_test check="at least one" comment="Red Hat Enterprise Linux 8 is installed" id="oval:com.redhat.rhsa:tst:20191708003" version="632">
+   <red-def:object object_ref="oval:com.redhat.rhsa:obj:20191708002"/>
+   <red-def:state state_ref="oval:com.redhat.rhsa:ste:20191708003"/>
+  </red-def:rpmverifyfile_test>
+  <red-def:rpmverifyfile_test check="none satisfy" comment="Red Hat Enterprise Linux must be installed" id="oval:com.redhat.rhsa:tst:20191708004" version="632">
+   <red-def:object object_ref="oval:com.redhat.rhsa:obj:20191708002"/>
+   <red-def:state state_ref="oval:com.redhat.rhsa:ste:20191708004"/>
+  </red-def:rpmverifyfile_test>
+  <red-def:rpminfo_test check="at least one" comment="ansible is earlier than 0:2.8.4-1.el8ae" id="oval:com.redhat.rhsa:tst:20192542001" version="637">
+   <red-def:object object_ref="oval:com.redhat.rhsa:obj:20191708001"/>
+   <red-def:state state_ref="oval:com.redhat.rhsa:ste:20192542001"/>
+  </red-def:rpminfo_test>
+  <red-def:rpminfo_test check="at least one" comment="ansible is earlier than 0:2.8.6-1.el8ae" id="oval:com.redhat.rhsa:tst:20193203001" version="633">
+   <red-def:object object_ref="oval:com.redhat.rhsa:obj:20191708001"/>
+   <red-def:state state_ref="oval:com.redhat.rhsa:ste:20193203001"/>
+  </red-def:rpminfo_test>
+  <red-def:rpminfo_test check="at least one" comment="ansible is earlier than 0:2.8.7-1.el8ae" id="oval:com.redhat.rhsa:tst:20193926001" version="632">
+   <red-def:object object_ref="oval:com.redhat.rhsa:obj:20191708001"/>
+   <red-def:state state_ref="oval:com.redhat.rhsa:ste:20193926001"/>
+  </red-def:rpminfo_test>
+  <red-def:rpminfo_test check="at least one" comment="ansible is earlier than 0:2.8.8-1.el8ae" id="oval:com.redhat.rhsa:tst:20200216001" version="632">
+   <red-def:object object_ref="oval:com.redhat.rhsa:obj:20191708001"/>
+   <red-def:state state_ref="oval:com.redhat.rhsa:ste:20200216001"/>
+  </red-def:rpminfo_test>
+ </tests>
+ <objects>
+  <red-def:rpminfo_object id="oval:com.redhat.rhsa:obj:20191708001" version="632">
+   <red-def:name>ansible</red-def:name>
+  </red-def:rpminfo_object>
+  <red-def:rpmverifyfile_object id="oval:com.redhat.rhsa:obj:20191708002" version="632">
+   <red-def:behaviors noconfigfiles="true" noghostfiles="true" nogroup="true" nolinkto="true" nomd5="true" nomode="true" nomtime="true" nordev="true" nosize="true" nouser="true"/>
+   <red-def:name operation="pattern match"/>
+   <red-def:epoch operation="pattern match"/>
+   <red-def:version operation="pattern match"/>
+   <red-def:release operation="pattern match"/>
+   <red-def:arch operation="pattern match"/>
+   <red-def:filepath>/etc/redhat-release</red-def:filepath>
+  </red-def:rpmverifyfile_object>
+ </objects>
+ <states>
+  <red-def:rpminfo_state id="oval:com.redhat.rhsa:ste:20191708001" version="632">
+   <red-def:evr datatype="evr_string" operation="less than">0:2.8.2-1.el8ae</red-def:evr>
+  </red-def:rpminfo_state>
+  <red-def:rpminfo_state id="oval:com.redhat.rhsa:ste:20191708002" version="632">
+   <red-def:signature_keyid operation="equals">199e2f91fd431d51</red-def:signature_keyid>
+  </red-def:rpminfo_state>
+  <red-def:rpmverifyfile_state id="oval:com.redhat.rhsa:ste:20191708003" version="632">
+   <red-def:name operation="pattern match">^redhat-release</red-def:name>
+   <red-def:version operation="pattern match">^8[^\d]</red-def:version>
+  </red-def:rpmverifyfile_state>
+  <red-def:rpmverifyfile_state id="oval:com.redhat.rhsa:ste:20191708004" version="632">
+   <red-def:name operation="pattern match">^redhat-release</red-def:name>
+  </red-def:rpmverifyfile_state>
+  <red-def:rpminfo_state id="oval:com.redhat.rhsa:ste:20192542001" version="637">
+   <red-def:evr datatype="evr_string" operation="less than">0:2.8.4-1.el8ae</red-def:evr>
+  </red-def:rpminfo_state>
+  <red-def:rpminfo_state id="oval:com.redhat.rhsa:ste:20193203001" version="633">
+   <red-def:evr datatype="evr_string" operation="less than">0:2.8.6-1.el8ae</red-def:evr>
+  </red-def:rpminfo_state>
+  <red-def:rpminfo_state id="oval:com.redhat.rhsa:ste:20193926001" version="632">
+   <red-def:evr datatype="evr_string" operation="less than">0:2.8.7-1.el8ae</red-def:evr>
+  </red-def:rpminfo_state>
+  <red-def:rpminfo_state id="oval:com.redhat.rhsa:ste:20200216001" version="632">
+   <red-def:evr datatype="evr_string" operation="less than">0:2.8.8-1.el8ae</red-def:evr>
+  </red-def:rpminfo_state>
+ </states>
+</oval_definitions>
