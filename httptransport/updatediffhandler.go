@@ -4,158 +4,72 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"path"
 
 	"github.com/google/uuid"
-	"github.com/quay/claircore/pkg/jsonerr"
-
 	"github.com/quay/clair/v4/matcher"
+	je "github.com/quay/claircore/pkg/jsonerr"
 )
 
-type updateDiffHandler struct {
-	matcher.Differ
-}
-
-func (h *updateDiffHandler) getLatest(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	ctx := r.Context()
-	var validator string
-	if latest, err := h.Differ.LatestUpdateOperation(ctx); err == nil {
-		// Using a validator is an optimization.
-		validator = `"` + latest.String() + `"`
-		if unmodified(r, validator) {
-			w.WriteHeader(http.StatusNotModified)
-			return
-		}
-	}
-
-	m, err := h.LatestUpdateOperations(ctx)
-	if err != nil {
-		res := &jsonerr.Response{
-			Code:    "update-error",
-			Message: fmt.Sprintf("failed to get latest update operations: %v", err),
-		}
-		jsonerr.Error(w, res, http.StatusInternalServerError)
-		return
-	}
-	if validator != "" {
-		w.Header().Set("etag", validator)
-	}
-	defer writerError(w, &err)()
-	err = json.NewEncoder(w).Encode(m)
-}
-
-func (h *updateDiffHandler) deleteRef(w http.ResponseWriter, r *http.Request, ref uuid.UUID) {
-	if r.Method != http.MethodDelete {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	ctx := r.Context()
-	if err := h.DeleteUpdateOperations(ctx, ref); err != nil {
-		res := &jsonerr.Response{
-			Code:    "update-error",
-			Message: fmt.Sprintf("failed to delete diff: %v", err),
-		}
-		jsonerr.Error(w, res, http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-}
-
-func (h *updateDiffHandler) getUpdates(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	ctx := r.Context()
-	var prev, cur uuid.UUID
-	var err error
-	q := r.URL.Query()
-	prevQ, curQ := q.Get("prev"), q.Get("cur")
-
-	cur, err = uuid.Parse(curQ)
-	if err != nil {
-		res := &jsonerr.Response{
-			Code:    "update-error",
-			Message: fmt.Sprintf("malformed ref: %q", curQ),
-		}
-		jsonerr.Error(w, res, http.StatusBadRequest)
-		return
-	}
-	if prevQ == "" {
-		prev = uuid.Nil
-	} else {
-		prev, err = uuid.Parse(prevQ)
-		if err != nil {
-			res := &jsonerr.Response{
-				Code:    "update-error",
-				Message: fmt.Sprintf("malformed ref: %q", prevQ),
+// UpdateDiffHandler provides an endpoint to GET update diffs
+// when provided an UpdateOperation ref.
+func UpdateDiffHandler(serv matcher.Differ) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		if r.Method != http.MethodGet {
+			resp := &je.Response{
+				Code:    "method-not-allowed",
+				Message: "endpoint only allows GET",
 			}
-			jsonerr.Error(w, res, http.StatusBadRequest)
+			je.Error(w, resp, http.StatusMethodNotAllowed)
 			return
 		}
+		// prev param is optional.
+		var prev uuid.UUID
+		var err error
+		if param, ok := r.URL.Query()["prev"]; ok {
+			if len(param) != 0 {
+				prev, err = uuid.Parse(param[0])
+				if err != nil {
+					resp := &je.Response{
+						Code:    "bad-request",
+						Message: "could not parse \"prev\" query param into uuid",
+					}
+					je.Error(w, resp, http.StatusBadRequest)
+					return
+				}
+			}
+		}
+		// cur param is required
+		var cur uuid.UUID
+		param, ok := r.URL.Query()["cur"]
+		if !ok || len(param) == 0 {
+			resp := &je.Response{
+				Code:    "bad-request",
+				Message: "\"cur\" query param is required",
+			}
+			je.Error(w, resp, http.StatusBadRequest)
+			return
+		}
+		if cur, err = uuid.Parse(param[0]); err != nil {
+			resp := &je.Response{
+				Code:    "bad-request",
+				Message: "could not parse \"cur\" query param into uuid",
+			}
+			je.Error(w, resp, http.StatusBadRequest)
+			return
+		}
+
+		diff, err := serv.UpdateDiff(ctx, prev, cur)
+		if err != nil {
+			resp := &je.Response{
+				Code:    "internal server error",
+				Message: fmt.Sprintf("could not get update operations: %v", err),
+			}
+			je.Error(w, resp, http.StatusInternalServerError)
+			return
+		}
+
+		defer writerError(w, &err)()
+		err = json.NewEncoder(w).Encode(&diff)
 	}
-	u, err := h.UpdateDiff(ctx, prev, cur)
-	if err != nil {
-		res := &jsonerr.Response{
-			Code:    "update-error",
-			Message: fmt.Sprintf("failed to get diff: %v", err),
-		}
-		jsonerr.Error(w, res, http.StatusInternalServerError)
-		return
-	}
-	defer writerError(w, &err)()
-	err = json.NewEncoder(w).Encode(u)
-}
-
-// NOTE(hank) This doc comment doesn't talk about the constant that's used in
-// code, because that'd just be annoying to read. So if the constant changes,
-// make sure to make changes here, too.
-
-/*
-UpdateDiffHandler returns a Handler that services the following endpoints rooted
-at "/api/v1/internal/updates".
-
-   /api/v1/internal/updates
-   /api/v1/internal/updates/
-
-These endpoints return the set of the latest update operations per-updater.
-GET is the only allowed method.
-
-   /api/v1/internal/updates/$ref
-
-This endpoint is used with DELETE to mark a ref as no longer being needed. No
-other methods are allowed.
-
-   /api/v1/internal/updates/diff
-
-This endpoint reports the difference of two update operations. It is used with
-two query parameters, "prev" and "cur", which are update operation references.
-"Prev" may be omitted, in which case the first known operation will be used.
-GET is the only allowed method.
-*/
-func UpdateDiffHandler(d matcher.Differ) (http.Handler, error) {
-	h := &updateDiffHandler{d}
-	mux := http.NewServeMux()
-	mux.HandleFunc(path.Clean(UpdatesAPIPath), http.HandlerFunc(h.getLatest))
-	mux.HandleFunc(UpdatesAPIPath, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == UpdatesAPIPath {
-			h.getLatest(w, r)
-			return
-		}
-		ref, err := uuid.Parse(path.Base(r.URL.Path))
-		if err == nil {
-			h.deleteRef(w, r, ref)
-			return
-		}
-		w.WriteHeader(http.StatusNotFound)
-	}))
-	mux.HandleFunc(path.Join(UpdatesAPIPath, "diff"), http.HandlerFunc(h.getUpdates))
-	return mux, nil
 }

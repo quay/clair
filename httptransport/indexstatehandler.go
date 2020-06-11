@@ -9,13 +9,13 @@ import (
 	"github.com/quay/clair/v4/indexer"
 )
 
-// StateHandler utilizes a Stater to report the
+// IndexStateHandler utilizes a Stater to report the
 // curent runtime state of an Indexer.
 //
 // Indexers running with different scanner versions
 // will produce unique states and indicate to clients
 // a re-index is necessary.
-func StateHandler(service indexer.Stater) http.HandlerFunc {
+func IndexStateHandler(service indexer.Stater) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)

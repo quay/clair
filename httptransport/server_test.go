@@ -28,8 +28,9 @@ func newTestMatcher() *testMatcher {
 		},
 		differ: differ{
 			delete:     func(context.Context, ...uuid.UUID) error { return nil },
-			latest:     func(context.Context) (uuid.UUID, error) { return uuid.Nil, nil },
-			latestOps:  func(context.Context) (map[string]uuid.UUID, error) { return nil, nil },
+			ops:        func(context.Context, ...string) (map[string][]driver.UpdateOperation, error) { return nil, nil },
+			latestOp:   func(context.Context) (uuid.UUID, error) { return uuid.Nil, nil },
+			latestOps:  func(context.Context) (map[string][]driver.UpdateOperation, error) { return nil, nil },
 			updateDiff: func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error) { return nil, nil },
 		},
 	}
@@ -62,7 +63,7 @@ func TestUpdateEndpoints(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	u.Path = path.Join(u.Path, internalRoot, "updates", "")
+	u.Path = path.Join(u.Path, UpdateOperationAPIPath, "")
 	t.Log(u)
 
 	res, err := srv.Client().Get(u.String())

@@ -24,8 +24,9 @@ const (
 	VulnerabilityReportPath = apiRoot + "vulnerability_report/"
 	IndexAPIPath            = apiRoot + "index_report"
 	IndexReportAPIPath      = apiRoot + "index_report/"
-	StateAPIPath            = apiRoot + "index_state"
-	UpdatesAPIPath          = internalRoot + "updates/"
+	IndexStateAPIPath       = apiRoot + "index_state"
+	UpdateOperationAPIPath  = internalRoot + "update_operation/"
+	UpdateDiffAPIPath       = internalRoot + "update_diff/"
 	OpenAPIV1Path           = "/openapi/v1"
 )
 
@@ -129,13 +130,13 @@ func (t *Server) configureDiscovery() error {
 }
 
 // configureDevMode configures the HttpTrasnport for
-// DevMode.
+// ComboMode.
 //
 // This mode runs both Indexer and Matcher in a single process.
 func (t *Server) configureComboMode() error {
 	// requires both indexer and matcher services
 	if t.indexer == nil || t.matcher == nil {
-		return clairerror.ErrNotInitialized{"DevMode requires both indexer and macher services"}
+		return clairerror.ErrNotInitialized{"Combo mode requires both indexer and macher services"}
 	}
 
 	// vulnerability report handler register
@@ -174,13 +175,13 @@ func (t *Server) configureComboMode() error {
 	// state handler register
 	stateH := intromw.Handler(
 		othttp.NewHandler(
-			StateHandler(t.indexer),
-			StateAPIPath,
+			IndexStateHandler(t.indexer),
+			IndexStateAPIPath,
 			t.traceOpt,
 		),
-		StateAPIPath,
+		IndexStateAPIPath,
 	)
-	t.Handle(StateAPIPath, othttp.WithRouteTag(StateAPIPath, stateH))
+	t.Handle(IndexStateAPIPath, othttp.WithRouteTag(IndexStateAPIPath, stateH))
 
 	return nil
 }
@@ -216,16 +217,16 @@ func (t *Server) configureIndexerMode() error {
 	)
 	t.Handle(IndexReportAPIPath, othttp.WithRouteTag(IndexReportAPIPath, indexReportH))
 
-	// state handler register
+	// index state handler register
 	stateH := intromw.Handler(
 		othttp.NewHandler(
-			StateHandler(t.indexer),
-			StateAPIPath,
+			IndexStateHandler(t.indexer),
+			IndexStateAPIPath,
 			t.traceOpt,
 		),
-		StateAPIPath,
+		IndexStateAPIPath,
 	)
-	t.Handle(StateAPIPath, othttp.WithRouteTag(StateAPIPath, stateH))
+	t.Handle(IndexStateAPIPath, othttp.WithRouteTag(IndexStateAPIPath, stateH))
 
 	return nil
 }
@@ -257,12 +258,26 @@ func (t *Server) configureUpdateEndpoints() error {
 		return clairerror.ErrNotInitialized{"matcher service required for update inspection endpoints"}
 	}
 
-	h, err := UpdateDiffHandler(t.matcher)
-	if err != nil {
-		return err
-	}
-	wh := intromw.Handler(othttp.NewHandler(h, UpdatesAPIPath, t.traceOpt), UpdatesAPIPath)
-	t.ServeMux.Handle(UpdatesAPIPath, othttp.WithRouteTag(UpdatesAPIPath, wh))
+	opH := intromw.Handler(
+		othttp.NewHandler(
+			UpdateOperationHandler(t.matcher),
+			UpdateOperationAPIPath,
+			t.traceOpt,
+		),
+		UpdateOperationAPIPath,
+	)
+
+	diffH := intromw.Handler(
+		othttp.NewHandler(
+			UpdateDiffHandler(t.matcher),
+			UpdateDiffAPIPath,
+			t.traceOpt,
+		),
+		UpdateDiffAPIPath,
+	)
+
+	t.Handle(UpdateOperationAPIPath, othttp.WithRouteTag(UpdateOperationAPIPath, opH))
+	t.Handle(UpdateDiffAPIPath, othttp.WithRouteTag(UpdateDiffAPIPath, diffH))
 
 	return nil
 }
@@ -308,6 +323,18 @@ func (t *Server) configureWithAuth() error {
 	default:
 	}
 	return nil
+}
+
+// unmodified determines whether to return a conditonal response
+func unmodified(r *http.Request, v string) bool {
+	if vs, ok := r.Header["If-None-Match"]; ok {
+		for _, rv := range vs {
+			if rv == v {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // WriterError is a helper that closes over an error that may be returned after
