@@ -3,20 +3,20 @@ package client_test
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"path"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
-	"github.com/quay/claircore/libvuln/driver"
 
 	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/httptransport/client"
+	"github.com/quay/claircore/libvuln/driver"
 )
 
 // TestDiffer puts the Differ methods of the client through its paces.
@@ -42,8 +42,8 @@ func TestDiffer(t *testing.T) {
 					w.WriteHeader(http.StatusMethodNotAllowed)
 					return
 				}
-				if !strings.HasPrefix(r.URL.Path, httptransport.UpdatesAPIPath) {
-					w.WriteHeader(http.StatusMethodNotAllowed)
+				if !strings.HasPrefix(r.URL.Path, httptransport.UpdateOperationAPIPath) {
+					w.WriteHeader(http.StatusNotFound)
 					return
 				}
 				got := path.Base(r.URL.Path)
@@ -71,9 +71,16 @@ func TestDiffer(t *testing.T) {
 		t.Run("Latest", func(t *testing.T) {
 			t.Parallel()
 			// Generate a set of names and refs.
-			want := make(map[string]uuid.UUID)
+			want := make(map[string][]driver.UpdateOperation)
 			for i := 0; i < 10; i++ {
-				want[strconv.Itoa(i)] = uuid.New()
+				want[strconv.Itoa(i)] = []driver.UpdateOperation{
+					{
+						Ref:         uuid.New(),
+						Date:        time.Now(),
+						Fingerprint: "xyz",
+						Updater:     "test-updater",
+					},
+				}
 			}
 			validator := `"validator"`
 
@@ -83,8 +90,8 @@ func TestDiffer(t *testing.T) {
 					w.WriteHeader(http.StatusMethodNotAllowed)
 					return
 				}
-				if !strings.HasPrefix(r.URL.Path, httptransport.UpdatesAPIPath) {
-					w.WriteHeader(http.StatusBadRequest)
+				if !strings.HasPrefix(r.URL.Path, httptransport.UpdateOperationAPIPath) {
+					w.WriteHeader(http.StatusNotFound)
 					return
 				}
 				if v := r.Header.Get("If-None-Match"); v != "" && v == validator {
@@ -115,11 +122,15 @@ func TestDiffer(t *testing.T) {
 					t.Error(cmp.Diff(got, want))
 				}
 			})
+			// second attempt will be served from cache
 			t.Run("Second", func(t *testing.T) {
 				// Do the call.
-				_, err := c.LatestUpdateOperations(ctx)
-				if got, want := err, client.ErrUnchanged; !errors.Is(got, want) {
-					t.Errorf("got: %v, want: %v", got, want)
+				got, err := c.LatestUpdateOperations(ctx)
+				if err != nil {
+					t.Error(err)
+				}
+				if !cmp.Equal(got, want) {
+					t.Error(cmp.Diff(got, want))
 				}
 			})
 		})
@@ -129,8 +140,8 @@ func TestDiffer(t *testing.T) {
 			// Create two refs and a delta between them.
 			prev, cur := uuid.New(), uuid.New()
 			want := &driver.UpdateDiff{
-				A:       driver.UpdateOperation{Ref: prev},
-				B:       driver.UpdateOperation{Ref: cur},
+				Prev:    driver.UpdateOperation{Ref: prev},
+				Cur:     driver.UpdateOperation{Ref: cur},
 				Added:   nil,
 				Removed: nil,
 			}

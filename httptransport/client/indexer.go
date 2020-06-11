@@ -88,7 +88,7 @@ func (s *HTTP) IndexReport(ctx context.Context, manifest claircore.Digest) (*cla
 }
 
 func (s *HTTP) State(ctx context.Context) (string, error) {
-	u, err := s.addr.Parse(httptransport.StateAPIPath)
+	u, err := s.addr.Parse(httptransport.IndexStateAPIPath)
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %v", err)
 	}
