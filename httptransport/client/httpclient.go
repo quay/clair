@@ -4,13 +4,59 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"sync"
 	"sync/atomic"
+
+	"github.com/quay/claircore/libvuln/driver"
 )
+
+// uoCache caches an UpdateOperation
+// map when the server provides a conditional
+// response
+type uoCache struct {
+	sync.RWMutex
+	validator string
+	uo        map[string][]driver.UpdateOperation
+}
+
+// Set persists the update operations map and it's associated
+// validator string used in conditional requests.
+//
+// It is safe for concurrent use.
+func (c *uoCache) Set(m map[string][]driver.UpdateOperation, v string) {
+	c.Lock()
+	defer c.Unlock()
+	c.uo = m
+	c.validator = v
+}
+
+// Copy returns a copy of the cache contents to the caller.
+//
+// It is safe for concurrent use.
+func (c *uoCache) Copy() map[string][]driver.UpdateOperation {
+	m := map[string][]driver.UpdateOperation{}
+	c.RLock()
+	defer c.RUnlock()
+	for u, ops := range c.uo {
+		o := make([]driver.UpdateOperation, len(ops), len(ops))
+		copy(o, ops)
+		m[u] = o
+	}
+	return m
+}
+
+func newOUCache() *uoCache {
+	return &uoCache{
+		RWMutex: sync.RWMutex{},
+	}
+}
 
 // HTTP implements access to clair interfaces over HTTP
 type HTTP struct {
-	addr *url.URL
-	c    *http.Client
+	addr          *url.URL
+	c             *http.Client
+	uoCache       *uoCache
+	uoLatestCache *uoCache
 
 	diffValidator atomic.Value
 }
@@ -29,8 +75,10 @@ func NewHTTP(ctx context.Context, opt ...Option) (*HTTP, error) {
 	}
 
 	c := &HTTP{
-		addr: addr,
-		c:    http.DefaultClient,
+		addr:          addr,
+		c:             http.DefaultClient,
+		uoCache:       newOUCache(),
+		uoLatestCache: newOUCache(),
 	}
 	c.diffValidator.Store("")
 

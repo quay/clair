@@ -12,18 +12,6 @@ import (
 	"github.com/quay/clair/v4/indexer"
 )
 
-// unmodified determines whether to return a conditonal response
-func unmodified(r *http.Request, v string) bool {
-	if vs, ok := r.Header["If-None-Match"]; ok {
-		for _, rv := range vs {
-			if rv == v {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 // IndexReportHandler utilizes a Reporter to serialize
 // and return a claircore.IndexReport given a path parameter
 func IndexReportHandler(serv indexer.StateReporter) http.HandlerFunc {
