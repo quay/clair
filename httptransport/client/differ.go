@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -152,25 +151,11 @@ func (c *HTTP) updateOperations(ctx context.Context, req *http.Request, cache *u
 		// check for etag, if exists store the value and add returned map
 		// to cache
 		if v := res.Header.Get("etag"); v != "" && !strings.HasPrefix(v, "W/") {
-			cache.Lock()
-			cache.uo = m
-			cache.validator = v
-			cache.Unlock()
+			cache.Set(m, v)
 		}
-		return m, nil
+		return cache.Copy(), nil
 	case http.StatusNotModified:
-		// received conditional response, serve map from cache
-		cache.RLock()
-		// make a copy
-		m := map[string][]driver.UpdateOperation{}
-		for u, ops := range cache.uo {
-			o := make([]driver.UpdateOperation, len(ops), len(ops))
-			copy(o, ops)
-			log.Printf("%v %v", o, ops)
-			m[u] = o
-		}
-		cache.RUnlock()
-		return m, nil
+		return cache.Copy(), nil
 	default:
 	}
 	return nil, fmt.Errorf("%v: unexpected status: %s", req.URL.Path, res.Status)

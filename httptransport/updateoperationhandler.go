@@ -59,8 +59,7 @@ func (h *UOHandler) Get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	// handle conditional request. this is an optimization
 	if ref, err := h.serv.LatestUpdateOperation(ctx); err == nil {
-		var validator string
-		validator = `"` + ref.String() + `"`
+		validator := `"` + ref.String() + `"`
 		if unmodified(r, validator) {
 			w.WriteHeader(http.StatusNotModified)
 			return
@@ -68,12 +67,7 @@ func (h *UOHandler) Get(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("etag", validator)
 	}
 
-	var latest string
-	if param, ok := r.URL.Query()["latest"]; ok {
-		if len(param) != 0 {
-			latest = param[0]
-		}
-	}
+	latest := r.URL.Query().Get("latest")
 
 	var uos map[string][]driver.UpdateOperation
 	var err error

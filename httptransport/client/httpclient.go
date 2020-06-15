@@ -19,6 +19,32 @@ type uoCache struct {
 	uo        map[string][]driver.UpdateOperation
 }
 
+// Set persists the update operations map and it's associated
+// validator string used in conditional requests.
+//
+// It is safe for concurrent use.
+func (c *uoCache) Set(m map[string][]driver.UpdateOperation, v string) {
+	c.Lock()
+	defer c.Unlock()
+	c.uo = m
+	c.validator = v
+}
+
+// Copy returns a copy of the cache contents to the caller.
+//
+// It is safe for concurrent use.
+func (c *uoCache) Copy() map[string][]driver.UpdateOperation {
+	m := map[string][]driver.UpdateOperation{}
+	c.RLock()
+	defer c.RUnlock()
+	for u, ops := range c.uo {
+		o := make([]driver.UpdateOperation, len(ops), len(ops))
+		copy(o, ops)
+		m[u] = o
+	}
+	return m
+}
+
 func newOUCache() *uoCache {
 	return &uoCache{
 		RWMutex: sync.RWMutex{},

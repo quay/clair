@@ -26,23 +26,22 @@ func UpdateDiffHandler(serv matcher.Differ) http.HandlerFunc {
 		// prev param is optional.
 		var prev uuid.UUID
 		var err error
-		if param, ok := r.URL.Query()["prev"]; ok {
-			if len(param) != 0 {
-				prev, err = uuid.Parse(param[0])
-				if err != nil {
-					resp := &je.Response{
-						Code:    "bad-request",
-						Message: "could not parse \"prev\" query param into uuid",
-					}
-					je.Error(w, resp, http.StatusBadRequest)
-					return
+		if param := r.URL.Query().Get("prev"); param != "" {
+			prev, err = uuid.Parse(param)
+			if err != nil {
+				resp := &je.Response{
+					Code:    "bad-request",
+					Message: "could not parse \"prev\" query param into uuid",
 				}
+				je.Error(w, resp, http.StatusBadRequest)
+				return
 			}
 		}
+
 		// cur param is required
 		var cur uuid.UUID
-		param, ok := r.URL.Query()["cur"]
-		if !ok || len(param) == 0 {
+		var param string
+		if param = r.URL.Query().Get("cur"); param == "" {
 			resp := &je.Response{
 				Code:    "bad-request",
 				Message: "\"cur\" query param is required",
@@ -50,7 +49,7 @@ func UpdateDiffHandler(serv matcher.Differ) http.HandlerFunc {
 			je.Error(w, resp, http.StatusBadRequest)
 			return
 		}
-		if cur, err = uuid.Parse(param[0]); err != nil {
+		if cur, err = uuid.Parse(param); err != nil {
 			resp := &je.Response{
 				Code:    "bad-request",
 				Message: "could not parse \"cur\" query param into uuid",
