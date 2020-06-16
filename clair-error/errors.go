@@ -86,10 +86,39 @@ func (e *ErrMatch) Unwrap() error {
 	return e.E
 }
 
+// ErrNotInitialized indicates an issue with initialization.
 type ErrNotInitialized struct {
 	Msg string
 }
 
 func (e ErrNotInitialized) Error() string {
 	return e.Msg
+}
+
+// ErrBadVulnerabilities indicates an issue where a set of Vulnerabilities could not be marshalled or unmarshalled
+// into JSON.
+type ErrBadVulnerabilities struct {
+	E error
+}
+
+func (e *ErrBadVulnerabilities) Error() string {
+	return e.E.Error()
+}
+
+func (e *ErrBadVulnerabilities) Unwrap() error {
+	return e.E
+}
+
+// ErrBadAffectedManifests indicates an issue where an AffectedManifests could not be marshalled or unmarshalled
+// into JSON.
+type ErrBadAffectedManifests struct {
+	E error
+}
+
+func (e *ErrBadAffectedManifests) Error() string {
+	return e.E.Error()
+}
+
+func (e *ErrBadAffectedManifests) Unwrap() error {
+	return e.E
 }

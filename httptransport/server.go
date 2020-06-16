@@ -25,6 +25,7 @@ const (
 	IndexAPIPath            = apiRoot + "index_report"
 	IndexReportAPIPath      = apiRoot + "index_report/"
 	IndexStateAPIPath       = apiRoot + "index_state"
+	AffectedManifestAPIPath = internalRoot + "affected_manifest/"
 	UpdateOperationAPIPath  = internalRoot + "update_operation/"
 	UpdateDiffAPIPath       = internalRoot + "update_diff/"
 	OpenAPIV1Path           = "/openapi/v1"
@@ -79,10 +80,6 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 		if e != nil {
 			return nil, e
 		}
-		e = t.configureUpdateEndpoints()
-		if e != nil {
-			return nil, e
-		}
 	case config.IndexerMode:
 		e = t.configureIndexerMode()
 		if e != nil {
@@ -90,10 +87,6 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 		}
 	case config.MatcherMode:
 		e = t.configureMatcherMode()
-		if e != nil {
-			return nil, e
-		}
-		e = t.configureUpdateEndpoints()
 		if e != nil {
 			return nil, e
 		}
@@ -139,49 +132,15 @@ func (t *Server) configureComboMode() error {
 		return clairerror.ErrNotInitialized{"Combo mode requires both indexer and macher services"}
 	}
 
-	// vulnerability report handler register
-	vulnReportH := intromw.Handler(
-		othttp.NewHandler(
-			VulnerabilityReportHandler(t.matcher, t.indexer),
-			VulnerabilityReportPath,
-			t.traceOpt,
-		),
-		VulnerabilityReportPath,
-	)
-	t.Handle(VulnerabilityReportPath, othttp.WithRouteTag(VulnerabilityReportPath, vulnReportH))
+	err := t.configureIndexerMode()
+	if err != nil {
+		return clairerror.ErrNotInitialized{"could not configure indexer: " + err.Error()}
+	}
 
-	// indexer handler register
-	indexH := intromw.Handler(
-		othttp.NewHandler(
-			IndexHandler(t.indexer),
-			IndexAPIPath,
-			t.traceOpt,
-		),
-		IndexAPIPath,
-	)
-	t.Handle(IndexAPIPath, othttp.WithRouteTag(IndexAPIPath, indexH))
-
-	// index report handler register
-	indexReportH := intromw.Handler(
-		othttp.NewHandler(
-			IndexReportHandler(t.indexer),
-			IndexReportAPIPath,
-			t.traceOpt,
-		),
-		IndexReportAPIPath,
-	)
-	t.Handle(IndexReportAPIPath, othttp.WithRouteTag(IndexReportAPIPath, indexReportH))
-
-	// state handler register
-	stateH := intromw.Handler(
-		othttp.NewHandler(
-			IndexStateHandler(t.indexer),
-			IndexStateAPIPath,
-			t.traceOpt,
-		),
-		IndexStateAPIPath,
-	)
-	t.Handle(IndexStateAPIPath, othttp.WithRouteTag(IndexStateAPIPath, stateH))
+	err = t.configureMatcherMode()
+	if err != nil {
+		return clairerror.ErrNotInitialized{"could not configure indexer: " + err.Error()}
+	}
 
 	return nil
 }
@@ -195,7 +154,18 @@ func (t *Server) configureIndexerMode() error {
 		return clairerror.ErrNotInitialized{"IndexerMode requires an indexer service"}
 	}
 
-	// indexer handler register
+	// affected manifest handler register
+	affectedH := intromw.Handler(
+		othttp.NewHandler(
+			AffectedManifestHandler(t.indexer),
+			AffectedManifestAPIPath,
+			t.traceOpt,
+		),
+		AffectedManifestAPIPath,
+	)
+	t.Handle(AffectedManifestAPIPath, othttp.WithRouteTag(AffectedManifestAPIPath, affectedH))
+
+	// index handler register
 	indexH := intromw.Handler(
 		othttp.NewHandler(
 			IndexHandler(t.indexer),
@@ -250,14 +220,7 @@ func (t *Server) configureMatcherMode() error {
 	)
 	t.Handle(VulnerabilityReportPath, othttp.WithRouteTag(VulnerabilityReportPath, vulnReportH))
 
-	return nil
-}
-
-func (t *Server) configureUpdateEndpoints() error {
-	if t.matcher == nil {
-		return clairerror.ErrNotInitialized{"matcher service required for update inspection endpoints"}
-	}
-
+	// update operation handler register
 	opH := intromw.Handler(
 		othttp.NewHandler(
 			UpdateOperationHandler(t.matcher),
@@ -266,7 +229,9 @@ func (t *Server) configureUpdateEndpoints() error {
 		),
 		UpdateOperationAPIPath,
 	)
+	t.Handle(UpdateOperationAPIPath, othttp.WithRouteTag(UpdateOperationAPIPath, opH))
 
+	// update diff handler register
 	diffH := intromw.Handler(
 		othttp.NewHandler(
 			UpdateDiffHandler(t.matcher),
@@ -275,8 +240,6 @@ func (t *Server) configureUpdateEndpoints() error {
 		),
 		UpdateDiffAPIPath,
 	)
-
-	t.Handle(UpdateOperationAPIPath, othttp.WithRouteTag(UpdateOperationAPIPath, opH))
 	t.Handle(UpdateDiffAPIPath, othttp.WithRouteTag(UpdateDiffAPIPath, diffH))
 
 	return nil

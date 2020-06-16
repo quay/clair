@@ -12,43 +12,6 @@ import (
 	"github.com/quay/claircore/libvuln/driver"
 )
 
-// Differ implements matcher.Differ by calling the func members.
-type differ struct {
-	delete     func(context.Context, ...uuid.UUID) error
-	ops        func(context.Context, ...string) (map[string][]driver.UpdateOperation, error)
-	latestOp   func(context.Context) (uuid.UUID, error)
-	latestOps  func(context.Context) (map[string][]driver.UpdateOperation, error)
-	updateDiff func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error)
-}
-
-// DeleteUpdateOperations marks the provided refs as seen and processed.
-func (d *differ) DeleteUpdateOperations(ctx context.Context, refs ...uuid.UUID) error {
-	return d.delete(ctx, refs...)
-}
-
-// UpdateDiff reports the differences between the provided refs.
-//
-// "Prev" can be `uuid.Nil` to indicate "earliest known ref."
-func (d *differ) UpdateDiff(ctx context.Context, prev uuid.UUID, cur uuid.UUID) (*driver.UpdateDiff, error) {
-	return d.updateDiff(ctx, prev, cur)
-}
-
-// UpdateOperations returns all the known UpdateOperations per updater.
-func (d *differ) UpdateOperations(ctx context.Context, updaters ...string) (map[string][]driver.UpdateOperation, error) {
-	return d.ops(ctx, updaters...)
-}
-
-// LatestUpdateOperations returns the most recent UpdateOperation per updater.
-func (d *differ) LatestUpdateOperations(ctx context.Context) (map[string][]driver.UpdateOperation, error) {
-	return d.latestOps(ctx)
-}
-
-// LatestUpdateOperation returns a ref for the most recent update operation
-// across all updaters.
-func (d *differ) LatestUpdateOperation(ctx context.Context) (uuid.UUID, error) {
-	return d.latestOp(ctx)
-}
-
 // TestUpdateDiffHandler is a parallel harness for testing a UpdateDiff handler.
 func TestUpdateDiffHandler(t *testing.T) {
 	t.Run("Matcher", testUpdateDiffMatcher)
