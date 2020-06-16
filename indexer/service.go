@@ -14,6 +14,7 @@ type Service interface {
 	Indexer
 	Reporter
 	Stater
+	Affected
 }
 
 // StateReporter is an aggregate interface providing both a Reporter and
@@ -30,12 +31,12 @@ type StateIndexer interface {
 	Stater
 }
 
-// Indexer is an interface providing a claircore.IndexReport given a claircore.Manifest
+// Indexer is an interface for computing a IndexReport given a Manifest.
 type Indexer interface {
 	Index(ctx context.Context, manifest *claircore.Manifest) (*claircore.IndexReport, error)
 }
 
-// Reporter is an interface providing a claircore.IndexReport provided a claircore.Digest which represents a manifest hash.
+// Reporter is an interface for retreiving an IndexReport given a manifest digest.
 type Reporter interface {
 	IndexReport(ctx context.Context, digest claircore.Digest) (*claircore.IndexReport, bool, error)
 }
@@ -43,4 +44,9 @@ type Reporter interface {
 // Stater is an interface which provides a unique token symbolizing a Clair's state.
 type Stater interface {
 	State(ctx context.Context) (string, error)
+}
+
+// Affected is an interface for reporting the manifests affected by a set of vulnerabilities.
+type Affected interface {
+	AffectedManifests(ctx context.Context, vulns []claircore.Vulnerability) (claircore.AffectedManifests, error)
 }

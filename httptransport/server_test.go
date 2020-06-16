@@ -36,24 +36,33 @@ func newTestMatcher() *testMatcher {
 	}
 }
 
-type scanner struct {
-	scan func(context.Context, *claircore.IndexReport) (*claircore.VulnerabilityReport, error)
-}
-
-func (s *scanner) Scan(ctx context.Context, ir *claircore.IndexReport) (*claircore.VulnerabilityReport, error) {
-	return s.scan(ctx, ir)
+func newTestIndexer() *indexerMock {
+	return &indexerMock{
+		index: func(ctx context.Context, manifest *claircore.Manifest) (*claircore.IndexReport, error) {
+			return nil, nil
+		},
+		report: func(ctx context.Context, digest claircore.Digest) (*claircore.IndexReport, bool, error) {
+			return nil, true, nil
+		},
+		state: func(ctx context.Context) (string, error) { return "", nil },
+		affected: func(ctx context.Context, vulns []claircore.Vulnerability) (claircore.AffectedManifests, error) {
+			return claircore.NewAffectedManifests(), nil
+		},
+	}
 }
 
 // TestUpdateEndpoints registers the handlers and tests that they're registered
 // at the correct endpoint.
 func TestUpdateEndpoints(t *testing.T) {
 	m := newTestMatcher()
+	i := newTestIndexer()
 	s := &Server{
 		matcher:  m,
+		indexer:  i,
 		ServeMux: http.NewServeMux(),
 		traceOpt: othttp.WithTracer(global.TraceProvider().Tracer("clair")),
 	}
-	if err := s.configureUpdateEndpoints(); err != nil {
+	if err := s.configureMatcherMode(); err != nil {
 		t.Error(err)
 	}
 

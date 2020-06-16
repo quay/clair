@@ -17,6 +17,40 @@ import (
 
 var _ indexer.Service = (*HTTP)(nil)
 
+func (s *HTTP) AffectedManifests(ctx context.Context, v []claircore.Vulnerability) (claircore.AffectedManifests, error) {
+	var affected claircore.AffectedManifests
+	buf := bytes.NewBuffer([]byte{})
+	err := json.NewEncoder(buf).Encode(struct {
+		V []claircore.Vulnerability `json:"vulnerabilities"`
+	}{
+		v,
+	})
+	if err != nil {
+		return affected, &clairerror.ErrBadVulnerabilities{err}
+	}
+
+	u, err := s.addr.Parse(httptransport.AffectedManifestAPIPath)
+	if err != nil {
+		return affected, fmt.Errorf("failed to parse api address: %v", err)
+	}
+	req, err := http.NewRequestWithContext(ctx, "POST", u.String(), buf)
+	if err != nil {
+		return affected, fmt.Errorf("failed to create request: %v", err)
+	}
+	resp, err := s.c.Do(req)
+	if resp.Body != nil {
+		defer resp.Body.Close()
+	}
+	if err != nil {
+		return affected, &clairerror.ErrRequestFail{Code: resp.StatusCode, Status: resp.Status}
+	}
+	err = json.NewDecoder(resp.Body).Decode(affected)
+	if err != nil {
+		return affected, &clairerror.ErrBadAffectedManifests{err}
+	}
+	return affected, nil
+}
+
 // Index receives a Manifest and returns a IndexReport providing the indexed
 // items in the resulting image.
 //
@@ -39,10 +73,12 @@ func (s *HTTP) Index(ctx context.Context, manifest *claircore.Manifest) (*clairc
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
 	resp, err := s.c.Do(req)
+	if resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to do request: %v", err)
 	}
-	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return nil, &clairerror.ErrRequestFail{Code: resp.StatusCode, Status: resp.Status}
 	}
@@ -67,10 +103,12 @@ func (s *HTTP) IndexReport(ctx context.Context, manifest claircore.Digest) (*cla
 		return nil, false, fmt.Errorf("failed to create request: %v", err)
 	}
 	resp, err := s.c.Do(req)
+	if resp.Body != nil {
+		defer resp.Body.Close()
+	}
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to do request: %v", err)
 	}
-	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, false, nil
 	}
@@ -97,11 +135,13 @@ func (s *HTTP) State(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("failed to create request: %v", err)
 	}
 	resp, err := s.c.Do(req)
+	if resp.Body != nil {
+		defer resp.Body.Close()
+	}
+
 	if err != nil {
 		return "", fmt.Errorf("failed to do request: %v", err)
 	}
-	defer resp.Body.Close()
-
 	buf := &bytes.Buffer{}
 	if _, err := buf.ReadFrom(resp.Body); err != nil {
 		return "", err
