@@ -36,6 +36,27 @@ matcher:
 	- "rhel"
 	- "suse"
 	- "ubuntu"
+notifier:
+  indexer_addr: http://clair-indexer:8080/
+  matcher_addr: http://clair-matcher:8080/
+  connstring: host=localhost port=5432 user=clair dbname=clair sslmode=disable
+  migrations: true
+  delivery_interval: 1m
+  poll_interval: 5m
+  # only webhook or amqp is allowed, configuring both is an error
+  webhook:
+    target: "http://webhook/"
+    callback: "http://clair-notifier/api/v1/notifications"
+  amqp:
+    exchange:
+        name: "" 
+        type: "direct"
+        durable: true
+        auto_delete: false
+    uri: "amqp://user:pass@host:10000/vhost"
+    routing_key: "notifications" 
+    callback: "http://clair-notifier/api/v1/notifications"
+
 trace:
   name: "jaeger"
   probability: 1
