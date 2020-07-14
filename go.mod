@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/go-stomp/stomp v2.0.6+incompatible
 	github.com/google/go-cmp v0.4.0
 	github.com/google/go-containerregistry v0.0.0-20191206185556-eb7c14b719c6
 	github.com/google/uuid v1.1.1
@@ -17,6 +18,7 @@ require (
 	github.com/quay/claircore v0.0.25
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
 	github.com/rs/zerolog v1.16.0
+	github.com/streadway/amqp v1.0.0
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/urfave/cli/v2 v2.2.0
 	go.opentelemetry.io/otel v0.2.1
