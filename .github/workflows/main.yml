@@ -38,6 +38,26 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
     container: docker.io/library/golang:${{ matrix.go }}-alpine
+    env:
+      POSTGRES_CONNECTION_STRING: "host=clair-db port=5432 user=clair dbname=clair sslmode=disable"
+      RABBITMQ_CONNECTION_STRING: "amqp://guest:guest@clair-rabbitmq:5672/"
+    services:
+      clair-db:
+        image: postgres:11.5
+        env:
+          POSTGRES_USER: "clair"
+          POSTGRES_DB: "clair"
+          POSTGRES_INITDB_ARGS: "--no-sync"
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      clair-rabbitmq:
+        image: rabbitmq:3.8.5
+        env:
+          RABBITMQ_VM_MEMORY_HIGH_WATERMARK: "85%"
+
     strategy:
       matrix:
         go: ['1.13', '1.14']
@@ -49,4 +69,4 @@ jobs:
       - name: Go Dependencies
         run: go mod vendor
       - name: Tests
-        run: go test ./...
+        run: go test -tags integration ./...
