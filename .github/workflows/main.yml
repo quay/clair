@@ -41,6 +41,7 @@ jobs:
     env:
       POSTGRES_CONNECTION_STRING: "host=clair-db port=5432 user=clair dbname=clair sslmode=disable"
       RABBITMQ_CONNECTION_STRING: "amqp://guest:guest@clair-rabbitmq:5672/"
+      STOMP_CONNECTION_STRING: "clair-activemq:61613"
     services:
       clair-db:
         image: postgres:11.5
@@ -57,6 +58,8 @@ jobs:
         image: rabbitmq:3.8.5
         env:
           RABBITMQ_VM_MEMORY_HIGH_WATERMARK: "85%"
+      clair-activemq:
+        image: webcenter/activemq:5.14.3
 
     strategy:
       matrix:

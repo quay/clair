@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -10,13 +11,50 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
 
 	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/matcher"
 )
 
-var _ matcher.Differ = (*HTTP)(nil)
+var _ matcher.Service = (*HTTP)(nil)
+
+func (c *HTTP) Scan(ctx context.Context, ir *claircore.IndexReport) (*claircore.VulnerabilityReport, error) {
+	u, err := c.addr.Parse(httptransport.VulnerabilityReportPath)
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := json.Marshal(&ir)
+	if err != nil {
+		return nil, err
+	}
+	buf := bytes.NewBuffer(b)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buf)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := c.c.Do(req)
+	if resp.Body != nil {
+		defer resp.Body.Close()
+	}
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%v: unexpected status: %s", u.Path, resp.Status)
+	}
+
+	var vr claircore.VulnerabilityReport
+	err = json.NewDecoder(resp.Body).Decode(&vr)
+	if err != nil {
+		return nil, err
+	}
+	return &vr, nil
+}
 
 // DeleteUpdateOperations attempts to delete the referenced update operations.
 func (c *HTTP) DeleteUpdateOperations(ctx context.Context, ref ...uuid.UUID) error {

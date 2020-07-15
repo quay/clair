@@ -28,10 +28,13 @@ local-dev-up: vendor
 	$(docker-compose) up -d traefik
 	$(docker-compose) up -d jaeger
 	$(docker-compose) up -d prometheus
+	$(docker-compose) up -d rabbitmq
+	$(docker-compose) up -d activemq
 	$(docker-compose) up -d clair-db
 	$(docker) exec -it clair-db bash -c 'while ! pg_isready; do echo "waiting for postgres"; sleep 2; done'
 	$(docker-compose) up -d indexer
 	$(docker-compose) up -d matcher
+	$(docker-compose) up -d notifier
 	$(docker-compose) up -d swagger-ui
 
 vendor: vendor/modules.txt
@@ -60,6 +63,16 @@ local-dev-indexer-restart:
 .PHONY: local-dev-matcher-restart
 local-dev-matcher-restart:
 	$(docker-compose) up -d --force-recreate matcher
+
+# restart the local development notifier, any local code changes will take effect
+.PHONY: local-dev-notifier-restart
+local-dev-notifier-restart:
+	$(docker-compose) up -d --force-recreate notifier
+
+# restart the local development rabbitmq
+.PHONY: local-dev-notifier-restart
+local-dev-rabbitmq-restart:
+	$(docker-compose) up -d --force-recreate notifier
 
 # restart the local development swagger-ui, any local code changes will take effect
 .PHONY: local-dev-swagger-ui-restart

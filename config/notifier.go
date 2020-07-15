@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/quay/clair/v4/notifier/amqp"
+	"github.com/quay/clair/v4/notifier/stomp"
 	"github.com/quay/clair/v4/notifier/webhook"
 )
 
@@ -43,4 +44,6 @@ type Notifier struct {
 	Webbook *webhook.Config `yaml:"webhook" json:"webbook"`
 	// Configures the notifier for AMQP delivery.
 	AMQP *amqp.Config `yaml:"amqp" json:"amqp"`
+	// Configures the notifier for STOMP delivery.
+	STOMP *stomp.Config `yaml:"stomp" json:"stomp"`
 }
