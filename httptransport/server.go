@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 
+	notifier "github.com/quay/clair/v4/notifier/service"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/plugin/othttp"
@@ -25,6 +26,7 @@ const (
 	IndexAPIPath            = apiRoot + "index_report"
 	IndexReportAPIPath      = apiRoot + "index_report/"
 	IndexStateAPIPath       = apiRoot + "index_state"
+	NotificationAPIPath     = apiRoot + "notification/"
 	AffectedManifestAPIPath = internalRoot + "affected_manifest/"
 	UpdateOperationAPIPath  = internalRoot + "update_operation/"
 	UpdateDiffAPIPath       = internalRoot + "update_diff/"
@@ -42,10 +44,11 @@ type Server struct {
 	*http.ServeMux
 	indexer  indexer.Service
 	matcher  matcher.Service
+	notifier notifier.Service
 	traceOpt othttp.Option
 }
 
-func New(ctx context.Context, conf config.Config, indexer indexer.Service, matcher matcher.Service) (*Server, error) {
+func New(ctx context.Context, conf config.Config, indexer indexer.Service, matcher matcher.Service, notifier notifier.Service) (*Server, error) {
 	log := zerolog.Ctx(ctx).With().
 		Str("component", "init/NewHttpTransport").
 		Logger()
@@ -64,6 +67,7 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 		ServeMux: mux,
 		indexer:  indexer,
 		matcher:  matcher,
+		notifier: notifier,
 		traceOpt: othttp.WithTracer(global.TraceProvider().Tracer("clair")),
 	}
 
@@ -87,6 +91,11 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 		}
 	case config.MatcherMode:
 		e = t.configureMatcherMode()
+		if e != nil {
+			return nil, e
+		}
+	case config.NotifierMode:
+		e = t.configureNotifierMode()
 		if e != nil {
 			return nil, e
 		}
@@ -139,7 +148,12 @@ func (t *Server) configureComboMode() error {
 
 	err = t.configureMatcherMode()
 	if err != nil {
-		return clairerror.ErrNotInitialized{"could not configure indexer: " + err.Error()}
+		return clairerror.ErrNotInitialized{"could not configure matcher: " + err.Error()}
+	}
+
+	err = t.configureNotifierMode()
+	if err != nil {
+		return clairerror.ErrNotInitialized{"could not configure notifier: " + err.Error()}
 	}
 
 	return nil
@@ -245,6 +259,28 @@ func (t *Server) configureMatcherMode() error {
 	return nil
 }
 
+// configureMatcherMode configures HttpTransport
+func (t *Server) configureNotifierMode() error {
+	// requires both an indexer and matcher service. indexer service
+	// is assumed to be a remote call over the network
+	if t.notifier == nil {
+		return clairerror.ErrNotInitialized{"NotifierMode requires a notifier service"}
+	}
+
+	// notifications callback handler
+	callbackH := intromw.Handler(
+		othttp.NewHandler(
+			NotificationHandler(t.notifier),
+			NotificationAPIPath,
+			t.traceOpt,
+		),
+		NotificationAPIPath,
+	)
+	t.Handle(NotificationAPIPath, othttp.WithRouteTag(NotificationAPIPath, callbackH))
+
+	return nil
+}
+
 // IntraserviceIssuer is the issuer that will be used if Clair is configured to
 // mint its own JWTs.
 const IntraserviceIssuer = `clair-intraservice`
@@ -300,7 +336,7 @@ func unmodified(r *http.Request, v string) bool {
 	return false
 }
 
-// WriterError is a helper that closes over an error that may be returned after
+// writerError is a helper that closes over an error that may be returned after
 // writing a response body starts.
 //
 // The normal error flow can't be used, because the HTTP status code will have

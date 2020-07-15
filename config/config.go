@@ -48,13 +48,13 @@ type Config struct {
 	// "error"
 	// "fatal"
 	// "panic"
-	LogLevel string  `yaml:"log_level" json:"log_level"`
-	Indexer  Indexer `yaml:"indexer" json:"indexer"`
-	Matcher  Matcher `yaml:"matcher"`
-	Notifier Notifier
-	Auth     Auth    `yaml:"auth"`
-	Trace    Trace   `yaml:"trace"`
-	Metrics  Metrics `yaml:"metrics"`
+	LogLevel string   `yaml:"log_level" json:"log_level"`
+	Indexer  Indexer  `yaml:"indexer" json:"indexer"`
+	Matcher  Matcher  `yaml:"matcher"`
+	Notifier Notifier `yaml:"notifier"`
+	Auth     Auth     `yaml:"auth"`
+	Trace    Trace    `yaml:"trace"`
+	Metrics  Metrics  `yaml:"metrics"`
 }
 
 // Validate confirms the necessary values to support

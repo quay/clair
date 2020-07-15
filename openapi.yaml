@@ -16,6 +16,74 @@ info:
     url: "http://www.apache.org/licenses/"
 
 paths:
+  /api/v1/notification/{notification_id}:
+    delete:
+      tags:
+        - Notifier
+      operationId: "notifications delete"
+      description: |
+        Issues a delete of the provided notification id and all associated notifications.
+        After this delete clients will no longer be able to retrieve notifications.
+      parameters:
+        - in: path
+          name: notification_id
+          schema:
+            type: string
+          description: "A notification ID returned by a callback"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                status: ok
+        400:
+          $ref: '#/components/responses/BadRequest'
+        405:
+          $ref: '#/components/responses/MethodNotAllowed'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+    get:
+      tags:
+        - Notifier
+      operationId: "notifications get"
+      summary: "Retreive a paginated result of notifications for the provided id"
+      description: |
+        By performing a GET with a notification_id as a path parameter the client
+        will retrieve a paginated response of notifcation objects
+      parameters:
+        - in: path
+          name: notification_id
+          schema:
+            type: string
+          description: "A notification ID returned by a callback"
+        - in: query
+          name: page_size
+          schema:
+            type: int
+          description: "The maximum number of notifications to deliver in a single page."
+        - in: query
+          name: next
+          schema:
+            type: string
+          description: |
+            The next page to fetch via id. Typically this number is provided to you 
+            on initial response in the page.next field.
+            The first GET request may omit this field.
+      responses:
+        200:
+          description: "A paginated list of notifications"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedNotifications'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        405:
+          $ref: '#/components/responses/MethodNotAllowed'
+        500:
+          $ref: '#/components/responses/InternalServerError'
+
   /api/v1/index_report:
     post:
       tags:
@@ -255,8 +323,148 @@ components:
           version: "1.6.11"
           kind: "source"
           source: null
+    
+    VulnSummary:
+      value:
+        name: "CVE-2009-5155"
+        description: |
+          In the GNU C Library (aka glibc or libc6) before 2.28,
+          parse_reg_exp in posix/regcomp.c misparses alternatives,
+          which allows attackers to cause a denial of service (assertion
+          failure and application exit) or trigger an incorrect result
+          by attempting a regular-expression match."
+        normalized_severity: "Low"
+        fixed_in_version: "v0.0.1"
+        links: "http://link-to-advisory"
+        package:
+          id: "0"
+          name: "glibc"
+          version: ""
+          kind: ""
+          source: null
+          package_db: ""
+          repository_hint: ""
+        dist:
+          id: "0"
+          did: "ubuntu"
+          name: "Ubuntu"
+          version: "18.04.3 LTS (Bionic Beaver)"
+          version_code_name: "bionic"
+          version_id: "18.04"
+          arch: ""
+          cpe: ""
+          pretty_name: ""
+        repo:
+          id: "0"
+          name: "Ubuntu 18.04.3 LTS"
+          key: ""
+          uri: ""
 
   schemas:
+    Page:
+      title: Page
+      description: "A page object indicating to the client how to retrieve multiple pages of a particular entity."
+      properties:
+        size:
+          description: "The maximum number of elements in a page"
+          type: int
+          example: 1
+        next:
+          description: "The next id to submit to the api to continue paging"
+          type: string
+          example: "1b4d0db2-e757-4150-bbbb-543658144205"
+
+    PagedNotifications:
+      title: PagedNotifications
+      type: object
+      description: "A page object followed by a list of notifications"
+      properties:
+        page:
+          description: |
+            A page object informing the client the next page to retrieve.
+            If page.next becomes "-1" the client should stop paging.
+          type: object
+          example:
+            size: 100
+            next: "1b4d0db2-e757-4150-bbbb-543658144205"
+        notifications:
+          description: "A list of notifications within this page"
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+
+    Callback:
+      title: Callback
+      type: object
+      description: "A callback for clients to retrieve notifications"
+      properties:
+        notification_id:
+          description: "the unique identifier for this set of notifications"
+          type: string
+          example: "269886f3-0146-4f08-9bf7-cb1138d48643"
+        callback:
+          description: "the url where notifications can be retrieved"
+          type: string
+          example: "http://clair-notifier/api/v1/notifications/269886f3-0146-4f08-9bf7-cb1138d48643"
+
+    VulnSummary:
+      title: VulnSummary
+      type: object
+      description: "A summary of a vulnerability"
+      properties:
+        name: 
+          description: "the vulnerability name"
+          type: string
+          example: "CVE-2009-5155"
+        fixed_in_version: 
+          description: "the version at which the vulnerability is fixed in. empty if not fixed."
+          type: string
+          example: "v0.0.1"
+        links:
+          description: "links to external information about vulnerability"
+          type: string
+          example: "http://link-to-advisory"
+        description: 
+          description: "the vulnerability name"
+          type: string
+          example: |
+            In the GNU C Library (aka glibc or libc6) before 2.28,
+            parse_reg_exp in posix/regcomp.c misparses alternatives,
+            which allows attackers to cause a denial of service (assertion
+            failure and application exit) or trigger an incorrect result
+            by attempting a regular-expression match."
+        normalized_severity:
+          description: |
+            A well defined set of severity strings guaranteed to be present.
+          type: string
+          enum: [Unknown, Negligible, Low, Medium, High, Critical, Defcon1]
+        package:
+          $ref: '#/components/schemas/Package'
+        distribution:
+          $ref: '#/components/schemas/Distribution'
+        repository:
+          $ref: '#/components/schemas/Repository'
+
+    Notification:
+      title: Notification
+      type: object
+      description: "A notification expressing a change in a manifest affected by a vulnerability"
+      properties:
+        id:
+          description: "a unique identifier for this notification"
+          type: string
+          example: "5e4b387e-88d3-4364-86fd-063447a6fad2"
+        manifest:
+          description: "the hash of the manifest affected by the provided vulnerability"
+          type: string
+          example: "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
+        reason:
+          description: "the reason for the notifcation, [added | removed]"
+          type: string
+          example: "added"
+        vulnerability:
+            $ref: '#/components/schemas/VulnSummary'
+
     Environment:
       title: Environment
       type: object

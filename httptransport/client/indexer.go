@@ -44,7 +44,7 @@ func (s *HTTP) AffectedManifests(ctx context.Context, v []claircore.Vulnerabilit
 	if err != nil {
 		return affected, &clairerror.ErrRequestFail{Code: resp.StatusCode, Status: resp.Status}
 	}
-	err = json.NewDecoder(resp.Body).Decode(affected)
+	err = json.NewDecoder(resp.Body).Decode(&affected)
 	if err != nil {
 		return affected, &clairerror.ErrBadAffectedManifests{err}
 	}

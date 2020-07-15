@@ -35,9 +35,45 @@ services:
       - "--accesslog=true"
     ports: 
       - "6060:6060"
-      - "8079:8080"
+      - "7000:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+
+  activemq:
+    container_name: clair-activemq
+    hostname: clair-activemq
+    image: webcenter/activemq:5.14.3
+    ports:
+      - "8161:8161"
+      - "61613:61613"
+
+  rabbitmq:
+    container_name: clair-rabbitmq
+    hostname: clair-rabbitmq
+    image: rabbitmq:3.8.5-management
+    ports:
+      - "5672:5672"
+      - "8087:15672"
+    environment:
+      RABBITMQ_VM_MEMORY_HIGH_WATERMARK: "85%"
+      
+  notifier:
+    container_name: clair-notifier
+    image: quay.io/claircore/golang:1.13.5
+    ports:
+      - "8079:8080"
+      - "8088:8089"
+    volumes:
+      - "./:/src/clair/"
+    environment:
+      CLAIR_CONF: "/src/clair/local-dev/clair/config.yaml"
+      CLAIR_MODE: "notifier"
+    command:
+      ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor ."]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.index_report.entrypoints=clair"
+      - "traefik.http.routers.index_report.rule=PathPrefix(`/api/v1/notification`)"
 
   indexer:
     container_name: clair-indexer
@@ -58,6 +94,8 @@ services:
       - "traefik.http.routers.index_report.rule=PathPrefix(`/api/v1/index_report`)"
       - "traefik.http.routers.index_state.entrypoints=clair"
       - "traefik.http.routers.index_state.rule=PathPrefix(`/api/v1/index_state`)"
+      - "traefik.http.routers.affected_manifest.entrypoints=clair"
+      - "traefik.http.routers.affected_manifest.rule=PathPrefix(`/api/v1/internal/affected_manifest`)"
 
   matcher:
     container_name: clair-matcher
@@ -76,6 +114,10 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.vulnerability_report.entrypoints=clair"
       - "traefik.http.routers.vulnerability_report.rule=PathPrefix(`/api/v1/vulnerability_report`)"
+      - "traefik.http.routers.update_operation.entrypoints=clair"
+      - "traefik.http.routers.update_operation.rule=PathPrefix(`/api/v1/internal/update_operation`)"
+      - "traefik.http.routers.update_diff.entrypoints=clair"
+      - "traefik.http.routers.update_diff.rule=PathPrefix(`/api/v1/internal/update_diff`)"
 
   swagger-ui:
     container_name: clair-swagger

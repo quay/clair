@@ -8,13 +8,13 @@ type Trace struct {
 
 type Jaeger struct {
 	Agent struct {
-		Endpoint string `yaml:"agent_endpoint" json:"endpoint"`
-	}
+		Endpoint string `yaml:"endpoint" json:"endpoint"`
+	} `yaml:"agent" json:"agent"`
 	Collector struct {
-		Endpoint string  `yaml:"collector_endpoint" json:"endpoint"`
+		Endpoint string  `yaml:"endpoint" json:"endpoint"`
 		Username *string `yaml:"username" json:"username"`
 		Password *string `yaml:"password" json:"password"`
-	}
+	} `yaml:"collector" json:"collector"`
 	ServiceName string            `yaml:"service_name" json:"service_name"`
 	Tags        map[string]string `yaml:"tags" json:"tags"`
 	BufferMax   int               `yaml:"buffer_max" json:"buffer_max"`

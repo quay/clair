@@ -8,6 +8,7 @@ import (
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/introspection"
 	"github.com/quay/clair/v4/matcher"
+	notifier "github.com/quay/clair/v4/notifier/service"
 )
 
 type Init struct {
@@ -23,6 +24,8 @@ type Init struct {
 	Indexer indexer.Service
 	// A local or remote Matcher service
 	Matcher matcher.Service
+	// A local or remote Notifier service
+	Notifier notifier.Service
 	// The primary http server implementing Clair's functionality
 	HttpTransport *httptransport.Server
 	// Introspection provides metrics and trace exporters,
@@ -61,7 +64,7 @@ func New(conf config.Config) (*Init, error) {
 
 	// init http transport.
 	// init will either succeed or fail.
-	i.HttpTransport, err = httptransport.New(i.GlobalCTX, conf, i.Indexer, i.Matcher)
+	i.HttpTransport, err = httptransport.New(i.GlobalCTX, conf, i.Indexer, i.Matcher, i.Notifier)
 	if err != nil {
 		return nil, err
 	}
