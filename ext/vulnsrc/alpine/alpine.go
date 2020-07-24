@@ -65,7 +65,6 @@ func (u *updater) processFile(filename string) {
 	if nameParts[1] == "json" {
 		return
 	}
-	//log.WithField("package", "Alpine").Debug(filename)
 
 	response, err := http.Get(baseURL + u.currentDir + filename)
 	if err != nil {
@@ -195,7 +194,6 @@ func (u *updater) Update(db database.Datastore) (resp vulnsrc.UpdateResponse, er
 		log.WithField("package", "alpine").Debug("no file updates, skip")
 		return
 	}
-	log.WithField("package", "Alpine").Debugf("Commit Hash: %s", commit)
 
 	// Set the updaterFlag to equal the commit processed.
 	resp.FlagName = updaterFlag
@@ -272,10 +270,6 @@ func newSecDB(filePath string) (file *secDB, err error) {
 	defer f.Close()
 	file = &secDB{}
 	err = yaml.NewDecoder(f).Decode(file)
-
-	if err != nil {
-		log.WithError(err).WithField("package", "Alpine").Debug("Error decoding YAML file" + filePath)
-	}
 	return
 }
 
