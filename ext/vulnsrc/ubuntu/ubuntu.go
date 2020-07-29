@@ -307,37 +307,56 @@ func parseUbuntuCVE(fileContent io.Reader) (vulnerability database.Vulnerability
 					continue
 				}
 
-				var version string
+				// var version string
+				var versions []string
+
+				versions = nil
+
 				if md["status"] == "released" {
 					if md["note"] != "" {
-						var err error
-						err = versionfmt.Valid(dpkg.ParserName, md["note"])
-						if err != nil {
-							log.WithError(err).WithField("version", md["note"]).Warning("could not parse package version. skipping")
+						if strings.Contains(md["note"], ",")  { //contains a comma
+							var tmp_strings []string
+							tmp_strings = strings.Split(md["note"], ",")
+							for _,s := range tmp_strings {
+								var err error
+								err = versionfmt.Valid(dpkg.ParserName, s)
+								if err != nil {
+									log.WithError(err).WithField("version", md["note"]).Warning("could not parse package version. skipping")
+								}
+								versions = append(versions, s)
+							}
+						} else {
+							var err error
+							err = versionfmt.Valid(dpkg.ParserName, md["note"])
+							if err != nil {
+								log.WithError(err).WithField("version", md["note"]).Warning("could not parse package version. skipping")
+							}
+							versions = append(versions, md["note"])
 						}
-						version = md["note"]
 					}
 				} else if md["status"] == "not-affected" {
-					version = versionfmt.MinVersion
+					versions = append(versions, versionfmt.MinVersion)
 				} else {
-					version = versionfmt.MaxVersion
+					versions = append(versions, versionfmt.MaxVersion)
 				}
-				if version == "" {
+				if versions == nil {
 					continue
 				}
 
 				// Create and add the new package.
-				featureVersion := database.FeatureVersion{
-					Feature: database.Feature{
-						Namespace: database.Namespace{
-							Name:          "ubuntu:" + database.UbuntuReleasesMapping[md["release"]],
-							VersionFormat: dpkg.ParserName,
+				for _, v := range versions {
+					featureVersion := database.FeatureVersion{
+						Feature: database.Feature{
+							Namespace: database.Namespace{
+								Name:          "ubuntu:" + database.UbuntuReleasesMapping[md["release"]],
+								VersionFormat: dpkg.ParserName,
+							},
+							Name: md["package"],
 						},
-						Name: md["package"],
-					},
-					Version: version,
+						Version: v,
+					}
+					vulnerability.FixedIn = append(vulnerability.FixedIn, featureVersion)
 				}
-				vulnerability.FixedIn = append(vulnerability.FixedIn, featureVersion)
 			}
 		}
 	}
