@@ -339,6 +339,8 @@ func link(def definition) (link string) {
 
 func severity(def definition) database.Severity {
 	switch strings.TrimSpace(def.Title[strings.LastIndex(def.Title, "(")+1 : len(def.Title)-1]) {
+	case "None":
+		return database.NegligibleSeverity
 	case "Low":
 		return database.LowSeverity
 	case "Moderate":
