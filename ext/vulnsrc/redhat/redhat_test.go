@@ -109,11 +109,11 @@ func TestIsRelevantCriterion(t *testing.T) {
 		args args
 		want bool
 	}{
-		{"1", args{OvalV2Criterion{Comment:"softhsm-devel is earlier than 0:2.4.0-2.module+el8.1.0+4098+f286395e"}}, true},
-		{"2", args{OvalV2Criterion{Comment:"Red Hat Enterprise Linux must be installed"}}, false},
-		{"3", args{OvalV2Criterion{Comment:"Module idm:DL1 is enabled"}}, false},
-		{"4", args{OvalV2Criterion{Comment:"softhsm-devel is signed with Red Hat redhatrelease2 key"}}, false},
-		{"5", args{OvalV2Criterion{Comment:""}}, false},
+		{"1", args{OvalV2Criterion{Comment: "softhsm-devel is earlier than 0:2.4.0-2.module+el8.1.0+4098+f286395e"}}, true},
+		{"2", args{OvalV2Criterion{Comment: "Module idm:DL1 is enabled"}}, true},
+		{"3", args{OvalV2Criterion{Comment: "Red Hat Enterprise Linux must be installed"}}, false},
+		{"4", args{OvalV2Criterion{Comment: "softhsm-devel is signed with Red Hat redhatrelease2 key"}}, false},
+		{"5", args{OvalV2Criterion{Comment: ""}}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -147,6 +147,11 @@ func TestIsSupportedDefinitionType(t *testing.T) {
 			log.Info(fmt.Sprintf("IsSupportedDefinitionType(%s)", tt.args.arch))
 			if got := IsSupportedDefinitionType(tt.args.arch); got != tt.want {
 				t.Errorf("IsSupportedDefinitionType(%v) = %v, want %v", tt.args.arch, got, tt.want)
+			}
+			// debug
+			log.Info(fmt.Sprintf("!IsSupportedDefinitionType(%s)", tt.args.arch))
+			if got := !IsSupportedDefinitionType(tt.args.arch); got != !tt.want {
+				t.Errorf("!IsSupportedDefinitionType(%v) = %v, want %v", tt.args.arch, got, !tt.want)
 			}
 		})
 	}
@@ -314,7 +319,7 @@ func TestReadBzipOvalFile(t *testing.T) {
 
 func TestParseCpeNamesFromAffectedCpeList(t *testing.T) {
 	pwd, _ := os.Getwd()
-	xmlFilePath := pwd + "/testdata/v2/ansible-2.8.oval.xml"
+	xmlFilePath := pwd + "/testdata/v2/ansible-1.x.oval.xml"
 	xmlContent, err := ioutil.ReadFile(xmlFilePath)
 	if err != nil {
 		log.Fatal("error reading " + xmlFilePath)
@@ -336,24 +341,39 @@ func TestParseCpeNamesFromAffectedCpeList(t *testing.T) {
 		want    []string
 		wantErr bool
 	}{
-		// cpe:/a:redhat:ansible_engine:2.8::el8
 		{
-			"1",
+			"Two cpes",
 			args{ovalDoc.DefinitionSet.Definitions[0].Metadata.Advisory.AffectedCpeList},
 			[]string{
 				"cpe:/a:redhat:ansible_engine:2.8",
 				"cpe:/a:redhat:ansible_engine:2.8::el8",
-				// []CpeName{
-				// 	{Part: "a", Vendor: "redhat", Product: "ansible_engine", Version: "2.8", Update: "", Edition: "el8", Language: ""},
 			},
 			false,
+		},
+		{
+			"With one empty cpe",
+			args{ovalDoc.DefinitionSet.Definitions[1].Metadata.Advisory.AffectedCpeList},
+			[]string{
+				"cpe:/a:redhat:ansible_engine:2.8",
+				"cpe:/a:redhat:ansible_engine:2.8::el8",
+			},
+			false,
+		},
+		{
+			"No cpe (unparseable)",
+			args{ovalDoc.DefinitionSet.Definitions[2].Metadata.Advisory.AffectedCpeList},
+			[]string{},
+			true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := ParseCpeNamesFromAffectedCpeList(tt.args.affectedCpeList)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ParseCpeNamesFromAffectedCpeList() error = %v, wantErr %v", err, tt.wantErr)
+			if err != nil {
+				if (err != nil) != tt.wantErr {
+					t.Errorf("ParseCpeNamesFromAffectedCpeList() error = %v, wantErr %v", err, tt.wantErr)
+				}
+				// expected error, no need to continue
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
@@ -372,36 +392,36 @@ func TestIsSignificantSeverity(t *testing.T) {
 		args args
 		want bool
 	}{
-		{"None", args{"None"},false},
-		{"Low", args{"Low"},true},
-		{"Moderate", args{"Moderate"},true},
-		{"Important", args{"Important"},true},
-		{"Critical", args{"Critical"},true},
-		{"Unknown", args{"Unknown"},true},
+		{"None", args{"None"}, false},
+		{"Low", args{"Low"}, true},
+		{"Moderate", args{"Moderate"}, true},
+		{"Important", args{"Important"}, true},
+		{"Critical", args{"Critical"}, true},
+		{"Unknown", args{"Unknown"}, true},
 	}
-	for _, tt := range tests {	
+	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := IsSignificantSeverity(tt.args.severity); got != tt.want {
-				t.Errorf("IsSignificantSeverity(%s->%s) = %v, want %v", 
-					tt.args.severity, 
-					strings.Title(tt.args.severity), 
-					got, 
+				t.Errorf("IsSignificantSeverity(%s->%s) = %v, want %v",
+					tt.args.severity,
+					strings.Title(tt.args.severity),
+					got,
 					tt.want)
 			}
 			// test as all uppercase
 			if got := IsSignificantSeverity(strings.ToUpper(tt.args.severity)); got != tt.want {
-				t.Errorf("IsSignificantSeverity(%s->%s) = %v, want %v", 
-					strings.ToUpper(tt.args.severity), 
-					strings.Title(strings.ToUpper(tt.args.severity)), 
-					got, 
+				t.Errorf("IsSignificantSeverity(%s->%s) = %v, want %v",
+					strings.ToUpper(tt.args.severity),
+					strings.Title(strings.ToUpper(tt.args.severity)),
+					got,
 					tt.want)
 			}
 			// test as all lowercase
 			if got := IsSignificantSeverity(strings.ToLower(tt.args.severity)); got != tt.want {
-				t.Errorf("IsSignificantSeverity(%s->%s) = %v, want %v", 
-					strings.ToLower(tt.args.severity), 
-					strings.Title(strings.ToLower(tt.args.severity)), 
-					got, 
+				t.Errorf("IsSignificantSeverity(%s->%s) = %v, want %v",
+					strings.ToLower(tt.args.severity),
+					strings.Title(strings.ToLower(tt.args.severity)),
+					got,
 					tt.want)
 			}
 		})
@@ -417,40 +437,678 @@ func TestGetSeverity(t *testing.T) {
 		args args
 		want database.Severity
 	}{
-		{"None", args{"None"},database.NegligibleSeverity},
-		{"Low", args{"Low"},database.LowSeverity},
-		{"Moderate", args{"Moderate"},database.MediumSeverity},
-		{"Important", args{"Important"},database.HighSeverity},
-		{"Critical", args{"Critical"},database.CriticalSeverity},
-		{"Unknown", args{"Unknown"},database.UnknownSeverity},
+		{"None", args{"None"}, database.NegligibleSeverity},
+		{"Low", args{"Low"}, database.LowSeverity},
+		{"Moderate", args{"Moderate"}, database.MediumSeverity},
+		{"Important", args{"Important"}, database.HighSeverity},
+		{"Critical", args{"Critical"}, database.CriticalSeverity},
+		{"Unknown", args{"Unknown"}, database.UnknownSeverity},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := GetSeverity(tt.args.severity); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetSeverity(%s->%s) = %v, want %v", 
-					tt.args.severity, 
-					strings.Title(tt.args.severity), 
-					got, 
+				t.Errorf("GetSeverity(%s->%s) = %v, want %v",
+					tt.args.severity,
+					strings.Title(tt.args.severity),
+					got,
 					tt.want)
 			}
 			// test as all uppercase
 			if got := GetSeverity(tt.args.severity); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetSeverity(%s->%s) = %v, want %v", 
-					tt.args.severity, 
-					strings.Title(strings.ToUpper(tt.args.severity)), 
-					got, 
+				t.Errorf("GetSeverity(%s->%s) = %v, want %v",
+					tt.args.severity,
+					strings.Title(strings.ToUpper(tt.args.severity)),
+					got,
 					tt.want)
 			}
 			// test as all lowercase
 			if got := GetSeverity(tt.args.severity); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetSeverity(%s->%s) = %v, want %v", 
-					tt.args.severity, 
-					strings.Title(strings.ToLower(tt.args.severity)), 
-					got, 
+				t.Errorf("GetSeverity(%s->%s) = %v, want %v",
+					tt.args.severity,
+					strings.Title(strings.ToLower(tt.args.severity)),
+					got,
 					tt.want)
 			}
 		})
 	}
+}
+
+func TestParsedNvrasContains(t *testing.T) {
+	type args struct {
+		parsedNvras []ParsedRmpNvra
+		nvra        ParsedRmpNvra
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{"1", args{[]ParsedRmpNvra{
+			ParsedRmpNvra{Name: "name1", Evr: "evr1", Arch: "arch1"},
+		},
+			ParsedRmpNvra{Name: "name1", Evr: "evr1", Arch: "arch1"}},
+			true,
+		},
+		{"2", args{[]ParsedRmpNvra{
+			ParsedRmpNvra{Name: "name1", Evr: "evr1", Arch: "arch1"},
+		},
+			ParsedRmpNvra{Name: "name1", Evr: "evr1", Arch: "arch2"}},
+			false,
+		},
+		{"3", args{[]ParsedRmpNvra{
+			ParsedRmpNvra{Name: "name1", Evr: "evr1", Arch: "arch1"},
+			ParsedRmpNvra{Name: "name1", Evr: "evr1", Arch: "arch2"},
+			ParsedRmpNvra{Name: "name1", Evr: "evr1", Arch: "arch3"},
+		},
+			ParsedRmpNvra{Name: "name1", Evr: "evr1", Arch: "arch1"}},
+			true},
+		{"4", args{[]ParsedRmpNvra{
+			ParsedRmpNvra{Name: "name1", Evr: "evr1", Arch: "arch1"},
+			ParsedRmpNvra{Name: "name2", Evr: "evr1", Arch: "arch1"},
+			ParsedRmpNvra{Name: "name3", Evr: "evr1", Arch: "arch1"},
+		},
+			ParsedRmpNvra{Name: "name2", Evr: "evr1", Arch: "arch1"}},
+			true},
+		{"5", args{[]ParsedRmpNvra{
+			ParsedRmpNvra{Name: "name1", Evr: "evr1", Arch: "arch1"},
+			ParsedRmpNvra{Name: "name1", Evr: "evr2", Arch: "arch1"},
+			ParsedRmpNvra{Name: "name1", Evr: "evr3", Arch: "arch1"},
+		},
+			ParsedRmpNvra{Name: "name1", Evr: "evr3", Arch: "arch1"}},
+			true},
+		{"6", args{[]ParsedRmpNvra{
+			ParsedRmpNvra{Name: "name1", Evr: "evr1", Arch: "arch1"},
+			ParsedRmpNvra{Name: "name1", Evr: "evr2", Arch: "arch1"},
+			ParsedRmpNvra{Name: "name1", Evr: "evr3", Arch: "arch1"},
+		},
+			ParsedRmpNvra{Name: "name1", Evr: "evr4", Arch: "arch1"}},
+			false},
+		{"7", args{[]ParsedRmpNvra{
+			ParsedRmpNvra{Name: "name1", Evr: "evr1", Arch: "arch1"},
+			ParsedRmpNvra{Name: "name1", Evr: "evr2", Arch: "arch1"},
+			ParsedRmpNvra{Name: "name1", Evr: "evr3", Arch: "arch1"},
+		},
+			ParsedRmpNvra{Name: "name2", Evr: "evr2", Arch: "arch1"}},
+			false},
+		{"8", args{[]ParsedRmpNvra{},
+			ParsedRmpNvra{Name: "name1", Evr: "evr1", Arch: "arch1"}},
+			false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// debug
+			log.Info(fmt.Sprintf("ParsedNvrasContains(%s, %s)", tt.args.parsedNvras, tt.args.nvra))
+			if got := ParsedNvrasContains(tt.args.parsedNvras, tt.args.nvra); got != tt.want {
+				t.Errorf("ParsedNvrasContains(%v, %v) = %v, want %v", tt.args.parsedNvras, tt.args.nvra, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParseRhsaName(t *testing.T) {
+	type args struct {
+		advisoryDefinition ParsedAdvisory
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			"1",
+			args{
+				ParsedAdvisory{Metadata: OvalV2Metadata{Title: "RHSA-2013:0149: flash-plugin security update (Critical)", Reference: []OvalV2Reference{{RefID: "RHSA-2013:0149"}}}},
+			},
+			"RHSA-2013:0149",
+		},
+		{
+			"2",
+			args{
+				ParsedAdvisory{Metadata: OvalV2Metadata{Title: "RHSA-2013:0149: flash-plugin security update (Critical)", Reference: []OvalV2Reference{{RefID: ""}}}},
+			},
+			"RHSA-2013:0149",
+		},
+		{
+			"3",
+			args{
+				ParsedAdvisory{Metadata: OvalV2Metadata{Title: "RHSA-2013:0149: flash-plugin security update (Critical)", Reference: []OvalV2Reference{}}},
+			},
+			"RHSA-2013:0149",
+		},
+		{
+			"4",
+			args{
+				ParsedAdvisory{Metadata: OvalV2Metadata{Title: "", Reference: []OvalV2Reference{{RefID: ""}}}},
+			},
+			"",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ParseRhsaName(tt.args.advisoryDefinition); got != tt.want {
+				t.Errorf("ParseRhsaName() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParseCriteriaForModuleNamespaces(t *testing.T) {
+	type args struct {
+		criteria OvalV2Criteria
+	}
+	tests := []struct {
+		name string
+		args args
+		want []string
+	}{
+		{
+			"One Module",
+			args{
+				OvalV2Criteria{Criterion: []OvalV2Criterion{{Comment: "Module nodejs:12 is enabled", TestRef: "oval:com.redhat.rhea:tst:20200330015"}}},
+			},
+			[]string{"nodejs:12"},
+		},
+		{
+			"Non-Module",
+			args{
+				OvalV2Criteria{Criterion: []OvalV2Criterion{{Comment: "vim-filesystem is earlier than vim-filesystem-2:7.4.629-2.el7.x86_64", TestRef: "oval:com.redhat.rhsa:tst:20162972001"}}},
+			},
+			[]string{},
+		},
+		{
+			"Three Modules",
+			args{
+				OvalV2Criteria{
+					Criterion: []OvalV2Criterion{
+						{Comment: "Module nodejs:12 is enabled", TestRef: "oval:com.redhat.rhea:tst:20200330015"},
+						{Comment: "Module idm:DL1 is enabled", TestRef: "oval:com.redhat.rhea:tst:20200330015"},
+						{Comment: "Module container-tools:rhel8 is enabled", TestRef: "oval:com.redhat.rhea:tst:20200330015"},
+					},
+				},
+			},
+			[]string{"nodejs:12", "idm:DL1", "container-tools:rhel8"},
+		},
+		{
+			"Empty Criteria",
+			args{
+				OvalV2Criteria{},
+			},
+			[]string{},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ParseCriteriaForModuleNamespaces(tt.args.criteria)
+			if len(got) == 0 {
+				if len(tt.want) != 0 {
+					t.Errorf("ParseCriteriaForModuleNamespaces() = %v, want %v", got, tt.want)
+				}
+			} else if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ParseCriteriaForModuleNamespaces() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestVulnerabilityContainsFeature(t *testing.T) {
+	type args struct {
+		vulnerability     database.VulnerabilityWithAffected
+		comparisonFeature database.AffectedFeature
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			"found in one feature",
+			args{
+				database.VulnerabilityWithAffected{
+					Vulnerability: database.Vulnerability{
+						Name: "vuln one",
+					},
+					Affected: []database.AffectedFeature{
+						{
+							FeatureName:     "first-feature-name",
+							AffectedVersion: "v.0.0.1",
+							FixedInVersion:  "v.0.0.1",
+							FeatureType:     "first.feature.type",
+						},
+					},
+				},
+				database.AffectedFeature{
+					FeatureName:     "first-feature-name",
+					AffectedVersion: "v.0.0.1",
+					FixedInVersion:  "v.0.0.1",
+					FeatureType:     "first.feature.type",
+				},
+			},
+			true,
+		},
+		{
+			"not found in one feature",
+			args{
+				database.VulnerabilityWithAffected{
+					Vulnerability: database.Vulnerability{
+						Name: "vuln one",
+					},
+					Affected: []database.AffectedFeature{
+						{
+							FeatureName:     "first-feature-name",
+							AffectedVersion: "v.0.0.1",
+							FixedInVersion:  "v.0.0.1",
+							FeatureType:     "first.feature.type",
+						},
+					},
+				},
+				database.AffectedFeature{
+					FeatureName:     "second-feature-name",
+					AffectedVersion: "v.0.0.2",
+					FixedInVersion:  "v.0.0.2",
+					FeatureType:     "second.feature.type",
+				},
+			},
+			false,
+		},
+		{
+			"found in three features",
+			args{
+				database.VulnerabilityWithAffected{
+					Vulnerability: database.Vulnerability{
+						Name: "vuln one",
+					},
+					Affected: []database.AffectedFeature{
+						{
+							FeatureName:     "first-feature-name",
+							AffectedVersion: "v.0.0.1",
+							FixedInVersion:  "v.0.0.1",
+							FeatureType:     "first.feature.type",
+						},
+						{
+							FeatureName:     "second-feature-name",
+							AffectedVersion: "v.0.0.2",
+							FixedInVersion:  "v.0.0.2",
+							FeatureType:     "second.feature.type",
+						},
+						{
+							FeatureName:     "third-feature-name",
+							AffectedVersion: "v.0.0.3",
+							FixedInVersion:  "v.0.0.3",
+							FeatureType:     "third.feature.type",
+						},
+					},
+				},
+				database.AffectedFeature{
+					FeatureName:     "second-feature-name",
+					AffectedVersion: "v.0.0.2",
+					FixedInVersion:  "v.0.0.2",
+					FeatureType:     "second.feature.type",
+				},
+			},
+			true,
+		},
+		{
+			"not found in three features",
+			args{
+				database.VulnerabilityWithAffected{
+					Vulnerability: database.Vulnerability{
+						Name: "vuln one",
+					},
+					Affected: []database.AffectedFeature{
+						{
+							FeatureName:     "first-feature-name",
+							AffectedVersion: "v.0.0.1",
+							FixedInVersion:  "v.0.0.1",
+							FeatureType:     "first.feature.type",
+						},
+						{
+							FeatureName:     "second-feature-name",
+							AffectedVersion: "v.0.0.2",
+							FixedInVersion:  "v.0.0.2",
+							FeatureType:     "second.feature.type",
+						},
+						{
+							FeatureName:     "third-feature-name",
+							AffectedVersion: "v.0.0.3",
+							FixedInVersion:  "v.0.0.3",
+							FeatureType:     "third.feature.type",
+						},
+					},
+				},
+				// imperfect match
+				database.AffectedFeature{
+					FeatureName:     "second-feature-name",
+					AffectedVersion: "v.0.0.4",
+					FixedInVersion:  "v.0.0.4",
+					FeatureType:     "second.feature.type",
+				},
+			},
+			false,
+		},
+		{
+			"not found in zero features",
+			args{
+				database.VulnerabilityWithAffected{
+					Vulnerability: database.Vulnerability{
+						Name: "vuln one",
+					},
+					Affected: []database.AffectedFeature{},
+				},
+				database.AffectedFeature{
+					FeatureName:     "first-feature-name",
+					AffectedVersion: "v.0.0.1",
+					FixedInVersion:  "v.0.0.1",
+					FeatureType:     "first.feature.type",
+				},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := VulnerabilityContainsFeature(tt.args.vulnerability, tt.args.comparisonFeature); got != tt.want {
+				t.Errorf("VulnerabilityContainsFeature() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetPendingVulnerabilitySliceIndex(t *testing.T) {
+	type args struct {
+		vulnSet    []database.VulnerabilityWithAffected
+		lookupVuln database.VulnerabilityWithAffected
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			"found among one vuln",
+			args{
+				[]database.VulnerabilityWithAffected{
+					{
+						Vulnerability: database.Vulnerability{
+							Name: "vuln one",
+						},
+					},
+				},
+				database.VulnerabilityWithAffected{
+					Vulnerability: database.Vulnerability{
+						Name: "vuln one",
+					},
+				},
+			},
+			0,
+		},
+		{
+			"not found among one vuln",
+			args{
+				[]database.VulnerabilityWithAffected{
+					{
+						Vulnerability: database.Vulnerability{
+							Name: "vuln one",
+						},
+					},
+				},
+				database.VulnerabilityWithAffected{
+					Vulnerability: database.Vulnerability{
+						Name: "vuln two",
+					},
+				},
+			},
+			-1,
+		},
+		{
+			"found among three vulns",
+			args{
+				[]database.VulnerabilityWithAffected{
+					{
+						Vulnerability: database.Vulnerability{
+							Name: "vuln one",
+						},
+					},
+					{
+						Vulnerability: database.Vulnerability{
+							Name: "vuln two",
+						},
+					},
+					{
+						Vulnerability: database.Vulnerability{
+							Name: "vuln three",
+						},
+					},
+				},
+				database.VulnerabilityWithAffected{
+					Vulnerability: database.Vulnerability{
+						Name: "vuln two",
+					},
+				},
+			},
+			1,
+		},
+		{
+			"not found among three vulns",
+			args{
+				[]database.VulnerabilityWithAffected{
+					{
+						Vulnerability: database.Vulnerability{
+							Name: "vuln one",
+						},
+					},
+					{
+						Vulnerability: database.Vulnerability{
+							Name: "vuln two",
+						},
+					},
+					{
+						Vulnerability: database.Vulnerability{
+							Name: "vuln three",
+						},
+					},
+				},
+				database.VulnerabilityWithAffected{
+					Vulnerability: database.Vulnerability{
+						Name: "vuln four",
+					},
+				},
+			},
+			-1,
+		},
+		{
+			"not found among zero vulns",
+			args{
+				[]database.VulnerabilityWithAffected{},
+				database.VulnerabilityWithAffected{
+					Vulnerability: database.Vulnerability{
+						Name: "vuln four",
+					},
+				},
+			},
+			-1,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetPendingVulnerabilitySliceIndex(tt.args.vulnSet, tt.args.lookupVuln); got != tt.want {
+				t.Errorf("GetPendingVulnerabilitySliceIndex() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMergeVulnerabilityFeature(t *testing.T) {
+	type args struct {
+		sourceVuln database.VulnerabilityWithAffected
+		targetVuln database.VulnerabilityWithAffected
+	}
+	tests := []struct {
+		name string
+		args args
+		want database.VulnerabilityWithAffected
+	}{
+		{
+			"one merged from two sets of three features",
+			args{
+				database.VulnerabilityWithAffected{
+					Vulnerability: database.Vulnerability{
+						Name: "vuln one",
+					},
+					Affected: []database.AffectedFeature{
+						{
+							FeatureName:     "first-feature-name",
+							AffectedVersion: "v.0.0.1",
+							FixedInVersion:  "v.0.0.1",
+							FeatureType:     "first.feature.type",
+						},
+						{
+							FeatureName:     "second-feature-name",
+							AffectedVersion: "v.0.0.2",
+							FixedInVersion:  "v.0.0.2",
+							FeatureType:     "second.feature.type",
+						},
+						{
+							FeatureName:     "third-feature-name",
+							AffectedVersion: "v.0.0.3",
+							FixedInVersion:  "v.0.0.3",
+							FeatureType:     "third.feature.type",
+						},
+					},
+				},
+				database.VulnerabilityWithAffected{
+					Vulnerability: database.Vulnerability{
+						Name: "vuln one",
+					},
+					Affected: []database.AffectedFeature{
+						{
+							FeatureName:     "second-feature-name",
+							AffectedVersion: "v.0.0.2",
+							FixedInVersion:  "v.0.0.2",
+							FeatureType:     "second.feature.type",
+						},
+						{
+							FeatureName:     "third-feature-name",
+							AffectedVersion: "v.0.0.3",
+							FixedInVersion:  "v.0.0.3",
+							FeatureType:     "third.feature.type",
+						},
+						{
+							FeatureName:     "fourth-feature-name",
+							AffectedVersion: "v.0.0.4",
+							FixedInVersion:  "v.0.0.4",
+							FeatureType:     "fourth.feature.type",
+						},
+					},
+				},
+			},
+			database.VulnerabilityWithAffected{
+				Vulnerability: database.Vulnerability{
+					Name: "vuln one",
+				},
+				Affected: []database.AffectedFeature{
+					{
+						FeatureName:     "second-feature-name",
+						AffectedVersion: "v.0.0.2",
+						FixedInVersion:  "v.0.0.2",
+						FeatureType:     "second.feature.type",
+					},
+					{
+						FeatureName:     "third-feature-name",
+						AffectedVersion: "v.0.0.3",
+						FixedInVersion:  "v.0.0.3",
+						FeatureType:     "third.feature.type",
+					},
+					{
+						FeatureName:     "fourth-feature-name",
+						AffectedVersion: "v.0.0.4",
+						FixedInVersion:  "v.0.0.4",
+						FeatureType:     "fourth.feature.type",
+					},
+					// additional source features will be apppended to the end of the target slice
+					{
+						FeatureName:     "first-feature-name",
+						AffectedVersion: "v.0.0.1",
+						FixedInVersion:  "v.0.0.1",
+						FeatureType:     "first.feature.type",
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := MergeVulnerabilityFeature(tt.args.sourceVuln, tt.args.targetVuln); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("MergeVulnerabilityFeature() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// (also tests MergeVulnerabilities)
+func TestCollectVulnsForAdvisory(t *testing.T) {
+	pwd, _ := os.Getwd()
+	fileCollectVulnsTestDataRhel7 := pwd + "/testdata/v2/collect-vulns-rhel7.xml"
+	xmlCollectVulnsTestDataRhel7, err := ioutil.ReadFile(fileCollectVulnsTestDataRhel7)
+	if err != nil {
+		log.Fatal("error reading " + fileCollectVulnsTestDataRhel7)
+	}
+	ovalDocRhel7 := OvalV2Document{}
+	err = xml.Unmarshal([]byte(xmlCollectVulnsTestDataRhel7), &ovalDocRhel7)
+	if err != nil {
+		// log error and continue
+		log.Fatal(err)
+	}
+	fileCollectVulnsTestDataRhel8 := pwd + "/testdata/v2/collect-vulns-rhel8.xml"
+	xmlCollectVulnsTestDataRhel8, err := ioutil.ReadFile(fileCollectVulnsTestDataRhel8)
+	if err != nil {
+		log.Fatal("error reading " + fileCollectVulnsTestDataRhel8)
+	}
+	var currentCollectedVulnerabilities = []database.VulnerabilityWithAffected{}
+	var accumulatedVulnerabilities = []database.VulnerabilityWithAffected{}
+	var pendingVulnNames = map[string]bool{}
+
+	currentCollectedVulnerabilities = CollectVulnsForAdvisory(ParseAdvisory(ovalDocRhel7.DefinitionSet.Definitions[0], ovalDocRhel7), ovalDocRhel7)
+	accumulatedVulnerabilities, pendingVulnNames = MergeVulnerabilities(currentCollectedVulnerabilities, accumulatedVulnerabilities, pendingVulnNames)
+
+	// should find one vuln
+	if (len(accumulatedVulnerabilities) != 1) {
+		log.Fatal(fmt.Sprintf("error: wrong vulns count after first document parse (expected: 1; found: %d)", len(accumulatedVulnerabilities)))
+	}
+	// should find one vuln affected feature
+	if (len(accumulatedVulnerabilities[0].Affected) != 1) {
+		log.Fatal(fmt.Sprintf("error: wrong vaf count after first document parse (expected: 1; found: %d)", len(accumulatedVulnerabilities)))
+	}
+
+	ovalDocRhel8 := OvalV2Document{}
+	err = xml.Unmarshal([]byte(xmlCollectVulnsTestDataRhel8), &ovalDocRhel8)
+	if err != nil {
+		// log error and continue
+		log.Fatal(err)
+	}
+	currentCollectedVulnerabilities = CollectVulnsForAdvisory(ParseAdvisory(ovalDocRhel8.DefinitionSet.Definitions[0], ovalDocRhel8), ovalDocRhel8)
+	accumulatedVulnerabilities, pendingVulnNames = MergeVulnerabilities(currentCollectedVulnerabilities, accumulatedVulnerabilities, pendingVulnNames)
+
+	// should still find one vuln
+	if (len(accumulatedVulnerabilities) != 1) {
+		log.Fatal(fmt.Sprintf("error: wrong vulns count after second document parse (expected: 1; found: %d)", len(accumulatedVulnerabilities)))
+	}
+	// should find two vuln affected features
+	if (len(accumulatedVulnerabilities[0].Affected) != 2) {
+		log.Fatal(fmt.Sprintf("error: wrong vaf count after first document parse (expected: 2; found: %d)", len(accumulatedVulnerabilities)))
+	}
+
+	currentCollectedVulnerabilities = CollectVulnsForAdvisory(ParseAdvisory(ovalDocRhel7.DefinitionSet.Definitions[0], ovalDocRhel7), ovalDocRhel7)
+	accumulatedVulnerabilities, pendingVulnNames = MergeVulnerabilities(currentCollectedVulnerabilities, accumulatedVulnerabilities, pendingVulnNames)
+
+	// should still find one vuln
+	if (len(accumulatedVulnerabilities) != 1) {
+		log.Fatal(fmt.Sprintf("error: wrong vulns count after first document re-parse (expected: 1; found: %d)", len(accumulatedVulnerabilities)))
+	}
+	// should still find two vuln affected features
+	if (len(accumulatedVulnerabilities[0].Affected) != 2) {
+		log.Fatal(fmt.Sprintf("error: wrong vaf count after first document re-parse (expected: 2; found: %d)", len(accumulatedVulnerabilities)))
+	}
+
 }
 
 type mockDatastore struct {

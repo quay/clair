@@ -35,177 +35,185 @@ type ManifestEntry struct {
 
 // OvalV2Document - represents an uncompressed ovalV2 bzip document linked from PULP_MANIFEST
 type OvalV2Document struct {
-	XMLName          xml.Name                      `xml:"oval_definitions"`
-	DefinitionSet    OvalV2AdvisoryDefinitions     `xml:"definitions"`
-	TestSet			 OvalV2Tests                   `xml:"tests"`
-	ObjectSet	     OvalV2Objects                 `xml:"objects"`
-	StateSet         OvalV2States                  `xml:"states"`
+	XMLName       xml.Name                  `xml:"oval_definitions"`
+	DefinitionSet OvalV2AdvisoryDefinitions `xml:"definitions"`
+	TestSet       OvalV2Tests               `xml:"tests"`
+	ObjectSet     OvalV2Objects             `xml:"objects"`
+	StateSet      OvalV2States              `xml:"states"`
 }
 
 // OvalV2AdvisoryDefinitions - OvalV2Document.definition array
 type OvalV2AdvisoryDefinitions struct {
-	Definitions      []OvalV2AdvisoryDefinition    `xml:"definition"`
+	Definitions []OvalV2AdvisoryDefinition `xml:"definition"`
 }
 
 // OvalV2AdvisoryDefinition - single definition from ovalV2 document
 type OvalV2AdvisoryDefinition struct {
-	Class            string            `xml:"class,attr"`
-	ID               string            `xml:"id,attr"`
-	Version          string            `xml:"version,attr"`
-	Metadata         OvalV2Metadata    `xml:"metadata"`
-	Criteria         OvalV2Criteria    `xml:"criteria"`
+	Class    string         `xml:"class,attr"`
+	ID       string         `xml:"id,attr"`
+	Version  string         `xml:"version,attr"`
+	Metadata OvalV2Metadata `xml:"metadata"`
+	Criteria OvalV2Criteria `xml:"criteria"`
 }
 
 // OvalV2Metadata - advisory metadata
 type OvalV2Metadata struct {
-	Title            string            `xml:"title"`
-	Description      string            `xml:"description"`
-	Advisory         OvalV2Advisory    `xml:"advisory"`
+	Title       string            `xml:"title"`
+	Reference   []OvalV2Reference `xml:"reference"`
+	Description string            `xml:"description"`
+	Advisory    OvalV2Advisory    `xml:"advisory"`
+}
+
+// OvalV2Reference - advisory reference
+type OvalV2Reference struct {
+	RefID  string `xml:"ref_id"`
+	RefURL string `xml:"ref_url"`
+	Source string `xml:"source"`
 }
 
 // OvalV2Advisory - advisory data
 type OvalV2Advisory struct {
-    Issued           OvalV2AdvisoryIssued     `xml:"issued"`
-	Updated          OvalV2AdvisoryUpdated    `xml:"updated"`
-	Severity         string                   `xml:"severity"`
-	CveList          []OvalV2CveData          `xml:"cve"`
-	AffectedCpeList  OvalV2Cpe                `xml:"affected_cpe_list"`
+	Issued          OvalV2AdvisoryIssued  `xml:"issued"`
+	Updated         OvalV2AdvisoryUpdated `xml:"updated"`
+	Severity        string                `xml:"severity"`
+	CveList         []OvalV2CveData       `xml:"cve"`
+	AffectedCpeList OvalV2Cpe             `xml:"affected_cpe_list"`
 }
 
 // OvalV2AdvisoryIssued - date advisory was issued (YYYY-MM-DD)
 type OvalV2AdvisoryIssued struct {
-    Date     string    `xml:"date,attr"`
+	Date string `xml:"date,attr"`
 }
 
 // OvalV2AdvisoryUpdated - date advisory was issued (YYYY-MM-DD)
 type OvalV2AdvisoryUpdated struct {
-    Date     string    `xml:"date,attr"`
+	Date string `xml:"date,attr"`
 }
 
 // OvalV2CveData - advisory cve data
 type OvalV2CveData struct {
-	XMLName  xml.Name  `xml:"cve"`
-    Cvss3    string    `xml:"cvss3,attr"`
-    Cwe      string    `xml:"cwe,attr"`
-	Href     string    `xml:"href,attr"`
-	Public   string    `xml:"public,attr"`
-	Value    string    `xml:",chardata"`
+	XMLName xml.Name `xml:"cve"`
+	Cvss3   string   `xml:"cvss3,attr"`
+	Cwe     string   `xml:"cwe,attr"`
+	Href    string   `xml:"href,attr"`
+	Public  string   `xml:"public,attr"`
+	Value   string   `xml:",chardata"`
 }
 
 // OvalV2Cpe - advisory affected cpes
 type OvalV2Cpe struct {
-	Cpe      []string   `xml:"cpe"`
+	Cpe []string `xml:"cpe"`
 }
 
 // CpeName - cpe name components
 type CpeName struct {
-	Part       string
-	Vendor     string
-	Product    string
-	Version    string
-	Update     string
-	Edition    string
-	Language   string
+	Part     string
+	Vendor   string
+	Product  string
+	Version  string
+	Update   string
+	Edition  string
+	Language string
 }
 
 // OvalV2Criteria - advisory-related criteria set
 type OvalV2Criteria struct {
-	Criterion   []OvalV2Criterion     `xml:"criterion"`
-	Criteria    []OvalV2Criteria      `xml:"criteria"`
+	Criterion []OvalV2Criterion `xml:"criterion"`
+	Criteria  []OvalV2Criteria  `xml:"criteria"`
 }
 
 // OvalV2Criterion - advisory-related criteria item
 type OvalV2Criterion struct {
-	XMLName     xml.Name              `xml:"criterion"`
-	Comment     string                `xml:"comment,attr"`
-	TestRef     string                `xml:"test_ref,attr"`
+	XMLName xml.Name `xml:"criterion"`
+	Comment string   `xml:"comment,attr"`
+	TestRef string   `xml:"test_ref,attr"`
 }
 
 // OvalV2Tests - oval tests
 type OvalV2Tests struct {
-	XMLName     xml.Name              `xml:"tests"`
-	Tests       []OvalV2RpmInfoTest   `xml:"rpminfo_test"`
+	XMLName xml.Name            `xml:"tests"`
+	Tests   []OvalV2RpmInfoTest `xml:"rpminfo_test"`
 }
 
 // OvalV2RpmInfoTest - oval tests.rpminfo_test
 type OvalV2RpmInfoTest struct {
-	Comment     string                `xml:"comment,attr"`
-	ID          string                `xml:"id,attr"`
-	ObjectRef   RpmInfoTestObjectRef  `xml:"object"`
-	StateRef    RpmInfoTestStateRef   `xml:"state"`
+	Comment   string               `xml:"comment,attr"`
+	ID        string               `xml:"id,attr"`
+	ObjectRef RpmInfoTestObjectRef `xml:"object"`
+	StateRef  RpmInfoTestStateRef  `xml:"state"`
 }
 
 // RpmInfoTestObjectRef - oval reference to test info
 type RpmInfoTestObjectRef struct {
-	Ref   string                `xml:"object_ref,attr"`
+	Ref string `xml:"object_ref,attr"`
 }
 
 // RpmInfoTestStateRef - oval reference to state info
 type RpmInfoTestStateRef struct {
-	Ref    string                `xml:"state_ref,attr"`
+	Ref string `xml:"state_ref,attr"`
 }
 
 // OvalV2Objects - ovalV2 objects set
 type OvalV2Objects struct {
-	XMLName     xml.Name              `xml:"objects"`
-	Objects     []OvalV2RpmInfoObject `xml:"rpminfo_object"`
+	XMLName xml.Name              `xml:"objects"`
+	Objects []OvalV2RpmInfoObject `xml:"rpminfo_object"`
 }
 
 // OvalV2RpmInfoObject - rpm info
 type OvalV2RpmInfoObject struct {
-	ID          string                `xml:"id,attr"`
-	Version     string                `xml:"version,attr"`
-	Name        string                `xml:"name"`
+	ID      string `xml:"id,attr"`
+	Version string `xml:"version,attr"`
+	Name    string `xml:"name"`
 }
 
 // OvalV2States - state info
 type OvalV2States struct {
-	XMLName     xml.Name              `xml:"states"`
-	States      []OvalV2RpmInfoState  `xml:"rpminfo_state"`
+	XMLName xml.Name             `xml:"states"`
+	States  []OvalV2RpmInfoState `xml:"rpminfo_state"`
 }
 
 // OvalV2RpmInfoState - state info
 type OvalV2RpmInfoState struct {
-	ID          string                `xml:"id,attr"`
-	Version     string                `xml:"version,attr"`
-	Arch        RpmInfoStateChild     `xml:"arch"`
-	Evr         RpmInfoStateChild     `xml:"evr"`
+	ID      string            `xml:"id,attr"`
+	Version string            `xml:"version,attr"`
+	Arch    RpmInfoStateChild `xml:"arch"`
+	Evr     RpmInfoStateChild `xml:"evr"`
 }
 
 // RpmInfoStateChild - arch and evr state info
 type RpmInfoStateChild struct {
-	DataType    string                `xml:"datatype,attr"`
-	Operation   string                `xml:"operation,attr"`
-	Value       string                `xml:",chardata"`
+	DataType  string `xml:"datatype,attr"`
+	Operation string `xml:"operation,attr"`
+	Value     string `xml:",chardata"`
 }
 
 // OvalV2DefinitionNamespaces - module and cpe namespace info
 type OvalV2DefinitionNamespaces struct {
-	ModuleNamespaces  []string
-	CpeNamespaces     []string
+	ModuleNamespaces []string
+	CpeNamespaces    []string
 }
 
 // RpmNvra - rpm nvra info
 type RpmNvra struct {
-	Name     string
-	Version  string
-	Release  string
-	Arch     string
+	Name    string
+	Version string
+	Release string
+	Arch    string
 }
 
 // ParsedAdvisory - parsed advisory info, including relevant criteria and package references
 type ParsedAdvisory struct {
-	Class            string
-	ID               string
-	Version          string
-	Metadata         OvalV2Metadata
-	Criteria         OvalV2Criteria
-	PackageList      []ParsedRmpNvra
+	Class       string
+	ID          string
+	Version     string
+	Metadata    OvalV2Metadata
+	Criteria    OvalV2Criteria
+	PackageList []ParsedRmpNvra
 }
 
 // ParsedRmpNvra - parsed rpm nvra info
 type ParsedRmpNvra struct {
-	Name     string
-	Evr      string
-	Arch     string
+	Name string
+	Evr  string
+	Arch string
 }

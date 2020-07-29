@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<oval_definitions xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:ind-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:red-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux" xmlns:unix-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-common-5 oval-common-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#unix unix-definitions-schema.xsd http://oval.mitre.org/XMLSchema/oval-definitions-5#linux linux-definitions-schema.xsd">
+ <definitions>
+  <definition class="patch" id="oval:com.redhat.rhsa:def:20191619" version="633">
+   <metadata>
+    <title>RHSA-2019:1619: vim security update (Important)</title>
+    <affected family="unix">
+     <platform>Red Hat Enterprise Linux 8</platform>
+    </affected>
+    <reference ref_id="RHSA-2019:1619" ref_url="https://access.redhat.com/errata/RHSA-2019:1619" source="RHSA"/>
+    <reference ref_id="CVE-2019-12735" ref_url="https://access.redhat.com/security/cve/CVE-2019-12735" source="CVE"/>
+    <description>Vim (Vi IMproved) is an updated and improved version of the vi editor.
+
+Security Fix(es):
+
+* vim/neovim: ':source!' command allows arbitrary command execution via modelines (CVE-2019-12735)
+
+For more details about the security issue(s), including the impact, a CVSS score, acknowledgments, and other related information, refer to the CVE page(s) listed in the References section.</description>
+    <advisory from="secalert@redhat.com">
+     <severity>Important</severity>
+     <rights>Copyright 2019 Red Hat, Inc.</rights>
+     <issued date="2019-06-27"/>
+     <updated date="2019-06-26"/>
+     <cve cvss3="6.3/CVSS:3.0/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:L" cwe="CWE-94" href="https://access.redhat.com/security/cve/CVE-2019-12735" public="20190605">CVE-2019-12735</cve>
+     <bugzilla href="https://bugzilla.redhat.com/1718308" id="1718308">CVE-2019-12735 vim/neovim: ':source!' command allows arbitrary command execution via modelines</bugzilla>
+     <affected_cpe_list>
+      <cpe>cpe:/a:redhat:enterprise_linux:8</cpe>
+     </affected_cpe_list>
+    </advisory>
+   </metadata>
+   <criteria operator="AND">
+    <criterion comment="vim-common is earlier than 2:8.0.1763-11.el8_0" test_ref="oval:com.redhat.rhsa:tst:20191619009"/>
+    <criterion comment="vim-common is signed with Red Hat redhatrelease2 key" test_ref="oval:com.redhat.rhsa:tst:20191619010"/>
+   </criteria>
+  </definition>
+ </definitions>
+ <tests>
+  <red-def:rpminfo_test check="at least one" comment="vim-common is earlier than 2:8.0.1763-11.el8_0" id="oval:com.redhat.rhsa:tst:20191619009" version="633">
+   <red-def:object object_ref="oval:com.redhat.rhsa:obj:20191619005"/>
+   <red-def:state state_ref="oval:com.redhat.rhsa:ste:20191619001"/>
+  </red-def:rpminfo_test>
+ </tests>
+ <objects>
+  <red-def:rpminfo_object id="oval:com.redhat.rhsa:obj:20191619005" version="633">
+   <red-def:name>vim-common</red-def:name>
+  </red-def:rpminfo_object>
+ </objects>
+ <states>
+  <red-def:rpminfo_state id="oval:com.redhat.rhsa:ste:20191619001" version="633">
+   <red-def:arch datatype="string" operation="pattern match">aarch64|ppc64le|s390x|x86_64</red-def:arch>
+   <red-def:evr datatype="evr_string" operation="less than">2:8.0.1763-11.el8_0</red-def:evr>
+  </red-def:rpminfo_state>
+ </states>
+</oval_definitions>
