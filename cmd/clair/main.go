@@ -59,7 +59,6 @@ import (
 	_ "github.com/quay/clair/v3/ext/vulnsrc/debian"
 	_ "github.com/quay/clair/v3/ext/vulnsrc/oracle"
 	_ "github.com/quay/clair/v3/ext/vulnsrc/redhat"
-	_ "github.com/quay/clair/v3/ext/vulnsrc/rhel"
 	_ "github.com/quay/clair/v3/ext/vulnsrc/suse"
 	_ "github.com/quay/clair/v3/ext/vulnsrc/ubuntu"
 )

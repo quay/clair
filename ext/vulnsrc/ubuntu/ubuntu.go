@@ -100,6 +100,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	// there are no incremental xml files. We store into the database
 	// the value of the generation timestamp of the latest file we
 	// parsed.
+	resp.Flags = make(map[string]string)
 	flagValue, ok, err := database.FindKeyValueAndRollback(datastore, updaterFlag)
 	if err != nil {
 		return resp, err
@@ -107,18 +108,11 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	log.WithField("flagvalue", flagValue).Debug("Generation timestamp of latest parsed file")
 
 	if !ok {
-		dbCommit = ""
+		flagValue = "0"
 	}
 
 	// Set the updaterFlag to equal the commit processed.
-	resp.Flags = make(map[string]string)
-	resp.Flags[updaterFlag] = commit
-
-	// Short-circuit if there have been no updates.
-	if commit == dbCommit {
-		log.WithField("package", "ubuntu").Debug("no update")
-		return
-	}
+	resp.Flags[updaterFlag] = flagValue
 
 	// this contains the modification time of the most recent
 	// file expressed as unix time (int64)
@@ -131,14 +125,10 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	// Fetch the update list.
 	r, err := http.Get(ovalURI)
 	if err != nil {
-		return
+		err = fmt.Errorf("Cannot download Ubuntu update list: %v", err)
+		return resp, err
 	}
 
-	// The only notes we take are if we encountered unknown Ubuntu release.
-	// We don't want the commit to be considered as managed in that case.
-	if len(resp.Notes) != 0 {
-		resp.Flags[updaterFlag] = dbCommit
-	}
 	defer r.Body.Close()
 
 	var ovalFiles []string
@@ -204,7 +194,6 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 
 	// Set the flag if we found anything.
 	if len(generationTimes) > 0 {
-		resp.Flags = make(map[string]string)
 		resp.Flags[updaterFlag] = strconv.FormatInt(latest(generationTimes), 10)
 	} else {
 		log.WithField("package", "Ubuntu Linux").Debug("no update")

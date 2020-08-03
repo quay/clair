@@ -9,11 +9,13 @@ replace (
 )
 
 require (
+	github.com/PuerkitoBio/goquery v1.5.1
 	github.com/asottile/dockerfile v2.2.0+incompatible
 	github.com/buildkite/interpolate v0.0.0-20181028012610-973457fa2b4c
 	github.com/coreos/pkg v0.0.0-20160727233714-3ac0863d7acf
 	github.com/deckarep/golang-set v1.7.1
 	github.com/fernet/fernet-go v0.0.0-20151007213151-1b2437bc582b
+	github.com/go-stomp/stomp v2.0.6+incompatible
 	github.com/golang/protobuf v1.2.0
 	github.com/google/go-cmp v0.3.0 // indirect
 	github.com/google/uuid v1.1.0 // indirect

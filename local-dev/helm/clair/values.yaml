@@ -43,7 +43,7 @@ config:
   enabledUpdaters:
   - debian
   - ubuntu
-  - rhel
+  - redhat
   - oracle
   - alpine
   - redhat
