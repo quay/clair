@@ -43,9 +43,10 @@ config:
   enabledUpdaters:
   - debian
   - ubuntu
-  - rhel
+  - redhat
   - oracle
   - alpine
+  - redhat
   enabledNamespaceDetectors:
   - os-release
   - lsb-release

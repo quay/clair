@@ -62,7 +62,7 @@ clair:
     enabledupdaters:
       - debian
       - ubuntu
-      - rhel
+      - redhat
       - oracle
       - alpine
       - suse

@@ -18,6 +18,7 @@ package ubuntu
 
 import (
 	"bufio"
+	"compress/bzip2"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -26,7 +27,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"compress/bzip2"
 
 	log "github.com/sirupsen/logrus"
 
@@ -100,6 +100,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	// there are no incremental xml files. We store into the database
 	// the value of the generation timestamp of the latest file we
 	// parsed.
+	resp.Flags = make(map[string]string)
 	flagValue, ok, err := database.FindKeyValueAndRollback(datastore, updaterFlag)
 	if err != nil {
 		return resp, err
@@ -109,6 +110,9 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 	if !ok {
 		flagValue = "0"
 	}
+
+	// Set the updaterFlag to equal the commit processed.
+	resp.Flags[updaterFlag] = flagValue
 
 	// this contains the modification time of the most recent
 	// file expressed as unix time (int64)
@@ -124,6 +128,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		err = fmt.Errorf("Cannot download Ubuntu update list: %v", err)
 		return resp, err
 	}
+
 	defer r.Body.Close()
 
 	var ovalFiles []string
@@ -189,8 +194,7 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 
 	// Set the flag if we found anything.
 	if len(generationTimes) > 0 {
-		resp.FlagName = updaterFlag
-		resp.FlagValue = strconv.FormatInt(latest(generationTimes), 10)
+		resp.Flags[updaterFlag] = strconv.FormatInt(latest(generationTimes), 10)
 	} else {
 		log.WithField("package", "Ubuntu Linux").Debug("no update")
 	}
