@@ -21,12 +21,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"github.com/coreos/clair/database"
-	"github.com/coreos/clair/ext/vulnmdsrc"
-	"github.com/coreos/clair/pkg/commonerr"
-	"github.com/coreos/clair/pkg/httputil"
-	log "github.com/sirupsen/logrus"
-	"golang.org/x/net/html/charset"
 	"io"
 	"io/ioutil"
 	"os"
@@ -34,6 +28,13 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/quay/clair/v3/database"
+	"github.com/quay/clair/v3/ext/vulnmdsrc"
+	"github.com/quay/clair/v3/pkg/commonerr"
+	"github.com/quay/clair/v3/pkg/httputil"
+	log "github.com/sirupsen/logrus"
+	"golang.org/x/net/html/charset"
 )
 
 const (
