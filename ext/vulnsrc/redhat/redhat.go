@@ -164,9 +164,9 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 
 			// since the current document was determined to be new/updated, log a summary of what was collected
 			log.WithFields(log.Fields{
-				"collectedVulns":     len(currentCollectedVulnerabilities),
-				"totalPendingVulns":  len(accumulatedVulnerabilities),
-				"document":           manifestEntry.BzipPath,
+				"collectedVulns":    len(currentCollectedVulnerabilities),
+				"totalPendingVulns": len(accumulatedVulnerabilities),
+				"document":          manifestEntry.BzipPath,
 			}).Info("Appending collected vulnerabilities to pending set")
 		} else {
 			// this pulp manifest entry has already been processed; log and skip it
@@ -367,9 +367,13 @@ func ConstructVulnerabilityIDs(advisoryDefinition ParsedAdvisory) []database.Vul
 	var vulnIDs []database.VulnerabilityID
 	rhsaName := ParseRhsaName(advisoryDefinition)
 	cveNames := ParseCveNames(advisoryDefinition)
+	namespaces := ParseVulnerabilityNamespace(advisoryDefinition)
 	for _, cveName := range cveNames {
-		vulnID := database.VulnerabilityID{Name: cveName + " - " + rhsaName, Namespace: ParseVulnerabilityNamespace(advisoryDefinition)}
-		vulnIDs = append(vulnIDs, vulnID)
+		for _, namespace := range namespaces {
+			vulnID := database.VulnerabilityID{Name: cveName + " - " + rhsaName, Namespace: namespace}
+			vulnIDs = append(vulnIDs, vulnID)
+
+		}
 	}
 	return vulnIDs
 }
@@ -396,25 +400,21 @@ func ParseRhsaName(advisoryDefinition ParsedAdvisory) string {
 }
 
 // ParseVulnerabilityNamespace - parse the namespace from the given advisory definition
-func ParseVulnerabilityNamespace(advisoryDefinition ParsedAdvisory) string {
+func ParseVulnerabilityNamespace(advisoryDefinition ParsedAdvisory) []string {
 	// use criteria parse result
 	moduleNamespaces := ParseCriteriaForModuleNamespaces(advisoryDefinition.Criteria)
 	if len(moduleNamespaces) > 0 {
 		// use MODULE namespace
-		return moduleNamespaces[0]
+		return moduleNamespaces
 	}
 	// use CPE namespace
 	cpeNames, err := ParseCpeNamesFromAffectedCpeList(advisoryDefinition.Metadata.Advisory.AffectedCpeList)
 	if err != nil {
 		// log error and continue
 		log.Error(err)
-		return ""
+		return []string{}
 	}
-	if len(cpeNames) == 0 {
-		// no namespace found
-		return ""
-	}
-	return cpeNames[0]
+	return cpeNames
 }
 
 // GetSeverity - get the Severity value which corresponds to the given string
@@ -702,11 +702,11 @@ func DbLookupIsAdvisoryProcessed(definition ParsedAdvisory, datastore database.D
 		// error during db lookup, treat advisory as unprocessed
 		return false
 	}
-	if len(foundVulns) > 0 {
-		// found a record, so this has already been processed
-		return true
+	for _, vuln := range foundVulns {
+		if vuln.Valid {
+			return true
+		}
 	}
-	// no record found, so it hasn't been processed yet
 	return false
 }
 
