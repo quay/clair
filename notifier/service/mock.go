@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/quay/clair/v4/notifier"
+	"github.com/quay/clair/v4/notifier/keymanager"
 	"github.com/quay/clair/v4/pkg/pager"
 )
 
@@ -14,6 +15,8 @@ var _ Service = (*Mock)(nil)
 type Mock struct {
 	Notifications_       func(ctx context.Context, id uuid.UUID, page *pager.Page) ([]notifier.Notification, pager.Page, error)
 	DeleteNotifications_ func(ctx context.Context, id uuid.UUID) error
+	KeyStore_            func(ctx context.Context) notifier.KeyStore
+	KeyManager_          func(ctx context.Context) *keymanager.Manager
 }
 
 func (m *Mock) Notifications(ctx context.Context, id uuid.UUID, page *pager.Page) ([]notifier.Notification, pager.Page, error) {
@@ -22,4 +25,11 @@ func (m *Mock) Notifications(ctx context.Context, id uuid.UUID, page *pager.Page
 
 func (m *Mock) DeleteNotifications(ctx context.Context, id uuid.UUID) error {
 	return m.DeleteNotifications_(ctx, id)
+}
+
+func (m *Mock) KeyStore(ctx context.Context) notifier.KeyStore {
+	return m.KeyStore_(ctx)
+}
+func (m *Mock) KeyManager(ctx context.Context) *keymanager.Manager {
+	return m.KeyManager_(ctx)
 }

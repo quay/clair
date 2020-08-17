@@ -36,7 +36,7 @@ func TestE2E(t *testing.T) {
 		},
 	}
 	ctx := context.Background()
-	db, store, teardown := TestStore(ctx, t)
+	db, store, _, teardown := TestStore(ctx, t)
 	defer teardown()
 	e := e2e{
 		notificaitonID: notificationID,

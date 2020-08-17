@@ -2,6 +2,8 @@ package clairerror
 
 import (
 	"fmt"
+
+	"github.com/google/uuid"
 )
 
 // ErrRequestFail indicates an http request failure
@@ -123,4 +125,12 @@ func (e *ErrBadAffectedManifests) Error() string {
 
 func (e *ErrBadAffectedManifests) Unwrap() error {
 	return e.E
+}
+
+type ErrKeyNotFound struct {
+	ID uuid.UUID
+}
+
+func (e ErrKeyNotFound) Error() string {
+	return "key with id " + e.ID.String() + " not found"
 }

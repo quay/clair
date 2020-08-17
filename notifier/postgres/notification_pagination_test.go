@@ -73,7 +73,7 @@ func TestNotePagination(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
-			_, store, _ := TestStore(ctx, t)
+			_, store, _, _ := TestStore(ctx, t)
 			ctx = log.TestLogger(ctx, t)
 
 			noteID := uuid.New()
