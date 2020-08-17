@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
+	"github.com/quay/claircore/test/log"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/plugin/othttp"
 )
@@ -62,7 +63,8 @@ func TestUpdateEndpoints(t *testing.T) {
 		ServeMux: http.NewServeMux(),
 		traceOpt: othttp.WithTracer(global.TraceProvider().Tracer("clair")),
 	}
-	if err := s.configureMatcherMode(); err != nil {
+	ctx := log.TestLogger(context.Background(), t)
+	if err := s.configureMatcherMode(ctx); err != nil {
 		t.Error(err)
 	}
 

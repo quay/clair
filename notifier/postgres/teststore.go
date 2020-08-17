@@ -21,7 +21,7 @@ const (
 	DefaultDSN = `host=localhost port=5432 user=clair dbname=clair sslmode=disable`
 )
 
-func TestStore(ctx context.Context, t testing.TB) (*sqlx.DB, *Store, func()) {
+func TestStore(ctx context.Context, t testing.TB) (*sqlx.DB, *Store, *KeyStore, func()) {
 	if os.Getenv(integration.EnvPGConnString) == "" {
 		os.Setenv(integration.EnvPGConnString, DefaultDSN)
 	}
@@ -57,7 +57,8 @@ func TestStore(ctx context.Context, t testing.TB) (*sqlx.DB, *Store, func()) {
 	}
 
 	s := NewStore(pool)
-	return sx, s, func() {
+	ks := NewKeyStore(pool)
+	return sx, s, ks, func() {
 		sx.Close()
 		pool.Close()
 		db.Close(ctx, t)
