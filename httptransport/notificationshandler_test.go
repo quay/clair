@@ -12,7 +12,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/quay/clair/v4/notifier"
 	"github.com/quay/clair/v4/notifier/service"
-	"github.com/quay/clair/v4/pkg/pager"
 )
 
 // TestUpdateOperationHandler is a parallel harness for testing a UpdateOperation handler.
@@ -60,25 +59,25 @@ func testNotificationHandlerGet(t *testing.T) {
 	t.Parallel()
 	var (
 		nextID     = uuid.New()
-		inPageWant = pager.Page{
+		inPageWant = notifier.Page{
 			Size: 500,
 		}
 		noteID      = uuid.New()
-		outPageWant = pager.Page{
+		outPageWant = notifier.Page{
 			Size: 500,
 			Next: &nextID,
 		}
 	)
 
 	nm := &service.Mock{
-		Notifications_: func(ctx context.Context, id uuid.UUID, page *pager.Page) ([]notifier.Notification, pager.Page, error) {
+		Notifications_: func(ctx context.Context, id uuid.UUID, page *notifier.Page) ([]notifier.Notification, notifier.Page, error) {
 			if !cmp.Equal(id, noteID) {
 				t.Fatalf("got: %v, wanted: %v", id, noteID)
 			}
 			if !cmp.Equal(page, &inPageWant) {
 				t.Fatalf("got: %v, wanted: %v", page, inPageWant)
 			}
-			return []notifier.Notification{}, pager.Page{
+			return []notifier.Notification{}, notifier.Page{
 				Size: inPageWant.Size,
 				Next: &nextID,
 			}, nil
@@ -119,25 +118,25 @@ func testNotificationHandlerGetParams(t *testing.T) {
 	)
 	var (
 		nextID     = uuid.New()
-		inPageWant = pager.Page{
+		inPageWant = notifier.Page{
 			Size: 100,
 		}
 		noteID      = uuid.New()
-		outPageWant = pager.Page{
+		outPageWant = notifier.Page{
 			Size: 100,
 			Next: &nextID,
 		}
 	)
 
 	nm := &service.Mock{
-		Notifications_: func(ctx context.Context, id uuid.UUID, page *pager.Page) ([]notifier.Notification, pager.Page, error) {
+		Notifications_: func(ctx context.Context, id uuid.UUID, page *notifier.Page) ([]notifier.Notification, notifier.Page, error) {
 			if !cmp.Equal(id, noteID) {
 				t.Fatalf("got: %v, wanted: %v", id, noteID)
 			}
 			if !cmp.Equal(page, &inPageWant) {
 				t.Fatalf("got: %v, wanted: %v", page, inPageWant)
 			}
-			return []notifier.Notification{}, pager.Page{
+			return []notifier.Notification{}, notifier.Page{
 				Size: inPageWant.Size,
 				Next: &nextID,
 			}, nil

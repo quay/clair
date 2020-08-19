@@ -8,7 +8,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/quay/clair/v4/notifier"
-	"github.com/quay/clair/v4/pkg/pager"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/test/integration"
 )
@@ -98,7 +97,7 @@ func TestNotePagination(t *testing.T) {
 				t.Fatalf("failed to insert notifications: %v", err)
 			}
 
-			var inPage = pager.Page{
+			var inPage = notifier.Page{
 				Size: tt.pageSize,
 			}
 

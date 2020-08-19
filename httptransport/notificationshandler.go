@@ -11,7 +11,6 @@ import (
 
 	"github.com/quay/clair/v4/notifier"
 	"github.com/quay/clair/v4/notifier/service"
-	"github.com/quay/clair/v4/pkg/pager"
 	je "github.com/quay/claircore/pkg/jsonerr"
 	"github.com/rs/zerolog"
 )
@@ -21,7 +20,7 @@ const (
 )
 
 type Response struct {
-	Page          pager.Page              `json:"page"`
+	Page          notifier.Page           `json:"page"`
 	Notifications []notifier.Notification `json:"notifications"`
 }
 
@@ -131,7 +130,7 @@ func (h *NotifHandler) Get(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	inP := &pager.Page{
+	inP := &notifier.Page{
 		Size: pageSize,
 		Next: next,
 	}

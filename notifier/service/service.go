@@ -17,7 +17,6 @@ import (
 	"github.com/quay/clair/v4/notifier/postgres"
 	"github.com/quay/clair/v4/notifier/stomp"
 	"github.com/quay/clair/v4/notifier/webhook"
-	"github.com/quay/clair/v4/pkg/pager"
 	pgdl "github.com/quay/claircore/pkg/distlock/postgres"
 	"github.com/remind101/migrate"
 	"github.com/rs/zerolog"
@@ -33,7 +32,7 @@ const (
 // This remains an interface so remote clients may implement as well.
 type Service interface {
 	// Retrieves an optional paginated set of notifications given an notification id
-	Notifications(ctx context.Context, id uuid.UUID, page *pager.Page) ([]notifier.Notification, pager.Page, error)
+	Notifications(ctx context.Context, id uuid.UUID, page *notifier.Page) ([]notifier.Notification, notifier.Page, error)
 	// Deletes the provided notification id
 	DeleteNotifications(ctx context.Context, id uuid.UUID) error
 	// KeyStore returns the notifier's KeyStore.
@@ -51,7 +50,7 @@ type service struct {
 	keymanager *keymanager.Manager
 }
 
-func (s *service) Notifications(ctx context.Context, id uuid.UUID, page *pager.Page) ([]notifier.Notification, pager.Page, error) {
+func (s *service) Notifications(ctx context.Context, id uuid.UUID, page *notifier.Page) ([]notifier.Notification, notifier.Page, error) {
 	return s.store.Notifications(ctx, id, page)
 }
 
