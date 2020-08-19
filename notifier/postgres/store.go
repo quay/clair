@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/quay/clair/v4/notifier"
-	"github.com/quay/clair/v4/pkg/pager"
 )
 
 // Store implements the notifier.Store interface
@@ -20,7 +19,7 @@ func NewStore(pool *pgxpool.Pool) *Store {
 
 // Notifications retrieves the list of notifications associated with a
 // notification id
-func (s *Store) Notifications(ctx context.Context, id uuid.UUID, page *pager.Page) ([]notifier.Notification, pager.Page, error) {
+func (s *Store) Notifications(ctx context.Context, id uuid.UUID, page *notifier.Page) ([]notifier.Notification, notifier.Page, error) {
 	return notifications(ctx, s.pool, id, page)
 }
 

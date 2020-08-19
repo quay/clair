@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/quay/clair/v4/pkg/pager"
 )
 
 // PutOpts is provided to Notificationer.Put
@@ -42,7 +41,7 @@ type Notificationer interface {
 	// paging has been exhausted.
 	//
 	// Page maybe nil to receive all notifications.
-	Notifications(ctx context.Context, id uuid.UUID, page *pager.Page) ([]Notification, pager.Page, error)
+	Notifications(ctx context.Context, id uuid.UUID, page *Page) ([]Notification, Page, error)
 	// PutNotifications persists the provided notifications and associates
 	// them with the provided notification id
 	//

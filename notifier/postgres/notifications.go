@@ -7,11 +7,10 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/notifier"
-	"github.com/quay/clair/v4/pkg/pager"
 	"github.com/rs/zerolog"
 )
 
-func notifications(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID, page *pager.Page) ([]notifier.Notification, pager.Page, error) {
+func notifications(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID, page *notifier.Page) ([]notifier.Notification, notifier.Page, error) {
 	const (
 		query      = "SELECT id, body FROM notification_body WHERE notification_id = $1"
 		pagedQuery = "SELECT id, body FROM notification_body WHERE notification_id = $1 AND id > $2 ORDER BY id ASC LIMIT $3"
@@ -23,7 +22,7 @@ func notifications(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID, page *
 
 	// if no page argument early return all notifications
 	if page == nil {
-		p := pager.Page{}
+		p := notifier.Page{}
 		notifications := make([]notifier.Notification, 0, 0)
 		rows, _ := pool.Query(ctx, query, id.String())
 		defer rows.Close()
@@ -39,7 +38,7 @@ func notifications(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID, page *
 	}
 
 	// page to return to client
-	outPage := pager.Page{
+	outPage := notifier.Page{
 		Size: page.Size,
 	}
 
@@ -60,7 +59,7 @@ func notifications(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID, page *
 		var n notifier.Notification
 		err := rows.Scan(&n.ID, &n)
 		if err != nil {
-			return nil, pager.Page{}, clairerror.ErrBadNotification{id, err}
+			return nil, notifier.Page{}, clairerror.ErrBadNotification{id, err}
 		}
 		notifications = append(notifications, n)
 	}

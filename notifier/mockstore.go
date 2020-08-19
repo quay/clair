@@ -4,12 +4,11 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/quay/clair/v4/pkg/pager"
 )
 
 // MockStore implements a mock Store.
 type MockStore struct {
-	Notifications_        func(ctx context.Context, id uuid.UUID, page *pager.Page) ([]Notification, pager.Page, error)
+	Notifications_        func(ctx context.Context, id uuid.UUID, page *Page) ([]Notification, Page, error)
 	PutNotifications_     func(ctx context.Context, opts PutOpts) error
 	DeleteNotitfications_ func(ctx context.Context, id uuid.UUID) error
 	Receipt_              func(ctx context.Context, id uuid.UUID) (Receipt, error)
@@ -24,7 +23,7 @@ type MockStore struct {
 
 // Notifications retrieves the list of notifications associated with a
 // notification id
-func (m *MockStore) Notifications(ctx context.Context, id uuid.UUID, page *pager.Page) ([]Notification, pager.Page, error) {
+func (m *MockStore) Notifications(ctx context.Context, id uuid.UUID, page *Page) ([]Notification, Page, error) {
 	return m.Notifications_(ctx, id, page)
 }
 

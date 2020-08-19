@@ -1,4 +1,4 @@
-package pager
+package notifier
 
 import (
 	"github.com/google/uuid"
