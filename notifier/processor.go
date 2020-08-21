@@ -3,6 +3,7 @@ package notifier
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 	clairerror "github.com/quay/clair/v4/clair-error"
@@ -112,16 +113,16 @@ func (p *Processor) create(ctx context.Context, e Event, prev uuid.UUID) error {
 	log.Debug().Str("prev", prev.String()).Str("cur", uoid).Msg("retrieving diff")
 	diff, err := p.matcher.UpdateDiff(ctx, prev, e.uo.Ref)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get update diff: %v", err)
 	}
 	log.Debug().Int("removed", len(diff.Removed)).Int("added", len(diff.Added)).Msg("diff results")
 	added, err := p.indexer.AffectedManifests(ctx, diff.Added)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get added affected manifests: %v", err)
 	}
 	removed, err := p.indexer.AffectedManifests(ctx, diff.Removed)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get removed affected manifests: %v", err)
 	}
 	log.Debug().Int("added", len(added.VulnerableManifests)).Int("removed", len(removed.VulnerableManifests)).Msg("affected manifest counts")
 
@@ -167,7 +168,7 @@ func (p *Processor) create(ctx context.Context, e Event, prev uuid.UUID) error {
 	}
 	err = p.store.PutNotifications(ctx, opts)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to store notifications: %v", err)
 	}
 	return nil
 }

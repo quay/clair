@@ -9,7 +9,6 @@ import (
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/claircore/pkg/distlock"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
 // Delivery handles the business logic of delivering
@@ -79,7 +78,7 @@ func (d *Delivery) RunDelivery(ctx context.Context) error {
 	log := zerolog.Ctx(ctx).With().
 		Str("deliverer", d.Deliverer.Name()).
 		Uint8("id", d.id).
-		Str("component", "notifier/delivery/Delivery.onTick").Logger()
+		Str("component", "notifier/delivery/Delivery.RunDelivery").Logger()
 
 	toDeliver := []uuid.UUID{}
 	// get created
@@ -105,7 +104,7 @@ func (d *Delivery) RunDelivery(ctx context.Context) error {
 			return err
 		}
 		if !ok {
-			log.Debug().Msg("another process is deliverying this notification")
+			log.Debug().Str("notification_id", nID.String()).Msg("another process is deliverying this notification")
 			// another process is working on this notification
 			continue
 		}
@@ -124,6 +123,11 @@ func (d *Delivery) RunDelivery(ctx context.Context) error {
 //
 // do's actions should be performed under a distributed lock.
 func (d *Delivery) do(ctx context.Context, nID uuid.UUID) error {
+	log := zerolog.Ctx(ctx).With().
+		Str("deliverer", d.Deliverer.Name()).
+		Uint8("id", d.id).
+		Str("component", "notifier/delivery/Delivery.do").Logger()
+
 	// if we have a direct deliverer provide the notifications to it.
 	if dd, ok := d.Deliverer.(DirectDeliverer); ok {
 		log.Debug().Msg("providing direct deliverer notifications")
@@ -144,6 +148,7 @@ func (d *Delivery) do(ctx context.Context, nID uuid.UUID) error {
 		if errors.As(err, &dErr) {
 			// OK for this to fail, notification will stay in Created status.
 			// store is failing, lets back off it tho until next tick.
+			log.Info().Str("notifcation_id", nID.String()).Msg("failed to deliver notifications")
 			err := d.store.SetDeliveryFailed(ctx, nID)
 			if err != nil {
 				return err
@@ -163,7 +168,10 @@ func (d *Delivery) do(ctx context.Context, nID uuid.UUID) error {
 	// we can delete notification id
 	if _, ok := d.Deliverer.(DirectDeliverer); ok {
 		err := d.store.SetDeleted(ctx, nID)
-		return err
+		if err != nil {
+			return err
+		}
 	}
+	log.Info().Str("notifcation_id", nID.String()).Msg("successfully delivered notifications")
 	return nil
 }
