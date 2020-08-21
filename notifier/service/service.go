@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/google/uuid"
@@ -101,6 +102,12 @@ func New(ctx context.Context, opts Opts) (*service, error) {
 		return nil, fmt.Errorf("failed to initialize key manager: %v", err)
 	}
 
+	// check for test mode
+	if tm := os.Getenv("NOTIFIER_TEST_MODE"); tm != "" {
+		log.Info().Str("interval", opts.PollInterval.String()).Msg("NOTIFIER TEST MODE ENABLED. NOTIFIER WILL CREATE TEST NOTIFICATIONS ON A SET INTERVAL")
+		testModeInit(ctx, &opts)
+	}
+
 	// kick off the poller
 	log.Info().Str("interval", opts.PollInterval.String()).Msg("intializing poller")
 	poller := notifier.NewPoller(opts.PollInterval, store, opts.Matcher)
@@ -142,6 +149,18 @@ func New(ctx context.Context, opts Opts) (*service, error) {
 		keymanager: kmgr,
 		keystore:   keystore,
 	}, nil
+}
+
+// testModeInit will inject a mock Indexer and Matcher into opts
+// to be used in testing mode.
+func testModeInit(ctx context.Context, opts *Opts) error {
+	mm := &matcher.Mock{}
+	im := &indexer.Mock{}
+	matcherForTestMode(mm)
+	indexerForTestMode(im)
+	opts.Matcher = mm
+	opts.Indexer = im
+	return nil
 }
 
 func storeInit(ctx context.Context, opts Opts) (*postgres.Store, *postgres.KeyStore, *sqlx.DB, error) {

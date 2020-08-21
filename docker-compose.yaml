@@ -75,6 +75,26 @@ services:
       - "traefik.http.routers.index_report.entrypoints=clair"
       - "traefik.http.routers.index_report.rule=PathPrefix(`/api/v1/notification`)"
 
+  # this should only be created and deleted via the make target "local-dev-notifier-test"
+  notifier-test-mode:
+    container_name: clair-notifier
+    image: quay.io/claircore/golang:1.13.5
+    ports:
+      - "8079:8080"
+      - "8088:8089"
+    volumes:
+      - "./:/src/clair/"
+    environment:
+      CLAIR_CONF: "/src/clair/local-dev/clair/config.yaml"
+      CLAIR_MODE: "notifier"
+      NOTIFIER_TEST_MODE: "true"
+    command:
+      ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor ."]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.index_report.entrypoints=clair"
+      - "traefik.http.routers.index_report.rule=PathPrefix(`/api/v1/notification`)"
+
   indexer:
     container_name: clair-indexer
     image: quay.io/claircore/golang:1.13.5

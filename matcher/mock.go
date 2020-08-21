@@ -2,6 +2,7 @@ package matcher
 
 import (
 	"context"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/quay/claircore"
@@ -18,6 +19,10 @@ type Mock struct {
 	LatestUpdateOperations_ func(context.Context) (map[string][]driver.UpdateOperation, error)
 	UpdateDiff_             func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error)
 	Scan_                   func(context.Context, *claircore.IndexReport) (*claircore.VulnerabilityReport, error)
+	// TestUOs provide memory for the mock.
+	// usage of this field can be dictated by the test case's needs.
+	sync.Mutex
+	TestUOs map[string][]driver.UpdateOperation
 }
 
 // DeleteUpdateOperations marks the provided refs as seen and processed.
