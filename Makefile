@@ -23,6 +23,8 @@ goimports-local:
 
 # start a local development environment. 
 # each services runs in it's own container to test service->service communication.
+#
+# local dev configuration can be found in "./local-dev/clair/config.yaml"
 .PHONY: local-dev-up
 local-dev-up: vendor
 	$(docker-compose) up -d traefik
@@ -36,6 +38,29 @@ local-dev-up: vendor
 	$(docker-compose) up -d matcher
 	$(docker-compose) up -d notifier
 	$(docker-compose) up -d swagger-ui
+
+# starts a local dev environment for testing notifier
+# the notifier will create a notification on very notifier.poll_interval value in the local dev configuration.
+# 
+# the notifier will deliver the notification to the configured deliverer in the local dev configuration. 
+# the default deliverer is rabbitmq/amqp
+#
+# local dev configuration can be found in "./local-dev/clair/config.yaml"
+.PHONY: local-dev-notifier-test
+local-dev-notifier-test: vendor
+	$(docker-compose) up -d traefik
+	$(docker-compose) up -d jaeger
+	$(docker-compose) up -d prometheus
+	$(docker-compose) up -d rabbitmq
+	$(docker-compose) up -d activemq
+	$(docker-compose) up -d clair-db
+	$(docker) exec -it clair-db bash -c 'while ! pg_isready; do echo "waiting for postgres"; sleep 2; done'
+	$(docker-compose) up -d notifier-test-mode
+	$(docker-compose) up -d swagger-ui
+
+.PHONY: local-dev-notifier-test-restart
+local-dev-notifier-test-restart: vendor
+	$(docker-compose) up -d --force-recreate notifier-test-mode
 
 vendor: vendor/modules.txt
 

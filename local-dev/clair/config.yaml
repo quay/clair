@@ -18,7 +18,7 @@ notifier:
   connstring: host=clair-db port=5432 user=clair dbname=clair sslmode=disable
   migrations: true
   delivery_interval: 5s
-  poll_interval: 5s
+  poll_interval: 15s
   # webhook:
   #   target: "http://webhook/"
   #   callback: "http://clair-notifier/api/v1/notifications"
