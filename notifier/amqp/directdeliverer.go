@@ -69,6 +69,8 @@ func (d *DirectDeliverer) Deliver(ctx context.Context, _ uuid.UUID) error {
 	if err != nil {
 		return &clairerror.ErrDeliveryFailed{err}
 	}
+	defer ch.Close()
+
 	err = ch.Tx()
 	if err != nil {
 		return &clairerror.ErrDeliveryFailed{err}
