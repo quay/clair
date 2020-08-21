@@ -52,6 +52,7 @@ func (d *Deliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
 	if err != nil {
 		return &clairerror.ErrDeliveryFailed{err}
 	}
+	defer ch.Close()
 
 	callback := d.conf.callback
 	callback.Path = path.Join(callback.Path, nID.String())
