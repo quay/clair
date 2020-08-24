@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 type Matcher struct {
 	// A Postgres connection string.
 	//
@@ -23,20 +25,13 @@ type Matcher struct {
 	//
 	// Whether Matcher nodes handle migrations to their databases.
 	Migrations bool `yaml:"migrations" json:"migrations"`
-	// A slice of strings representing which
-	// updaters matcher will create.
+	// Period controls how often updaters are run.
 	//
-	// If nil all default UpdaterSets will be used
+	// The default is 30 minutes.
+	Period *time.Duration `yaml:"period" json:"period"`
+	// DisableUpdaters disables the updater's running of matchers.
 	//
-	// The following sets are supported:
-	// "alpine"
-	// "aws"
-	// "debian"
-	// "oracle"
-	// "photon"
-	// "pyupio"
-	// "rhel"
-	// "suse"
-	// "ubuntu"
-	UpdaterSets []string `yaml:"updater_sets" json:"updater_sets"`
+	// This should be toggled on if vulnerabilities are being provided by
+	// another mechanism.
+	DisableUpdaters bool `yaml:"disable_updaters" json:"disable_updaters"`
 }

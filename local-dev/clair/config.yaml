@@ -2,6 +2,7 @@
 log_level: debug-color
 introspection_addr: ""
 http_listen_addr: ":6000"
+updaters: {}
 indexer:
   connstring: host=clair-db port=5432 user=clair dbname=clair sslmode=disable
   scanlock_retry: 10
@@ -25,12 +26,12 @@ notifier:
   amqp:
     direct: true
     exchange:
-        name: "" 
-        type: "direct"
-        durable: true
-        auto_delete: false
+      name: ""
+      type: "direct"
+      durable: true
+      auto_delete: false
     uris: ["amqp://guest:guest@clair-rabbitmq:5672/"]
-    routing_key: "notifications" 
+    routing_key: "notifications"
     callback: "http://clair-notifier/api/v1/notifications"
 # tracing and metrics config
 trace:
@@ -42,4 +43,3 @@ trace:
     service_name: "clair"
 metrics:
   name: "prometheus"
-
