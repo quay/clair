@@ -9,14 +9,14 @@ import (
 // Config provides configuration for an Webhook deliverer.
 type Config struct {
 	// the URL where our webhook will be delivered
-	Target string `yaml:"target"`
+	Target string `yaml:"target" json:"target"`
 	target *url.URL
 	// the callback url where notifications can be received
 	// the notification will be appended to this url
-	Callback string `yaml:"callback"`
+	Callback string `yaml:"callback" json:"callback"`
 	callback *url.URL
 	// any htp headers necessary for the request to Target
-	Headers http.Header `yaml:"headers"`
+	Headers http.Header `yaml:"headers" json:"headers"`
 	// whether the webhook deliverer will sign out going.
 	// if true webhooks will be sent with a jwt signed by
 	// the notifier's private key.
