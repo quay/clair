@@ -39,6 +39,31 @@ local-dev-up: vendor
 	$(docker-compose) up -d notifier
 	$(docker-compose) up -d swagger-ui
 
+.PHONY: local-dev-up-with-quay
+local-dev-up-with-quay: vendor
+	## clair ##
+	$(docker-compose) up -d traefik
+	$(docker-compose) up -d jaeger
+	$(docker-compose) up -d prometheus
+	$(docker-compose) up -d rabbitmq
+	$(docker-compose) up -d activemq
+	$(docker-compose) up -d clair-db
+	$(docker) exec -it clair-db bash -c 'while ! pg_isready; do echo "waiting for clair postgres"; sleep 2; done'
+	$(docker-compose) up -d indexer-quay
+	$(docker-compose) up -d matcher
+	$(docker-compose) up -d notifier
+	$(docker-compose) up -d swagger-ui
+	## quay ##
+	$(docker-compose) up -d redis
+	$(docker-compose) up -d quay-db
+	$(docker) exec -it quay-db bash -c 'while ! pg_isready; do echo "waiting for quay postgres"; sleep 2; done'
+	$(docker) exec -it quay-db /bin/bash -c 'echo "CREATE EXTENSION IF NOT EXISTS pg_trgm" | psql -d quay -U quay'
+	$(docker-compose) up -d quay
+
+.PHONY: local-dev-restart-quay
+local-dev-restart-quay: 
+	$(docker-compose) up -d --force-recreate quay
+
 # starts a local dev environment for testing notifier
 # the notifier will create a notification on very notifier.poll_interval value in the local dev configuration.
 # 
