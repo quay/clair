@@ -27,5 +27,14 @@ type Indexer struct {
 	// Whether Indexer nodes handle migrations to their database.
 	Migrations bool `yaml:"migrations" json:"migrations"`
 	// Scanner allows for passing configuration options to layer scanners.
-	Scanner map[string]yaml.Node `yaml:"scanner" json:"scanner"`
+	Scanner ScannerConfig `yaml:"scanner" json:"scanner"`
+	// Airgap disables scanners that have signaled they expect to talk to the
+	// Internet.
+	Airgap bool `yaml:"airgap" json:"airgap"`
+}
+
+type ScannerConfig struct {
+	Package map[string]yaml.Node `yaml:"package" json:"package"`
+	Dist    map[string]yaml.Node `yaml:"dist" json:"dist"`
+	Repo    map[string]yaml.Node `yaml:"repo" json:"repo"`
 }

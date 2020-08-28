@@ -204,4 +204,27 @@ Desired updaters should be selected by the normal configuration mechanism.
 
 ## Indexers
 
-#### Configuration
+### Configuration
+
+#### Airgap
+
+```yaml
+indexer:
+  airgap: true
+```
+
+#### Specific Scanners
+
+```yaml
+indexer:
+  scanner:
+    package:
+      name:
+        key: value
+    repo:
+      name:
+        key: value
+    dist:
+      name:
+        key: value
+```
