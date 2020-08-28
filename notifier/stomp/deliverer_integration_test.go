@@ -20,7 +20,8 @@ const (
 // callback is successfully delivered to the stomp broker.
 func TestDeliverer(t *testing.T) {
 	integration.Skip(t)
-	ctx := log.TestLogger(context.Background(), t)
+	ctx, done := log.TestLogger(context.Background(), t)
+	defer done()
 	const (
 		callback = "http://clair-notifier/api/v1/notifications"
 	)

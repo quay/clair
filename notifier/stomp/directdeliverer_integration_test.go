@@ -7,11 +7,12 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/quay/clair/v4/notifier"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/test/integration"
 	"github.com/quay/claircore/test/log"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/quay/clair/v4/notifier"
 )
 
 // TestDirectDeliverer confirms delivery of notifications directly
@@ -67,7 +68,8 @@ func TestDirectDeliverer(t *testing.T) {
 	}
 	for _, tt := range table {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := log.TestLogger(context.Background(), t)
+			ctx, done := log.TestLogger(context.Background(), t)
+			defer done()
 			// deliverer test
 			conf := Config{
 				Direct:      true,

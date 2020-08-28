@@ -63,7 +63,8 @@ func TestUpdateEndpoints(t *testing.T) {
 		ServeMux: http.NewServeMux(),
 		traceOpt: othttp.WithTracer(global.TraceProvider().Tracer("clair")),
 	}
-	ctx := log.TestLogger(context.Background(), t)
+	ctx, done := log.TestLogger(context.Background(), t)
+	defer done()
 	if err := s.configureMatcherMode(ctx); err != nil {
 		t.Error(err)
 	}

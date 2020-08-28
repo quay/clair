@@ -10,11 +10,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/quay/claircore/test/integration"
+	"github.com/quay/claircore/test/log"
+
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/notifier/keymanager"
 	"github.com/quay/clair/v4/notifier/postgres"
-	"github.com/quay/claircore/test/integration"
-	"github.com/quay/claircore/test/log"
 )
 
 func genKeyPair(t *testing.T, n int) (kps []keymanager.KeyPair) {
@@ -51,7 +52,8 @@ func TestKeyStore(t *testing.T) {
 func testKeyStoreGC(t *testing.T) {
 	integration.Skip(t)
 	t.Parallel()
-	ctx := log.TestLogger(context.Background(), t)
+	ctx, done := log.TestLogger(context.Background(), t)
+	defer done()
 	db, _, keystore, teardown := postgres.TestStore(ctx, t)
 	defer teardown()
 
@@ -104,7 +106,8 @@ func testKeyStoreGC(t *testing.T) {
 func testKeyStore(t *testing.T) {
 	integration.Skip(t)
 	t.Parallel()
-	ctx := log.TestLogger(context.Background(), t)
+	ctx, done := log.TestLogger(context.Background(), t)
+	defer done()
 	_, _, keystore, teardown := postgres.TestStore(ctx, t)
 	defer teardown()
 

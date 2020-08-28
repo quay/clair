@@ -16,11 +16,12 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
-	"github.com/quay/clair/v4/notifier"
-	"github.com/quay/clair/v4/notifier/keymanager"
 	"github.com/quay/claircore/test/log"
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
+
+	"github.com/quay/clair/v4/notifier"
+	"github.com/quay/clair/v4/notifier/keymanager"
 )
 
 var (
@@ -50,7 +51,8 @@ func testSign(t *testing.T) {
 		t.Fatalf("failed to create request: %v", err)
 	}
 
-	ctx := log.TestLogger(context.Background(), t)
+	ctx, done := log.TestLogger(context.Background(), t)
+	defer done()
 	err = d.sign(ctx, req, kp)
 	if err != nil {
 		t.Fatalf("failed to sign request: %v", err)
@@ -125,7 +127,8 @@ func testDeliverer(t *testing.T) {
 			return
 		},
 	))
-	ctx := log.TestLogger(context.Background(), t)
+	ctx, done := log.TestLogger(context.Background(), t)
+	defer done()
 	conf := Config{
 		Callback: callback,
 		Target:   server.URL,

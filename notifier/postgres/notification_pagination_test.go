@@ -4,12 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/quay/claircore/test/log"
-
 	"github.com/google/uuid"
-	"github.com/quay/clair/v4/notifier"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/test/integration"
+	"github.com/quay/claircore/test/log"
+
+	"github.com/quay/clair/v4/notifier"
 )
 
 // TestNotePagination confirms paginating notifications
@@ -72,8 +72,9 @@ func TestNotePagination(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
+			ctx, done := log.TestLogger(ctx, t)
+			defer done()
 			_, store, _, _ := TestStore(ctx, t)
-			ctx = log.TestLogger(ctx, t)
 
 			noteID := uuid.New()
 			updateID := uuid.New()
