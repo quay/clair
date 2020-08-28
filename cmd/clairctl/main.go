@@ -32,6 +32,8 @@ func main() {
 		Commands: []*cli.Command{
 			ManifestCmd,
 			ReportCmd,
+			ExportCmd,
+			ImportCmd,
 		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
