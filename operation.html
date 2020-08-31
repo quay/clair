@@ -5,13 +5,24 @@
         <meta charset="UTF-8">
         <title>Operation - Clair Documentation</title>
         
+        
+
+
+        <!-- Custom HTML head -->
+        
+
 
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="Documentation for Clair.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff" />
 
+        
+        <link rel="icon" href="favicon.svg">
+        
+        
         <link rel="shortcut icon" href="favicon.png">
+        
         <link rel="stylesheet" href="css/variables.css">
         <link rel="stylesheet" href="css/general.css">
         <link rel="stylesheet" href="css/chrome.css">
@@ -19,8 +30,9 @@
 
         <!-- Fonts -->
         <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
-        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" rel="stylesheet" type="text/css">
-        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro:500" rel="stylesheet" type="text/css">
+        
+        <link rel="stylesheet" href="fonts/fonts.css">
+        
 
         <!-- Highlight.js Stylesheets -->
         <link rel="stylesheet" href="highlight.css">
@@ -214,6 +226,90 @@ encoded symmetric key for validating the requests.</p>
       MDQ4ODBlNDAtNDc0ZC00MWUxLThhMzAtOTk0MzEwMGQwYTMxCg==
     iss: 'issuer'
 </code></pre>
+<h2><a class="header" href="#updaters" id="updaters">Updaters</a></h2>
+<p>Clair utilizes go packages we call &quot;updaters&quot; that encapsulate the logic of
+fetching and parsing different vulnerability databases. Updaters are usually
+pared with a matcher to interpret if and how any vulnerability is related to a
+package.</p>
+<p>Operators may wish to update the vulnerability database less frequently or not
+import vulnerabilities from databases that they know will not be used.</p>
+<h3><a class="header" href="#configuration-2" id="configuration-2">Configuration</a></h3>
+<p>Updaters can be configured by <code>updaters</code> key at the top of the configuration. If
+updaters are being run automatically within the matcher processes, as is the
+default, the period for running updaters is configured under the matcher's
+configuration stanza.</p>
+<h4><a class="header" href="#choosing-sets" id="choosing-sets">Choosing Sets</a></h4>
+<p>Specific sets of updaters can be selected by the <code>sets</code> list. If not present,
+the defaults of all upstream updaters will be used.</p>
+<pre><code class="language-yaml">updaters:
+  sets:
+    - rhel
+</code></pre>
+<h4><a class="header" href="#filtering-updaters" id="filtering-updaters">Filtering Updaters</a></h4>
+<p>To disallow an updater from running without disabling an entire set, the filter
+option can be used. The provided string will be interpreted as a go [regexp]
+used to disallow any updater with a name that does not match. <strong>Note:</strong> This
+means that an empty string matches <em>any</em> string, not no strings.</p>
+<pre><code class="language-yaml">updaters:
+  filter: '^$'
+</code></pre>
+<h4><a class="header" href="#specific-updaters" id="specific-updaters">Specific Updaters</a></h4>
+<p>Configuration for specific updaters can be passed by putting a key underneath
+the <code>config</code> member of the <code>updaters</code> object. The name of an updater may be
+constructed dynamically; users should examine logs to double-check names.
+The specific object that an updater expects should be covered in the updater's
+documentation.</p>
+<p>For example, to have the &quot;rhel&quot; updater fetch a manifest from a different
+location:</p>
+<pre><code class="language-yaml">updaters:
+  config:
+    rhel:
+      url: https://example.com/mirror/oval/PULP_MANIFEST
+</code></pre>
+<h3><a class="header" href="#airgap" id="airgap">Airgap</a></h3>
+<p>For additional flexibility, Clair supports running updaters in a different
+environment and importing the results. This is aimed at supporting installations
+that disallow the Clair cluster from talking to the Internet directly. An update
+procedure needs to arrange to call the relevant <code>clairctl</code> command in an
+environment with access to the Internet, move the resulting artifact across the
+airgap according to site policy, and then call the relevant <code>clairctl</code> command
+to import the updates.</p>
+<p>For example:</p>
+<pre><code class="language-sh"># On a workstation, run:
+clairctl updater-export updates.gz
+</code></pre>
+<pre><code class="language-sh"># Move the resulting file to a place reachable by the cluster:
+scp updates.gz internal-webserver:/var/www/
+</code></pre>
+<pre><code class="language-sh"># On a pod inside the cluster, import the file:
+clairctl updater-import http://web.svc/updates.gz
+</code></pre>
+<h4><a class="header" href="#configuration-3" id="configuration-3">Configuration</a></h4>
+<p>Matcher processes should have the <code>disable_updaters</code> key set to disable
+automatic updaters running.</p>
+<pre><code class="language-yaml">matcher:
+  disable_updaters: true
+</code></pre>
+<p>Desired updaters should be selected by the normal configuration mechanism.</p>
+<h2><a class="header" href="#indexers" id="indexers">Indexers</a></h2>
+<h3><a class="header" href="#configuration-4" id="configuration-4">Configuration</a></h3>
+<h4><a class="header" href="#airgap-1" id="airgap-1">Airgap</a></h4>
+<pre><code class="language-yaml">indexer:
+  airgap: true
+</code></pre>
+<h4><a class="header" href="#specific-scanners" id="specific-scanners">Specific Scanners</a></h4>
+<pre><code class="language-yaml">indexer:
+  scanner:
+    package:
+      name:
+        key: value
+    repo:
+      name:
+        key: value
+    dist:
+      name:
+        key: value
+</code></pre>
 
                     </main>
 
@@ -257,10 +353,10 @@ encoded symmetric key for validating the requests.</p>
         
 
         
-        
+
         
         <script type="text/javascript">
-            window.playpen_copyable = true;
+            window.playground_copyable = true;
         </script>
         
 
