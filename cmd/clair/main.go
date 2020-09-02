@@ -13,6 +13,7 @@ import (
 
 	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/initialize"
+	_ "github.com/quay/claircore/updater/defaults"
 )
 
 // Version is a version string, optionally injected at build time.
