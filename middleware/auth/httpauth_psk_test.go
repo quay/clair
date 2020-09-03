@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 	"testing/quick"
 	"time"
@@ -24,23 +25,14 @@ type pskTestcase struct {
 }
 
 func (tc *pskTestcase) String() string {
-	return fmt.Sprintf("\nkey:\t%x\nissuer:\t%s\nnonce:\t%s", tc.key, tc.issuer, tc.nonce)
+	return fmt.Sprintf("\nalg:\t%s\nkey:\t%x\nissuer:\t%s\nnonce:\t%s",
+		tc.alg, tc.key, tc.issuer, tc.nonce)
 }
 
 var signAlgo = []jose.SignatureAlgorithm{
-	jose.EdDSA,
 	jose.HS256,
 	jose.HS384,
 	jose.HS512,
-	jose.RS256,
-	jose.RS384,
-	jose.RS512,
-	jose.ES256,
-	jose.ES384,
-	jose.ES512,
-	jose.PS256,
-	jose.PS384,
-	jose.PS512,
 }
 
 func (tc *pskTestcase) Generate(rand *rand.Rand, sz int) reflect.Value {
@@ -72,15 +64,18 @@ func (tc *pskTestcase) Generate(rand *rand.Rand, sz int) reflect.Value {
 	return reflect.ValueOf(n)
 }
 
-func (tc *pskTestcase) Handler() (http.Handler, error) {
+func (tc *pskTestcase) Handler(t *testing.T) http.Handler {
 	af, err := NewPSK(tc.key, tc.issuer)
 	if err != nil {
-		return nil, err
+		t.Error(err)
+		return nil
 	}
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ah := strings.TrimPrefix(r.Header.Get("authorization"), "Bearer ")
+		t.Logf("got jwt: %s", ah)
 		fmt.Fprint(w, tc.nonce)
 	})
-	return Handler(h, af), nil
+	return Handler(h, af)
 }
 
 // Roundtrips returns a function suitable for passing to quick.Check.
@@ -89,7 +84,7 @@ func roundtrips(t *testing.T) func(*pskTestcase) bool {
 		t.Log(tc)
 		// Set up the jwt signer.
 		sk := jose.SigningKey{
-			Algorithm: jose.HS256,
+			Algorithm: tc.alg,
 			Key:       tc.key,
 		}
 		s, err := jose.NewSigner(sk, nil)
@@ -112,9 +107,8 @@ func roundtrips(t *testing.T) func(*pskTestcase) bool {
 		}
 
 		// Set up the http server.
-		h, err := tc.Handler()
-		if err != nil {
-			t.Error(err)
+		h := tc.Handler(t)
+		if t.Failed() {
 			return false
 		}
 		srv := httptest.NewServer(h)
