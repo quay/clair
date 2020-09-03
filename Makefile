@@ -21,6 +21,12 @@ goimports-local:
 	go list -f '{{$$d := .Dir}}{{range .GoFiles}}{{printf "%s/%s\n" $$d .}}{{end}}' ./... | xargs sed -i'' '/import (/,/)/{ /^$$/d }'
 	go list -f '{{.Dir}}' ./... | xargs goimports -local "$(go list -m)" -w
 
+# https://github.com/Mermade/widdershins used to convert openapi.yaml to markdown
+# you'll need to have npx to run this gen.
+.PHONY: gen-api-reference
+gen-api-reference:
+	npx widdershins --search false --language_tabs 'python:Python' 'go:Golang' 'javascript:Javascript' --summary ./openapi.yaml -o ./Documentation/reference/api.md
+
 # start a local development environment. 
 # each services runs in it's own container to test service->service communication.
 #

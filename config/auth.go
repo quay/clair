@@ -47,7 +47,7 @@ func (a *AuthKeyserver) UnmarshalYAML(f func(interface{}) error) error {
 
 // AuthPSK is the configuration for doing pre-shared key based authentication.
 //
-// The "Issuer" key is what the service expects to verify as the "issuer claim.
+// The "Issuer" key is what the service expects to verify as the "issuer" claim.
 type AuthPSK struct {
 	Key    []byte `yaml:"key" json:"key"`
 	Issuer string `yaml:"iss" json:"issuer"`
