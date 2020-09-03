@@ -63,10 +63,7 @@ func (s *QuayKeyserver) Check(ctx context.Context, r *http.Request) bool {
 	if err != nil {
 		return false
 	}
-	aud, err := r.URL.Parse("/")
-	if err != nil {
-		return false
-	}
+
 	// Need to find the key id.
 	ok = false
 	var kid string
@@ -140,10 +137,70 @@ HeaderSearch:
 	}
 	// Returning true is now possible.
 	if err := cl.ValidateWithLeeway(jwt.Expected{
-		Audience: jwt.Audience{strings.TrimRight(aud.String(), "/")},
+		Audience: findAudience(r),
 		Time:     time.Now(),
 	}, 15*time.Second); err != nil {
 		return false
 	}
 	return true
+}
+
+// FindAudience looks at a variety of information to guess a valid audience.
+func findAudience(r *http.Request) (ret jwt.Audience) {
+	// Prefer the new, standardized header.
+	//
+	// One would hope modern proxies are adding these headers at every hop.
+	if fwds, ok := r.Header["Forwarded"]; ok {
+	Fwd:
+		for _, fwd := range fwds {
+			fwd := strings.TrimSpace(fwd)
+			proto, host := "http", ""
+			for _, kv := range strings.Split(fwd, ";") {
+				i := strings.IndexByte(kv, '=')
+				if i == -1 {
+					// If there's a key without a "=", this header is a botch;
+					// skip it.
+					continue Fwd
+				}
+				k := kv[:i]
+				v := kv[i+1:]
+				switch k {
+				case "host":
+					host = v
+				case "proto":
+					proto = v
+				}
+			}
+			if host != "" && proto != "" {
+				ret = append(ret, proto+"://"+host)
+			}
+		}
+	}
+	if len(ret) != 0 {
+		return
+	}
+
+	// Fall back to the nonstandard headers.
+	//
+	// Reverse proxies are probably setting these, and hopefully only the first
+	// one.
+	xfp := r.Header.Get("x-forwarded-proto")
+	if xfp == "" {
+		xfp = "http"
+	}
+	if h := r.Header.Get("x-forwarded-host"); h != "" {
+		ret = append(ret, xfp+"://"+h)
+	}
+	if len(ret) != 0 {
+		return
+	}
+
+	// Finally, use the requested URL.
+	//
+	// This will be wrong except in trivial configurations.
+	u, err := r.URL.Parse("/")
+	if err == nil {
+		ret = append(ret, strings.TrimSuffix(u.String(), "/"))
+	}
+	return
 }
