@@ -2,11 +2,9 @@ package httptransport
 
 import (
 	"context"
-	"fmt"
 	"net"
 	"net/http"
 
-	notifier "github.com/quay/clair/v4/notifier/service"
 	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel/api/global"
 	"go.opentelemetry.io/otel/plugin/othttp"
@@ -15,8 +13,8 @@ import (
 	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
-	"github.com/quay/clair/v4/middleware/auth"
 	intromw "github.com/quay/clair/v4/middleware/introspection"
+	notifier "github.com/quay/clair/v4/notifier/service"
 )
 
 const (
@@ -319,41 +317,15 @@ const IntraserviceIssuer = `clair-intraservice`
 //
 // must be ran after the config*Mode method of choice.
 func (t *Server) configureWithAuth(_ context.Context) error {
-	// Keep this ordered "best" to "worst".
-	switch {
-	case t.conf.Auth.Keyserver != nil:
-		cfg := t.conf.Auth.Keyserver
-		checks := []auth.Checker{}
-		ks, err := auth.NewQuayKeyserver(cfg.API)
-		if err != nil {
-			return fmt.Errorf("failed to initialize quay keyserver: %v", err)
-		}
-		checks = append(checks, ks)
-		if cfg.Intraservice != nil {
-			psk, err := auth.NewPSK(cfg.Intraservice, IntraserviceIssuer)
-			if err != nil {
-				return fmt.Errorf("failed to initialize quay keyserver: %w", err)
-			}
-			checks = append(checks, psk)
-		}
-		t.Server.Handler = auth.Handler(t.Server.Handler, checks...)
-	case t.conf.Auth.PSK != nil:
-		cfg := t.conf.Auth.PSK
-		intra, err := auth.NewPSK(cfg.Key, IntraserviceIssuer)
-		if err != nil {
-			return err
-		}
-		psk, err := auth.NewPSK(cfg.Key, cfg.Issuer)
-		if err != nil {
-			return err
-		}
-		t.Server.Handler = auth.Handler(t.Server.Handler, intra, psk)
-	default:
+	h, err := authHandler(&t.conf, t.Server.Handler)
+	if err != nil {
+		return err
 	}
+	t.Server.Handler = h
 	return nil
 }
 
-// unmodified determines whether to return a conditonal response
+// Unmodified determines whether to return a conditional response.
 func unmodified(r *http.Request, v string) bool {
 	if vs, ok := r.Header["If-None-Match"]; ok {
 		for _, rv := range vs {
