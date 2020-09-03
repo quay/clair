@@ -15,7 +15,7 @@ import (
 	"gopkg.in/square/go-jose.v2/jwt"
 )
 
-// QuayKS implements the AuthCheck interface.
+// QuayKeyserver implements the AuthCheck interface.
 //
 // When Check is called the JWT on the incoming http request
 // will be validated against the Quay Keyserver
@@ -45,6 +45,14 @@ func NewQuayKeyserver(api string) (*QuayKeyserver, error) {
 	}, nil
 }
 
+// AlgoAllow is an allowlist of signature algorithms.
+//
+// The jose package doesn't allow the mistake of putting "none" in this list,
+// but otherwise this is similar to the list of algorithms Quay maintains.
+var algoAllow = []string{
+	string(jose.RS256),
+}
+
 // Check implements AuthCheck.
 func (s *QuayKeyserver) Check(ctx context.Context, r *http.Request) bool {
 	wt, ok := fromHeader(r)
@@ -62,11 +70,14 @@ func (s *QuayKeyserver) Check(ctx context.Context, r *http.Request) bool {
 	// Need to find the key id.
 	ok = false
 	var kid string
+HeaderSearch:
 	for _, h := range tok.Headers {
-		if h.Algorithm == string(jose.RS256) {
-			ok = true
-			kid = h.KeyID
-			break
+		for _, a := range algoAllow {
+			if h.Algorithm == a {
+				ok = true
+				kid = h.KeyID
+				break HeaderSearch
+			}
 		}
 	}
 	if !ok {
