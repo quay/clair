@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	_ "github.com/quay/claircore/updater/defaults"
 	"github.com/urfave/cli/v2"
 )
 
