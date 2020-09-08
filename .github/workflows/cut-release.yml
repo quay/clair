@@ -1,15 +1,64 @@
 ---
+name: Release
+
 on:
-  release:
-    types:
-      - published
+  push:
     tags:
       - v4.*
 
-name: Upload Release Assets
-
 jobs:
-  build:
+  release:
+    name: Release
+    runs-on: 'ubuntu-latest'
+    container: docker.io/library/golang:1.14
+    steps:
+      - name: Setup
+        run: |
+          tag=`basename ${{ github.ref }}`
+          cat <<.
+          ::set-env name=VERSION::${tag}
+          .
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Build clairctl
+        run:
+          GOOS=darwin GOARCH=amd64 -o clairctl-darwin-amd64 ./cmd/clairctl
+          GOOS=linux GOARCH=amd64 -o clairctl-linux-amd64 ./cmd/clairctl
+          GOOS=windows GOARCH=amd64 -o clairctl-windows-amd64 ./cmd/clairctl
+
+          GOOS=darwin GOARCH=386 -o clairctl-darwin-386 ./cmd/clairctl
+          GOOS=linux GOARCH=386 -o clairctl-linux-386 ./cmd/clairctl
+          GOOS=windows GOARCH=386 -o clairctl-windows-386 ./cmd/clairctl
+
+      - name: ChangeLog
+        shell: bash
+        run: |
+          curl -o git-chglog -L https://github.com/git-chglog/git-chglog/releases/download/0.9.1/git-chglog_linux_amd64
+          chmod u+x git-chglog
+          tag=`basename ${{ github.ref }}`
+          echo "creating change log for tag: $tag"
+          chglog="$(./git-chglog ${tag})"
+          chglog="${chglog//'%'/'%25'}"
+          chglog="${chglog//$'\n'/'%0A'}"
+          chglog="${chglog//$'\r'/'%0D'}"
+          cat <<.
+          ::set-env name=CHANGELOG::${chglog}
+          .
+      - name: Create Release
+        uses: actions/create-release@latest
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ env.VERSION}} Release
+          body: |
+            ${{ env.CHANGELOG }}
+          prerelease: ${{ contains(env.VERSION, 'alpha') || contains(env.VERSION, 'beta') || contains(env.VERSION, 'rc') }}
+
+    # perform production release of artifacts
     name: Upload Release Assets
     runs-on: ubuntu-latest
     steps:
@@ -42,14 +91,76 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ github.event.release.upload_url }}
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./clair.tar.gz
           asset_name: clair-${{ env.CLAIR_VERSION }}.tar.gz
           asset_content_type: application/gzip
+
+      - name: Publish clairctl-darwin-amd64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./clairctl-darwin-amd64
+          asset_name: clairctl-darwin-amd64
+          asset_content_type: application/octet-stream
+
+      - name: Publish clairctl-linux-amd64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./clairctl-linux-amd64
+          asset_name: clairctl-linux-amd64
+          asset_content_type: application/octet-stream
+
+      - name: Publish clairctl-windows-amd64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./clairctl-windows-amd64
+          asset_name: clairctl-windows-amd64
+          asset_content_type: application/octet-stream
+
+      - name: Publish clairctl-darwin-386
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./clairctl-darwin-386
+          asset_name: clairctl-darwin-386
+          asset_content_type: application/octet-stream
+
+      - name: Publish clairctl-linux-386
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./clairctl-linux-386
+          asset_name: clairctl-linux-386
+          asset_content_type: application/octet-stream
+
+      - name: Publish clairctl-windows-386
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./clairctl-windows-386
+          asset_name: clairctl-windows-386
+          asset_content_type: application/octet-stream
+
       - name: Publish Release Container
         run: |
           docker login -u "${QUAY_USER}" -p '${{ secrets.QUAY_TOKEN }}' quay.io
           docker push "${TAG}"
+
   deploy-documentation:
     name: Deploy Documentation
     runs-on: ubuntu-latest
