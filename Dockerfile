@@ -12,29 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM docker.io/library/golang:1.14-alpine AS build
-RUN apk add --no-cache build-base
+FROM docker.io/library/golang:1.14 AS build
 WORKDIR /build/
 ADD . /build/
 ARG CLAIR_VERSION=dev
 RUN go build \
-	`test -d vendor && echo -mod=vendor` \
-	-ldflags="-X main.Version=${CLAIR_VERSION}" \
-	./cmd/clair
-RUN go build \
-	`test -d vendor && echo -mod=vendor` \
-	./cmd/clairctl
+  -ldflags="-X main.Version=${CLAIR_VERSION}" \
+  ./cmd/clair
+RUN go build\
+  ./cmd/clairctl
 
-FROM docker.io/library/alpine:3.11 AS final
-RUN apk add --no-cache tar rpm ca-certificates dumb-init
-# change ownership of ssl directory to allow custom cert in OpenShift
-RUN chgrp -R 0 /etc/ssl/certs && \
-    chmod -R g=u /etc/ssl/certs
-ENTRYPOINT ["/usr/bin/dumb-init", "--", "/bin/clair"]
+FROM registry.access.redhat.com/ubi8/ubi-minimal AS final
+RUN microdnf install tar
+RUN curl -L -o /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64 && chmod +x /usr/local/bin/dumb-init 
+ENTRYPOINT ["/usr/local/bin/dumb-init", "--", "/bin/clair"]
 VOLUME /config
 EXPOSE 6060
 WORKDIR /run
 ENV CLAIR_CONF=/config/config.yaml CLAIR_MODE=combo
+ENV SSL_CERT_DIR="/etc/ssl/certs:/etc/pki/tls/certs:/var/run/certs"
 USER nobody:nobody
 
 COPY --from=build /build/clair /bin/clair
