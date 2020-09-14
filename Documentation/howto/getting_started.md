@@ -1,4 +1,4 @@
-# Getting Started With ClairV4
+# Getting Started With Clair
 
 ## Releases
 
@@ -19,65 +19,65 @@ and version tags are built from the corresponding release.
 
 ## Running Clair
 
-The easiest way to get ClairV4 up and running for test purposes is to use our [local dev environment](./testing.md)
+The easiest way to get Clair up and running for test purposes is to use our [local dev environment](./testing.md)
 
 If you're the hands on type who wants to get into the details however, continue reading.
 
-## ClairV4 Modes
+## Modes
 
-ClairV4 can run in several modes. [Indexer](../reference/indexer.md), [matcher](../reference/matcher.md), [notifier](../reference/notifier.md) or combo mode. In combo mode all of the mentioned node types ran in a single process. 
+Clair can run in several modes. [Indexer](../reference/indexer.md), [matcher](../reference/matcher.md), [notifier](../reference/notifier.md) or combo mode. In combo mode, everything runs in a single OS process. 
 
-If you are just starting with ClairV4 you will most likely want to continue with combo mode and venture out to a distributed deployment once acquainted. 
+If you are just starting with Clair you will most likely want to start with combo mode and venture out to a distributed deployment once acquainted. 
 
 This how-to will demonstrate combo mode and introduce some further reading on a distributed deployment.
 
 ## Postgres
 
-ClairV4 uses Postgres for its data persistence. Migrations are supported so you should only need to point ClairV4 to a fresh database and have it do the setup for you.
+Clair uses PostgreSQL for its data persistence. Migrations are supported so you should only need to point Clair to a fresh database and have it do the setup for you.
 
-We will assume you have setup a postgres database its reachable with the following connection string:
+We will assume you have setup a postgres database it's reachable with the following connection string:
 `host=clair-db port=5432 user=clair dbname=clair sslmode=disable`. Adjust for your environment accordingly. 
 
-## Starting ClairV4 In Combo Mode
+## Starting Clair In Combo Mode
 
-At this point you either have built ClairV4 from source or you have the ClairV4 container pulled. In either case we will assume that the clair-db hostname can be resolved to your postgres database. 
+At this point, you should either have built Clair from source or have pulled the container. In either case, we will assume that the `clair-db` hostname will resolve to your postgres database. 
 
-*You may need to configure [docker](https://docs.docker.com/network/) or [podman](https://podman.io/getting-started/network.html) networking if you are utilizing containers. This is out of scope for this how too.*
+*You may need to configure [docker](https://docs.docker.com/network/) or [podman](https://podman.io/getting-started/network.html) networking if you are utilizing containers. This is out of scope for this how-to.*
 
-A basic config for combo mode can be found [here](https://github.com/quay/clair/blob/development-4.0/config.yaml.sample). Make sure to edit this config with your database settings and flip "migrations" on for all node types. In combo mode all "connstring" field should point to the same database and any *_addr fields are simply ignored. For more details see the [config reference](../reference/config.md) and [deployment models](./deployment.md)
+A basic config for combo mode can be found [here](https://github.com/quay/clair/blob/development-4.0/config.yaml.sample). Make sure to edit this config with your database settings and set "migrations" to `true` for all mode stanzas. In this basic combo mode, all "connstring" fields should point to the same database and any *_addr fields are simply ignored. For more details see the [config reference](../reference/config.md) and [deployment models](./deployment.md)
 
 Clair has 3 requirements to start:
-* a mode cli flag or CLAIR_MODE env variable telling what node type this Clair will run as.
-* a conf cli flag or CLAIR_CONF env variable telling where Clair can find its configuration.
-* a structured yaml config providing the bulk of Clair's configuration.
+* The `mode` flag or `CLAIR_MODE` environment variable specifying what mode this instance will run in.
+* The `conf` flag or `CLAIR_CONF` environment variable specifying where Clair can find its configuration.
+* A yaml document providing Clair's configuration.
 
-If you are running a container you can can [mount](https://docs.docker.com/storage/volumes/) a clair config to any readable path you like and set the env vars to:
+If you are running a container, you can can [mount](https://docs.docker.com/storage/volumes/) a Clair config and set the `CLAIR_CONF` environment variable to the corresponding path.
 ```
 CLAIR_MODE=combo
 CLAIR_CONF=/path/to/mounted/config.yaml
 ```
 
-If you are running Clair from a built binary its likely easiest to issue the following command line
+If you are running a Clair binary directly, its likely easiest to use the command line.
 ```
 clair -conf "path/to/config.yaml" -mode "combo"
 ```
 
 ## Submitting A Manifest
 
-The simplest way to submit a manifest to your running Clair is utilizing [clairctl](../reference/clairctl.md). This is a CLI tool capable of grabbing images from public repositories and and submitting them to ClairV4 for analysis. 
-This CLI will be in your ClairV4 container and can also be installed by running the following command:
+The simplest way to submit a manifest to your running Clair is utilizing [clairctl](../reference/clairctl.md). This is a CLI tool capable of grabbing image manifests from public repositories and and submitting them for analysis. 
+The command will be in the Clair container, but can also be installed locally by running the following command:
 ```
 go install github.com/quay/clair/v4/cmd/clairctl
 ```
 
 You can submit a manifest to ClairV4 via the following command.
 ```shell
-$ clairctl --host {net_address_of_clair} report {image:tag}
+$ clairctl --host ${net_address_of_clair} report ${image_tag}
 ```
 
-By default the tool will look for clair at `localhost:6060` (our local development address) but you may change this.
+By default, `clairctl` will look for Clair at `localhost:6060`.
 
-If all things look good you should see some output like the following informting you of vulnerabilities affecting the supplied image.
+If everything is configured correctly, you should see some output like the following informing you of vulnerabilities affecting the supplied image.
 
 ```shell
 $ clairctl report ubuntu:focal
@@ -108,8 +108,8 @@ ubuntu:focal found libc6       2.31-0ubuntu9          CVE-2020-6096
 ubuntu:focal found libgcrypt20 1.8.5-5ubuntu1         CVE-2019-12904
 ```
 
-## Whats Next
+## What's Next
 
-Now that you see the basic usage of ClairV4 you can checkout our [deployment models](./deployment.md) to learn different ways of deploing ClairV4.
+Now that you see the basic usage of Clair, you can checkout our [deployment models](./deployment.md) to learn different ways of deploying.
 
-You may also be curious about how clairctl did that work. Check out out [api definition](./api.md) to understand how an application would interact with ClairV4 without a client.
+You may also be curious about how `clairctl` did that work. Check out our [API definition](./api.md) to understand how an application interacts with Clair.
