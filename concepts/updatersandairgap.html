@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Releases - Clair Documentation</title>
+        <title>Updaters and Airgap - Clair Documentation</title>
         
         
 
@@ -93,7 +93,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../whatis.html"><strong aria-hidden="true">1.</strong> What is ClairV4</a></li><li class="chapter-item expanded "><a href="../howto.html"><strong aria-hidden="true">2.</strong> How Tos</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../howto/getting_started.html"><strong aria-hidden="true">2.1.</strong> Getting Started With ClairV4</a></li><li class="chapter-item expanded "><a href="../howto/deployment.html"><strong aria-hidden="true">2.2.</strong> Deployment Models</a></li><li class="chapter-item expanded "><a href="../howto/api.html"><strong aria-hidden="true">2.3.</strong> API Definition</a></li><li class="chapter-item expanded "><a href="../howto/testing.html"><strong aria-hidden="true">2.4.</strong> Testing ClairV4</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts.html"><strong aria-hidden="true">3.</strong> Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../concepts/api_internal.html"><strong aria-hidden="true">3.1.</strong> Internal API</a></li><li class="chapter-item expanded "><a href="../concepts/authentication.html"><strong aria-hidden="true">3.2.</strong> Authentication</a></li><li class="chapter-item expanded "><a href="../concepts/notifications.html"><strong aria-hidden="true">3.3.</strong> Notifications</a></li><li class="chapter-item expanded "><a href="../concepts/updatersandairgap.html"><strong aria-hidden="true">3.4.</strong> Updaters and Airgap</a></li></ol></li><li class="chapter-item expanded "><a href="../contribution.html"><strong aria-hidden="true">4.</strong> Contribution</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../contribution/releases.html" class="active"><strong aria-hidden="true">4.1.</strong> Releases</a></li><li class="chapter-item expanded "><a href="../contribution/commit_style.html"><strong aria-hidden="true">4.2.</strong> Commit Style</a></li></ol></li><li class="chapter-item expanded "><a href="../reference.html"><strong aria-hidden="true">5.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../reference/api.html"><strong aria-hidden="true">5.1.</strong> Api</a></li><li class="chapter-item expanded "><a href="../reference/clairctl.html"><strong aria-hidden="true">5.2.</strong> Clairctl</a></li><li class="chapter-item expanded "><a href="../reference/config.html"><strong aria-hidden="true">5.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="../reference/indexer.html"><strong aria-hidden="true">5.4.</strong> Indexer</a></li><li class="chapter-item expanded "><a href="../reference/matcher.html"><strong aria-hidden="true">5.5.</strong> Matcher</a></li><li class="chapter-item expanded "><a href="../reference/notifier.html"><strong aria-hidden="true">5.6.</strong> Notifier</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../whatis.html"><strong aria-hidden="true">1.</strong> What is ClairV4</a></li><li class="chapter-item expanded "><a href="../howto.html"><strong aria-hidden="true">2.</strong> How Tos</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../howto/getting_started.html"><strong aria-hidden="true">2.1.</strong> Getting Started With ClairV4</a></li><li class="chapter-item expanded "><a href="../howto/deployment.html"><strong aria-hidden="true">2.2.</strong> Deployment Models</a></li><li class="chapter-item expanded "><a href="../howto/api.html"><strong aria-hidden="true">2.3.</strong> API Definition</a></li><li class="chapter-item expanded "><a href="../howto/testing.html"><strong aria-hidden="true">2.4.</strong> Testing ClairV4</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts.html"><strong aria-hidden="true">3.</strong> Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../concepts/api_internal.html"><strong aria-hidden="true">3.1.</strong> Internal API</a></li><li class="chapter-item expanded "><a href="../concepts/authentication.html"><strong aria-hidden="true">3.2.</strong> Authentication</a></li><li class="chapter-item expanded "><a href="../concepts/notifications.html"><strong aria-hidden="true">3.3.</strong> Notifications</a></li><li class="chapter-item expanded "><a href="../concepts/updatersandairgap.html" class="active"><strong aria-hidden="true">3.4.</strong> Updaters and Airgap</a></li></ol></li><li class="chapter-item expanded "><a href="../contribution.html"><strong aria-hidden="true">4.</strong> Contribution</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../contribution/releases.html"><strong aria-hidden="true">4.1.</strong> Releases</a></li><li class="chapter-item expanded "><a href="../contribution/commit_style.html"><strong aria-hidden="true">4.2.</strong> Commit Style</a></li></ol></li><li class="chapter-item expanded "><a href="../reference.html"><strong aria-hidden="true">5.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../reference/api.html"><strong aria-hidden="true">5.1.</strong> Api</a></li><li class="chapter-item expanded "><a href="../reference/clairctl.html"><strong aria-hidden="true">5.2.</strong> Clairctl</a></li><li class="chapter-item expanded "><a href="../reference/config.html"><strong aria-hidden="true">5.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="../reference/indexer.html"><strong aria-hidden="true">5.4.</strong> Indexer</a></li><li class="chapter-item expanded "><a href="../reference/matcher.html"><strong aria-hidden="true">5.5.</strong> Matcher</a></li><li class="chapter-item expanded "><a href="../reference/notifier.html"><strong aria-hidden="true">5.6.</strong> Notifier</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -163,51 +163,102 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#releases" id="releases">Releases</a></h1>
-<p>Clair releases are cut roughly every three months and actively maintained for
-six.</p>
-<p>This means that bugfixes should be landed on <code>master</code> (if applicable) and then
-marked for backporting to a minor version's release branch. The process for
-doing this is not yet formalized.</p>
-<h2><a class="header" href="#process" id="process">Process</a></h2>
-<h3><a class="header" href="#minor" id="minor">Minor</a></h3>
-<p>When cutting a new minor release, two things need to be done: creating a tag and
-creating a release branch. This can be done like so:</p>
-<pre><code class="language-sh">git tag -as v4.x.0 HEAD
-git push upstream HEAD:release-4.x tag v4.x.0
+                        <h2><a class="header" href="#updaters" id="updaters">Updaters</a></h2>
+<p>Clair utilizes go packages we call &quot;updaters&quot; that encapsulate the logic of
+fetching and parsing different vulnerability databases. Updaters are usually
+pared with a matcher to interpret if and how any vulnerability is related to a
+package.</p>
+<p>Operators may wish to update the vulnerability database less frequently or not
+import vulnerabilities from databases that they know will not be used.</p>
+<h3><a class="header" href="#configuration" id="configuration">Configuration</a></h3>
+<p>Updaters can be configured by <code>updaters</code> key at the top of the configuration. If
+updaters are being run automatically within the matcher processes, as is the
+default, the period for running updaters is configured under the matcher's
+configuration stanza.</p>
+<h4><a class="header" href="#choosing-sets" id="choosing-sets">Choosing Sets</a></h4>
+<p>Specific sets of updaters can be selected by the <code>sets</code> list. If not present,
+the defaults of all upstream updaters will be used.</p>
+<pre><code class="language-yaml">updaters:
+  sets:
+    - rhel
 </code></pre>
-<p>Then, a &quot;release&quot; needs to be created in the Github UI using the created tag.</p>
-<h3><a class="header" href="#patch" id="patch">Patch</a></h3>
-<p>A patch release is just like a minor release with the caveat that minor version
-tags should <em>only</em> appear on release branches and a new branch does not need to
-be created.</p>
-<pre><code class="language-sh">git checkout release-4.x
-git tag -as v4.x.1 HEAD
-git push upstream tag v4.x.1
+<h4><a class="header" href="#filtering-updaters" id="filtering-updaters">Filtering Updaters</a></h4>
+<p>To disallow an updater from running without disabling an entire set, the filter
+option can be used. The provided string will be interpreted as a go [regexp]
+used to disallow any updater with a name that does not match. <strong>Note:</strong> This
+means that an empty string matches <em>any</em> string, not no strings.</p>
+<pre><code class="language-yaml">updaters:
+  filter: '^$'
 </code></pre>
-<p>Then, a &quot;release&quot; needs to be created in the Github UI using the created tag.</p>
-<h3><a class="header" href="#creating-artifacts" id="creating-artifacts">Creating Artifacts</a></h3>
-<p>Clair's artifact release process is automated and driven off the releases in
-Github.</p>
-<p>Publishing a new release in the Github UI automatically triggers the creation of
-a complete source archive and a container. The archive is attached to the
-release, and the container is pushed to the
-<a href="https://quay.io/repository/projectquay/clair"><code>quay.io/projectquay/clair</code></a>
-repository.</p>
-<p>This is all powered by a Github Action in <code>.github/workflows/cut-release.yml</code>.</p>
+<h4><a class="header" href="#specific-updaters" id="specific-updaters">Specific Updaters</a></h4>
+<p>Configuration for specific updaters can be passed by putting a key underneath
+the <code>config</code> member of the <code>updaters</code> object. The name of an updater may be
+constructed dynamically; users should examine logs to double-check names.
+The specific object that an updater expects should be covered in the updater's
+documentation.</p>
+<p>For example, to have the &quot;rhel&quot; updater fetch a manifest from a different
+location:</p>
+<pre><code class="language-yaml">updaters:
+  config:
+    rhel:
+      url: https://example.com/mirror/oval/PULP_MANIFEST
+</code></pre>
+<h3><a class="header" href="#airgap" id="airgap">Airgap</a></h3>
+<p>For additional flexibility, Clair supports running updaters in a different
+environment and importing the results. This is aimed at supporting installations
+that disallow the Clair cluster from talking to the Internet directly. An update
+procedure needs to arrange to call the relevant <code>clairctl</code> command in an
+environment with access to the Internet, move the resulting artifact across the
+airgap according to site policy, and then call the relevant <code>clairctl</code> command
+to import the updates.</p>
+<p>For example:</p>
+<pre><code class="language-sh"># On a workstation, run:
+clairctl updater-export updates.gz
+</code></pre>
+<pre><code class="language-sh"># Move the resulting file to a place reachable by the cluster:
+scp updates.gz internal-webserver:/var/www/
+</code></pre>
+<pre><code class="language-sh"># On a pod inside the cluster, import the file:
+clairctl updater-import http://web.svc/updates.gz
+</code></pre>
+<h4><a class="header" href="#configuration-1" id="configuration-1">Configuration</a></h4>
+<p>Matcher processes should have the <code>disable_updaters</code> key set to disable
+automatic updaters running.</p>
+<pre><code class="language-yaml">matcher:
+  disable_updaters: true
+</code></pre>
+<h2><a class="header" href="#indexers" id="indexers">Indexers</a></h2>
+<h3><a class="header" href="#configuration-2" id="configuration-2">Configuration</a></h3>
+<h4><a class="header" href="#airgap-1" id="airgap-1">Airgap</a></h4>
+<pre><code class="language-yaml">indexer:
+  airgap: true
+</code></pre>
+<h4><a class="header" href="#specific-scanners" id="specific-scanners">Specific Scanners</a></h4>
+<pre><code class="language-yaml">indexer:
+  scanner:
+    package:
+      name:
+        key: value
+    repo:
+      name:
+        key: value
+    dist:
+      name:
+        key: value
+</code></pre>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
                         
-                            <a rel="prev" href="../contribution.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../concepts/notifications.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <i class="fa fa-angle-left"></i>
                             </a>
                         
 
                         
-                            <a rel="next" href="../contribution/commit_style.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next" href="../contribution.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <i class="fa fa-angle-right"></i>
                             </a>
                         
@@ -219,13 +270,13 @@ repository.</p>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
                 
-                    <a rel="prev" href="../contribution.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../concepts/notifications.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <i class="fa fa-angle-left"></i>
                     </a>
                 
 
                 
-                    <a rel="next" href="../contribution/commit_style.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next" href="../contribution.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <i class="fa fa-angle-right"></i>
                     </a>
                 
