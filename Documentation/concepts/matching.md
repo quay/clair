@@ -2,9 +2,9 @@
 
 A [Matcher](../reference/matcher.md) node is responsible for matching vulnerabilities to a provided IndexReport. 
 
-Matchers by default are also responsible for keeping the database of vulnerabilities up to date. Matchers will typically run a set of Updaters which periodically probe their data sources for new contents, writing new vulns to the database when discovered.
+Matchers by default are also responsible for keeping the database of vulnerabilities up to date. Matchers will typically run a set of Updaters which periodically probe their data sources for new contents, storing new vulnerabilities in the database when discovered.
 
-The matcher API is designed to be called often and will always provide the most up-to-date VulnerabilityReport when queried. This VulnerabilityReport summaries both the container's contents and any vulnerabilities affecting the container image.
+The matcher API is designed to be called often and will always provide the most up-to-date VulnerabilityReport when queried. This VulnerabilityReport summaries both a manifest's contents and any vulnerabilities affecting the contents.
 
 See our [api](../howto/api.md) guide to learn how to view our api specification and work with the Matcher api.
 

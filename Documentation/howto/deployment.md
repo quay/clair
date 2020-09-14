@@ -1,22 +1,22 @@
-# Deploying ClairV4
+# Deploying Clair
 
-ClairV4 was designed with flexible deployment architectures in mind. The operator is free to choose a deployment model which scales to their use cases. 
+Clair v4 was designed with flexible deployment architectures in mind. The operator is free to choose a deployment model which scales to their use cases.
 
 ## Configuration
 
-Before jumping directly into the models its important to note that ClairV4 is capable of using a single configuration file across all node types. This design decision makes it very easy to deploy on systems like Kubernetes and Openshift.
+Before jumping directly into the models its important to note that Clair is designed to use a single configuration file across all node types. This design decision makes it very easy to deploy on systems like Kubernetes and OpenShift.
 
 See [Config Reference](../reference/config.md)
 
 ## Combined Deployment
 
-In a combined deployment all node types run on in a single Clair process. This is by far the easiest deployment model to configure as it involves the least moving parts. 
+In a combined deployment, all the Clair processes run in a single OS process. This is by far the easiest deployment model to configure as it involves the least moving parts. 
 
-A load balancer is still recommended if you plan on performing TLS termination. Typically this will be a Openshift route or a Kubernetes ingress.
+A load balancer is still recommended if you plan on performing TLS termination. Typically this will be a OpenShift route or a Kubernetes ingress.
 
 ![combo mode single db deployment diagran](./clairv4_combo_single_db.png)
 
-In the above diagram Clair is running in combo mode and talking to a single database. To configure this model you will provide all node types the same database and start clair in **combo** mode.
+In the above diagram, Clair is running in combo mode and talking to a single database. To configure this model you will provide all node types the same database and start Clair in **combo** mode.
 
 ```
 ...
@@ -29,15 +29,15 @@ notifier:
     connstring: "host=clairdb user=pqgotest dbname=pqgotest sslmode=verify-full"
     ...
 ```
-In this mode any configuration informing Clair how to talk to other nodes is ignored, it is not needed as all api communication is done in process.
+In this mode, any configuration informing Clair how to talk to other nodes is ignored, it is not needed as all intra-process communication is done directly.
 
-For added flexibility its also supported to split the databases while in combo mode.
+For added flexibility, it's also supported to split the databases while in combo mode.
 
 ![combo mode multiple db deployment diagran](./clairv4_combo_multi_db.png)
 
-In the above diagram Clair is running in combo mode but database load is split between multiple databases. Since Clair is conceptually a set of micro-services, nodes communicate over API and do not share database tables.
+In the above diagram, Clair is running in combo mode but database load is split between multiple databases. Since Clair is conceptually a set of micro-services, its processes do not share database tables even when combined into the same OS process.
 
-To configure this model you would provide each node type it's own "connstring" in the configuration. 
+To configure this model, you would provide each process its own "connstring" in the configuration. 
 ```
 ...
 indexer:
@@ -52,17 +52,17 @@ notifier:
 
 ## Distributed Deployment
 
-If your application needs to asymetrically scale or you expect high load you may want to consider a distributed deployment.
+If your application needs to asymmetrically scale or you expect high load you may want to consider a distributed deployment.
 
-In a distributed deployment each Clair node type runs in its own process. Typically this will be a Kubernetes\Openshift deployment or your public cloud of choice's auto scaling mechanism.
+In a distributed deployment, each Clair process runs in its own OS process. Typically this will be a Kubernetes or OpenShift Pod.
 
-A load balancer **must** be setup in this deployment model. The load balancer will route traffic between Clair nodes along with routing API requests via [path based routing](https://devcentral.f5.com/s/articles/the-three-http-routing-patterns-you-should-know-30764) to the correct services. In a Kubernetes or Openshift deployment this is usually trivialized by the Service and Routes abstractions. If you will be deploying on bare metal you will need to configure a load balancer appropriately. 
+A load balancer **must** be setup in this deployment model. The load balancer will route traffic between Clair nodes along with routing API requests via [path based routing](https://devcentral.f5.com/s/articles/the-three-http-routing-patterns-you-should-know-30764) to the correct services. In a Kubernetes or OpenShift deployment this is usually handled with the Service and Routes abstractions. If deploying on bare metal, a load balancer will need to be configured appropriately. 
 
 ![distributed mode multiple db deployment diagran](./clairv4_distributed_multi_db.png)
 
-In the above diagram a load balancer is configured to route traffic coming from the client to the correct service. This routing is path based routing and requires a layer 7 load balancer. Traefik, Nginx, and HAProxy are all capable of this. As mentioned above this funtionality is native to Openshift and Kubernetes.
+In the above diagram, a load balancer is configured to route traffic coming from the client to the correct service. This routing is path based routing and requires a layer 7 load balancer. Traefik, Nginx, and HAProxy are all capable of this. As mentioned above, this functionality is native to OpenShift and Kubernetes.
 
-In this configuration you'd supply each node type with their own database conn string and inform each node type how to contact their dependent services. Each node will need to have it's mode CLI flag or ENV variable set to the appropriate node type. 
+In this configuration, you'd supply each process with database connection strings and addresses for their dependent services. Each OS process will need to have its "mode" CLI flag or environment variable set to the appropriate value. 
 See [Config Reference](../reference/config.md)
 
 
@@ -81,11 +81,11 @@ notifier:
     ...
 ```
 
-Keep in mind you do not need a config file per node type. You may provide each node the same config and each node will configure itself correctly, only using the values necessary for their configured mode.
+Keep in mind a config file per process is not need. Processes only use the values necessary for their configured mode.
 
 ## TLS Termination
 
-Currently ClairV4 punts TLS termination to the load balancing infrastucture. This is a design choice due to the ubiquity of Kubernetes and Openshift infrastructure providing this facility. ClairV4 requires a load balancing solution to terminate TLS.
+Currently Clair offloads TLS termination to the load balancing infrastructure. This design choice is due to the ubiquity of Kubernetes and OpenShift infrastructure already providing this facility.
 
 ## More On Path Routing
 
@@ -95,9 +95,9 @@ Learn how to grab our OpenAPI spec [here](./api.mw) and either start up a local 
 
 You will notice particular API paths are grouped by the services which implement them. This is your guide to configure your layer 7 load balancer correctly. 
 
-When the loadbalancer encounters a particular path prefix it must send those request to the correct set of ClairV4 nodes. 
+When the load balancer encounters a particular path prefix it must send those request to the correct set of Clair nodes. 
 
-For example this is how we configure Traefik in our local development environment.
+For example, this is how we configure Traefik in our local development environment:
 ```
 "traefik.enable=true"
 "traefik.http.routers.notifications.entrypoints=clair"

@@ -1,7 +1,7 @@
 # Clairctl
 
-`clairctl` is a command line tool for working with ClairV4. 
-This CLI is capable of generating manifests from most public registires (docker, quay.io, redhat container catalog) and submitting them for analysis to a running ClairV4.
+`clairctl` is a command line tool for working with Clair.
+This CLI is capable of generating manifests from most public registries (dockerhub, quay.io, Red Hat Container Catalog) and submitting them for analysis to a running Clair.
 
 
 ```

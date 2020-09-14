@@ -1,41 +1,41 @@
-# What is ClairV4
+# What is Clair
 
-ClairV4 is an application for parsing container contents and reporting any vulnerabilities affecting the image. These actions happen via static analysis and not during container runtime.
+Clair is an application for parsing image contents and reporting vulnerabilities affecting the contents. This is done via static analysis and not at runtime.
 
 ## Architecture
 
-ClairV4 utilizes the [ClairCore](https://quay.github.io/claircore/) library as its engine for extracing image contents and reporting vulnerabilities. At a high level you can consider ClairV4 a service wrapper to the functionality provided in the ClairCore library. 
+Clair v4 utilizes the [ClairCore](https://quay.github.io/claircore/) library as its engine for examining contents and reporting vulnerabilities. At a high level you can consider Clair a service wrapper to the functionality provided in the ClairCore library. 
 
 ![diagram of clairV4 highlevel architecture](./clairv4_arch.png)
 
-The above diagram expresses the separation of concerns between ClairV4 and the ClairCore library. Most development involving new distrubtion, vulnerability analysis, and container indexing will occur in ClairCore.
+The above diagram expresses the separation of concerns between Clair and the ClairCore library. Most development involving new distributions, vulnerability sources, and layer indexing will occur in ClairCore.
 
-## How ClairV4 Works
+## How Clair Works
 
-ClairV4's container analysis is broken into three distinct parts.
+Clair's analysis is broken into three distinct parts.
 
 ### Indexing
 
-Indexing is the act of submitting a Manifest to ClairV4. On receipt ClairV4 will fetch all the layers, scan each layer for contents, and create an intermediate representation of the contents called an IndexReport. 
+Indexing starts with submitting a Manifest to Clair. On receipt, Clair will fetch layers, scan their contents, and return an intermediate representation called an IndexReport. 
 
-Manifests are treated as content-addressable containeers. A manifest's hash will always represent the same content and ClairV4 exploits this fact, not performing duplicate work unless necessary.
+Manifests are Clair's representation of a container image. Clair leverages the fact that OCI Manifests and Layers are content-addressed to reduce duplicated work.
 
-Once a Manifest is indexed the IndxReport is persisted for later retrieval. 
+Once a Manifest is indexed, the IndexReport is persisted for later retrieval. 
 
 ### Matching
 
-Matching is the act of taking an IndexReport and discovering vulnerabilties affecting the container the report represents. 
+Matching is taking an IndexReport and correlating vulnerabilities affecting the manifest the report represents. 
 
-The matcher takes care to not cache any datat for too long. ClairV4 is continually indexing new security data and a request to the matcher will always provide you with the most up to date vulnerability analysse of an IndexReport.
+Clair is continually ingesting new security data and a request to the matcher will always provide you with the most up to date vulnerability analysis of an IndexReport.
 
-*how we implement indexing and matching in detail is covered in [ClairCore's](https://quay.github.io/claircore/) documentation*
+*How we implement indexing and matching in detail is covered in [ClairCore's](https://quay.github.io/claircore/) documentation.*
 
 ### Notifications
 
-ClairV4 implements a notification service. 
+Clair implements a notification service. 
 
-When new vulnerabilities are discovered the notifier service will determine if these vulnerabilities affect any indexed Manifests. The notifier will then fire a web hook or deliver a notification to a message broker depending on its configuration. 
+When new vulnerabilities are discovered, the notifier service will determine if these vulnerabilities affect any indexed Manifests. The notifier will then take action according to its configuration.
 
 ### Getting Started
 
-At this point you'll probably want to check out [Getting Started With ClairV4](./howto/getting_started.md)
+At this point you'll probably want to check out [Getting Started With Clair](./howto/getting_started.md).
