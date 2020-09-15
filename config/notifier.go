@@ -41,7 +41,7 @@ type Notifier struct {
 	// Only one of the following should be provided in the configuration
 	//
 	// Configures the notifier for webhook delivery
-	Webbook *webhook.Config `yaml:"webhook" json:"webhook"`
+	Webhook *webhook.Config `yaml:"webhook" json:"webhook"`
 	// Configures the notifier for AMQP delivery.
 	AMQP *amqp.Config `yaml:"amqp" json:"amqp"`
 	// Configures the notifier for STOMP delivery.
