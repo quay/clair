@@ -121,7 +121,7 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 func (t *Server) configureDiscovery(_ context.Context) error {
 	h := intromw.Handler(
 		othttp.NewHandler(
-			DiscoveryHandler(),
+			LoggingHandler(DiscoveryHandler()),
 			OpenAPIV1Path,
 			t.traceOpt,
 		),
@@ -171,7 +171,7 @@ func (t *Server) configureIndexerMode(_ context.Context) error {
 	// affected manifest handler register
 	affectedH := intromw.Handler(
 		othttp.NewHandler(
-			AffectedManifestHandler(t.indexer),
+			LoggingHandler(AffectedManifestHandler(t.indexer)),
 			AffectedManifestAPIPath,
 			t.traceOpt,
 		),
@@ -182,7 +182,7 @@ func (t *Server) configureIndexerMode(_ context.Context) error {
 	// index handler register
 	indexH := intromw.Handler(
 		othttp.NewHandler(
-			IndexHandler(t.indexer),
+			LoggingHandler(IndexHandler(t.indexer)),
 			IndexAPIPath,
 			t.traceOpt,
 		),
@@ -193,7 +193,7 @@ func (t *Server) configureIndexerMode(_ context.Context) error {
 	// index report handler register
 	indexReportH := intromw.Handler(
 		othttp.NewHandler(
-			IndexReportHandler(t.indexer),
+			LoggingHandler(IndexReportHandler(t.indexer)),
 			IndexReportAPIPath,
 			t.traceOpt,
 		),
@@ -204,7 +204,7 @@ func (t *Server) configureIndexerMode(_ context.Context) error {
 	// index state handler register
 	stateH := intromw.Handler(
 		othttp.NewHandler(
-			IndexStateHandler(t.indexer),
+			LoggingHandler(IndexStateHandler(t.indexer)),
 			IndexStateAPIPath,
 			t.traceOpt,
 		),
@@ -226,7 +226,7 @@ func (t *Server) configureMatcherMode(_ context.Context) error {
 	// vulnerability report handler register
 	vulnReportH := intromw.Handler(
 		othttp.NewHandler(
-			VulnerabilityReportHandler(t.matcher, t.indexer),
+			LoggingHandler(VulnerabilityReportHandler(t.matcher, t.indexer)),
 			VulnerabilityReportPath,
 			t.traceOpt,
 		),
@@ -237,7 +237,7 @@ func (t *Server) configureMatcherMode(_ context.Context) error {
 	// update operation handler register
 	opH := intromw.Handler(
 		othttp.NewHandler(
-			UpdateOperationHandler(t.matcher),
+			LoggingHandler(UpdateOperationHandler(t.matcher)),
 			UpdateOperationAPIPath,
 			t.traceOpt,
 		),
@@ -248,7 +248,7 @@ func (t *Server) configureMatcherMode(_ context.Context) error {
 	// update diff handler register
 	diffH := intromw.Handler(
 		othttp.NewHandler(
-			UpdateDiffHandler(t.matcher),
+			LoggingHandler(UpdateDiffHandler(t.matcher)),
 			UpdateDiffAPIPath,
 			t.traceOpt,
 		),
@@ -270,7 +270,7 @@ func (t *Server) configureNotifierMode(ctx context.Context) error {
 	// notifications callback handler
 	callbackH := intromw.Handler(
 		othttp.NewHandler(
-			NotificationHandler(t.notifier),
+			LoggingHandler(NotificationHandler(t.notifier)),
 			NotificationAPIPath,
 			t.traceOpt,
 		),
@@ -286,7 +286,7 @@ func (t *Server) configureNotifierMode(ctx context.Context) error {
 	// keys handler
 	keysH := intromw.Handler(
 		othttp.NewHandler(
-			KeysHandler(ks),
+			LoggingHandler(KeysHandler(ks)),
 			KeysAPIPath,
 			t.traceOpt,
 		),
@@ -297,7 +297,7 @@ func (t *Server) configureNotifierMode(ctx context.Context) error {
 	// key by ID handler
 	keyByIDH := intromw.Handler(
 		othttp.NewHandler(
-			KeyByIDHandler(ks),
+			LoggingHandler(KeyByIDHandler(ks)),
 			KeyByIDAPIPath,
 			t.traceOpt,
 		),
