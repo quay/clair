@@ -19,7 +19,7 @@ import (
 
 type pskTestcase struct {
 	key    []byte
-	issuer string
+	issuer []string
 	nonce  string
 	alg    jose.SignatureAlgorithm
 }
@@ -35,33 +35,40 @@ var signAlgo = []jose.SignatureAlgorithm{
 	jose.HS512,
 }
 
+// implements the Generate interface from testing/quick package.
 func (tc *pskTestcase) Generate(rand *rand.Rand, sz int) reflect.Value {
 	b := make([]byte, sz)
-	n := &pskTestcase{
-		key: make([]byte, sz),
-		alg: signAlgo[rand.Intn(len(signAlgo))],
+	t := &pskTestcase{
+		key:    make([]byte, sz),
+		alg:    signAlgo[rand.Intn(len(signAlgo))],
+		issuer: make([]string, 0),
 	}
-	switch n, err := rand.Read(n.key); {
+	switch n, err := rand.Read(t.key); {
 	case n != sz:
 		panic(fmt.Errorf("read %d, expected %d", n, sz))
 	case err != nil:
 		panic(err)
 	}
 
-	for _, t := range []*string{
-		&n.issuer,
-		&n.nonce,
-	} {
-		switch n, err := rand.Read(b); {
-		case n != sz:
-			panic(fmt.Errorf("read %d, expected %d", n, sz))
-		case err != nil:
-			panic(err)
-		}
-		*t = base64.StdEncoding.EncodeToString(b)
+	switch n, err := rand.Read(b); {
+	case n != sz:
+		panic(fmt.Errorf("read %d, expected %d", n, sz))
+	case err != nil:
+		panic(err)
+	default:
+		t.issuer = append(t.issuer, base64.StdEncoding.EncodeToString(b))
 	}
 
-	return reflect.ValueOf(n)
+	switch n, err := rand.Read(b); {
+	case n != sz:
+		panic(fmt.Errorf("read %d, expected %d", n, sz))
+	case err != nil:
+		panic(err)
+	default:
+		t.nonce = base64.StdEncoding.EncodeToString(b)
+	}
+
+	return reflect.ValueOf(t)
 }
 
 func (tc *pskTestcase) Handler(t *testing.T) http.Handler {
@@ -96,7 +103,7 @@ func roundtrips(t *testing.T) func(*pskTestcase) bool {
 
 		// Mint the jwt.
 		tok, err := jwt.Signed(s).Claims(&jwt.Claims{
-			Issuer:    tc.issuer,
+			Issuer:    tc.issuer[0],
 			Expiry:    jwt.NewNumericDate(now.Add(time.Minute)),
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),

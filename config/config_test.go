@@ -82,11 +82,12 @@ func TestAuthUnmarshal(t *testing.T) {
 				In: `---
 key: >-
   ZGVhZGJlZWZkZWFkYmVlZg==
-iss: iss
+iss: 
+  - iss
 `,
 				Want: config.AuthPSK{
 					Key:    []byte("deadbeefdeadbeef"),
-					Issuer: "iss",
+					Issuer: []string{"iss"},
 				},
 			},
 		}
