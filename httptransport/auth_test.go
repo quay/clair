@@ -95,7 +95,7 @@ func TestAuth(t *testing.T) {
 			Config: config.Config{
 				Auth: config.Auth{
 					PSK: &config.AuthPSK{
-						Issuer: `sweet-bro`,
+						Issuer: []string{`sweet-bro`},
 						Key:    fakeKey,
 					},
 				},
@@ -117,7 +117,7 @@ func TestAuth(t *testing.T) {
 			Config: config.Config{
 				Auth: config.Auth{
 					PSK: &config.AuthPSK{
-						Issuer: `sweet-bro`,
+						Issuer: []string{`sweet-bro`},
 						Key:    fakeKey,
 					},
 				},
@@ -143,7 +143,7 @@ func TestAuth(t *testing.T) {
 			Config: config.Config{
 				Auth: config.Auth{
 					PSK: &config.AuthPSK{
-						Issuer: `sweet-bro`,
+						Issuer: []string{`sweet-bro`},
 						Key:    fakeKey,
 					},
 				},

@@ -513,11 +513,11 @@ a string value
 A shared key distributed between all parties signing and verifying JWTs.
 ```
 
-#### &emsp;&emsp;issuer: ""
+#### &emsp;&emsp;issuer: []string
 ```
-a string value
+a list of string value
 
-The "Issuer" key is what the service expects to verify as the "issuer" claim.
+A list of issuers to verify. An empty list will accept any issuer in a jwt claim.
 ```
 
 ### &emsp;keyserver: \<object\>
