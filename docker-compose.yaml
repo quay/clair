@@ -70,10 +70,10 @@ services:
     labels:
       - "traefik.enable=true"
 
-      - "traefik.http.routers.notifications.entrypoints=clair"
-      - "traefik.http.routers.notifications.rule=PathPrefix(`/api/v1/notification`)"
-      - "traefik.http.routers.notifications.service=notifications"
-      - "traefik.http.services.notifications.loadbalancer.server.port=6000"
+      - "traefik.http.routers.notifier.entrypoints=clair"
+      - "traefik.http.routers.notifier.rule=PathPrefix(`/notifier`)"
+      - "traefik.http.routers.notifier.service=notifier"
+      - "traefik.http.services.notifier.loadbalancer.server.port=6000"
 
   # this should only be created and deleted via the make target "local-dev-notifier-test"
   notifier-test-mode:
@@ -90,10 +90,10 @@ services:
     labels:
       - "traefik.enable=true"
 
-      - "traefik.http.routers.notifications.entrypoints=clair"
-      - "traefik.http.routers.notifications.rule=PathPrefix(`/api/v1/notification`)"
-      - "traefik.http.routers.notifications.service=notifications"
-      - "traefik.http.services.notifications.loadbalancer.server.port=6000"
+      - "traefik.http.routers.notifier.entrypoints=clair"
+      - "traefik.http.routers.notifier.rule=PathPrefix(`/notifier`)"
+      - "traefik.http.routers.notifier.service=notifier"
+      - "traefik.http.services.notifier.loadbalancer.server.port=6000"
 
   indexer:
     container_name: clair-indexer
@@ -108,20 +108,10 @@ services:
     labels:
       - "traefik.enable=true"
 
-      - "traefik.http.routers.index_report.rule=PathPrefix(`/api/v1/index_report`)"
-      - "traefik.http.routers.index_report.entrypoints=clair"
-      - "traefik.http.routers.index_report.service=index_report"
-      - "traefik.http.services.index_report.loadbalancer.server.port=6000"
-
-      - "traefik.http.services.index_state.loadbalancer.server.port=6000"
-      - "traefik.http.routers.index_state.entrypoints=clair"
-      - "traefik.http.routers.index_state.service=index_state"
-      - "traefik.http.routers.index_state.rule=PathPrefix(`/api/v1/index_state`)"
-
-      - "traefik.http.services.affected_manifest.loadbalancer.server.port=6000"
-      - "traefik.http.routers.affected_manifest.entrypoints=clair"
-      - "traefik.http.routers.affected_manifest.service=affected_manifest"
-      - "traefik.http.routers.affected_manifest.rule=PathPrefix(`/api/v1/internal/affected_manifest`)"
+      - "traefik.http.routers.indexer.rule=PathPrefix(`/indexer`)"
+      - "traefik.http.routers.indexer.entrypoints=clair"
+      - "traefik.http.routers.indexer.service=indexer"
+      - "traefik.http.services.indexer.loadbalancer.server.port=6000"
 
   ## like the indexer service above, but mounts quay's http port into local
   ## network namespace.
@@ -141,20 +131,10 @@ services:
     labels:
       - "traefik.enable=true"
 
-      - "traefik.http.routers.index_report.rule=PathPrefix(`/api/v1/index_report`)"
-      - "traefik.http.routers.index_report.entrypoints=clair"
-      - "traefik.http.routers.index_report.service=index_report"
-      - "traefik.http.services.index_report.loadbalancer.server.port=6000"
-
-      - "traefik.http.services.index_state.loadbalancer.server.port=6000"
-      - "traefik.http.routers.index_state.entrypoints=clair"
-      - "traefik.http.routers.index_state.service=index_state"
-      - "traefik.http.routers.index_state.rule=PathPrefix(`/api/v1/index_state`)"
-
-      - "traefik.http.services.affected_manifest.loadbalancer.server.port=6000"
-      - "traefik.http.routers.affected_manifest.entrypoints=clair"
-      - "traefik.http.routers.affected_manifest.service=affected_manifest"
-      - "traefik.http.routers.affected_manifest.rule=PathPrefix(`/api/v1/internal/affected_manifest`)"
+      - "traefik.http.routers.indexer.rule=PathPrefix(`/indexer`)"
+      - "traefik.http.routers.indexer.entrypoints=clair"
+      - "traefik.http.routers.indexer.service=indexer"
+      - "traefik.http.services.indexer.loadbalancer.server.port=6000"
     depends_on:
       - quay
 
@@ -171,20 +151,10 @@ services:
     labels:
       - "traefik.enable=true"
 
-      - "traefik.http.routers.vulnerability_report.rule=PathPrefix(`/api/v1/vulnerability_report`)"
-      - "traefik.http.routers.vulnerability_report.entrypoints=clair"
-      - "traefik.http.routers.vulnerability_report.service=vulnerability_report"
-      - "traefik.http.services.vulnerability_report.loadbalancer.server.port=6000"
-
-      - "traefik.http.routers.update_operation.entrypoints=clair"
-      - "traefik.http.routers.update_operation.rule=PathPrefix(`/api/v1/internal/update_operation`)"
-      - "traefik.http.routers.update_operation.service=update_operation"
-      - "traefik.http.services.update_operation.loadbalancer.server.port=6000"
-
-      - "traefik.http.routers.update_diff.entrypoints=clair"
-      - "traefik.http.routers.update_diff.rule=PathPrefix(`/api/v1/internal/update_diff`)"
-      - "traefik.http.routers.update_diff.service=update_diff"
-      - "traefik.http.services.update_diff.loadbalancer.server.port=6000"
+      - "traefik.http.routers.matcher.rule=PathPrefix(`/matcher`)"
+      - "traefik.http.routers.matcher.entrypoints=clair"
+      - "traefik.http.routers.matcher.service=matcher"
+      - "traefik.http.services.matcher.loadbalancer.server.port=6000"
 
   swagger-ui:
     container_name: clair-swagger

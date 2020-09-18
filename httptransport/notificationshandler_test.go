@@ -41,7 +41,7 @@ func testNotificationHandlerDelete(t *testing.T) {
 
 	h := NotificationHandler(nm)
 	rr := httptest.NewRecorder()
-	u, _ := url.Parse("http://clair-notifier/api/v1/notification/" + noteID.String())
+	u, _ := url.Parse("http://clair-notifier/notifier/api/v1/notification/" + noteID.String())
 	req := &http.Request{
 		URL:    u,
 		Method: http.MethodGet,
@@ -86,7 +86,7 @@ func testNotificationHandlerGet(t *testing.T) {
 
 	h := NotificationHandler(nm)
 	rr := httptest.NewRecorder()
-	u, _ := url.Parse("http://clair-notifier/api/v1/notification/" + noteID.String())
+	u, _ := url.Parse("http://clair-notifier/notifier/api/v1/notification/" + noteID.String())
 	req := &http.Request{
 		URL:    u,
 		Method: http.MethodGet,
@@ -145,7 +145,7 @@ func testNotificationHandlerGetParams(t *testing.T) {
 
 	h := NotificationHandler(nm)
 	rr := httptest.NewRecorder()
-	u, _ := url.Parse("http://clair-notifier/api/v1/notification/" + noteID.String())
+	u, _ := url.Parse("http://clair-notifier/notifier/api/v1/notification/" + noteID.String())
 	v := url.Values{}
 	v.Set("page_size", pageSizeParam)
 	v.Set("page", pageParam)

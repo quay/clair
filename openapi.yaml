@@ -16,7 +16,7 @@ info:
     url: "http://www.apache.org/licenses/"
 
 paths:
-  /api/v1/notification/{notification_id}:
+  notifier/api/v1/notification/{notification_id}:
     delete:
       tags:
         - Notifier
@@ -84,7 +84,7 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/index_report:
+  indexer/api/v1/index_report:
     post:
       tags:
         - Indexer
@@ -114,7 +114,7 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/index_report/{manifest_hash}:
+  indexer/api/v1/index_report/{manifest_hash}:
     get:
       tags:
         - Indexer
@@ -148,7 +148,7 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  /api/v1/vulnerability_report/{manifest_hash}:
+  matcher/api/v1/vulnerability_report/{manifest_hash}:
     get:
       tags:
         - Matcher
@@ -184,7 +184,7 @@ paths:
           $ref: '#/components/responses/MethodNotAllowed'
         500:
           $ref: '#/components/responses/InternalServerError'
-  '/api/v1/index_state':
+  indexer/api/v1/index_state:
     get:
       tags:
         - Indexer
@@ -405,7 +405,7 @@ components:
         callback:
           description: "the url where notifications can be retrieved"
           type: string
-          example: "http://clair-notifier/api/v1/notifications/269886f3-0146-4f08-9bf7-cb1138d48643"
+          example: "http://clair-notifier/notifier/api/v1/notifications/269886f3-0146-4f08-9bf7-cb1138d48643"
 
     VulnSummary:
       title: VulnSummary
