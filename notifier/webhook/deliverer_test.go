@@ -25,7 +25,7 @@ import (
 )
 
 var (
-	callback = "http://clair-notifier/api/v1/notification"
+	callback = "http://clair-notifier/notifier/api/v1/notification"
 	noteID   = uuid.New()
 )
 

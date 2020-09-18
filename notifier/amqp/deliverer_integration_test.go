@@ -22,7 +22,7 @@ const (
 func TestDeliverer(t *testing.T) {
 	integration.Skip(t)
 	const (
-		callback = "http://clair-notifier/api/v1/notifications"
+		callback = "http://clair-notifier/notifier/api/v1/notifications"
 	)
 	var (
 		uri         = os.Getenv("RABBITMQ_CONNECTION_STRING")

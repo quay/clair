@@ -48,7 +48,7 @@ notifier:
   # webhook, amqp, stomp
   webhook:
     target: "http://webhook/"
-    callback: "http://clair-notifier/api/v1/notifications"
+    callback: "http://clair-notifier/notifier/api/v1/notifications"
   amqp:
     exchange:
         name: "" 
@@ -58,7 +58,7 @@ notifier:
     uris: ["amqp://user:pass@host:10000/vhost"]
     direct: false
     routing_key: "notifications" 
-    callback: "http://clair-notifier/api/v1/notifications"
+    callback: "http://clair-notifier/notifier/api/v1/notifications"
     tls:
      root_ca: "optional/path/to/rootca" 
      cert: "madatory/path/to/cert"
@@ -66,7 +66,7 @@ notifier:
   stomp:
     desitnation: "notifications"
     direct: false
-    callback: "http://clair-notifier/api/v1/notifications"
+    callback: "http://clair-notifier/notifier/api/v1/notifications"
     login:
       login: "username"
       passcode: "passcode"

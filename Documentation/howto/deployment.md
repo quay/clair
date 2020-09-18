@@ -99,13 +99,13 @@ When the load balancer encounters a particular path prefix it must send those re
 
 For example, this is how we configure Traefik in our local development environment:
 ```
-"traefik.enable=true"
-"traefik.http.routers.notifications.entrypoints=clair"
-"traefik.http.routers.notifications.rule=PathPrefix(`/api/v1/notification`)"
-"traefik.http.routers.notifications.service=notifications"
-"traefik.http.services.notifications.loadbalancer.server.port=6000"
+- "traefik.enable=true"
+- "traefik.http.routers.notifier.entrypoints=clair"
+- "traefik.http.routers.notifier.rule=PathPrefix(`/notifier`)"
+- "traefik.http.routers.notifier.service=notifier"
+- "traefik.http.services.notifier.loadbalancer.server.port=6000"
 ```
 
-This configuration is saying "take any paths prefixes of /api/v1/notification and send them to the notifier services on port 6060"
+This configuration is saying "take any paths prefixes of /notifier/ and send them to the notifier services on port 6000"
 
 Every load balancer will have their own way to perform path routing. Check the documentation for your infrastructure of choice.

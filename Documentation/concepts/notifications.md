@@ -53,7 +53,7 @@ type VulnSummary struct {
 When you configure notifier for webhook delivery you provide the service with the following pieces of information:
 * A target URL where the webhook will fire
 * The callback URL where the notifier may be reached including its API path
-    * e.g. "http://clair-notifier/api/v1/notifications"
+    * e.g. "http://clair-notifier/notifier/api/v1/notifications"
 
 When the notifier has determined an updated security database has changed the affected status of an indexed manifest, it will deliver the following JSON body to the configured target:
 ```json
@@ -72,7 +72,7 @@ The URL returned in the callback field brings the client to a paginated result.
 The callback endpoint specification follows:
 
 ```go
-GET /api/v1/notification/{id}?[page_size=N][next=N]
+GET /notifier/api/v1/notification/{id}?[page_size=N][next=N]
 {
   page: {
     size:    int,      // maximum number of notifications in the response 
@@ -99,10 +99,10 @@ When the final page is served to the client the returned "page" data structure w
 Therefore the following loop is valid for obtaining all notifications for a notification id in pages of a specified size.
 
 ```
-{ page, notifications } = http.Get("http://clairv4/api/v1/notifications/{id}?page_size=1000")
+{ page, notifications } = http.Get("http://clairv4/notifier/api/v1/notifications/{id}?page_size=1000")
 
 while (page.Next != None) {
-    { page, notifications } = http.Get("http://clairv4/api/v1/notifications/{id}?next={page.Next},page_size=1000")
+    { page, notifications } = http.Get("http://clairv4/notifier/api/v1/notifications/{id}?next={page.Next},page_size=1000")
 }
 ```
 

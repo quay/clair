@@ -23,7 +23,7 @@ func TestDeliverer(t *testing.T) {
 	ctx, done := log.TestLogger(context.Background(), t)
 	defer done()
 	const (
-		callback = "http://clair-notifier/api/v1/notifications"
+		callback = "http://clair-notifier/notifier/api/v1/notifications"
 	)
 
 	var (

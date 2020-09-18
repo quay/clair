@@ -189,19 +189,19 @@ objects:
         service: matcher
         app: clair
   #
-  # index_report route
+  # indexer
   #
   - kind: Route
     apiVersion: route.openshift.io/v1
     metadata:
-      name: clair-index-report
+      name: clair-indexer
       namespace: clair
       labels:
         app: clair
         component: indexer
     spec:
       host: clair.stage.quay.io
-      path: /api/v1/index_report
+      path: /indexer
       to:
         kind: Service
         name: clair-indexer
@@ -210,43 +210,43 @@ objects:
         targetPort: ${{INTROSPECTION_PORT}}
       wildcardPolicy: None
   #
-  # index_state route
+  # matcher route
   #
   - kind: Route
     apiVersion: route.openshift.io/v1
     metadata:
-      name: clair-index-state
-      namespace: clair
-      labels:
-        app: clair
-        component: indexer
-    spec:
-      host: clair.stage.quay.io
-      path: /api/v1/index_state
-      to:
-        kind: Service
-        name: clair-indexer
-        weight: 100
-      port:
-        targetPort: ${{INTROSPECTION_PORT}}
-      wildcardPolicy: None
-  #
-  # vulnerability_report route
-  #
-  - kind: Route
-    apiVersion: route.openshift.io/v1
-    metadata:
-      name: clair-vulnerability-report
+      name: clair-matcher
       namespace: clair
       labels:
         app: clair
         component: matcher
     spec:
       host: clair.stage.quay.io
-      path: /api/v1/vulnerability_report
+      path: /matcher
       to:
         kind: Service
         name: clair-matcher
+        weight: 100
+      port:
+        targetPort: ${{INTROSPECTION_PORT}}
+      wildcardPolicy: None
+  #
+  # notifier route
+  #
+  - kind: Route
+    apiVersion: route.openshift.io/v1
+    metadata:
+      name: notifier
+      namespace: clair
+      labels:
+        app: clair
+        component: notifier
+    spec:
+      host: clair.stage.quay.io
+      path: /notifier
+      to:
+        kind: Service
+        name: clair-notifier
         weight: 100
       port:
         targetPort: ${{INTROSPECTION_PORT}}
