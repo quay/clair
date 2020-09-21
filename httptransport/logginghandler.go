@@ -34,7 +34,7 @@ func LoggingHandler(next http.Handler) http.HandlerFunc {
 			Str("method", r.Method).
 			Str("request uri", r.RequestURI).
 			Int("status", lrw.StatusCode).
-			Float64("elapsed time (md)", float64(time.Since(start).Nanoseconds())*1e-6).
+			Str("elapsed time (md)", time.Since(start).String()).
 			Msg("handled HTTP request")
 	}
 }
