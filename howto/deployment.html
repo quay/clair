@@ -228,13 +228,13 @@ notifier:
 <p>You will notice particular API paths are grouped by the services which implement them. This is your guide to configure your layer 7 load balancer correctly. </p>
 <p>When the load balancer encounters a particular path prefix it must send those request to the correct set of Clair nodes. </p>
 <p>For example, this is how we configure Traefik in our local development environment:</p>
-<pre><code>&quot;traefik.enable=true&quot;
-&quot;traefik.http.routers.notifications.entrypoints=clair&quot;
-&quot;traefik.http.routers.notifications.rule=PathPrefix(`/api/v1/notification`)&quot;
-&quot;traefik.http.routers.notifications.service=notifications&quot;
-&quot;traefik.http.services.notifications.loadbalancer.server.port=6000&quot;
+<pre><code>- &quot;traefik.enable=true&quot;
+- &quot;traefik.http.routers.notifier.entrypoints=clair&quot;
+- &quot;traefik.http.routers.notifier.rule=PathPrefix(`/notifier`)&quot;
+- &quot;traefik.http.routers.notifier.service=notifier&quot;
+- &quot;traefik.http.services.notifier.loadbalancer.server.port=6000&quot;
 </code></pre>
-<p>This configuration is saying &quot;take any paths prefixes of /api/v1/notification and send them to the notifier services on port 6060&quot;</p>
+<p>This configuration is saying &quot;take any paths prefixes of /notifier/ and send them to the notifier services on port 6000&quot;</p>
 <p>Every load balancer will have their own way to perform path routing. Check the documentation for your infrastructure of choice.</p>
 
                     </main>

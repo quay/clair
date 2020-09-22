@@ -209,7 +209,7 @@ type VulnSummary struct {
 <li>A target URL where the webhook will fire</li>
 <li>The callback URL where the notifier may be reached including its API path
 <ul>
-<li>e.g. &quot;http://clair-notifier/api/v1/notifications&quot;</li>
+<li>e.g. &quot;http://clair-notifier/notifier/api/v1/notifications&quot;</li>
 </ul>
 </li>
 </ul>
@@ -223,7 +223,7 @@ type VulnSummary struct {
 <h3><a class="header" href="#pagination" id="pagination">Pagination</a></h3>
 <p>The URL returned in the callback field brings the client to a paginated result.</p>
 <p>The callback endpoint specification follows:</p>
-<pre><code class="language-go">GET /api/v1/notification/{id}?[page_size=N][next=N]
+<pre><code class="language-go">GET /notifier/api/v1/notification/{id}?[page_size=N][next=N]
 {
   page: {
     size:    int,      // maximum number of notifications in the response 
@@ -241,10 +241,10 @@ If not provided a default of 500 is used.</p>
 <p>The &quot;size&quot; field will simply echo back the request page_size parameter.</p>
 <p>When the final page is served to the client the returned &quot;page&quot; data structure will not contain a &quot;next&quot; member.</p>
 <p>Therefore the following loop is valid for obtaining all notifications for a notification id in pages of a specified size.</p>
-<pre><code>{ page, notifications } = http.Get(&quot;http://clairv4/api/v1/notifications/{id}?page_size=1000&quot;)
+<pre><code>{ page, notifications } = http.Get(&quot;http://clairv4/notifier/api/v1/notifications/{id}?page_size=1000&quot;)
 
 while (page.Next != None) {
-    { page, notifications } = http.Get(&quot;http://clairv4/api/v1/notifications/{id}?next={page.Next},page_size=1000&quot;)
+    { page, notifications } = http.Get(&quot;http://clairv4/notifier/api/v1/notifications/{id}?next={page.Next},page_size=1000&quot;)
 }
 </code></pre>
 <p><em>Note: If the client specifies a custom page_size it must specify this page_size on every request for accurate responses.</em></p>

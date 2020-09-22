@@ -228,6 +228,7 @@ If so, the configuration files can be found inside the repository at
 <h2><a class="header" href="#troubleshooting" id="troubleshooting">Troubleshooting</a></h2>
 <p>The most common issue encountered when standing up the dev environment is port conflicts. Make sure that you do not have any other processes listening on any of the ports outlined above.</p>
 <p>The second issue you may face is your Docker resource settings maybe too constrained to support the local dev stack. This is typically seen on Docker4Mac since a VM is used with a specific set of resources configured. See <a href="https://docs.docker.com/docker-for-mac/">Docker For Mac Manual</a> for instructions on how to change these resources.</p>
+<p>Lastly, you can view traefik's ui at <code>localhost:7000</code>. If traefik is reporting no routers or services its likely SELinux has blocked its access to <code>/var/run/docker.socket</code>. Place SELinuse in permissive mode and restart the local development environment.</p>
 
                     </main>
 

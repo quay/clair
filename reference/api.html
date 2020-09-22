@@ -201,7 +201,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.delete('/api/v1/notification/{notification_id}', headers = headers)
+r = requests.delete('/notifier/api/v1/notification/{notification_id}', headers = headers)
 
 print(r.json())
 
@@ -220,7 +220,7 @@ func main() {
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;DELETE&quot;, &quot;/api/v1/notification/{notification_id}&quot;, data)
+    req, err := http.NewRequest(&quot;DELETE&quot;, &quot;/notifier/api/v1/notification/{notification_id}&quot;, data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -234,7 +234,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('/api/v1/notification/{notification_id}',
+fetch('/notifier/api/v1/notification/{notification_id}',
 {
   method: 'DELETE',
 
@@ -247,7 +247,7 @@ fetch('/api/v1/notification/{notification_id}',
 });
 
 </code></pre>
-<p><code>DELETE /api/v1/notification/{notification_id}</code></p>
+<p><code>DELETE notifier/api/v1/notification/{notification_id}</code></p>
 <p>Issues a delete of the provided notification id and all associated notifications.
 After this delete clients will no longer be able to retrieve notifications.</p>
 <h3 id="notifications-delete-parameters">Parameters</h3>
@@ -283,7 +283,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('/api/v1/notification/{notification_id}', headers = headers)
+r = requests.get('/notifier/api/v1/notification/{notification_id}', headers = headers)
 
 print(r.json())
 
@@ -302,7 +302,7 @@ func main() {
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;GET&quot;, &quot;/api/v1/notification/{notification_id}&quot;, data)
+    req, err := http.NewRequest(&quot;GET&quot;, &quot;/notifier/api/v1/notification/{notification_id}&quot;, data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -316,7 +316,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('/api/v1/notification/{notification_id}',
+fetch('/notifier/api/v1/notification/{notification_id}',
 {
   method: 'GET',
 
@@ -329,7 +329,7 @@ fetch('/api/v1/notification/{notification_id}',
 });
 
 </code></pre>
-<p><code>GET /api/v1/notification/{notification_id}</code></p>
+<p><code>GET notifier/api/v1/notification/{notification_id}</code></p>
 <p>By performing a GET with a notification_id as a path parameter the client
 will retrieve a paginated response of notifcation objects</p>
 <h3 id="retreive-a-paginated-result-of-notifications-for-the-provided-id-parameters">Parameters</h3>
@@ -426,7 +426,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.post('/api/v1/index_report', headers = headers)
+r = requests.post('/indexer/api/v1/index_report', headers = headers)
 
 print(r.json())
 
@@ -446,7 +446,7 @@ func main() {
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;POST&quot;, &quot;/api/v1/index_report&quot;, data)
+    req, err := http.NewRequest(&quot;POST&quot;, &quot;/indexer/api/v1/index_report&quot;, data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -477,7 +477,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('/api/v1/index_report',
+fetch('/indexer/api/v1/index_report',
 {
   method: 'POST',
   body: inputBody,
@@ -490,7 +490,7 @@ fetch('/api/v1/index_report',
 });
 
 </code></pre>
-<p><code>POST /api/v1/index_report</code></p>
+<p><code>POST indexer/api/v1/index_report</code></p>
 <p>By submitting a Manifest object to this endpoint Clair will fetch the
 layers, scan each layer's contents, and provide an index of discovered
 packages, repository and distribution information.</p>
@@ -593,7 +593,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('/api/v1/index_report/{manifest_hash}', headers = headers)
+r = requests.get('/indexer/api/v1/index_report/{manifest_hash}', headers = headers)
 
 print(r.json())
 
@@ -612,7 +612,7 @@ func main() {
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;GET&quot;, &quot;/api/v1/index_report/{manifest_hash}&quot;, data)
+    req, err := http.NewRequest(&quot;GET&quot;, &quot;/indexer/api/v1/index_report/{manifest_hash}&quot;, data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -626,7 +626,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('/api/v1/index_report/{manifest_hash}',
+fetch('/indexer/api/v1/index_report/{manifest_hash}',
 {
   method: 'GET',
 
@@ -639,7 +639,7 @@ fetch('/api/v1/index_report/{manifest_hash}',
 });
 
 </code></pre>
-<p><code>GET /api/v1/index_report/{manifest_hash}</code></p>
+<p><code>GET indexer/api/v1/index_report/{manifest_hash}</code></p>
 <p>Given a Manifest's content addressable hash an IndexReport will
 be retrieved if exists.</p>
 <h3 id="retrieve-an-indexreport-for-the-given-manifest-hash-if-exists.-parameters">Parameters</h3>
@@ -724,7 +724,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('/api/v1/index_state', headers = headers)
+r = requests.get('/indexer/api/v1/index_state', headers = headers)
 
 print(r.json())
 
@@ -743,7 +743,7 @@ func main() {
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;GET&quot;, &quot;/api/v1/index_state&quot;, data)
+    req, err := http.NewRequest(&quot;GET&quot;, &quot;/indexer/api/v1/index_state&quot;, data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -757,7 +757,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('/api/v1/index_state',
+fetch('/indexer/api/v1/index_state',
 {
   method: 'GET',
 
@@ -770,7 +770,7 @@ fetch('/api/v1/index_state',
 });
 
 </code></pre>
-<p><code>GET /api/v1/index_state</code></p>
+<p><code>GET indexer/api/v1/index_state</code></p>
 <p>The index state endpoint returns a json structure indicating the
 indexer's internal configuration state.</p>
 <p>A client may be interested in this as a signal that manifests may need
@@ -809,7 +809,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('/api/v1/vulnerability_report/{manifest_hash}', headers = headers)
+r = requests.get('/matcher/api/v1/vulnerability_report/{manifest_hash}', headers = headers)
 
 print(r.json())
 
@@ -828,7 +828,7 @@ func main() {
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;GET&quot;, &quot;/api/v1/vulnerability_report/{manifest_hash}&quot;, data)
+    req, err := http.NewRequest(&quot;GET&quot;, &quot;/matcher/api/v1/vulnerability_report/{manifest_hash}&quot;, data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -842,7 +842,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('/api/v1/vulnerability_report/{manifest_hash}',
+fetch('/matcher/api/v1/vulnerability_report/{manifest_hash}',
 {
   method: 'GET',
 
@@ -855,7 +855,7 @@ fetch('/api/v1/vulnerability_report/{manifest_hash}',
 });
 
 </code></pre>
-<p><code>GET /api/v1/vulnerability_report/{manifest_hash}</code></p>
+<p><code>GET matcher/api/v1/vulnerability_report/{manifest_hash}</code></p>
 <p>Given a Manifest's content addressable hash a VulnerabilityReport
 will be created. The Manifest <strong>must</strong> have been Indexed first
 via the Index endpoint.</p>
@@ -1072,7 +1072,7 @@ This operation does not require authentication
 <a id="tocscallback"></a>
 <pre><code class="language-json">{
   &quot;notification_id&quot;: &quot;269886f3-0146-4f08-9bf7-cb1138d48643&quot;,
-  &quot;callback&quot;: &quot;http://clair-notifier/api/v1/notifications/269886f3-0146-4f08-9bf7-cb1138d48643&quot;
+  &quot;callback&quot;: &quot;http://clair-notifier/notifier/api/v1/notifications/269886f3-0146-4f08-9bf7-cb1138d48643&quot;
 }
 
 </code></pre>
