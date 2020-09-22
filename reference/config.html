@@ -554,10 +554,10 @@ If multiple auth mechanisms are defined the Keyserver is preferred.
 
 A shared key distributed between all parties signing and verifying JWTs.
 </code></pre>
-<h4><a class="header" href="#issuer" id="issuer">  issuer: &quot;&quot;</a></h4>
-<pre><code>a string value
+<h4><a class="header" href="#issuer-string" id="issuer-string">  issuer: []string</a></h4>
+<pre><code>a list of string value
 
-The &quot;Issuer&quot; key is what the service expects to verify as the &quot;issuer&quot; claim.
+A list of issuers to verify. An empty list will accept any issuer in a jwt claim.
 </code></pre>
 <h3><a class="header" href="#keyserver-object" id="keyserver-object"> keyserver: &lt;object&gt;</a></h3>
 <pre><code>Defines Quay keyserver authentication
