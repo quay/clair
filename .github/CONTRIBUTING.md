@@ -1,6 +1,6 @@
 # How to Contribute
 
-CoreOS projects are [Apache 2.0 licensed](LICENSE) and accept contributions via GitHub pull requests.
+Clair is [Apache 2.0 licensed](LICENSE) and accepts contributions via GitHub pull requests.
 This document outlines some of the conventions on development workflow, commit message formatting, contact points and other resources to make it easier to get your contribution accepted.
 
 # Certificate of Origin
@@ -14,7 +14,7 @@ See the [DCO](../DCO) file for details.
 The project currently uses a mailing list and IRC channel:
 
 - Email: [clair-dev@googlegroups.com](https://groups.google.com/forum/#!forum/clair-dev)
-- IRC: #[coreos](irc://irc.freenode.org:6667/#clair) IRC channel on freenode.org
+- IRC: #[clair](irc://irc.freenode.org:6667/#clair) IRC channel on freenode.org
 
 Please avoid emailing maintainers directly.
 They are very busy and read the mailing lists.
@@ -29,7 +29,7 @@ They are very busy and read the mailing lists.
 
 This is a rough outline of what a contributor's workflow looks like:
 
-- Create a topic branch from where you want to base your work (usually master).
+- Create a topic branch from where you want to base your work (usually main).
 - Make commits of logical units.
 - Make sure your commit messages are in the proper format (see below).
 - Push your changes to a topic branch in your fork of the repository.

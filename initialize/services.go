@@ -102,7 +102,7 @@ func (i *Init) Services() error {
 			Matcher:          libV,
 			Migrations:       i.conf.Notifier.Migrations,
 			PollInterval:     pInterval,
-			Webhook:          i.conf.Notifier.Webbook,
+			Webhook:          i.conf.Notifier.Webhook,
 			AMQP:             i.conf.Notifier.AMQP,
 			STOMP:            i.conf.Notifier.STOMP,
 		})
@@ -235,7 +235,7 @@ func (i *Init) Services() error {
 			Matcher:          remoteMatcher,
 			Migrations:       i.conf.Notifier.Migrations,
 			PollInterval:     pInterval,
-			Webhook:          i.conf.Notifier.Webbook,
+			Webhook:          i.conf.Notifier.Webhook,
 			AMQP:             i.conf.Notifier.AMQP,
 			STOMP:            i.conf.Notifier.STOMP,
 		})

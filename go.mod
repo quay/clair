@@ -17,7 +17,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/prometheus/client_golang v0.9.4 // indirect
 	github.com/prometheus/procfs v0.0.8 // indirect
-	github.com/quay/claircore v0.1.2
+	github.com/quay/claircore v0.1.8
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
 	github.com/rs/zerolog v1.16.0
 	github.com/streadway/amqp v1.0.0
@@ -27,7 +27,7 @@ require (
 	go.opentelemetry.io/otel/exporter/metric/prometheus v0.2.2-0.20200111012159-d85178b63b15
 	go.opentelemetry.io/otel/exporter/trace/jaeger v0.2.1
 	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
-	golang.org/x/tools v0.0.0-20200828013309-97019fc2e64b // indirect
+	golang.org/x/tools v0.0.0-20200923053713-ba800b16d873 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.1
 	gopkg.in/yaml.v3 v3.0.0-20200506231410-2ff61e1afc86
 )

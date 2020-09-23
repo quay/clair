@@ -38,7 +38,7 @@ func (c *HTTP) Scan(ctx context.Context, ir *claircore.IndexReport) (*claircore.
 	}
 
 	resp, err := c.c.Do(req)
-	if resp.Body != nil {
+	if resp != nil {
 		defer resp.Body.Close()
 	}
 	if err != nil {

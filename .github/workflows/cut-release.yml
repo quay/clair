@@ -17,20 +17,16 @@ jobs:
           tag=`basename ${{ github.ref }}`
           cat <<.
           ::set-env name=VERSION::${tag}
+          ::set-env name=CLAIR_VERSION::${tag}
+          ::set-env name=PREFIX::clair-${tag}/
+          ::set-env name=TAG::quay.io/projectquay/clair:${tag#v}
+          ::set-env name=QUAY_USER::projectquay+clair_github
+          ::add-mask::${{ secrets.QUAY_TOKEN }}
           .
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Build clairctl
-        run:
-          GOOS=darwin GOARCH=amd64 -o clairctl-darwin-amd64 ./cmd/clairctl
-          GOOS=linux GOARCH=amd64 -o clairctl-linux-amd64 ./cmd/clairctl
-          GOOS=windows GOARCH=amd64 -o clairctl-windows-amd64 ./cmd/clairctl
-
-          GOOS=darwin GOARCH=386 -o clairctl-darwin-386 ./cmd/clairctl
-          GOOS=linux GOARCH=386 -o clairctl-linux-386 ./cmd/clairctl
-          GOOS=windows GOARCH=386 -o clairctl-windows-386 ./cmd/clairctl
 
       - name: ChangeLog
         shell: bash
@@ -46,6 +42,31 @@ jobs:
           cat <<.
           ::set-env name=CHANGELOG::${chglog}
           .
+
+      - name: Build clairctl
+        run:
+          GOOS=darwin GOARCH=amd64 -o clairctl-darwin-amd64 ./cmd/clairctl
+          GOOS=linux GOARCH=amd64 -o clairctl-linux-amd64 ./cmd/clairctl
+          GOOS=windows GOARCH=amd64 -o clairctl-windows-amd64 ./cmd/clairctl
+
+          GOOS=darwin GOARCH=386 -o clairctl-darwin-386 ./cmd/clairctl
+          GOOS=linux GOARCH=386 -o clairctl-linux-386 ./cmd/clairctl
+          GOOS=windows GOARCH=386 -o clairctl-windows-386 ./cmd/clairctl
+
+      - name: Create Release Archive
+        run: |
+          go mod vendor
+          git archive --prefix "${PREFIX}" -o clair.tar "${GITHUB_REF}"
+          tar -rf clair.tar --transform "s,^,${PREFIX}," vendor
+          gzip clair.tar
+
+      - name: Build Release Container
+        run: |
+          build=$(mktemp -d)
+          trap "rm -rf '${build}'" EXIT
+          tar -xzf clair.tar.gz -C "${build}" --strip-components 1
+          docker build --build-arg CLAIR_VERSION --tag "${TAG}" "${build}"
+
       - name: Create Release
         uses: actions/create-release@latest
         id: create_release
@@ -58,34 +79,6 @@ jobs:
             ${{ env.CHANGELOG }}
           prerelease: ${{ contains(env.VERSION, 'alpha') || contains(env.VERSION, 'beta') || contains(env.VERSION, 'rc') }}
 
-    # perform production release of artifacts
-    name: Upload Release Assets
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Prepare Environment
-        run: |
-          : "${tag:=${GITHUB_REF#refs/tags/}}"
-          cat <<.
-          ::set-env name=CLAIR_VERSION::${tag}
-          ::set-env name=PREFIX::clair-${tag}/
-          ::set-env name=TAG::quay.io/projectquay/clair:${tag#v}
-          ::set-env name=QUAY_USER::projectquay+clair_github
-          ::add-mask::${{ secrets.QUAY_TOKEN }}
-          .
-      - name: Create Release Archive
-        run: |
-          go mod vendor
-          git archive --prefix "${PREFIX}" -o clair.tar "${GITHUB_REF}"
-          tar -rf clair.tar --transform "s,^,${PREFIX}," vendor
-          gzip clair.tar
-      - name: Build Release Container
-        run: |
-          build=$(mktemp -d)
-          trap "rm -rf '${build}'" EXIT
-          tar -xzf clair.tar.gz -C "${build}" --strip-components 1
-          docker build --build-arg CLAIR_VERSION --tag "${TAG}" "${build}"
       - name: Publish Release Archive
         uses: actions/upload-release-asset@v1
         env:

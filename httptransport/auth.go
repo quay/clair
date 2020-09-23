@@ -23,7 +23,7 @@ func authHandler(cfg *config.Config, next http.Handler) (http.Handler, error) {
 		}
 		checks = append(checks, ks)
 		if cfg.Intraservice != nil {
-			psk, err := auth.NewPSK(cfg.Intraservice, IntraserviceIssuer)
+			psk, err := auth.NewPSK(cfg.Intraservice, []string{IntraserviceIssuer})
 			if err != nil {
 				return nil, fmt.Errorf("failed to initialize quay keyserver: %w", err)
 			}
@@ -31,15 +31,15 @@ func authHandler(cfg *config.Config, next http.Handler) (http.Handler, error) {
 		}
 	case cfg.Auth.PSK != nil:
 		cfg := cfg.Auth.PSK
-		intra, err := auth.NewPSK(cfg.Key, IntraserviceIssuer)
+		issuers := make([]string, 0, 1+len(cfg.Issuer))
+		issuers = append(issuers, IntraserviceIssuer)
+		issuers = append(issuers, cfg.Issuer...)
+
+		psk, err := auth.NewPSK(cfg.Key, issuers)
 		if err != nil {
 			return nil, err
 		}
-		psk, err := auth.NewPSK(cfg.Key, cfg.Issuer)
-		if err != nil {
-			return nil, err
-		}
-		checks = append(checks, intra, psk)
+		checks = append(checks, psk)
 	default:
 		return next, nil
 	}
