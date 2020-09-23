@@ -5,8 +5,8 @@ Project discussion and other meta topics should be discussed on the mailing list
 GitHub issues are ONLY for bugs and features for the Clair API.
 Please first create an issue on your client's repository before opening one here.
 
-Are you using a development build of Clair (e.g. quay.io/coreos/clair-git)?
-Your problem might be solved by switching to a stable release (e.g. quay.io/coreos/clair).
+Are you using a development build of Clair?
+Your problem might be solved by switching to a stable release.
 
 -->
 
@@ -36,5 +36,4 @@ If you're making a feature request, please specify "N/A" under the environment s
 - Host OS: 
 - Kernel (e.g. `uname -a`): 
 - Kubernetes version (use `kubectl version`): 
-- Helm version (use `helm version`): 
 - Network/Firewall setup: 
