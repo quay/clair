@@ -38,7 +38,7 @@ func (s *HTTP) AffectedManifests(ctx context.Context, v []claircore.Vulnerabilit
 		return affected, fmt.Errorf("failed to create request: %v", err)
 	}
 	resp, err := s.c.Do(req)
-	if resp.Body != nil {
+	if resp != nil {
 		defer resp.Body.Close()
 	}
 	if err != nil {
@@ -73,7 +73,7 @@ func (s *HTTP) Index(ctx context.Context, manifest *claircore.Manifest) (*clairc
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
 	resp, err := s.c.Do(req)
-	if resp.Body != nil {
+	if resp != nil {
 		defer resp.Body.Close()
 	}
 	if err != nil {
@@ -103,7 +103,7 @@ func (s *HTTP) IndexReport(ctx context.Context, manifest claircore.Digest) (*cla
 		return nil, false, fmt.Errorf("failed to create request: %v", err)
 	}
 	resp, err := s.c.Do(req)
-	if resp.Body != nil {
+	if resp != nil {
 		defer resp.Body.Close()
 	}
 	if err != nil {
@@ -135,7 +135,7 @@ func (s *HTTP) State(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("failed to create request: %v", err)
 	}
 	resp, err := s.c.Do(req)
-	if resp.Body != nil {
+	if resp != nil {
 		defer resp.Body.Close()
 	}
 
