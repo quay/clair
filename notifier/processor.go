@@ -10,6 +10,7 @@ import (
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
 	"github.com/quay/claircore"
+	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/claircore/pkg/distlock"
 	"github.com/rs/zerolog"
 )
@@ -217,13 +218,17 @@ func (p *Processor) safe(ctx context.Context, e Event) (bool, uuid.UUID) {
 	}
 
 	uos := all[e.updater]
-	n := len(uos)
-	if n < 2 {
-		log.Info().Msg("encountered first update operation. will not process notifications")
-		return false, uuid.Nil
+
+	var current driver.UpdateOperation
+	var prev driver.UpdateOperation
+
+	if len(uos) == 1 {
+		current = uos[0]
+		prev.Ref = uuid.Nil
+	} else {
+		current, prev = uos[0], uos[1]
 	}
 
-	current, prev := uos[0], uos[1]
 	if current.Ref.String() != e.uo.Ref.String() {
 		log.Info().Str("new", current.Ref.String()).Msg("newer update operation is present, will not process notifications")
 		return false, uuid.Nil
