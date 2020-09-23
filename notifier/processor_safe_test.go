@@ -39,7 +39,6 @@ var (
 func TestProcessorSafe(t *testing.T) {
 	t.Run("UnsafeDuplications", testUnsafeDuplications)
 	t.Run("UnsafeStaleUOID", testUnsafeStaleUOID)
-	t.Run("UnSafeFirstUpdate", testUnsafeFirstUpdate)
 	t.Run("UnsafeMatcherErr", testUnsafeMatcherErr)
 	t.Run("UnsafeStoreErr", testUnsafeStoreErr)
 	t.Run("Safe", testSafe)
@@ -129,43 +128,6 @@ func testUnsafeMatcherErr(t *testing.T) {
 	if b {
 		t.Fatalf("got: %v, want: %v", b, false)
 	}
-}
-
-// testSafeFirstUpdate confirms notifications will not be created if no previous
-// operation can be used as a base in the diff.
-func testUnsafeFirstUpdate(t *testing.T) {
-	ctx := context.TODO()
-	sm := &MockStore{
-		ReceiptByUOID_: func(ctx context.Context, id uuid.UUID) (Receipt, error) {
-			return Receipt{}, clairerror.ErrNoReceipt{}
-		},
-	}
-	mm := &matcher.Mock{
-		UpdateOperations_: func(context.Context, ...string) (map[string][]driver.UpdateOperation, error) {
-			// reslice to have only one UOID
-			latest := processorUpdateOps[testUpdater][:1]
-			uo := map[string][]driver.UpdateOperation{
-				testUpdater: latest,
-			}
-			return uo, nil
-		},
-	}
-
-	p := Processor{
-		store:   sm,
-		matcher: mm,
-	}
-
-	e := Event{
-		updater: testUpdater,
-		uo:      processorUpdateOps[testUpdater][1],
-	}
-
-	b, _ := p.safe(ctx, e)
-	if b {
-		t.Fatalf("got: %v, want: %v", b, false)
-	}
-
 }
 
 // testSafeStaleUOID confirms the guard against creating stale notifications
