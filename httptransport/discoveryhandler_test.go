@@ -21,6 +21,7 @@ func TestDiscoveryEndpoint(t *testing.T) {
 
 	r := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/openapi/v1", nil)
+	req.Header.Set("Accept", "application/json")
 	h.ServeHTTP(r, req)
 
 	resp := r.Result()
@@ -43,6 +44,20 @@ func TestDiscoveryEndpoint(t *testing.T) {
 		t.Fatalf("returned json did not container openapi key at the root")
 	}
 	t.Logf("openapi verion: %v", m["openapi"])
+}
+
+func TestDiscoveryFailure(t *testing.T) {
+	h := DiscoveryHandler()
+
+	r := httptest.NewRecorder()
+	req := httptest.NewRequest("GET", "/openapi/v1", nil)
+	req.Header.Set("Accept", "application/yaml")
+	h.ServeHTTP(r, req)
+
+	resp := r.Result()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("got status code: %v want status code: %v", resp.StatusCode, http.StatusBadRequest)
+	}
 }
 
 func TestEmbedding(t *testing.T) {

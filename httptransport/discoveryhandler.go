@@ -9,6 +9,13 @@ import (
 
 //go:generate go run openapigen.go
 
+var okCT = map[string]string{
+	"application/vnd.oai.openapi+json": "application/vnd.oai.openapi+json",
+	"application/json":                 "application/json",
+	"application/*":                    "application/vnd.oai.openapi+json",
+	"*/*":                              "application/vnd.oai.openapi+json",
+}
+
 // DiscoveryHandler serves the embedded OpenAPI spec.
 func DiscoveryHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -20,15 +27,14 @@ func DiscoveryHandler() http.Handler {
 			je.Error(w, resp, http.StatusMethodNotAllowed)
 			return
 		}
-		ct := "application/vnd.oai.openapi+json"
+		w.Header().Set("content-type", okCT["*/*"])
 		// Add a gate so that requesters expecting the yaml version get some
 		// sort of error.
 		if as, ok := r.Header["Accept"]; ok {
 			bail := true
 			for _, a := range as {
-				if a == "application/json" ||
-					a == "application/vnd.oai.openapi+json" {
-					ct = a
+				if ct, ok := okCT[a]; ok {
+					w.Header().Set("content-type", ct)
 					bail = false
 					break
 				}
@@ -42,7 +48,6 @@ func DiscoveryHandler() http.Handler {
 				return
 			}
 		}
-		w.Header().Add("content-type", ct)
 		w.Header().Set("etag", _openapiJSONEtag)
 		var err error
 		defer writerError(w, &err)()
