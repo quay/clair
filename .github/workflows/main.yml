@@ -4,14 +4,23 @@ name: CI
 on:
   push:
     branches:
-      - master
-      - development-4.0  # Remove this when the branch switch happens.
+      - main
   pull_request:
     branches:
-      - master
-      - development-4.0  # Remove this when the branch switch happens.
+      - main
 
 jobs:
+  commit-check:
+    name: Commit Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: commit check
+        uses: gsactions/commit-message-checker@v1
+        with:
+          pattern: |
+            ^(.*):\s*(.*)\n          
+          error: 'Commit must begin with <scope>: <subject>'
+
   tidy:
     name: Tidy
     runs-on: ubuntu-latest
