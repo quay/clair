@@ -1,14 +1,16 @@
 package main
 
 import (
+	"bufio"
+	"compress/gzip"
 	"errors"
+	"fmt"
 	"io"
 	"os"
-	"regexp"
 
-	"github.com/quay/claircore/libvuln"
 	"github.com/quay/claircore/libvuln/driver"
-	"github.com/quay/claircore/updater"
+	"github.com/quay/claircore/libvuln/jsonblob"
+	"github.com/quay/claircore/libvuln/updates"
 	_ "github.com/quay/claircore/updater/defaults"
 	"github.com/urfave/cli/v2"
 )
@@ -57,10 +59,6 @@ func exportAction(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	filter, err := regexp.Compile(cfg.Updaters.Filter)
-	if err != nil {
-		return err
-	}
 	cfgs := make(map[string]driver.ConfigUnmarshaler, len(cfg.Updaters.Config))
 	for name, node := range cfg.Updaters.Config {
 		cfgs[name] = node.Decode
@@ -71,29 +69,34 @@ func exportAction(c *cli.Context) error {
 		return err
 	}
 
-	u, err := libvuln.NewOfflineUpdater(cfgs, filter.MatchString, out)
+	// use a jsonblob store
+	store, err := jsonblob.New()
+
+	// create update manager
+	mgr, err := updates.NewManager(ctx,
+		store,
+		nil,
+		cl,
+		updates.WithConfigs(cfgs),
+		updates.WithEnabled(cfg.Updaters.Sets))
 	if err != nil {
 		return err
 	}
 
-	defs := updater.Registered()
-	cfg.Updaters.FilterSets(defs)
-	if err := updater.Configure(ctx, defs, cfgs, cl); err != nil {
+	err = mgr.Run(ctx)
+	if err != nil {
 		return err
 	}
-	ufs := make([]driver.UpdaterSetFactory, 0, len(defs))
-	for _, u := range defs {
-		ufs = append(ufs, u)
+
+	bw := bufio.NewWriter(out)
+	gz := gzip.NewWriter(bw)
+	defer func() {
+		gz.Close()
+		bw.Flush()
+	}()
+	if err := store.Store(gz); err != nil {
+		return fmt.Errorf("failed to write jsonblob to file")
 	}
 
-	if err := u.RunUpdaters(ctx, ufs...); err != nil {
-		// Don't exit non-zero if we run into errors, unless the strict flag was
-		// provided.
-		code := 0
-		if c.Bool("strict") {
-			code = 1
-		}
-		return cli.Exit(err.Error(), code)
-	}
 	return nil
 }
