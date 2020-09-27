@@ -20,7 +20,7 @@ paths:
     delete:
       tags:
         - Notifier
-      operationId: "notifications delete"
+      operationId: "DeleteNotification"
       description: |
         Issues a delete of the provided notification id and all associated notifications.
         After this delete clients will no longer be able to retrieve notifications.
@@ -33,10 +33,6 @@ paths:
       responses:
         200:
           description: "OK"
-          content:
-            application/json:
-              schema:
-                status: ok
         400:
           $ref: '#/components/responses/BadRequest'
         405:
@@ -46,7 +42,7 @@ paths:
     get:
       tags:
         - Notifier
-      operationId: "notifications get"
+      operationId: "GetNotification"
       summary: "Retreive a paginated result of notifications for the provided id"
       description: |
         By performing a GET with a notification_id as a path parameter the client

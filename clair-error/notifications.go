@@ -117,7 +117,7 @@ type ErrDeliveryFailed struct {
 }
 
 func (e ErrDeliveryFailed) Error() string {
-	return "failed to delivery notification"
+	return "failed to deliver notification"
 }
 
 func (e ErrDeliveryFailed) Unwrap() error {
