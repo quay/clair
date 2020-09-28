@@ -23,7 +23,7 @@ In the above diagram, Clair is running in combo mode and talking to a single dat
 indexer:
     connstring: "host=clairdb user=pqgotest dbname=pqgotest sslmode=verify-full"
 matcher:
-    connstring: "host=cher-clairdb user=pqgotest dbname=pqgotest sslmode=verify-full"
+    connstring: "host=clairdb user=pqgotest dbname=pqgotest sslmode=verify-full"
     ...
 notifier:
     connstring: "host=clairdb user=pqgotest dbname=pqgotest sslmode=verify-full"

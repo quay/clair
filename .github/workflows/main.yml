@@ -20,6 +20,7 @@ jobs:
           pattern: |
             ^(.*):\s*(.*)\n?
           error: 'Commit must begin with <scope>: <subject>'
+          flags: ''
 
   tidy:
     name: Tidy
