@@ -45,13 +45,13 @@ jobs:
 
       - name: Build clairctl
         run:
-          GOOS=darwin GOARCH=amd64 -o clairctl-darwin-amd64 ./cmd/clairctl
-          GOOS=linux GOARCH=amd64 -o clairctl-linux-amd64 ./cmd/clairctl
-          GOOS=windows GOARCH=amd64 -o clairctl-windows-amd64 ./cmd/clairctl
+          GOOS=darwin GOARCH=amd64 go build -o clairctl-darwin-amd64 ./cmd/clairctl
+          GOOS=linux GOARCH=amd64 go build -o clairctl-linux-amd64 ./cmd/clairctl
+          GOOS=windows GOARCH=amd64 go build -o clairctl-windows-amd64 ./cmd/clairctl
 
-          GOOS=darwin GOARCH=386 -o clairctl-darwin-386 ./cmd/clairctl
-          GOOS=linux GOARCH=386 -o clairctl-linux-386 ./cmd/clairctl
-          GOOS=windows GOARCH=386 -o clairctl-windows-386 ./cmd/clairctl
+          GOOS=darwin GOARCH=386 go build -o clairctl-darwin-386 ./cmd/clairctl
+          GOOS=linux GOARCH=386 go build -o clairctl-linux-386 ./cmd/clairctl
+          GOOS=windows GOARCH=386 go build -o clairctl-windows-386 ./cmd/clairctl
 
       - name: Create Release Archive
         run: |
