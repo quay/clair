@@ -2,8 +2,15 @@
 ## [Unreleased]
 
 
+<a name="v4.0.0-rc.7"></a>
+## [v4.0.0-rc.7] - 2020-09-29
+### Cicd
+- [195ce7a](https://github.com/quay/clair/commit/195ce7a59a5db9d7e1f854e25242434e82635fa7): move container building out of container
+
 <a name="v4.0.0-rc.6"></a>
 ## [v4.0.0-rc.6] - 2020-09-29
+### Chore
+- [2f5756d](https://github.com/quay/clair/commit/2f5756de91a4367c4ebda047f2dcbc29bf252d6f): v4.0.0-rc.6 changelog bump
 ### Cicd
 - [f6aa6e6](https://github.com/quay/clair/commit/f6aa6e6e028f73c5ae05e65e2c870972fa04393d): use multiline string for clairctl build command
 
@@ -1140,7 +1147,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.6...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.7...HEAD
+[v4.0.0-rc.7]: https://github.com/quay/clair/compare/v4.0.0-rc.6...v4.0.0-rc.7
 [v4.0.0-rc.6]: https://github.com/quay/clair/compare/v4.0.0-rc.5...v4.0.0-rc.6
 [v4.0.0-rc.5]: https://github.com/quay/clair/compare/v4.0.0-rc.4...v4.0.0-rc.5
 [v4.0.0-rc.4]: https://github.com/quay/clair/compare/v4.0.0-rc.3...v4.0.0-rc.4
