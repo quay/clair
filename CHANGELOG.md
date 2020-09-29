@@ -2,8 +2,15 @@
 ## [Unreleased]
 
 
+<a name="v4.0.0-rc.6"></a>
+## [v4.0.0-rc.6] - 2020-09-29
+### Cicd
+- [f6aa6e6](https://github.com/quay/clair/commit/f6aa6e6e028f73c5ae05e65e2c870972fa04393d): use multiline string for clairctl build command
+
 <a name="v4.0.0-rc.5"></a>
 ## [v4.0.0-rc.5] - 2020-09-29
+### Chore
+- [9b9ab32](https://github.com/quay/clair/commit/9b9ab323147b14dbd9fecf4c0620c8f34ae7b23a): v4.0.0-rc.5 changelog bump
 ### Cicd
 - [9aa8adc](https://github.com/quay/clair/commit/9aa8adc10d4e48b01abff666e160b498d982124a): fix clairctl builds
 
@@ -1133,7 +1140,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.5...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.6...HEAD
+[v4.0.0-rc.6]: https://github.com/quay/clair/compare/v4.0.0-rc.5...v4.0.0-rc.6
 [v4.0.0-rc.5]: https://github.com/quay/clair/compare/v4.0.0-rc.4...v4.0.0-rc.5
 [v4.0.0-rc.4]: https://github.com/quay/clair/compare/v4.0.0-rc.3...v4.0.0-rc.4
 [v4.0.0-rc.3]: https://github.com/quay/clair/compare/v4.0.0-rc.2...v4.0.0-rc.3
