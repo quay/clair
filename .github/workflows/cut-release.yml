@@ -164,10 +164,7 @@ jobs:
 
       - name: Build Release Container
         run: |
-          build=$(mktemp -d)
-          trap "rm -rf '${build}'" EXIT
-          tar -xzf clair.tar.gz -C "${build}" --strip-components 1
-          docker build --build-arg CLAIR_VERSION --tag "${TAG}" "${build}"
+          docker build --build-arg CLAIR_VERSION --tag "${TAG}" .
 
       - name: Publish Release Container
         run: |
