@@ -22,8 +22,9 @@ paths:
         - Notifier
       operationId: "DeleteNotification"
       description: |
-        Issues a delete of the provided notification id and all associated notifications.
-        After this delete clients will no longer be able to retrieve notifications.
+        Issues a delete of the provided notification id and all associated
+        notifications. After this delete clients will no longer be able to
+        retrieve notifications.
       parameters:
         - in: path
           name: notification_id
@@ -43,10 +44,10 @@ paths:
       tags:
         - Notifier
       operationId: "GetNotification"
-      summary: "Retreive a paginated result of notifications for the provided id"
+      summary: Retrieve a paginated result of notifications for the provided id.
       description: |
-        By performing a GET with a notification_id as a path parameter the client
-        will retrieve a paginated response of notifcation objects
+        By performing a GET with a notification_id as a path parameter, the
+        client will retrieve a paginated response of notification objects.
       parameters:
         - in: path
           name: notification_id
@@ -57,13 +58,14 @@ paths:
           name: page_size
           schema:
             type: int
-          description: "The maximum number of notifications to deliver in a single page."
+          description: |
+            The maximum number of notifications to deliver in a single page.
         - in: query
           name: next
           schema:
             type: string
           description: |
-            The next page to fetch via id. Typically this number is provided to you 
+            The next page to fetch via id. Typically this number is provided
             on initial response in the page.next field.
             The first GET request may omit this field.
       responses:
@@ -319,7 +321,7 @@ components:
           version: "1.6.11"
           kind: "source"
           source: null
-    
+
     VulnSummary:
       value:
         name: "CVE-2009-5155"
@@ -359,7 +361,9 @@ components:
   schemas:
     Page:
       title: Page
-      description: "A page object indicating to the client how to retrieve multiple pages of a particular entity."
+      description: |
+        A page object indicating to the client how to retrieve multiple pages of
+        a particular entity.
       properties:
         size:
           description: "The maximum number of elements in a page"
@@ -401,26 +405,28 @@ components:
         callback:
           description: "the url where notifications can be retrieved"
           type: string
-          example: "http://clair-notifier/notifier/api/v1/notifications/269886f3-0146-4f08-9bf7-cb1138d48643"
+          example: |-
+            http://clair-notifier/notifier/api/v1/notifications/269886f3-0146-4f08-9bf7-cb1138d48643
 
     VulnSummary:
       title: VulnSummary
       type: object
       description: "A summary of a vulnerability"
       properties:
-        name: 
+        name:
           description: "the vulnerability name"
           type: string
           example: "CVE-2009-5155"
-        fixed_in_version: 
-          description: "the version at which the vulnerability is fixed in. empty if not fixed."
+        fixed_in_version:
+          description: |
+            The version which the vulnerability is fixed in. Empty if not fixed.
           type: string
           example: "v0.0.1"
         links:
           description: "links to external information about vulnerability"
           type: string
           example: "http://link-to-advisory"
-        description: 
+        description:
           description: "the vulnerability name"
           type: string
           example: |
@@ -444,22 +450,26 @@ components:
     Notification:
       title: Notification
       type: object
-      description: "A notification expressing a change in a manifest affected by a vulnerability"
+      description: |
+        A notification expressing a change in a manifest affected by a
+        vulnerability.
       properties:
         id:
           description: "a unique identifier for this notification"
           type: string
           example: "5e4b387e-88d3-4364-86fd-063447a6fad2"
         manifest:
-          description: "the hash of the manifest affected by the provided vulnerability"
+          description: |
+            The hash of the manifest affected by the provided vulnerability.
           type: string
-          example: "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a"
+          example: |-
+            sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
         reason:
           description: "the reason for the notifcation, [added | removed]"
           type: string
           example: "added"
         vulnerability:
-            $ref: '#/components/schemas/VulnSummary'
+          $ref: '#/components/schemas/VulnSummary'
 
     Environment:
       title: Environment
@@ -662,7 +672,7 @@ components:
           type: string
         range:
           description: |
-            The range of package versions that are affected by this vulnerability
+            The range of package versions affected by this vulnerability.
           type: string
         fixed_in_version:
           description: "A unique ID representing this vulnerability."
