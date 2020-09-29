@@ -7,7 +7,7 @@ on:
       branch:
         description: 'the branch to prepare the release against'
         required: true
-        deault: 'master'
+        deault: 'main'
       tag:
         description: 'the tag to be released'
         required: true
