@@ -2,9 +2,15 @@
 ## [Unreleased]
 
 
+<a name="v4.0.0-rc.5"></a>
+## [v4.0.0-rc.5] - 2020-09-29
+### Cicd
+- [9aa8adc](https://github.com/quay/clair/commit/9aa8adc10d4e48b01abff666e160b498d982124a): fix clairctl builds
+
 <a name="v4.0.0-rc.4"></a>
 ## [v4.0.0-rc.4] - 2020-09-29
 ### Chore
+- [31adc6d](https://github.com/quay/clair/commit/31adc6dec374eb2ff1a08cf1154d327cf5f30865): v4.0.0-rc.4 changelog bump
 - [d141c5c](https://github.com/quay/clair/commit/d141c5cac5d4e4b13f614ebedb89c99ee3ebf8b0): bump claircore to v0.1.9
 - [cd34ea9](https://github.com/quay/clair/commit/cd34ea9e264a8690bb88866f96a407949b14b0a1): remove unused files
 ### Cicd
@@ -1127,7 +1133,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.4...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.5...HEAD
+[v4.0.0-rc.5]: https://github.com/quay/clair/compare/v4.0.0-rc.4...v4.0.0-rc.5
 [v4.0.0-rc.4]: https://github.com/quay/clair/compare/v4.0.0-rc.3...v4.0.0-rc.4
 [v4.0.0-rc.3]: https://github.com/quay/clair/compare/v4.0.0-rc.2...v4.0.0-rc.3
 [v4.0.0-rc.2]: https://github.com/quay/clair/compare/v4.0.0-rc.1...v4.0.0-rc.2
