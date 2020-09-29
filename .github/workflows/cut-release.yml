@@ -44,7 +44,7 @@ jobs:
           .
 
       - name: Build clairctl
-        run:
+        run: |
           GOOS=darwin GOARCH=amd64 go build -o clairctl-darwin-amd64 ./cmd/clairctl
           GOOS=linux GOARCH=amd64 go build -o clairctl-linux-amd64 ./cmd/clairctl
           GOOS=windows GOARCH=amd64 go build -o clairctl-windows-amd64 ./cmd/clairctl
