@@ -2,8 +2,15 @@
 ## [Unreleased]
 
 
+<a name="v4.0.0-rc.8"></a>
+## [v4.0.0-rc.8] - 2020-09-29
+### Cicd
+- [7520b09](https://github.com/quay/clair/commit/7520b0912967a0811660ead8e35f80d85899c000): fix container building
+
 <a name="v4.0.0-rc.7"></a>
 ## [v4.0.0-rc.7] - 2020-09-29
+### Chore
+- [9282d29](https://github.com/quay/clair/commit/9282d299fda9f1dee321d0f9b883651e18bf4bf8): v4.0.0-rc.7 changelog bump
 ### Cicd
 - [195ce7a](https://github.com/quay/clair/commit/195ce7a59a5db9d7e1f854e25242434e82635fa7): move container building out of container
 
@@ -1147,7 +1154,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.7...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.8...HEAD
+[v4.0.0-rc.8]: https://github.com/quay/clair/compare/v4.0.0-rc.7...v4.0.0-rc.8
 [v4.0.0-rc.7]: https://github.com/quay/clair/compare/v4.0.0-rc.6...v4.0.0-rc.7
 [v4.0.0-rc.6]: https://github.com/quay/clair/compare/v4.0.0-rc.5...v4.0.0-rc.6
 [v4.0.0-rc.5]: https://github.com/quay/clair/compare/v4.0.0-rc.4...v4.0.0-rc.5
