@@ -69,9 +69,13 @@ func Services(ctx context.Context, cfg *config.Config) (*Srv, error) {
 		if err != nil {
 			return nil, err
 		}
-		srv.Notifier, err = localNotifier(ctx, cfg, srv.Indexer, srv.Matcher)
-		if err != nil {
-			return nil, err
+		if cfg.Notifier.Any() {
+			srv.Notifier, err = localNotifier(ctx, cfg, srv.Indexer, srv.Matcher)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			zlog.Info(ctx).Msg("notifier unconfigured")
 		}
 	case config.IndexerMode:
 		srv.Indexer, err = localIndexer(ctx, cfg)

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -72,7 +73,7 @@ func Validate(conf *Config) error {
 		if err := conf.Matcher.Validate(true); err != nil {
 			return err
 		}
-		if err := conf.Notifier.Validate(true); err != nil {
+		if ok, err := conf.Notifier.Any(), conf.Notifier.Validate(true); ok && err != nil {
 			return err
 		}
 	case IndexerMode:
@@ -84,6 +85,9 @@ func Validate(conf *Config) error {
 			return err
 		}
 	case NotifierMode:
+		if !conf.Notifier.Any() {
+			return errNeedDelivery
+		}
 		if err := conf.Notifier.Validate(false); err != nil {
 			return err
 		}
@@ -92,3 +96,5 @@ func Validate(conf *Config) error {
 	}
 	return nil
 }
+
+var errNeedDelivery = errors.New("notifier mode requires a delivery mechanism")
