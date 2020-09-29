@@ -21,15 +21,6 @@ const (
 // Index of a manifest.
 func IndexHandler(serv indexer.StateIndexer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			resp := &je.Response{
-				Code:    "method-not-allowed",
-				Message: "endpoint only allows POST",
-			}
-			je.Error(w, resp, http.StatusMethodNotAllowed)
-			return
-		}
-
 		ctx := r.Context()
 		w.Header().Set("content-type", "application/json")
 		if r.Method != http.MethodPost {
