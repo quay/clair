@@ -30,9 +30,9 @@ License: <a href="http://www.apache.org/licenses/">Apache License 2.0</a>
 
 <h1 id="clairv4-notifier">Notifier</h1>
 
-## notifications delete
+## DeleteNotification
 
-<a id="opIdnotifications delete"></a>
+<a id="opIdDeleteNotification"></a>
 
 > Code samples
 
@@ -95,10 +95,11 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 
 `DELETE notifier/api/v1/notification/{notification_id}`
 
-Issues a delete of the provided notification id and all associated notifications.
-After this delete clients will no longer be able to retrieve notifications.
+Issues a delete of the provided notification id and all associated
+notifications. After this delete clients will no longer be able to
+retrieve notifications.
 
-<h3 id="notifications-delete-parameters">Parameters</h3>
+<h3 id="deletenotification-parameters">Parameters</h3>
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
@@ -106,30 +107,31 @@ After this delete clients will no longer be able to retrieve notifications.
 
 > Example responses
 
-> 200 Response
+> 400 Response
 
 ```json
-null
+{
+  "code": "string",
+  "message": "string"
+}
 ```
 
-<h3 id="notifications-delete-responses">Responses</h3>
+<h3 id="deletenotification-responses">Responses</h3>
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|OK|Inline|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|OK|None|
 |400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad Request|[Error](#schemaerror)|
 |405|[Method Not Allowed](https://tools.ietf.org/html/rfc7231#section-6.5.5)|Method Not Allowed|[Error](#schemaerror)|
 |500|[Internal Server Error](https://tools.ietf.org/html/rfc7231#section-6.6.1)|Internal Server Error|[Error](#schemaerror)|
-
-<h3 id="notifications-delete-responseschema">Response Schema</h3>
 
 <aside class="success">
 This operation does not require authentication
 </aside>
 
-## Retreive a paginated result of notifications for the provided id
+## Retrieve a paginated result of notifications for the provided id.
 
-<a id="opIdnotifications get"></a>
+<a id="opIdGetNotification"></a>
 
 > Code samples
 
@@ -192,20 +194,22 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 
 `GET notifier/api/v1/notification/{notification_id}`
 
-By performing a GET with a notification_id as a path parameter the client
-will retrieve a paginated response of notifcation objects
+By performing a GET with a notification_id as a path parameter, the
+client will retrieve a paginated response of notification objects.
 
-<h3 id="retreive-a-paginated-result-of-notifications-for-the-provided-id-parameters">Parameters</h3>
+<h3 id="retrieve-a-paginated-result-of-notifications-for-the-provided-id.-parameters">Parameters</h3>
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
 |notification_id|path|string|false|A notification ID returned by a callback|
 |page_size|query|int|false|The maximum number of notifications to deliver in a single page.|
-|next|query|string|false|The next page to fetch via id. Typically this number is provided to you |
+|next|query|string|false|The next page to fetch via id. Typically this number is provided|
 
 #### Detailed descriptions
 
-**next**: The next page to fetch via id. Typically this number is provided to you 
+**page_size**: The maximum number of notifications to deliver in a single page.
+
+**next**: The next page to fetch via id. Typically this number is provided
 on initial response in the page.next field.
 The first GET request may omit this field.
 
@@ -271,7 +275,7 @@ The first GET request may omit this field.
 }
 ```
 
-<h3 id="retreive-a-paginated-result-of-notifications-for-the-provided-id-responses">Responses</h3>
+<h3 id="retrieve-a-paginated-result-of-notifications-for-the-provided-id.-responses">Responses</h3>
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
@@ -1095,7 +1099,7 @@ VulnSummary
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |name|string|false|none|the vulnerability name|
-|fixed_in_version|string|false|none|the version at which the vulnerability is fixed in. empty if not fixed.|
+|fixed_in_version|string|false|none|The version which the vulnerability is fixed in. Empty if not fixed.|
 |links|string|false|none|links to external information about vulnerability|
 |description|string|false|none|the vulnerability name|
 |normalized_severity|string|false|none|A well defined set of severity strings guaranteed to be present.|
@@ -1180,7 +1184,7 @@ Notification
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |id|string|false|none|a unique identifier for this notification|
-|manifest|string|false|none|the hash of the manifest affected by the provided vulnerability|
+|manifest|string|false|none|The hash of the manifest affected by the provided vulnerability.|
 |reason|string|false|none|the reason for the notifcation, [added | removed]|
 |vulnerability|[VulnSummary](#schemavulnsummary)|false|none|A summary of a vulnerability|
 
@@ -1468,7 +1472,7 @@ Vulnerability
 |distribution|[Distribution](#schemadistribution)|false|none|An indexed distribution discovered in a layer. See<br>https://www.freedesktop.org/software/systemd/man/os-release.html<br>for explanations and example of fields.|
 |repository|[Repository](#schemarepository)|false|none|A package repository|
 |issued|string|false|none|The timestamp in which the vulnerability was issued|
-|range|string|false|none|The range of package versions that are affected by this vulnerability|
+|range|string|false|none|The range of package versions affected by this vulnerability.|
 |fixed_in_version|string|true|none|A unique ID representing this vulnerability.|
 
 #### Enumerated Values
