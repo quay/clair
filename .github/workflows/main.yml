@@ -22,6 +22,19 @@ jobs:
           error: 'Commit must begin with <scope>: <subject>'
           flags: ''
 
+  api-reference-check:
+    name: API Reference Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: gen api reference 
+        run: |
+          npx widdershins --search false --language_tabs 'python:Python' 'go:Golang' 'javascript:Javascript' --summary ./openapi.yaml -o ./Documentation/reference/api.md
+      - name: diff
+        run: |
+          git diff --exit-code
+
   tidy:
     name: Tidy
     runs-on: ubuntu-latest
