@@ -21,6 +21,9 @@ const (
 	// DefaultUpdatePeriod is the default period used for running updaters
 	// within matcher processes.
 	DefaultUpdatePeriod = 30 * time.Minute
+	// NotifierIssuer is the value used for the issuer claim of any outgoing
+	// HTTP requests the notifier makes, if PSK auth is configured.
+	NotifierIssuer = `clair-notifier`
 )
 
 // Services will initialize the correct ClairCore services
@@ -96,12 +99,17 @@ func (i *Init) Services() error {
 				Msg: "notifier: failed to parse poll interval: " + err.Error(),
 			}
 		}
+		c, _, err := i.conf.Client(nil, notifierClaim)
+		if err != nil {
+			return err
+		}
 
 		n, err := notifier.New(i.GlobalCTX, notifier.Opts{
 			DeliveryInterval: dInterval,
 			ConnString:       i.conf.Notifier.ConnString,
 			Indexer:          libI,
 			Matcher:          libV,
+			Client:           c,
 			Migrations:       i.conf.Notifier.Migrations,
 			PollInterval:     pInterval,
 			Webhook:          i.conf.Notifier.Webhook,
@@ -172,7 +180,7 @@ func (i *Init) Services() error {
 			return fmt.Errorf("failed to initialize libvuln: %v", err)
 		}
 		// matcher mode needs a remote indexer client
-		c, auth, err := i.conf.Client(nil, intraservice)
+		c, auth, err := i.conf.Client(nil, intraserviceClaim)
 		switch {
 		case err != nil:
 			return err
@@ -192,7 +200,7 @@ func (i *Init) Services() error {
 		i.Matcher = libV
 	case config.NotifierMode:
 		// notifier uses a remote indexer and matcher
-		c, auth, err := i.conf.Client(nil, intraservice)
+		c, auth, err := i.conf.Client(nil, intraserviceClaim)
 		switch {
 		case err != nil:
 			return err
@@ -229,12 +237,17 @@ func (i *Init) Services() error {
 				Msg: "notifier: failed to parse poll interval: " + err.Error(),
 			}
 		}
+		c, _, err = i.conf.Client(nil, notifierClaim)
+		if err != nil {
+			return err
+		}
 
 		n, err := notifier.New(i.GlobalCTX, notifier.Opts{
 			DeliveryInterval: dInterval,
 			ConnString:       i.conf.Notifier.ConnString,
 			Indexer:          remoteIndexer,
 			Matcher:          remoteMatcher,
+			Client:           c,
 			Migrations:       i.conf.Notifier.Migrations,
 			PollInterval:     pInterval,
 			Webhook:          i.conf.Notifier.Webhook,
@@ -257,4 +270,7 @@ func (i *Init) Services() error {
 	return nil
 }
 
-var intraservice = jwt.Claims{Issuer: httptransport.IntraserviceIssuer}
+var (
+	intraserviceClaim = jwt.Claims{Issuer: httptransport.IntraserviceIssuer}
+	notifierClaim     = jwt.Claims{Issuer: NotifierIssuer}
+)
