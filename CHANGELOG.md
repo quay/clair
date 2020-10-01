@@ -2,8 +2,29 @@
 ## [Unreleased]
 
 
+<a name="v4.0.0-rc.10"></a>
+## [v4.0.0-rc.10] - 2020-10-01
+### Cicd
+- [f04bc76](https://github.com/quay/clair/commit/f04bc76c666b3d1c5098dcc14b928a165066549a): api reference check
+### Docs
+- [0d8a2a4](https://github.com/quay/clair/commit/0d8a2a4aae8358597e3b67cbf4deb8be79e76dec): bump api reference
+### Go.Mod
+- [bd1a3b7](https://github.com/quay/clair/commit/bd1a3b772c2dbd6ae87a94c5608f1cdc2bf0044a): update claircore version
+### Httptransport
+- [2c9762b](https://github.com/quay/clair/commit/2c9762b0351449b5b09249da513178b3d2757985): remove redundant method check
+### Openapi
+- [015d862](https://github.com/quay/clair/commit/015d862dce63068951d145c5512ec95977262a03): yamllint and spellcheck
+- [d06dabf](https://github.com/quay/clair/commit/d06dabfe57fbb90ba376e8f1fa81d18db90ed070): change OperationIDs for notification endpoints
+
+<a name="v4.0.0-rc.9"></a>
+## [v4.0.0-rc.9] - 2020-09-29
+### Cicd
+- [04fab4a](https://github.com/quay/clair/commit/04fab4a7ef9344ee5e3578c60873a5e56bff64b7): build container with local checkout
+
 <a name="v4.0.0-rc.8"></a>
 ## [v4.0.0-rc.8] - 2020-09-29
+### Chore
+- [6181cc6](https://github.com/quay/clair/commit/6181cc6c7a47203482f420ccd257318a0d478978): v4.0.0-rc.8 changelog bump
 ### Cicd
 - [7520b09](https://github.com/quay/clair/commit/7520b0912967a0811660ead8e35f80d85899c000): fix container building
 
@@ -1154,7 +1175,9 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.8...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.10...HEAD
+[v4.0.0-rc.10]: https://github.com/quay/clair/compare/v4.0.0-rc.9...v4.0.0-rc.10
+[v4.0.0-rc.9]: https://github.com/quay/clair/compare/v4.0.0-rc.8...v4.0.0-rc.9
 [v4.0.0-rc.8]: https://github.com/quay/clair/compare/v4.0.0-rc.7...v4.0.0-rc.8
 [v4.0.0-rc.7]: https://github.com/quay/clair/compare/v4.0.0-rc.6...v4.0.0-rc.7
 [v4.0.0-rc.6]: https://github.com/quay/clair/compare/v4.0.0-rc.5...v4.0.0-rc.6
