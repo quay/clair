@@ -4,15 +4,17 @@ import (
 	"fmt"
 	"time"
 
-	notifier "github.com/quay/clair/v4/notifier/service"
 	"github.com/quay/claircore/libindex"
 	"github.com/quay/claircore/libvuln"
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/rs/zerolog"
+	"gopkg.in/square/go-jose.v2/jwt"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/config"
+	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/httptransport/client"
+	notifier "github.com/quay/clair/v4/notifier/service"
 )
 
 const (
@@ -170,7 +172,7 @@ func (i *Init) Services() error {
 			return fmt.Errorf("failed to initialize libvuln: %v", err)
 		}
 		// matcher mode needs a remote indexer client
-		c, auth, err := i.conf.Client(nil)
+		c, auth, err := i.conf.Client(nil, intraservice)
 		switch {
 		case err != nil:
 			return err
@@ -190,7 +192,7 @@ func (i *Init) Services() error {
 		i.Matcher = libV
 	case config.NotifierMode:
 		// notifier uses a remote indexer and matcher
-		c, auth, err := i.conf.Client(nil)
+		c, auth, err := i.conf.Client(nil, intraservice)
 		switch {
 		case err != nil:
 			return err
@@ -254,3 +256,5 @@ func (i *Init) Services() error {
 
 	return nil
 }
+
+var intraservice = jwt.Claims{Issuer: httptransport.IntraserviceIssuer}

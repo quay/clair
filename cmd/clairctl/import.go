@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/quay/claircore/libvuln"
 	"github.com/urfave/cli/v2"
+	"gopkg.in/square/go-jose.v2/jwt"
 )
 
 // ImportCmd is the "import-updaters" subcommand.
@@ -39,7 +40,7 @@ func importAction(c *cli.Context) error {
 		return err
 	}
 
-	cl, _, err := cfg.Client(nil)
+	cl, _, err := cfg.Client(nil, jwt.Claims{})
 	if err != nil {
 		return err
 	}

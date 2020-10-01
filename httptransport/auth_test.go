@@ -10,6 +10,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"gopkg.in/square/go-jose.v2/jwt"
+
 	"github.com/quay/clair/v4/config"
 )
 
@@ -18,6 +20,11 @@ type authTestcase struct {
 	Config     config.Config
 	ShouldFail bool
 	ConfigMod  func(*testing.T, *config.Config)
+	Claims     *jwt.Claims
+}
+
+var defaultClaims = jwt.Claims{
+	Issuer: IntraserviceIssuer,
 }
 
 func (tc *authTestcase) Run(t *testing.T) {
@@ -51,8 +58,13 @@ func (tc *authTestcase) Run(t *testing.T) {
 		f(t, &tc.Config)
 	}
 
+	// Use a default intraservice claim if not set.
+	if tc.Claims == nil {
+		tc.Claims = &defaultClaims
+	}
+
 	// Create a client that has auth according to the config.
-	c, authed, err := tc.Config.Client(nil)
+	c, authed, err := tc.Config.Client(nil, *tc.Claims)
 	if err != nil {
 		t.Error(err)
 	}
@@ -100,6 +112,18 @@ func TestAuth(t *testing.T) {
 					},
 				},
 			},
+		},
+		{
+			Name: "PSKMultipleIssuer",
+			Config: config.Config{
+				Auth: config.Auth{
+					PSK: &config.AuthPSK{
+						Issuer: []string{`sweet-bro`, `hella-jeff`, `geromy`},
+						Key:    fakeKey,
+					},
+				},
+			},
+			Claims: &jwt.Claims{Issuer: `geromy`},
 		},
 		{
 			Name: "FakeKeyserver",

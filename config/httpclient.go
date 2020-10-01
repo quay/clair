@@ -13,7 +13,7 @@ import (
 //
 // It returns an *http.Client and a boolean indicating whether the client is
 // configured for authentication, or an error that occurred during construction.
-func (cfg *Config) Client(next *http.Transport) (c *http.Client, authed bool, err error) {
+func (cfg *Config) Client(next *http.Transport, cl jwt.Claims) (c *http.Client, authed bool, err error) {
 	if next == nil {
 		next = http.DefaultTransport.(*http.Transport).Clone()
 	}
@@ -29,7 +29,10 @@ func (cfg *Config) Client(next *http.Transport) (c *http.Client, authed bool, er
 		sk.Key = cfg.Auth.PSK.Key
 	default:
 	}
-	rt := &transport{next: next}
+	rt := &transport{
+		next: next,
+		base: cl,
+	}
 	c = &http.Client{Transport: rt}
 
 	// Both of the JWT-based methods set the signing key.
@@ -50,11 +53,11 @@ var _ http.RoundTripper = (*transport)(nil)
 type transport struct {
 	jose.Signer
 	next http.RoundTripper
+	base jwt.Claims
 }
 
 func (cs *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 	const (
-		issuer    = `clair-intraservice`
 		userAgent = `clair/v4`
 	)
 	r.Header.Set("user-agent", userAgent)
@@ -62,12 +65,10 @@ func (cs *transport) RoundTrip(r *http.Request) (*http.Response, error) {
 		// TODO(hank) Make this mint longer-lived tokens and re-use them, only
 		// refreshing when needed. Like a resettable sync.Once.
 		now := time.Now()
-		cl := jwt.Claims{
-			IssuedAt:  jwt.NewNumericDate(now),
-			NotBefore: jwt.NewNumericDate(now.Add(-jwt.DefaultLeeway)),
-			Expiry:    jwt.NewNumericDate(now.Add(jwt.DefaultLeeway)),
-			Issuer:    issuer,
-		}
+		cl := cs.base
+		cl.IssuedAt = jwt.NewNumericDate(now)
+		cl.NotBefore = jwt.NewNumericDate(now.Add(-jwt.DefaultLeeway))
+		cl.Expiry = jwt.NewNumericDate(now.Add(jwt.DefaultLeeway))
 		h, err := jwt.Signed(cs).Claims(&cl).CompactSerialize()
 		if err != nil {
 			return nil, err
