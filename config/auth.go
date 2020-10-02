@@ -50,13 +50,13 @@ func (a *AuthKeyserver) UnmarshalYAML(f func(interface{}) error) error {
 // The "Issuer" key is what the service expects to verify as the "issuer" claim.
 type AuthPSK struct {
 	Key    []byte   `yaml:"key" json:"key"`
-	Issuer []string `yaml:"iss" json:"issuer"`
+	Issuer []string `yaml:"iss" json:"iss"`
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
 func (a *AuthPSK) UnmarshalYAML(f func(interface{}) error) error {
 	var m struct {
-		Issuer []string `yaml:"iss" json:"issuer"`
+		Issuer []string `yaml:"iss" json:"iss"`
 		Key    string   `yaml:"key" json:"key"`
 	}
 	if err := f(&m); err != nil {
