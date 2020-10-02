@@ -2,8 +2,21 @@
 ## [Unreleased]
 
 
+<a name="v4.0.0-rc.11"></a>
+## [v4.0.0-rc.11] - 2020-10-01
+### Config
+- [a4e0410](https://github.com/quay/clair/commit/a4e04105cb15173ee3b06090de7573540969a89c): allow HTTP client to specify claims
+- [5aba727](https://github.com/quay/clair/commit/5aba72783bff70fa41769cbe33365a34835bd73f): ensure yaml/json struct tag for auth 'Issuer' field are the same
+### Notifier
+- [57e1ed0](https://github.com/quay/clair/commit/57e1ed0a1178ca5b980f65e5030a00a82acf52c8): pass configured client into notifier
+### Pull Requests
+- Merge pull request [#1078](https://github.com/quay/clair/issues/1078) from alecmerdler/fix-issuer-struct-tag
+
+
 <a name="v4.0.0-rc.10"></a>
 ## [v4.0.0-rc.10] - 2020-10-01
+### Chore
+- [2c54a82](https://github.com/quay/clair/commit/2c54a82467af83db44b9dcccdfb73a320699426b): v4.0.0-rc.10 changelog bump
 ### Cicd
 - [f04bc76](https://github.com/quay/clair/commit/f04bc76c666b3d1c5098dcc14b928a165066549a): api reference check
 ### Docs
@@ -1175,7 +1188,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.10...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.11...HEAD
+[v4.0.0-rc.11]: https://github.com/quay/clair/compare/v4.0.0-rc.10...v4.0.0-rc.11
 [v4.0.0-rc.10]: https://github.com/quay/clair/compare/v4.0.0-rc.9...v4.0.0-rc.10
 [v4.0.0-rc.9]: https://github.com/quay/clair/compare/v4.0.0-rc.8...v4.0.0-rc.9
 [v4.0.0-rc.8]: https://github.com/quay/clair/compare/v4.0.0-rc.7...v4.0.0-rc.8
