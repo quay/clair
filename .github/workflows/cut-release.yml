@@ -7,59 +7,99 @@ on:
       - v4.*
 
 jobs:
-  release:
-    name: Release
+  release-archive:
+    name: Create Release Archive
     runs-on: 'ubuntu-latest'
-    container: docker.io/library/golang:1.14
     steps:
       - name: Setup
         run: |
           tag=`basename ${{ github.ref }}`
           cat <<.
-          ::set-env name=VERSION::${tag}
-          ::set-env name=CLAIR_VERSION::${tag}
           ::set-env name=PREFIX::clair-${tag}/
-          ::set-env name=TAG::quay.io/projectquay/clair:${tag#v}
-          ::set-env name=QUAY_USER::projectquay+clair_github
-          ::add-mask::${{ secrets.QUAY_TOKEN }}
+          ::set-env name=TAG::${tag}
           .
       - name: Checkout
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-
-      - name: ChangeLog
-        shell: bash
-        run: |
-          curl -o git-chglog -L https://github.com/git-chglog/git-chglog/releases/download/0.9.1/git-chglog_linux_amd64
-          chmod u+x git-chglog
-          tag=`basename ${{ github.ref }}`
-          echo "creating change log for tag: $tag"
-          chglog="$(./git-chglog ${tag})"
-          chglog="${chglog//'%'/'%25'}"
-          chglog="${chglog//$'\n'/'%0A'}"
-          chglog="${chglog//$'\r'/'%0D'}"
-          cat <<.
-          ::set-env name=CHANGELOG::${chglog}
-          .
-
-      - name: Build clairctl
-        run: |
-          GOOS=darwin GOARCH=amd64 go build -o clairctl-darwin-amd64 ./cmd/clairctl
-          GOOS=linux GOARCH=amd64 go build -o clairctl-linux-amd64 ./cmd/clairctl
-          GOOS=windows GOARCH=amd64 go build -o clairctl-windows-amd64 ./cmd/clairctl
-
-          GOOS=darwin GOARCH=386 go build -o clairctl-darwin-386 ./cmd/clairctl
-          GOOS=linux GOARCH=386 go build -o clairctl-linux-386 ./cmd/clairctl
-          GOOS=windows GOARCH=386 go build -o clairctl-windows-386 ./cmd/clairctl
-
       - name: Create Release Archive
         run: |
           go mod vendor
           git archive --prefix "${PREFIX}" -o clair.tar "${GITHUB_REF}"
           tar -rf clair.tar --transform "s,^,${PREFIX}," vendor
           gzip clair.tar
+      - name: ChangeLog
+        shell: bash
+        run: |
+          curl -o git-chglog -L https://github.com/git-chglog/git-chglog/releases/download/0.9.1/git-chglog_linux_amd64
+          chmod u+x git-chglog
+          echo "creating change log for tag: $TAG"
+          ./git-chglog "${TAG}" > changelog
+      - name: Upload Release Archive
+        uses: actions/upload-artifact@v2
+        with:
+          name: release
+          path: |
+            clair.tar.gz
+            changelog
+          if-no-files-found: error
 
+  release-binaries:
+    name: Create Release Binaries
+    runs-on: 'ubuntu-latest'
+    container: docker.io/library/golang:1.15
+    needs: release-archive
+    strategy:
+      matrix:
+        goos: ['arm64', 'amd64', '386']
+        goarch: ['linux', 'windows', 'darwin']
+        exclude:
+          - goos: darwin
+            goarch: 386
+    env:
+      GOOS: ${{matrix.goos}}
+      GOARCH: ${{matrix.goarch}}
+    steps:
+      - name: Fetch Artifacts
+        uses: actions/download-artifact@v2
+        id: download
+        with:
+          name: release
+      - name: Unpack and Build
+        run: |
+          tar xzf ${{steps.download.outputs.download-path}}/clair.tar.gz
+          cd clair-v4*
+          go build -o ${{github.workspace}}/clairctl-${{matrix.goos}}-${{matrix.goarch}} ./cmd/clairctl
+      - name: Upload clairctl-${{matrix.goos}}-${{matrix.goarch}}
+        uses: actions/upload-artifact@v2
+        with:
+          name: release
+          path: |
+            ${{github.workspace}}/clairctl-${{matrix.goos}}-${{matrix.goarch}}
+          if-no-files-found: error
+
+  release:
+    name: Release
+    runs-on: 'ubuntu-latest'
+    needs: release-archive
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Setup
+        run: |
+          tag=`basename ${{ github.ref }}`
+          cat <<.
+          ::set-env name=VERSION::${tag}
+          ::set-env name=PREFIX::clair-${tag}/
+          ::set-env name=TAG::quay.io/projectquay/clair:${tag#v}
+          ::set-env name=QUAY_USER::projectquay+clair_github
+          ::add-mask::${{ secrets.QUAY_TOKEN }}
+          .
+      - name: Fetch Artifacts
+        uses: actions/download-artifact@v2
+        id: download
+        with:
+          name: release
       - name: Create Release
         uses: actions/create-release@latest
         id: create_release
@@ -67,105 +107,73 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: ${{ env.VERSION}} Release
-          body: |
-            ${{ env.CHANGELOG }}
+          release_name: ${{ env.VERSION }} Release
+          body_path: ${{steps.download.outputs.download-path}}/changelog
           prerelease: ${{ contains(env.VERSION, 'alpha') || contains(env.VERSION, 'beta') || contains(env.VERSION, 'rc') }}
-
       - name: Publish Release Archive
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./clair.tar.gz
-          asset_name: clair-${{ env.CLAIR_VERSION }}.tar.gz
+          asset_path: ${{steps.download.outputs.download-path}}/clair.tar.gz
+          asset_name: clair-${{ env.VERSION }}.tar.gz
           asset_content_type: application/gzip
 
-      - name: Publish clairctl-darwin-amd64
+  publish-binaries:
+    name: Publish Binaries
+    runs-on: 'ubuntu-latest'
+    needs: [release-archive, release]
+    strategy:
+      matrix:
+        goos: ['arm64', 'amd64', '386']
+        goarch: ['linux', 'windows', 'darwin']
+        exclude:
+          - goos: darwin
+            goarch: 386
+    steps:
+      - name: Fetch Archive
+        uses: actions/download-artifact@v2
+        id: download
+        with:
+          name: release
+      - name: Publish clairctl-${{matrix.goos}}-${{matrix.goarch}}
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./clairctl-darwin-amd64
-          asset_name: clairctl-darwin-amd64
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: |
+            ${{steps.download.outputs.download-path}}/clairctl-${{matrix.goos}}-${{matrix.goarch}}
+          asset_name: clairctl-${{matrix.goos}}-${{matrix.goarch}}
           asset_content_type: application/octet-stream
 
-      - name: Publish clairctl-linux-amd64
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./clairctl-linux-amd64
-          asset_name: clairctl-linux-amd64
-          asset_content_type: application/octet-stream
-
-      - name: Publish clairctl-windows-amd64
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./clairctl-windows-amd64
-          asset_name: clairctl-windows-amd64
-          asset_content_type: application/octet-stream
-
-      - name: Publish clairctl-darwin-386
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./clairctl-darwin-386
-          asset_name: clairctl-darwin-386
-          asset_content_type: application/octet-stream
-
-      - name: Publish clairctl-linux-386
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./clairctl-linux-386
-          asset_name: clairctl-linux-386
-          asset_content_type: application/octet-stream
-
-      - name: Publish clairctl-windows-386
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./clairctl-windows-386
-          asset_name: clairctl-windows-386
-          asset_content_type: application/octet-stream
-
-  deploy-container:
-    name: Deploy Container
-    runs-on: ubuntu-latest
-    needs: release
+  publish-container:
+    name: Publish Container
+    runs-on: 'ubuntu-latest'
+    needs: [release-archive, release]
     steps:
       - name: Setup
         run: |
           tag=`basename ${{ github.ref }}`
           cat <<.
-          ::set-env name=VERSION::${tag}
           ::set-env name=CLAIR_VERSION::${tag}
-          ::set-env name=PREFIX::clair-${tag}/
           ::set-env name=TAG::quay.io/projectquay/clair:${tag#v}
           ::set-env name=QUAY_USER::projectquay+clair_github
           ::add-mask::${{ secrets.QUAY_TOKEN }}
           .
-
-      - name: Checkout
-        uses: actions/checkout@v2
-
+      - name: Fetch Artifacts
+        uses: actions/download-artifact@v2
+        id: download
+        with:
+          name: release
       - name: Build Release Container
-        run: |
-          docker build --build-arg CLAIR_VERSION --tag "${TAG}" .
-
+        run: >
+          docker build
+          --build-arg CLAIR_VERSION
+          --tag "${TAG}"
+          -
+          <${{steps.download.outputs.download-path}}/clair.tar.gz
       - name: Publish Release Container
         run: |
           docker login -u "${QUAY_USER}" -p '${{ secrets.QUAY_TOKEN }}' quay.io

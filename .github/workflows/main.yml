@@ -18,9 +18,13 @@ jobs:
         uses: gsactions/commit-message-checker@v1
         with:
           pattern: |
-            ^(.*):\s*(.*)\n?
+            ^(.*):\s*(.*)\n.*$
           error: 'Commit must begin with <scope>: <subject>'
-          flags: ''
+          flags: 'gm'
+          excludeTitle: true
+          excludeDescription: true
+          checkAllCommitMessages: true
+          accessToken: ${{ secrets.GITHUB_TOKEN }}
 
   api-reference-check:
     name: API Reference Check
@@ -28,7 +32,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: gen api reference 
+      - name: gen api reference
         run: |
           npx widdershins --search false --language_tabs 'python:Python' 'go:Golang' 'javascript:Javascript' --summary ./openapi.yaml -o ./Documentation/reference/api.md
       - name: diff
@@ -46,6 +50,7 @@ jobs:
         run: go mod tidy
       - name: Git Diff
         run: git diff --exit-code
+
   documentation:
     name: Documentation
     runs-on: ubuntu-latest
@@ -57,6 +62,7 @@ jobs:
         with:
           mdbook-version: 'latest'
       - run: mdbook build
+
   tests:
     name: Tests
     runs-on: ubuntu-latest
@@ -96,3 +102,9 @@ jobs:
         run: go mod vendor
       - name: Tests
         run: go test -tags integration ./...
+      - name: Create Artifact on Failure
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: workspace-${{matrix.go}}
+          path: ${{ github.workspace }}

@@ -36,5 +36,5 @@ jobs:
           body: "This is an automated changelog commit."
           commit-message: "chore: ${{ github.event.inputs.tag }} changelog bump"
           branch: "ready-${{ github.event.inputs.tag }}"
-          signoff: "gh-actions"
-
+          signoff: true
+          delete-branch: true
