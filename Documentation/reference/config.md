@@ -270,7 +270,11 @@ notifications
 #### &emsp;webhook: \<object\>
 ```
 Configures the notifier for webhook delivery
+
+If the global "Auth" key is populated with a PSK stanza the 
+webhook will be signed by a JWT issued by "clair-notifier"
 ```
+
 #### &emsp;&emsp;target: ""
 ```
 URL where our webhook will be delivered
@@ -287,12 +291,6 @@ This will typically be where the clair notifier is hosted
 { "header": [ "value" ] }
 
 A map associating header names to a list of header values
-```
-#### &emsp;&emsp;signed: ""
-```
-A "true" or "false" value
-
-If true the Notifier will use its internal key server to sign out going webhooks.
 ```
 
 #### &emsp;amqp: \<object\>

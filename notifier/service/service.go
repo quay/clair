@@ -38,19 +38,14 @@ type Service interface {
 	Notifications(ctx context.Context, id uuid.UUID, page *notifier.Page) ([]notifier.Notification, notifier.Page, error)
 	// Deletes the provided notification id
 	DeleteNotifications(ctx context.Context, id uuid.UUID) error
-	// KeyStore returns the notifier's KeyStore.
-	KeyStore(ctx context.Context) notifier.KeyStore
-	// KeyManager returns the notifier's KeyManager.
-	KeyManager(ctx context.Context) *keymanager.Manager
 }
 
 var _ Service = (*service)(nil)
 
 // service is a local implementation of a notifier service.
 type service struct {
-	store      notifier.Store
-	keystore   notifier.KeyStore
-	keymanager *keymanager.Manager
+	store    notifier.Store
+	keystore notifier.KeyStore
 }
 
 func (s *service) Notifications(ctx context.Context, id uuid.UUID, page *notifier.Page) ([]notifier.Notification, notifier.Page, error) {
@@ -59,14 +54,6 @@ func (s *service) Notifications(ctx context.Context, id uuid.UUID, page *notifie
 
 func (s *service) DeleteNotifications(ctx context.Context, id uuid.UUID) error {
 	return s.store.SetDeleted(ctx, id)
-}
-
-func (s *service) KeyStore(_ context.Context) notifier.KeyStore {
-	return s.keystore
-}
-
-func (s *service) KeyManager(_ context.Context) *keymanager.Manager {
-	return s.keymanager
 }
 
 // Opts configures the notifier service
@@ -94,15 +81,9 @@ func New(ctx context.Context, opts Opts) (*service, error) {
 	ctx = log.WithContext(ctx)
 
 	// initialize store and dist lock pool
-	store, keystore, lockPool, err := storeInit(ctx, opts)
+	store, lockPool, err := storeInit(ctx, opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize store and lockpool: %v", err)
-	}
-
-	// kick off key manager
-	kmgr, err := keyManagerInit(ctx, keystore)
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize key manager: %v", err)
 	}
 
 	// check for test mode
@@ -134,7 +115,7 @@ func New(ctx context.Context, opts Opts) (*service, error) {
 	// kick off configured deliverer type
 	switch {
 	case opts.Webhook != nil:
-		if err := webhookDeliveries(ctx, opts, lockPool, store, kmgr); err != nil {
+		if err := webhookDeliveries(ctx, opts, lockPool, store); err != nil {
 			return nil, err
 		}
 	case opts.AMQP != nil:
@@ -148,9 +129,7 @@ func New(ctx context.Context, opts Opts) (*service, error) {
 	}
 
 	return &service{
-		store:      store,
-		keymanager: kmgr,
-		keystore:   keystore,
+		store: store,
 	}, nil
 }
 
@@ -166,7 +145,7 @@ func testModeInit(ctx context.Context, opts *Opts) error {
 	return nil
 }
 
-func storeInit(ctx context.Context, opts Opts) (*postgres.Store, *postgres.KeyStore, *sqlx.DB, error) {
+func storeInit(ctx context.Context, opts Opts) (*postgres.Store, *sqlx.DB, error) {
 	log := zerolog.Ctx(ctx).With().
 		Str("component", "notifier/service/storeInit").
 		Logger()
@@ -174,17 +153,17 @@ func storeInit(ctx context.Context, opts Opts) (*postgres.Store, *postgres.KeySt
 
 	cfg, err := pgxpool.ParseConfig(opts.ConnString)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to parse ConnString: %v", err)
+		return nil, nil, fmt.Errorf("failed to parse ConnString: %v", err)
 	}
 	cfg.MaxConns = 30
 	pool, err := pgxpool.ConnectConfig(ctx, cfg)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to create ConnPool: %v", err)
+		return nil, nil, fmt.Errorf("failed to create ConnPool: %v", err)
 	}
 
 	lockPool, err := sqlx.Connect("pgx", opts.ConnString)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to create lock ConnPool: %v", err)
+		return nil, nil, fmt.Errorf("failed to create lock ConnPool: %v", err)
 	}
 
 	// do migrations if requested
@@ -194,14 +173,13 @@ func storeInit(ctx context.Context, opts Opts) (*postgres.Store, *postgres.KeySt
 		migrator.Table = migrations.MigrationTable
 		err := migrator.Exec(migrate.Up, migrations.Migrations...)
 		if err != nil {
-			return nil, nil, nil, fmt.Errorf("failed to perform migrations: %w", err)
+			return nil, nil, fmt.Errorf("failed to perform migrations: %w", err)
 		}
 	}
 
 	log.Info().Msg("initializing notifier store")
 	store := postgres.NewStore(pool)
-	keystore := postgres.NewKeyStore(pool)
-	return store, keystore, lockPool, nil
+	return store, lockPool, nil
 }
 
 func keyManagerInit(ctx context.Context, keystore notifier.KeyStore) (*keymanager.Manager, error) {
@@ -218,7 +196,7 @@ func keyManagerInit(ctx context.Context, keystore notifier.KeyStore) (*keymanage
 	return mgr, nil
 }
 
-func webhookDeliveries(ctx context.Context, opts Opts, lockPool *sqlx.DB, store notifier.Store, keymanager *keymanager.Manager) error {
+func webhookDeliveries(ctx context.Context, opts Opts, lockPool *sqlx.DB, store notifier.Store) error {
 	log := zerolog.Ctx(ctx).With().
 		Str("component", "notifier/service/webhookInit").
 		Logger()
@@ -233,7 +211,7 @@ func webhookDeliveries(ctx context.Context, opts Opts, lockPool *sqlx.DB, store 
 	ds := make([]*notifier.Delivery, 0, deliveries)
 	for i := 0; i < deliveries; i++ {
 		distLock := pgdl.NewLock(lockPool, 0)
-		wh, err := webhook.New(conf, opts.Client, keymanager)
+		wh, err := webhook.New(conf, opts.Client)
 		if err != nil {
 			return fmt.Errorf("failed to create webhook deliverer: %v", err)
 		}

@@ -18,10 +18,6 @@ type Config struct {
 	callback *url.URL
 	// any htp headers necessary for the request to Target
 	Headers http.Header `yaml:"headers" json:"headers"`
-	// whether the webhook deliverer will sign out going.
-	// if true webhooks will be sent with a jwt signed by
-	// the notifier's private key.
-	Signed bool `yaml:"signed" json:"signed"`
 }
 
 // Validate will return a copy of the Config on success.

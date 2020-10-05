@@ -1,3 +1,5 @@
+// +build deprecated
+
 package postgres_test
 
 import (

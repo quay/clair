@@ -281,33 +281,6 @@ func (t *Server) configureNotifierMode(ctx context.Context) error {
 	)
 	t.Handle(NotificationAPIPath, othttp.WithRouteTag(NotificationAPIPath, callbackH))
 
-	ks := t.notifier.KeyStore(ctx)
-	if ks == nil {
-		return clairerror.ErrNotInitialized{"NotifierMode requires the notifier to provide a non-nil key store"}
-	}
-
-	// keys handler
-	keysH := intromw.Handler(
-		othttp.NewHandler(
-			LoggingHandler(KeysHandler(ks)),
-			KeysAPIPath,
-			t.traceOpt,
-		),
-		KeysAPIPath,
-	)
-	t.Handle(KeysAPIPath, othttp.WithRouteTag(KeysAPIPath, keysH))
-
-	// key by ID handler
-	keyByIDH := intromw.Handler(
-		othttp.NewHandler(
-			LoggingHandler(KeyByIDHandler(ks)),
-			KeyByIDAPIPath,
-			t.traceOpt,
-		),
-		KeyByIDAPIPath,
-	)
-	t.Handle(KeyByIDAPIPath, othttp.WithRouteTag(KeyByIDAPIPath, keyByIDH))
-
 	return nil
 }
 

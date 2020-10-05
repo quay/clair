@@ -41,14 +41,5 @@ const (
 		details         jsonb -- any additional details specific to the delivery mechanism
 	);
 	CREATE INDEX receipt_idx ON receipt (notification_id, uo_id);
-
-	--- a relation holding a pub_key in PKIX, ASN.1 DER form
-	--- expiration is application defined and not associated with the public key
-	CREATE TABLE IF NOT EXISTS key
-	(
-		id         uuid PRIMARY KEY,
-		expiration timestamptz,
-		pub_key    bytea
-	);
 	`
 )
