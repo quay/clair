@@ -12,9 +12,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rs/zerolog"
+
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/notifier"
-	"github.com/rs/zerolog"
 )
 
 const (
@@ -136,8 +137,9 @@ func (m *Manager) loop(ctx context.Context) {
 			return
 		case <-t.C:
 			log.Debug().Msg("keymanager tick")
-			err := m.bump(ctx)
-			log.Error().Err(err).Msg("received error when bumping public key expiration")
+			if err := m.bump(ctx); err != nil {
+				log.Error().Err(err).Msg("received error when bumping public key expiration")
+			}
 
 			// 1/4 chance of running gc
 			if rand.Int()%4 == 0 {
