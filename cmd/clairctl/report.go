@@ -19,7 +19,7 @@ import (
 // ReportCmd is the "report" subcommand.
 var ReportCmd = &cli.Command{
 	Name:        "report",
-	Description: "Request and print a Clair vulnerability report for the provided container(s).",
+	Description: "Request and print a Clair vulnerability report for the named container(s).",
 	Action:      reportAction,
 	Usage:       "request vulnerability reports for the named containers",
 	ArgsUsage:   "container...",

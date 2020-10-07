@@ -20,7 +20,8 @@ import (
 
 var ManifestCmd = &cli.Command{
 	Name:        "manifest",
-	Description: "print a clair manifest for the provided container",
+	Description: "print a clair manifest for the named container",
+	Usage:       "print a clair manifest for the named container",
 	Action:      manifestAction,
 }
 
