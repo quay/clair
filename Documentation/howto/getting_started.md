@@ -35,7 +35,7 @@ This how-to will demonstrate combo mode and introduce some further reading on a 
 
 Clair uses PostgreSQL for its data persistence. Migrations are supported so you should only need to point Clair to a fresh database and have it do the setup for you.
 
-We will assume you have setup a postgres database it's reachable with the following connection string:
+We will assume you have setup a postgres database and it's reachable with the following connection string:
 `host=clair-db port=5432 user=clair dbname=clair sslmode=disable`. Adjust for your environment accordingly. 
 
 ## Starting Clair In Combo Mode
@@ -44,14 +44,14 @@ At this point, you should either have built Clair from source or have pulled the
 
 *You may need to configure [docker](https://docs.docker.com/network/) or [podman](https://podman.io/getting-started/network.html) networking if you are utilizing containers. This is out of scope for this how-to.*
 
-A basic config for combo mode can be found [here](https://github.com/quay/clair/blob/development-4.0/config.yaml.sample). Make sure to edit this config with your database settings and set "migrations" to `true` for all mode stanzas. In this basic combo mode, all "connstring" fields should point to the same database and any *_addr fields are simply ignored. For more details see the [config reference](../reference/config.md) and [deployment models](./deployment.md)
+A basic config for combo mode can be found [here](https://github.com/quay/clair/blob/main/config.yaml.sample). Make sure to edit this config with your database settings and set "migrations" to `true` for all mode stanzas. In this basic combo mode, all "connstring" fields should point to the same database and any *_addr fields are simply ignored. For more details see the [config reference](../reference/config.md) and [deployment models](./deployment.md)
 
 Clair has 3 requirements to start:
 * The `mode` flag or `CLAIR_MODE` environment variable specifying what mode this instance will run in.
 * The `conf` flag or `CLAIR_CONF` environment variable specifying where Clair can find its configuration.
 * A yaml document providing Clair's configuration.
 
-If you are running a container, you can can [mount](https://docs.docker.com/storage/volumes/) a Clair config and set the `CLAIR_CONF` environment variable to the corresponding path.
+If you are running a container, you can [mount](https://docs.docker.com/storage/volumes/) a Clair config and set the `CLAIR_CONF` environment variable to the corresponding path.
 ```
 CLAIR_MODE=combo
 CLAIR_CONF=/path/to/mounted/config.yaml
