@@ -51,8 +51,8 @@ jobs:
     needs: release-archive
     strategy:
       matrix:
-        goos: ['arm64', 'amd64', '386']
-        goarch: ['linux', 'windows', 'darwin']
+        goarch: ['arm64', 'amd64', '386']
+        goos: ['linux', 'windows', 'darwin']
         exclude:
           - goos: darwin
             goarch: 386
@@ -126,8 +126,8 @@ jobs:
     needs: [release-archive, release]
     strategy:
       matrix:
-        goos: ['arm64', 'amd64', '386']
-        goarch: ['linux', 'windows', 'darwin']
+        goarch: ['arm64', 'amd64', '386']
+        goos: ['linux', 'windows', 'darwin']
         exclude:
           - goos: darwin
             goarch: 386
