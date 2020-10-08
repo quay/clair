@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 // Config provides configuration for an Webhook deliverer.
@@ -32,6 +33,12 @@ func (c *Config) Validate() (Config, error) {
 		return conf, fmt.Errorf("failed to parse target url")
 	}
 	conf.target = target
+
+	// require trailing slash so url.Parse() can easily
+	// append notification id.
+	if !strings.HasSuffix(c.Callback, "/") {
+		c.Callback = c.Callback + "/"
+	}
 
 	callback, err := url.Parse(c.Callback)
 	if err != nil {
