@@ -9,15 +9,15 @@ require (
 	github.com/golang/mock v1.4.4 // indirect
 	github.com/google/go-cmp v0.4.0
 	github.com/google/go-containerregistry v0.0.0-20191206185556-eb7c14b719c6
-	github.com/google/uuid v1.1.1
+	github.com/google/uuid v1.1.2
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
-	github.com/jackc/pgx/v4 v4.7.1
+	github.com/jackc/pgx/v4 v4.7.2
 	github.com/jmoiron/sqlx v1.2.0
-	github.com/klauspost/compress v1.10.6
+	github.com/klauspost/compress v1.10.11
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/prometheus/client_golang v0.9.4 // indirect
 	github.com/prometheus/procfs v0.0.8 // indirect
-	github.com/quay/claircore v0.1.10
+	github.com/quay/claircore v0.1.11
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
 	github.com/rs/zerolog v1.16.0
 	github.com/streadway/amqp v1.0.0
