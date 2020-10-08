@@ -2,8 +2,27 @@
 ## [Unreleased]
 
 
+<a name="v4.0.0-rc.12"></a>
+## [v4.0.0-rc.12] - 2020-10-08
+### Cicd
+- [28dcd94](https://github.com/quay/clair/commit/28dcd9443f95c4243a94896b04ff7b3075a1c21c): parallelize release process, keep test failures
+### Clairctl
+- [b1fee08](https://github.com/quay/clair/commit/b1fee08e43401fdbe6fd9af222bbe64b6412c773): update some interactive help
+### Go.Mod
+- [af868db](https://github.com/quay/clair/commit/af868db100705074f718f1a8f7caaafaa8b88220): update dependencies
+### Local-Dev
+- [3b60292](https://github.com/quay/clair/commit/3b60292591900173f4eda02461d3891e48d070c2): make quay container ignore validations
+### Notifier
+- [0c1554e](https://github.com/quay/clair/commit/0c1554e9aa6cb8d1116376bf303c8af8e5112b23): ensure Content-Type header present in webhook notification
+- [a2d5f9b](https://github.com/quay/clair/commit/a2d5f9b92371094ade82b8f9bef19d72fb8addcd): copy url struct
+### Pull Requests
+- Merge pull request [#1086](https://github.com/quay/clair/issues/1086) from alecmerdler/webhook-notifier-headers
+
+
 <a name="v4.0.0-rc.11"></a>
-## [v4.0.0-rc.11] - 2020-10-01
+## [v4.0.0-rc.11] - 2020-10-02
+### Chore
+- [f9f8635](https://github.com/quay/clair/commit/f9f86350521ed9c02258c713a992d76976fab9cc): v4.0.0-rc.11 changelog bump
 ### Config
 - [a4e0410](https://github.com/quay/clair/commit/a4e04105cb15173ee3b06090de7573540969a89c): allow HTTP client to specify claims
 - [5aba727](https://github.com/quay/clair/commit/5aba72783bff70fa41769cbe33365a34835bd73f): ensure yaml/json struct tag for auth 'Issuer' field are the same
@@ -1188,7 +1207,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.11...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.12...HEAD
+[v4.0.0-rc.12]: https://github.com/quay/clair/compare/v4.0.0-rc.11...v4.0.0-rc.12
 [v4.0.0-rc.11]: https://github.com/quay/clair/compare/v4.0.0-rc.10...v4.0.0-rc.11
 [v4.0.0-rc.10]: https://github.com/quay/clair/compare/v4.0.0-rc.9...v4.0.0-rc.10
 [v4.0.0-rc.9]: https://github.com/quay/clair/compare/v4.0.0-rc.8...v4.0.0-rc.9
