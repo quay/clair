@@ -2,8 +2,15 @@
 ## [Unreleased]
 
 
+<a name="v4.0.0-rc.13"></a>
+## [v4.0.0-rc.13] - 2020-10-08
+### Cicd
+- [f6a28c2](https://github.com/quay/clair/commit/f6a28c2dcc252b4e8be08158a227b8fed7b71b27): fix goos/goarch
+
 <a name="v4.0.0-rc.12"></a>
 ## [v4.0.0-rc.12] - 2020-10-08
+### Chore
+- [61ce675](https://github.com/quay/clair/commit/61ce675946bd186f5a0be800ab26cad3f008a0f1): v4.0.0-rc.12 changelog bump
 ### Cicd
 - [28dcd94](https://github.com/quay/clair/commit/28dcd9443f95c4243a94896b04ff7b3075a1c21c): parallelize release process, keep test failures
 ### Clairctl
@@ -1207,7 +1214,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.12...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.13...HEAD
+[v4.0.0-rc.13]: https://github.com/quay/clair/compare/v4.0.0-rc.12...v4.0.0-rc.13
 [v4.0.0-rc.12]: https://github.com/quay/clair/compare/v4.0.0-rc.11...v4.0.0-rc.12
 [v4.0.0-rc.11]: https://github.com/quay/clair/compare/v4.0.0-rc.10...v4.0.0-rc.11
 [v4.0.0-rc.10]: https://github.com/quay/clair/compare/v4.0.0-rc.9...v4.0.0-rc.10
