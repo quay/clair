@@ -45,5 +45,11 @@ func (c *Config) Validate() (Config, error) {
 		return conf, fmt.Errorf("failed to parse callback url")
 	}
 	conf.callback = callback
+
+	if conf.Headers == nil {
+		conf.Headers = map[string][]string{}
+	}
+	conf.Headers.Set("Content-Type", "application/json")
+
 	return conf, nil
 }
