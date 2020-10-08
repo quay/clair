@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"path"
 	"time"
 
 	"github.com/google/uuid"
@@ -83,8 +82,10 @@ func (d *Deliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
 		Str("notification_id", nID.String()).
 		Logger()
 
-	callback := d.conf.callback
-	callback.Path = path.Join(callback.Path, nID.String())
+	callback, err := d.conf.callback.Parse(nID.String())
+	if err != nil {
+		return err
+	}
 
 	wh := notifier.Callback{
 		NotificationID: nID,
