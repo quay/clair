@@ -212,6 +212,7 @@ services:
       - "8080:8080" 
     environment:
       DEBUGLOG: "true"
+      IGNORE_VALIDATION: "true"
 
   quay-db:
     container_name: quay-db
