@@ -5,6 +5,7 @@ on:
   push:
     tags:
       - v4.*
+  workflow_dispatch: {}
 
 jobs:
   release-archive:
@@ -69,19 +70,25 @@ jobs:
           name: release
       - name: Unpack and Build
         run: |
-          tar xzf ${{steps.download.outputs.download-path}}/clair.tar.gz
-          cd clair-v4*
-          go build -o ${{github.workspace}}/clairctl-${{matrix.goos}}-${{matrix.goarch}} ./cmd/clairctl
-      - name: Upload clairctl-${{matrix.goos}}-${{matrix.goarch}}
+          tar -xz -f ${{steps.download.outputs.download-path}}/clair.tar.gz --strip-components=1 -C "${{github.workspace}}"
+          go build -o "clairctl-${{matrix.goos}}-${{matrix.goarch}}" ./cmd/clairctl
+      - name: Upload
         uses: actions/upload-artifact@v2
         with:
           name: release
-          path: ${{github.workspace}}/clairctl-${{matrix.goos}}-${{matrix.goarch}}
+          path: clairctl-${{matrix.goos}}-${{matrix.goarch}}
           if-no-files-found: error
+      - name: Create Artifact on Failure
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: workspace-${{matrix.goos}}-${{matrix.goarch}}
+          path: ${{ github.workspace }}
 
   release:
     name: Release
     runs-on: 'ubuntu-latest'
+    if: github.event_name == 'push'
     needs: [release-archive, release-binaries]
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
