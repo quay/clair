@@ -15,10 +15,8 @@ jobs:
       - name: Setup
         run: |
           tag=`basename ${{ github.ref }}`
-          cat <<.
-          ::set-env name=PREFIX::clair-${tag}/
-          ::set-env name=TAG::${tag}
-          .
+          echo "PREFIX=clair-${tag}/" >> $GITHUB_ENV
+          echo "TAG=${tag}" >> $GITHUB_ENV
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -103,13 +101,7 @@ jobs:
       - name: Setup
         run: |
           tag=`basename ${{ github.ref }}`
-          cat <<.
-          ::set-env name=VERSION::${tag}
-          ::set-env name=PREFIX::clair-${tag}/
-          ::set-env name=TAG::quay.io/projectquay/clair:${tag#v}
-          ::set-env name=QUAY_USER::projectquay+clair_github
-          ::add-mask::${{ secrets.QUAY_TOKEN }}
-          .
+          echo "VERSION=${tag}" >> $GITHUB_ENV
       - name: Fetch Artifacts
         uses: actions/download-artifact@v2
         id: download
@@ -174,12 +166,10 @@ jobs:
       - name: Setup
         run: |
           tag=`basename ${{ github.ref }}`
-          cat <<.
-          ::set-env name=CLAIR_VERSION::${tag}
-          ::set-env name=TAG::quay.io/projectquay/clair:${tag#v}
-          ::set-env name=QUAY_USER::projectquay+clair_github
-          ::add-mask::${{ secrets.QUAY_TOKEN }}
-          .
+          echo "CLAIR_VERSION=${tag}" >> $GITHUB_ENV
+          echo "TAG=quay.io/projectquay/clair:${tag#v}" >> $GITHUB_ENV
+          echo "QUAY_USER=projectquay+clair_github" >> $GITHUB_ENV
+          echo "::add-mask::${{ secrets.QUAY_TOKEN }}"
       - name: Fetch Artifacts
         uses: actions/download-artifact@v2
         id: download
