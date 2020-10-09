@@ -2,8 +2,20 @@
 ## [Unreleased]
 
 
+<a name="v4.0.0-rc.16"></a>
+## [v4.0.0-rc.16] - 2020-10-09
+### Cicd
+- [96909bf](https://github.com/quay/clair/commit/96909bf3bfca47c8ea1ce0b53d9d5b7e9897b55e): exclude darwin/arm64
+- [7786d7d](https://github.com/quay/clair/commit/7786d7d34b01b48f9d2d87682faa54936c25a21f): more debugging
+- [89c26ec](https://github.com/quay/clair/commit/89c26ec55443050d2e3dd425b4e37a15fe96c061): more debugging
+- [7a1eeaf](https://github.com/quay/clair/commit/7a1eeafd0bebc261f356f05244c3a946bfee8c87): make sure the workspace exists
+- [68c0318](https://github.com/quay/clair/commit/68c0318b1b225387402a3d4e66c1803f64fd1d98): make empty changelog on manual trigger
+- [4e5ee29](https://github.com/quay/clair/commit/4e5ee2908d49191f54951cc276cf95387f90b83c): rig up a workflow_dispatch to help debugging
+
 <a name="v4.0.0-rc.15"></a>
 ## [v4.0.0-rc.15] - 2020-10-09
+### Chore
+- [8d87481](https://github.com/quay/clair/commit/8d87481b80e495c52c8677eae2db1e288576dcb1): v4.0.0-rc.15 changelog bump
 ### Cicd
 - [d758248](https://github.com/quay/clair/commit/d758248755fe18f4658eee93cc5d40dc2b206c06): maybe there's some newline issues
 
@@ -1228,7 +1240,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.15...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.16...HEAD
+[v4.0.0-rc.16]: https://github.com/quay/clair/compare/v4.0.0-rc.15...v4.0.0-rc.16
 [v4.0.0-rc.15]: https://github.com/quay/clair/compare/v4.0.0-rc.14...v4.0.0-rc.15
 [v4.0.0-rc.14]: https://github.com/quay/clair/compare/v4.0.0-rc.13...v4.0.0-rc.14
 [v4.0.0-rc.13]: https://github.com/quay/clair/compare/v4.0.0-rc.12...v4.0.0-rc.13
