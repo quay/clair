@@ -186,12 +186,11 @@ jobs:
         with:
           name: release
       - name: Build Release Container
-        run: >
-          docker build
-          --build-arg CLAIR_VERSION
-          --tag "${TAG}"
-          -
-          <${{steps.download.outputs.download-path}}/clair.tar.gz
+        run: |
+          d=$(mktemp -d)
+          trap 'rm -rf "$d"' EXIT
+          tar -xz -f ${{steps.download.outputs.download-path}}/clair.tar.gz --strip-components=1 -C "$d"
+          docker build --build-arg CLAIR_VERSION --tag "${TAG}" "$d"
       - name: Publish Release Container
         run: |
           docker login -u "${QUAY_USER}" -p '${{ secrets.QUAY_TOKEN }}' quay.io
