@@ -1,11 +1,10 @@
 ---
-name: Deploy Master Documentation
+name: Deploy Main Documentation
 
 on:
   push:
     branches:
-      - master
-      - development-4.0  # Remove this when the branch switch happens.
+      - main
     paths:
       - 'Documentation/**'
 
