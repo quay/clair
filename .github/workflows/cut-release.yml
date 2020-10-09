@@ -75,10 +75,9 @@ jobs:
           name: release
       - name: Unpack and Build
         run: |
-          mkdir -p "${{github.workspace}}"
-          cd "${{github.workspace}}"
+          mkdir -p "${{github.workspace}}" && cd "${{github.workspace}}"
           tar -xz -f ${{steps.download.outputs.download-path}}/clair.tar.gz --strip-components=1
-          go build -o "clairctl-${{matrix.goos}}-${{matrix.goarch}}" ./cmd/clairctl
+          go build -x -o "${{github.workspace}}/clairctl-${{matrix.goos}}-${{matrix.goarch}}" ./cmd/clairctl
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
