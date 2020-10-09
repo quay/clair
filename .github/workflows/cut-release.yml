@@ -32,6 +32,11 @@ jobs:
       - name: ChangeLog
         shell: bash
         run: |
+          if [ "${{ github.event_name }}" = workflow_dispatch ]; then
+            echo "workflow trigger, skipping"
+            touch changelog
+            exit 0
+          fi
           curl -o git-chglog -L https://github.com/git-chglog/git-chglog/releases/download/0.9.1/git-chglog_linux_amd64
           chmod u+x git-chglog
           echo "creating change log for tag: $TAG"
