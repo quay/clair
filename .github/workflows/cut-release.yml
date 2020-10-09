@@ -55,7 +55,9 @@ jobs:
         goos: ['linux', 'windows', 'darwin']
         exclude:
           - goos: darwin
-            goarch: 386
+            goarch: '386'
+          - goos: windows
+            goarch: arm64
     env:
       GOOS: ${{matrix.goos}}
       GOARCH: ${{matrix.goarch}}
@@ -81,7 +83,7 @@ jobs:
   release:
     name: Release
     runs-on: 'ubuntu-latest'
-    needs: release-archive
+    needs: [release-archive, release-binaries]
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
@@ -130,7 +132,9 @@ jobs:
         goos: ['linux', 'windows', 'darwin']
         exclude:
           - goos: darwin
-            goarch: 386
+            goarch: '386'
+          - goos: windows
+            goarch: arm64
     steps:
       - name: Fetch Archive
         uses: actions/download-artifact@v2
@@ -182,6 +186,7 @@ jobs:
   deploy-documentation:
     name: Deploy Documentation
     runs-on: ubuntu-latest
+    needs: [release]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
