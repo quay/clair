@@ -75,14 +75,13 @@ jobs:
           name: release
       - name: Unpack and Build
         run: |
-          mkdir -p "${{github.workspace}}" && cd "${{github.workspace}}"
           tar -xz -f ${{steps.download.outputs.download-path}}/clair.tar.gz --strip-components=1
-          go build -x -o "${{github.workspace}}/clairctl-${{matrix.goos}}-${{matrix.goarch}}" ./cmd/clairctl
+          go build -o "clairctl-${{matrix.goos}}-${{matrix.goarch}}" ./cmd/clairctl
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
           name: release
-          path: ${{github.workspace}}/clairctl-${{matrix.goos}}-${{matrix.goarch}}
+          path: clairctl-${{matrix.goos}}-${{matrix.goarch}}
           if-no-files-found: error
       - name: Create Artifact on Failure
         uses: actions/upload-artifact@v2
