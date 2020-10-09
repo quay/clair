@@ -76,8 +76,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: release
-          path: |
-            ${{github.workspace}}/clairctl-${{matrix.goos}}-${{matrix.goarch}}
+          path: ${{github.workspace}}/clairctl-${{matrix.goos}}-${{matrix.goarch}}
           if-no-files-found: error
 
   release:
@@ -147,8 +146,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: |
-            ${{steps.download.outputs.download-path}}/clairctl-${{matrix.goos}}-${{matrix.goarch}}
+          asset_path: ${{steps.download.outputs.download-path}}/clairctl-${{matrix.goos}}-${{matrix.goarch}}
           asset_name: clairctl-${{matrix.goos}}-${{matrix.goarch}}
           asset_content_type: application/octet-stream
 
