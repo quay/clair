@@ -62,6 +62,8 @@ jobs:
         exclude:
           - goos: darwin
             goarch: '386'
+          - goos: darwin
+            goarch: arm64
           - goos: windows
             goarch: arm64
     env:
@@ -144,6 +146,8 @@ jobs:
         exclude:
           - goos: darwin
             goarch: '386'
+          - goos: darwin
+            goarch: arm64
           - goos: windows
             goarch: arm64
     steps:
