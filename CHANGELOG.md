@@ -2,8 +2,15 @@
 ## [Unreleased]
 
 
+<a name="v4.0.0-rc.15"></a>
+## [v4.0.0-rc.15] - 2020-10-09
+### Cicd
+- [d758248](https://github.com/quay/clair/commit/d758248755fe18f4658eee93cc5d40dc2b206c06): maybe there's some newline issues
+
 <a name="v4.0.0-rc.14"></a>
 ## [v4.0.0-rc.14] - 2020-10-09
+### Chore
+- [e46b4f8](https://github.com/quay/clair/commit/e46b4f89aa2a4a13062c2dd4726b66d476ef8b24): v4.0.0-rc.14 changelog bump
 ### Cicd
 - [58a987d](https://github.com/quay/clair/commit/58a987d6078506357933b378c299576bf15e39c8): invalid goos+goarch pair
 
@@ -1221,7 +1228,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.14...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.15...HEAD
+[v4.0.0-rc.15]: https://github.com/quay/clair/compare/v4.0.0-rc.14...v4.0.0-rc.15
 [v4.0.0-rc.14]: https://github.com/quay/clair/compare/v4.0.0-rc.13...v4.0.0-rc.14
 [v4.0.0-rc.13]: https://github.com/quay/clair/compare/v4.0.0-rc.12...v4.0.0-rc.13
 [v4.0.0-rc.12]: https://github.com/quay/clair/compare/v4.0.0-rc.11...v4.0.0-rc.12
