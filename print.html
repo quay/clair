@@ -212,19 +212,19 @@ and version tags are built from the corresponding release.</p>
 <p>This how-to will demonstrate combo mode and introduce some further reading on a distributed deployment.</p>
 <h2><a class="header" href="#postgres" id="postgres">Postgres</a></h2>
 <p>Clair uses PostgreSQL for its data persistence. Migrations are supported so you should only need to point Clair to a fresh database and have it do the setup for you.</p>
-<p>We will assume you have setup a postgres database it's reachable with the following connection string:
+<p>We will assume you have setup a postgres database and it's reachable with the following connection string:
 <code>host=clair-db port=5432 user=clair dbname=clair sslmode=disable</code>. Adjust for your environment accordingly. </p>
 <h2><a class="header" href="#starting-clair-in-combo-mode" id="starting-clair-in-combo-mode">Starting Clair In Combo Mode</a></h2>
 <p>At this point, you should either have built Clair from source or have pulled the container. In either case, we will assume that the <code>clair-db</code> hostname will resolve to your postgres database. </p>
 <p><em>You may need to configure <a href="https://docs.docker.com/network/">docker</a> or <a href="https://podman.io/getting-started/network.html">podman</a> networking if you are utilizing containers. This is out of scope for this how-to.</em></p>
-<p>A basic config for combo mode can be found <a href="https://github.com/quay/clair/blob/development-4.0/config.yaml.sample">here</a>. Make sure to edit this config with your database settings and set &quot;migrations&quot; to <code>true</code> for all mode stanzas. In this basic combo mode, all &quot;connstring&quot; fields should point to the same database and any *_addr fields are simply ignored. For more details see the <a href="howto/../reference/config.html">config reference</a> and <a href="howto/./deployment.html">deployment models</a></p>
+<p>A basic config for combo mode can be found <a href="https://github.com/quay/clair/blob/main/config.yaml.sample">here</a>. Make sure to edit this config with your database settings and set &quot;migrations&quot; to <code>true</code> for all mode stanzas. In this basic combo mode, all &quot;connstring&quot; fields should point to the same database and any *_addr fields are simply ignored. For more details see the <a href="howto/../reference/config.html">config reference</a> and <a href="howto/./deployment.html">deployment models</a></p>
 <p>Clair has 3 requirements to start:</p>
 <ul>
 <li>The <code>mode</code> flag or <code>CLAIR_MODE</code> environment variable specifying what mode this instance will run in.</li>
 <li>The <code>conf</code> flag or <code>CLAIR_CONF</code> environment variable specifying where Clair can find its configuration.</li>
 <li>A yaml document providing Clair's configuration.</li>
 </ul>
-<p>If you are running a container, you can can <a href="https://docs.docker.com/storage/volumes/">mount</a> a Clair config and set the <code>CLAIR_CONF</code> environment variable to the corresponding path.</p>
+<p>If you are running a container, you can <a href="https://docs.docker.com/storage/volumes/">mount</a> a Clair config and set the <code>CLAIR_CONF</code> environment variable to the corresponding path.</p>
 <pre><code>CLAIR_MODE=combo
 CLAIR_CONF=/path/to/mounted/config.yaml
 </code></pre>
@@ -285,7 +285,7 @@ ubuntu:focal found libgcrypt20 1.8.5-5ubuntu1         CVE-2019-12904
 indexer:
     connstring: &quot;host=clairdb user=pqgotest dbname=pqgotest sslmode=verify-full&quot;
 matcher:
-    connstring: &quot;host=cher-clairdb user=pqgotest dbname=pqgotest sslmode=verify-full&quot;
+    connstring: &quot;host=clairdb user=pqgotest dbname=pqgotest sslmode=verify-full&quot;
     ...
 notifier:
     connstring: &quot;host=clairdb user=pqgotest dbname=pqgotest sslmode=verify-full&quot;
@@ -769,8 +769,8 @@ match your container's content with known vulnerabilities.</p>
 <p>Email: <a href="mailto:quay-devel@redhat.com">Clair Team</a> Web: <a href="http://github.com/quay/clair">Clair Team</a> 
 License: <a href="http://www.apache.org/licenses/">Apache License 2.0</a></p>
 <h1 id="clairv4-notifier">Notifier</h1>
-<h2><a class="header" href="#notifications-delete" id="notifications-delete">notifications delete</a></h2>
-<p><a id="opIdnotifications delete"></a></p>
+<h2><a class="header" href="#deletenotification" id="deletenotification">DeleteNotification</a></h2>
+<p><a id="opIdDeleteNotification"></a></p>
 <blockquote>
 <p>Code samples</p>
 </blockquote>
@@ -826,9 +826,10 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 
 </code></pre>
 <p><code>DELETE notifier/api/v1/notification/{notification_id}</code></p>
-<p>Issues a delete of the provided notification id and all associated notifications.
-After this delete clients will no longer be able to retrieve notifications.</p>
-<h3 id="notifications-delete-parameters">Parameters</h3>
+<p>Issues a delete of the provided notification id and all associated
+notifications. After this delete clients will no longer be able to
+retrieve notifications.</p>
+<h3 id="deletenotification-parameters">Parameters</h3>
 <table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
 <tr><td>notification_id</td><td>path</td><td>string</td><td>false</td><td>A notification ID returned by a callback</td></tr>
 </tbody></table>
@@ -836,23 +837,25 @@ After this delete clients will no longer be able to retrieve notifications.</p>
 <p>Example responses</p>
 </blockquote>
 <blockquote>
-<p>200 Response</p>
+<p>400 Response</p>
 </blockquote>
-<pre><code class="language-json">null
+<pre><code class="language-json">{
+  &quot;code&quot;: &quot;string&quot;,
+  &quot;message&quot;: &quot;string&quot;
+}
 </code></pre>
-<h3 id="notifications-delete-responses">Responses</h3>
+<h3 id="deletenotification-responses">Responses</h3>
 <table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
-<tr><td>200</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td><td>OK</td><td>Inline</td></tr>
+<tr><td>200</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td><td>OK</td><td>None</td></tr>
 <tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="reference/api.html#schemaerror">Error</a></td></tr>
 <tr><td>405</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.5">Method Not Allowed</a></td><td>Method Not Allowed</td><td><a href="reference/api.html#schemaerror">Error</a></td></tr>
 <tr><td>500</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.6.1">Internal Server Error</a></td><td>Internal Server Error</td><td><a href="reference/api.html#schemaerror">Error</a></td></tr>
 </tbody></table>
-<h3 id="notifications-delete-responseschema">Response Schema</h3>
 <aside class="success">
 This operation does not require authentication
 </aside>
-<h2><a class="header" href="#retreive-a-paginated-result-of-notifications-for-the-provided-id" id="retreive-a-paginated-result-of-notifications-for-the-provided-id">Retreive a paginated result of notifications for the provided id</a></h2>
-<p><a id="opIdnotifications get"></a></p>
+<h2><a class="header" href="#retrieve-a-paginated-result-of-notifications-for-the-provided-id" id="retrieve-a-paginated-result-of-notifications-for-the-provided-id">Retrieve a paginated result of notifications for the provided id.</a></h2>
+<p><a id="opIdGetNotification"></a></p>
 <blockquote>
 <p>Code samples</p>
 </blockquote>
@@ -908,16 +911,17 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 
 </code></pre>
 <p><code>GET notifier/api/v1/notification/{notification_id}</code></p>
-<p>By performing a GET with a notification_id as a path parameter the client
-will retrieve a paginated response of notifcation objects</p>
-<h3 id="retreive-a-paginated-result-of-notifications-for-the-provided-id-parameters">Parameters</h3>
+<p>By performing a GET with a notification_id as a path parameter, the
+client will retrieve a paginated response of notification objects.</p>
+<h3 id="retrieve-a-paginated-result-of-notifications-for-the-provided-id.-parameters">Parameters</h3>
 <table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
 <tr><td>notification_id</td><td>path</td><td>string</td><td>false</td><td>A notification ID returned by a callback</td></tr>
 <tr><td>page_size</td><td>query</td><td>int</td><td>false</td><td>The maximum number of notifications to deliver in a single page.</td></tr>
-<tr><td>next</td><td>query</td><td>string</td><td>false</td><td>The next page to fetch via id. Typically this number is provided to you</td></tr>
+<tr><td>next</td><td>query</td><td>string</td><td>false</td><td>The next page to fetch via id. Typically this number is provided</td></tr>
 </tbody></table>
 <h4><a class="header" href="#detailed-descriptions" id="detailed-descriptions">Detailed descriptions</a></h4>
-<p><strong>next</strong>: The next page to fetch via id. Typically this number is provided to you 
+<p><strong>page_size</strong>: The maximum number of notifications to deliver in a single page.</p>
+<p><strong>next</strong>: The next page to fetch via id. Typically this number is provided
 on initial response in the page.next field.
 The first GET request may omit this field.</p>
 <blockquote>
@@ -982,7 +986,7 @@ The first GET request may omit this field.</p>
   ]
 }
 </code></pre>
-<h3 id="retreive-a-paginated-result-of-notifications-for-the-provided-id-responses">Responses</h3>
+<h3 id="retrieve-a-paginated-result-of-notifications-for-the-provided-id.-responses">Responses</h3>
 <table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
 <tr><td>200</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td><td>A paginated list of notifications</td><td><a href="reference/api.html#schemapagednotifications">PagedNotifications</a></td></tr>
 <tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="reference/api.html#schemaerror">Error</a></td></tr>
@@ -1714,7 +1718,7 @@ This operation does not require authentication
 <h3><a class="header" href="#properties-3" id="properties-3">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>name</td><td>string</td><td>false</td><td>none</td><td>the vulnerability name</td></tr>
-<tr><td>fixed_in_version</td><td>string</td><td>false</td><td>none</td><td>the version at which the vulnerability is fixed in. empty if not fixed.</td></tr>
+<tr><td>fixed_in_version</td><td>string</td><td>false</td><td>none</td><td>The version which the vulnerability is fixed in. Empty if not fixed.</td></tr>
 <tr><td>links</td><td>string</td><td>false</td><td>none</td><td>links to external information about vulnerability</td></tr>
 <tr><td>description</td><td>string</td><td>false</td><td>none</td><td>the vulnerability name</td></tr>
 <tr><td>normalized_severity</td><td>string</td><td>false</td><td>none</td><td>A well defined set of severity strings guaranteed to be present.</td></tr>
@@ -1791,7 +1795,7 @@ This operation does not require authentication
 <h3><a class="header" href="#properties-4" id="properties-4">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>id</td><td>string</td><td>false</td><td>none</td><td>a unique identifier for this notification</td></tr>
-<tr><td>manifest</td><td>string</td><td>false</td><td>none</td><td>the hash of the manifest affected by the provided vulnerability</td></tr>
+<tr><td>manifest</td><td>string</td><td>false</td><td>none</td><td>The hash of the manifest affected by the provided vulnerability.</td></tr>
 <tr><td>reason</td><td>string</td><td>false</td><td>none</td><td>the reason for the notifcation, [added</td></tr>
 <tr><td>vulnerability</td><td><a href="reference/api.html#schemavulnsummary">VulnSummary</a></td><td>false</td><td>none</td><td>A summary of a vulnerability</td></tr>
 </tbody></table>
@@ -2055,7 +2059,7 @@ This operation does not require authentication
 <tr><td>distribution</td><td><a href="reference/api.html#schemadistribution">Distribution</a></td><td>false</td><td>none</td><td>An indexed distribution discovered in a layer. See<br>https://www.freedesktop.org/software/systemd/man/os-release.html<br>for explanations and example of fields.</td></tr>
 <tr><td>repository</td><td><a href="reference/api.html#schemarepository">Repository</a></td><td>false</td><td>none</td><td>A package repository</td></tr>
 <tr><td>issued</td><td>string</td><td>false</td><td>none</td><td>The timestamp in which the vulnerability was issued</td></tr>
-<tr><td>range</td><td>string</td><td>false</td><td>none</td><td>The range of package versions that are affected by this vulnerability</td></tr>
+<tr><td>range</td><td>string</td><td>false</td><td>none</td><td>The range of package versions affected by this vulnerability.</td></tr>
 <tr><td>fixed_in_version</td><td>string</td><td>true</td><td>none</td><td>A unique ID representing this vulnerability.</td></tr>
 </tbody></table>
 <h4><a class="header" href="#enumerated-values-1" id="enumerated-values-1">Enumerated Values</a></h4>
@@ -2328,7 +2332,7 @@ This operation does not require authentication
 <p><code>clairctl</code> is a command line tool for working with Clair.
 This CLI is capable of generating manifests from most public registries (dockerhub, quay.io, Red Hat Container Catalog) and submitting them for analysis to a running Clair.</p>
 <pre><code>NAME:
-   clairctl - A new cli application
+   clairctl - interact with a clair API
 
 USAGE:
    clairctl [global options] command [command options] [arguments...]
@@ -2340,9 +2344,11 @@ DESCRIPTION:
    A command-line tool for clair v4.
 
 COMMANDS:
-   manifest  
-   report    request vulnerability reports for the named containers
-   help, h   Shows a list of commands or help for one command
+   manifest         print a clair manifest for the named container
+   report           request vulnerability reports for the named containers
+   export-updaters  run updaters and export results
+   import-updaters  import updates
+   help, h          Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
    -D             print debugging logs (default: false)
@@ -2350,16 +2356,13 @@ GLOBAL OPTIONS:
    --version, -v  print the version (default: false)
 </code></pre>
 <pre><code>NAME:
-   clairctl manifest - 
+   clairctl manifest - print a clair manifest for the named container
 
 USAGE:
-   clairctl manifest [command options] [arguments...]
+   clairctl manifest [arguments...]
 
 DESCRIPTION:
-   print a clair manifest for the provided container
-
-OPTIONS:
-   --help, -h  show help (default: false)
+   print a clair manifest for the named container
 </code></pre>
 <pre><code>NAME:
    clairctl report - request vulnerability reports for the named containers
@@ -2368,12 +2371,36 @@ USAGE:
    clairctl report [command options] container...
 
 DESCRIPTION:
-   Request and print a Clair vulnerability report for the provided container(s).
+   Request and print a Clair vulnerability report for the named container(s).
 
 OPTIONS:
-   --host value           URL for the clairv4 v1 API. (default: &quot;http://localhost:6060/&quot;)
+   --host value           URL for the clairv4 v1 API. (default: &quot;http://localhost:6060/&quot;) [$CLAIR_API]
    --out value, -o value  output format: text, json, xml (default: text)
-   --help, -h             show help (default: false)
+</code></pre>
+<pre><code>NAME:
+   clairctl export-updaters - run updaters and export results
+
+USAGE:
+   clairctl export-updaters [command options] [out]
+
+DESCRIPTION:
+   Run configured exporters and export to a file.
+
+OPTIONS:
+   --strict                  Return non-zero exit when updaters report errors. (default: false)
+   --config value, -c value  clair configuration file (default: &quot;config.yaml&quot;) [$CLAIR_CONF]
+</code></pre>
+<pre><code>NAME:
+   clairctl import-updaters - import updates
+
+USAGE:
+   clairctl import-updaters [command options] in
+
+DESCRIPTION:
+   Import updates from a file.
+
+OPTIONS:
+   --config value, -c value  clair configuration file (default: &quot;config.yaml&quot;) [$CLAIR_CONF]
 </code></pre>
 <h1><a class="header" href="#config" id="config">Config</a></h1>
 <h2><a class="header" href="#cli-flags-and-env-vars" id="cli-flags-and-env-vars">CLI Flags And ENV Vars</a></h2>
