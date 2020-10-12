@@ -25,9 +25,10 @@ var ReportCmd = &cli.Command{
 	ArgsUsage:   "container...",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
-			Name:  "host",
-			Usage: "URL for the clairv4 v1 API.",
-			Value: "http://localhost:6060/",
+			Name:    "host",
+			Usage:   "URL for the clairv4 v1 API.",
+			Value:   "http://localhost:6060/",
+			EnvVars: []string{"CLAIR_API"},
 		},
 		&cli.GenericFlag{
 			Name:        "out",

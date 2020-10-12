@@ -33,6 +33,7 @@ var ExportCmd = &cli.Command{
 			Usage:     "clair configuration file",
 			Value:     "config.yaml",
 			TakesFile: true,
+			EnvVars:   []string{"CLAIR_CONF"},
 		},
 	},
 }

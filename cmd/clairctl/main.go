@@ -22,6 +22,7 @@ func main() {
 	app := &cli.App{
 		Name:                 "clairctl",
 		Version:              "0.1.0",
+		Usage:                "interact with a clair API",
 		Description:          "A command-line tool for clair v4.",
 		EnableBashCompletion: true,
 		Before: func(c *cli.Context) error {
