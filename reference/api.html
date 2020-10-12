@@ -191,8 +191,8 @@ match your container's content with known vulnerabilities.</p>
 <p>Email: <a href="mailto:quay-devel@redhat.com">Clair Team</a> Web: <a href="http://github.com/quay/clair">Clair Team</a> 
 License: <a href="http://www.apache.org/licenses/">Apache License 2.0</a></p>
 <h1 id="clairv4-notifier">Notifier</h1>
-<h2><a class="header" href="#notifications-delete" id="notifications-delete">notifications delete</a></h2>
-<p><a id="opIdnotifications delete"></a></p>
+<h2><a class="header" href="#deletenotification" id="deletenotification">DeleteNotification</a></h2>
+<p><a id="opIdDeleteNotification"></a></p>
 <blockquote>
 <p>Code samples</p>
 </blockquote>
@@ -248,9 +248,10 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 
 </code></pre>
 <p><code>DELETE notifier/api/v1/notification/{notification_id}</code></p>
-<p>Issues a delete of the provided notification id and all associated notifications.
-After this delete clients will no longer be able to retrieve notifications.</p>
-<h3 id="notifications-delete-parameters">Parameters</h3>
+<p>Issues a delete of the provided notification id and all associated
+notifications. After this delete clients will no longer be able to
+retrieve notifications.</p>
+<h3 id="deletenotification-parameters">Parameters</h3>
 <table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
 <tr><td>notification_id</td><td>path</td><td>string</td><td>false</td><td>A notification ID returned by a callback</td></tr>
 </tbody></table>
@@ -258,23 +259,25 @@ After this delete clients will no longer be able to retrieve notifications.</p>
 <p>Example responses</p>
 </blockquote>
 <blockquote>
-<p>200 Response</p>
+<p>400 Response</p>
 </blockquote>
-<pre><code class="language-json">null
+<pre><code class="language-json">{
+  &quot;code&quot;: &quot;string&quot;,
+  &quot;message&quot;: &quot;string&quot;
+}
 </code></pre>
-<h3 id="notifications-delete-responses">Responses</h3>
+<h3 id="deletenotification-responses">Responses</h3>
 <table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
-<tr><td>200</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td><td>OK</td><td>Inline</td></tr>
+<tr><td>200</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td><td>OK</td><td>None</td></tr>
 <tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="#schemaerror">Error</a></td></tr>
 <tr><td>405</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.5">Method Not Allowed</a></td><td>Method Not Allowed</td><td><a href="#schemaerror">Error</a></td></tr>
 <tr><td>500</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.6.1">Internal Server Error</a></td><td>Internal Server Error</td><td><a href="#schemaerror">Error</a></td></tr>
 </tbody></table>
-<h3 id="notifications-delete-responseschema">Response Schema</h3>
 <aside class="success">
 This operation does not require authentication
 </aside>
-<h2><a class="header" href="#retreive-a-paginated-result-of-notifications-for-the-provided-id" id="retreive-a-paginated-result-of-notifications-for-the-provided-id">Retreive a paginated result of notifications for the provided id</a></h2>
-<p><a id="opIdnotifications get"></a></p>
+<h2><a class="header" href="#retrieve-a-paginated-result-of-notifications-for-the-provided-id" id="retrieve-a-paginated-result-of-notifications-for-the-provided-id">Retrieve a paginated result of notifications for the provided id.</a></h2>
+<p><a id="opIdGetNotification"></a></p>
 <blockquote>
 <p>Code samples</p>
 </blockquote>
@@ -330,16 +333,17 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 
 </code></pre>
 <p><code>GET notifier/api/v1/notification/{notification_id}</code></p>
-<p>By performing a GET with a notification_id as a path parameter the client
-will retrieve a paginated response of notifcation objects</p>
-<h3 id="retreive-a-paginated-result-of-notifications-for-the-provided-id-parameters">Parameters</h3>
+<p>By performing a GET with a notification_id as a path parameter, the
+client will retrieve a paginated response of notification objects.</p>
+<h3 id="retrieve-a-paginated-result-of-notifications-for-the-provided-id.-parameters">Parameters</h3>
 <table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
 <tr><td>notification_id</td><td>path</td><td>string</td><td>false</td><td>A notification ID returned by a callback</td></tr>
 <tr><td>page_size</td><td>query</td><td>int</td><td>false</td><td>The maximum number of notifications to deliver in a single page.</td></tr>
-<tr><td>next</td><td>query</td><td>string</td><td>false</td><td>The next page to fetch via id. Typically this number is provided to you</td></tr>
+<tr><td>next</td><td>query</td><td>string</td><td>false</td><td>The next page to fetch via id. Typically this number is provided</td></tr>
 </tbody></table>
 <h4><a class="header" href="#detailed-descriptions" id="detailed-descriptions">Detailed descriptions</a></h4>
-<p><strong>next</strong>: The next page to fetch via id. Typically this number is provided to you 
+<p><strong>page_size</strong>: The maximum number of notifications to deliver in a single page.</p>
+<p><strong>next</strong>: The next page to fetch via id. Typically this number is provided
 on initial response in the page.next field.
 The first GET request may omit this field.</p>
 <blockquote>
@@ -404,7 +408,7 @@ The first GET request may omit this field.</p>
   ]
 }
 </code></pre>
-<h3 id="retreive-a-paginated-result-of-notifications-for-the-provided-id-responses">Responses</h3>
+<h3 id="retrieve-a-paginated-result-of-notifications-for-the-provided-id.-responses">Responses</h3>
 <table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
 <tr><td>200</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td><td>A paginated list of notifications</td><td><a href="#schemapagednotifications">PagedNotifications</a></td></tr>
 <tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="#schemaerror">Error</a></td></tr>
@@ -1136,7 +1140,7 @@ This operation does not require authentication
 <h3><a class="header" href="#properties-3" id="properties-3">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>name</td><td>string</td><td>false</td><td>none</td><td>the vulnerability name</td></tr>
-<tr><td>fixed_in_version</td><td>string</td><td>false</td><td>none</td><td>the version at which the vulnerability is fixed in. empty if not fixed.</td></tr>
+<tr><td>fixed_in_version</td><td>string</td><td>false</td><td>none</td><td>The version which the vulnerability is fixed in. Empty if not fixed.</td></tr>
 <tr><td>links</td><td>string</td><td>false</td><td>none</td><td>links to external information about vulnerability</td></tr>
 <tr><td>description</td><td>string</td><td>false</td><td>none</td><td>the vulnerability name</td></tr>
 <tr><td>normalized_severity</td><td>string</td><td>false</td><td>none</td><td>A well defined set of severity strings guaranteed to be present.</td></tr>
@@ -1213,7 +1217,7 @@ This operation does not require authentication
 <h3><a class="header" href="#properties-4" id="properties-4">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>id</td><td>string</td><td>false</td><td>none</td><td>a unique identifier for this notification</td></tr>
-<tr><td>manifest</td><td>string</td><td>false</td><td>none</td><td>the hash of the manifest affected by the provided vulnerability</td></tr>
+<tr><td>manifest</td><td>string</td><td>false</td><td>none</td><td>The hash of the manifest affected by the provided vulnerability.</td></tr>
 <tr><td>reason</td><td>string</td><td>false</td><td>none</td><td>the reason for the notifcation, [added</td></tr>
 <tr><td>vulnerability</td><td><a href="#schemavulnsummary">VulnSummary</a></td><td>false</td><td>none</td><td>A summary of a vulnerability</td></tr>
 </tbody></table>
@@ -1477,7 +1481,7 @@ This operation does not require authentication
 <tr><td>distribution</td><td><a href="#schemadistribution">Distribution</a></td><td>false</td><td>none</td><td>An indexed distribution discovered in a layer. See<br>https://www.freedesktop.org/software/systemd/man/os-release.html<br>for explanations and example of fields.</td></tr>
 <tr><td>repository</td><td><a href="#schemarepository">Repository</a></td><td>false</td><td>none</td><td>A package repository</td></tr>
 <tr><td>issued</td><td>string</td><td>false</td><td>none</td><td>The timestamp in which the vulnerability was issued</td></tr>
-<tr><td>range</td><td>string</td><td>false</td><td>none</td><td>The range of package versions that are affected by this vulnerability</td></tr>
+<tr><td>range</td><td>string</td><td>false</td><td>none</td><td>The range of package versions affected by this vulnerability.</td></tr>
 <tr><td>fixed_in_version</td><td>string</td><td>true</td><td>none</td><td>A unique ID representing this vulnerability.</td></tr>
 </tbody></table>
 <h4><a class="header" href="#enumerated-values-1" id="enumerated-values-1">Enumerated Values</a></h4>

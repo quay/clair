@@ -181,19 +181,19 @@ and version tags are built from the corresponding release.</p>
 <p>This how-to will demonstrate combo mode and introduce some further reading on a distributed deployment.</p>
 <h2><a class="header" href="#postgres" id="postgres">Postgres</a></h2>
 <p>Clair uses PostgreSQL for its data persistence. Migrations are supported so you should only need to point Clair to a fresh database and have it do the setup for you.</p>
-<p>We will assume you have setup a postgres database it's reachable with the following connection string:
+<p>We will assume you have setup a postgres database and it's reachable with the following connection string:
 <code>host=clair-db port=5432 user=clair dbname=clair sslmode=disable</code>. Adjust for your environment accordingly. </p>
 <h2><a class="header" href="#starting-clair-in-combo-mode" id="starting-clair-in-combo-mode">Starting Clair In Combo Mode</a></h2>
 <p>At this point, you should either have built Clair from source or have pulled the container. In either case, we will assume that the <code>clair-db</code> hostname will resolve to your postgres database. </p>
 <p><em>You may need to configure <a href="https://docs.docker.com/network/">docker</a> or <a href="https://podman.io/getting-started/network.html">podman</a> networking if you are utilizing containers. This is out of scope for this how-to.</em></p>
-<p>A basic config for combo mode can be found <a href="https://github.com/quay/clair/blob/development-4.0/config.yaml.sample">here</a>. Make sure to edit this config with your database settings and set &quot;migrations&quot; to <code>true</code> for all mode stanzas. In this basic combo mode, all &quot;connstring&quot; fields should point to the same database and any *_addr fields are simply ignored. For more details see the <a href="../reference/config.html">config reference</a> and <a href="./deployment.html">deployment models</a></p>
+<p>A basic config for combo mode can be found <a href="https://github.com/quay/clair/blob/main/config.yaml.sample">here</a>. Make sure to edit this config with your database settings and set &quot;migrations&quot; to <code>true</code> for all mode stanzas. In this basic combo mode, all &quot;connstring&quot; fields should point to the same database and any *_addr fields are simply ignored. For more details see the <a href="../reference/config.html">config reference</a> and <a href="./deployment.html">deployment models</a></p>
 <p>Clair has 3 requirements to start:</p>
 <ul>
 <li>The <code>mode</code> flag or <code>CLAIR_MODE</code> environment variable specifying what mode this instance will run in.</li>
 <li>The <code>conf</code> flag or <code>CLAIR_CONF</code> environment variable specifying where Clair can find its configuration.</li>
 <li>A yaml document providing Clair's configuration.</li>
 </ul>
-<p>If you are running a container, you can can <a href="https://docs.docker.com/storage/volumes/">mount</a> a Clair config and set the <code>CLAIR_CONF</code> environment variable to the corresponding path.</p>
+<p>If you are running a container, you can <a href="https://docs.docker.com/storage/volumes/">mount</a> a Clair config and set the <code>CLAIR_CONF</code> environment variable to the corresponding path.</p>
 <pre><code>CLAIR_MODE=combo
 CLAIR_CONF=/path/to/mounted/config.yaml
 </code></pre>
