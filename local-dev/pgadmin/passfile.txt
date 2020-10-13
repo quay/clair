@@ -1,0 +1,2 @@
+# hostname:port:database:username:password
+clair-db:5432:clair-db:clair:clair

@@ -40,6 +40,7 @@ local-dev-up: vendor
 	$(docker-compose) up -d activemq
 	$(docker-compose) up -d clair-db
 	$(docker) exec -it clair-db bash -c 'while ! pg_isready; do echo "waiting for postgres"; sleep 2; done'
+	$(docker-compose) up -d pgadmin
 	$(docker-compose) up -d indexer
 	$(docker-compose) up -d matcher
 	$(docker-compose) up -d notifier
@@ -55,6 +56,7 @@ local-dev-up-with-quay: vendor
 	$(docker-compose) up -d activemq
 	$(docker-compose) up -d clair-db
 	$(docker) exec -it clair-db bash -c 'while ! pg_isready; do echo "waiting for clair postgres"; sleep 2; done'
+	$(docker-compose) up -d pgadmin
 	$(docker-compose) up -d indexer-quay
 	$(docker-compose) up -d matcher
 	$(docker-compose) up -d notifier
@@ -125,10 +127,17 @@ local-dev-matcher-restart:
 local-dev-notifier-restart:
 	$(docker-compose) up -d --force-recreate notifier
 
-# restart the local development rabbitmq
-.PHONY: local-dev-notifier-restart
-local-dev-rabbitmq-restart:
+# restart all clair instances
+.PHONY: local-dev-clair-restart
+local-dev-clair-restart:
+	$(docker-compose) up -d --force-recreate indexer
+	$(docker-compose) up -d --force-recreate matcher
 	$(docker-compose) up -d --force-recreate notifier
+
+# restart the local development rabbitmq
+.PHONY: local-dev-rabbitmq-restart
+local-dev-rabbitmq-restart:
+	$(docker-compose) up -d --force-recreate rabbitmq
 
 # restart the local development swagger-ui, any local code changes will take effect
 .PHONY: local-dev-swagger-ui-restart
