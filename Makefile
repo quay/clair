@@ -143,3 +143,10 @@ local-dev-traefik-restart:
 .PHONY: container-build
 container-build:
 	$(docker) build -t clair-local:latest .
+
+DOCS_DIR ?= ../clair-doc
+.PHONY: docs-build
+docs-build:
+	mdbook build
+	rsync --recursive --delete-after --exclude 'v4.*' --exclude .git\
+		./book/ $(DOCS_DIR)/
