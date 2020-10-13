@@ -24,6 +24,21 @@ services:
       retries: 3
       start_period: 10s
 
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: clair@clair.com
+      PGADMIN_DEFAULT_PASSWORD: clair
+      PGADMIN_SERVER_JSON_FILE: /pgadmin4/config/servers.json
+      PGADMIN_LISTEN_PORT: 8081
+    ports:
+      - "8081:8081"
+    volumes:
+      - "./local-dev/pgadmin:/pgadmin4/config"
+    depends_on:
+      - clair-db
+
   traefik:
     container_name: clair-traefik
     image: traefik:v2.2
