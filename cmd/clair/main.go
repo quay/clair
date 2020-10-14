@@ -8,12 +8,13 @@ import (
 	"os/signal"
 	"time"
 
+	_ "github.com/quay/claircore/updater/defaults"
 	"github.com/rs/zerolog"
 	yaml "gopkg.in/yaml.v3"
 
 	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/initialize"
-	_ "github.com/quay/claircore/updater/defaults"
+	_ "github.com/quay/clair/v4/internal/pid1"
 )
 
 // Version is a version string, optionally injected at build time.
