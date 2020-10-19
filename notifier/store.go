@@ -53,6 +53,11 @@ type Notificationer interface {
 	// successful persistence of notifications in such a way that Receipter.Created()
 	// returns the persisted notification id.
 	PutNotifications(ctx context.Context, opts PutOpts) error
+	// PutReceipt allows for the caller to directly add a receipt to the store
+	// without notifications being created.
+	//
+	// After this method returns all methods on the Receipter interface must work accordingly.
+	PutReceipt(ctx context.Context, updater string, r Receipt) error
 	// DeleteNotifications garbage collects all notifications associated
 	// with a notification id.
 	//

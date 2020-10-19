@@ -37,6 +37,10 @@ func (s *Store) PutNotifications(ctx context.Context, opts notifier.PutOpts) err
 	return putNotifications(ctx, s.pool, opts)
 }
 
+func (s *Store) PutReceipt(ctx context.Context, updater string, r notifier.Receipt) error {
+	return putReceipt(ctx, s.pool, updater, r)
+}
+
 // DeleteNotifications garbage collects all notifications associated
 // with a notification id.
 //

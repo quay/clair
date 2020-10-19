@@ -22,6 +22,8 @@ const (
 
 // Receipt represents the current status of a notification
 type Receipt struct {
+	// The update operation associated with this receipt
+	UOID uuid.UUID
 	// the id a client may use to retrieve a set of notifications
 	NotificationID uuid.UUID
 	// the current status  of the notification

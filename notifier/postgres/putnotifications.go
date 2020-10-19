@@ -31,7 +31,7 @@ func putNotifications(ctx context.Context, pool *pgxpool.Pool, opts notifier.Put
 		insertReceipt         = `INSERT INTO receipt (notification_id, uo_id, status, ts) VALUES ($1, $2, 'created', CURRENT_TIMESTAMP);`
 		insertUpdateOperation = `
 		INSERT INTO notifier_update_operation (updater, uo_id, ts)
-		VALUES ($1, $2, $3)
+		VALUES ($1, $2, CURRENT_TIMESTAMP)
 		`
 	)
 	tx, err := pool.Begin(ctx)
@@ -64,7 +64,7 @@ func putNotifications(ctx context.Context, pool *pgxpool.Pool, opts notifier.Put
 	}
 
 	// update known update operations
-	_, err = tx.Exec(ctx, insertUpdateOperation, opts.Updater, opts.UpdateID, time.Now())
+	_, err = tx.Exec(ctx, insertUpdateOperation, opts.Updater, opts.UpdateID)
 	if err != nil {
 		return clairerror.ErrPutNotifications{opts.NotificationID, err}
 	}
