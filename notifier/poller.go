@@ -117,12 +117,18 @@ func (p *Poller) onTick(ctx context.Context, c chan<- Event) {
 			select {
 			case c <- e:
 			default:
-				log.Warn().Str("updater", e.updater).Str("UOID", e.uo.Ref.String()).Msg("could not deliver event to channel. backing off till next tick")
+				log.Warn().
+					Str("updater", updater).
+					Str("UOID", latest.Ref.String()).
+					Msg("could not deliver event to channel. skipping updater now")
 			}
-			return
+			continue
 		}
 		if err != nil {
-			log.Error().Err(err).Msg("received error getting receipt by UOID. backing off till next tick")
+			log.Error().Err(err).
+				Str("updater", updater).
+				Str("UOID", latest.Ref.String()).
+				Msg("received error getting receipt by UOID. backing off till next tick")
 			return
 		}
 	}
