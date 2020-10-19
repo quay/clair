@@ -10,6 +10,7 @@ import (
 type MockStore struct {
 	Notifications_        func(ctx context.Context, id uuid.UUID, page *Page) ([]Notification, Page, error)
 	PutNotifications_     func(ctx context.Context, opts PutOpts) error
+	PutReceipt_           func(ctx context.Context, updater string, r Receipt) error
 	DeleteNotitfications_ func(ctx context.Context, id uuid.UUID) error
 	Receipt_              func(ctx context.Context, id uuid.UUID) (Receipt, error)
 	ReceiptByUOID_        func(ctx context.Context, id uuid.UUID) (Receipt, error)
@@ -39,6 +40,14 @@ func (m *MockStore) Notifications(ctx context.Context, id uuid.UUID, page *Page)
 // returns the persisted notification id.
 func (m *MockStore) PutNotifications(ctx context.Context, opts PutOpts) error {
 	return m.PutNotifications_(ctx, opts)
+}
+
+// PutReceipt allows for the caller to directly add a receipt to the store
+// without notifications being created.
+//
+// After this method returns all methods on the Receipter interface must work accordingly.
+func (m *MockStore) PutReceipt(ctx context.Context, updater string, r Receipt) error {
+	return m.PutReceipt_(ctx, updater, r)
 }
 
 // DeleteNotifications garbage collects all notifications associated

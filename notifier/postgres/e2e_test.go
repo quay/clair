@@ -91,6 +91,7 @@ func (e *e2e) Run(t *testing.T) {
 		{"SetDelivered", e.SetDelivered},
 		{"SetDeliveryFailed", e.SetDeliveryFailed},
 		{"SetDeleted", e.SetDeleted},
+		{"PutReceipt", e.PutReceipt},
 	}
 	for i := range subtests {
 		subtest := subtests[i]
@@ -260,5 +261,40 @@ func (e *e2e) SetDeleted(t *testing.T) {
 	}
 	if !cmp.Equal(receipt.Status, notifier.Deleted) {
 		t.Fatal(cmp.Diff(receipt.Status, notifier.Deleted))
+	}
+}
+
+// PutReceipt will confirm a receipt can be directly placed into the
+// the database.
+func (e *e2e) PutReceipt(t *testing.T) {
+	defer func() {
+		e.failed = t.Failed()
+	}()
+	noteID := uuid.New()
+	UOID := uuid.New()
+	r := notifier.Receipt{
+		NotificationID: noteID,
+		UOID:           UOID,
+		Status:         notifier.Delivered,
+	}
+	err := e.store.PutReceipt(e.ctx, "test-updater", r)
+	if err != nil {
+		t.Fatalf("failed to put receipt: %v", err)
+	}
+
+	rPrime, err := e.store.Receipt(e.ctx, noteID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(rPrime, r, cmpopts.IgnoreFields(rPrime, "TS")) {
+		t.Fatal(cmp.Diff(rPrime, r))
+	}
+
+	rPrime, err = e.store.ReceiptByUOID(e.ctx, UOID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cmp.Equal(rPrime, r, cmpopts.IgnoreFields(rPrime, "TS")) {
+		t.Fatal(cmp.Diff(rPrime, r))
 	}
 }
