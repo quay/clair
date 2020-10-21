@@ -2,8 +2,32 @@
 ## [Unreleased]
 
 
+<a name="v4.0.0-rc.18"></a>
+## [v4.0.0-rc.18] - 2020-10-19
+### Notifier
+- [40abaa6](https://github.com/quay/clair/commit/40abaa67e5b3e4453d6e6cf2ec3452a0c3570f42): do less work
+
+<a name="v4.0.0-rc.17"></a>
+## [v4.0.0-rc.17] - 2020-10-19
+### Chore
+- [37f7791](https://github.com/quay/clair/commit/37f7791287d28de53828ee35c139dc78d5f3e962): claircore bump v0.1.13
+### Cicd
+- [d2bc2b6](https://github.com/quay/clair/commit/d2bc2b6cda9ff609e0e9883467095f6e425cdae9): remove deprecated set-env commands
+- [0cfda4d](https://github.com/quay/clair/commit/0cfda4ddf6a86f01fddd8b8143ce4f64b23a0527): update documentation action
+- [49e01d6](https://github.com/quay/clair/commit/49e01d60feeb9fdce618d82b7b328f80bdb4fa89): fix container build
+### Clairctl
+- [2363778](https://github.com/quay/clair/commit/2363778b4086a62de55cef1afa8f3c519328ec25): add environment variables for clairctl
+### Docs
+- [dc4bda4](https://github.com/quay/clair/commit/dc4bda499e7aeed655536aa8409b6512113eb7ea): add Makefile target to build docs website
+### Local-Dev
+- [15b607a](https://github.com/quay/clair/commit/15b607a98e92d87f083d4ca406c7d795fc373cd5): add pgadmin4 container
+### Notifier
+- [673bd0f](https://github.com/quay/clair/commit/673bd0fe32d5422e8eb3dff3716a2bfce81b891c): fix poller loop
+
 <a name="v4.0.0-rc.16"></a>
 ## [v4.0.0-rc.16] - 2020-10-09
+### Chore
+- [88407e2](https://github.com/quay/clair/commit/88407e254d33b7c66e0484ee980daa3f69b1683e): v4.0.0-rc.16 changelog bump
 ### Cicd
 - [96909bf](https://github.com/quay/clair/commit/96909bf3bfca47c8ea1ce0b53d9d5b7e9897b55e): exclude darwin/arm64
 - [7786d7d](https://github.com/quay/clair/commit/7786d7d34b01b48f9d2d87682faa54936c25a21f): more debugging
@@ -1240,7 +1264,9 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.16...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.18...HEAD
+[v4.0.0-rc.18]: https://github.com/quay/clair/compare/v4.0.0-rc.17...v4.0.0-rc.18
+[v4.0.0-rc.17]: https://github.com/quay/clair/compare/v4.0.0-rc.16...v4.0.0-rc.17
 [v4.0.0-rc.16]: https://github.com/quay/clair/compare/v4.0.0-rc.15...v4.0.0-rc.16
 [v4.0.0-rc.15]: https://github.com/quay/clair/compare/v4.0.0-rc.14...v4.0.0-rc.15
 [v4.0.0-rc.14]: https://github.com/quay/clair/compare/v4.0.0-rc.13...v4.0.0-rc.14
