@@ -26,13 +26,14 @@ type AuthKeyserver struct {
 	API          string `yaml:"api" json:"api"`
 	Intraservice []byte `yaml:"intraservice" json:"intraservice"`
 }
+type keyserverConfig struct {
+	API          string `yaml:"api" json:"api"`
+	Intraservice string `yaml:"intraservice" json:"intraservice"`
+}
 
 // UnmarshalYAML implements yaml.Unmarshaler.
 func (a *AuthKeyserver) UnmarshalYAML(f func(interface{}) error) error {
-	var m struct {
-		API          string `yaml:"api"`
-		Intraservice string `yaml:"intraservice"`
-	}
+	var m keyserverConfig
 	if err := f(&m); err != nil {
 		return nil
 	}
@@ -45,6 +46,14 @@ func (a *AuthKeyserver) UnmarshalYAML(f func(interface{}) error) error {
 	return nil
 }
 
+// MarshalYAML implements yaml.Marshaler.
+func (a *AuthKeyserver) MarshalYAML() (interface{}, error) {
+	return &keyserverConfig{
+		API:          a.API,
+		Intraservice: base64.StdEncoding.EncodeToString(a.Intraservice),
+	}, nil
+}
+
 // AuthPSK is the configuration for doing pre-shared key based authentication.
 //
 // The "Issuer" key is what the service expects to verify as the "issuer" claim.
@@ -52,13 +61,14 @@ type AuthPSK struct {
 	Key    []byte   `yaml:"key" json:"key"`
 	Issuer []string `yaml:"iss" json:"iss"`
 }
+type pskConfig struct {
+	Key    string   `yaml:"key" json:"key"`
+	Issuer []string `yaml:"iss" json:"iss"`
+}
 
 // UnmarshalYAML implements yaml.Unmarshaler.
 func (a *AuthPSK) UnmarshalYAML(f func(interface{}) error) error {
-	var m struct {
-		Issuer []string `yaml:"iss" json:"iss"`
-		Key    string   `yaml:"key" json:"key"`
-	}
+	var m pskConfig
 	if err := f(&m); err != nil {
 		return nil
 	}
@@ -69,4 +79,12 @@ func (a *AuthPSK) UnmarshalYAML(f func(interface{}) error) error {
 	}
 	a.Key = s
 	return nil
+}
+
+// MarshalYAML implements yaml.Marshaler.
+func (a *AuthPSK) MarshalYAML() (interface{}, error) {
+	return &pskConfig{
+		Key:    base64.StdEncoding.EncodeToString(a.Key),
+		Issuer: a.Issuer,
+	}, nil
 }
