@@ -3,17 +3,22 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	golog "log"
+	"net/http"
 	"os"
 	"os/signal"
 	"time"
 
+	_ "github.com/quay/claircore/updater/defaults"
 	"github.com/rs/zerolog"
+	"golang.org/x/sync/errgroup"
 	yaml "gopkg.in/yaml.v3"
 
 	"github.com/quay/clair/v4/config"
+	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/initialize"
-	_ "github.com/quay/claircore/updater/defaults"
+	"github.com/quay/clair/v4/introspection"
 )
 
 // Version is a version string, optionally injected at build time.
@@ -51,54 +56,70 @@ func main() {
 		golog.Fatalf("failed to validate config: %v", err)
 	}
 
-	// initialize performs all Clair initialization tasks.
-	init, err := initialize.New(conf)
-	if err != nil {
-		golog.Fatalf("initialized failed: %v", err)
-	}
-	logger := zerolog.Ctx(init.GlobalCTX).With().Str("component", "main").Logger()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	// register signal handler
+	ctx, err = initialize.Logging(ctx, &conf)
+	if err != nil {
+		golog.Fatalf("failed to set up logging: %v", err)
+	}
+	logger := zerolog.Ctx(ctx).With().Str("component", "main").Logger()
+	logger.Info().Str("version", Version).Msg("starting")
+
+	// Some machinery for starting and stopping server goroutines
+	down := &Shutdown{}
+	srvs, srvctx := errgroup.WithContext(ctx)
+
+	srvs.Go(func() (_ error) {
+		logger.Info().Msg("launching introspection server")
+		i, err := introspection.New(ctx, conf, nil)
+		if err != nil {
+			logger.Warn().
+				Err(err).Msg("introspection server configuration failed. continuing anyway")
+			return
+		}
+		down.Add(i.Server)
+		if err := i.ListenAndServe(); err != http.ErrServerClosed {
+			logger.Warn().
+				Err(err).Msg("introspection server failed to launch. continuing anyway")
+		}
+		return
+	})
+
+	srvs.Go(func() error {
+		logger.Info().Msg("launching http transport")
+		srvs, err := initialize.Services(ctx, &conf)
+		if err != nil {
+			return fmt.Errorf("service initialization failed: %w", err)
+		}
+		h, err := httptransport.New(ctx, conf, srvs.Indexer, srvs.Matcher, srvs.Notifier)
+		if err != nil {
+			return fmt.Errorf("http transport configuration failed: %w", err)
+		}
+		down.Add(h.Server)
+		if err := h.ListenAndServe(); err != http.ErrServerClosed {
+			return fmt.Errorf("http transport failed to launch: %w", err)
+		}
+		return nil
+	})
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	logger.Info().Msg("registered signal handler")
-
-	// introspection server
-	if init.Introspection != nil {
-		logger.Info().Msg("launching introspection server")
-		go func() {
-			err := init.Introspection.ListenAndServe()
-			if err != nil {
-				logger.Err(err).Msg("introspection server failed to launch. continuing anyway")
-			}
-		}()
-	}
-
-	// http transport
-	logger.Info().Msg("launching http transport")
-	go func() {
-		err := init.HttpTransport.ListenAndServe()
-		if err != nil {
-			logger.Err(err).Msg("http transport failed to listen and serve")
-			init.GlobalCancel()
-		}
-	}()
-
-	// block on signal
 	logger.Info().Str("version", Version).Msg("ready")
 	select {
 	case sig := <-c:
-		// received a SIGINT for graceful shutdown
 		logger.Info().
 			Str("signal", sig.String()).
 			Msg("gracefully shutting down")
-		tctx, cancel := context.WithTimeout(init.GlobalCTX, 10*time.Second)
-		defer cancel()
-		init.HttpTransport.Shutdown(tctx)
-		// cancel the entire application root ctx
-		init.GlobalCancel()
-	case <-init.GlobalCTX.Done():
-		// main cancel func called indicating error initializing
-		logger.Fatal().Msg("initialization failed")
+		tctx, done := context.WithTimeout(ctx, 10*time.Second)
+		err := down.Shutdown(tctx)
+		done()
+		if err != nil {
+			logger.Error().Err(err).Msg("error shutting down server")
+		}
+	case <-srvctx.Done():
+		logger.Error().Err(srvctx.Err()).Msg("initialization failed")
+		os.Exit(1)
 	}
 }
