@@ -11,23 +11,6 @@ import (
 	"github.com/quay/clair/v4/config"
 )
 
-// Logging will set the global logging level for Clair,
-// create a global logger embedded into a CTX,
-// and sets this CTX as our application's GlobalCTX.
-func (i *Init) Logging() error {
-	// global log level
-	level := LogLevel(i.conf.LogLevel)
-	zerolog.SetGlobalLevel(level)
-
-	// attach global logger to ctx
-	i.GlobalCTX, i.GlobalCancel = context.WithCancel(context.Background())
-	globalLogger := log.With().Timestamp().Logger()
-	i.GlobalCTX = globalLogger.WithContext(i.GlobalCTX)
-
-	globalLogger.Info().Str("component", "init/Init.Logging").Msg("logging initialized")
-	return nil
-}
-
 // LogLevel does a string-to-level mapping.
 func LogLevel(level string) zerolog.Level {
 	level = strings.ToLower(level)
