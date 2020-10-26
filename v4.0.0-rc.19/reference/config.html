@@ -1,0 +1,712 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Config - Clair Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="Documentation for Clair.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "coal" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../whatis.html"><strong aria-hidden="true">1.</strong> What is ClairV4</a></li><li class="chapter-item expanded "><a href="../howto.html"><strong aria-hidden="true">2.</strong> How Tos</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../howto/getting_started.html"><strong aria-hidden="true">2.1.</strong> Getting Started With ClairV4</a></li><li class="chapter-item expanded "><a href="../howto/deployment.html"><strong aria-hidden="true">2.2.</strong> Deployment Models</a></li><li class="chapter-item expanded "><a href="../howto/api.html"><strong aria-hidden="true">2.3.</strong> API Definition</a></li><li class="chapter-item expanded "><a href="../howto/testing.html"><strong aria-hidden="true">2.4.</strong> Testing ClairV4</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts.html"><strong aria-hidden="true">3.</strong> Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../concepts/api_internal.html"><strong aria-hidden="true">3.1.</strong> Internal API</a></li><li class="chapter-item expanded "><a href="../concepts/authentication.html"><strong aria-hidden="true">3.2.</strong> Authentication</a></li><li class="chapter-item expanded "><a href="../concepts/notifications.html"><strong aria-hidden="true">3.3.</strong> Notifications</a></li><li class="chapter-item expanded "><a href="../concepts/updatersandairgap.html"><strong aria-hidden="true">3.4.</strong> Updaters and Airgap</a></li></ol></li><li class="chapter-item expanded "><a href="../contribution.html"><strong aria-hidden="true">4.</strong> Contribution</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../contribution/releases.html"><strong aria-hidden="true">4.1.</strong> Releases</a></li><li class="chapter-item expanded "><a href="../contribution/commit_style.html"><strong aria-hidden="true">4.2.</strong> Commit Style</a></li></ol></li><li class="chapter-item expanded "><a href="../reference.html"><strong aria-hidden="true">5.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../reference/api.html"><strong aria-hidden="true">5.1.</strong> Api</a></li><li class="chapter-item expanded "><a href="../reference/clairctl.html"><strong aria-hidden="true">5.2.</strong> Clairctl</a></li><li class="chapter-item expanded "><a href="../reference/config.html" class="active"><strong aria-hidden="true">5.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="../reference/indexer.html"><strong aria-hidden="true">5.4.</strong> Indexer</a></li><li class="chapter-item expanded "><a href="../reference/matcher.html"><strong aria-hidden="true">5.5.</strong> Matcher</a></li><li class="chapter-item expanded "><a href="../reference/notifier.html"><strong aria-hidden="true">5.6.</strong> Notifier</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Clair Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/quay/clair" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#config" id="config">Config</a></h1>
+<h2><a class="header" href="#cli-flags-and-env-vars" id="cli-flags-and-env-vars">CLI Flags And ENV Vars</a></h2>
+<p>ClairV4 is provided a structured yaml configuration. 
+Each ClairV4 node will specify what mode it will run in and config path via cli flag or environment variable.</p>
+<p>For example:</p>
+<pre><code class="language-shell">$ clair -conf ./path/to/config.yaml -mode indexer
+$ clair -conf ./path/to/config.yaml -mode matcher
+</code></pre>
+<pre><code>-mode 
+    (also specified by CLAIR_MODE env variable)
+    One of the following strings
+    Sets which mode the clair instances will run in
+    
+    &quot;indexer&quot;: runs just the indexer node
+    &quot;matcher&quot;: runs just the matcher node
+    &quot;notifier&quot;: runs just the notifier node
+    &quot;combo&quot;:	will run both indexer and matcher on the same node.
+-conf
+    (also specified by CLAIR_CONF env variable)
+    A file system path to Clair's config file
+</code></pre>
+<p>The above example starts two Clair nodes using the same configuration. One will only run the indexing facilities while the other will only run the matching facilities.</p>
+<h2><a class="header" href="#config-reference" id="config-reference">Config Reference</a></h2>
+<pre><code>http_listen_addr: &quot;&quot;
+introspection_addr: &quot;&quot;
+log_level: &quot;&quot;
+indexer:
+    connstring: &quot;&quot;
+    scanlock_retry: 0
+    layer_scan_concurrency: 0
+    migrations: false
+    scanner: {}
+matcher:
+    connstring: &quot;&quot;
+    max_conn_pool: 0
+    indexer_addr: &quot;&quot;
+    migrations: false
+    updater_sets: []
+notifier:
+    connstring: &quot;&quot;
+    migrations: false
+    indexer_addr: &quot;&quot;
+    matcher_addr: &quot;&quot;
+    poll_interval: &quot;&quot;
+    delivery_interval: &quot;&quot;
+    webhook: null
+    amqp: null
+    stomp: null
+auth: {}
+trace:
+    name: &quot;&quot;
+    probability: null
+    jaeger:
+        agent:
+            endpoint: &quot;&quot;
+        collector:
+            endpoint: &quot;&quot;
+            username: null
+            password: null
+        service_name: &quot;&quot;
+        tags: {}
+        buffer_max: 0
+metrics:
+    name: &quot;&quot;
+    prometheus:
+        endpoint: null
+    dogstatsd:
+        url: &quot;&quot;
+</code></pre>
+<h3><a class="header" href="#http_listen_addr" id="http_listen_addr">http_listen_addr: &quot;&quot;</a></h3>
+<pre><code>A string in &lt;host&gt;:&lt;port&gt; format where &lt;host&gt; can be an empty string.
+
+exposes Clair node's functionality to the network.
+see /openapi/v1 for api spec.
+</code></pre>
+<h3><a class="header" href="#introspection_addr" id="introspection_addr">introspection_addr: &quot;&quot;</a></h3>
+<pre><code>A string in &lt;host&gt;:&lt;port&gt; format where &lt;host&gt; can be an empty string.
+
+exposes Clair's metrics and health endpoints.
+</code></pre>
+<h3><a class="header" href="#log_level" id="log_level">log_level: &quot;&quot;</a></h3>
+<pre><code>Set the logging level.
+
+One of the following strings:
+&quot;debug-color&quot;
+&quot;debug&quot;
+&quot;info&quot;
+&quot;warn&quot;
+&quot;error&quot;
+&quot;fatal&quot;
+&quot;panic&quot;
+</code></pre>
+<h3><a class="header" href="#indexer-object" id="indexer-object">indexer: &lt;object&gt;</a></h3>
+<pre><code>Indexer provides Clair Indexer node configuration
+</code></pre>
+<h4><a class="header" href="#connstring" id="connstring"> connstring: &quot;&quot;</a></h4>
+<pre><code>A Postgres connection string.
+
+formats:
+url: &quot;postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full&quot;
+or
+string: &quot;user=pqgotest dbname=pqgotest sslmode=verify-full&quot;
+</code></pre>
+<h4><a class="header" href="#scanlock_retry-0" id="scanlock_retry-0"> scanlock_retry: 0</a></h4>
+<pre><code>A positive value representing seconds.
+
+Concurrent Indexers lock on manifest scans to avoid clobbering.
+This value tunes how often a waiting Indexer will poll for the lock.
+TODO: Move to async operating mode
+</code></pre>
+<h4><a class="header" href="#layer_scan_concurrency-0" id="layer_scan_concurrency-0"> layer_scan_concurrency: 0</a></h4>
+<pre><code>A positive values represeting quantity.
+
+Indexers will index a Manifest's layers concurrently.
+This value tunes the number of layers an Indexer will scan in parallel.
+</code></pre>
+<h4><a class="header" href="#migrations-false" id="migrations-false"> migrations: false</a></h4>
+<pre><code>A &quot;true&quot; or &quot;false&quot; value
+
+Whether Indexer nodes handle migrations to their database.
+</code></pre>
+<h4><a class="header" href="#scanner-" id="scanner-"> scanner: {}</a></h4>
+<pre><code>A map with the name of a particular scanner and arbitrary yaml as a value
+
+Scanner allows for passing configuration options to layer scanners.
+The scanner will have this configuration passed to it on construction if designed to do so.
+</code></pre>
+<h3><a class="header" href="#matcher-object" id="matcher-object">matcher: &lt;object&gt;</a></h3>
+<pre><code>Matcher provides Clair matcher node configuration
+</code></pre>
+<h4><a class="header" href="#connstring-1" id="connstring-1"> connstring: &quot;&quot;</a></h4>
+<pre><code>A Postgres connection string.
+
+Formats:
+url: &quot;postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full&quot;
+or
+string: &quot;user=pqgotest dbname=pqgotest sslmode=verify-full&quot;
+</code></pre>
+<h4><a class="header" href="#max_conn_pool-0" id="max_conn_pool-0"> max_conn_pool: 0</a></h4>
+<pre><code>A positive integer
+
+Clair allows for a custom connection pool size.
+This number will directly set how many active sql
+connections are allowed concurrently.
+</code></pre>
+<h4><a class="header" href="#indexer_addr" id="indexer_addr"> indexer_addr: &quot;&quot;</a></h4>
+<pre><code>A string in &lt;host&gt;:&lt;port&gt; format where &lt;host&gt; can be an empty string.
+
+A Matcher contacts an Indexer to create a VulnerabilityReport.
+The location of this Indexer is required.
+</code></pre>
+<h4><a class="header" href="#migrations-false-1" id="migrations-false-1"> migrations: false</a></h4>
+<pre><code>A &quot;true&quot; or &quot;false&quot; value
+
+Whether Matcher nodes handle migrations to their databases.
+</code></pre>
+<h4><a class="header" href="#updater_sets-" id="updater_sets-"> updater_sets: []</a></h4>
+<pre><code>A slice of strings representing which
+updaters matcher will create.
+
+If nil all default UpdaterSets will be used
+
+The following sets are supported:
+&quot;alpine&quot;
+&quot;aws&quot;
+&quot;debian&quot;
+&quot;oracle&quot;
+&quot;photon&quot;
+&quot;pyupio&quot;
+&quot;rhel&quot;
+&quot;suse&quot;
+&quot;ubuntu&quot;
+</code></pre>
+<h3><a class="header" href="#notifier-object" id="notifier-object">notifier: &lt;object&gt;</a></h3>
+<pre><code>Notifier provides Clair Notifier node configuration
+</code></pre>
+<h4><a class="header" href="#connstring-2" id="connstring-2"> connstring: &quot;&quot;</a></h4>
+<pre><code>
+A Postgres connection string.
+
+Formats:
+url: &quot;postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full&quot;
+or
+string: &quot;user=pqgotest dbname=pqgotest sslmode=verify-full&quot;
+</code></pre>
+<h4><a class="header" href="#migrations-false-2" id="migrations-false-2"> migrations: false</a></h4>
+<pre><code>A &quot;true&quot; or &quot;false&quot; value
+
+Whether Notifier nodes handle migrations to their database.
+</code></pre>
+<h4><a class="header" href="#indexer_addr-1" id="indexer_addr-1"> indexer_addr: &quot;&quot;</a></h4>
+<pre><code>A string in &lt;host&gt;:&lt;port&gt; format where &lt;host&gt; can be an empty string.
+
+A Notifier contacts an Indexer to create obtain manifests affected by vulnerabilities.
+The location of this Indexer is required.
+</code></pre>
+<h4><a class="header" href="#matcher_addr" id="matcher_addr"> matcher_addr: &quot;&quot;</a></h4>
+<pre><code>A string in &lt;host&gt;:&lt;port&gt; format where &lt;host&gt; can be an empty string.
+
+A Notifier contacts a Matcher to list update operations and acquire diffs.
+The location of this Indexer is required.
+</code></pre>
+<h4><a class="header" href="#poll_interval" id="poll_interval"> poll_interval: &quot;&quot;</a></h4>
+<pre><code>A time.ParseDuration parsable string
+
+The frequency at which the notifier will query at Matcher for Update Operations.
+</code></pre>
+<h4><a class="header" href="#delivery_interval" id="delivery_interval"> delivery_interval: &quot;&quot;</a></h4>
+<pre><code>A time.ParseDuration parsable string
+
+The frequency at which the notifier attempt delivery of created or previously failed
+notifications
+</code></pre>
+<h4><a class="header" href="#webhook-object" id="webhook-object"> webhook: &lt;object&gt;</a></h4>
+<pre><code>Configures the notifier for webhook delivery
+</code></pre>
+<h4><a class="header" href="#target" id="target">  target: &quot;&quot;</a></h4>
+<pre><code>URL where our webhook will be delivered
+
+</code></pre>
+<h4><a class="header" href="#callback" id="callback">  callback: &quot;&quot;</a></h4>
+<pre><code>The callback url where notifications can be received
+The notification will be appended to this url
+This will typically be where the clair notifier is hosted
+</code></pre>
+<h4><a class="header" href="#headers" id="headers">  headers: &quot;&quot;</a></h4>
+<pre><code>{ &quot;header&quot;: [ &quot;value&quot; ] }
+
+A map associating header names to a list of header values
+</code></pre>
+<h4><a class="header" href="#signed" id="signed">  signed: &quot;&quot;</a></h4>
+<pre><code>A &quot;true&quot; or &quot;false&quot; value
+
+If true the Notifier will use its internal key server to sign out going webhooks.
+</code></pre>
+<h4><a class="header" href="#amqp-object" id="amqp-object"> amqp: &lt;object&gt;</a></h4>
+<pre><code>Configures the notifier for AMQP delivery.
+Note: Clair does not declare any AMQP components on its own.
+All attempts to use an exchange or queue are passive only and will fail
+The broker administrators should setup exchanges and queues ahead of time.
+</code></pre>
+<h4><a class="header" href="#direct" id="direct">  direct: &quot;&quot;</a></h4>
+<pre><code>A &quot;true&quot; or &quot;false&quot; value
+
+If true the Notifier will deliver individual notifications (not a callback) to the configured AMQP broker.
+</code></pre>
+<h4><a class="header" href="#rollup" id="rollup">  rollup: &quot;&quot;</a></h4>
+<pre><code>Integer 0 or greater.
+
+If direct is true this value will inform notifier how many notifications to send in a single direct delivery. 
+For example if direct is set to true and rollup is set to 5 the notifier will deliver no more then 5 notifications in a single json payload to the broker.
+</code></pre>
+<h4><a class="header" href="#exchange-object" id="exchange-object">  exchange: &lt;object&gt;</a></h4>
+<pre><code>The AMQP Exchange to connect to.
+</code></pre>
+<h4><a class="header" href="#name" id="name">   name: &quot;&quot;</a></h4>
+<pre><code>string value
+
+The name of the exchange to connect to.
+</code></pre>
+<h4><a class="header" href="#type" id="type">   type: &quot;&quot;</a></h4>
+<pre><code>string value
+
+The type of the exchange. Typically:
+&quot;direct&quot;
+&quot;fanout&quot;
+&quot;topic&quot;
+&quot;headers&quot;
+</code></pre>
+<h4><a class="header" href="#durability-false" id="durability-false">   durability: false</a></h4>
+<pre><code>bool value
+
+Whether the configured queue is durable or not.
+</code></pre>
+<h4><a class="header" href="#auto_delete-false" id="auto_delete-false">   auto_delete: false</a></h4>
+<pre><code>bool value
+
+Whether the configured queue uses an auto_delete policy.
+</code></pre>
+<h4><a class="header" href="#routing_key" id="routing_key">   routing_key: &quot;&quot;</a></h4>
+<pre><code>string value
+
+The name of the routing key each notification will be sent with.
+</code></pre>
+<h4><a class="header" href="#callback-1" id="callback-1">  callback: &quot;&quot;</a></h4>
+<pre><code>a URL string 
+
+If direct is false this URL is provided in the notificaition callback sent to the broker.
+This URL should point to Clair's notification API endpoint.
+</code></pre>
+<h4><a class="header" href="#uris-" id="uris-">  uris: []</a></h4>
+<pre><code>list of URL string
+
+A list of one or more AMQP brokers to connect to in priority order.
+Clair will attempt to connect to the first one in the list and if this
+fails will try any subsuquent in specified order.
+</code></pre>
+<h4><a class="header" href="#tls-object" id="tls-object">  tls: &lt;object&gt;</a></h4>
+<pre><code>Configures TLS connection to AMQP broker
+</code></pre>
+<h4><a class="header" href="#root_ca" id="root_ca">   root_ca: &quot;&quot;</a></h4>
+<pre><code>string value
+
+The filesystem path where a root CA can be read.
+</code></pre>
+<h4><a class="header" href="#cert" id="cert">   cert: &quot;&quot;</a></h4>
+<pre><code>string value
+
+The filesystem path where a tls certificate can be read.
+</code></pre>
+<h4><a class="header" href="#key" id="key">   key: &quot;&quot;</a></h4>
+<pre><code>string value
+
+The filesystem path where a tls private key can be read.
+</code></pre>
+<h4><a class="header" href="#stomp-object" id="stomp-object"> stomp: &lt;object&gt;</a></h4>
+<pre><code>Configures the notifier for STOMP delivery.
+</code></pre>
+<h4><a class="header" href="#direct-1" id="direct-1">  direct: &quot;&quot;</a></h4>
+<pre><code>A &quot;true&quot; or &quot;false&quot; value
+
+If true the Notifier will deliver individual notifications (not a callback) to the configured STOMP broker.
+</code></pre>
+<h4><a class="header" href="#rollup-1" id="rollup-1">  rollup: &quot;&quot;</a></h4>
+<pre><code>Integer 0 or greater.
+
+If direct is true this value will inform notifier how many notifications to send in a single direct delivery. 
+For example if direct is set to true and rollup is set to 5 the notifier will deliver no more then 5 notifications in a single json payload to the broker.
+</code></pre>
+<h4><a class="header" href="#callback-2" id="callback-2">  callback: &quot;&quot;</a></h4>
+<pre><code>a URL string 
+
+If direct is false this URL is provided in the notificaition callback sent to the broker.
+This URL should point to Clair's notification API endpoint.
+</code></pre>
+<h4><a class="header" href="#destination" id="destination">  destination: &quot;&quot;</a></h4>
+<pre><code>a string value
+
+The STOMP destination to deliver notifications to. 
+</code></pre>
+<h4><a class="header" href="#uris--1" id="uris--1">  uris: []</a></h4>
+<pre><code>list of URL string
+
+A list of one or more STOMP brokers to connect to in priority order.
+Clair will attempt to connect to the first one in the list and if this
+fails will try any subsuquent in specified order.
+</code></pre>
+<h4><a class="header" href="#tls-object-1" id="tls-object-1">  tls: &lt;object&gt;</a></h4>
+<pre><code>Configures TLS connection to STOMP broker
+</code></pre>
+<h4><a class="header" href="#root_ca-1" id="root_ca-1">   root_ca: &quot;&quot;</a></h4>
+<pre><code>string value
+
+The filesystem path where a root CA can be read.
+</code></pre>
+<h4><a class="header" href="#cert-1" id="cert-1">   cert: &quot;&quot;</a></h4>
+<pre><code>string value
+
+The filesystem path where a tls certificate can be read.
+</code></pre>
+<h4><a class="header" href="#key-1" id="key-1">   key: &quot;&quot;</a></h4>
+<pre><code>string value
+
+The filesystem path where a tls private key can be read.
+</code></pre>
+<h4><a class="header" href="#user-object" id="user-object">   user: &lt;object&gt;</a></h4>
+<pre><code>Configures login information for conneting to a STOMP broker
+</code></pre>
+<h4><a class="header" href="#login" id="login">   login: &quot;&quot;</a></h4>
+<pre><code>string value
+
+The STOMP login to connect with.
+</code></pre>
+<h4><a class="header" href="#passcode" id="passcode">   passcode: &quot;&quot;</a></h4>
+<pre><code>string value
+
+The STOMP passcode to connect with.
+</code></pre>
+<h3><a class="header" href="#auth-object" id="auth-object">auth: &lt;object&gt;</a></h3>
+<pre><code>Defines ClairV4's external and intra-service JWT based authentication.
+
+If multiple auth mechanisms are defined the Keyserver is preferred.
+</code></pre>
+<h3><a class="header" href="#psk-object" id="psk-object"> psk: &lt;object&gt;</a></h3>
+<pre><code>Defines pre-shard-key authentication
+</code></pre>
+<h4><a class="header" href="#key-2" id="key-2">  key: &quot;&quot;</a></h4>
+<pre><code>a string value
+
+A shared key distributed between all parties signing and verifying JWTs.
+</code></pre>
+<h4><a class="header" href="#issuer-string" id="issuer-string">  issuer: []string</a></h4>
+<pre><code>a list of string value
+
+A list of issuers to verify. An empty list will accept any issuer in a jwt claim.
+</code></pre>
+<h3><a class="header" href="#keyserver-object" id="keyserver-object"> keyserver: &lt;object&gt;</a></h3>
+<pre><code>Defines Quay keyserver authentication
+</code></pre>
+<h4><a class="header" href="#api" id="api">  api: &quot;&quot;</a></h4>
+<pre><code>a string value
+
+The API where Quay Keyserver can be reached.
+</code></pre>
+<h4><a class="header" href="#intraservice" id="intraservice">  intraservice: &quot;&quot;</a></h4>
+<pre><code>a string value
+
+A key shared between all Clair nodes for intra-service JWT authentication.
+</code></pre>
+<h3><a class="header" href="#trace-object" id="trace-object">trace: &lt;object&gt;</a></h3>
+<pre><code>Defines distributed tracing configuration based on OpenTelemtry
+</code></pre>
+<h4><a class="header" href="#name-1" id="name-1"> name: &quot;&quot;</a></h4>
+<pre><code>a string value
+
+The name of the application traces will belong to.
+</code></pre>
+<h4><a class="header" href="#probability-00" id="probability-00"> probability: 0.0</a></h4>
+<pre><code>a float value
+
+The probabality a trace will occur
+</code></pre>
+<h4><a class="header" href="#jaeger-object" id="jaeger-object"> Jaeger: &lt;object&gt;</a></h4>
+<pre><code>Defines values for Jaeger tracing
+</code></pre>
+<h4><a class="header" href="#agent-object" id="agent-object">  agent: &lt;object&gt;</a></h4>
+<pre><code>Defines values for a Jaeger agent
+</code></pre>
+<h4><a class="header" href="#endpoint" id="endpoint">   endpoint: &quot;&quot;</a></h4>
+<pre><code>a string value
+
+An address in &lt;host&gt;:&lt;post&gt; syntax where the agent will deliver traces.
+</code></pre>
+<h4><a class="header" href="#collector-object" id="collector-object">   collector: &lt;object&gt;</a></h4>
+<pre><code>Defines values for a Jaeger collector
+</code></pre>
+<h4><a class="header" href="#endpoint-1" id="endpoint-1">   endpoint: &quot;&quot;</a></h4>
+<pre><code>a string value
+
+An address in &lt;host&gt;:&lt;post&gt; syntax where the agent will deliver traces.
+</code></pre>
+<h4><a class="header" href="#username" id="username">   username: &quot;&quot;</a></h4>
+<pre><code>a string value
+</code></pre>
+<h4><a class="header" href="#passwordd" id="passwordd">   passwordd: &quot;&quot;</a></h4>
+<pre><code>a string value
+</code></pre>
+<h4><a class="header" href="#service_name" id="service_name">  service_name: &quot;&quot;</a></h4>
+<pre><code>a string value
+</code></pre>
+<h4><a class="header" href="#tags-" id="tags-">  tags: {}</a></h4>
+<pre><code>a mapping of a string to a string
+</code></pre>
+<h4><a class="header" href="#buffer_max-0" id="buffer_max-0">  buffer_max: 0</a></h4>
+<pre><code>a integer value
+</code></pre>
+<h3><a class="header" href="#metrics-object" id="metrics-object">metrics: &lt;object&gt;</a></h3>
+<pre><code>Defines distributed tracing configuration based on OpenTelemtry
+</code></pre>
+<h4><a class="header" href="#name-2" id="name-2"> name: &quot;&quot;</a></h4>
+<pre><code>a string value
+</code></pre>
+<h3><a class="header" href="#prometheus-object" id="prometheus-object"> prometheus: &lt;object&gt;</a></h3>
+<pre><code>Defines distributed tracing configuration based on OpenTelemtry
+</code></pre>
+<h4><a class="header" href="#endpoint-2" id="endpoint-2">  endpoint: &quot;&quot;</a></h4>
+<pre><code>a string value
+</code></pre>
+<h3><a class="header" href="#dogstatsd-object" id="dogstatsd-object"> dogstatsd: &lt;object&gt;</a></h3>
+<pre><code>Defines distributed tracing configuration based on OpenTelemtry
+</code></pre>
+<h4><a class="header" href="#url" id="url">  url: &quot;&quot;</a></h4>
+<pre><code>a string value
+</code></pre>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../reference/clairctl.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../reference/indexer.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../reference/clairctl.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../reference/indexer.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
