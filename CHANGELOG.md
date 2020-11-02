@@ -2,8 +2,15 @@
 ## [Unreleased]
 
 
+<a name="v4.0.0-rc.20"></a>
+## [v4.0.0-rc.20] - 2020-11-02
+### Chore
+- [e0e1f0d](https://github.com/quay/clair/commit/e0e1f0dbcd8e7ff46b3c34066f9e894ce124e84f): bump claircore to v0.1.15
+
 <a name="v4.0.0-rc.19"></a>
 ## [v4.0.0-rc.19] - 2020-10-26
+### Chore
+- [ecdcc8e](https://github.com/quay/clair/commit/ecdcc8ea104161ecbc36edd7cbf2d6e49e1f836d): v4.0.0-rc.19 changelog bump
 ### Config
 - [157628d](https://github.com/quay/clair/commit/157628dfe1c7f1f837dc8df0e622a2d64a31c79a): add custom config marshaling
 ### Go.Mod
@@ -1273,7 +1280,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.19...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.20...HEAD
+[v4.0.0-rc.20]: https://github.com/quay/clair/compare/v4.0.0-rc.19...v4.0.0-rc.20
 [v4.0.0-rc.19]: https://github.com/quay/clair/compare/v4.0.0-rc.18...v4.0.0-rc.19
 [v4.0.0-rc.18]: https://github.com/quay/clair/compare/v4.0.0-rc.17...v4.0.0-rc.18
 [v4.0.0-rc.17]: https://github.com/quay/clair/compare/v4.0.0-rc.16...v4.0.0-rc.17
