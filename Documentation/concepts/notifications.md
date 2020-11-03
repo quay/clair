@@ -121,6 +121,8 @@ The notifier also supports delivering to an AMQP broker. With AMQP delivery you 
 
 This allows the developer of the AMQP consumer to determine the logic of notification processing.
 
+Note that AMQP delivery only supports AMQP 0.x protocol (e.g. RabbitMQ). If you need to publish notifications on AMQP 1.x message queue (e.g. ActiveMQ), you can use STOMP delivery.
+
 ### Direct Delivery
 
 If the notifier's configuration specifies `direct: true` for AMQP, notifications will be delivered directly to the configured exchange.
