@@ -58,7 +58,7 @@ type Config struct {
 	Auth     Auth     `yaml:"auth" json:"auth"`
 	Trace    Trace    `yaml:"trace" json:"trace"`
 	Metrics  Metrics  `yaml:"metrics" json:"metrics"`
-	Updaters Updaters `yaml:"updaters" json:"updaters"`
+	Updaters Updaters `yaml:"updaters,omitempty" json:"updaters,omitempty"`
 }
 
 // Updaters configures updater behavior.
@@ -78,7 +78,7 @@ type Updaters struct {
 	// "rhel"
 	// "suse"
 	// "ubuntu"
-	Sets []string `yaml:"sets" json:"sets"`
+	Sets []string `yaml:"sets,omitempty" json:"sets,omitempty"`
 	// Config holds configuration blocks for UpdaterFactories and Updaters,
 	// keyed by name.
 	//
