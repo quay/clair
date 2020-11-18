@@ -28,7 +28,9 @@
         <link rel="stylesheet" href="css/variables.css">
         <link rel="stylesheet" href="css/general.css">
         <link rel="stylesheet" href="css/chrome.css">
+        
         <link rel="stylesheet" href="css/print.css" media="print">
+        
 
         <!-- Fonts -->
         <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
@@ -130,9 +132,11 @@
                     <h1 class="menu-title">Clair Documentation</h1>
 
                     <div class="right-buttons">
+                        
                         <a href="print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
+                        
                         
                         <a href="https://github.com/quay/clair" title="Git repository" aria-label="Git repository">
                             <i id="git-repository-button" class="fa fa-github"></i>
@@ -584,6 +588,7 @@ while (page.Next != None) {
 <p><em>See the &quot;Notifier.AMQP&quot; object in our <a href="concepts/../reference/config.html">config reference</a> for complete configuration details.</em></p>
 <p>The notifier also supports delivering to an AMQP broker. With AMQP delivery you can control whether a callback is delivered to the broker or whether notifications are directly delivered to the queue.</p>
 <p>This allows the developer of the AMQP consumer to determine the logic of notification processing.</p>
+<p>Note that AMQP delivery only supports AMQP 0.x protocol (e.g. RabbitMQ). If you need to publish notifications on AMQP 1.x message queue (e.g. ActiveMQ), you can use STOMP delivery.</p>
 <h3><a class="header" href="#direct-delivery" id="direct-delivery">Direct Delivery</a></h3>
 <p>If the notifier's configuration specifies <code>direct: true</code> for AMQP, notifications will be delivered directly to the configured exchange.</p>
 <p>When <code>direct</code> is set, the <code>rollup</code> property may be set to instruct the notifier to send a max number of notifications in a single AMQP message. This allows a balance between size of the message and number of messages delivered to the queue.</p>
