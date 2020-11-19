@@ -85,6 +85,7 @@ func (d *DirectDeliverer) Deliver(ctx context.Context, _ uuid.UUID) error {
 
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
+	var currentBlock []notifier.Notification
 	for bs, be := 0, rollup; bs < len(d.n); bs, be = be, be+rollup {
 		buf.Reset()
 		// if block-end exceeds array bounds, slice block underflow.
@@ -93,8 +94,8 @@ func (d *DirectDeliverer) Deliver(ctx context.Context, _ uuid.UUID) error {
 			be = len(d.n)
 		}
 
-		d.n = d.n[bs:be]
-		err := enc.Encode(&d.n)
+		currentBlock = d.n[bs:be]
+		err := enc.Encode(&currentBlock)
 		if err != nil {
 			ch.TxRollback()
 			return &clairerror.ErrDeliveryFailed{err}
