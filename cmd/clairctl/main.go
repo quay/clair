@@ -7,10 +7,13 @@ import (
 
 	_ "github.com/quay/claircore/updater/defaults"
 	"github.com/urfave/cli/v2"
+	"gopkg.in/square/go-jose.v2/jwt"
 )
 
 var (
 	flagDebug bool
+
+	commonClaim = jwt.Claims{}
 )
 
 func main() {
@@ -29,6 +32,7 @@ func main() {
 			if c.IsSet("D") {
 				debug.SetOutput(os.Stderr)
 			}
+			commonClaim.Issuer = c.String("issuer")
 			return nil
 		},
 		Commands: []*cli.Command{
@@ -41,6 +45,20 @@ func main() {
 			&cli.BoolFlag{
 				Name:  "D",
 				Usage: "print debugging logs",
+			},
+			&cli.PathFlag{
+				Name:      "config",
+				Aliases:   []string{"c"},
+				Usage:     "clair configuration file",
+				Value:     "config.yaml",
+				TakesFile: true,
+				EnvVars:   []string{"CLAIR_CONF"},
+			},
+			&cli.StringFlag{
+				Name:    "issuer",
+				Aliases: []string{"iss"},
+				Usage:   `jwt "issuer" to use when making authenticated requests`,
+				Value:   "clairctl",
 			},
 		},
 	}

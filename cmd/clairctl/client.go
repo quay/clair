@@ -15,9 +15,10 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
-	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/claircore"
 	"github.com/tomnomnom/linkheader"
+
+	"github.com/quay/clair/v4/httptransport"
 )
 
 const (
@@ -63,14 +64,17 @@ type Client struct {
 	validator map[string]string
 }
 
-func NewClient(root string) (*Client, error) {
+func NewClient(c *http.Client, root string) (*Client, error) {
+	if c == nil {
+		c = http.DefaultClient
+	}
 	host, err := url.Parse(root)
 	if err != nil {
 		return nil, err
 	}
 	return &Client{
 		host:      host,
-		client:    &http.Client{},
+		client:    c,
 		validator: make(map[string]string),
 	}, nil
 }

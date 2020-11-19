@@ -19,5 +19,6 @@ func loadConfig(n string) (*config.Config, error) {
 	if err := yaml.NewDecoder(f).Decode(&cfg); err != nil {
 		return nil, err
 	}
+	// Can't use validate, because we're not running in a server "mode".
 	return &cfg, nil
 }

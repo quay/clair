@@ -108,7 +108,24 @@ func reportAction(c *cli.Context) error {
 		return errors.New("missing needed arguments")
 	}
 
-	cc, err := NewClient(c.String("host"))
+	// Do we have a config?
+	fi, err := os.Stat(c.Path("config"))
+	useCfg := err == nil && !fi.IsDir()
+
+	var cc *Client
+	if useCfg {
+		cfg, e := loadConfig(c.Path("config"))
+		if e != nil {
+			return e
+		}
+		hc, _, e := cfg.Client(nil, commonClaim)
+		if e != nil {
+			return e
+		}
+		cc, err = NewClient(hc, c.String("host"))
+	} else {
+		cc, err = NewClient(nil, c.String("host"))
+	}
 	if err != nil {
 		return err
 	}

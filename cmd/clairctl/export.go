@@ -11,7 +11,6 @@ import (
 	"github.com/quay/claircore/updater"
 	_ "github.com/quay/claircore/updater/defaults"
 	"github.com/urfave/cli/v2"
-	"gopkg.in/square/go-jose.v2/jwt"
 )
 
 // ExportCmd is the "export-updaters" subcommand.
@@ -26,14 +25,6 @@ var ExportCmd = &cli.Command{
 		&cli.BoolFlag{
 			Name:  "strict",
 			Usage: "Return non-zero exit when updaters report errors.",
-		},
-		&cli.PathFlag{
-			Name:      "config",
-			Aliases:   []string{"c"},
-			Usage:     "clair configuration file",
-			Value:     "config.yaml",
-			TakesFile: true,
-			EnvVars:   []string{"CLAIR_CONF"},
 		},
 	},
 }
@@ -72,7 +63,7 @@ func exportAction(c *cli.Context) error {
 		cfgs[name] = node.Decode
 	}
 
-	cl, _, err := cfg.Client(nil, jwt.Claims{})
+	cl, _, err := cfg.Client(nil, commonClaim)
 	if err != nil {
 		return err
 	}
