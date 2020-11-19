@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -46,34 +47,11 @@ func importAction(c *cli.Context) error {
 	}
 	inName := args.First()
 
-	var in io.Reader
-	u, uerr := url.Parse(inName)
-	f, ferr := os.Open(inName)
-	if f != nil {
-		defer f.Close()
+	in, err := openInput(ctx, cl, inName)
+	if err != nil {
+		return err
 	}
-	switch {
-	case uerr == nil:
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
-		if err != nil {
-			return err
-		}
-		res, err := cl.Do(req)
-		if res != nil {
-			defer res.Body.Close()
-		}
-		if err != nil {
-			return err
-		}
-		if res.StatusCode != http.StatusOK {
-			return fmt.Errorf("unexpected response: %d %s", res.StatusCode, res.Status)
-		}
-		in = res.Body
-	case ferr == nil:
-		in = f
-	default:
-		return fmt.Errorf("unable to make sense of argument %q", inName)
-	}
+	defer in.Close()
 
 	pool, err := pgxpool.Connect(ctx, cfg.Matcher.ConnString)
 	if err != nil {
@@ -85,4 +63,31 @@ func importAction(c *cli.Context) error {
 		return err
 	}
 	return nil
+}
+
+func openInput(ctx context.Context, c *http.Client, n string) (io.ReadCloser, error) {
+	f, ferr := os.Open(n)
+	if ferr == nil {
+		return f, nil
+	}
+	u, uerr := url.Parse(n)
+	if uerr == nil {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+		if err != nil {
+			return nil, err
+		}
+		res, err := c.Do(req)
+		if err != nil {
+			if res != nil {
+				res.Body.Close()
+			}
+			return nil, err
+		}
+		if res.StatusCode != http.StatusOK {
+			res.Body.Close()
+			return nil, fmt.Errorf("unexpected response: %d %s", res.StatusCode, res.Status)
+		}
+		return res.Body, nil
+	}
+	return nil, fmt.Errorf("error opening input:\n\t%v\n\t%v", ferr, uerr)
 }
