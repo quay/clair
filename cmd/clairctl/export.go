@@ -15,11 +15,10 @@ import (
 
 // ExportCmd is the "export-updaters" subcommand.
 var ExportCmd = &cli.Command{
-	Name:        "export-updaters",
-	Description: "Run configured exporters and export to a file.",
-	Action:      exportAction,
-	Usage:       "run updaters and export results",
-	ArgsUsage:   "[out]",
+	Name:      "export-updaters",
+	Action:    exportAction,
+	Usage:     "run updaters and export results",
+	ArgsUsage: "[out]",
 	Flags: []cli.Flag{
 		// Strict can be used to check that updaters still work.
 		&cli.BoolFlag{
@@ -27,6 +26,10 @@ var ExportCmd = &cli.Command{
 			Usage: "Return non-zero exit when updaters report errors.",
 		},
 	},
+	Description: `Run configured exporters and export to a file.
+
+   A configuration file is needed to run this command, see 'clairctl help'
+   for how to specify one.`, // NB this has spaces, not tabs.
 }
 
 func exportAction(c *cli.Context) error {

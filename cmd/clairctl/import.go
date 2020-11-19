@@ -15,12 +15,15 @@ import (
 
 // ImportCmd is the "import-updaters" subcommand.
 var ImportCmd = &cli.Command{
-	Name:        "import-updaters",
-	Description: "Import updates from a file.",
-	Action:      importAction,
-	Usage:       "import updates",
-	ArgsUsage:   "in",
-	Flags:       []cli.Flag{},
+	Name:      "import-updaters",
+	Action:    importAction,
+	Usage:     "import updates",
+	ArgsUsage: "input...",
+	Flags:     []cli.Flag{},
+	Description: `Import updates from files or HTTP URIs.
+
+   A configuration file is needed to run this command, see 'clairctl help'
+   for how to specify one.`, // NB this has spaces, not tabs.
 }
 
 func importAction(c *cli.Context) error {
