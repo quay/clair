@@ -53,6 +53,7 @@ notifier:
     matcher_addr: ""
     poll_interval: ""
     delivery_interval: ""
+    disable_summary: false
     webhook: null
     amqp: null
     stomp: null
@@ -265,6 +266,13 @@ A time.ParseDuration parsable string
 
 The frequency at which the notifier attempt delivery of created or previously failed
 notifications
+```
+
+#### &emsp;disable_summary: false
+```
+A boolean
+
+Controls whether notifications should be summarized to one per manifest or not.
 ```
 
 #### &emsp;webhook: \<object\>

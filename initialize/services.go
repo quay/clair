@@ -112,6 +112,7 @@ func (i *Init) Services() error {
 			Client:           c,
 			Migrations:       i.conf.Notifier.Migrations,
 			PollInterval:     pInterval,
+			DisableSummary:   i.conf.Notifier.DisableSummary,
 			Webhook:          i.conf.Notifier.Webhook,
 			AMQP:             i.conf.Notifier.AMQP,
 			STOMP:            i.conf.Notifier.STOMP,

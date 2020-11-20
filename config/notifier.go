@@ -38,6 +38,16 @@ type Notifier struct {
 	// The frequency at which the notifier attempt delivery of created or previously failed
 	// notifications
 	DeliveryInterval string `yaml:"delivery_interval" json:"delivery_interval"`
+	// DisableSummary disables summarizing vulnerabilities per-manifest.
+	//
+	// The default is to summarize any new vulnerabilities to the most severe
+	// one, in the thought that any additional processing for end-user
+	// notifications can have policies around severity and fetch a complete
+	// VulnerabilityReport if it'd like.
+	//
+	// For a machine-consumption use case, it may be easier to instead have the
+	// notifier push all the data.
+	DisableSummary bool `yaml:"disable_summary" json:"disable_summary"`
 	// Only one of the following should be provided in the configuration
 	//
 	// Configures the notifier for webhook delivery

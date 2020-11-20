@@ -77,6 +77,7 @@ type Opts struct {
 	ConnString       string
 	Matcher          matcher.Service
 	Indexer          indexer.Service
+	DisableSummary   bool
 	Client           *http.Client
 	Webhook          *webhook.Config
 	AMQP             *namqp.Config
@@ -128,6 +129,7 @@ func New(ctx context.Context, opts Opts) (*service, error) {
 			opts.Matcher,
 			store,
 		)
+		p.NoSummary = opts.DisableSummary
 		p.Process(ctx, c)
 	}
 
