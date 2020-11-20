@@ -169,7 +169,11 @@
                     <main>
                         <h1><a class="header" href="#clairctl" id="clairctl">Clairctl</a></h1>
 <p><code>clairctl</code> is a command line tool for working with Clair.
-This CLI is capable of generating manifests from most public registries (dockerhub, quay.io, Red Hat Container Catalog) and submitting them for analysis to a running Clair.</p>
+This CLI is capable of generating manifests from most public registries
+(dockerhub, quay.io, Red Hat Container Catalog) and submitting them for
+analysis to a running Clair.</p>
+<p>Note that if the Clair instance has authentication configured, the value
+provided to the <code>issuer</code> flag must be on the list accepted by the server.</p>
 <pre><code>NAME:
    clairctl - interact with a clair API
 
@@ -190,9 +194,11 @@ COMMANDS:
    help, h          Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   -D             print debugging logs (default: false)
-   --help, -h     show help (default: false)
-   --version, -v  print the version (default: false)
+   -D                           print debugging logs (default: false)
+   --config value, -c value     clair configuration file (default: &quot;config.yaml&quot;) [$CLAIR_CONF]
+   --issuer value, --iss value  jwt &quot;issuer&quot; to use when making authenticated requests (default: &quot;clairctl&quot;)
+   --help, -h                   show help (default: false)
+   --version, -v                print the version (default: false)
 </code></pre>
 <pre><code>NAME:
    clairctl manifest - print a clair manifest for the named container
@@ -225,21 +231,23 @@ USAGE:
 DESCRIPTION:
    Run configured exporters and export to a file.
 
+   A configuration file is needed to run this command, see 'clairctl help'
+   for how to specify one.
+
 OPTIONS:
-   --strict                  Return non-zero exit when updaters report errors. (default: false)
-   --config value, -c value  clair configuration file (default: &quot;config.yaml&quot;) [$CLAIR_CONF]
+   --strict  Return non-zero exit when updaters report errors. (default: false)
 </code></pre>
 <pre><code>NAME:
    clairctl import-updaters - import updates
 
 USAGE:
-   clairctl import-updaters [command options] in
+   clairctl import-updaters input...
 
 DESCRIPTION:
-   Import updates from a file.
+   Import updates from files or HTTP URIs.
 
-OPTIONS:
-   --config value, -c value  clair configuration file (default: &quot;config.yaml&quot;) [$CLAIR_CONF]
+   A configuration file is needed to run this command, see 'clairctl help'
+   for how to specify one.
 </code></pre>
 
                     </main>
