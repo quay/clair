@@ -1,7 +1,12 @@
 # Clairctl
 
 `clairctl` is a command line tool for working with Clair.
-This CLI is capable of generating manifests from most public registries (dockerhub, quay.io, Red Hat Container Catalog) and submitting them for analysis to a running Clair.
+This CLI is capable of generating manifests from most public registries
+(dockerhub, quay.io, Red Hat Container Catalog) and submitting them for
+analysis to a running Clair.
+
+Note that if the Clair instance has authentication configured, the value
+provided to the `issuer` flag must be on the list accepted by the server.
 
 ```
 NAME:
@@ -24,9 +29,11 @@ COMMANDS:
    help, h          Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
-   -D             print debugging logs (default: false)
-   --help, -h     show help (default: false)
-   --version, -v  print the version (default: false)
+   -D                           print debugging logs (default: false)
+   --config value, -c value     clair configuration file (default: "config.yaml") [$CLAIR_CONF]
+   --issuer value, --iss value  jwt "issuer" to use when making authenticated requests (default: "clairctl")
+   --help, -h                   show help (default: false)
+   --version, -v                print the version (default: false)
 ```
 
 ```
@@ -65,9 +72,11 @@ USAGE:
 DESCRIPTION:
    Run configured exporters and export to a file.
 
+   A configuration file is needed to run this command, see 'clairctl help'
+   for how to specify one.
+
 OPTIONS:
-   --strict                  Return non-zero exit when updaters report errors. (default: false)
-   --config value, -c value  clair configuration file (default: "config.yaml") [$CLAIR_CONF]
+   --strict  Return non-zero exit when updaters report errors. (default: false)
 ```
 
 ```
@@ -75,11 +84,11 @@ NAME:
    clairctl import-updaters - import updates
 
 USAGE:
-   clairctl import-updaters [command options] in
+   clairctl import-updaters input...
 
 DESCRIPTION:
-   Import updates from a file.
+   Import updates from files or HTTP URIs.
 
-OPTIONS:
-   --config value, -c value  clair configuration file (default: "config.yaml") [$CLAIR_CONF]
+   A configuration file is needed to run this command, see 'clairctl help'
+   for how to specify one.
 ```
