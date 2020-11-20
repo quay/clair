@@ -15,7 +15,7 @@ type VulnSummary struct {
 	Links          string                  `json:"links"`
 }
 
-func (vs *VulnSummary) FromVulnerability(v claircore.Vulnerability) {
+func (vs *VulnSummary) FromVulnerability(v *claircore.Vulnerability) {
 	*vs = VulnSummary{
 		Name:           v.Name,
 		Description:    v.Description,

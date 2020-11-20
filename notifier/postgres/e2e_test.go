@@ -8,10 +8,11 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
-	"github.com/quay/clair/v4/notifier"
 	"github.com/quay/claircore"
 	cctest "github.com/quay/claircore/test"
 	"github.com/quay/claircore/test/integration"
+
+	"github.com/quay/clair/v4/notifier"
 )
 
 const (
@@ -27,7 +28,7 @@ func TestE2E(t *testing.T) {
 	notificationID := uuid.New()
 	// this function puts a single noification undertest
 	vuln, vsummary := cctest.GenUniqueVulnerabilities(1, updater)[0], notifier.VulnSummary{}
-	vsummary.FromVulnerability(*vuln)
+	vsummary.FromVulnerability(vuln)
 	notifications := []notifier.Notification{
 		{
 			Manifest:      digest,

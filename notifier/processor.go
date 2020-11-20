@@ -6,13 +6,14 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	clairerror "github.com/quay/clair/v4/clair-error"
-	"github.com/quay/clair/v4/indexer"
-	"github.com/quay/clair/v4/matcher"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/claircore/pkg/distlock"
 	"github.com/rs/zerolog"
+
+	clairerror "github.com/quay/clair/v4/clair-error"
+	"github.com/quay/clair/v4/indexer"
+	"github.com/quay/clair/v4/matcher"
 )
 
 // Processor listen for new UOIDs, creates notifications, and persists
@@ -21,6 +22,12 @@ import (
 // Processor(s) create atomic boundaries, no two Processor(s) will be creating
 // notifications for the same UOID at once.
 type Processor struct {
+	// NoSummary controls whether per-manifest vulnerability summarization
+	// should happen.
+	NoSummary bool
+	// NoSummary is a little awkward to use, but reversing the boolean this way
+	// makes the defaults line up better.
+
 	// distributed lock used for mutual exclusion
 	distLock distlock.Locker
 	// a handle to an indexer service
@@ -146,21 +153,26 @@ func (p *Processor) create(ctx context.Context, e Event, prev uuid.UUID) error {
 	notifications := []Notification{}
 	create := func(r Reason, affected claircore.AffectedManifests) error {
 		for manifest, vulns := range affected.VulnerableManifests {
-			// summarize most severe vuln affecting manifest
-			// the vulns array will be sorted by most severe
-			vuln := affected.Vulnerabilities[vulns[0]]
-
 			digest, err := claircore.ParseDigest(manifest)
 			if err != nil {
 				return err
 			}
-			n := Notification{
-				Manifest: digest,
-				Reason:   r,
-			}
-			n.Vulnerability.FromVulnerability(*vuln)
+			// The vulns slice is sorted most severe to lease severe.
+			for i := range vulns {
+				vuln := affected.Vulnerabilities[vulns[i]]
 
-			notifications = append(notifications, n)
+				n := Notification{
+					Manifest: digest,
+					Reason:   r,
+				}
+				n.Vulnerability.FromVulnerability(vuln)
+
+				notifications = append(notifications, n)
+
+				if !p.NoSummary {
+					break
+				}
+			}
 		}
 		return nil
 	}
