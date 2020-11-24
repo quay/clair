@@ -25,7 +25,7 @@ services:
       start_period: 10s
 
   pgadmin:
-    container_name: pgadmin
+    container_name: clair-pgadmin
     image: dpage/pgadmin4:latest
     environment:
       PGADMIN_DEFAULT_EMAIL: clair@clair.com
