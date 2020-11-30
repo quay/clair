@@ -2,9 +2,28 @@
 ## [Unreleased]
 
 
+<a name="v4.0.0-rc.21"></a>
+## [v4.0.0-rc.21] - 2020-11-30
+### Chore
+- [5648439](https://github.com/quay/clair/commit/5648439518cbf10b44fc7fac8a3710c044487bb8): bump cc to v0.0.17
+### Clairctl
+- [835af27](https://github.com/quay/clair/commit/835af272fad49342f51adb4633ff639de3cc14a1): fix and codify import arguments
+- [b9ef107](https://github.com/quay/clair/commit/b9ef1073ca48ed5ed7caaa3e0fbad03a7d83592c): update import and export online help
+- [9883e80](https://github.com/quay/clair/commit/9883e80f331190e60de711b0705e9b37017fc5b1): unifiy config, client handling
+### Config
+- [bb3cd66](https://github.com/quay/clair/commit/bb3cd669f66345aaa0fc5df6f502f34922cc069e): add 'omitempty' to 'updaters' config struct for correct marshalling
+### Direct-Delivery
+- [ea564d4](https://github.com/quay/clair/commit/ea564d489f2cb8b43c6ea1c90eb40bbcf39ebc63): Fix slices in direct notifier
+### Docs
+- [425fc38](https://github.com/quay/clair/commit/425fc38af9837527421ebf550259f9d7e8371039): add clairctl's new powers to the reference
+- [f4169c4](https://github.com/quay/clair/commit/f4169c43d283ede2678ab620db5fa4ee9d6b2c37): Add information about AMQP delivery compatibility
+### Notifier
+- [77ca653](https://github.com/quay/clair/commit/77ca6535649c4860b17d345505d44c0511d12bb0): log failed delivery reason
+
 <a name="v4.0.0-rc.20"></a>
 ## [v4.0.0-rc.20] - 2020-11-02
 ### Chore
+- [ba70ca3](https://github.com/quay/clair/commit/ba70ca3eda70c4654d0f44348ec89231dfb40f44): v4.0.0-rc.20 changelog bump
 - [e0e1f0d](https://github.com/quay/clair/commit/e0e1f0dbcd8e7ff46b3c34066f9e894ce124e84f): bump claircore to v0.1.15
 
 <a name="v4.0.0-rc.19"></a>
@@ -1280,7 +1299,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.20...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.21...HEAD
+[v4.0.0-rc.21]: https://github.com/quay/clair/compare/v4.0.0-rc.20...v4.0.0-rc.21
 [v4.0.0-rc.20]: https://github.com/quay/clair/compare/v4.0.0-rc.19...v4.0.0-rc.20
 [v4.0.0-rc.19]: https://github.com/quay/clair/compare/v4.0.0-rc.18...v4.0.0-rc.19
 [v4.0.0-rc.18]: https://github.com/quay/clair/compare/v4.0.0-rc.17...v4.0.0-rc.18
