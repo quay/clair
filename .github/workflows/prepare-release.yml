@@ -7,7 +7,7 @@ on:
       branch:
         description: 'the branch to prepare the release against'
         required: true
-        deault: 'main'
+        default: 'main'
       tag:
         description: 'the tag to be released'
         required: true
@@ -30,7 +30,7 @@ jobs:
           echo "creating change log for tag: ${{ github.event.inputs.tag }}"
           /tmp/git-chglog --tag-filter-pattern "v4" --next-tag "${{ github.event.inputs.tag }}" -o CHANGELOG.md v4.0.0-alpha.2..
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3.1.2
+        uses: peter-evans/create-pull-request@v3.5.1
         with:
           title: "${{ github.event.inputs.tag }} Changelog Bump"
           body: "This is an automated changelog commit."
