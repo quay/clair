@@ -212,6 +212,7 @@ notifier:
     matcher_addr: &quot;&quot;
     poll_interval: &quot;&quot;
     delivery_interval: &quot;&quot;
+    disable_summary: false
     webhook: null
     amqp: null
     stomp: null
@@ -379,6 +380,11 @@ The frequency at which the notifier will query at Matcher for Update Operations.
 
 The frequency at which the notifier attempt delivery of created or previously failed
 notifications
+</code></pre>
+<h4><a class="header" href="#disable_summary-false" id="disable_summary-false"> disable_summary: false</a></h4>
+<pre><code>A boolean
+
+Controls whether notifications should be summarized to one per manifest or not.
 </code></pre>
 <h4><a class="header" href="#webhook-object" id="webhook-object"> webhook: &lt;object&gt;</a></h4>
 <pre><code>Configures the notifier for webhook delivery
