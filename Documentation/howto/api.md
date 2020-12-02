@@ -1,6 +1,6 @@
 # API Definition
 
-Clair provides its API definition via an OpenAPI specification. You can view our OpenAPI spec [here](https://raw.githubusercontent.com/quay/clair/development-4.0/openapi.yaml)
+Clair provides its API definition via an OpenAPI specification. You can view our OpenAPI spec [here](https://raw.githubusercontent.com/quay/clair/main/openapi.yaml)
 
 The OpenAPI spec can be used in a variety of ways.
 * Generating http clients for your application
@@ -10,4 +10,4 @@ The OpenAPI spec can be used in a variety of ways.
 
 See [Testing Clair](./testing.md) to learn how the local dev tooling starts a local swagger editor. This is handy for making changes to the spec in real time.
 
-See [API Reference](./reference/api.md) for a markdown rendered API reference.
+See [API Reference](../reference/api.md) for a markdown rendered API reference.
