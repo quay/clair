@@ -522,8 +522,8 @@ github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40T
 github.com/quasilyte/go-consistent v0.0.0-20190521200055-c6f3937de18c/go.mod h1:5STLWrekHfjyYwxBRVRXNOSewLJ3PWfDJd1VyTS21fI=
 github.com/quay/alas v1.0.1 h1:MuFpGGXyZlDD7+F/hrnMZmzhS8P2bjRzX9DyGmyLA+0=
 github.com/quay/alas v1.0.1/go.mod h1:pseepSrG9pwry1joG7RO/RNRFJaWqiqx9qeoomeYwEk=
-github.com/quay/claircore v0.1.17 h1:J42vKce6yWdz3LmjOCZsdcnh8aKKwLqHYtwEPwpTBiI=
-github.com/quay/claircore v0.1.17/go.mod h1:Q40RR0jWuYSg5qLglCX7WT5Q9yzmvnr0JkgBNRxPmoo=
+github.com/quay/claircore v0.1.18 h1:pZGNVFpetCEzfuZC55t5UsQW6QIh/V1oPZrOOaYIetc=
+github.com/quay/claircore v0.1.18/go.mod h1:Q40RR0jWuYSg5qLglCX7WT5Q9yzmvnr0JkgBNRxPmoo=
 github.com/quay/goval-parser v0.8.6 h1:h1Xg3SZR/6I7UVa1LcsQZvQft/q7sJbosmFrjzSmdqE=
 github.com/quay/goval-parser v0.8.6/go.mod h1:Y0NTNfPYOC7yxsYKzJOrscTWUPq1+QbtHw4XpPXWPMc=
 github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319 h1:ukjThsA2ou7AmovpwtMVkNQSuoN/v5U16+JomTz3c7o=
