@@ -66,7 +66,7 @@ jobs:
   tests:
     name: Tests
     runs-on: ubuntu-latest
-    container: docker.io/library/golang:${{ matrix.go }}-alpine
+    container: quay.io/app-sre/golang:${{ matrix.go }}-alpine
     env:
       POSTGRES_CONNECTION_STRING: "host=clair-db port=5432 user=clair dbname=clair sslmode=disable"
       RABBITMQ_CONNECTION_STRING: "amqp://guest:guest@clair-rabbitmq:5672/"
