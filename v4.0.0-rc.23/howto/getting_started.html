@@ -1,0 +1,315 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Getting Started With ClairV4 - Clair Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="Documentation for Clair.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "coal" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../whatis.html"><strong aria-hidden="true">1.</strong> What is ClairV4</a></li><li class="chapter-item expanded "><a href="../howto.html"><strong aria-hidden="true">2.</strong> How Tos</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../howto/getting_started.html" class="active"><strong aria-hidden="true">2.1.</strong> Getting Started With ClairV4</a></li><li class="chapter-item expanded "><a href="../howto/deployment.html"><strong aria-hidden="true">2.2.</strong> Deployment Models</a></li><li class="chapter-item expanded "><a href="../howto/api.html"><strong aria-hidden="true">2.3.</strong> API Definition</a></li><li class="chapter-item expanded "><a href="../howto/testing.html"><strong aria-hidden="true">2.4.</strong> Testing ClairV4</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts.html"><strong aria-hidden="true">3.</strong> Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../concepts/api_internal.html"><strong aria-hidden="true">3.1.</strong> Internal API</a></li><li class="chapter-item expanded "><a href="../concepts/authentication.html"><strong aria-hidden="true">3.2.</strong> Authentication</a></li><li class="chapter-item expanded "><a href="../concepts/notifications.html"><strong aria-hidden="true">3.3.</strong> Notifications</a></li><li class="chapter-item expanded "><a href="../concepts/updatersandairgap.html"><strong aria-hidden="true">3.4.</strong> Updaters and Airgap</a></li></ol></li><li class="chapter-item expanded "><a href="../contribution.html"><strong aria-hidden="true">4.</strong> Contribution</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../contribution/releases.html"><strong aria-hidden="true">4.1.</strong> Releases</a></li><li class="chapter-item expanded "><a href="../contribution/commit_style.html"><strong aria-hidden="true">4.2.</strong> Commit Style</a></li></ol></li><li class="chapter-item expanded "><a href="../reference.html"><strong aria-hidden="true">5.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../reference/api.html"><strong aria-hidden="true">5.1.</strong> Api</a></li><li class="chapter-item expanded "><a href="../reference/clairctl.html"><strong aria-hidden="true">5.2.</strong> Clairctl</a></li><li class="chapter-item expanded "><a href="../reference/config.html"><strong aria-hidden="true">5.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="../reference/indexer.html"><strong aria-hidden="true">5.4.</strong> Indexer</a></li><li class="chapter-item expanded "><a href="../reference/matcher.html"><strong aria-hidden="true">5.5.</strong> Matcher</a></li><li class="chapter-item expanded "><a href="../reference/notifier.html"><strong aria-hidden="true">5.6.</strong> Notifier</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Clair Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/quay/clair" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1><a class="header" href="#getting-started-with-clair" id="getting-started-with-clair">Getting Started With Clair</a></h1>
+<h2><a class="header" href="#releases" id="releases">Releases</a></h2>
+<p>All of the source code needed to build clair is packaged as an archive and
+attached to the release. Releases are tracked at the <a href="https://github.com/quay/clair/releases">github releases</a>.</p>
+<p>The release artifacts also include the clairctl command line tool.</p>
+<h2><a class="header" href="#official-containers" id="official-containers">Official Containers</a></h2>
+<p>Clair is officially packaged and released as a container at
+<a href="https://quay.io/repository/projectquay/clair">quay.io/projectquay/clair</a>. The <code>latest</code> tag tracks the git development branch,
+and version tags are built from the corresponding release.</p>
+<h2><a class="header" href="#running-clair" id="running-clair">Running Clair</a></h2>
+<p>The easiest way to get Clair up and running for test purposes is to use our <a href="./testing.html">local dev environment</a></p>
+<p>If you're the hands on type who wants to get into the details however, continue reading.</p>
+<h2><a class="header" href="#modes" id="modes">Modes</a></h2>
+<p>Clair can run in several modes. <a href="../reference/indexer.html">Indexer</a>, <a href="../reference/matcher.html">matcher</a>, <a href="../reference/notifier.html">notifier</a> or combo mode. In combo mode, everything runs in a single OS process. </p>
+<p>If you are just starting with Clair you will most likely want to start with combo mode and venture out to a distributed deployment once acquainted. </p>
+<p>This how-to will demonstrate combo mode and introduce some further reading on a distributed deployment.</p>
+<h2><a class="header" href="#postgres" id="postgres">Postgres</a></h2>
+<p>Clair uses PostgreSQL for its data persistence. Migrations are supported so you should only need to point Clair to a fresh database and have it do the setup for you.</p>
+<p>We will assume you have setup a postgres database and it's reachable with the following connection string:
+<code>host=clair-db port=5432 user=clair dbname=clair sslmode=disable</code>. Adjust for your environment accordingly. </p>
+<h2><a class="header" href="#starting-clair-in-combo-mode" id="starting-clair-in-combo-mode">Starting Clair In Combo Mode</a></h2>
+<p>At this point, you should either have built Clair from source or have pulled the container. In either case, we will assume that the <code>clair-db</code> hostname will resolve to your postgres database. </p>
+<p><em>You may need to configure <a href="https://docs.docker.com/network/">docker</a> or <a href="https://podman.io/getting-started/network.html">podman</a> networking if you are utilizing containers. This is out of scope for this how-to.</em></p>
+<p>A basic config for combo mode can be found <a href="https://github.com/quay/clair/blob/main/config.yaml.sample">here</a>. Make sure to edit this config with your database settings and set &quot;migrations&quot; to <code>true</code> for all mode stanzas. In this basic combo mode, all &quot;connstring&quot; fields should point to the same database and any *_addr fields are simply ignored. For more details see the <a href="../reference/config.html">config reference</a> and <a href="./deployment.html">deployment models</a></p>
+<p>Clair has 3 requirements to start:</p>
+<ul>
+<li>The <code>mode</code> flag or <code>CLAIR_MODE</code> environment variable specifying what mode this instance will run in.</li>
+<li>The <code>conf</code> flag or <code>CLAIR_CONF</code> environment variable specifying where Clair can find its configuration.</li>
+<li>A yaml document providing Clair's configuration.</li>
+</ul>
+<p>If you are running a container, you can <a href="https://docs.docker.com/storage/volumes/">mount</a> a Clair config and set the <code>CLAIR_CONF</code> environment variable to the corresponding path.</p>
+<pre><code>CLAIR_MODE=combo
+CLAIR_CONF=/path/to/mounted/config.yaml
+</code></pre>
+<p>If you are running a Clair binary directly, its likely easiest to use the command line.</p>
+<pre><code>clair -conf &quot;path/to/config.yaml&quot; -mode &quot;combo&quot;
+</code></pre>
+<h2><a class="header" href="#submitting-a-manifest" id="submitting-a-manifest">Submitting A Manifest</a></h2>
+<p>The simplest way to submit a manifest to your running Clair is utilizing <a href="../reference/clairctl.html">clairctl</a>. This is a CLI tool capable of grabbing image manifests from public repositories and and submitting them for analysis. 
+The command will be in the Clair container, but can also be installed locally by running the following command:</p>
+<pre><code>go install github.com/quay/clair/v4/cmd/clairctl
+</code></pre>
+<p>You can submit a manifest to ClairV4 via the following command.</p>
+<pre><code class="language-shell">$ clairctl --host ${net_address_of_clair} report ${image_tag}
+</code></pre>
+<p>By default, <code>clairctl</code> will look for Clair at <code>localhost:6060</code>.</p>
+<p>If everything is configured correctly, you should see some output like the following informing you of vulnerabilities affecting the supplied image.</p>
+<pre><code class="language-shell">$ clairctl report ubuntu:focal
+ubuntu:focal found bash        5.0-6ubuntu1.1         CVE-2019-18276
+ubuntu:focal found libpcre3    2:8.39-12build1        CVE-2017-11164
+ubuntu:focal found libpcre3    2:8.39-12build1        CVE-2019-20838
+ubuntu:focal found libpcre3    2:8.39-12build1        CVE-2020-14155
+ubuntu:focal found libsystemd0 245.4-4ubuntu3.2       CVE-2018-20839
+ubuntu:focal found libsystemd0 245.4-4ubuntu3.2       CVE-2020-13776
+ubuntu:focal found libtasn1-6  4.16.0-2               CVE-2018-1000654
+ubuntu:focal found libudev1    245.4-4ubuntu3.2       CVE-2018-20839
+ubuntu:focal found libudev1    245.4-4ubuntu3.2       CVE-2020-13776
+ubuntu:focal found login       1:4.8.1-1ubuntu5.20.04 CVE-2013-4235
+ubuntu:focal found login       1:4.8.1-1ubuntu5.20.04 CVE-2018-7169
+ubuntu:focal found coreutils   8.30-3ubuntu2          CVE-2016-2781
+ubuntu:focal found passwd      1:4.8.1-1ubuntu5.20.04 CVE-2013-4235
+ubuntu:focal found passwd      1:4.8.1-1ubuntu5.20.04 CVE-2018-7169
+ubuntu:focal found perl-base   5.30.0-9build1         CVE-2020-10543
+ubuntu:focal found perl-base   5.30.0-9build1         CVE-2020-10878
+ubuntu:focal found perl-base   5.30.0-9build1         CVE-2020-12723
+ubuntu:focal found tar         1.30+dfsg-7            CVE-2019-9923
+ubuntu:focal found dpkg        1.19.7ubuntu3          CVE-2017-8283
+ubuntu:focal found gpgv        2.2.19-3ubuntu2        CVE-2019-13050
+ubuntu:focal found libc-bin    2.31-0ubuntu9          CVE-2016-10228
+ubuntu:focal found libc-bin    2.31-0ubuntu9          CVE-2020-6096
+ubuntu:focal found libc6       2.31-0ubuntu9          CVE-2016-10228
+ubuntu:focal found libc6       2.31-0ubuntu9          CVE-2020-6096
+ubuntu:focal found libgcrypt20 1.8.5-5ubuntu1         CVE-2019-12904
+</code></pre>
+<h2><a class="header" href="#whats-next" id="whats-next">What's Next</a></h2>
+<p>Now that you see the basic usage of Clair, you can checkout our <a href="./deployment.html">deployment models</a> to learn different ways of deploying.</p>
+<p>You may also be curious about how <code>clairctl</code> did that work. Check out our <a href="./api.html">API definition</a> to understand how an application interacts with Clair.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../howto.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../howto/deployment.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../howto.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../howto/deployment.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
