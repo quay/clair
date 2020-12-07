@@ -2,9 +2,17 @@
 ## [Unreleased]
 
 
+<a name="v4.0.0-rc.23"></a>
+## [v4.0.0-rc.23] - 2020-12-07
+### Chore
+- [289208c](https://github.com/quay/clair/commit/289208cfab02b587366434372e5295150306abf2): bump cc to v0.1.19
+### Cicd
+- [30444f3](https://github.com/quay/clair/commit/30444f3b782044373ab174ffa2628aaf9495d832): use golang image from quay.io
+
 <a name="v4.0.0-rc.22"></a>
 ## [v4.0.0-rc.22] - 2020-12-02
 ### Chore
+- [8ef8509](https://github.com/quay/clair/commit/8ef8509753387e1dcdf709e71fee16cbdd7146f9): v4.0.0-rc.22 changelog bump
 - [bbe1cd8](https://github.com/quay/clair/commit/bbe1cd8f19f62a0becbd110d27cb20b6bd699f36): claircore v0.1.18 bump
 ### Documentation
 - [d962bef](https://github.com/quay/clair/commit/d962bef8140516c739e322a7406c0068e2164d45): update links in howto/api
@@ -1316,7 +1324,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.22...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.23...HEAD
+[v4.0.0-rc.23]: https://github.com/quay/clair/compare/v4.0.0-rc.22...v4.0.0-rc.23
 [v4.0.0-rc.22]: https://github.com/quay/clair/compare/v4.0.0-rc.21...v4.0.0-rc.22
 [v4.0.0-rc.21]: https://github.com/quay/clair/compare/v4.0.0-rc.20...v4.0.0-rc.21
 [v4.0.0-rc.20]: https://github.com/quay/clair/compare/v4.0.0-rc.19...v4.0.0-rc.20
