@@ -2,9 +2,17 @@
 ## [Unreleased]
 
 
+<a name="v4.0.0"></a>
+## [v4.0.0] - 2020-12-14
+### Reverts
+- Dockerfile: Get build image from Quay instead of DockerHub
+- cicd: use golang image from quay.io
+
+
 <a name="v4.0.0-rc.24"></a>
 ## [v4.0.0-rc.24] - 2020-12-11
 ### Chore
+- [d3b3497](https://github.com/quay/clair/commit/d3b3497d997020a879eca1190150ce73642d90b9): v4.0.0-rc.24 changelog bump
 - [0515f09](https://github.com/quay/clair/commit/0515f09a2fbc4f5a29fda476f6be1f0e77f5d8fa): bump cc to v0.1.20
 
 <a name="v4.0.0-rc.23"></a>
@@ -1330,7 +1338,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.0-rc.24...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.0.0...HEAD
+[v4.0.0]: https://github.com/quay/clair/compare/v4.0.0-rc.24...v4.0.0
 [v4.0.0-rc.24]: https://github.com/quay/clair/compare/v4.0.0-rc.23...v4.0.0-rc.24
 [v4.0.0-rc.23]: https://github.com/quay/clair/compare/v4.0.0-rc.22...v4.0.0-rc.23
 [v4.0.0-rc.22]: https://github.com/quay/clair/compare/v4.0.0-rc.21...v4.0.0-rc.22
