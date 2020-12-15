@@ -1,0 +1,1825 @@
+<!DOCTYPE HTML>
+<html lang="en" class="sidebar-visible no-js light">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Api - Clair Documentation</title>
+        
+        
+
+
+        <!-- Custom HTML head -->
+        
+
+
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="Documentation for Clair.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff" />
+
+        
+        <link rel="icon" href="../favicon.svg">
+        
+        
+        <link rel="shortcut icon" href="../favicon.png">
+        
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        
+        <link rel="stylesheet" href="../css/print.css" media="print">
+        
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        
+        <link rel="stylesheet" href="../fonts/fonts.css">
+        
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+        
+
+        
+    </head>
+    <body>
+        <!-- Provide site root to javascript -->
+        <script type="text/javascript">
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "coal" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script type="text/javascript">
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script type="text/javascript">
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('no-js')
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add('js');
+        </script>
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script type="text/javascript">
+            var html = document.querySelector('html');
+            var sidebar = 'hidden';
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            }
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../whatis.html"><strong aria-hidden="true">1.</strong> What is ClairV4</a></li><li class="chapter-item expanded "><a href="../howto.html"><strong aria-hidden="true">2.</strong> How Tos</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../howto/getting_started.html"><strong aria-hidden="true">2.1.</strong> Getting Started With ClairV4</a></li><li class="chapter-item expanded "><a href="../howto/deployment.html"><strong aria-hidden="true">2.2.</strong> Deployment Models</a></li><li class="chapter-item expanded "><a href="../howto/api.html"><strong aria-hidden="true">2.3.</strong> API Definition</a></li><li class="chapter-item expanded "><a href="../howto/testing.html"><strong aria-hidden="true">2.4.</strong> Testing ClairV4</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts.html"><strong aria-hidden="true">3.</strong> Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../concepts/api_internal.html"><strong aria-hidden="true">3.1.</strong> Internal API</a></li><li class="chapter-item expanded "><a href="../concepts/authentication.html"><strong aria-hidden="true">3.2.</strong> Authentication</a></li><li class="chapter-item expanded "><a href="../concepts/notifications.html"><strong aria-hidden="true">3.3.</strong> Notifications</a></li><li class="chapter-item expanded "><a href="../concepts/updatersandairgap.html"><strong aria-hidden="true">3.4.</strong> Updaters and Airgap</a></li></ol></li><li class="chapter-item expanded "><a href="../contribution.html"><strong aria-hidden="true">4.</strong> Contribution</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../contribution/releases.html"><strong aria-hidden="true">4.1.</strong> Releases</a></li><li class="chapter-item expanded "><a href="../contribution/commit_style.html"><strong aria-hidden="true">4.2.</strong> Commit Style</a></li></ol></li><li class="chapter-item expanded "><a href="../reference.html"><strong aria-hidden="true">5.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../reference/api.html" class="active"><strong aria-hidden="true">5.1.</strong> Api</a></li><li class="chapter-item expanded "><a href="../reference/clairctl.html"><strong aria-hidden="true">5.2.</strong> Clairctl</a></li><li class="chapter-item expanded "><a href="../reference/config.html"><strong aria-hidden="true">5.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="../reference/indexer.html"><strong aria-hidden="true">5.4.</strong> Indexer</a></li><li class="chapter-item expanded "><a href="../reference/matcher.html"><strong aria-hidden="true">5.5.</strong> Matcher</a></li><li class="chapter-item expanded "><a href="../reference/notifier.html"><strong aria-hidden="true">5.6.</strong> Notifier</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky bordered">
+                    <div class="left-buttons">
+                        <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </button>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light (default)</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                        
+                    </div>
+
+                    <h1 class="menu-title">Clair Documentation</h1>
+
+                    <div class="right-buttons">
+                        
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        
+                        
+                        <a href="https://github.com/quay/clair" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+                        
+                    </div>
+                </div>
+
+                
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+                
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script type="text/javascript">
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <hr />
+<p>title: ClairV4 v0.1
+language_tabs:</p>
+<ul>
+<li>python: Python</li>
+<li>go: Golang</li>
+<li>javascript: Javascript
+language_clients:</li>
+<li>python: &quot;&quot;</li>
+<li>go: &quot;&quot;</li>
+<li>javascript: &quot;&quot;
+toc_footers: []
+includes: []
+search: false
+highlight_theme: darkula
+headingLevel: 2</li>
+</ul>
+<hr />
+<!-- Generator: Widdershins v4.0.1 -->
+<h1 id="clairv4">ClairV4 v0.1</h1>
+<blockquote>
+<p>Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.</p>
+</blockquote>
+<p>ClairV4 is a set of cooperating microservices which scan, index, and
+match your container's content with known vulnerabilities.</p>
+<p>Email: <a href="mailto:quay-devel@redhat.com">Clair Team</a> Web: <a href="http://github.com/quay/clair">Clair Team</a> 
+License: <a href="http://www.apache.org/licenses/">Apache License 2.0</a></p>
+<h1 id="clairv4-notifier">Notifier</h1>
+<h2><a class="header" href="#deletenotification" id="deletenotification">DeleteNotification</a></h2>
+<p><a id="opIdDeleteNotification"></a></p>
+<blockquote>
+<p>Code samples</p>
+</blockquote>
+<pre><code class="language-python">import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.delete('/notifier/api/v1/notification/{notification_id}', headers = headers)
+
+print(r.json())
+
+</code></pre>
+<pre><code class="language-go">package main
+
+import (
+       &quot;bytes&quot;
+       &quot;net/http&quot;
+)
+
+func main() {
+
+    headers := map[string][]string{
+        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest(&quot;DELETE&quot;, &quot;/notifier/api/v1/notification/{notification_id}&quot;, data)
+    req.Header = headers
+
+    client := &amp;http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+</code></pre>
+<pre><code class="language-javascript">
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('/notifier/api/v1/notification/{notification_id}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+</code></pre>
+<p><code>DELETE notifier/api/v1/notification/{notification_id}</code></p>
+<p>Issues a delete of the provided notification id and all associated
+notifications. After this delete clients will no longer be able to
+retrieve notifications.</p>
+<h3 id="deletenotification-parameters">Parameters</h3>
+<table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
+<tr><td>notification_id</td><td>path</td><td>string</td><td>false</td><td>A notification ID returned by a callback</td></tr>
+</tbody></table>
+<blockquote>
+<p>Example responses</p>
+</blockquote>
+<blockquote>
+<p>400 Response</p>
+</blockquote>
+<pre><code class="language-json">{
+  &quot;code&quot;: &quot;string&quot;,
+  &quot;message&quot;: &quot;string&quot;
+}
+</code></pre>
+<h3 id="deletenotification-responses">Responses</h3>
+<table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
+<tr><td>200</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td><td>OK</td><td>None</td></tr>
+<tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="#schemaerror">Error</a></td></tr>
+<tr><td>405</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.5">Method Not Allowed</a></td><td>Method Not Allowed</td><td><a href="#schemaerror">Error</a></td></tr>
+<tr><td>500</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.6.1">Internal Server Error</a></td><td>Internal Server Error</td><td><a href="#schemaerror">Error</a></td></tr>
+</tbody></table>
+<aside class="success">
+This operation does not require authentication
+</aside>
+<h2><a class="header" href="#retrieve-a-paginated-result-of-notifications-for-the-provided-id" id="retrieve-a-paginated-result-of-notifications-for-the-provided-id">Retrieve a paginated result of notifications for the provided id.</a></h2>
+<p><a id="opIdGetNotification"></a></p>
+<blockquote>
+<p>Code samples</p>
+</blockquote>
+<pre><code class="language-python">import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('/notifier/api/v1/notification/{notification_id}', headers = headers)
+
+print(r.json())
+
+</code></pre>
+<pre><code class="language-go">package main
+
+import (
+       &quot;bytes&quot;
+       &quot;net/http&quot;
+)
+
+func main() {
+
+    headers := map[string][]string{
+        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest(&quot;GET&quot;, &quot;/notifier/api/v1/notification/{notification_id}&quot;, data)
+    req.Header = headers
+
+    client := &amp;http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+</code></pre>
+<pre><code class="language-javascript">
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('/notifier/api/v1/notification/{notification_id}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+</code></pre>
+<p><code>GET notifier/api/v1/notification/{notification_id}</code></p>
+<p>By performing a GET with a notification_id as a path parameter, the
+client will retrieve a paginated response of notification objects.</p>
+<h3 id="retrieve-a-paginated-result-of-notifications-for-the-provided-id.-parameters">Parameters</h3>
+<table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
+<tr><td>notification_id</td><td>path</td><td>string</td><td>false</td><td>A notification ID returned by a callback</td></tr>
+<tr><td>page_size</td><td>query</td><td>int</td><td>false</td><td>The maximum number of notifications to deliver in a single page.</td></tr>
+<tr><td>next</td><td>query</td><td>string</td><td>false</td><td>The next page to fetch via id. Typically this number is provided</td></tr>
+</tbody></table>
+<h4><a class="header" href="#detailed-descriptions" id="detailed-descriptions">Detailed descriptions</a></h4>
+<p><strong>page_size</strong>: The maximum number of notifications to deliver in a single page.</p>
+<p><strong>next</strong>: The next page to fetch via id. Typically this number is provided
+on initial response in the page.next field.
+The first GET request may omit this field.</p>
+<blockquote>
+<p>Example responses</p>
+</blockquote>
+<blockquote>
+<p>200 Response</p>
+</blockquote>
+<pre><code class="language-json">{
+  &quot;page&quot;: {
+    &quot;size&quot;: 100,
+    &quot;next&quot;: &quot;1b4d0db2-e757-4150-bbbb-543658144205&quot;
+  },
+  &quot;notifications&quot;: [
+    {
+      &quot;id&quot;: &quot;5e4b387e-88d3-4364-86fd-063447a6fad2&quot;,
+      &quot;manifest&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
+      &quot;reason&quot;: &quot;added&quot;,
+      &quot;vulnerability&quot;: {
+        &quot;name&quot;: &quot;CVE-2009-5155&quot;,
+        &quot;fixed_in_version&quot;: &quot;v0.0.1&quot;,
+        &quot;links&quot;: &quot;http://link-to-advisory&quot;,
+        &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28,\nparse_reg_exp in posix/regcomp.c misparses alternatives,\nwhich allows attackers to cause a denial of service (assertion\nfailure and application exit) or trigger an incorrect result\nby attempting a regular-expression match.\&quot;\n&quot;,
+        &quot;normalized_severity&quot;: &quot;Unknown&quot;,
+        &quot;package&quot;: {
+          &quot;id&quot;: &quot;10&quot;,
+          &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
+          &quot;version&quot;: &quot;1.6.11&quot;,
+          &quot;kind&quot;: &quot;binary&quot;,
+          &quot;normalized_version&quot;: &quot;&quot;,
+          &quot;arch&quot;: &quot;x86&quot;,
+          &quot;module&quot;: &quot;&quot;,
+          &quot;cpe&quot;: &quot;&quot;,
+          &quot;source&quot;: {
+            &quot;id&quot;: &quot;9&quot;,
+            &quot;name&quot;: &quot;apt&quot;,
+            &quot;version&quot;: &quot;1.6.11&quot;,
+            &quot;kind&quot;: &quot;source&quot;,
+            &quot;source&quot;: null
+          }
+        },
+        &quot;distribution&quot;: {
+          &quot;id&quot;: &quot;1&quot;,
+          &quot;did&quot;: &quot;ubuntu&quot;,
+          &quot;name&quot;: &quot;Ubuntu&quot;,
+          &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
+          &quot;version_code_name&quot;: &quot;bionic&quot;,
+          &quot;version_id&quot;: &quot;18.04&quot;,
+          &quot;arch&quot;: &quot;&quot;,
+          &quot;cpe&quot;: &quot;&quot;,
+          &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+        },
+        &quot;repository&quot;: {
+          &quot;id&quot;: &quot;string&quot;,
+          &quot;name&quot;: &quot;string&quot;,
+          &quot;key&quot;: &quot;string&quot;,
+          &quot;uri&quot;: &quot;string&quot;,
+          &quot;cpe&quot;: &quot;string&quot;
+        }
+      }
+    }
+  ]
+}
+</code></pre>
+<h3 id="retrieve-a-paginated-result-of-notifications-for-the-provided-id.-responses">Responses</h3>
+<table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
+<tr><td>200</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td><td>A paginated list of notifications</td><td><a href="#schemapagednotifications">PagedNotifications</a></td></tr>
+<tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="#schemaerror">Error</a></td></tr>
+<tr><td>405</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.5">Method Not Allowed</a></td><td>Method Not Allowed</td><td><a href="#schemaerror">Error</a></td></tr>
+<tr><td>500</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.6.1">Internal Server Error</a></td><td>Internal Server Error</td><td><a href="#schemaerror">Error</a></td></tr>
+</tbody></table>
+<aside class="success">
+This operation does not require authentication
+</aside>
+<h1 id="clairv4-indexer">Indexer</h1>
+<h2><a class="header" href="#index-the-contents-of-a-manifest" id="index-the-contents-of-a-manifest">Index the contents of a Manifest</a></h2>
+<p><a id="opIdIndex"></a></p>
+<blockquote>
+<p>Code samples</p>
+</blockquote>
+<pre><code class="language-python">import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+r = requests.post('/indexer/api/v1/index_report', headers = headers)
+
+print(r.json())
+
+</code></pre>
+<pre><code class="language-go">package main
+
+import (
+       &quot;bytes&quot;
+       &quot;net/http&quot;
+)
+
+func main() {
+
+    headers := map[string][]string{
+        &quot;Content-Type&quot;: []string{&quot;application/json&quot;},
+        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest(&quot;POST&quot;, &quot;/indexer/api/v1/index_report&quot;, data)
+    req.Header = headers
+
+    client := &amp;http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+</code></pre>
+<pre><code class="language-javascript">const inputBody = '{
+  &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
+  &quot;layers&quot;: [
+    {
+      &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
+      &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36\n&quot;,
+      &quot;headers&quot;: {
+        &quot;property1&quot;: [
+          &quot;string&quot;
+        ],
+        &quot;property2&quot;: [
+          &quot;string&quot;
+        ]
+      }
+    }
+  ]
+}';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('/indexer/api/v1/index_report',
+{
+  method: 'POST',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+</code></pre>
+<p><code>POST indexer/api/v1/index_report</code></p>
+<p>By submitting a Manifest object to this endpoint Clair will fetch the
+layers, scan each layer's contents, and provide an index of discovered
+packages, repository and distribution information.</p>
+<blockquote>
+<p>Body parameter</p>
+</blockquote>
+<pre><code class="language-json">{
+  &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
+  &quot;layers&quot;: [
+    {
+      &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
+      &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36\n&quot;,
+      &quot;headers&quot;: {
+        &quot;property1&quot;: [
+          &quot;string&quot;
+        ],
+        &quot;property2&quot;: [
+          &quot;string&quot;
+        ]
+      }
+    }
+  ]
+}
+</code></pre>
+<h3 id="index-the-contents-of-a-manifest-parameters">Parameters</h3>
+<table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
+<tr><td>body</td><td>body</td><td><a href="#schemamanifest">Manifest</a></td><td>true</td><td>none</td></tr>
+</tbody></table>
+<blockquote>
+<p>Example responses</p>
+</blockquote>
+<blockquote>
+<p>201 Response</p>
+</blockquote>
+<pre><code class="language-json">{
+  &quot;manifest_hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
+  &quot;state&quot;: &quot;IndexFinished&quot;,
+  &quot;packages&quot;: {
+    &quot;10&quot;: {
+      &quot;id&quot;: &quot;10&quot;,
+      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
+      &quot;version&quot;: &quot;1.6.11&quot;,
+      &quot;kind&quot;: &quot;binary&quot;,
+      &quot;normalized_version&quot;: &quot;&quot;,
+      &quot;arch&quot;: &quot;x86&quot;,
+      &quot;module&quot;: &quot;&quot;,
+      &quot;cpe&quot;: &quot;&quot;,
+      &quot;source&quot;: {
+        &quot;id&quot;: &quot;9&quot;,
+        &quot;name&quot;: &quot;apt&quot;,
+        &quot;version&quot;: &quot;1.6.11&quot;,
+        &quot;kind&quot;: &quot;source&quot;,
+        &quot;source&quot;: null
+      }
+    }
+  },
+  &quot;distributions&quot;: {
+    &quot;1&quot;: {
+      &quot;id&quot;: &quot;1&quot;,
+      &quot;did&quot;: &quot;ubuntu&quot;,
+      &quot;name&quot;: &quot;Ubuntu&quot;,
+      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
+      &quot;version_code_name&quot;: &quot;bionic&quot;,
+      &quot;version_id&quot;: &quot;18.04&quot;,
+      &quot;arch&quot;: &quot;&quot;,
+      &quot;cpe&quot;: &quot;&quot;,
+      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+    }
+  },
+  &quot;environments&quot;: {
+    &quot;10&quot;: [
+      {
+        &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
+        &quot;introduced_in&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
+        &quot;distribution_id&quot;: &quot;1&quot;
+      }
+    ]
+  },
+  &quot;success&quot;: true,
+  &quot;err&quot;: &quot;&quot;
+}
+</code></pre>
+<h3 id="index-the-contents-of-a-manifest-responses">Responses</h3>
+<table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
+<tr><td>201</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.2">Created</a></td><td>IndexReport Created</td><td><a href="#schemaindexreport">IndexReport</a></td></tr>
+<tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="#schemaerror">Error</a></td></tr>
+<tr><td>405</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.5">Method Not Allowed</a></td><td>Method Not Allowed</td><td><a href="#schemaerror">Error</a></td></tr>
+<tr><td>500</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.6.1">Internal Server Error</a></td><td>Internal Server Error</td><td><a href="#schemaerror">Error</a></td></tr>
+</tbody></table>
+<aside class="success">
+This operation does not require authentication
+</aside>
+<h2><a class="header" href="#retrieve-an-indexreport-for-the-given-manifest-hash-if-exists" id="retrieve-an-indexreport-for-the-given-manifest-hash-if-exists">Retrieve an IndexReport for the given Manifest hash if exists.</a></h2>
+<p><a id="opIdGetIndexReport"></a></p>
+<blockquote>
+<p>Code samples</p>
+</blockquote>
+<pre><code class="language-python">import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('/indexer/api/v1/index_report/{manifest_hash}', headers = headers)
+
+print(r.json())
+
+</code></pre>
+<pre><code class="language-go">package main
+
+import (
+       &quot;bytes&quot;
+       &quot;net/http&quot;
+)
+
+func main() {
+
+    headers := map[string][]string{
+        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest(&quot;GET&quot;, &quot;/indexer/api/v1/index_report/{manifest_hash}&quot;, data)
+    req.Header = headers
+
+    client := &amp;http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+</code></pre>
+<pre><code class="language-javascript">
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('/indexer/api/v1/index_report/{manifest_hash}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+</code></pre>
+<p><code>GET indexer/api/v1/index_report/{manifest_hash}</code></p>
+<p>Given a Manifest's content addressable hash an IndexReport will
+be retrieved if exists.</p>
+<h3 id="retrieve-an-indexreport-for-the-given-manifest-hash-if-exists.-parameters">Parameters</h3>
+<table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
+<tr><td>manifest_hash</td><td>path</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>A digest of a manifest that has been indexed previous to this</td></tr>
+</tbody></table>
+<h4><a class="header" href="#detailed-descriptions-1" id="detailed-descriptions-1">Detailed descriptions</a></h4>
+<p><strong>manifest_hash</strong>: A digest of a manifest that has been indexed previous to this
+request.</p>
+<blockquote>
+<p>Example responses</p>
+</blockquote>
+<blockquote>
+<p>200 Response</p>
+</blockquote>
+<pre><code class="language-json">{
+  &quot;manifest_hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
+  &quot;state&quot;: &quot;IndexFinished&quot;,
+  &quot;packages&quot;: {
+    &quot;10&quot;: {
+      &quot;id&quot;: &quot;10&quot;,
+      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
+      &quot;version&quot;: &quot;1.6.11&quot;,
+      &quot;kind&quot;: &quot;binary&quot;,
+      &quot;normalized_version&quot;: &quot;&quot;,
+      &quot;arch&quot;: &quot;x86&quot;,
+      &quot;module&quot;: &quot;&quot;,
+      &quot;cpe&quot;: &quot;&quot;,
+      &quot;source&quot;: {
+        &quot;id&quot;: &quot;9&quot;,
+        &quot;name&quot;: &quot;apt&quot;,
+        &quot;version&quot;: &quot;1.6.11&quot;,
+        &quot;kind&quot;: &quot;source&quot;,
+        &quot;source&quot;: null
+      }
+    }
+  },
+  &quot;distributions&quot;: {
+    &quot;1&quot;: {
+      &quot;id&quot;: &quot;1&quot;,
+      &quot;did&quot;: &quot;ubuntu&quot;,
+      &quot;name&quot;: &quot;Ubuntu&quot;,
+      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
+      &quot;version_code_name&quot;: &quot;bionic&quot;,
+      &quot;version_id&quot;: &quot;18.04&quot;,
+      &quot;arch&quot;: &quot;&quot;,
+      &quot;cpe&quot;: &quot;&quot;,
+      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+    }
+  },
+  &quot;environments&quot;: {
+    &quot;10&quot;: [
+      {
+        &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
+        &quot;introduced_in&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
+        &quot;distribution_id&quot;: &quot;1&quot;
+      }
+    ]
+  },
+  &quot;success&quot;: true,
+  &quot;err&quot;: &quot;&quot;
+}
+</code></pre>
+<h3 id="retrieve-an-indexreport-for-the-given-manifest-hash-if-exists.-responses">Responses</h3>
+<table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
+<tr><td>200</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td><td>IndexReport retrieved</td><td><a href="#schemaindexreport">IndexReport</a></td></tr>
+<tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="#schemaerror">Error</a></td></tr>
+<tr><td>404</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.4">Not Found</a></td><td>Not Found</td><td><a href="#schemaerror">Error</a></td></tr>
+<tr><td>405</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.5">Method Not Allowed</a></td><td>Method Not Allowed</td><td><a href="#schemaerror">Error</a></td></tr>
+<tr><td>500</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.6.1">Internal Server Error</a></td><td>Internal Server Error</td><td><a href="#schemaerror">Error</a></td></tr>
+</tbody></table>
+<aside class="success">
+This operation does not require authentication
+</aside>
+<h2><a class="header" href="#report-the-indexers-internal-configuration-and-state" id="report-the-indexers-internal-configuration-and-state">Report the indexer's internal configuration and state.</a></h2>
+<p><a id="opIdIndexState"></a></p>
+<blockquote>
+<p>Code samples</p>
+</blockquote>
+<pre><code class="language-python">import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('/indexer/api/v1/index_state', headers = headers)
+
+print(r.json())
+
+</code></pre>
+<pre><code class="language-go">package main
+
+import (
+       &quot;bytes&quot;
+       &quot;net/http&quot;
+)
+
+func main() {
+
+    headers := map[string][]string{
+        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest(&quot;GET&quot;, &quot;/indexer/api/v1/index_state&quot;, data)
+    req.Header = headers
+
+    client := &amp;http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+</code></pre>
+<pre><code class="language-javascript">
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('/indexer/api/v1/index_state',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+</code></pre>
+<p><code>GET indexer/api/v1/index_state</code></p>
+<p>The index state endpoint returns a json structure indicating the
+indexer's internal configuration state.</p>
+<p>A client may be interested in this as a signal that manifests may need
+to be re-indexed.</p>
+<blockquote>
+<p>Example responses</p>
+</blockquote>
+<blockquote>
+<p>200 Response</p>
+</blockquote>
+<pre><code class="language-json">{
+  &quot;state&quot;: &quot;aae368a064d7c5a433d0bf2c4f5554cc&quot;
+}
+</code></pre>
+<h3 id="report-the-indexer's-internal-configuration-and-state.-responses">Responses</h3>
+<table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
+<tr><td>200</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td><td>Indexer State</td><td><a href="#schemastate">State</a></td></tr>
+<tr><td>304</td><td><a href="https://tools.ietf.org/html/rfc7232#section-4.1">Not Modified</a></td><td>Indexer State Unchanged</td><td>None</td></tr>
+</tbody></table>
+<h3><a class="header" href="#response-headers" id="response-headers">Response Headers</a></h3>
+<table><thead><tr><th>Status</th><th>Header</th><th>Type</th><th>Format</th><th>Description</th></tr></thead><tbody>
+<tr><td>200</td><td>Etag</td><td>string</td><td></td><td>Entity Tag</td></tr>
+</tbody></table>
+<aside class="success">
+This operation does not require authentication
+</aside>
+<h1 id="clairv4-matcher">Matcher</h1>
+<h2><a class="header" href="#retrieve-a-vulnerabilityreport-for-a-given-manifests-content" id="retrieve-a-vulnerabilityreport-for-a-given-manifests-content">Retrieve a VulnerabilityReport for a given manifest's content</a></h2>
+<p>addressable hash.</p>
+<p><a id="opIdGetVulnerabilityReport"></a></p>
+<blockquote>
+<p>Code samples</p>
+</blockquote>
+<pre><code class="language-python">import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('/matcher/api/v1/vulnerability_report/{manifest_hash}', headers = headers)
+
+print(r.json())
+
+</code></pre>
+<pre><code class="language-go">package main
+
+import (
+       &quot;bytes&quot;
+       &quot;net/http&quot;
+)
+
+func main() {
+
+    headers := map[string][]string{
+        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest(&quot;GET&quot;, &quot;/matcher/api/v1/vulnerability_report/{manifest_hash}&quot;, data)
+    req.Header = headers
+
+    client := &amp;http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+</code></pre>
+<pre><code class="language-javascript">
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('/matcher/api/v1/vulnerability_report/{manifest_hash}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+</code></pre>
+<p><code>GET matcher/api/v1/vulnerability_report/{manifest_hash}</code></p>
+<p>Given a Manifest's content addressable hash a VulnerabilityReport
+will be created. The Manifest <strong>must</strong> have been Indexed first
+via the Index endpoint.</p>
+<h3 id="retrieve-a-vulnerabilityreport-for-a-given-manifest's-content
+addressable-hash.
+-parameters">Parameters</h3>
+<table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
+<tr><td>manifest_hash</td><td>path</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>A digest of a manifest that has been indexed previous to this</td></tr>
+</tbody></table>
+<h4><a class="header" href="#detailed-descriptions-2" id="detailed-descriptions-2">Detailed descriptions</a></h4>
+<p><strong>manifest_hash</strong>: A digest of a manifest that has been indexed previous to this
+request.</p>
+<blockquote>
+<p>Example responses</p>
+</blockquote>
+<blockquote>
+<p>201 Response</p>
+</blockquote>
+<pre><code class="language-json">{
+  &quot;manifest_hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
+  &quot;packages&quot;: {
+    &quot;10&quot;: {
+      &quot;id&quot;: &quot;10&quot;,
+      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
+      &quot;version&quot;: &quot;1.6.11&quot;,
+      &quot;kind&quot;: &quot;binary&quot;,
+      &quot;normalized_version&quot;: &quot;&quot;,
+      &quot;arch&quot;: &quot;x86&quot;,
+      &quot;module&quot;: &quot;&quot;,
+      &quot;cpe&quot;: &quot;&quot;,
+      &quot;source&quot;: {
+        &quot;id&quot;: &quot;9&quot;,
+        &quot;name&quot;: &quot;apt&quot;,
+        &quot;version&quot;: &quot;1.6.11&quot;,
+        &quot;kind&quot;: &quot;source&quot;,
+        &quot;source&quot;: null
+      }
+    }
+  },
+  &quot;distributions&quot;: {
+    &quot;1&quot;: {
+      &quot;id&quot;: &quot;1&quot;,
+      &quot;did&quot;: &quot;ubuntu&quot;,
+      &quot;name&quot;: &quot;Ubuntu&quot;,
+      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
+      &quot;version_code_name&quot;: &quot;bionic&quot;,
+      &quot;version_id&quot;: &quot;18.04&quot;,
+      &quot;arch&quot;: &quot;&quot;,
+      &quot;cpe&quot;: &quot;&quot;,
+      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+    }
+  },
+  &quot;environments&quot;: {
+    &quot;10&quot;: [
+      {
+        &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
+        &quot;introduced_in&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
+        &quot;distribution_id&quot;: &quot;1&quot;
+      }
+    ]
+  },
+  &quot;vulnerabilities&quot;: {
+    &quot;356835&quot;: {
+      &quot;id&quot;: &quot;356835&quot;,
+      &quot;updater&quot;: &quot;&quot;,
+      &quot;name&quot;: &quot;CVE-2009-5155&quot;,
+      &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28,\nparse_reg_exp in posix/regcomp.c misparses alternatives,\nwhich allows attackers to cause a denial of service (assertion\nfailure and application exit) or trigger an incorrect result\nby attempting a regular-expression match.\&quot;\n&quot;,
+      &quot;links&quot;: &quot;https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155\nhttp://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html\nhttps://sourceware.org/bugzilla/show_bug.cgi?id=11053\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238\nhttps://sourceware.org/bugzilla/show_bug.cgi?id=18986\&quot;\n&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;normalized_severity&quot;: &quot;Low&quot;,
+      &quot;package&quot;: {
+        &quot;id&quot;: &quot;0&quot;,
+        &quot;name&quot;: &quot;glibc&quot;,
+        &quot;version&quot;: &quot;&quot;,
+        &quot;kind&quot;: &quot;&quot;,
+        &quot;source&quot;: null,
+        &quot;package_db&quot;: &quot;&quot;,
+        &quot;repository_hint&quot;: &quot;&quot;
+      },
+      &quot;dist&quot;: {
+        &quot;id&quot;: &quot;0&quot;,
+        &quot;did&quot;: &quot;ubuntu&quot;,
+        &quot;name&quot;: &quot;Ubuntu&quot;,
+        &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
+        &quot;version_code_name&quot;: &quot;bionic&quot;,
+        &quot;version_id&quot;: &quot;18.04&quot;,
+        &quot;arch&quot;: &quot;&quot;,
+        &quot;cpe&quot;: &quot;&quot;,
+        &quot;pretty_name&quot;: &quot;&quot;
+      },
+      &quot;repo&quot;: {
+        &quot;id&quot;: &quot;0&quot;,
+        &quot;name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;,
+        &quot;key&quot;: &quot;&quot;,
+        &quot;uri&quot;: &quot;&quot;
+      },
+      &quot;issued&quot;: &quot;2019-10-12T07:20:50.52Z&quot;,
+      &quot;fixed_in_version&quot;: &quot;2.28-0ubuntu1&quot;
+    }
+  },
+  &quot;package_vulnerabilities&quot;: {
+    &quot;10&quot;: [
+      &quot;356835&quot;
+    ]
+  }
+}
+</code></pre>
+<h3 id="retrieve-a-vulnerabilityreport-for-a-given-manifest's-content
+addressable-hash.
+-responses">Responses</h3>
+<table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
+<tr><td>201</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.2">Created</a></td><td>VulnerabilityReport Created</td><td><a href="#schemavulnerabilityreport">VulnerabilityReport</a></td></tr>
+<tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="#schemaerror">Error</a></td></tr>
+<tr><td>404</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.4">Not Found</a></td><td>Not Found</td><td><a href="#schemaerror">Error</a></td></tr>
+<tr><td>405</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.5">Method Not Allowed</a></td><td>Method Not Allowed</td><td><a href="#schemaerror">Error</a></td></tr>
+<tr><td>500</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.6.1">Internal Server Error</a></td><td>Internal Server Error</td><td><a href="#schemaerror">Error</a></td></tr>
+</tbody></table>
+<aside class="success">
+This operation does not require authentication
+</aside>
+<h1><a class="header" href="#schemas" id="schemas">Schemas</a></h1>
+<h2 id="tocS_Page">Page</h2>
+<!-- backwards compatibility -->
+<a id="schemapage"></a>
+<a id="schema_Page"></a>
+<a id="tocSpage"></a>
+<a id="tocspage"></a>
+<pre><code class="language-json">{
+  &quot;size&quot;: 1,
+  &quot;next&quot;: &quot;1b4d0db2-e757-4150-bbbb-543658144205&quot;
+}
+
+</code></pre>
+<p>Page</p>
+<h3><a class="header" href="#properties" id="properties">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>size</td><td>int</td><td>false</td><td>none</td><td>The maximum number of elements in a page</td></tr>
+<tr><td>next</td><td>string</td><td>false</td><td>none</td><td>The next id to submit to the api to continue paging</td></tr>
+</tbody></table>
+<h2 id="tocS_PagedNotifications">PagedNotifications</h2>
+<!-- backwards compatibility -->
+<a id="schemapagednotifications"></a>
+<a id="schema_PagedNotifications"></a>
+<a id="tocSpagednotifications"></a>
+<a id="tocspagednotifications"></a>
+<pre><code class="language-json">{
+  &quot;page&quot;: {
+    &quot;size&quot;: 100,
+    &quot;next&quot;: &quot;1b4d0db2-e757-4150-bbbb-543658144205&quot;
+  },
+  &quot;notifications&quot;: [
+    {
+      &quot;id&quot;: &quot;5e4b387e-88d3-4364-86fd-063447a6fad2&quot;,
+      &quot;manifest&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
+      &quot;reason&quot;: &quot;added&quot;,
+      &quot;vulnerability&quot;: {
+        &quot;name&quot;: &quot;CVE-2009-5155&quot;,
+        &quot;fixed_in_version&quot;: &quot;v0.0.1&quot;,
+        &quot;links&quot;: &quot;http://link-to-advisory&quot;,
+        &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28,\nparse_reg_exp in posix/regcomp.c misparses alternatives,\nwhich allows attackers to cause a denial of service (assertion\nfailure and application exit) or trigger an incorrect result\nby attempting a regular-expression match.\&quot;\n&quot;,
+        &quot;normalized_severity&quot;: &quot;Unknown&quot;,
+        &quot;package&quot;: {
+          &quot;id&quot;: &quot;10&quot;,
+          &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
+          &quot;version&quot;: &quot;1.6.11&quot;,
+          &quot;kind&quot;: &quot;binary&quot;,
+          &quot;normalized_version&quot;: &quot;&quot;,
+          &quot;arch&quot;: &quot;x86&quot;,
+          &quot;module&quot;: &quot;&quot;,
+          &quot;cpe&quot;: &quot;&quot;,
+          &quot;source&quot;: {
+            &quot;id&quot;: &quot;9&quot;,
+            &quot;name&quot;: &quot;apt&quot;,
+            &quot;version&quot;: &quot;1.6.11&quot;,
+            &quot;kind&quot;: &quot;source&quot;,
+            &quot;source&quot;: null
+          }
+        },
+        &quot;distribution&quot;: {
+          &quot;id&quot;: &quot;1&quot;,
+          &quot;did&quot;: &quot;ubuntu&quot;,
+          &quot;name&quot;: &quot;Ubuntu&quot;,
+          &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
+          &quot;version_code_name&quot;: &quot;bionic&quot;,
+          &quot;version_id&quot;: &quot;18.04&quot;,
+          &quot;arch&quot;: &quot;&quot;,
+          &quot;cpe&quot;: &quot;&quot;,
+          &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+        },
+        &quot;repository&quot;: {
+          &quot;id&quot;: &quot;string&quot;,
+          &quot;name&quot;: &quot;string&quot;,
+          &quot;key&quot;: &quot;string&quot;,
+          &quot;uri&quot;: &quot;string&quot;,
+          &quot;cpe&quot;: &quot;string&quot;
+        }
+      }
+    }
+  ]
+}
+
+</code></pre>
+<p>PagedNotifications</p>
+<h3><a class="header" href="#properties-1" id="properties-1">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>page</td><td>object</td><td>false</td><td>none</td><td>A page object informing the client the next page to retrieve.<br>If page.next becomes &quot;-1&quot; the client should stop paging.</td></tr>
+<tr><td>notifications</td><td>[<a href="#schemanotification">Notification</a>]</td><td>false</td><td>none</td><td>A list of notifications within this page</td></tr>
+</tbody></table>
+<h2 id="tocS_Callback">Callback</h2>
+<!-- backwards compatibility -->
+<a id="schemacallback"></a>
+<a id="schema_Callback"></a>
+<a id="tocScallback"></a>
+<a id="tocscallback"></a>
+<pre><code class="language-json">{
+  &quot;notification_id&quot;: &quot;269886f3-0146-4f08-9bf7-cb1138d48643&quot;,
+  &quot;callback&quot;: &quot;http://clair-notifier/notifier/api/v1/notifications/269886f3-0146-4f08-9bf7-cb1138d48643&quot;
+}
+
+</code></pre>
+<p>Callback</p>
+<h3><a class="header" href="#properties-2" id="properties-2">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>notification_id</td><td>string</td><td>false</td><td>none</td><td>the unique identifier for this set of notifications</td></tr>
+<tr><td>callback</td><td>string</td><td>false</td><td>none</td><td>the url where notifications can be retrieved</td></tr>
+</tbody></table>
+<h2 id="tocS_VulnSummary">VulnSummary</h2>
+<!-- backwards compatibility -->
+<a id="schemavulnsummary"></a>
+<a id="schema_VulnSummary"></a>
+<a id="tocSvulnsummary"></a>
+<a id="tocsvulnsummary"></a>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;CVE-2009-5155&quot;,
+  &quot;fixed_in_version&quot;: &quot;v0.0.1&quot;,
+  &quot;links&quot;: &quot;http://link-to-advisory&quot;,
+  &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28,\nparse_reg_exp in posix/regcomp.c misparses alternatives,\nwhich allows attackers to cause a denial of service (assertion\nfailure and application exit) or trigger an incorrect result\nby attempting a regular-expression match.\&quot;\n&quot;,
+  &quot;normalized_severity&quot;: &quot;Unknown&quot;,
+  &quot;package&quot;: {
+    &quot;id&quot;: &quot;10&quot;,
+    &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
+    &quot;version&quot;: &quot;1.6.11&quot;,
+    &quot;kind&quot;: &quot;binary&quot;,
+    &quot;normalized_version&quot;: &quot;&quot;,
+    &quot;arch&quot;: &quot;x86&quot;,
+    &quot;module&quot;: &quot;&quot;,
+    &quot;cpe&quot;: &quot;&quot;,
+    &quot;source&quot;: {
+      &quot;id&quot;: &quot;9&quot;,
+      &quot;name&quot;: &quot;apt&quot;,
+      &quot;version&quot;: &quot;1.6.11&quot;,
+      &quot;kind&quot;: &quot;source&quot;,
+      &quot;source&quot;: null
+    }
+  },
+  &quot;distribution&quot;: {
+    &quot;id&quot;: &quot;1&quot;,
+    &quot;did&quot;: &quot;ubuntu&quot;,
+    &quot;name&quot;: &quot;Ubuntu&quot;,
+    &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
+    &quot;version_code_name&quot;: &quot;bionic&quot;,
+    &quot;version_id&quot;: &quot;18.04&quot;,
+    &quot;arch&quot;: &quot;&quot;,
+    &quot;cpe&quot;: &quot;&quot;,
+    &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+  },
+  &quot;repository&quot;: {
+    &quot;id&quot;: &quot;string&quot;,
+    &quot;name&quot;: &quot;string&quot;,
+    &quot;key&quot;: &quot;string&quot;,
+    &quot;uri&quot;: &quot;string&quot;,
+    &quot;cpe&quot;: &quot;string&quot;
+  }
+}
+
+</code></pre>
+<p>VulnSummary</p>
+<h3><a class="header" href="#properties-3" id="properties-3">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>name</td><td>string</td><td>false</td><td>none</td><td>the vulnerability name</td></tr>
+<tr><td>fixed_in_version</td><td>string</td><td>false</td><td>none</td><td>The version which the vulnerability is fixed in. Empty if not fixed.</td></tr>
+<tr><td>links</td><td>string</td><td>false</td><td>none</td><td>links to external information about vulnerability</td></tr>
+<tr><td>description</td><td>string</td><td>false</td><td>none</td><td>the vulnerability name</td></tr>
+<tr><td>normalized_severity</td><td>string</td><td>false</td><td>none</td><td>A well defined set of severity strings guaranteed to be present.</td></tr>
+<tr><td>package</td><td><a href="#schemapackage">Package</a></td><td>false</td><td>none</td><td>A package discovered by indexing a Manifest</td></tr>
+<tr><td>distribution</td><td><a href="#schemadistribution">Distribution</a></td><td>false</td><td>none</td><td>An indexed distribution discovered in a layer. See<br>https://www.freedesktop.org/software/systemd/man/os-release.html<br>for explanations and example of fields.</td></tr>
+<tr><td>repository</td><td><a href="#schemarepository">Repository</a></td><td>false</td><td>none</td><td>A package repository</td></tr>
+</tbody></table>
+<h4><a class="header" href="#enumerated-values" id="enumerated-values">Enumerated Values</a></h4>
+<table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>
+<tr><td>normalized_severity</td><td>Unknown</td></tr>
+<tr><td>normalized_severity</td><td>Negligible</td></tr>
+<tr><td>normalized_severity</td><td>Low</td></tr>
+<tr><td>normalized_severity</td><td>Medium</td></tr>
+<tr><td>normalized_severity</td><td>High</td></tr>
+<tr><td>normalized_severity</td><td>Critical</td></tr>
+<tr><td>normalized_severity</td><td>Defcon1</td></tr>
+</tbody></table>
+<h2 id="tocS_Notification">Notification</h2>
+<!-- backwards compatibility -->
+<a id="schemanotification"></a>
+<a id="schema_Notification"></a>
+<a id="tocSnotification"></a>
+<a id="tocsnotification"></a>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;5e4b387e-88d3-4364-86fd-063447a6fad2&quot;,
+  &quot;manifest&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
+  &quot;reason&quot;: &quot;added&quot;,
+  &quot;vulnerability&quot;: {
+    &quot;name&quot;: &quot;CVE-2009-5155&quot;,
+    &quot;fixed_in_version&quot;: &quot;v0.0.1&quot;,
+    &quot;links&quot;: &quot;http://link-to-advisory&quot;,
+    &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28,\nparse_reg_exp in posix/regcomp.c misparses alternatives,\nwhich allows attackers to cause a denial of service (assertion\nfailure and application exit) or trigger an incorrect result\nby attempting a regular-expression match.\&quot;\n&quot;,
+    &quot;normalized_severity&quot;: &quot;Unknown&quot;,
+    &quot;package&quot;: {
+      &quot;id&quot;: &quot;10&quot;,
+      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
+      &quot;version&quot;: &quot;1.6.11&quot;,
+      &quot;kind&quot;: &quot;binary&quot;,
+      &quot;normalized_version&quot;: &quot;&quot;,
+      &quot;arch&quot;: &quot;x86&quot;,
+      &quot;module&quot;: &quot;&quot;,
+      &quot;cpe&quot;: &quot;&quot;,
+      &quot;source&quot;: {
+        &quot;id&quot;: &quot;9&quot;,
+        &quot;name&quot;: &quot;apt&quot;,
+        &quot;version&quot;: &quot;1.6.11&quot;,
+        &quot;kind&quot;: &quot;source&quot;,
+        &quot;source&quot;: null
+      }
+    },
+    &quot;distribution&quot;: {
+      &quot;id&quot;: &quot;1&quot;,
+      &quot;did&quot;: &quot;ubuntu&quot;,
+      &quot;name&quot;: &quot;Ubuntu&quot;,
+      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
+      &quot;version_code_name&quot;: &quot;bionic&quot;,
+      &quot;version_id&quot;: &quot;18.04&quot;,
+      &quot;arch&quot;: &quot;&quot;,
+      &quot;cpe&quot;: &quot;&quot;,
+      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+    },
+    &quot;repository&quot;: {
+      &quot;id&quot;: &quot;string&quot;,
+      &quot;name&quot;: &quot;string&quot;,
+      &quot;key&quot;: &quot;string&quot;,
+      &quot;uri&quot;: &quot;string&quot;,
+      &quot;cpe&quot;: &quot;string&quot;
+    }
+  }
+}
+
+</code></pre>
+<p>Notification</p>
+<h3><a class="header" href="#properties-4" id="properties-4">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>id</td><td>string</td><td>false</td><td>none</td><td>a unique identifier for this notification</td></tr>
+<tr><td>manifest</td><td>string</td><td>false</td><td>none</td><td>The hash of the manifest affected by the provided vulnerability.</td></tr>
+<tr><td>reason</td><td>string</td><td>false</td><td>none</td><td>the reason for the notifcation, [added</td></tr>
+<tr><td>vulnerability</td><td><a href="#schemavulnsummary">VulnSummary</a></td><td>false</td><td>none</td><td>A summary of a vulnerability</td></tr>
+</tbody></table>
+<h2 id="tocS_Environment">Environment</h2>
+<!-- backwards compatibility -->
+<a id="schemaenvironment"></a>
+<a id="schema_Environment"></a>
+<a id="tocSenvironment"></a>
+<a id="tocsenvironment"></a>
+<pre><code class="language-json">{
+  &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
+  &quot;introduced_in&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
+  &quot;distribution_id&quot;: &quot;1&quot;
+}
+
+</code></pre>
+<p>Environment</p>
+<h3><a class="header" href="#properties-5" id="properties-5">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>package_db</td><td>string</td><td>true</td><td>none</td><td>The filesystem path or unique identifier of a package database.</td></tr>
+<tr><td>introduced_in</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
+<tr><td>distribution_id</td><td>string</td><td>true</td><td>none</td><td>The distribution ID found in an associated IndexReport or<br>VulnerabilityReport.</td></tr>
+</tbody></table>
+<h2 id="tocS_IndexReport">IndexReport</h2>
+<!-- backwards compatibility -->
+<a id="schemaindexreport"></a>
+<a id="schema_IndexReport"></a>
+<a id="tocSindexreport"></a>
+<a id="tocsindexreport"></a>
+<pre><code class="language-json">{
+  &quot;manifest_hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
+  &quot;state&quot;: &quot;IndexFinished&quot;,
+  &quot;packages&quot;: {
+    &quot;10&quot;: {
+      &quot;id&quot;: &quot;10&quot;,
+      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
+      &quot;version&quot;: &quot;1.6.11&quot;,
+      &quot;kind&quot;: &quot;binary&quot;,
+      &quot;normalized_version&quot;: &quot;&quot;,
+      &quot;arch&quot;: &quot;x86&quot;,
+      &quot;module&quot;: &quot;&quot;,
+      &quot;cpe&quot;: &quot;&quot;,
+      &quot;source&quot;: {
+        &quot;id&quot;: &quot;9&quot;,
+        &quot;name&quot;: &quot;apt&quot;,
+        &quot;version&quot;: &quot;1.6.11&quot;,
+        &quot;kind&quot;: &quot;source&quot;,
+        &quot;source&quot;: null
+      }
+    }
+  },
+  &quot;distributions&quot;: {
+    &quot;1&quot;: {
+      &quot;id&quot;: &quot;1&quot;,
+      &quot;did&quot;: &quot;ubuntu&quot;,
+      &quot;name&quot;: &quot;Ubuntu&quot;,
+      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
+      &quot;version_code_name&quot;: &quot;bionic&quot;,
+      &quot;version_id&quot;: &quot;18.04&quot;,
+      &quot;arch&quot;: &quot;&quot;,
+      &quot;cpe&quot;: &quot;&quot;,
+      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+    }
+  },
+  &quot;environments&quot;: {
+    &quot;10&quot;: [
+      {
+        &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
+        &quot;introduced_in&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
+        &quot;distribution_id&quot;: &quot;1&quot;
+      }
+    ]
+  },
+  &quot;success&quot;: true,
+  &quot;err&quot;: &quot;&quot;
+}
+
+</code></pre>
+<p>IndexReport</p>
+<h3><a class="header" href="#properties-6" id="properties-6">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>manifest_hash</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
+<tr><td>state</td><td>string</td><td>true</td><td>none</td><td>The current state of the index operation</td></tr>
+<tr><td>packages</td><td>object</td><td>true</td><td>none</td><td>A map of Package objects indexed by Package.id</td></tr>
+<tr><td>» <strong>additionalProperties</strong></td><td><a href="#schemapackage">Package</a></td><td>false</td><td>none</td><td>A package discovered by indexing a Manifest</td></tr>
+<tr><td>distributions</td><td>object</td><td>true</td><td>none</td><td>A map of Distribution objects keyed by their Distribution.id<br>discovered in the manifest.</td></tr>
+<tr><td>» <strong>additionalProperties</strong></td><td><a href="#schemadistribution">Distribution</a></td><td>false</td><td>none</td><td>An indexed distribution discovered in a layer. See<br>https://www.freedesktop.org/software/systemd/man/os-release.html<br>for explanations and example of fields.</td></tr>
+<tr><td>environments</td><td>object</td><td>true</td><td>none</td><td>A map of lists containing Environment objects keyed by the<br>associated Package.id.</td></tr>
+<tr><td>» <strong>additionalProperties</strong></td><td>[<a href="#schemaenvironment">Environment</a>]</td><td>false</td><td>none</td><td>[The environment a particular package was discovered in.]</td></tr>
+<tr><td>success</td><td>boolean</td><td>true</td><td>none</td><td>A bool indicating succcessful index</td></tr>
+<tr><td>err</td><td>string</td><td>true</td><td>none</td><td>An error message on event of unsuccessful index</td></tr>
+</tbody></table>
+<h2 id="tocS_VulnerabilityReport">VulnerabilityReport</h2>
+<!-- backwards compatibility -->
+<a id="schemavulnerabilityreport"></a>
+<a id="schema_VulnerabilityReport"></a>
+<a id="tocSvulnerabilityreport"></a>
+<a id="tocsvulnerabilityreport"></a>
+<pre><code class="language-json">{
+  &quot;manifest_hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
+  &quot;packages&quot;: {
+    &quot;10&quot;: {
+      &quot;id&quot;: &quot;10&quot;,
+      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
+      &quot;version&quot;: &quot;1.6.11&quot;,
+      &quot;kind&quot;: &quot;binary&quot;,
+      &quot;normalized_version&quot;: &quot;&quot;,
+      &quot;arch&quot;: &quot;x86&quot;,
+      &quot;module&quot;: &quot;&quot;,
+      &quot;cpe&quot;: &quot;&quot;,
+      &quot;source&quot;: {
+        &quot;id&quot;: &quot;9&quot;,
+        &quot;name&quot;: &quot;apt&quot;,
+        &quot;version&quot;: &quot;1.6.11&quot;,
+        &quot;kind&quot;: &quot;source&quot;,
+        &quot;source&quot;: null
+      }
+    }
+  },
+  &quot;distributions&quot;: {
+    &quot;1&quot;: {
+      &quot;id&quot;: &quot;1&quot;,
+      &quot;did&quot;: &quot;ubuntu&quot;,
+      &quot;name&quot;: &quot;Ubuntu&quot;,
+      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
+      &quot;version_code_name&quot;: &quot;bionic&quot;,
+      &quot;version_id&quot;: &quot;18.04&quot;,
+      &quot;arch&quot;: &quot;&quot;,
+      &quot;cpe&quot;: &quot;&quot;,
+      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+    }
+  },
+  &quot;environments&quot;: {
+    &quot;10&quot;: [
+      {
+        &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
+        &quot;introduced_in&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
+        &quot;distribution_id&quot;: &quot;1&quot;
+      }
+    ]
+  },
+  &quot;vulnerabilities&quot;: {
+    &quot;356835&quot;: {
+      &quot;id&quot;: &quot;356835&quot;,
+      &quot;updater&quot;: &quot;&quot;,
+      &quot;name&quot;: &quot;CVE-2009-5155&quot;,
+      &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28,\nparse_reg_exp in posix/regcomp.c misparses alternatives,\nwhich allows attackers to cause a denial of service (assertion\nfailure and application exit) or trigger an incorrect result\nby attempting a regular-expression match.\&quot;\n&quot;,
+      &quot;links&quot;: &quot;https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155\nhttp://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html\nhttps://sourceware.org/bugzilla/show_bug.cgi?id=11053\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238\nhttps://sourceware.org/bugzilla/show_bug.cgi?id=18986\&quot;\n&quot;,
+      &quot;severity&quot;: &quot;Low&quot;,
+      &quot;normalized_severity&quot;: &quot;Low&quot;,
+      &quot;package&quot;: {
+        &quot;id&quot;: &quot;0&quot;,
+        &quot;name&quot;: &quot;glibc&quot;,
+        &quot;version&quot;: &quot;&quot;,
+        &quot;kind&quot;: &quot;&quot;,
+        &quot;source&quot;: null,
+        &quot;package_db&quot;: &quot;&quot;,
+        &quot;repository_hint&quot;: &quot;&quot;
+      },
+      &quot;dist&quot;: {
+        &quot;id&quot;: &quot;0&quot;,
+        &quot;did&quot;: &quot;ubuntu&quot;,
+        &quot;name&quot;: &quot;Ubuntu&quot;,
+        &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
+        &quot;version_code_name&quot;: &quot;bionic&quot;,
+        &quot;version_id&quot;: &quot;18.04&quot;,
+        &quot;arch&quot;: &quot;&quot;,
+        &quot;cpe&quot;: &quot;&quot;,
+        &quot;pretty_name&quot;: &quot;&quot;
+      },
+      &quot;repo&quot;: {
+        &quot;id&quot;: &quot;0&quot;,
+        &quot;name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;,
+        &quot;key&quot;: &quot;&quot;,
+        &quot;uri&quot;: &quot;&quot;
+      },
+      &quot;issued&quot;: &quot;2019-10-12T07:20:50.52Z&quot;,
+      &quot;fixed_in_version&quot;: &quot;2.28-0ubuntu1&quot;
+    }
+  },
+  &quot;package_vulnerabilities&quot;: {
+    &quot;10&quot;: [
+      &quot;356835&quot;
+    ]
+  }
+}
+
+</code></pre>
+<p>VulnerabilityReport</p>
+<h3><a class="header" href="#properties-7" id="properties-7">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>manifest_hash</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
+<tr><td>packages</td><td>object</td><td>true</td><td>none</td><td>A map of Package objects indexed by Package.id</td></tr>
+<tr><td>» <strong>additionalProperties</strong></td><td><a href="#schemapackage">Package</a></td><td>false</td><td>none</td><td>A package discovered by indexing a Manifest</td></tr>
+<tr><td>distributions</td><td>object</td><td>true</td><td>none</td><td>A map of Distribution objects indexed by Distribution.id.</td></tr>
+<tr><td>» <strong>additionalProperties</strong></td><td><a href="#schemadistribution">Distribution</a></td><td>false</td><td>none</td><td>An indexed distribution discovered in a layer. See<br>https://www.freedesktop.org/software/systemd/man/os-release.html<br>for explanations and example of fields.</td></tr>
+<tr><td>environments</td><td>object</td><td>true</td><td>none</td><td>A mapping of Environment lists indexed by Package.id</td></tr>
+<tr><td>» <strong>additionalProperties</strong></td><td>[<a href="#schemaenvironment">Environment</a>]</td><td>false</td><td>none</td><td>[The environment a particular package was discovered in.]</td></tr>
+<tr><td>vulnerabilities</td><td>object</td><td>true</td><td>none</td><td>A map of Vulnerabilities indexed by Vulnerability.id</td></tr>
+<tr><td>» <strong>additionalProperties</strong></td><td><a href="#schemavulnerability">Vulnerability</a></td><td>false</td><td>none</td><td>A unique vulnerability indexed by Clair</td></tr>
+<tr><td>package_vulnerabilities</td><td>object</td><td>true</td><td>none</td><td>A mapping of Vulnerability.id lists indexed by Package.id.</td></tr>
+<tr><td>» <strong>additionalProperties</strong></td><td>[string]</td><td>false</td><td>none</td><td>none</td></tr>
+</tbody></table>
+<h2 id="tocS_Vulnerability">Vulnerability</h2>
+<!-- backwards compatibility -->
+<a id="schemavulnerability"></a>
+<a id="schema_Vulnerability"></a>
+<a id="tocSvulnerability"></a>
+<a id="tocsvulnerability"></a>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;356835&quot;,
+  &quot;updater&quot;: &quot;&quot;,
+  &quot;name&quot;: &quot;CVE-2009-5155&quot;,
+  &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28,\nparse_reg_exp in posix/regcomp.c misparses alternatives,\nwhich allows attackers to cause a denial of service (assertion\nfailure and application exit) or trigger an incorrect result\nby attempting a regular-expression match.\&quot;\n&quot;,
+  &quot;links&quot;: &quot;https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155\nhttp://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html\nhttps://sourceware.org/bugzilla/show_bug.cgi?id=11053\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238\nhttps://sourceware.org/bugzilla/show_bug.cgi?id=18986\&quot;\n&quot;,
+  &quot;severity&quot;: &quot;Low&quot;,
+  &quot;normalized_severity&quot;: &quot;Low&quot;,
+  &quot;package&quot;: {
+    &quot;id&quot;: &quot;0&quot;,
+    &quot;name&quot;: &quot;glibc&quot;,
+    &quot;version&quot;: &quot;&quot;,
+    &quot;kind&quot;: &quot;&quot;,
+    &quot;source&quot;: null,
+    &quot;package_db&quot;: &quot;&quot;,
+    &quot;repository_hint&quot;: &quot;&quot;
+  },
+  &quot;dist&quot;: {
+    &quot;id&quot;: &quot;0&quot;,
+    &quot;did&quot;: &quot;ubuntu&quot;,
+    &quot;name&quot;: &quot;Ubuntu&quot;,
+    &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
+    &quot;version_code_name&quot;: &quot;bionic&quot;,
+    &quot;version_id&quot;: &quot;18.04&quot;,
+    &quot;arch&quot;: &quot;&quot;,
+    &quot;cpe&quot;: &quot;&quot;,
+    &quot;pretty_name&quot;: &quot;&quot;
+  },
+  &quot;repo&quot;: {
+    &quot;id&quot;: &quot;0&quot;,
+    &quot;name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;,
+    &quot;key&quot;: &quot;&quot;,
+    &quot;uri&quot;: &quot;&quot;
+  },
+  &quot;issued&quot;: &quot;2019-10-12T07:20:50.52Z&quot;,
+  &quot;fixed_in_version&quot;: &quot;2.28-0ubuntu1&quot;,
+  &quot;x-widdershins-oldRef&quot;: &quot;#/components/examples/Vulnerability/value&quot;
+}
+
+</code></pre>
+<p>Vulnerability</p>
+<h3><a class="header" href="#properties-8" id="properties-8">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>id</td><td>string</td><td>true</td><td>none</td><td>A unique ID representing this vulnerability.</td></tr>
+<tr><td>updater</td><td>string</td><td>true</td><td>none</td><td>A unique ID representing this vulnerability.</td></tr>
+<tr><td>name</td><td>string</td><td>true</td><td>none</td><td>Name of this specific vulnerability.</td></tr>
+<tr><td>description</td><td>string</td><td>true</td><td>none</td><td>A description of this specific vulnerability.</td></tr>
+<tr><td>links</td><td>string</td><td>true</td><td>none</td><td>A space separate list of links to any external information.</td></tr>
+<tr><td>severity</td><td>string</td><td>true</td><td>none</td><td>A severity keyword taken verbatim from the vulnerability source.</td></tr>
+<tr><td>normalized_severity</td><td>string</td><td>true</td><td>none</td><td>A well defined set of severity strings guaranteed to be present.</td></tr>
+<tr><td>package</td><td><a href="#schemapackage">Package</a></td><td>false</td><td>none</td><td>A package discovered by indexing a Manifest</td></tr>
+<tr><td>distribution</td><td><a href="#schemadistribution">Distribution</a></td><td>false</td><td>none</td><td>An indexed distribution discovered in a layer. See<br>https://www.freedesktop.org/software/systemd/man/os-release.html<br>for explanations and example of fields.</td></tr>
+<tr><td>repository</td><td><a href="#schemarepository">Repository</a></td><td>false</td><td>none</td><td>A package repository</td></tr>
+<tr><td>issued</td><td>string</td><td>false</td><td>none</td><td>The timestamp in which the vulnerability was issued</td></tr>
+<tr><td>range</td><td>string</td><td>false</td><td>none</td><td>The range of package versions affected by this vulnerability.</td></tr>
+<tr><td>fixed_in_version</td><td>string</td><td>true</td><td>none</td><td>A unique ID representing this vulnerability.</td></tr>
+</tbody></table>
+<h4><a class="header" href="#enumerated-values-1" id="enumerated-values-1">Enumerated Values</a></h4>
+<table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>
+<tr><td>normalized_severity</td><td>Unknown</td></tr>
+<tr><td>normalized_severity</td><td>Negligible</td></tr>
+<tr><td>normalized_severity</td><td>Low</td></tr>
+<tr><td>normalized_severity</td><td>Medium</td></tr>
+<tr><td>normalized_severity</td><td>High</td></tr>
+<tr><td>normalized_severity</td><td>Critical</td></tr>
+<tr><td>normalized_severity</td><td>Defcon1</td></tr>
+</tbody></table>
+<h2 id="tocS_Distribution">Distribution</h2>
+<!-- backwards compatibility -->
+<a id="schemadistribution"></a>
+<a id="schema_Distribution"></a>
+<a id="tocSdistribution"></a>
+<a id="tocsdistribution"></a>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;1&quot;,
+  &quot;did&quot;: &quot;ubuntu&quot;,
+  &quot;name&quot;: &quot;Ubuntu&quot;,
+  &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
+  &quot;version_code_name&quot;: &quot;bionic&quot;,
+  &quot;version_id&quot;: &quot;18.04&quot;,
+  &quot;arch&quot;: &quot;&quot;,
+  &quot;cpe&quot;: &quot;&quot;,
+  &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;,
+  &quot;x-widdershins-oldRef&quot;: &quot;#/components/examples/Distribution/value&quot;
+}
+
+</code></pre>
+<p>Distribution</p>
+<h3><a class="header" href="#properties-9" id="properties-9">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>id</td><td>string</td><td>true</td><td>none</td><td>A unique ID representing this distribution</td></tr>
+<tr><td>did</td><td>string</td><td>true</td><td>none</td><td>none</td></tr>
+<tr><td>name</td><td>string</td><td>true</td><td>none</td><td>none</td></tr>
+<tr><td>version</td><td>string</td><td>true</td><td>none</td><td>none</td></tr>
+<tr><td>version_code_name</td><td>string</td><td>true</td><td>none</td><td>none</td></tr>
+<tr><td>version_id</td><td>string</td><td>true</td><td>none</td><td>none</td></tr>
+<tr><td>arch</td><td>string</td><td>true</td><td>none</td><td>none</td></tr>
+<tr><td>cpe</td><td>string</td><td>true</td><td>none</td><td>none</td></tr>
+<tr><td>pretty_name</td><td>string</td><td>true</td><td>none</td><td>none</td></tr>
+</tbody></table>
+<h2 id="tocS_SourcePackage">SourcePackage</h2>
+<!-- backwards compatibility -->
+<a id="schemasourcepackage"></a>
+<a id="schema_SourcePackage"></a>
+<a id="tocSsourcepackage"></a>
+<a id="tocssourcepackage"></a>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;10&quot;,
+  &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
+  &quot;version&quot;: &quot;1.6.11&quot;,
+  &quot;kind&quot;: &quot;binary&quot;,
+  &quot;normalized_version&quot;: &quot;&quot;,
+  &quot;arch&quot;: &quot;x86&quot;,
+  &quot;module&quot;: &quot;&quot;,
+  &quot;cpe&quot;: &quot;&quot;,
+  &quot;source&quot;: {
+    &quot;id&quot;: &quot;9&quot;,
+    &quot;name&quot;: &quot;apt&quot;,
+    &quot;version&quot;: &quot;1.6.11&quot;,
+    &quot;kind&quot;: &quot;source&quot;,
+    &quot;source&quot;: null
+  },
+  &quot;x-widdershins-oldRef&quot;: &quot;#/components/examples/Package/value&quot;
+}
+
+</code></pre>
+<p>SourcePackage</p>
+<h3><a class="header" href="#properties-10" id="properties-10">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>id</td><td>string</td><td>true</td><td>none</td><td>A unique ID representing this package</td></tr>
+<tr><td>name</td><td>string</td><td>true</td><td>none</td><td>Name of the Package</td></tr>
+<tr><td>version</td><td>string</td><td>true</td><td>none</td><td>Version of the Package</td></tr>
+<tr><td>kind</td><td>string</td><td>false</td><td>none</td><td>Kind of package. Source</td></tr>
+<tr><td>source</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
+<tr><td>normalized_version</td><td><a href="#schemaversion">Version</a></td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a &quot;kind&quot; and an<br>array of integers such that two versions of the same kind have the<br>correct ordering when the integers are compared pair-wise.</td></tr>
+<tr><td>arch</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
+<tr><td>module</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
+<tr><td>cpe</td><td>string</td><td>false</td><td>none</td><td>A CPE identifying the package</td></tr>
+</tbody></table>
+<h2 id="tocS_Package">Package</h2>
+<!-- backwards compatibility -->
+<a id="schemapackage"></a>
+<a id="schema_Package"></a>
+<a id="tocSpackage"></a>
+<a id="tocspackage"></a>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;10&quot;,
+  &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
+  &quot;version&quot;: &quot;1.6.11&quot;,
+  &quot;kind&quot;: &quot;binary&quot;,
+  &quot;normalized_version&quot;: &quot;&quot;,
+  &quot;arch&quot;: &quot;x86&quot;,
+  &quot;module&quot;: &quot;&quot;,
+  &quot;cpe&quot;: &quot;&quot;,
+  &quot;source&quot;: {
+    &quot;id&quot;: &quot;9&quot;,
+    &quot;name&quot;: &quot;apt&quot;,
+    &quot;version&quot;: &quot;1.6.11&quot;,
+    &quot;kind&quot;: &quot;source&quot;,
+    &quot;source&quot;: null
+  },
+  &quot;x-widdershins-oldRef&quot;: &quot;#/components/examples/Package/value&quot;
+}
+
+</code></pre>
+<p>Package</p>
+<h3><a class="header" href="#properties-11" id="properties-11">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>id</td><td>string</td><td>true</td><td>none</td><td>A unique ID representing this package</td></tr>
+<tr><td>name</td><td>string</td><td>true</td><td>none</td><td>Name of the Package</td></tr>
+<tr><td>version</td><td>string</td><td>true</td><td>none</td><td>Version of the Package</td></tr>
+<tr><td>kind</td><td>string</td><td>false</td><td>none</td><td>Kind of package. Source</td></tr>
+<tr><td>source</td><td><a href="#schemasourcepackage">SourcePackage</a></td><td>false</td><td>none</td><td>A source package affiliated with a Package</td></tr>
+<tr><td>normalized_version</td><td><a href="#schemaversion">Version</a></td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a &quot;kind&quot; and an<br>array of integers such that two versions of the same kind have the<br>correct ordering when the integers are compared pair-wise.</td></tr>
+<tr><td>arch</td><td>string</td><td>false</td><td>none</td><td>The package's target system architecture</td></tr>
+<tr><td>module</td><td>string</td><td>false</td><td>none</td><td>A module further defining a namespace for a package</td></tr>
+<tr><td>cpe</td><td>string</td><td>false</td><td>none</td><td>A CPE identifying the package</td></tr>
+</tbody></table>
+<h2 id="tocS_Repository">Repository</h2>
+<!-- backwards compatibility -->
+<a id="schemarepository"></a>
+<a id="schema_Repository"></a>
+<a id="tocSrepository"></a>
+<a id="tocsrepository"></a>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;string&quot;,
+  &quot;name&quot;: &quot;string&quot;,
+  &quot;key&quot;: &quot;string&quot;,
+  &quot;uri&quot;: &quot;string&quot;,
+  &quot;cpe&quot;: &quot;string&quot;
+}
+
+</code></pre>
+<p>Repository</p>
+<h3><a class="header" href="#properties-12" id="properties-12">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>id</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
+<tr><td>name</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
+<tr><td>key</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
+<tr><td>uri</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
+<tr><td>cpe</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
+</tbody></table>
+<h2 id="tocS_Version">Version</h2>
+<!-- backwards compatibility -->
+<a id="schemaversion"></a>
+<a id="schema_Version"></a>
+<a id="tocSversion"></a>
+<a id="tocsversion"></a>
+<pre><code class="language-json">&quot;pep440:0.0.0.0.0.0.0.0.0&quot;
+
+</code></pre>
+<p>Version</p>
+<h3><a class="header" href="#properties-13" id="properties-13">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>Version</td><td>string</td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a &quot;kind&quot; and an<br>array of integers such that two versions of the same kind have the<br>correct ordering when the integers are compared pair-wise.</td></tr>
+</tbody></table>
+<h2 id="tocS_Manifest">Manifest</h2>
+<!-- backwards compatibility -->
+<a id="schemamanifest"></a>
+<a id="schema_Manifest"></a>
+<a id="tocSmanifest"></a>
+<a id="tocsmanifest"></a>
+<pre><code class="language-json">{
+  &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
+  &quot;layers&quot;: [
+    {
+      &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
+      &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36\n&quot;,
+      &quot;headers&quot;: {
+        &quot;property1&quot;: [
+          &quot;string&quot;
+        ],
+        &quot;property2&quot;: [
+          &quot;string&quot;
+        ]
+      }
+    }
+  ]
+}
+
+</code></pre>
+<p>Manifest</p>
+<h3><a class="header" href="#properties-14" id="properties-14">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>hash</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
+<tr><td>layers</td><td>[<a href="#schemalayer">Layer</a>]</td><td>true</td><td>none</td><td>[A Layer within a Manifest and where Clair may retrieve it.]</td></tr>
+</tbody></table>
+<h2 id="tocS_Layer">Layer</h2>
+<!-- backwards compatibility -->
+<a id="schemalayer"></a>
+<a id="schema_Layer"></a>
+<a id="tocSlayer"></a>
+<a id="tocslayer"></a>
+<pre><code class="language-json">{
+  &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
+  &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36\n&quot;,
+  &quot;headers&quot;: {
+    &quot;property1&quot;: [
+      &quot;string&quot;
+    ],
+    &quot;property2&quot;: [
+      &quot;string&quot;
+    ]
+  }
+}
+
+</code></pre>
+<p>Layer</p>
+<h3><a class="header" href="#properties-15" id="properties-15">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>hash</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
+<tr><td>uri</td><td>string</td><td>true</td><td>none</td><td>A URI describing where the layer may be found. Implementations<br>MUST support http(s) schemes and MAY support additional<br>schemes.</td></tr>
+<tr><td>headers</td><td>object</td><td>true</td><td>none</td><td>map of arrays of header values keyed by header<br>value. e.g. map[string][]string</td></tr>
+<tr><td>» <strong>additionalProperties</strong></td><td>[string]</td><td>false</td><td>none</td><td>none</td></tr>
+</tbody></table>
+<h2 id="tocS_Error">Error</h2>
+<!-- backwards compatibility -->
+<a id="schemaerror"></a>
+<a id="schema_Error"></a>
+<a id="tocSerror"></a>
+<a id="tocserror"></a>
+<pre><code class="language-json">{
+  &quot;code&quot;: &quot;string&quot;,
+  &quot;message&quot;: &quot;string&quot;
+}
+
+</code></pre>
+<p>Error</p>
+<h3><a class="header" href="#properties-16" id="properties-16">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>code</td><td>string</td><td>false</td><td>none</td><td>a code for this particular error</td></tr>
+<tr><td>message</td><td>string</td><td>false</td><td>none</td><td>a message with further detail</td></tr>
+</tbody></table>
+<h2 id="tocS_State">State</h2>
+<!-- backwards compatibility -->
+<a id="schemastate"></a>
+<a id="schema_State"></a>
+<a id="tocSstate"></a>
+<a id="tocsstate"></a>
+<pre><code class="language-json">{
+  &quot;state&quot;: &quot;aae368a064d7c5a433d0bf2c4f5554cc&quot;
+}
+
+</code></pre>
+<p>State</p>
+<h3><a class="header" href="#properties-17" id="properties-17">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>state</td><td>string</td><td>true</td><td>none</td><td>an opaque identifier</td></tr>
+</tbody></table>
+<h2 id="tocS_Digest">Digest</h2>
+<!-- backwards compatibility -->
+<a id="schemadigest"></a>
+<a id="schema_Digest"></a>
+<a id="tocSdigest"></a>
+<a id="tocsdigest"></a>
+<pre><code class="language-json">&quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;
+
+</code></pre>
+<p>Digest</p>
+<h3><a class="header" href="#properties-18" id="properties-18">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>Digest</td><td>string</td><td>false</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
+</tbody></table>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                        
+                            <a rel="prev" href="../reference.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+                        
+
+                        
+                            <a rel="next" href="../reference/clairctl.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                
+                    <a rel="prev" href="../reference.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+                
+
+                
+                    <a rel="next" href="../reference/clairctl.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                
+            </nav>
+
+        </div>
+
+        
+
+        
+
+        
+
+        
+        <script type="text/javascript">
+            window.playground_copyable = true;
+        </script>
+        
+
+        
+
+        
+        <script src="../elasticlunr.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../mark.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../searcher.js" type="text/javascript" charset="utf-8"></script>
+        
+
+        <script src="../clipboard.min.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../highlight.js" type="text/javascript" charset="utf-8"></script>
+        <script src="../book.js" type="text/javascript" charset="utf-8"></script>
+
+        <!-- Custom JS scripts -->
+        
+
+        
+
+    </body>
+</html>
