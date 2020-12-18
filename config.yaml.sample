@@ -26,16 +26,16 @@ matcher:
   max_conn_pool: 100
   run: ""
   migrations: true
-  updater_sets: 
-	- "alpine"
-	- "aws"
-	- "debian"
-	- "oracle"
-	- "photon"
-	- "pyupio"
-	- "rhel"
-	- "suse"
-	- "ubuntu"
+  updater_sets:
+  - "alpine"
+  - "aws"
+  - "debian"
+  - "oracle"
+  - "photon"
+  - "pyupio"
+  - "rhel"
+  - "suse"
+  - "ubuntu"
 notifier:
   indexer_addr: http://clair-indexer:8080/
   matcher_addr: http://clair-matcher:8080/
@@ -51,16 +51,16 @@ notifier:
     callback: "http://clair-notifier/notifier/api/v1/notifications"
   amqp:
     exchange:
-        name: "" 
+        name: ""
         type: "direct"
         durable: true
         auto_delete: false
     uris: ["amqp://user:pass@host:10000/vhost"]
     direct: false
-    routing_key: "notifications" 
+    routing_key: "notifications"
     callback: "http://clair-notifier/notifier/api/v1/notifications"
     tls:
-     root_ca: "optional/path/to/rootca" 
+     root_ca: "optional/path/to/rootca"
      cert: "madatory/path/to/cert"
      key: "madatory/path/to/key"
   stomp:
@@ -71,7 +71,7 @@ notifier:
       login: "username"
       passcode: "passcode"
     tls:
-     root_ca: "optional/path/to/rootca" 
+     root_ca: "optional/path/to/rootca"
      cert: "madatory/path/to/cert"
      key: "madatory/path/to/key"
 
