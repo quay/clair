@@ -1,0 +1,90 @@
+---
+name: Build and publish golang image
+
+on:
+  # Run every day at 5AM UTC
+  schedule:
+    - cron: '0 5 * * *'
+
+env:
+  QUAY_ORG: projectquay
+  QUAY_REPO: golang
+  QUAY_USER: projectquay+clair_github
+  CLAIRCORE_PATH: claircore
+
+jobs:
+  golang-image:
+    name: Build and publish golang image
+    runs-on: 'ubuntu-latest'
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ['1.13', '1.14', '1.15']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Determine the latest released minor version of golang
+        run: |
+          GO_VERSION=`./.github/scripts/get-latest-golang-minor-version.sh ${{ matrix.go }} ${{ matrix.go }}.log`
+          echo "The latest released golang version is ${GO_VERSION}"
+          echo "GO_VERSION=${GO_VERSION}" >> $GITHUB_ENV
+      - name: Archive logfile
+        uses: actions/upload-artifact@v2
+        with:
+          path: ${{ matrix.go }}.log
+          name: ${{ matrix.go }}.log
+          retention-days: 14
+      - name: Determine when quay.io tag was last modified
+        run: |
+          API_RESPONSE=`curl -s \
+            "https://quay.io/api/v1/repository/${QUAY_ORG}/${QUAY_REPO}/tag/?specificTag=${{ matrix.go }}&onlyActiveTags=true"`
+          if [[ `jq -r '.tags' <<< $API_RESPONSE` = "[]" ]]
+          then
+            # The tag we're looking for doesn't exist in the repository so we make sure we'll publish it
+            TAG_LAST_MODIFIED="Thu, 01 Jan 1970 00:00:00 -0000"
+          else
+            TAG_LAST_MODIFIED=`jq -r '.tags[].last_modified' <<< $API_RESPONSE`
+          fi
+          echo "quay.io/${QUAY_ORG}/${QUAY_REPO} was last modified on ${TAG_LAST_MODIFIED}"
+          echo "TAG_LAST_MODIFIED=${TAG_LAST_MODIFIED}" >> $GITHUB_ENV
+      - name: Determine when released golang was last modified
+        run: |
+          GO_LAST_MODIFIED=`curl -sI \
+            https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz \
+            | awk 'BEGIN {FS=": "}/^last-modified/{print $2}'`
+          echo "https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz was last modified on ${GO_LAST_MODIFIED}"
+          echo "GO_LAST_MODIFIED=${GO_LAST_MODIFIED}" >> $GITHUB_ENV
+      - name: Decide whether we need to build new golang image
+        run: |
+          TAG=`date -d "${TAG_LAST_MODIFIED}" +%s`
+          GO=`date -d "${GO_LAST_MODIFIED}" +%s`
+          if [[ $GO -gt $TAG ]]
+          then
+            echo "BUILD_IMAGE=1" >> $GITHUB_ENV
+            echo "We need to build and publish new golang image since new version of golang has been released"
+          else
+            echo "BUILD_IMAGE=0" >> $GITHUB_ENV
+            echo "No need to publish new golang image, it is up to date"
+          fi
+      - name: Prepare for new golang image build
+        run: |
+          TAG=quay.io/${QUAY_ORG}/${QUAY_REPO}:${{ matrix.go }}
+          echo "TAG=${TAG}" >> $GITHUB_ENV
+          echo "::add-mask::${{ secrets.QUAY_TOKEN }}"
+        if: env.BUILD_IMAGE == 1
+      - name: Checkout claircore repository
+        uses: actions/checkout@v2
+        with:
+          repository: quay/claircore
+          path: ${{ env.CLAIRCORE_PATH }}
+        if: env.BUILD_IMAGE == 1
+      - name: Build golang image
+        run: |
+          docker build -f ${CLAIRCORE_PATH}/etc/Dockerfile -t ${TAG}\
+            --build-arg GO_VERSION=${GO_VERSION} ${CLAIRCORE_PATH}/etc
+        if: env.BUILD_IMAGE == 1
+      - name: Publish golang image
+        run: |
+          docker login -u "${QUAY_USER}" -p '${{ secrets.QUAY_TOKEN }}' quay.io
+          docker push "${TAG}"
+        if: env.BUILD_IMAGE == 1
