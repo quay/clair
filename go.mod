@@ -15,6 +15,8 @@ require (
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/klauspost/compress v1.10.11
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
+	github.com/opencontainers/go-digest v1.0.0
+	github.com/opencontainers/image-spec v1.0.1
 	github.com/prometheus/client_golang v0.9.4 // indirect
 	github.com/prometheus/procfs v0.0.8 // indirect
 	github.com/quay/claircore v0.1.20
