@@ -67,7 +67,7 @@ clair -conf "path/to/config.yaml" -mode "combo"
 The simplest way to submit a manifest to your running Clair is utilizing [clairctl](../reference/clairctl.md). This is a CLI tool capable of grabbing image manifests from public repositories and and submitting them for analysis. 
 The command will be in the Clair container, but can also be installed locally by running the following command:
 ```
-go install github.com/quay/clair/v4/cmd/clairctl
+go install github.com/quay/clair/cmd/clairctl
 ```
 
 You can submit a manifest to ClairV4 via the following command.
