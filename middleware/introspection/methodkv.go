@@ -3,20 +3,23 @@ package introspection
 import (
 	"net/http"
 
-	"go.opentelemetry.io/otel/api/core"
-	"go.opentelemetry.io/otel/api/key"
+	"go.opentelemetry.io/otel/label"
 )
 
-var methods = map[string]core.KeyValue{
-	http.MethodConnect: key.New("http.method").String(http.MethodConnect),
-	http.MethodDelete:  key.New("http.method").String(http.MethodDelete),
-	http.MethodGet:     key.New("http.method").String(http.MethodGet),
-	http.MethodHead:    key.New("http.method").String(http.MethodHead),
-	http.MethodOptions: key.New("http.method").String(http.MethodOptions),
-	http.MethodPatch:   key.New("http.method").String(http.MethodPatch),
-	http.MethodPost:    key.New("http.method").String(http.MethodPost),
-	http.MethodPut:     key.New("http.method").String(http.MethodPut),
-	http.MethodTrace:   key.New("http.method").String(http.MethodTrace),
+// methodKey is the label accompanying pathKey and
+// provides the http method of the requested path
+var methodKey = label.Key("http.method")
+
+var methods = map[string]label.KeyValue{
+	http.MethodConnect: methodKey.String(http.MethodDelete),
+	http.MethodDelete:  methodKey.String(http.MethodDelete),
+	http.MethodGet:     methodKey.String(http.MethodGet),
+	http.MethodHead:    methodKey.String(http.MethodHead),
+	http.MethodOptions: methodKey.String(http.MethodOptions),
+	http.MethodPatch:   methodKey.String(http.MethodPatch),
+	http.MethodPost:    methodKey.String(http.MethodPost),
+	http.MethodPut:     methodKey.String(http.MethodPut),
+	http.MethodTrace:   methodKey.String(http.MethodTrace),
 }
 
 // methodKV provides an O(1) function for creating
@@ -24,9 +27,9 @@ var methods = map[string]core.KeyValue{
 //
 // in best case no construction of a KeyValue will
 // be necessary
-func methodKV(r *http.Request) core.KeyValue {
+func methodKV(r *http.Request) label.KeyValue {
 	if kv, ok := methods[r.Method]; ok {
 		return kv
 	}
-	return key.New("http.method").String(r.Method)
+	return label.String("http.method", r.Method)
 }

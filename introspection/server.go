@@ -8,12 +8,12 @@ import (
 	"net/http/pprof"
 
 	"github.com/rs/zerolog"
-	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/api/key"
-	"go.opentelemetry.io/otel/exporter/metric/dogstatsd"
-	"go.opentelemetry.io/otel/exporter/metric/prometheus"
-	"go.opentelemetry.io/otel/exporter/trace/jaeger"
-	"go.opentelemetry.io/otel/exporter/trace/stdout"
+	"go.opentelemetry.io/contrib/exporters/metric/dogstatsd"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/metric/prometheus"
+	"go.opentelemetry.io/otel/exporters/stdout"
+	"go.opentelemetry.io/otel/exporters/trace/jaeger"
+	"go.opentelemetry.io/otel/label"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 
 	"github.com/quay/clair/v4/config"
@@ -95,7 +95,9 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Server, 
 		sampler = sdktrace.AlwaysSample()
 	case i.conf.Trace.Probability != nil:
 		p := *i.conf.Trace.Probability
-		sampler = sdktrace.ProbabilitySampler(p)
+		sampler = sdktrace.ParentBased(
+			sdktrace.TraceIDRatioBased(p),
+		)
 	default:
 		sampler = sdktrace.NeverSample()
 	}
@@ -104,7 +106,7 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Server, 
 	traceCfg := sdktrace.Config{
 		DefaultSampler: sampler,
 	}
-	traceOpts := []sdktrace.ProviderOption{
+	traceOpts := []sdktrace.TracerProviderOption{
 		sdktrace.WithConfig(traceCfg),
 	}
 	switch conf.Trace.Name {
@@ -155,22 +157,19 @@ func (i *Server) withDiagnostics(_ context.Context) error {
 }
 
 // withStdOut configures the stdout exporter for distributed tracing
-func (i *Server) withStdOut(_ context.Context, traceOpts []sdktrace.ProviderOption) error {
-	exporter, err := stdout.NewExporter(stdout.Options{})
+func (i *Server) withStdOut(_ context.Context, traceOpts []sdktrace.TracerProviderOption) error {
+	exporter, err := stdout.NewExporter()
 	if err != nil {
 		return err
 	}
 	traceOpts = append(traceOpts, sdktrace.WithSyncer(exporter))
-	tp, err := sdktrace.NewProvider(traceOpts...)
-	if err != nil {
-		return err
-	}
-	global.SetTraceProvider(tp)
+	tp := sdktrace.NewTracerProvider(traceOpts...)
+	otel.SetTracerProvider(tp)
 	return nil
 }
 
 // withJaeger configures the Jaeger exporter for distributed tracing.
-func (i *Server) withJaeger(ctx context.Context, traceOpts []sdktrace.ProviderOption) error {
+func (i *Server) withJaeger(ctx context.Context, traceOpts []sdktrace.TracerProviderOption) error {
 	logger := zerolog.Ctx(ctx).With().
 		Str("component", "introspection/Introspection.withJaeger").
 		Logger()
@@ -211,14 +210,7 @@ func (i *Server) withJaeger(ctx context.Context, traceOpts []sdktrace.ProviderOp
 	}
 
 	// configure the exporter
-	component := fmt.Sprintf("jaeger-exporter:%v", endpoint)
-	// jaegerLog := log.With().Str("component", component).Logger()
-	jaegerLog := zerolog.Ctx(ctx).With().Str("component", component).Logger()
-	opts := []jaeger.Option{
-		jaeger.WithOnError(func(err error) {
-			jaegerLog.Error().Err(err).Msg("jaeger-exporter error")
-		}),
-	}
+	opts := []jaeger.Option{}
 	if conf.BufferMax != 0 {
 		opts = append(opts, jaeger.WithBufferMaxCount(conf.BufferMax))
 	}
@@ -227,11 +219,11 @@ func (i *Server) withJaeger(ctx context.Context, traceOpts []sdktrace.ProviderOp
 	}
 	if len(conf.Tags) != 0 {
 		for k, v := range conf.Tags {
-			p.Tags = append(p.Tags, key.String(k, v))
+			p.Tags = append(p.Tags, label.String(k, v))
 		}
 	}
 	opts = append(opts, jaeger.WithProcess(p))
-	exporter, err := jaeger.NewExporter(e, opts...)
+	exporter, err := jaeger.NewRawExporter(e, opts...)
 	if err != nil {
 		return err
 	}
@@ -239,11 +231,11 @@ func (i *Server) withJaeger(ctx context.Context, traceOpts []sdktrace.ProviderOp
 
 	i.RegisterOnShutdown(exporter.Flush)
 
-	tp, err := sdktrace.NewProvider(traceOpts...)
+	tp := sdktrace.NewTracerProvider(traceOpts...)
 	if err != nil {
 		return err
 	}
-	global.SetTraceProvider(tp)
+	otel.SetTracerProvider(tp)
 	return nil
 }
 
@@ -267,7 +259,10 @@ func (i *Server) withDogStatsD(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to create dogstatsd pipeline: %v", err)
 	}
-	i.RegisterOnShutdown(pipeline.Stop)
+	i.RegisterOnShutdown(
+		func() {
+			pipeline.Stop(ctx)
+		})
 	return nil
 }
 
@@ -287,20 +282,14 @@ func (i *Server) withPrometheus(ctx context.Context) error {
 		Str("server", i.Addr).
 		Msg("configuring prometheus")
 
-	promlog := zerolog.Ctx(ctx).With().
-		Str("component", "prometheus-metrics-exporter").
-		Logger()
-
-	pipeline, hr, err := prometheus.InstallNewPipeline(prometheus.Config{
-		OnError: func(err error) {
-			promlog.Error().Err(err).Msg("prometheus error")
-		},
-	})
+	pipeline, err := prometheus.InstallNewPipeline(prometheus.Config{})
 	if err != nil {
 		return err
 	}
 
-	i.RegisterOnShutdown(pipeline.Stop)
-	i.HandleFunc(endpoint, hr)
+	i.RegisterOnShutdown(func() {
+		pipeline.Controller().Stop(ctx)
+	})
+	i.HandleFunc(endpoint, pipeline.ServeHTTP)
 	return nil
 }
