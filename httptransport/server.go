@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/rs/zerolog"
-	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/plugin/othttp"
+	othttp "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/config"
@@ -71,7 +71,7 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 		indexer:  indexer,
 		matcher:  matcher,
 		notifier: notifier,
-		traceOpt: othttp.WithTracer(global.TraceProvider().Tracer("clair")),
+		traceOpt: othttp.WithTracerProvider(otel.GetTracerProvider()),
 	}
 
 	if err := t.configureDiscovery(ctx); err != nil {

@@ -12,8 +12,8 @@ import (
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/claircore/test/log"
-	"go.opentelemetry.io/otel/api/global"
-	"go.opentelemetry.io/otel/plugin/othttp"
+	othttp "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
 )
 
 type testMatcher struct {
@@ -61,7 +61,7 @@ func TestUpdateEndpoints(t *testing.T) {
 		matcher:  m,
 		indexer:  i,
 		ServeMux: http.NewServeMux(),
-		traceOpt: othttp.WithTracer(global.TraceProvider().Tracer("clair")),
+		traceOpt: othttp.WithTracerProvider(otel.GetTracerProvider()),
 	}
 	ctx, done := log.TestLogger(context.Background(), t)
 	defer done()
