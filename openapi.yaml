@@ -439,7 +439,7 @@ components:
           description: |
             A well defined set of severity strings guaranteed to be present.
           type: string
-          enum: [Unknown, Negligible, Low, Medium, High, Critical, Defcon1]
+          enum: [Unknown, Negligible, Low, Medium, High, Critical]
         package:
           $ref: '#/components/schemas/Package'
         distribution:
@@ -659,7 +659,7 @@ components:
           description: |
             A well defined set of severity strings guaranteed to be present.
           type: string
-          enum: [Unknown, Negligible, Low, Medium, High, Critical, Defcon1]
+          enum: [Unknown, Negligible, Low, Medium, High, Critical]
         package:
           $ref: '#/components/schemas/Package'
         distribution:

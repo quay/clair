@@ -1117,7 +1117,6 @@ VulnSummary
 |normalized_severity|Medium|
 |normalized_severity|High|
 |normalized_severity|Critical|
-|normalized_severity|Defcon1|
 
 <h2 id="tocS_Notification">Notification</h2>
 <!-- backwards compatibility -->
@@ -1485,7 +1484,6 @@ Vulnerability
 |normalized_severity|Medium|
 |normalized_severity|High|
 |normalized_severity|Critical|
-|normalized_severity|Defcon1|
 
 <h2 id="tocS_Distribution">Distribution</h2>
 <!-- backwards compatibility -->
