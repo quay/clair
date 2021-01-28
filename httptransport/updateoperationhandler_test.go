@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/quay/clair/v4/matcher"
 	"github.com/quay/claircore/libvuln/driver"
 )
 
@@ -27,16 +28,16 @@ func testUpdateOperationHandlerErrors(t *testing.T) {
 
 	id := uuid.New().String()
 	var ErrExpected error = fmt.Errorf("expected error")
-	h := UpdateOperationHandler(&differ{
-		delete: func(context.Context, ...uuid.UUID) error { return ErrExpected },
-		// this will not immediately faile the handler
-		latestOp: func(context.Context) (uuid.UUID, error) {
+	h := UpdateOperationHandler(&matcher.Mock{
+		DeleteUpdateOperations_: func(context.Context, ...uuid.UUID) (int64, error) { return 0, ErrExpected },
+		// this will not immediately fail the handler
+		LatestUpdateOperation_: func(context.Context) (uuid.UUID, error) {
 			return uuid.Nil, ErrExpected
 		},
-		latestOps: func(context.Context) (map[string][]driver.UpdateOperation, error) {
+		LatestUpdateOperations_: func(context.Context) (map[string][]driver.UpdateOperation, error) {
 			return nil, ErrExpected
 		},
-		ops: func(context.Context, ...string) (map[string][]driver.UpdateOperation, error) {
+		UpdateOperations_: func(context.Context, ...string) (map[string][]driver.UpdateOperation, error) {
 			return nil, ErrExpected
 		},
 	})
@@ -76,7 +77,7 @@ func testUpdateOperationHandlerErrors(t *testing.T) {
 // to the desired methods.
 func testUpdateOperationHandlerMethods(t *testing.T) {
 	t.Parallel()
-	h := UpdateOperationHandler(&differ{})
+	h := UpdateOperationHandler(&matcher.Mock{})
 	srv := httptest.NewServer(h)
 	defer srv.Close()
 	c := srv.Client()
@@ -109,8 +110,8 @@ func testUpdateOperationHandlerMethods(t *testing.T) {
 func testUpdateOperationDelete(t *testing.T) {
 	t.Parallel()
 
-	h := UpdateOperationHandler(&differ{
-		delete: func(context.Context, ...uuid.UUID) error { return nil },
+	h := UpdateOperationHandler(&matcher.Mock{
+		DeleteUpdateOperations_: func(context.Context, ...uuid.UUID) (int64, error) { return 0, nil },
 	})
 	srv := httptest.NewServer(h)
 	defer srv.Close()
@@ -141,15 +142,15 @@ func testUpdateOperationHandlerGet(t *testing.T) {
 	idStr := "\"" + id.String() + "\""
 	var called bool
 	var latestCalled bool
-	h := UpdateOperationHandler(&differ{
-		latestOp: func(context.Context) (uuid.UUID, error) {
+	h := UpdateOperationHandler(&matcher.Mock{
+		LatestUpdateOperation_: func(context.Context) (uuid.UUID, error) {
 			return id, nil
 		},
-		latestOps: func(context.Context) (map[string][]driver.UpdateOperation, error) {
+		LatestUpdateOperations_: func(context.Context) (map[string][]driver.UpdateOperation, error) {
 			latestCalled = true
 			return nil, nil
 		},
-		ops: func(context.Context, ...string) (map[string][]driver.UpdateOperation, error) {
+		UpdateOperations_: func(context.Context, ...string) (map[string][]driver.UpdateOperation, error) {
 			called = true
 			return nil, nil
 		},

@@ -32,7 +32,7 @@ var (
 			vulnAdd.ID: vulnAdd,
 		},
 		VulnerableManifests: map[string][]string{
-			manifestAdd: []string{vulnAdd.ID},
+			manifestAdd: {vulnAdd.ID},
 		},
 	}
 	affectedManifestsRemoved = &claircore.AffectedManifests{
@@ -40,7 +40,7 @@ var (
 			vulnRemoved.ID: vulnRemoved,
 		},
 		VulnerableManifests: map[string][]string{
-			manifestRemoved: []string{vulnRemoved.ID},
+			manifestRemoved: {vulnRemoved.ID},
 		},
 	}
 	notifications = []Notification{
@@ -90,11 +90,11 @@ func testProcessorStoreErr(t *testing.T) {
 		},
 	}
 	im := &indexer.Mock{
-		AffectedManifests_: func(ctx context.Context, vulns []claircore.Vulnerability) (claircore.AffectedManifests, error) {
+		AffectedManifests_: func(ctx context.Context, vulns []claircore.Vulnerability) (*claircore.AffectedManifests, error) {
 			// needs to be populated.
 			// create method needs at least one affected manifest
 			// for the code path to invoke store.PutNotifications()
-			return *affectedManifestsAdd, nil
+			return affectedManifestsAdd, nil
 		},
 	}
 	// perform bulk of checks in this mock method.
@@ -135,8 +135,8 @@ func testProcessorIndexerErr(t *testing.T) {
 		},
 	}
 	im := &indexer.Mock{
-		AffectedManifests_: func(ctx context.Context, vulns []claircore.Vulnerability) (claircore.AffectedManifests, error) {
-			return claircore.AffectedManifests{}, fmt.Errorf("expected")
+		AffectedManifests_: func(ctx context.Context, vulns []claircore.Vulnerability) (*claircore.AffectedManifests, error) {
+			return nil, fmt.Errorf("expected")
 		},
 	}
 	// perform bulk of checks in this mock method.
@@ -174,8 +174,8 @@ func testProcessorMatcherErr(t *testing.T) {
 		},
 	}
 	im := &indexer.Mock{
-		AffectedManifests_: func(ctx context.Context, vulns []claircore.Vulnerability) (claircore.AffectedManifests, error) {
-			return claircore.AffectedManifests{}, nil
+		AffectedManifests_: func(ctx context.Context, vulns []claircore.Vulnerability) (*claircore.AffectedManifests, error) {
+			return &claircore.AffectedManifests{}, nil
 		},
 	}
 	// perform bulk of checks in this mock method.
@@ -216,15 +216,15 @@ func testProcessorCreate(t *testing.T) {
 	}
 	count := 0
 	im := &indexer.Mock{
-		AffectedManifests_: func(ctx context.Context, vulns []claircore.Vulnerability) (claircore.AffectedManifests, error) {
+		AffectedManifests_: func(ctx context.Context, vulns []claircore.Vulnerability) (*claircore.AffectedManifests, error) {
 			switch count {
 			case 0:
 				count++
-				return *affectedManifestsAdd, nil
+				return affectedManifestsAdd, nil
 			case 1:
-				return *affectedManifestsRemoved, nil
+				return affectedManifestsRemoved, nil
 			default:
-				return claircore.AffectedManifests{}, fmt.Errorf("unexpected number of calls")
+				return nil, fmt.Errorf("unexpected number of calls")
 			}
 		},
 	}

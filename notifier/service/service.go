@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
 	"os"
@@ -9,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/jmoiron/sqlx"
+	_ "github.com/jackc/pgx/v4/stdlib"
 	pgdl "github.com/quay/claircore/pkg/distlock/postgres"
 	"github.com/remind101/migrate"
 	"github.com/rs/zerolog"
@@ -121,7 +122,7 @@ func New(ctx context.Context, opts Opts) (*service, error) {
 	log.Info().Int("count", processors).Msg("initializing processors")
 	for i := 0; i < processors; i++ {
 		// processors only use try locks
-		distLock := pgdl.NewLock(lockPool, 0)
+		distLock := pgdl.NewPool(lockPool, 0)
 		p := notifier.NewProcessor(
 			i,
 			distLock,
@@ -168,7 +169,7 @@ func testModeInit(ctx context.Context, opts *Opts) error {
 	return nil
 }
 
-func storeInit(ctx context.Context, opts Opts) (*postgres.Store, *postgres.KeyStore, *sqlx.DB, error) {
+func storeInit(ctx context.Context, opts Opts) (*postgres.Store, *postgres.KeyStore, *pgxpool.Pool, error) {
 	log := zerolog.Ctx(ctx).With().
 		Str("component", "notifier/service/storeInit").
 		Logger()
@@ -184,15 +185,16 @@ func storeInit(ctx context.Context, opts Opts) (*postgres.Store, *postgres.KeySt
 		return nil, nil, nil, fmt.Errorf("failed to create ConnPool: %v", err)
 	}
 
-	lockPool, err := sqlx.Connect("pgx", opts.ConnString)
+	db, err := sql.Open("pgx", opts.ConnString)
 	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to create lock ConnPool: %v", err)
+		return nil, nil, nil, fmt.Errorf("failed to open db: %v", err)
 	}
+	defer db.Close()
 
 	// do migrations if requested
 	if opts.Migrations {
 		log.Info().Msg("performing notifier migrations")
-		migrator := migrate.NewPostgresMigrator(lockPool.DB)
+		migrator := migrate.NewPostgresMigrator(db)
 		migrator.Table = migrations.MigrationTable
 		err := migrator.Exec(migrate.Up, migrations.Migrations...)
 		if err != nil {
@@ -203,7 +205,7 @@ func storeInit(ctx context.Context, opts Opts) (*postgres.Store, *postgres.KeySt
 	log.Info().Msg("initializing notifier store")
 	store := postgres.NewStore(pool)
 	keystore := postgres.NewKeyStore(pool)
-	return store, keystore, lockPool, nil
+	return store, keystore, pool, nil
 }
 
 func keyManagerInit(ctx context.Context, keystore notifier.KeyStore) (*keymanager.Manager, error) {
@@ -220,7 +222,7 @@ func keyManagerInit(ctx context.Context, keystore notifier.KeyStore) (*keymanage
 	return mgr, nil
 }
 
-func webhookDeliveries(ctx context.Context, opts Opts, lockPool *sqlx.DB, store notifier.Store, keymanager *keymanager.Manager) error {
+func webhookDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, store notifier.Store, keymanager *keymanager.Manager) error {
 	log := zerolog.Ctx(ctx).With().
 		Str("component", "notifier/service/webhookInit").
 		Logger()
@@ -234,7 +236,7 @@ func webhookDeliveries(ctx context.Context, opts Opts, lockPool *sqlx.DB, store 
 
 	ds := make([]*notifier.Delivery, 0, deliveries)
 	for i := 0; i < deliveries; i++ {
-		distLock := pgdl.NewLock(lockPool, 0)
+		distLock := pgdl.NewPool(lockPool, 0)
 		wh, err := webhook.New(conf, opts.Client, keymanager)
 		if err != nil {
 			return fmt.Errorf("failed to create webhook deliverer: %v", err)
@@ -248,7 +250,7 @@ func webhookDeliveries(ctx context.Context, opts Opts, lockPool *sqlx.DB, store 
 	return nil
 }
 
-func amqpDeliveries(ctx context.Context, opts Opts, lockPool *sqlx.DB, store notifier.Store) error {
+func amqpDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, store notifier.Store) error {
 	log := zerolog.Ctx(ctx).With().
 		Str("component", "notifier/service/amqpInit").
 		Logger()
@@ -266,7 +268,7 @@ func amqpDeliveries(ctx context.Context, opts Opts, lockPool *sqlx.DB, store not
 
 	ds := make([]*notifier.Delivery, 0, deliveries)
 	for i := 0; i < deliveries; i++ {
-		distLock := pgdl.NewLock(lockPool, 0)
+		distLock := pgdl.NewPool(lockPool, 0)
 		if conf.Direct {
 			q, err := namqp.NewDirectDeliverer(conf)
 			if err != nil {
@@ -290,7 +292,7 @@ func amqpDeliveries(ctx context.Context, opts Opts, lockPool *sqlx.DB, store not
 	return nil
 }
 
-func stompDeliveries(ctx context.Context, opts Opts, lockPool *sqlx.DB, store notifier.Store) error {
+func stompDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, store notifier.Store) error {
 	log := zerolog.Ctx(ctx).With().
 		Str("component", "notifier/service/stompInit").
 		Logger()
@@ -308,7 +310,7 @@ func stompDeliveries(ctx context.Context, opts Opts, lockPool *sqlx.DB, store no
 
 	ds := make([]*notifier.Delivery, 0, deliveries)
 	for i := 0; i < deliveries; i++ {
-		distLock := pgdl.NewLock(lockPool, 0)
+		distLock := pgdl.NewPool(lockPool, 0)
 		if conf.Direct {
 			q, err := stomp.NewDirectDeliverer(conf)
 			if err != nil {

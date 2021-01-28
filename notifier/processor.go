@@ -151,7 +151,7 @@ func (p *Processor) create(ctx context.Context, e Event, prev uuid.UUID) error {
 	}
 
 	notifications := []Notification{}
-	create := func(r Reason, affected claircore.AffectedManifests) error {
+	create := func(r Reason, affected *claircore.AffectedManifests) error {
 		for manifest, vulns := range affected.VulnerableManifests {
 			digest, err := claircore.ParseDigest(manifest)
 			if err != nil {

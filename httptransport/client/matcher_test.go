@@ -63,8 +63,12 @@ func TestDiffer(t *testing.T) {
 			}
 
 			// Do the call.
-			if err := c.DeleteUpdateOperations(ctx, refs...); err != nil {
+			deleted, err := c.DeleteUpdateOperations(ctx, refs...)
+			if err != nil {
 				t.Error(err)
+			}
+			if deleted != int64(len(refs)) {
+				t.Errorf("got: %v, want: %v", deleted, len(refs))
 			}
 		})
 
