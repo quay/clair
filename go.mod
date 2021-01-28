@@ -14,9 +14,10 @@ require (
 	github.com/klauspost/compress v1.10.11
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/prometheus/procfs v0.3.0 // indirect
-	github.com/quay/claircore v0.1.20
+	github.com/quay/claircore v0.2.0
+	github.com/quay/zlog v0.0.0-20210113185248-ce16eed1dcec
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
-	github.com/rs/zerolog v1.16.0
+	github.com/rs/zerolog v1.20.0
 	github.com/streadway/amqp v1.0.0
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/urfave/cli/v2 v2.2.0

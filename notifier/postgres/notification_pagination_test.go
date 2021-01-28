@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/test/integration"
-	"github.com/quay/claircore/test/log"
+	"github.com/quay/zlog"
 
 	"github.com/quay/clair/v4/notifier"
 )
@@ -72,8 +72,7 @@ func TestNotePagination(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
-			ctx, done := log.TestLogger(ctx, t)
-			defer done()
+			ctx = zlog.Test(ctx, t)
 			_, store, _, _ := TestStore(ctx, t)
 
 			noteID := uuid.New()

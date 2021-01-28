@@ -18,26 +18,26 @@ import (
 // in notifier test mode a notifier.Processor will request "indexer.AffectedManifest" with a
 // set of vulnerabilities at which point we will return a mock affected vulnerability.
 func indexerForTestMode(mock *indexer.Mock) {
-	affectedManifests := func(ctx context.Context, vulns []claircore.Vulnerability) (claircore.AffectedManifests, error) {
+	affectedManifests := func(ctx context.Context, vulns []claircore.Vulnerability) (*claircore.AffectedManifests, error) {
 		if len(vulns) == 0 {
-			return claircore.NewAffectedManifests(), nil
+			return &claircore.AffectedManifests{}, nil
 		}
 
 		data := make([]byte, sha256.Size)
 		_, err := rand.Read(data)
 		if err != nil {
-			return claircore.AffectedManifests{}, err
+			return nil, err
 		}
 		digest, err := claircore.NewDigest("sha256", data)
 		if err != nil {
-			return claircore.AffectedManifests{}, err
+			return nil, err
 		}
-		am := claircore.AffectedManifests{
+		am := &claircore.AffectedManifests{
 			Vulnerabilities: map[string]*claircore.Vulnerability{
 				vulns[0].ID: &(vulns[0]),
 			},
 			VulnerableManifests: map[string][]string{
-				digest.String(): []string{vulns[0].ID},
+				digest.String(): {vulns[0].ID},
 			},
 		}
 		return am, nil

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/quay/clair/v4/matcher"
 	"github.com/quay/claircore/libvuln/driver"
 )
 
@@ -23,11 +24,11 @@ func TestUpdateDiffHandler(t *testing.T) {
 // the correct status codes when a matcher returns an error or success
 func testUpdateDiffMatcher(t *testing.T) {
 	t.Parallel()
-	hOK := UpdateDiffHandler(&differ{
-		updateDiff: func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error) { return nil, nil },
+	hOK := UpdateDiffHandler(&matcher.Mock{
+		UpdateDiff_: func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error) { return nil, nil },
 	})
-	hErr := UpdateDiffHandler(&differ{
-		updateDiff: func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error) {
+	hErr := UpdateDiffHandler(&matcher.Mock{
+		UpdateDiff_: func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error) {
 			return nil, fmt.Errorf("expected error")
 		},
 	})
@@ -119,8 +120,8 @@ func testUpdateDiffHandlerParams(t *testing.T) {
 		},
 	}
 
-	h := UpdateDiffHandler(&differ{
-		updateDiff: func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error) { return nil, nil },
+	h := UpdateDiffHandler(&matcher.Mock{
+		UpdateDiff_: func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error) { return nil, nil },
 	})
 	srv := httptest.NewServer(h)
 	defer srv.Close()
@@ -157,8 +158,8 @@ func testUpdateDiffHandlerParams(t *testing.T) {
 // to unaccepted HTTP methods.
 func testUpdateDiffHandlerMethods(t *testing.T) {
 	t.Parallel()
-	h := UpdateDiffHandler(&differ{
-		updateDiff: func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error) { return nil, nil },
+	h := UpdateDiffHandler(&matcher.Mock{
+		UpdateDiff_: func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error) { return nil, nil },
 	})
 	srv := httptest.NewServer(h)
 	defer srv.Close()

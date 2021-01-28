@@ -25,7 +25,7 @@ type Scanner interface {
 // Differ is an interface providing information on update operations.
 type Differ interface {
 	// DeleteUpdateOperations marks the provided refs as seen and processed.
-	DeleteUpdateOperations(context.Context, ...uuid.UUID) error
+	DeleteUpdateOperations(context.Context, ...uuid.UUID) (int64, error)
 	// UpdateDiff reports the differences between the provided refs.
 	//
 	// "Prev" can be `uuid.Nil` to indicate "earliest known ref."

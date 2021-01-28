@@ -107,7 +107,7 @@ func (h *UOHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.serv.DeleteUpdateOperations(ctx, uuid)
+	_, err = h.serv.DeleteUpdateOperations(ctx, uuid)
 	if err != nil {
 		resp := &je.Response{
 			Code:    "internal server error",

@@ -17,7 +17,7 @@ import (
 
 var _ indexer.Service = (*HTTP)(nil)
 
-func (s *HTTP) AffectedManifests(ctx context.Context, v []claircore.Vulnerability) (claircore.AffectedManifests, error) {
+func (s *HTTP) AffectedManifests(ctx context.Context, v []claircore.Vulnerability) (*claircore.AffectedManifests, error) {
 	var affected claircore.AffectedManifests
 	buf := bytes.NewBuffer([]byte{})
 	err := json.NewEncoder(buf).Encode(struct {
@@ -26,29 +26,29 @@ func (s *HTTP) AffectedManifests(ctx context.Context, v []claircore.Vulnerabilit
 		v,
 	})
 	if err != nil {
-		return affected, &clairerror.ErrBadVulnerabilities{err}
+		return nil, &clairerror.ErrBadVulnerabilities{err}
 	}
 
 	u, err := s.addr.Parse(httptransport.AffectedManifestAPIPath)
 	if err != nil {
-		return affected, fmt.Errorf("failed to parse api address: %v", err)
+		return nil, fmt.Errorf("failed to parse api address: %v", err)
 	}
 	req, err := http.NewRequestWithContext(ctx, "POST", u.String(), buf)
 	if err != nil {
-		return affected, fmt.Errorf("failed to create request: %v", err)
+		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
 	resp, err := s.c.Do(req)
 	if resp != nil {
 		defer resp.Body.Close()
 	}
 	if err != nil {
-		return affected, &clairerror.ErrRequestFail{Code: resp.StatusCode, Status: resp.Status}
+		return nil, &clairerror.ErrRequestFail{Code: resp.StatusCode, Status: resp.Status}
 	}
 	err = json.NewDecoder(resp.Body).Decode(&affected)
 	if err != nil {
-		return affected, &clairerror.ErrBadAffectedManifests{err}
+		return nil, &clairerror.ErrBadAffectedManifests{err}
 	}
-	return affected, nil
+	return &affected, nil
 }
 
 // Index receives a Manifest and returns a IndexReport providing the indexed
