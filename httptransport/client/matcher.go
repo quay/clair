@@ -57,10 +57,10 @@ func (c *HTTP) Scan(ctx context.Context, ir *claircore.IndexReport) (*claircore.
 }
 
 // DeleteUpdateOperations attempts to delete the referenced update operations.
-func (c *HTTP) DeleteUpdateOperations(ctx context.Context, ref ...uuid.UUID) error {
+func (c *HTTP) DeleteUpdateOperations(ctx context.Context, ref ...uuid.UUID) (int64, error) {
 	u, err := c.addr.Parse(httptransport.UpdateOperationAPIPath)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	// Spawn a few requests that will write their result into "errs".
@@ -110,8 +110,10 @@ func (c *HTTP) DeleteUpdateOperations(ctx context.Context, ref ...uuid.UUID) err
 
 	var b strings.Builder
 	var errd bool
+	var deleted = int64(len(ref))
 	for _, err := range errs {
 		if err != nil {
+			deleted--
 			if errd {
 				b.WriteByte('\n')
 			}
@@ -121,9 +123,9 @@ func (c *HTTP) DeleteUpdateOperations(ctx context.Context, ref ...uuid.UUID) err
 	}
 
 	if errd {
-		return errors.New("deletion errors: " + b.String())
+		return deleted, errors.New("deletion errors: " + b.String())
 	}
-	return nil
+	return deleted, nil
 }
 
 // LatestUpdateOperation shouldn't be used by client code and is implemented

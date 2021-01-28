@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/test/integration"
-	"github.com/quay/claircore/test/log"
+	"github.com/quay/zlog"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/quay/clair/v4/notifier"
@@ -68,8 +68,7 @@ func TestDirectDeliverer(t *testing.T) {
 	}
 	for _, tt := range table {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx, done := log.TestLogger(context.Background(), t)
-			defer done()
+			ctx := zlog.Test(context.Background(), t)
 			// deliverer test
 			conf := Config{
 				Direct:      true,

@@ -48,5 +48,5 @@ type Stater interface {
 
 // Affected is an interface for reporting the manifests affected by a set of vulnerabilities.
 type Affected interface {
-	AffectedManifests(ctx context.Context, vulns []claircore.Vulnerability) (claircore.AffectedManifests, error)
+	AffectedManifests(ctx context.Context, vulns []claircore.Vulnerability) (*claircore.AffectedManifests, error)
 }

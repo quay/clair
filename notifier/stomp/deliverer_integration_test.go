@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/quay/claircore/test/integration"
-	"github.com/quay/claircore/test/log"
+	"github.com/quay/zlog"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -20,8 +20,7 @@ const (
 // callback is successfully delivered to the stomp broker.
 func TestDeliverer(t *testing.T) {
 	integration.Skip(t)
-	ctx, done := log.TestLogger(context.Background(), t)
-	defer done()
+	ctx := zlog.Test(context.Background(), t)
 	const (
 		callback = "http://clair-notifier/notifier/api/v1/notifications"
 	)

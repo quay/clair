@@ -13,17 +13,6 @@ import (
 	"github.com/quay/claircore"
 )
 
-var _ indexer.Affected = (*affected)(nil)
-
-// affected implements indexer.Affected by calling the func members
-type affected struct {
-	affectedManifests func(context.Context, []claircore.Vulnerability) (claircore.AffectedManifests, error)
-}
-
-func (a *affected) AffectedManifests(ctx context.Context, v []claircore.Vulnerability) (claircore.AffectedManifests, error) {
-	return a.affectedManifests(ctx, v)
-}
-
 // TestAffectedManifestHandler is a parallel harness for testing an AffectedManifest handler.
 func TestAffectedManifestHandler(t *testing.T) {
 	t.Run("IndexerOK", testAffectedManifestHandlerIndexerOK)
@@ -33,9 +22,9 @@ func TestAffectedManifestHandler(t *testing.T) {
 
 func testAffectedManifestHandlerIndexerOK(t *testing.T) {
 	t.Parallel()
-	h := AffectedManifestHandler(&affected{
-		affectedManifests: func(context.Context, []claircore.Vulnerability) (claircore.AffectedManifests, error) {
-			return claircore.NewAffectedManifests(), nil
+	h := AffectedManifestHandler(&indexer.Mock{
+		AffectedManifests_: func(context.Context, []claircore.Vulnerability) (*claircore.AffectedManifests, error) {
+			return &claircore.AffectedManifests{}, nil
 		},
 	})
 
@@ -68,9 +57,9 @@ func testAffectedManifestHandlerIndexerOK(t *testing.T) {
 
 func testAffectedManifestHandlerIndexerErr(t *testing.T) {
 	t.Parallel()
-	h := AffectedManifestHandler(&affected{
-		affectedManifests: func(context.Context, []claircore.Vulnerability) (claircore.AffectedManifests, error) {
-			return claircore.NewAffectedManifests(), fmt.Errorf("error")
+	h := AffectedManifestHandler(&indexer.Mock{
+		AffectedManifests_: func(context.Context, []claircore.Vulnerability) (*claircore.AffectedManifests, error) {
+			return &claircore.AffectedManifests{}, fmt.Errorf("failed")
 		},
 	})
 
@@ -103,9 +92,9 @@ func testAffectedManifestHandlerIndexerErr(t *testing.T) {
 
 func testAffectedManifestHandlerMethods(t *testing.T) {
 	t.Parallel()
-	h := AffectedManifestHandler(&affected{
-		affectedManifests: func(context.Context, []claircore.Vulnerability) (claircore.AffectedManifests, error) {
-			return claircore.NewAffectedManifests(), nil
+	h := AffectedManifestHandler(&indexer.Mock{
+		AffectedManifests_: func(context.Context, []claircore.Vulnerability) (*claircore.AffectedManifests, error) {
+			return &claircore.AffectedManifests{}, nil
 		},
 	})
 	srv := httptest.NewServer(h)

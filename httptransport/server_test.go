@@ -8,63 +8,25 @@ import (
 	"path"
 	"testing"
 
-	"github.com/google/uuid"
-	"github.com/quay/claircore"
-	"github.com/quay/claircore/libvuln/driver"
-	"github.com/quay/claircore/test/log"
+	"github.com/quay/clair/v4/indexer"
+	"github.com/quay/clair/v4/matcher"
+	"github.com/quay/zlog"
 	othttp "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 )
 
-type testMatcher struct {
-	scanner
-	differ
-}
-
-// NewTestMatcher returns a testMatcher with all functions set to non-nil stubs.
-func newTestMatcher() *testMatcher {
-	return &testMatcher{
-		scanner: scanner{
-			scan: func(context.Context, *claircore.IndexReport) (*claircore.VulnerabilityReport, error) { return nil, nil },
-		},
-		differ: differ{
-			delete:     func(context.Context, ...uuid.UUID) error { return nil },
-			ops:        func(context.Context, ...string) (map[string][]driver.UpdateOperation, error) { return nil, nil },
-			latestOp:   func(context.Context) (uuid.UUID, error) { return uuid.Nil, nil },
-			latestOps:  func(context.Context) (map[string][]driver.UpdateOperation, error) { return nil, nil },
-			updateDiff: func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error) { return nil, nil },
-		},
-	}
-}
-
-func newTestIndexer() *indexerMock {
-	return &indexerMock{
-		index: func(ctx context.Context, manifest *claircore.Manifest) (*claircore.IndexReport, error) {
-			return nil, nil
-		},
-		report: func(ctx context.Context, digest claircore.Digest) (*claircore.IndexReport, bool, error) {
-			return nil, true, nil
-		},
-		state: func(ctx context.Context) (string, error) { return "", nil },
-		affected: func(ctx context.Context, vulns []claircore.Vulnerability) (claircore.AffectedManifests, error) {
-			return claircore.NewAffectedManifests(), nil
-		},
-	}
-}
-
 // TestUpdateEndpoints registers the handlers and tests that they're registered
 // at the correct endpoint.
 func TestUpdateEndpoints(t *testing.T) {
-	m := newTestMatcher()
-	i := newTestIndexer()
+	m := &matcher.Mock{}
+	i := &indexer.Mock{}
 	s := &Server{
 		matcher:  m,
 		indexer:  i,
 		ServeMux: http.NewServeMux(),
 		traceOpt: othttp.WithTracerProvider(otel.GetTracerProvider()),
 	}
-	ctx, done := log.TestLogger(context.Background(), t)
-	defer done()
+	ctx := zlog.Test(context.Background(), t)
 	if err := s.configureMatcherMode(ctx); err != nil {
 		t.Error(err)
 	}

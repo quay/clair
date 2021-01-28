@@ -7,16 +7,14 @@ import (
 	"github.com/google/uuid"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
-	"github.com/quay/claircore/test/log"
+	"github.com/quay/zlog"
 
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
 )
 
 func TestNotificationSummary(t *testing.T) {
-	ctx := context.Background()
-	ctx, done := log.TestLogger(ctx, t)
-	defer done()
+	ctx := zlog.Test(context.Background(), t)
 
 	// This is a bunch of supporting data structures.
 	updater := uuid.New().String()
@@ -32,7 +30,7 @@ func TestNotificationSummary(t *testing.T) {
 		{ID: "🖳", Name: "uncool vulnerability"},
 		{ID: "☃", Name: "cool vulnerability", NormalizedSeverity: claircore.Critical},
 	}
-	am := claircore.AffectedManifests{
+	am := &claircore.AffectedManifests{
 		Vulnerabilities: map[string]*claircore.Vulnerability{
 			"☃": &vs[0],
 			"🖳": &vs[1],
@@ -55,13 +53,13 @@ func TestNotificationSummary(t *testing.T) {
 			},
 		},
 		indexer: &indexer.Mock{
-			AffectedManifests_: func(_ context.Context, vs []claircore.Vulnerability) (claircore.AffectedManifests, error) {
+			AffectedManifests_: func(_ context.Context, vs []claircore.Vulnerability) (*claircore.AffectedManifests, error) {
 				if len(vs) > 0 {
 					// Needs at least one affected manifest
 					// for the code path to invoke store.PutNotifications()
 					return am, nil
 				}
-				return claircore.NewAffectedManifests(), nil
+				return &claircore.AffectedManifests{}, nil
 			},
 		},
 	}

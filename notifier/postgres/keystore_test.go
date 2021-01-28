@@ -11,7 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/quay/claircore/test/integration"
-	"github.com/quay/claircore/test/log"
+	"github.com/quay/zlog"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/notifier/keymanager"
@@ -52,8 +52,7 @@ func TestKeyStore(t *testing.T) {
 func testKeyStoreGC(t *testing.T) {
 	integration.Skip(t)
 	t.Parallel()
-	ctx, done := log.TestLogger(context.Background(), t)
-	defer done()
+	ctx := zlog.Test(context.Background(), t)
 	db, _, keystore, teardown := postgres.TestStore(ctx, t)
 	defer teardown()
 
@@ -106,8 +105,7 @@ func testKeyStoreGC(t *testing.T) {
 func testKeyStore(t *testing.T) {
 	integration.Skip(t)
 	t.Parallel()
-	ctx, done := log.TestLogger(context.Background(), t)
-	defer done()
+	ctx := zlog.Test(context.Background(), t)
 	_, _, keystore, teardown := postgres.TestStore(ctx, t)
 	defer teardown()
 
