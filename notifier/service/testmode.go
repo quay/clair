@@ -26,11 +26,11 @@ func indexerForTestMode(mock *indexer.Mock) {
 		data := make([]byte, sha256.Size)
 		_, err := rand.Read(data)
 		if err != nil {
-			return &claircore.AffectedManifests{}, err
+			return nil, err
 		}
 		digest, err := claircore.NewDigest("sha256", data)
 		if err != nil {
-			return &claircore.AffectedManifests{}, err
+			return nil, err
 		}
 		am := &claircore.AffectedManifests{
 			Vulnerabilities: map[string]*claircore.Vulnerability{

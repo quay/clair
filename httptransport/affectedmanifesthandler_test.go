@@ -59,7 +59,7 @@ func testAffectedManifestHandlerIndexerErr(t *testing.T) {
 	t.Parallel()
 	h := AffectedManifestHandler(&indexer.Mock{
 		AffectedManifests_: func(context.Context, []claircore.Vulnerability) (*claircore.AffectedManifests, error) {
-			return &claircore.AffectedManifests{}, fmt.Errorf("failed")
+			return nil, fmt.Errorf("failed")
 		},
 	})
 
