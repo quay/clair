@@ -139,6 +139,72 @@ objects:
                 - name: clair-config
                   mountPath: /etc/clair
   #
+  # notifier deployment
+  #
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: clair-notifier
+      labels:
+        service: notifier
+        app: clair
+    spec:
+      replicas: ${{NOTIFIER_DEPLOYMENT_REPLICAS}}
+      selector:
+        matchLabels:
+          service: notifier
+          app: clair
+      template:
+        metadata:
+          name: clair-notifier
+          labels:
+            service: notifier
+            app: clair
+        spec:
+          volumes:
+            - name: clair-config
+              secret:
+                secretName: ${{CLAIR_SECRET}}
+                items:
+                  - key: config
+                    path: clair.conf
+          containers:
+            - name: clair-notifier
+              resources:
+                limits:
+                  cpu: ${{NOTIFIER_CPU_LIMITS}}
+                  memory: ${{NOTIFIER_MEM_LIMITS}}
+                requests:
+                  cpu: ${{NOTIFIER_CPU_REQS}}
+                  memory: ${{NOTIFIER_MEM_REQS}}
+              command: [clair]
+              env:
+                - name: CLAIR_CONF
+                  value: '/etc/clair/clair.conf'
+                - name: CLAIR_MODE
+                  value: notifier
+              image: ${CLAIR_IMAGE}:${IMAGE_TAG}
+              ports:
+                - containerPort: ${{HTTP_TRANSPORT_PORT}}
+                  name: http-transport
+                - containerPort: ${{INTROSPECTION_PORT}}
+                  name: introspection
+              livenessProbe:
+                httpGet:
+                  path: ${{HEALTH_PATH}}
+                  port: ${{HEALTH_PORT}}
+              readinessProbe:
+                httpGet:
+                  path: ${{HEALTH_PATH}}
+                  port: ${{HEALTH_PORT}}
+              startupProbe:
+                httpGet:
+                  path: ${{HEALTH_PATH}}
+                  port: ${{HEALTH_PORT}}
+              volumeMounts:
+                - name: clair-config
+                  mountPath: /etc/clair
+  #
   # indexer service
   #
   - apiVersion: v1
@@ -189,68 +255,30 @@ objects:
         service: matcher
         app: clair
   #
-  # indexer
+  # notifier service
   #
-  - kind: Route
-    apiVersion: route.openshift.io/v1
+  - apiVersion: v1
+    kind: Service
     metadata:
-      name: clair-indexer
-      namespace: clair
+      name: clair-notifier
       labels:
+        service: notifier
         app: clair
-        component: indexer
+      annotations:
+        prometheus.io/scrape: 'true'
     spec:
-      host: clair.stage.quay.io
-      path: /indexer
-      to:
-        kind: Service
-        name: clair-indexer
-        weight: 100
-      port:
-        targetPort: ${{INTROSPECTION_PORT}}
-      wildcardPolicy: None
-  #
-  # matcher route
-  #
-  - kind: Route
-    apiVersion: route.openshift.io/v1
-    metadata:
-      name: clair-matcher
-      namespace: clair
-      labels:
+      ports:
+        - name: http-transport
+          protocol: TCP
+          port: 80
+          targetPort: ${{HTTP_TRANSPORT_PORT}}
+        - name: introspection
+          protocol: TCP
+          port: 8089
+          targetPort: ${{INTROSPECTION_PORT}}
+      selector:
+        service: notifier
         app: clair
-        component: matcher
-    spec:
-      host: clair.stage.quay.io
-      path: /matcher
-      to:
-        kind: Service
-        name: clair-matcher
-        weight: 100
-      port:
-        targetPort: ${{INTROSPECTION_PORT}}
-      wildcardPolicy: None
-  #
-  # notifier route
-  #
-  - kind: Route
-    apiVersion: route.openshift.io/v1
-    metadata:
-      name: notifier
-      namespace: clair
-      labels:
-        app: clair
-        component: notifier
-    spec:
-      host: clair.stage.quay.io
-      path: /notifier
-      to:
-        kind: Service
-        name: clair-notifier
-        weight: 100
-      port:
-        targetPort: ${{INTROSPECTION_PORT}}
-      wildcardPolicy: None
 parameters:
   #
   # indexer params
@@ -286,6 +314,24 @@ parameters:
     value: "8192Mi"
     displayName: the matcher's memory limits in vCPUs
   - name: MATCHER_MEM_REQS
+    value: "4096Mi"
+    displayName: the matcher's memory requests in vCPUs
+  #
+  # notifier params
+  #
+  - name: NOTIFIER_DEPLOYMENT_REPLICAS
+    value: "2"
+    displayName: the number of matchers deployed
+  - name: NOTIFIER_CPU_LIMITS
+    value: "4"
+    displayName: the matcher's cpu limits in vCPUs
+  - name: NOTIFIER_CPU_REQS
+    value: "2"
+    displayName: the matcher's cpu requests in vCPUs
+  - name: NOTIFIER_MEM_LIMITS
+    value: "8192Mi"
+    displayName: the matcher's memory limits in vCPUs
+  - name: NOTIFIER_MEM_REQS
     value: "4096Mi"
     displayName: the matcher's memory requests in vCPUs
   #
