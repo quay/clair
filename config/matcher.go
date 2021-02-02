@@ -1,6 +1,10 @@
 package config
 
-import "time"
+import (
+	"fmt"
+	"net/url"
+	"time"
+)
 
 type Matcher struct {
 	// A Postgres connection string.
@@ -40,4 +44,29 @@ type Matcher struct {
 	// The lowest possible value is 2 in order to compare updates for notification
 	// purposes.
 	UpdateRetention int `yaml:"update_retention" json:"update_retention"`
+}
+
+func (m *Matcher) Validate() error {
+	const (
+		DefaultPeriod    = 30 * time.Minute
+		DefaultRetention = 10
+	)
+	if m.ConnString == "" {
+		return fmt.Errorf("matcher requies a database connection string")
+	}
+	if m.IndexerAddr == "" {
+		return fmt.Errorf("matcher mode requires a remote Indexer address")
+	}
+
+	_, err := url.Parse(m.IndexerAddr)
+	if err != nil {
+		return fmt.Errorf("failed to url parse matcher mode IndexAddr string: %v", err)
+	}
+	if m.Period == 0 {
+		m.Period = DefaultPeriod
+	}
+	if m.UpdateRetention < 2 {
+		m.UpdateRetention = DefaultRetention
+	}
+	return nil
 }

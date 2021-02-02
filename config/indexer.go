@@ -1,6 +1,10 @@
 package config
 
-import "gopkg.in/yaml.v3"
+import (
+	"fmt"
+
+	"gopkg.in/yaml.v3"
+)
 
 // Indexer provides Clair Indexer node configuration
 type Indexer struct {
@@ -31,6 +35,19 @@ type Indexer struct {
 	// Airgap disables scanners that have signaled they expect to talk to the
 	// Internet.
 	Airgap bool `yaml:"airgap" json:"airgap"`
+}
+
+func (i *Indexer) Validate() error {
+	const (
+		DefaultScanLockRetry = 1
+	)
+	if i.ConnString == "" {
+		return fmt.Errorf("indexer mode requires a database connection string")
+	}
+	if i.ScanLockRetry == 0 {
+		i.ScanLockRetry = 1
+	}
+	return nil
 }
 
 type ScannerConfig struct {
