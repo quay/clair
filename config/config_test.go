@@ -64,7 +64,7 @@ func Test_Config_Validate_Failure(t *testing.T) {
 
 	for _, tab := range table {
 		t.Run(tab.name, func(t *testing.T) {
-			if err := config.Validate(tab.conf); err == nil {
+			if err := config.Validate(&tab.conf); err == nil {
 				log.Fatalf("expected error for test case: %s", tab.name)
 			}
 		})

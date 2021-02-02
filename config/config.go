@@ -2,9 +2,7 @@ package config
 
 import (
 	"fmt"
-	"net/url"
 	"strings"
-	"time"
 
 	"github.com/quay/claircore/libvuln/driver"
 	"gopkg.in/yaml.v3"
@@ -108,64 +106,32 @@ func (u *Updaters) FilterSets(m map[string]driver.UpdaterSetFactory) {
 
 // Validate confirms the necessary values to support
 // the desired Clair Mode exist
-func Validate(conf Config) error {
+func Validate(conf *Config) error {
+	if conf.HTTPListenAddr == "" {
+		conf.HTTPListenAddr = DefaultAddress
+	}
 	switch strings.ToLower(conf.Mode) {
 	case ComboMode:
-		if conf.HTTPListenAddr == "" {
-			conf.HTTPListenAddr = DefaultAddress
+		if err := conf.Indexer.Validate(); err != nil {
+			return err
 		}
-		if conf.Indexer.ConnString == "" {
-			return fmt.Errorf("indexer mode requires a database connection string")
+		if err := conf.Matcher.Validate(); err != nil {
+			return err
 		}
-		if conf.Matcher.ConnString == "" {
-			return fmt.Errorf("matcher mode requires a database connection string")
-		}
-		if conf.Notifier.ConnString == "" {
-			return fmt.Errorf("notifier mode requires a database connection string")
-		}
-		if conf.Matcher.Period == 0 {
-			conf.Matcher.Period = 30 * time.Minute
-		}
-		if conf.Matcher.UpdateRetention < 2 {
-			conf.Matcher.UpdateRetention = 10
+		if err := conf.Notifier.Validate(); err != nil {
+			return err
 		}
 	case IndexerMode:
-		if conf.HTTPListenAddr == "" {
-			conf.HTTPListenAddr = DefaultAddress
-		}
-		if conf.Indexer.ConnString == "" {
-			return fmt.Errorf("indexer mode requires a database connection string")
+		if err := conf.Indexer.Validate(); err != nil {
+			return err
 		}
 	case MatcherMode:
-		if conf.HTTPListenAddr == "" {
-			conf.HTTPListenAddr = DefaultAddress
-		}
-		if conf.Matcher.ConnString == "" {
-			return fmt.Errorf("matcher mode requires a database connection string")
-		}
-
-		if conf.Matcher.IndexerAddr == "" {
-			return fmt.Errorf("matcher mode requires a remote Indexer address")
-		}
-		_, err := url.Parse(conf.Matcher.IndexerAddr)
-		if err != nil {
-			return fmt.Errorf("failed to url parse matcher mode IndexAddr string: %v", err)
-		}
-		if conf.Matcher.Period == 0 {
-			conf.Matcher.Period = 30 * time.Minute
-		}
-		if conf.Matcher.UpdateRetention < 2 {
-			conf.Matcher.UpdateRetention = 10
+		if err := conf.Matcher.Validate(); err != nil {
+			return err
 		}
 	case NotifierMode:
-		if conf.Notifier.ConnString == "" {
-			return fmt.Errorf("notifier mode requires a database connection string")
-		}
-		if conf.Notifier.IndexerAddr == "" {
-			return fmt.Errorf("notifier mode requires a remote Indexer")
-		}
-		if conf.Notifier.MatcherAddr == "" {
-			return fmt.Errorf("notifier mode requires a remote Matcher")
+		if err := conf.Notifier.Validate(); err != nil {
+			return err
 		}
 	default:
 		return fmt.Errorf("unknown mode received: %v", conf.Mode)

@@ -83,32 +83,19 @@ func (i *Init) Services() error {
 			return fmt.Errorf("failed to initialize libvuln: %v", err)
 		}
 
-		// configure notifier service
-		dInterval, err := time.ParseDuration(i.conf.Notifier.DeliveryInterval)
-		if err != nil {
-			return &clairerror.ErrNotInitialized{
-				Msg: "notifier: failed to parse delivery interval: " + err.Error(),
-			}
-		}
-		pInterval, err := time.ParseDuration(i.conf.Notifier.PollInterval)
-		if err != nil {
-			return &clairerror.ErrNotInitialized{
-				Msg: "notifier: failed to parse poll interval: " + err.Error(),
-			}
-		}
 		c, _, err := i.conf.Client(nil, notifierClaim)
 		if err != nil {
 			return err
 		}
 
 		n, err := notifier.New(i.GlobalCTX, notifier.Opts{
-			DeliveryInterval: dInterval,
+			DeliveryInterval: i.conf.Notifier.DeliveryInterval,
 			ConnString:       i.conf.Notifier.ConnString,
 			Indexer:          libI,
 			Matcher:          libV,
 			Client:           c,
 			Migrations:       i.conf.Notifier.Migrations,
-			PollInterval:     pInterval,
+			PollInterval:     i.conf.Notifier.PollInterval,
 			DisableSummary:   i.conf.Notifier.DisableSummary,
 			Webhook:          i.conf.Notifier.Webhook,
 			AMQP:             i.conf.Notifier.AMQP,
@@ -220,31 +207,19 @@ func (i *Init) Services() error {
 			return err
 		}
 
-		dInterval, err := time.ParseDuration(i.conf.Notifier.DeliveryInterval)
-		if err != nil {
-			return &clairerror.ErrNotInitialized{
-				Msg: "notifier: failed to parse delivery interval: " + err.Error(),
-			}
-		}
-		pInterval, err := time.ParseDuration(i.conf.Notifier.PollInterval)
-		if err != nil {
-			return &clairerror.ErrNotInitialized{
-				Msg: "notifier: failed to parse poll interval: " + err.Error(),
-			}
-		}
 		c, _, err = i.conf.Client(nil, notifierClaim)
 		if err != nil {
 			return err
 		}
 
 		n, err := notifier.New(i.GlobalCTX, notifier.Opts{
-			DeliveryInterval: dInterval,
+			DeliveryInterval: i.conf.Notifier.DeliveryInterval,
 			ConnString:       i.conf.Notifier.ConnString,
 			Indexer:          remoteIndexer,
 			Matcher:          remoteMatcher,
 			Client:           c,
 			Migrations:       i.conf.Notifier.Migrations,
-			PollInterval:     pInterval,
+			PollInterval:     i.conf.Notifier.PollInterval,
 			Webhook:          i.conf.Notifier.Webhook,
 			AMQP:             i.conf.Notifier.AMQP,
 			STOMP:            i.conf.Notifier.STOMP,
