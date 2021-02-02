@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/quay/claircore/libvuln/driver"
 	"gopkg.in/yaml.v3"
@@ -122,6 +123,12 @@ func Validate(conf Config) error {
 		if conf.Notifier.ConnString == "" {
 			return fmt.Errorf("notifier mode requires a database connection string")
 		}
+		if conf.Matcher.Period == 0 {
+			conf.Matcher.Period = 30 * time.Minute
+		}
+		if conf.Matcher.UpdateRetention < 2 {
+			conf.Matcher.UpdateRetention = 10
+		}
 	case IndexerMode:
 		if conf.HTTPListenAddr == "" {
 			conf.HTTPListenAddr = DefaultAddress
@@ -143,6 +150,12 @@ func Validate(conf Config) error {
 		_, err := url.Parse(conf.Matcher.IndexerAddr)
 		if err != nil {
 			return fmt.Errorf("failed to url parse matcher mode IndexAddr string: %v", err)
+		}
+		if conf.Matcher.Period == 0 {
+			conf.Matcher.Period = 30 * time.Minute
+		}
+		if conf.Matcher.UpdateRetention < 2 {
+			conf.Matcher.UpdateRetention = 10
 		}
 	case NotifierMode:
 		if conf.Notifier.ConnString == "" {

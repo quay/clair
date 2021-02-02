@@ -45,7 +45,9 @@ matcher:
     max_conn_pool: 0
     indexer_addr: ""
     migrations: false
-    updater_sets: []
+    period: ""
+    disable_updaters: false
+    update_retention: 2
 notifier:
     connstring: ""
     migrations: false
@@ -195,23 +197,30 @@ A "true" or "false" value
 Whether Matcher nodes handle migrations to their databases.
 ```
 
-#### &emsp;updater_sets: []
+#### &emsp;period: ""
 ```
-A slice of strings representing which
-updaters matcher will create.
+A time.ParseDuration parsable string
 
-If nil all default UpdaterSets will be used
+Determines how often updates for new security advisories will take place.
 
-The following sets are supported:
-"alpine"
-"aws"
-"debian"
-"oracle"
-"photon"
-"pyupio"
-"rhel"
-"suse"
-"ubuntu"
+Defaults to 30 minutes.
+```
+
+#### &emsp;disable_updaters: ""
+```
+A "true" or "false" value
+
+Whether to run background updates or not.
+```
+
+#### &emsp;update_retention: ""
+```
+An integer value 
+
+Sets the number of update operations to retain between garbage collection cycles.
+This should be set to a safe MAX value based on database size constraints. 
+
+Defaults to 10
 ```
 
 ### notifier: \<object\>

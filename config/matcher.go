@@ -28,10 +28,16 @@ type Matcher struct {
 	// Period controls how often updaters are run.
 	//
 	// The default is 30 minutes.
-	Period *time.Duration `yaml:"period" json:"period"`
+	Period time.Duration `yaml:"period" json:"period"`
 	// DisableUpdaters disables the updater's running of matchers.
 	//
 	// This should be toggled on if vulnerabilities are being provided by
 	// another mechanism.
 	DisableUpdaters bool `yaml:"disable_updaters" json:"disable_updaters"`
+	// UpdateRetention controls the number of updates to retain between
+	// garbage collection periods.
+	//
+	// The lowest possible value is 2 in order to compare updates for notification
+	// purposes.
+	UpdateRetention int `yaml:"update_retention" json:"update_retention"`
 }

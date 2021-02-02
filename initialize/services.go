@@ -64,23 +64,20 @@ func (i *Init) Services() error {
 		}
 		libI, err := libindex.New(i.GlobalCTX, &opts)
 		if err != nil {
-			return clairerror.ErrNotInitialized{"failed to initialize libindex: " + err.Error()}
-		}
-		per := DefaultUpdatePeriod
-		if p := i.conf.Matcher.Period; p != nil {
-			per = *p
+			return clairerror.ErrNotInitialized{Msg: "failed to initialize libindex: " + err.Error()}
 		}
 		updaterConfigs := make(map[string]driver.ConfigUnmarshaler)
 		for name, node := range i.conf.Updaters.Config {
 			updaterConfigs[name] = node.Decode
 		}
 		libV, err := libvuln.New(i.GlobalCTX, &libvuln.Opts{
-			MaxConnPool:    int32(i.conf.Matcher.MaxConnPool),
-			ConnString:     i.conf.Matcher.ConnString,
-			Migrations:     i.conf.Matcher.Migrations,
-			UpdaterSets:    i.conf.Updaters.Sets,
-			UpdateInterval: per,
-			UpdaterConfigs: updaterConfigs,
+			MaxConnPool:     int32(i.conf.Matcher.MaxConnPool),
+			ConnString:      i.conf.Matcher.ConnString,
+			Migrations:      i.conf.Matcher.Migrations,
+			UpdaterSets:     i.conf.Updaters.Sets,
+			UpdateInterval:  i.conf.Matcher.Period,
+			UpdaterConfigs:  updaterConfigs,
+			UpdateRetention: i.conf.Matcher.UpdateRetention,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to initialize libvuln: %v", err)
@@ -155,27 +152,24 @@ func (i *Init) Services() error {
 		}
 		libI, err := libindex.New(i.GlobalCTX, &opts)
 		if err != nil {
-			return clairerror.ErrNotInitialized{"failed to initialize libindex: " + err.Error()}
+			return clairerror.ErrNotInitialized{Msg: "failed to initialize libindex: " + err.Error()}
 		}
 		i.Indexer = libI
 		i.Matcher = nil
 	case config.MatcherMode:
-		per := DefaultUpdatePeriod
-		if p := i.conf.Matcher.Period; p != nil {
-			per = *p
-		}
 		updaterConfigs := make(map[string]driver.ConfigUnmarshaler)
 		for name, node := range i.conf.Updaters.Config {
 			updaterConfigs[name] = node.Decode
 		}
 		// configure a local matcher but a remote indexer
 		libV, err := libvuln.New(i.GlobalCTX, &libvuln.Opts{
-			MaxConnPool:    int32(i.conf.Matcher.MaxConnPool),
-			ConnString:     i.conf.Matcher.ConnString,
-			Migrations:     i.conf.Matcher.Migrations,
-			UpdaterSets:    i.conf.Updaters.Sets,
-			UpdateInterval: per,
-			UpdaterConfigs: updaterConfigs,
+			MaxConnPool:     int32(i.conf.Matcher.MaxConnPool),
+			ConnString:      i.conf.Matcher.ConnString,
+			Migrations:      i.conf.Matcher.Migrations,
+			UpdaterSets:     i.conf.Updaters.Sets,
+			UpdateInterval:  i.conf.Matcher.Period,
+			UpdaterConfigs:  updaterConfigs,
+			UpdateRetention: i.conf.Matcher.UpdateRetention,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to initialize libvuln: %v", err)
