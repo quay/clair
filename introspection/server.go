@@ -7,16 +7,17 @@ import (
 	"net/http"
 	"net/http/pprof"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
-	"go.opentelemetry.io/contrib/exporters/metric/dogstatsd"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/metric/prometheus"
+	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/exporters/stdout"
 	"go.opentelemetry.io/otel/exporters/trace/jaeger"
 	"go.opentelemetry.io/otel/label"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 
 	"github.com/quay/clair/v4/config"
+	"github.com/quay/zlog"
 )
 
 const (
@@ -70,21 +71,10 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Server, 
 		i.health = func() bool { return true }
 	}
 
-	// configure metrics
-	logger.Info().Str("sink", conf.Metrics.Name).Msg("configuring")
-	switch conf.Metrics.Name {
-	case "", "default":
-		logger.Info().Msg("no metrics sync enabled")
-	case Prom:
-		err := i.withPrometheus(ctx)
-		if err != nil {
-			return nil, err
-		}
-	case DogStatsD:
-		err := i.withDogStatsD(ctx)
-		if err != nil {
-			return nil, err
-		}
+	// configure prometheus
+	err := i.withPrometheus(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error configuring prometheus handler: %v", err)
 	}
 
 	// configure tracing
@@ -125,7 +115,7 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Server, 
 	}
 
 	// configure diagnostics
-	err := i.withDiagnostics(ctx)
+	err = i.withDiagnostics(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("error configuring diagnostics: %v", err)
 	}
@@ -239,57 +229,21 @@ func (i *Server) withJaeger(ctx context.Context, traceOpts []sdktrace.TracerProv
 	return nil
 }
 
-// withDogStatsD configures a dogstatsd open telemetry
-// pipeline.
-func (i *Server) withDogStatsD(ctx context.Context) error {
-	if i.conf.Metrics.Dogstatsd.URL == "" {
-		return fmt.Errorf("dogstatsd metrics were specified but no url was configured")
-	}
-	logger := zerolog.Ctx(ctx).With().
-		Str("component", "introspection/Introspection.withDogStatsD").
-		Logger()
-
-	logger.Info().
-		Str("endpoint", i.conf.Metrics.Dogstatsd.URL).
-		Msg("configuring dogstatsd")
-
-	pipeline, err := dogstatsd.InstallNewPipeline(dogstatsd.Config{
-		URL: i.conf.Metrics.Dogstatsd.URL,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to create dogstatsd pipeline: %v", err)
-	}
-	i.RegisterOnShutdown(
-		func() {
-			pipeline.Stop(ctx)
-		})
-	return nil
-}
-
 // withPrometheus configures a prometheus open telemetry
 // pipeline, registers it with the server, and adds the prometheus
 // endpoint to i's servemux.
 func (i *Server) withPrometheus(ctx context.Context) error {
-	logger := zerolog.Ctx(ctx).With().
-		Str("component", "introspection/Introspection.withPrometheus").
-		Logger()
-
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "introspection/Introspection.withPrometheus"),
+	)
 	endpoint := DefaultPromEndpoint
 	if i.conf.Metrics.Prometheus.Endpoint != nil {
 		endpoint = *i.conf.Metrics.Prometheus.Endpoint
 	}
-	logger.Info().Str("endpoint", endpoint).
+	zlog.Info(ctx).Str("endpoint", endpoint).
 		Str("server", i.Addr).
 		Msg("configuring prometheus")
 
-	pipeline, err := prometheus.InstallNewPipeline(prometheus.Config{})
-	if err != nil {
-		return err
-	}
-
-	i.RegisterOnShutdown(func() {
-		pipeline.Controller().Stop(ctx)
-	})
-	i.HandleFunc(endpoint, pipeline.ServeHTTP)
+	i.Handle(endpoint, promhttp.Handler())
 	return nil
 }

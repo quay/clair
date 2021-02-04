@@ -12,7 +12,9 @@ require (
 	github.com/jackc/pgx/v4 v4.7.2
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/klauspost/compress v1.10.11
+	github.com/ldelossa/responserecorder v1.0.1
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
+	github.com/prometheus/client_golang v1.9.0
 	github.com/prometheus/procfs v0.3.0 // indirect
 	github.com/quay/claircore v0.3.1
 	github.com/quay/zlog v0.0.0-20210113185248-ce16eed1dcec
@@ -21,11 +23,9 @@ require (
 	github.com/streadway/amqp v1.0.0
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/urfave/cli/v2 v2.2.0
-	go.opentelemetry.io/contrib/exporters/metric/dogstatsd v0.16.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.16.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.16.0
 	go.opentelemetry.io/otel v0.16.0
-	go.opentelemetry.io/otel/exporters/metric/prometheus v0.16.0
 	go.opentelemetry.io/otel/exporters/stdout v0.16.0
 	go.opentelemetry.io/otel/exporters/trace/jaeger v0.16.0
 	go.opentelemetry.io/otel/sdk v0.16.0

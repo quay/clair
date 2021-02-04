@@ -1,11 +1,13 @@
 package config
 
+// Configure distributed tracing via OTEL
 type Trace struct {
 	Name        string   `yaml:"name" json:"name"`
 	Probability *float64 `yaml:"probability" json:"probability"`
 	Jaeger      Jaeger   `yaml:"jaeger" json:"jaeger"`
 }
 
+// Jager specific distributed tracing configuration.
 type Jaeger struct {
 	Agent struct {
 		Endpoint string `yaml:"endpoint" json:"endpoint"`
@@ -20,16 +22,15 @@ type Jaeger struct {
 	BufferMax   int               `yaml:"buffer_max" json:"buffer_max"`
 }
 
+// Configure Metrics.
 type Metrics struct {
 	Name       string     `yaml:"name" json:"name"`
 	Prometheus Prometheus `yaml:"prometheus" json:"prometheus"`
-	Dogstatsd  Dogstatsd  `yaml:"dogstatsd" json:"dogstatsd"`
 }
 
+// Prometheus specific metrics configuration
 type Prometheus struct {
+	// Endpoint is a URL path where
+	// Prometheus metrics will be hosted.
 	Endpoint *string `yaml:"endpoint" json:"endpoint"`
-}
-
-type Dogstatsd struct {
-	URL string `yaml:"url" json:"url"`
 }
