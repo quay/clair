@@ -650,13 +650,3 @@ Defines distributed tracing configuration based on OpenTelemtry
 ```
 a string value
 ```
-
-### &emsp;dogstatsd: \<object\>
-```
-Defines distributed tracing configuration based on OpenTelemtry
-```
-
-#### &emsp;&emsp;url: ""
-```
-a string value
-```

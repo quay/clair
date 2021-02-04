@@ -2,6 +2,7 @@ package httptransport
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -51,8 +52,10 @@ func TestUpdateEndpoints(t *testing.T) {
 	if err := s.configureMatcherMode(ctx); err != nil {
 		t.Error(err)
 	}
-
 	srv := httptest.NewServer(s)
+	srv.Config.BaseContext = func(_ net.Listener) context.Context {
+		return ctx
+	}
 	defer srv.Close()
 	u, err := url.Parse(srv.URL)
 	if err != nil {

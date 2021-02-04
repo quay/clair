@@ -122,15 +122,8 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 // configureDiscovery() creates a discovery handler
 // for serving the v1 open api specification
 func (t *Server) configureDiscovery(_ context.Context) error {
-	h := intromw.Handler(
-		othttp.NewHandler(
-			LoggingHandler(DiscoveryHandler()),
-			OpenAPIV1Path,
-			t.traceOpt,
-		),
-		OpenAPIV1Path,
-	)
-	t.Handle(OpenAPIV1Path, othttp.WithRouteTag(OpenAPIV1Path, h))
+	t.Handle(OpenAPIV1Path,
+		intromw.InstrumentedHandler(OpenAPIV1Path, t.traceOpt, DiscoveryHandler()))
 	return nil
 }
 
@@ -141,22 +134,22 @@ func (t *Server) configureDiscovery(_ context.Context) error {
 func (t *Server) configureComboMode(ctx context.Context) error {
 	// requires both indexer and matcher services
 	if t.indexer == nil || t.matcher == nil {
-		return clairerror.ErrNotInitialized{"Combo mode requires both indexer and macher services"}
+		return clairerror.ErrNotInitialized{Msg: "Combo mode requires both indexer and macher services"}
 	}
 
 	err := t.configureIndexerMode(ctx)
 	if err != nil {
-		return clairerror.ErrNotInitialized{"could not configure indexer: " + err.Error()}
+		return clairerror.ErrNotInitialized{Msg: "could not configure indexer: " + err.Error()}
 	}
 
 	err = t.configureMatcherMode(ctx)
 	if err != nil {
-		return clairerror.ErrNotInitialized{"could not configure matcher: " + err.Error()}
+		return clairerror.ErrNotInitialized{Msg: "could not configure matcher: " + err.Error()}
 	}
 
 	err = t.configureNotifierMode(ctx)
 	if err != nil {
-		return clairerror.ErrNotInitialized{"could not configure notifier: " + err.Error()}
+		return clairerror.ErrNotInitialized{Msg: "could not configure notifier: " + err.Error()}
 	}
 
 	return nil
@@ -168,52 +161,20 @@ func (t *Server) configureComboMode(ctx context.Context) error {
 func (t *Server) configureIndexerMode(_ context.Context) error {
 	// requires only indexer service
 	if t.indexer == nil {
-		return clairerror.ErrNotInitialized{"IndexerMode requires an indexer service"}
+		return clairerror.ErrNotInitialized{Msg: "IndexerMode requires an indexer service"}
 	}
 
-	// affected manifest handler register
-	affectedH := intromw.Handler(
-		othttp.NewHandler(
-			LoggingHandler(AffectedManifestHandler(t.indexer)),
-			AffectedManifestAPIPath,
-			t.traceOpt,
-		),
-		AffectedManifestAPIPath,
-	)
-	t.Handle(AffectedManifestAPIPath, othttp.WithRouteTag(AffectedManifestAPIPath, affectedH))
+	t.Handle(AffectedManifestAPIPath,
+		intromw.InstrumentedHandler(AffectedManifestAPIPath, t.traceOpt, AffectedManifestHandler(t.indexer)))
 
-	// index handler register
-	indexH := intromw.Handler(
-		othttp.NewHandler(
-			LoggingHandler(IndexHandler(t.indexer)),
-			IndexAPIPath,
-			t.traceOpt,
-		),
-		IndexAPIPath,
-	)
-	t.Handle(IndexAPIPath, othttp.WithRouteTag(IndexAPIPath, indexH))
+	t.Handle(IndexAPIPath,
+		intromw.InstrumentedHandler(IndexAPIPath, t.traceOpt, IndexHandler(t.indexer)))
 
-	// index report handler register
-	indexReportH := intromw.Handler(
-		othttp.NewHandler(
-			LoggingHandler(IndexReportHandler(t.indexer)),
-			IndexReportAPIPath,
-			t.traceOpt,
-		),
-		IndexReportAPIPath,
-	)
-	t.Handle(IndexReportAPIPath, othttp.WithRouteTag(IndexReportAPIPath, indexReportH))
+	t.Handle(IndexReportAPIPath,
+		intromw.InstrumentedHandler(IndexReportAPIPath+"GET", t.traceOpt, IndexReportHandler(t.indexer)))
 
-	// index state handler register
-	stateH := intromw.Handler(
-		othttp.NewHandler(
-			LoggingHandler(IndexStateHandler(t.indexer)),
-			IndexStateAPIPath,
-			t.traceOpt,
-		),
-		IndexStateAPIPath,
-	)
-	t.Handle(IndexStateAPIPath, othttp.WithRouteTag(IndexStateAPIPath, stateH))
+	t.Handle(IndexStateAPIPath,
+		intromw.InstrumentedHandler(IndexStateAPIPath, t.traceOpt, IndexReportHandler(t.indexer)))
 
 	return nil
 }
@@ -223,41 +184,17 @@ func (t *Server) configureMatcherMode(_ context.Context) error {
 	// requires both an indexer and matcher service. indexer service
 	// is assumed to be a remote call over the network
 	if t.indexer == nil || t.matcher == nil {
-		return clairerror.ErrNotInitialized{"MatcherMode requires both indexer and matcher services"}
+		return clairerror.ErrNotInitialized{Msg: "MatcherMode requires both indexer and matcher services"}
 	}
 
-	// vulnerability report handler register
-	vulnReportH := intromw.Handler(
-		othttp.NewHandler(
-			LoggingHandler(VulnerabilityReportHandler(t.matcher, t.indexer)),
-			VulnerabilityReportPath,
-			t.traceOpt,
-		),
-		VulnerabilityReportPath,
-	)
-	t.Handle(VulnerabilityReportPath, othttp.WithRouteTag(VulnerabilityReportPath, vulnReportH))
+	t.Handle(VulnerabilityReportPath,
+		intromw.InstrumentedHandler(VulnerabilityReportPath, t.traceOpt, VulnerabilityReportHandler(t.matcher, t.indexer)))
 
-	// update operation handler register
-	opH := intromw.Handler(
-		othttp.NewHandler(
-			LoggingHandler(UpdateOperationHandler(t.matcher)),
-			UpdateOperationAPIPath,
-			t.traceOpt,
-		),
-		UpdateOperationAPIPath,
-	)
-	t.Handle(UpdateOperationAPIPath, othttp.WithRouteTag(UpdateOperationAPIPath, opH))
+	t.Handle(UpdateOperationAPIPath,
+		intromw.InstrumentedHandler(UpdateOperationAPIPath, t.traceOpt, UpdateOperationHandler(t.matcher)))
 
-	// update diff handler register
-	diffH := intromw.Handler(
-		othttp.NewHandler(
-			LoggingHandler(UpdateDiffHandler(t.matcher)),
-			UpdateDiffAPIPath,
-			t.traceOpt,
-		),
-		UpdateDiffAPIPath,
-	)
-	t.Handle(UpdateDiffAPIPath, othttp.WithRouteTag(UpdateDiffAPIPath, diffH))
+	t.Handle(UpdateDiffAPIPath,
+		intromw.InstrumentedHandler(UpdateDiffAPIPath, t.traceOpt, UpdateDiffHandler(t.matcher)))
 
 	return nil
 }
@@ -267,46 +204,22 @@ func (t *Server) configureNotifierMode(ctx context.Context) error {
 	// requires both an indexer and matcher service. indexer service
 	// is assumed to be a remote call over the network
 	if t.notifier == nil {
-		return clairerror.ErrNotInitialized{"NotifierMode requires a notifier service"}
+		return clairerror.ErrNotInitialized{Msg: "NotifierMode requires a notifier service"}
 	}
 
-	// notifications callback handler
-	callbackH := intromw.Handler(
-		othttp.NewHandler(
-			LoggingHandler(NotificationHandler(t.notifier)),
-			NotificationAPIPath,
-			t.traceOpt,
-		),
-		NotificationAPIPath,
-	)
-	t.Handle(NotificationAPIPath, othttp.WithRouteTag(NotificationAPIPath, callbackH))
+	t.Handle(NotificationAPIPath,
+		intromw.InstrumentedHandler(NotificationAPIPath, t.traceOpt, NotificationHandler(t.notifier)))
 
 	ks := t.notifier.KeyStore(ctx)
 	if ks == nil {
-		return clairerror.ErrNotInitialized{"NotifierMode requires the notifier to provide a non-nil key store"}
+		return clairerror.ErrNotInitialized{Msg: "NotifierMode requires the notifier to provide a non-nil key store"}
 	}
 
-	// keys handler
-	keysH := intromw.Handler(
-		othttp.NewHandler(
-			LoggingHandler(KeysHandler(ks)),
-			KeysAPIPath,
-			t.traceOpt,
-		),
-		KeysAPIPath,
-	)
-	t.Handle(KeysAPIPath, othttp.WithRouteTag(KeysAPIPath, keysH))
+	t.Handle(KeysAPIPath,
+		intromw.InstrumentedHandler(KeysAPIPath, t.traceOpt, KeysHandler(ks)))
 
-	// key by ID handler
-	keyByIDH := intromw.Handler(
-		othttp.NewHandler(
-			LoggingHandler(KeyByIDHandler(ks)),
-			KeyByIDAPIPath,
-			t.traceOpt,
-		),
-		KeyByIDAPIPath,
-	)
-	t.Handle(KeyByIDAPIPath, othttp.WithRouteTag(KeyByIDAPIPath, keyByIDH))
+	t.Handle(KeyByIDAPIPath,
+		intromw.InstrumentedHandler(KeyByIDAPIPath, t.traceOpt, KeyByIDHandler(ks)))
 
 	return nil
 }
