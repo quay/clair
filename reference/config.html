@@ -204,7 +204,9 @@ matcher:
     max_conn_pool: 0
     indexer_addr: &quot;&quot;
     migrations: false
-    updater_sets: []
+    period: &quot;&quot;
+    disable_updaters: false
+    update_retention: 2
 notifier:
     connstring: &quot;&quot;
     migrations: false
@@ -324,22 +326,25 @@ The location of this Indexer is required.
 
 Whether Matcher nodes handle migrations to their databases.
 </code></pre>
-<h4><a class="header" href="#updater_sets-" id="updater_sets-"> updater_sets: []</a></h4>
-<pre><code>A slice of strings representing which
-updaters matcher will create.
+<h4><a class="header" href="#period" id="period"> period: &quot;&quot;</a></h4>
+<pre><code>A time.ParseDuration parsable string
 
-If nil all default UpdaterSets will be used
+Determines how often updates for new security advisories will take place.
 
-The following sets are supported:
-&quot;alpine&quot;
-&quot;aws&quot;
-&quot;debian&quot;
-&quot;oracle&quot;
-&quot;photon&quot;
-&quot;pyupio&quot;
-&quot;rhel&quot;
-&quot;suse&quot;
-&quot;ubuntu&quot;
+Defaults to 30 minutes.
+</code></pre>
+<h4><a class="header" href="#disable_updaters" id="disable_updaters"> disable_updaters: &quot;&quot;</a></h4>
+<pre><code>A &quot;true&quot; or &quot;false&quot; value
+
+Whether to run background updates or not.
+</code></pre>
+<h4><a class="header" href="#update_retention" id="update_retention"> update_retention: &quot;&quot;</a></h4>
+<pre><code>An integer value 
+
+Sets the number of update operations to retain between garbage collection cycles.
+This should be set to a safe MAX value based on database size constraints. 
+
+Defaults to 10
 </code></pre>
 <h3><a class="header" href="#notifier-object" id="notifier-object">notifier: &lt;object&gt;</a></h3>
 <pre><code>Notifier provides Clair Notifier node configuration
