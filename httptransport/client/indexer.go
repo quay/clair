@@ -38,12 +38,10 @@ func (s *HTTP) AffectedManifests(ctx context.Context, v []claircore.Vulnerabilit
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
 	resp, err := s.c.Do(req)
-	if resp != nil {
-		defer resp.Body.Close()
-	}
 	if err != nil {
 		return nil, &clairerror.ErrRequestFail{Code: resp.StatusCode, Status: resp.Status}
 	}
+	defer resp.Body.Close()
 	err = json.NewDecoder(resp.Body).Decode(&affected)
 	if err != nil {
 		return nil, &clairerror.ErrBadAffectedManifests{err}
@@ -73,12 +71,10 @@ func (s *HTTP) Index(ctx context.Context, manifest *claircore.Manifest) (*clairc
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
 	resp, err := s.c.Do(req)
-	if resp != nil {
-		defer resp.Body.Close()
-	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to do request: %v", err)
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return nil, &clairerror.ErrRequestFail{Code: resp.StatusCode, Status: resp.Status}
 	}
@@ -103,12 +99,10 @@ func (s *HTTP) IndexReport(ctx context.Context, manifest claircore.Digest) (*cla
 		return nil, false, fmt.Errorf("failed to create request: %v", err)
 	}
 	resp, err := s.c.Do(req)
-	if resp != nil {
-		defer resp.Body.Close()
-	}
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to do request: %v", err)
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusNotFound {
 		return nil, false, nil
 	}
@@ -135,13 +129,10 @@ func (s *HTTP) State(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("failed to create request: %v", err)
 	}
 	resp, err := s.c.Do(req)
-	if resp != nil {
-		defer resp.Body.Close()
-	}
-
 	if err != nil {
 		return "", fmt.Errorf("failed to do request: %v", err)
 	}
+	defer resp.Body.Close()
 	buf := &bytes.Buffer{}
 	if _, err := buf.ReadFrom(resp.Body); err != nil {
 		return "", err

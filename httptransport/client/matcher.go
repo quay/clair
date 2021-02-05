@@ -38,12 +38,10 @@ func (c *HTTP) Scan(ctx context.Context, ir *claircore.IndexReport) (*claircore.
 	}
 
 	resp, err := c.c.Do(req)
-	if resp != nil {
-		defer resp.Body.Close()
-	}
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%v: unexpected status: %s", u.Path, resp.Status)
 	}
@@ -89,13 +87,11 @@ func (c *HTTP) DeleteUpdateOperations(ctx context.Context, ref ...uuid.UUID) (in
 					return
 				}
 				res, err := c.c.Do(req)
-				if res != nil {
-					defer res.Body.Close()
-				}
 				if err != nil {
 					errs[i] = err
 					return
 				}
+				defer res.Body.Close()
 				if got, want := res.StatusCode, http.StatusOK; got != want {
 					errs[i] = fmt.Errorf("%v: unexpected status: %s", u.Path, res.Status)
 				}
@@ -176,12 +172,10 @@ func (c *HTTP) LatestUpdateOperations(ctx context.Context) (map[string][]driver.
 // if a subsequent response provides a StatusNotModified status, the map of UpdateOprations is served from cache.
 func (c *HTTP) updateOperations(ctx context.Context, req *http.Request, cache *uoCache) (map[string][]driver.UpdateOperation, error) {
 	res, err := c.c.Do(req)
-	if res != nil {
-		defer res.Body.Close()
-	}
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 	switch res.StatusCode {
 	case http.StatusOK:
 		m := make(map[string][]driver.UpdateOperation)
@@ -223,12 +217,10 @@ func (c *HTTP) UpdateDiff(ctx context.Context, prev, cur uuid.UUID) (*driver.Upd
 	req.URL.RawQuery = v.Encode()
 
 	res, err := c.c.Do(req)
-	if res != nil {
-		defer res.Body.Close()
-	}
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("%v: unexpected status: %s", u.Path, res.Status)
 	}
