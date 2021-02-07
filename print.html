@@ -238,8 +238,9 @@ CLAIR_CONF=/path/to/mounted/config.yaml
 <h2><a class="header" href="#submitting-a-manifest" id="submitting-a-manifest">Submitting A Manifest</a></h2>
 <p>The simplest way to submit a manifest to your running Clair is utilizing <a href="howto/../reference/clairctl.html">clairctl</a>. This is a CLI tool capable of grabbing image manifests from public repositories and and submitting them for analysis. 
 The command will be in the Clair container, but can also be installed locally by running the following command:</p>
-<pre><code>go install github.com/quay/clair/v4/cmd/clairctl
+<pre><code>GO111MODULE=on go get github.com/quay/clair/v4/cmd/clairctl@latest
 </code></pre>
+<p>Ensure you run the above command outside of any Go directory with a go.mod file.</p>
 <p>You can submit a manifest to ClairV4 via the following command.</p>
 <pre><code class="language-shell">$ clairctl --host ${net_address_of_clair} report ${image_tag}
 </code></pre>
