@@ -221,6 +221,8 @@ Sets the number of update operations to retain between garbage collection cycles
 This should be set to a safe MAX value based on database size constraints. 
 
 Defaults to 10
+
+If a value of 0 is provided GC is disabled.
 ```
 
 ### notifier: \<object\>

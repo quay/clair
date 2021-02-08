@@ -43,6 +43,8 @@ type Matcher struct {
 	//
 	// The lowest possible value is 2 in order to compare updates for notification
 	// purposes.
+	//
+	// A value of 0 disables GC.
 	UpdateRetention int `yaml:"update_retention" json:"update_retention"`
 }
 
@@ -65,7 +67,7 @@ func (m *Matcher) Validate() error {
 	if m.Period == 0 {
 		m.Period = DefaultPeriod
 	}
-	if m.UpdateRetention < 2 {
+	if m.UpdateRetention == 1 || m.UpdateRetention < 0 {
 		m.UpdateRetention = DefaultRetention
 	}
 	return nil
