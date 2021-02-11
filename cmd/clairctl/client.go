@@ -99,7 +99,7 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 		req *http.Request
 		res *http.Response
 	)
-	fp, err := c.host.Parse(path.Join(httptransport.IndexReportAPIPath, id.String()))
+	fp, err := c.host.Parse(path.Join(c.host.RequestURI(), httptransport.IndexReportAPIPath, id.String()))
 	if err != nil {
 		debug.Printf("unable to construct index_report url: %v", err)
 		return err
@@ -133,7 +133,8 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 		debug.Printf("unable to encode json payload: %v", err)
 		return err
 	}
-	ru, err := c.host.Parse(httptransport.IndexAPIPath)
+
+	ru, err := c.host.Parse(path.Join(c.host.RequestURI(), httptransport.IndexAPIPath))
 	if err != nil {
 		debug.Printf("unable to construct index_report url: %v", err)
 		return err
@@ -184,7 +185,7 @@ func (c *Client) VulnerabilityReport(ctx context.Context, id claircore.Digest) (
 		req *http.Request
 		res *http.Response
 	)
-	u, err := c.host.Parse(path.Join(httptransport.VulnerabilityReportPath, id.String()))
+	u, err := c.host.Parse(path.Join(c.host.RequestURI(), httptransport.VulnerabilityReportPath, id.String()))
 	if err != nil {
 		debug.Printf("unable to construct vulnerability_report url: %v", err)
 		return nil, err
