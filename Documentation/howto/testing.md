@@ -66,9 +66,9 @@ localhost:9090 --- Prometheus
 
 ## Pushing to the Local Quay
 
-As mentioned above ,Quay is present at `localhost:8080`. You may navigate to this address and create a account. Creating an account named `admin` will ensure you are a super user. An email is required, but is not validated.
+As mentioned above, Quay is present at `localhost:8080`. You may navigate to this address and create a account. Creating an account named `admin` will ensure you are a super user. An email is required, but is not validated.
 
-Once inside, you will create an organization named "clairv4-org". Currently Quay has to explicitly enable Clair v4 security scanning, which is done via an organization allowlist. "Clairv4-org" is preconfigured in our local dev configuration.
+Once inside, you will create an organization named "clairv4-org". Currently Quay has to explicitly enable Clair v4 security scanning, which is done via an organization allowlist. "clairv4-org" is preconfigured in our local dev configuration.
 
 The easiest way to push to Quay is using podman:
 
@@ -80,6 +80,10 @@ podman push --tls-verify=false localhost:8080/clairv4-org/testing:latest
 ```
 
 Using docker to push is possible, however you will need to add "localhost:8080" as an insecure repository. See [Insecure Repository](https://docs.docker.com/registry/insecure/)
+
+## Viewing Results
+
+By default, Quay displays security scanner results on the Tags page of the given repository.
 
 ## Making changes to configuration
 
