@@ -216,8 +216,8 @@ localhost:7000 --- Traefik Web UI.
 localhost:9090 --- Prometheus
 </code></pre>
 <h2><a class="header" href="#pushing-to-the-local-quay" id="pushing-to-the-local-quay">Pushing to the Local Quay</a></h2>
-<p>As mentioned above ,Quay is present at <code>localhost:8080</code>. You may navigate to this address and create a account. Creating an account named <code>admin</code> will ensure you are a super user. An email is required, but is not validated.</p>
-<p>Once inside, you will create an organization named &quot;clairv4-org&quot;. Currently Quay has to explicitly enable Clair v4 security scanning, which is done via an organization allowlist. &quot;Clairv4-org&quot; is preconfigured in our local dev configuration.</p>
+<p>As mentioned above, Quay is present at <code>localhost:8080</code>. You may navigate to this address and create a account. Creating an account named <code>admin</code> will ensure you are a super user. An email is required, but is not validated.</p>
+<p>Once inside, you will create an organization named &quot;clairv4-org&quot;. Currently Quay has to explicitly enable Clair v4 security scanning, which is done via an organization allowlist. &quot;clairv4-org&quot; is preconfigured in our local dev configuration.</p>
 <p>The easiest way to push to Quay is using podman:</p>
 <pre><code>podman pull ubuntu:latest
 podman login --tls-verify=false localhost:8080 # use account created in above steps
@@ -225,6 +225,8 @@ podman tag ubuntu:latest localhost:8080/clairv4-org/testing:latest
 podman push --tls-verify=false localhost:8080/clairv4-org/testing:latest
 </code></pre>
 <p>Using docker to push is possible, however you will need to add &quot;localhost:8080&quot; as an insecure repository. See <a href="https://docs.docker.com/registry/insecure/">Insecure Repository</a></p>
+<h2><a class="header" href="#viewing-results" id="viewing-results">Viewing Results</a></h2>
+<p>By default, Quay displays security scanner results on the Tags page of the given repository.</p>
 <h2><a class="header" href="#making-changes-to-configuration" id="making-changes-to-configuration">Making changes to configuration</a></h2>
 <p>You may want to play with either Clair or Quay's configuration. 
 If so, the configuration files can be found inside the repository at
