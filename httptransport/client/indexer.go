@@ -39,9 +39,12 @@ func (s *HTTP) AffectedManifests(ctx context.Context, v []claircore.Vulnerabilit
 	}
 	resp, err := s.c.Do(req)
 	if err != nil {
-		return nil, &clairerror.ErrRequestFail{Code: resp.StatusCode, Status: resp.Status}
+		return nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, &clairerror.ErrRequestFail{Code: resp.StatusCode, Status: resp.Status}
+	}
 	err = json.NewDecoder(resp.Body).Decode(&affected)
 	if err != nil {
 		return nil, &clairerror.ErrBadAffectedManifests{err}
