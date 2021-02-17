@@ -1,11 +1,11 @@
 package client
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"sync"
@@ -14,6 +14,7 @@ import (
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
 
+	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/matcher"
 )
@@ -25,31 +26,40 @@ func (c *HTTP) Scan(ctx context.Context, ir *claircore.IndexReport) (*claircore.
 	if err != nil {
 		return nil, err
 	}
+	rd, wr := io.Pipe()
+	go func() {
+		defer wr.Close()
+		if err := json.NewEncoder(wr).Encode(ir); err != nil {
+			wr.CloseWithError(err)
+		}
+	}()
+	defer rd.Close()
 
-	b, err := json.Marshal(&ir)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), rd)
 	if err != nil {
 		return nil, err
 	}
-	buf := bytes.NewBuffer(b)
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), buf)
-	if err != nil {
-		return nil, err
-	}
-
+	req.Header.Set("content-type", `application/json`)
 	resp, err := c.c.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("%v: unexpected status: %s", u.Path, resp.Status)
+		return nil, &clairerror.ErrRequestFail{
+			Code:   resp.StatusCode,
+			Status: resp.Status,
+		}
 	}
 
 	var vr claircore.VulnerabilityReport
-	err = json.NewDecoder(resp.Body).Decode(&vr)
-	if err != nil {
-		return nil, err
+	switch ct := req.Header.Get("content-type"); ct {
+	case "", `application/json`:
+		if err := json.NewDecoder(resp.Body).Decode(&vr); err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("unrecognized content-type %q", ct)
 	}
 	return &vr, nil
 }
