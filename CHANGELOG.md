@@ -2,9 +2,15 @@
 ## [Unreleased]
 
 
+<a name="4.0.2"></a>
+## [4.0.2] - 2021-02-16
+### Client
+- [8b63953](https://github.com/quay/clair/commit/8b63953e99e0246a9428205cf51c66ec3af65ba3): fix panic on request failure
+ -  [#1186](https://github.com/quay/clair/issues/1186) -  [#1188](https://github.com/quay/clair/issues/1188)
 <a name="v4.0.1"></a>
-## [v4.0.1] - 2021-02-13
+## [v4.0.1] - 2021-02-15
 ### Chore
+- [8a392f1](https://github.com/quay/clair/commit/8a392f1bd3a381e98ece87e9ccd4842113563bb4): v4.0.1 changelog bump
 - [c47be87](https://github.com/quay/clair/commit/c47be87d6fbb0a34960001a45246d3936e5f8710): bump cc to v0.1.22 stable
 
 <a name="v4.0.0"></a>
@@ -1345,7 +1351,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.1...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/4.0.2...HEAD
+[4.0.2]: https://github.com/quay/clair/compare/v4.0.1...4.0.2
 [v4.0.1]: https://github.com/quay/clair/compare/v4.0.0...v4.0.1
 [v4.0.0]: https://github.com/quay/clair/compare/v4.0.0-rc.24...v4.0.0
 [v4.0.0-rc.24]: https://github.com/quay/clair/compare/v4.0.0-rc.23...v4.0.0-rc.24
