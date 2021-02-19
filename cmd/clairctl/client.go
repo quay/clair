@@ -1,12 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"path"
@@ -19,6 +16,7 @@ import (
 	"github.com/tomnomnom/linkheader"
 
 	"github.com/quay/clair/v4/httptransport"
+	"github.com/quay/clair/v4/internal/codec"
 )
 
 const (
@@ -128,12 +126,6 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 		debug.Printf("don't have needed manifest %v", id)
 		return errNeedManifest
 	}
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(m); err != nil {
-		debug.Printf("unable to encode json payload: %v", err)
-		return err
-	}
-
 	ru, err := c.host.Parse(path.Join(c.host.RequestURI(), httptransport.IndexAPIPath))
 	if err != nil {
 		debug.Printf("unable to construct index_report url: %v", err)
@@ -141,15 +133,13 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 	}
 
 	req = c.request(ctx, ru, http.MethodPost)
-	req.Body = ioutil.NopCloser(&buf)
+	req.Body = codec.JSONReader(m)
 	res, err = c.client.Do(req)
-	if res != nil {
-		defer res.Body.Close()
-	}
 	if err != nil {
 		debug.Printf("request failed for url %q: %v", req.URL.String(), err)
 		return err
 	}
+	defer res.Body.Close()
 	debug.Printf("%s %s: %s", res.Request.Method, res.Request.URL.Path, res.Status)
 	switch res.StatusCode {
 	case http.StatusOK:
@@ -159,7 +149,9 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 		return fmt.Errorf("unexpected return status: %d", res.StatusCode)
 	}
 	var report claircore.IndexReport
-	if err := json.NewDecoder(res.Body).Decode(&report); err != nil {
+	dec := codec.GetDecoder(res.Body)
+	defer codec.PutDecoder(dec)
+	if err := dec.Decode(&report); err != nil {
 		debug.Printf("unable to decode json payload: %v", err)
 		return err
 	}
@@ -192,13 +184,11 @@ func (c *Client) VulnerabilityReport(ctx context.Context, id claircore.Digest) (
 	}
 	req = c.request(ctx, u, http.MethodGet)
 	res, err = c.client.Do(req)
-	if res != nil {
-		defer res.Body.Close()
-	}
 	if err != nil {
 		debug.Printf("request failed for url %q: %v", req.URL.String(), err)
 		return nil, err
 	}
+	defer res.Body.Close()
 	debug.Printf("%s %s: %s", res.Request.Method, res.Request.URL.Path, res.Status)
 	switch res.StatusCode {
 	case http.StatusOK:
@@ -209,7 +199,9 @@ func (c *Client) VulnerabilityReport(ctx context.Context, id claircore.Digest) (
 		return nil, fmt.Errorf("unexpected return status: %d", res.StatusCode)
 	}
 	var report claircore.VulnerabilityReport
-	if err := json.NewDecoder(res.Body).Decode(&report); err != nil {
+	dec := codec.GetDecoder(res.Body)
+	defer codec.PutDecoder(dec)
+	if err := dec.Decode(&report); err != nil {
 		debug.Printf("unable to decode json payload: %v", err)
 		return nil, err
 	}

@@ -1,18 +1,18 @@
 package httptransport
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"path/filepath"
 	"strconv"
 
 	"github.com/google/uuid"
-
-	"github.com/quay/clair/v4/notifier"
-	"github.com/quay/clair/v4/notifier/service"
 	je "github.com/quay/claircore/pkg/jsonerr"
 	"github.com/rs/zerolog"
+
+	"github.com/quay/clair/v4/internal/codec"
+	"github.com/quay/clair/v4/notifier"
+	"github.com/quay/clair/v4/notifier/service"
 )
 
 const (
@@ -46,7 +46,6 @@ func (h *NotifHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Message: "endpoint only allows POST",
 		}
 		je.Error(w, resp, http.StatusMethodNotAllowed)
-		return
 	}
 }
 
@@ -74,9 +73,7 @@ func (h *NotifHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Warn().Err(err).Msg("could not delete notification")
 		je.Error(w, resp, http.StatusInternalServerError)
-		return
 	}
-	return
 }
 
 // NotificaitonsHandler will return paginated notifications to the caller.
@@ -149,9 +146,8 @@ func (h *NotifHandler) Get(w http.ResponseWriter, r *http.Request) {
 		Notifications: notifications,
 	}
 
-	err = json.NewEncoder(w).Encode(&response)
-	if err != nil {
-		log.Error().Err(err).Msg("failed to serialize response")
-	}
-	return
+	defer writerError(w, &err)()
+	enc := codec.GetEncoder(w)
+	defer codec.PutEncoder(enc)
+	err = enc.Encode(&response)
 }

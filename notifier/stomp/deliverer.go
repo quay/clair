@@ -8,6 +8,7 @@ import (
 
 	gostomp "github.com/go-stomp/stomp"
 	"github.com/google/uuid"
+
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/notifier"
 )

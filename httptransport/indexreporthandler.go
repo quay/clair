@@ -1,7 +1,6 @@
 package httptransport
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -10,6 +9,7 @@ import (
 	je "github.com/quay/claircore/pkg/jsonerr"
 
 	"github.com/quay/clair/v4/indexer"
+	"github.com/quay/clair/v4/internal/codec"
 )
 
 // IndexReportHandler utilizes a Reporter to serialize
@@ -80,6 +80,8 @@ func IndexReportHandler(serv indexer.StateReporter) http.HandlerFunc {
 
 		w.Header().Add("etag", validator)
 		defer writerError(w, &err)()
-		err = json.NewEncoder(w).Encode(report)
+		enc := codec.GetEncoder(w)
+		defer codec.PutEncoder(enc)
+		err = enc.Encode(report)
 	}
 }

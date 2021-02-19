@@ -1,13 +1,14 @@
 package httptransport
 
 import (
-	"encoding/json"
 	"net/http"
 
-	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/pkg/jsonerr"
 	"github.com/rs/zerolog"
+
+	"github.com/quay/clair/v4/indexer"
+	"github.com/quay/clair/v4/internal/codec"
 )
 
 func AffectedManifestHandler(serv indexer.Affected) http.HandlerFunc {
@@ -30,8 +31,9 @@ func AffectedManifestHandler(serv indexer.Affected) http.HandlerFunc {
 		var vulnerabilities struct {
 			V []claircore.Vulnerability `json:"vulnerabilities"`
 		}
-		err := json.NewDecoder(r.Body).Decode(&vulnerabilities)
-		if err != nil {
+		dec := codec.GetDecoder(r.Body)
+		defer codec.PutDecoder(dec)
+		if err := dec.Decode(&vulnerabilities); err != nil {
 			resp := &jsonerr.Response{
 				Code:    "bad-request",
 				Message: err.Error(),
@@ -51,7 +53,9 @@ func AffectedManifestHandler(serv indexer.Affected) http.HandlerFunc {
 		}
 
 		defer writerError(w, &err)
-		err = json.NewEncoder(w).Encode(affected)
+		enc := codec.GetEncoder(w)
+		defer codec.PutEncoder(enc)
+		err = enc.Encode(affected)
 		return
 	}
 }

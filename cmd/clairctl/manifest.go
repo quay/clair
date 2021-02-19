@@ -1,9 +1,7 @@
 package main
 
 import (
-	"bufio"
 	"context"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/url"
@@ -16,6 +14,8 @@ import (
 	"github.com/quay/claircore"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/quay/clair/v4/internal/codec"
 )
 
 var ManifestCmd = &cli.Command{
@@ -37,12 +37,10 @@ func manifestAction(c *cli.Context) error {
 	eg, ctx := errgroup.WithContext(c.Context)
 	go func() {
 		defer close(done)
-		buf := bufio.NewWriter(os.Stdout)
-		defer buf.Flush()
-		enc := json.NewEncoder(buf)
+		enc := codec.GetEncoder(os.Stdout)
+		defer codec.PutEncoder(enc)
 		for m := range result {
-			enc.Encode(m)
-			buf.Flush()
+			enc.MustEncode(m)
 		}
 	}()
 

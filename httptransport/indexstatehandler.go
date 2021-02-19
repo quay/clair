@@ -1,12 +1,12 @@
 package httptransport
 
 import (
-	"encoding/json"
 	"net/http"
 
 	je "github.com/quay/claircore/pkg/jsonerr"
 
 	"github.com/quay/clair/v4/indexer"
+	"github.com/quay/clair/v4/internal/codec"
 )
 
 // IndexStateHandler utilizes a Stater to report the
@@ -43,7 +43,9 @@ func IndexStateHandler(service indexer.Stater) http.HandlerFunc {
 		w.Header().Set("content-type", "application/json")
 
 		defer writerError(w, &err)()
-		err = json.NewEncoder(w).Encode(struct {
+		enc := codec.GetEncoder(w)
+		defer codec.PutEncoder(enc)
+		err = enc.Encode(struct {
 			State string `json:"state"`
 		}{
 			State: s,

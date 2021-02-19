@@ -1,17 +1,18 @@
 package httptransport
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"path/filepath"
 	"strconv"
 
 	"github.com/google/uuid"
-	"github.com/quay/clair/v4/matcher"
 	"github.com/quay/claircore/libvuln/driver"
 	je "github.com/quay/claircore/pkg/jsonerr"
 	"github.com/rs/zerolog"
+
+	"github.com/quay/clair/v4/internal/codec"
+	"github.com/quay/clair/v4/matcher"
 )
 
 var _ http.Handler = (*UOHandler)(nil)
@@ -44,7 +45,6 @@ func (h *UOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Message: "endpoint only allows POST",
 		}
 		je.Error(w, resp, http.StatusMethodNotAllowed)
-		return
 	}
 }
 
@@ -86,8 +86,9 @@ func (h *UOHandler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer writerError(w, &err)()
-	err = json.NewEncoder(w).Encode(&uos)
-	return
+	enc := codec.GetEncoder(w)
+	defer codec.PutEncoder(enc)
+	err = enc.Encode(&uos)
 }
 
 // Delete removes an UpdateOperation models from the system.
@@ -114,7 +115,5 @@ func (h *UOHandler) Delete(w http.ResponseWriter, r *http.Request) {
 			Message: fmt.Sprintf("could not get update operations: %v", err),
 		}
 		je.Error(w, resp, http.StatusInternalServerError)
-		return
 	}
-	return
 }

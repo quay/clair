@@ -2,10 +2,8 @@ package client
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"sync"
@@ -16,6 +14,7 @@ import (
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/httptransport"
+	"github.com/quay/clair/v4/internal/codec"
 	"github.com/quay/clair/v4/matcher"
 )
 
@@ -26,16 +25,7 @@ func (c *HTTP) Scan(ctx context.Context, ir *claircore.IndexReport) (*claircore.
 	if err != nil {
 		return nil, err
 	}
-	rd, wr := io.Pipe()
-	go func() {
-		defer wr.Close()
-		if err := json.NewEncoder(wr).Encode(ir); err != nil {
-			wr.CloseWithError(err)
-		}
-	}()
-	defer rd.Close()
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), rd)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), codec.JSONReader(ir))
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +45,9 @@ func (c *HTTP) Scan(ctx context.Context, ir *claircore.IndexReport) (*claircore.
 	var vr claircore.VulnerabilityReport
 	switch ct := req.Header.Get("content-type"); ct {
 	case "", `application/json`:
-		if err := json.NewDecoder(resp.Body).Decode(&vr); err != nil {
+		dec := codec.GetDecoder(resp.Body)
+		defer codec.PutDecoder(dec)
+		if err := dec.Decode(&vr); err != nil {
 			return nil, err
 		}
 	default:
@@ -189,7 +181,9 @@ func (c *HTTP) updateOperations(ctx context.Context, req *http.Request, cache *u
 	switch res.StatusCode {
 	case http.StatusOK:
 		m := make(map[string][]driver.UpdateOperation)
-		if err := json.NewDecoder(res.Body).Decode(&m); err != nil {
+		dec := codec.GetDecoder(res.Body)
+		defer codec.PutDecoder(dec)
+		if err := dec.Decode(&m); err != nil {
 			return nil, err
 		}
 		// check for etag, if exists store the value and add returned map
@@ -235,7 +229,9 @@ func (c *HTTP) UpdateDiff(ctx context.Context, prev, cur uuid.UUID) (*driver.Upd
 		return nil, fmt.Errorf("%v: unexpected status: %s", u.Path, res.Status)
 	}
 	d := driver.UpdateDiff{}
-	if err := json.NewDecoder(res.Body).Decode(&d); err != nil {
+	dec := codec.GetDecoder(res.Body)
+	defer codec.PutDecoder(dec)
+	if err := dec.Decode(&d); err != nil {
 		return nil, err
 	}
 	return &d, nil

@@ -1,13 +1,13 @@
 package httptransport
 
 import (
-	"encoding/json"
 	"net/http"
 
+	je "github.com/quay/claircore/pkg/jsonerr"
 	jose "gopkg.in/square/go-jose.v2"
 
+	"github.com/quay/clair/v4/internal/codec"
 	"github.com/quay/clair/v4/notifier"
-	je "github.com/quay/claircore/pkg/jsonerr"
 )
 
 // KeysHandler returns all keys persisted in the keystore in JWK set format.
@@ -54,6 +54,8 @@ func KeysHandler(keystore notifier.KeyStore) http.HandlerFunc {
 		}
 
 		defer writerError(w, &err)()
-		err = json.NewEncoder(w).Encode(&set)
+		enc := codec.GetEncoder(w)
+		defer codec.PutEncoder(enc)
+		err = enc.Encode(&set)
 	}
 }

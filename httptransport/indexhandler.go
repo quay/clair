@@ -1,7 +1,6 @@
 package httptransport
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"path"
@@ -10,6 +9,7 @@ import (
 	je "github.com/quay/claircore/pkg/jsonerr"
 
 	"github.com/quay/clair/v4/indexer"
+	"github.com/quay/clair/v4/internal/codec"
 )
 
 const (
@@ -42,7 +42,9 @@ func IndexHandler(serv indexer.StateIndexer) http.HandlerFunc {
 		}
 
 		var m claircore.Manifest
-		if err := json.NewDecoder(r.Body).Decode(&m); err != nil {
+		dec := codec.GetDecoder(r.Body)
+		defer codec.PutDecoder(dec)
+		if err := dec.Decode(&m); err != nil {
 			resp := &je.Response{
 				Code:    "bad-request",
 				Message: fmt.Sprintf("failed to deserialize manifest: %v", err),
@@ -85,6 +87,8 @@ func IndexHandler(serv indexer.StateIndexer) http.HandlerFunc {
 		w.Header().Set("location", next)
 		defer writerError(w, &err)()
 		w.WriteHeader(http.StatusCreated)
-		err = json.NewEncoder(w).Encode(report)
+		enc := codec.GetEncoder(w)
+		defer codec.PutEncoder(enc)
+		err = enc.Encode(report)
 	}
 }

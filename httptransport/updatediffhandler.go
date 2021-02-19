@@ -1,13 +1,14 @@
 package httptransport
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/quay/clair/v4/matcher"
 	je "github.com/quay/claircore/pkg/jsonerr"
+
+	"github.com/quay/clair/v4/internal/codec"
+	"github.com/quay/clair/v4/matcher"
 )
 
 // UpdateDiffHandler provides an endpoint to GET update diffs
@@ -69,6 +70,8 @@ func UpdateDiffHandler(serv matcher.Differ) http.HandlerFunc {
 		}
 
 		defer writerError(w, &err)()
-		err = json.NewEncoder(w).Encode(&diff)
+		enc := codec.GetEncoder(w)
+		defer codec.PutEncoder(enc)
+		err = enc.Encode(&diff)
 	}
 }

@@ -1,17 +1,17 @@
 package httptransport
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"path"
 
+	"github.com/google/uuid"
+	je "github.com/quay/claircore/pkg/jsonerr"
 	jose "gopkg.in/square/go-jose.v2"
 
-	"github.com/google/uuid"
 	clairerror "github.com/quay/clair/v4/clair-error"
+	"github.com/quay/clair/v4/internal/codec"
 	"github.com/quay/clair/v4/notifier"
-	je "github.com/quay/claircore/pkg/jsonerr"
 )
 
 // KeyByIDHandler returns a particular key queried by ID in JWK format.
@@ -72,6 +72,8 @@ func KeyByIDHandler(keystore notifier.KeyStore) http.HandlerFunc {
 			Use:   "sig",
 		}
 		defer writerError(w, &err)()
-		err = json.NewEncoder(w).Encode(&jwk)
+		enc := codec.GetEncoder(w)
+		defer codec.PutEncoder(enc)
+		err = enc.Encode(&jwk)
 	}
 }

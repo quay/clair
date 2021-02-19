@@ -3,9 +3,7 @@ package client
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"path"
 
@@ -14,6 +12,7 @@ import (
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/indexer"
+	"github.com/quay/clair/v4/internal/codec"
 )
 
 var _ indexer.Service = (*HTTP)(nil)
@@ -23,19 +22,11 @@ func (s *HTTP) AffectedManifests(ctx context.Context, v []claircore.Vulnerabilit
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse api address: %v", err)
 	}
-	rd, wr := io.Pipe()
-	go func() {
-		defer wr.Close()
-		if err := json.NewEncoder(wr).Encode(struct {
-			V []claircore.Vulnerability `json:"vulnerabilities"`
-		}{
-			v,
-		}); err != nil {
-			wr.CloseWithError(err)
-		}
-	}()
-	defer rd.Close()
-
+	rd := codec.JSONReader(struct {
+		V []claircore.Vulnerability `json:"vulnerabilities"`
+	}{
+		v,
+	})
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), rd)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
@@ -56,7 +47,9 @@ func (s *HTTP) AffectedManifests(ctx context.Context, v []claircore.Vulnerabilit
 	var a claircore.AffectedManifests
 	switch ct := req.Header.Get("content-type"); ct {
 	case "", `application/json`:
-		if err := json.NewDecoder(resp.Body).Decode(&a); err != nil {
+		dec := codec.GetDecoder(resp.Body)
+		defer codec.PutDecoder(dec)
+		if err := dec.Decode(&a); err != nil {
 			return nil, err
 		}
 	default:
@@ -76,16 +69,8 @@ func (s *HTTP) Index(ctx context.Context, manifest *claircore.Manifest) (*clairc
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
-	rd, wr := io.Pipe()
-	go func() {
-		defer wr.Close()
-		if err := json.NewEncoder(wr).Encode(manifest); err != nil {
-			wr.CloseWithError(err)
-		}
-	}()
-	defer rd.Close()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), rd)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), codec.JSONReader(manifest))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
@@ -105,7 +90,9 @@ func (s *HTTP) Index(ctx context.Context, manifest *claircore.Manifest) (*clairc
 	var ir claircore.IndexReport
 	switch ct := resp.Header.Get("content-type"); ct {
 	case "", `application/json`:
-		if err := json.NewDecoder(resp.Body).Decode(&ir); err != nil {
+		dec := codec.GetDecoder(resp.Body)
+		defer codec.PutDecoder(dec)
+		if err := dec.Decode(&ir); err != nil {
 			return nil, err
 		}
 	default:
@@ -143,8 +130,9 @@ func (s *HTTP) IndexReport(ctx context.Context, manifest claircore.Digest) (*cla
 	}
 
 	ir := &claircore.IndexReport{}
-	err = json.NewDecoder(resp.Body).Decode(ir)
-	if err != nil {
+	dec := codec.GetDecoder(resp.Body)
+	defer codec.PutDecoder(dec)
+	if err := dec.Decode(ir); err != nil {
 		return nil, false, &clairerror.ErrBadIndexReport{E: err}
 	}
 	return ir, true, nil

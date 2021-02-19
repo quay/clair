@@ -1,21 +1,20 @@
 package webhook
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"time"
 
 	"github.com/google/uuid"
-	clairerror "github.com/quay/clair/v4/clair-error"
-	"github.com/quay/clair/v4/notifier"
-	"github.com/quay/clair/v4/notifier/keymanager"
 	"github.com/rs/zerolog"
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
+
+	clairerror "github.com/quay/clair/v4/clair-error"
+	"github.com/quay/clair/v4/internal/codec"
+	"github.com/quay/clair/v4/notifier"
+	"github.com/quay/clair/v4/notifier/keymanager"
 )
 
 type Deliverer struct {
@@ -91,16 +90,11 @@ func (d *Deliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
 		NotificationID: nID,
 		Callback:       *callback,
 	}
-	b, err := json.Marshal(&wh)
-	if err != nil {
-		return err
-	}
-	buf := bytes.NewReader(b)
 
 	req := &http.Request{
 		URL:    d.conf.target,
 		Header: d.conf.Headers,
-		Body:   ioutil.NopCloser(buf),
+		Body:   codec.JSONReader(&wh),
 		Method: http.MethodPost,
 	}
 

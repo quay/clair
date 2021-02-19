@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"path"
@@ -13,6 +12,8 @@ import (
 	"github.com/gregjones/httpcache"
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
+
+	"github.com/quay/clair/v4/internal/codec"
 )
 
 // QuayKeyserver implements the AuthCheck interface.
@@ -99,12 +100,10 @@ HeaderSearch:
 	}
 	req.URL = uri
 	res, err := s.client.Do(req)
-	if res != nil {
-		defer res.Body.Close()
-	}
 	if err != nil {
 		return false
 	}
+	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
 		// If the keyserver returns a non-OK, we can't use the key: it doesn't
 		// exist or is expired or is not yet approved, so make sure to delete it
@@ -121,7 +120,9 @@ HeaderSearch:
 	// remote server, do the deserializtion and cache it.
 	if !ok || res.Header.Get(httpcache.XFromCache) != "" {
 		jwk = &jose.JSONWebKey{}
-		if err := json.NewDecoder(res.Body).Decode(jwk); err != nil {
+		dec := codec.GetDecoder(res.Body)
+		defer codec.PutDecoder(dec)
+		if err := dec.Decode(jwk); err != nil {
 			return false
 		}
 		s.mu.Lock()

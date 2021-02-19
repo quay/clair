@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -14,6 +13,8 @@ import (
 	"github.com/quay/claircore"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/quay/clair/v4/internal/codec"
 )
 
 // ReportCmd is the "report" subcommand.
@@ -73,8 +74,8 @@ func (o *outFmt) Formatter(w io.WriteCloser) Formatter {
 	case "json":
 		debug.Println("using json output")
 		return &jsonFormatter{
-			enc:    json.NewEncoder(w),
-			Closer: w,
+			enc: codec.GetEncoder(w),
+			c:   w,
 		}
 	case "xml":
 		debug.Println("using xml output")
