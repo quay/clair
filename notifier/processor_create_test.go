@@ -8,10 +8,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
-	"github.com/quay/clair/v4/indexer"
-	"github.com/quay/clair/v4/matcher"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
+
+	"github.com/quay/clair/v4/indexer"
+	"github.com/quay/clair/v4/matcher"
 )
 
 var (
@@ -84,8 +85,8 @@ func testProcessorStoreErr(t *testing.T) {
 	mm := &matcher.Mock{
 		UpdateDiff_: func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error) {
 			return &driver.UpdateDiff{
-				Added:   []claircore.Vulnerability{},
-				Removed: []claircore.Vulnerability{},
+				Added:   []claircore.Vulnerability{*vulnAdd},
+				Removed: []claircore.Vulnerability{*vulnRemoved},
 			}, nil
 		},
 	}
@@ -129,8 +130,8 @@ func testProcessorIndexerErr(t *testing.T) {
 	mm := &matcher.Mock{
 		UpdateDiff_: func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error) {
 			return &driver.UpdateDiff{
-				Added:   []claircore.Vulnerability{},
-				Removed: []claircore.Vulnerability{},
+				Added:   []claircore.Vulnerability{*vulnAdd},
+				Removed: []claircore.Vulnerability{*vulnRemoved},
 			}, nil
 		},
 	}
@@ -209,23 +210,25 @@ func testProcessorCreate(t *testing.T) {
 	mm := &matcher.Mock{
 		UpdateDiff_: func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error) {
 			return &driver.UpdateDiff{
-				Added:   []claircore.Vulnerability{},
-				Removed: []claircore.Vulnerability{},
+				Added:   []claircore.Vulnerability{*vulnAdd},
+				Removed: []claircore.Vulnerability{*vulnRemoved},
 			}, nil
 		},
 	}
 	count := 0
 	im := &indexer.Mock{
 		AffectedManifests_: func(ctx context.Context, vulns []claircore.Vulnerability) (*claircore.AffectedManifests, error) {
-			switch count {
-			case 0:
-				count++
-				return affectedManifestsAdd, nil
-			case 1:
-				return affectedManifestsRemoved, nil
-			default:
+			if count > 1 {
 				return nil, fmt.Errorf("unexpected number of calls")
 			}
+			count++
+			switch vulns[0].ID {
+			case "0":
+				return affectedManifestsAdd, nil
+			case "1":
+				return affectedManifestsRemoved, nil
+			}
+			return nil, fmt.Errorf("unexpected call")
 		},
 	}
 	// perform bulk of checks in this mock method.
