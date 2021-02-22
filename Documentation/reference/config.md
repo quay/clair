@@ -529,14 +529,14 @@ Defines pre-shard-key authentication
 ```
 a string value
 
-A shared key distributed between all parties signing and verifying JWTs.
+A shared base64 encoded key distributed between all parties signing and verifying JWTs.
 ```
 
-#### &emsp;&emsp;issuer: []string
+#### &emsp;&emsp;iss: []string
 ```
 a list of string value
 
-A list of issuers to verify. An empty list will accept any issuer in a jwt claim.
+A list of jwt issuers to verify. An empty list will accept any issuer in a jwt claim.
 ```
 
 ### &emsp;keyserver: \<object\>
