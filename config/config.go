@@ -3,9 +3,6 @@ package config
 import (
 	"fmt"
 	"strings"
-
-	"github.com/quay/claircore/libvuln/driver"
-	"gopkg.in/yaml.v3"
 )
 
 // Clair Modes
@@ -53,55 +50,11 @@ type Config struct {
 	LogLevel string   `yaml:"log_level" json:"log_level"`
 	Indexer  Indexer  `yaml:"indexer" json:"indexer"`
 	Matcher  Matcher  `yaml:"matcher" json:"matcher"`
+	Updaters Updaters `yaml:"updaters,omitempty" json:"updaters,omitempty"`
 	Notifier Notifier `yaml:"notifier" json:"notifier"`
 	Auth     Auth     `yaml:"auth" json:"auth"`
 	Trace    Trace    `yaml:"trace" json:"trace"`
 	Metrics  Metrics  `yaml:"metrics" json:"metrics"`
-	Updaters Updaters `yaml:"updaters,omitempty" json:"updaters,omitempty"`
-}
-
-// Updaters configures updater behavior.
-type Updaters struct {
-	// A slice of strings representing which
-	// updaters will be used.
-	//
-	// If nil all default UpdaterSets will be used
-	//
-	// The following sets are supported by default:
-	// "alpine"
-	// "aws"
-	// "debian"
-	// "oracle"
-	// "photon"
-	// "pyupio"
-	// "rhel"
-	// "suse"
-	// "ubuntu"
-	Sets []string `yaml:"sets,omitempty" json:"sets,omitempty"`
-	// Config holds configuration blocks for UpdaterFactories and Updaters,
-	// keyed by name.
-	//
-	// These are defined by the updater implementation and can't be documented
-	// here. Improving the documentation for these is an open issue.
-	Config map[string]yaml.Node `yaml:"config" json:"config"`
-	// Filter is a regexp that disallows updaters that do not match from
-	// running.
-	Filter string `yaml:"filter" json:"filter"`
-}
-
-func (u *Updaters) FilterSets(m map[string]driver.UpdaterSetFactory) {
-	if u.Sets != nil {
-	Outer:
-		for k := range m {
-			for _, n := range u.Sets {
-				if k == n {
-					continue Outer
-				}
-			}
-			delete(m, k)
-		}
-	}
-	return
 }
 
 // Validate confirms the necessary values to support
