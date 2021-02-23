@@ -167,21 +167,21 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#testing-clair" id="testing-clair">Testing Clair</a></h1>
+                        <h1 id="testing-clair"><a class="header" href="#testing-clair">Testing Clair</a></h1>
 <p>We provide dev tooling in order to quickly get a fully configured Clair and Quay environment stood up locally. This environment can be used to test and develop Clair.</p>
-<h2><a class="header" href="#requirements" id="requirements">Requirements</a></h2>
-<h3><a class="header" href="#make" id="make">Make</a></h3>
+<h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
+<h3 id="make"><a class="header" href="#make">Make</a></h3>
 <p>Make is used to stand up the the local dev environment. 
 Make is readily available in just about every package manager you can think of.
 It's very likely your workstation already has make on it.</p>
-<h3><a class="header" href="#docker-and-docker-compose" id="docker-and-docker-compose">Docker and Docker Compose</a></h3>
+<h3 id="docker-and-docker-compose"><a class="header" href="#docker-and-docker-compose">Docker and Docker Compose</a></h3>
 <p>Currently our local dev tooling is supported by docker and docker-compose. We are making strides to provide a podman native local dev environment but we are not quite there yet.</p>
 <p>Docker version 19.03.11 and docker-compose version 1.25.4 are confirmed working. Our assumption is most recent versions will not have an issue running the local dev tooling.</p>
 <p>See <a href="https://docs.docker.com/get-docker/">Install Docker</a></p>
-<h3><a class="header" href="#go-toolchain" id="go-toolchain">Go Toolchain</a></h3>
+<h3 id="go-toolchain"><a class="header" href="#go-toolchain">Go Toolchain</a></h3>
 <p>Go v1.13 or higher is required.</p>
 <p>See <a href="https://golang.org/doc/install">Install Golang</a></p>
-<h2><a class="header" href="#starting-a-cluster" id="starting-a-cluster">Starting a cluster</a></h2>
+<h2 id="starting-a-cluster"><a class="header" href="#starting-a-cluster">Starting a cluster</a></h2>
 <pre><code>git clone git@github.com:quay/clair.git
 cd clair
 make local-dev-up-with-quay
@@ -215,7 +215,7 @@ localhost:7000 --- Traefik Web UI.
 
 localhost:9090 --- Prometheus
 </code></pre>
-<h2><a class="header" href="#pushing-to-the-local-quay" id="pushing-to-the-local-quay">Pushing to the Local Quay</a></h2>
+<h2 id="pushing-to-the-local-quay"><a class="header" href="#pushing-to-the-local-quay">Pushing to the Local Quay</a></h2>
 <p>As mentioned above, Quay is present at <code>localhost:8080</code>. You may navigate to this address and create a account. Creating an account named <code>admin</code> will ensure you are a super user. An email is required, but is not validated.</p>
 <p>Once inside, you will create an organization named &quot;clairv4-org&quot;. Currently Quay has to explicitly enable Clair v4 security scanning, which is done via an organization allowlist. &quot;clairv4-org&quot; is preconfigured in our local dev configuration.</p>
 <p>The easiest way to push to Quay is using podman:</p>
@@ -225,18 +225,18 @@ podman tag ubuntu:latest localhost:8080/clairv4-org/testing:latest
 podman push --tls-verify=false localhost:8080/clairv4-org/testing:latest
 </code></pre>
 <p>Using docker to push is possible, however you will need to add &quot;localhost:8080&quot; as an insecure repository. See <a href="https://docs.docker.com/registry/insecure/">Insecure Repository</a></p>
-<h2><a class="header" href="#viewing-results" id="viewing-results">Viewing Results</a></h2>
+<h2 id="viewing-results"><a class="header" href="#viewing-results">Viewing Results</a></h2>
 <p>By default, Quay displays security scanner results on the Tags page of the given repository.</p>
-<h2><a class="header" href="#making-changes-to-configuration" id="making-changes-to-configuration">Making changes to configuration</a></h2>
+<h2 id="making-changes-to-configuration"><a class="header" href="#making-changes-to-configuration">Making changes to configuration</a></h2>
 <p>You may want to play with either Clair or Quay's configuration. 
 If so, the configuration files can be found inside the repository at
 <code>local-dev/quay/config.yaml</code> and <code>local-dev/clair.yaml</code>.</p>
 <p>Any changes to the configs will require a restart of the relevant service. Take a look at the <code>Makefile</code> for the various restart targets.</p>
-<h2><a class="header" href="#tearing-it-down" id="tearing-it-down">Tearing it down</a></h2>
+<h2 id="tearing-it-down"><a class="header" href="#tearing-it-down">Tearing it down</a></h2>
 <pre><code>make local-dev-down
 </code></pre>
 <p>will rip the entire environment down.</p>
-<h2><a class="header" href="#troubleshooting" id="troubleshooting">Troubleshooting</a></h2>
+<h2 id="troubleshooting"><a class="header" href="#troubleshooting">Troubleshooting</a></h2>
 <p>The most common issue encountered when standing up the dev environment is port conflicts. Make sure that you do not have any other processes listening on any of the ports outlined above.</p>
 <p>The second issue you may face is your Docker resource settings maybe too constrained to support the local dev stack. This is typically seen on Docker4Mac since a VM is used with a specific set of resources configured. See <a href="https://docs.docker.com/docker-for-mac/">Docker For Mac Manual</a> for instructions on how to change these resources.</p>
 <p>Lastly, you can view traefik's ui at <code>localhost:7000</code>. If traefik is reporting no routers or services its likely SELinux has blocked its access to <code>/var/run/docker.socket</code>. Place SELinuse in permissive mode and restart the local development environment.</p>

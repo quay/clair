@@ -195,7 +195,7 @@ match your container's content with known vulnerabilities.</p>
 <p>Email: <a href="mailto:quay-devel@redhat.com">Clair Team</a> Web: <a href="http://github.com/quay/clair">Clair Team</a> 
 License: <a href="http://www.apache.org/licenses/">Apache License 2.0</a></p>
 <h1 id="clairv4-notifier">Notifier</h1>
-<h2><a class="header" href="#deletenotification" id="deletenotification">DeleteNotification</a></h2>
+<h2 id="deletenotification"><a class="header" href="#deletenotification">DeleteNotification</a></h2>
 <p><a id="opIdDeleteNotification"></a></p>
 <blockquote>
 <p>Code samples</p>
@@ -280,7 +280,7 @@ retrieve notifications.</p>
 <aside class="success">
 This operation does not require authentication
 </aside>
-<h2><a class="header" href="#retrieve-a-paginated-result-of-notifications-for-the-provided-id" id="retrieve-a-paginated-result-of-notifications-for-the-provided-id">Retrieve a paginated result of notifications for the provided id.</a></h2>
+<h2 id="retrieve-a-paginated-result-of-notifications-for-the-provided-id"><a class="header" href="#retrieve-a-paginated-result-of-notifications-for-the-provided-id">Retrieve a paginated result of notifications for the provided id.</a></h2>
 <p><a id="opIdGetNotification"></a></p>
 <blockquote>
 <p>Code samples</p>
@@ -345,7 +345,7 @@ client will retrieve a paginated response of notification objects.</p>
 <tr><td>page_size</td><td>query</td><td>int</td><td>false</td><td>The maximum number of notifications to deliver in a single page.</td></tr>
 <tr><td>next</td><td>query</td><td>string</td><td>false</td><td>The next page to fetch via id. Typically this number is provided</td></tr>
 </tbody></table>
-<h4><a class="header" href="#detailed-descriptions" id="detailed-descriptions">Detailed descriptions</a></h4>
+<h4 id="detailed-descriptions"><a class="header" href="#detailed-descriptions">Detailed descriptions</a></h4>
 <p><strong>page_size</strong>: The maximum number of notifications to deliver in a single page.</p>
 <p><strong>next</strong>: The next page to fetch via id. Typically this number is provided
 on initial response in the page.next field.
@@ -423,7 +423,7 @@ The first GET request may omit this field.</p>
 This operation does not require authentication
 </aside>
 <h1 id="clairv4-indexer">Indexer</h1>
-<h2><a class="header" href="#index-the-contents-of-a-manifest" id="index-the-contents-of-a-manifest">Index the contents of a Manifest</a></h2>
+<h2 id="index-the-contents-of-a-manifest"><a class="header" href="#index-the-contents-of-a-manifest">Index the contents of a Manifest</a></h2>
 <p><a id="opIdIndex"></a></p>
 <blockquote>
 <p>Code samples</p>
@@ -591,7 +591,7 @@ packages, repository and distribution information.</p>
 <aside class="success">
 This operation does not require authentication
 </aside>
-<h2><a class="header" href="#retrieve-an-indexreport-for-the-given-manifest-hash-if-exists" id="retrieve-an-indexreport-for-the-given-manifest-hash-if-exists">Retrieve an IndexReport for the given Manifest hash if exists.</a></h2>
+<h2 id="retrieve-an-indexreport-for-the-given-manifest-hash-if-exists"><a class="header" href="#retrieve-an-indexreport-for-the-given-manifest-hash-if-exists">Retrieve an IndexReport for the given Manifest hash if exists.</a></h2>
 <p><a id="opIdGetIndexReport"></a></p>
 <blockquote>
 <p>Code samples</p>
@@ -654,7 +654,7 @@ be retrieved if exists.</p>
 <table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
 <tr><td>manifest_hash</td><td>path</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>A digest of a manifest that has been indexed previous to this</td></tr>
 </tbody></table>
-<h4><a class="header" href="#detailed-descriptions-1" id="detailed-descriptions-1">Detailed descriptions</a></h4>
+<h4 id="detailed-descriptions-1"><a class="header" href="#detailed-descriptions-1">Detailed descriptions</a></h4>
 <p><strong>manifest_hash</strong>: A digest of a manifest that has been indexed previous to this
 request.</p>
 <blockquote>
@@ -722,7 +722,7 @@ request.</p>
 <aside class="success">
 This operation does not require authentication
 </aside>
-<h2><a class="header" href="#report-the-indexers-internal-configuration-and-state" id="report-the-indexers-internal-configuration-and-state">Report the indexer's internal configuration and state.</a></h2>
+<h2 id="report-the-indexers-internal-configuration-and-state"><a class="header" href="#report-the-indexers-internal-configuration-and-state">Report the indexer's internal configuration and state.</a></h2>
 <p><a id="opIdIndexState"></a></p>
 <blockquote>
 <p>Code samples</p>
@@ -798,7 +798,7 @@ to be re-indexed.</p>
 <tr><td>200</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td><td>Indexer State</td><td><a href="#schemastate">State</a></td></tr>
 <tr><td>304</td><td><a href="https://tools.ietf.org/html/rfc7232#section-4.1">Not Modified</a></td><td>Indexer State Unchanged</td><td>None</td></tr>
 </tbody></table>
-<h3><a class="header" href="#response-headers" id="response-headers">Response Headers</a></h3>
+<h3 id="response-headers"><a class="header" href="#response-headers">Response Headers</a></h3>
 <table><thead><tr><th>Status</th><th>Header</th><th>Type</th><th>Format</th><th>Description</th></tr></thead><tbody>
 <tr><td>200</td><td>Etag</td><td>string</td><td></td><td>Entity Tag</td></tr>
 </tbody></table>
@@ -806,7 +806,7 @@ to be re-indexed.</p>
 This operation does not require authentication
 </aside>
 <h1 id="clairv4-matcher">Matcher</h1>
-<h2><a class="header" href="#retrieve-a-vulnerabilityreport-for-a-given-manifests-content" id="retrieve-a-vulnerabilityreport-for-a-given-manifests-content">Retrieve a VulnerabilityReport for a given manifest's content</a></h2>
+<h2 id="retrieve-a-vulnerabilityreport-for-a-given-manifests-content"><a class="header" href="#retrieve-a-vulnerabilityreport-for-a-given-manifests-content">Retrieve a VulnerabilityReport for a given manifest's content</a></h2>
 <p>addressable hash.</p>
 <p><a id="opIdGetVulnerabilityReport"></a></p>
 <blockquote>
@@ -873,7 +873,7 @@ addressable-hash.
 <table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
 <tr><td>manifest_hash</td><td>path</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>A digest of a manifest that has been indexed previous to this</td></tr>
 </tbody></table>
-<h4><a class="header" href="#detailed-descriptions-2" id="detailed-descriptions-2">Detailed descriptions</a></h4>
+<h4 id="detailed-descriptions-2"><a class="header" href="#detailed-descriptions-2">Detailed descriptions</a></h4>
 <p><strong>manifest_hash</strong>: A digest of a manifest that has been indexed previous to this
 request.</p>
 <blockquote>
@@ -984,7 +984,7 @@ addressable-hash.
 <aside class="success">
 This operation does not require authentication
 </aside>
-<h1><a class="header" href="#schemas" id="schemas">Schemas</a></h1>
+<h1 id="schemas"><a class="header" href="#schemas">Schemas</a></h1>
 <h2 id="tocS_Page">Page</h2>
 <!-- backwards compatibility -->
 <a id="schemapage"></a>
@@ -998,7 +998,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>Page</p>
-<h3><a class="header" href="#properties" id="properties">Properties</a></h3>
+<h3 id="properties"><a class="header" href="#properties">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>size</td><td>int</td><td>false</td><td>none</td><td>The maximum number of elements in a page</td></tr>
 <tr><td>next</td><td>string</td><td>false</td><td>none</td><td>The next id to submit to the api to continue paging</td></tr>
@@ -1067,7 +1067,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>PagedNotifications</p>
-<h3><a class="header" href="#properties-1" id="properties-1">Properties</a></h3>
+<h3 id="properties-1"><a class="header" href="#properties-1">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>page</td><td>object</td><td>false</td><td>none</td><td>A page object informing the client the next page to retrieve.<br>If page.next becomes &quot;-1&quot; the client should stop paging.</td></tr>
 <tr><td>notifications</td><td>[<a href="#schemanotification">Notification</a>]</td><td>false</td><td>none</td><td>A list of notifications within this page</td></tr>
@@ -1085,7 +1085,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>Callback</p>
-<h3><a class="header" href="#properties-2" id="properties-2">Properties</a></h3>
+<h3 id="properties-2"><a class="header" href="#properties-2">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>notification_id</td><td>string</td><td>false</td><td>none</td><td>the unique identifier for this set of notifications</td></tr>
 <tr><td>callback</td><td>string</td><td>false</td><td>none</td><td>the url where notifications can be retrieved</td></tr>
@@ -1141,7 +1141,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>VulnSummary</p>
-<h3><a class="header" href="#properties-3" id="properties-3">Properties</a></h3>
+<h3 id="properties-3"><a class="header" href="#properties-3">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>name</td><td>string</td><td>false</td><td>none</td><td>the vulnerability name</td></tr>
 <tr><td>fixed_in_version</td><td>string</td><td>false</td><td>none</td><td>The version which the vulnerability is fixed in. Empty if not fixed.</td></tr>
@@ -1152,7 +1152,7 @@ This operation does not require authentication
 <tr><td>distribution</td><td><a href="#schemadistribution">Distribution</a></td><td>false</td><td>none</td><td>An indexed distribution discovered in a layer. See<br>https://www.freedesktop.org/software/systemd/man/os-release.html<br>for explanations and example of fields.</td></tr>
 <tr><td>repository</td><td><a href="#schemarepository">Repository</a></td><td>false</td><td>none</td><td>A package repository</td></tr>
 </tbody></table>
-<h4><a class="header" href="#enumerated-values" id="enumerated-values">Enumerated Values</a></h4>
+<h4 id="enumerated-values"><a class="header" href="#enumerated-values">Enumerated Values</a></h4>
 <table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>
 <tr><td>normalized_severity</td><td>Unknown</td></tr>
 <tr><td>normalized_severity</td><td>Negligible</td></tr>
@@ -1217,7 +1217,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>Notification</p>
-<h3><a class="header" href="#properties-4" id="properties-4">Properties</a></h3>
+<h3 id="properties-4"><a class="header" href="#properties-4">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>id</td><td>string</td><td>false</td><td>none</td><td>a unique identifier for this notification</td></tr>
 <tr><td>manifest</td><td>string</td><td>false</td><td>none</td><td>The hash of the manifest affected by the provided vulnerability.</td></tr>
@@ -1238,7 +1238,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>Environment</p>
-<h3><a class="header" href="#properties-5" id="properties-5">Properties</a></h3>
+<h3 id="properties-5"><a class="header" href="#properties-5">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>package_db</td><td>string</td><td>true</td><td>none</td><td>The filesystem path or unique identifier of a package database.</td></tr>
 <tr><td>introduced_in</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
@@ -1300,7 +1300,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>IndexReport</p>
-<h3><a class="header" href="#properties-6" id="properties-6">Properties</a></h3>
+<h3 id="properties-6"><a class="header" href="#properties-6">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>manifest_hash</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
 <tr><td>state</td><td>string</td><td>true</td><td>none</td><td>The current state of the index operation</td></tr>
@@ -1410,7 +1410,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>VulnerabilityReport</p>
-<h3><a class="header" href="#properties-7" id="properties-7">Properties</a></h3>
+<h3 id="properties-7"><a class="header" href="#properties-7">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>manifest_hash</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
 <tr><td>packages</td><td>object</td><td>true</td><td>none</td><td>A map of Package objects indexed by Package.id</td></tr>
@@ -1471,7 +1471,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>Vulnerability</p>
-<h3><a class="header" href="#properties-8" id="properties-8">Properties</a></h3>
+<h3 id="properties-8"><a class="header" href="#properties-8">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>id</td><td>string</td><td>true</td><td>none</td><td>A unique ID representing this vulnerability.</td></tr>
 <tr><td>updater</td><td>string</td><td>true</td><td>none</td><td>A unique ID representing this vulnerability.</td></tr>
@@ -1487,7 +1487,7 @@ This operation does not require authentication
 <tr><td>range</td><td>string</td><td>false</td><td>none</td><td>The range of package versions affected by this vulnerability.</td></tr>
 <tr><td>fixed_in_version</td><td>string</td><td>true</td><td>none</td><td>A unique ID representing this vulnerability.</td></tr>
 </tbody></table>
-<h4><a class="header" href="#enumerated-values-1" id="enumerated-values-1">Enumerated Values</a></h4>
+<h4 id="enumerated-values-1"><a class="header" href="#enumerated-values-1">Enumerated Values</a></h4>
 <table><thead><tr><th>Property</th><th>Value</th></tr></thead><tbody>
 <tr><td>normalized_severity</td><td>Unknown</td></tr>
 <tr><td>normalized_severity</td><td>Negligible</td></tr>
@@ -1517,7 +1517,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>Distribution</p>
-<h3><a class="header" href="#properties-9" id="properties-9">Properties</a></h3>
+<h3 id="properties-9"><a class="header" href="#properties-9">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>id</td><td>string</td><td>true</td><td>none</td><td>A unique ID representing this distribution</td></tr>
 <tr><td>did</td><td>string</td><td>true</td><td>none</td><td>none</td></tr>
@@ -1556,7 +1556,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>SourcePackage</p>
-<h3><a class="header" href="#properties-10" id="properties-10">Properties</a></h3>
+<h3 id="properties-10"><a class="header" href="#properties-10">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>id</td><td>string</td><td>true</td><td>none</td><td>A unique ID representing this package</td></tr>
 <tr><td>name</td><td>string</td><td>true</td><td>none</td><td>Name of the Package</td></tr>
@@ -1595,7 +1595,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>Package</p>
-<h3><a class="header" href="#properties-11" id="properties-11">Properties</a></h3>
+<h3 id="properties-11"><a class="header" href="#properties-11">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>id</td><td>string</td><td>true</td><td>none</td><td>A unique ID representing this package</td></tr>
 <tr><td>name</td><td>string</td><td>true</td><td>none</td><td>Name of the Package</td></tr>
@@ -1623,7 +1623,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>Repository</p>
-<h3><a class="header" href="#properties-12" id="properties-12">Properties</a></h3>
+<h3 id="properties-12"><a class="header" href="#properties-12">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>id</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
 <tr><td>name</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
@@ -1641,7 +1641,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>Version</p>
-<h3><a class="header" href="#properties-13" id="properties-13">Properties</a></h3>
+<h3 id="properties-13"><a class="header" href="#properties-13">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>Version</td><td>string</td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a &quot;kind&quot; and an<br>array of integers such that two versions of the same kind have the<br>correct ordering when the integers are compared pair-wise.</td></tr>
 </tbody></table>
@@ -1671,7 +1671,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>Manifest</p>
-<h3><a class="header" href="#properties-14" id="properties-14">Properties</a></h3>
+<h3 id="properties-14"><a class="header" href="#properties-14">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>hash</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
 <tr><td>layers</td><td>[<a href="#schemalayer">Layer</a>]</td><td>true</td><td>none</td><td>[A Layer within a Manifest and where Clair may retrieve it.]</td></tr>
@@ -1697,7 +1697,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>Layer</p>
-<h3><a class="header" href="#properties-15" id="properties-15">Properties</a></h3>
+<h3 id="properties-15"><a class="header" href="#properties-15">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>hash</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
 <tr><td>uri</td><td>string</td><td>true</td><td>none</td><td>A URI describing where the layer may be found. Implementations<br>MUST support http(s) schemes and MAY support additional<br>schemes.</td></tr>
@@ -1717,7 +1717,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>Error</p>
-<h3><a class="header" href="#properties-16" id="properties-16">Properties</a></h3>
+<h3 id="properties-16"><a class="header" href="#properties-16">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>code</td><td>string</td><td>false</td><td>none</td><td>a code for this particular error</td></tr>
 <tr><td>message</td><td>string</td><td>false</td><td>none</td><td>a message with further detail</td></tr>
@@ -1734,7 +1734,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>State</p>
-<h3><a class="header" href="#properties-17" id="properties-17">Properties</a></h3>
+<h3 id="properties-17"><a class="header" href="#properties-17">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>state</td><td>string</td><td>true</td><td>none</td><td>an opaque identifier</td></tr>
 </tbody></table>
@@ -1748,7 +1748,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>Digest</p>
-<h3><a class="header" href="#properties-18" id="properties-18">Properties</a></h3>
+<h3 id="properties-18"><a class="header" href="#properties-18">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>Digest</td><td>string</td><td>false</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
 </tbody></table>

@@ -167,7 +167,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#commit-style" id="commit-style">Commit Style</a></h1>
+                        <h1 id="commit-style"><a class="header" href="#commit-style">Commit Style</a></h1>
 <p>The Clair project utilizes well structured commits to keep the history useful and help with release automation.
 We suggest signing off on your commits as well.</p>
 <p>A typical commit will take on the following structure:</p>
@@ -180,14 +180,14 @@ Pull Request #2
 Signed-Off By: &lt;email&gt;
 </code></pre>
 <p>The header of the commit is regexp checked before commit and your commit will be kicked back if it does not conform.</p>
-<h2><a class="header" href="#scope" id="scope">Scope</a></h2>
+<h2 id="scope"><a class="header" href="#scope">Scope</a></h2>
 <p>This is the section of code this commit influences. </p>
 <p>You will often see scopes such as &quot;notifier&quot;, &quot;auth&quot;, &quot;chore&quot;, &quot;cicd&quot;.</p>
 <p>We use this field to group commits by scope in our automated changelog generation.</p>
 <p>It would be wise to take a look at our changelog before contributing to get an idea of the common scopes we use.</p>
-<h2><a class="header" href="#subject" id="subject">Subject</a></h2>
+<h2 id="subject"><a class="header" href="#subject">Subject</a></h2>
 <p>Subject is a short and concise summary of the change the commit is introducing. It should be a sentence fragment without starting capitalization and ending punctuation and limited to about 60 characters, to allow for the scope prefix and decoration in the git log.</p>
-<h2><a class="header" href="#body" id="body">Body</a></h2>
+<h2 id="body"><a class="header" href="#body">Body</a></h2>
 <p>Body should be full of detail.</p>
 <p>Explain what this commit is doing and why it is necessary.</p>
 <p>You may include references to issues and pull requests as well. Our automated changelog process will discover references prefixed with &quot;Fixes&quot;, &quot;Closed&quot; and &quot;Pull Request&quot;</p>

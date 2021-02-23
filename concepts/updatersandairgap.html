@@ -167,26 +167,26 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h2><a class="header" href="#updaters" id="updaters">Updaters</a></h2>
+                        <h2 id="updaters"><a class="header" href="#updaters">Updaters</a></h2>
 <p>Clair utilizes go packages we call &quot;updaters&quot; that encapsulate the logic of
 fetching and parsing different vulnerability databases. Updaters are usually
 pared with a matcher to interpret if and how any vulnerability is related to a
 package.</p>
 <p>Operators may wish to update the vulnerability database less frequently or not
 import vulnerabilities from databases that they know will not be used.</p>
-<h3><a class="header" href="#configuration" id="configuration">Configuration</a></h3>
+<h3 id="configuration"><a class="header" href="#configuration">Configuration</a></h3>
 <p>Updaters can be configured by <code>updaters</code> key at the top of the configuration. If
 updaters are being run automatically within the matcher processes, as is the
 default, the period for running updaters is configured under the matcher's
 configuration stanza.</p>
-<h4><a class="header" href="#choosing-sets" id="choosing-sets">Choosing Sets</a></h4>
+<h4 id="choosing-sets"><a class="header" href="#choosing-sets">Choosing Sets</a></h4>
 <p>Specific sets of updaters can be selected by the <code>sets</code> list. If not present,
 the defaults of all upstream updaters will be used.</p>
 <pre><code class="language-yaml">updaters:
   sets:
     - rhel
 </code></pre>
-<h4><a class="header" href="#filtering-updaters" id="filtering-updaters">Filtering Updaters</a></h4>
+<h4 id="filtering-updaters"><a class="header" href="#filtering-updaters">Filtering Updaters</a></h4>
 <p>To disallow an updater from running without disabling an entire set, the filter
 option can be used. The provided string will be interpreted as a go [regexp]
 used to disallow any updater with a name that does not match. <strong>Note:</strong> This
@@ -194,7 +194,7 @@ means that an empty string matches <em>any</em> string, not no strings.</p>
 <pre><code class="language-yaml">updaters:
   filter: '^$'
 </code></pre>
-<h4><a class="header" href="#specific-updaters" id="specific-updaters">Specific Updaters</a></h4>
+<h4 id="specific-updaters"><a class="header" href="#specific-updaters">Specific Updaters</a></h4>
 <p>Configuration for specific updaters can be passed by putting a key underneath
 the <code>config</code> member of the <code>updaters</code> object. The name of an updater may be
 constructed dynamically; users should examine logs to double-check names.
@@ -207,7 +207,7 @@ location:</p>
     rhel:
       url: https://example.com/mirror/oval/PULP_MANIFEST
 </code></pre>
-<h3><a class="header" href="#airgap" id="airgap">Airgap</a></h3>
+<h3 id="airgap"><a class="header" href="#airgap">Airgap</a></h3>
 <p>For additional flexibility, Clair supports running updaters in a different
 environment and importing the results. This is aimed at supporting installations
 that disallow the Clair cluster from talking to the Internet directly. An update
@@ -226,19 +226,19 @@ scp updates.gz internal-webserver:/var/www/
 clairctl import-updaters http://web.svc/updates.gz
 </code></pre>
 <p>Note that a configuration file is needed to run these commands.</p>
-<h4><a class="header" href="#configuration-1" id="configuration-1">Configuration</a></h4>
+<h4 id="configuration-1"><a class="header" href="#configuration-1">Configuration</a></h4>
 <p>Matcher processes should have the <code>disable_updaters</code> key set to disable
 automatic updaters running.</p>
 <pre><code class="language-yaml">matcher:
   disable_updaters: true
 </code></pre>
-<h2><a class="header" href="#indexers" id="indexers">Indexers</a></h2>
-<h3><a class="header" href="#configuration-2" id="configuration-2">Configuration</a></h3>
-<h4><a class="header" href="#airgap-1" id="airgap-1">Airgap</a></h4>
+<h2 id="indexers"><a class="header" href="#indexers">Indexers</a></h2>
+<h3 id="configuration-2"><a class="header" href="#configuration-2">Configuration</a></h3>
+<h4 id="airgap-1"><a class="header" href="#airgap-1">Airgap</a></h4>
 <pre><code class="language-yaml">indexer:
   airgap: true
 </code></pre>
-<h4><a class="header" href="#specific-scanners" id="specific-scanners">Specific Scanners</a></h4>
+<h4 id="specific-scanners"><a class="header" href="#specific-scanners">Specific Scanners</a></h4>
 <pre><code class="language-yaml">indexer:
   scanner:
     package:

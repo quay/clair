@@ -167,21 +167,21 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#releases" id="releases">Releases</a></h1>
+                        <h1 id="releases"><a class="header" href="#releases">Releases</a></h1>
 <p>Clair releases are cut roughly every three months and actively maintained for
 six.</p>
 <p>This means that bugfixes should be landed on <code>master</code> (if applicable) and then
 marked for backporting to a minor version's release branch. The process for
 doing this is not yet formalized.</p>
-<h2><a class="header" href="#process" id="process">Process</a></h2>
-<h3><a class="header" href="#minor" id="minor">Minor</a></h3>
+<h2 id="process"><a class="header" href="#process">Process</a></h2>
+<h3 id="minor"><a class="header" href="#minor">Minor</a></h3>
 <p>When cutting a new minor release, two things need to be done: creating a tag and
 creating a release branch. This can be done like so:</p>
 <pre><code class="language-sh">git tag -as v4.x.0 HEAD
 git push upstream HEAD:release-4.x tag v4.x.0
 </code></pre>
 <p>Then, a &quot;release&quot; needs to be created in the Github UI using the created tag.</p>
-<h3><a class="header" href="#patch" id="patch">Patch</a></h3>
+<h3 id="patch"><a class="header" href="#patch">Patch</a></h3>
 <p>A patch release is just like a minor release with the caveat that minor version
 tags should <em>only</em> appear on release branches and a new branch does not need to
 be created.</p>
@@ -190,7 +190,7 @@ git tag -as v4.x.1 HEAD
 git push upstream tag v4.x.1
 </code></pre>
 <p>Then, a &quot;release&quot; needs to be created in the Github UI using the created tag.</p>
-<h3><a class="header" href="#creating-artifacts" id="creating-artifacts">Creating Artifacts</a></h3>
+<h3 id="creating-artifacts"><a class="header" href="#creating-artifacts">Creating Artifacts</a></h3>
 <p>Clair's artifact release process is automated and driven off the releases in
 Github.</p>
 <p>Publishing a new release in the Github UI automatically triggers the creation of

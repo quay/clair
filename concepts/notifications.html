@@ -167,7 +167,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#notifications" id="notifications">Notifications</a></h1>
+                        <h1 id="notifications"><a class="header" href="#notifications">Notifications</a></h1>
 <p>ClairV4 implements a notification system.</p>
 <p>The notifier service will keep track of new security database updates and inform an interested client if new or removed vulnerabilites affect an indexed manifest.</p>
 <p>The interested client can subscribe to notifications via several mechanisms:</p>
@@ -178,7 +178,7 @@
 </ul>
 <p>Configuring the notifier is done via the yaml configuration. </p>
 <p>See the &quot;Notifier&quot; object in our <a href="../reference/config.html">config reference</a></p>
-<h2><a class="header" href="#a-notification" id="a-notification">A Notification</a></h2>
+<h2 id="a-notification"><a class="header" href="#a-notification">A Notification</a></h2>
 <p>When the notifier becomes aware of new vulnerabilities affecting a previously indexed manifest, it will use the configured method(s) to issue notifications about the new changes. Any given notification expresses the <strong>most severe</strong> vulnerability discovered because of the change. This avoids creating a flurry of notifications for the same security database update. </p>
 <p>Once a client receives a notification, it should issue a new request against the <a href="../reference/matcher.html">matcher</a> to receive an up-to-date vulnerability report.</p>
 <p>The notification schema is the JSON marshaled form of the following types:</p>
@@ -206,7 +206,7 @@ type VulnSummary struct {
 	Links          string                  `json:&quot;links&quot;`
 }
 </code></pre>
-<h2><a class="header" href="#webhook-delivery" id="webhook-delivery">Webhook Delivery</a></h2>
+<h2 id="webhook-delivery"><a class="header" href="#webhook-delivery">Webhook Delivery</a></h2>
 <p><em>See the &quot;Notifier.Webhook&quot; object in the <a href="../reference/config.html">config reference</a> for complete configuration details.</em></p>
 <p>When you configure notifier for webhook delivery you provide the service with the following pieces of information:</p>
 <ul>
@@ -224,7 +224,7 @@ type VulnSummary struct {
 }
 </code></pre>
 <p>On receipt, the server can immediately browse to the URL provided in the callback field.</p>
-<h3><a class="header" href="#pagination" id="pagination">Pagination</a></h3>
+<h3 id="pagination"><a class="header" href="#pagination">Pagination</a></h3>
 <p>The URL returned in the callback field brings the client to a paginated result.</p>
 <p>The callback endpoint specification follows:</p>
 <pre><code class="language-go">GET /notifier/api/v1/notification/{id}?[page_size=N][next=N]
@@ -252,18 +252,18 @@ while (page.Next != None) {
 }
 </code></pre>
 <p><em>Note: If the client specifies a custom page_size it must specify this page_size on every request for accurate responses.</em></p>
-<h3><a class="header" href="#deleting-notifications" id="deleting-notifications">Deleting Notifications</a></h3>
+<h3 id="deleting-notifications"><a class="header" href="#deleting-notifications">Deleting Notifications</a></h3>
 <p>While not mandatory, the client may issue a delete of the notification via a DELETE method. See <a href="../howto/api.html">api</a> to view the delete api.</p>
 <p>Deleting a notification ID will clean up resources in the notifier quicker. Otherwise the notifier will wait a predetermined length of time before clearing delivered notifications from its database.</p>
-<h2><a class="header" href="#amqp-delivery" id="amqp-delivery">AMQP Delivery</a></h2>
+<h2 id="amqp-delivery"><a class="header" href="#amqp-delivery">AMQP Delivery</a></h2>
 <p><em>See the &quot;Notifier.AMQP&quot; object in our <a href="../reference/config.html">config reference</a> for complete configuration details.</em></p>
 <p>The notifier also supports delivering to an AMQP broker. With AMQP delivery you can control whether a callback is delivered to the broker or whether notifications are directly delivered to the queue.</p>
 <p>This allows the developer of the AMQP consumer to determine the logic of notification processing.</p>
 <p>Note that AMQP delivery only supports AMQP 0.x protocol (e.g. RabbitMQ). If you need to publish notifications on AMQP 1.x message queue (e.g. ActiveMQ), you can use STOMP delivery.</p>
-<h3><a class="header" href="#direct-delivery" id="direct-delivery">Direct Delivery</a></h3>
+<h3 id="direct-delivery"><a class="header" href="#direct-delivery">Direct Delivery</a></h3>
 <p>If the notifier's configuration specifies <code>direct: true</code> for AMQP, notifications will be delivered directly to the configured exchange.</p>
 <p>When <code>direct</code> is set, the <code>rollup</code> property may be set to instruct the notifier to send a max number of notifications in a single AMQP message. This allows a balance between size of the message and number of messages delivered to the queue.</p>
-<h2><a class="header" href="#testing-and-development" id="testing-and-development">Testing and Development</a></h2>
+<h2 id="testing-and-development"><a class="header" href="#testing-and-development">Testing and Development</a></h2>
 <p>The notifier has a testing mode enabled when it sees the &quot;NOTIFIER_TEST_MODE&quot; environment variable set. It can be set to any value as we only check to see if it exists.</p>
 <p>When this environment variable is set, the notifier will begin sending fake notifications to the configured delivery mechanism every &quot;poll_interval&quot; interval. This provides an easy way to implement and test new or existing deliverers.</p>
 <p>The notifier will run in this mode until the environment variable is cleared and the service is restarted.</p>

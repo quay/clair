@@ -167,12 +167,12 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#deploying-clair" id="deploying-clair">Deploying Clair</a></h1>
+                        <h1 id="deploying-clair"><a class="header" href="#deploying-clair">Deploying Clair</a></h1>
 <p>Clair v4 was designed with flexible deployment architectures in mind. The operator is free to choose a deployment model which scales to their use cases.</p>
-<h2><a class="header" href="#configuration" id="configuration">Configuration</a></h2>
+<h2 id="configuration"><a class="header" href="#configuration">Configuration</a></h2>
 <p>Before jumping directly into the models its important to note that Clair is designed to use a single configuration file across all node types. This design decision makes it very easy to deploy on systems like Kubernetes and OpenShift.</p>
 <p>See <a href="../reference/config.html">Config Reference</a></p>
-<h2><a class="header" href="#combined-deployment" id="combined-deployment">Combined Deployment</a></h2>
+<h2 id="combined-deployment"><a class="header" href="#combined-deployment">Combined Deployment</a></h2>
 <p>In a combined deployment, all the Clair processes run in a single OS process. This is by far the easiest deployment model to configure as it involves the least moving parts. </p>
 <p>A load balancer is still recommended if you plan on performing TLS termination. Typically this will be a OpenShift route or a Kubernetes ingress.</p>
 <p><img src="./clairv4_combo_single_db.png" alt="combo mode single db deployment diagran" /></p>
@@ -202,7 +202,7 @@ notifier:
     connstring: &quot;host=notifier-clairdb user=pqgotest dbname=pqgotest sslmode=verify-full&quot;
     ...
 </code></pre>
-<h2><a class="header" href="#distributed-deployment" id="distributed-deployment">Distributed Deployment</a></h2>
+<h2 id="distributed-deployment"><a class="header" href="#distributed-deployment">Distributed Deployment</a></h2>
 <p>If your application needs to asymmetrically scale or you expect high load you may want to consider a distributed deployment.</p>
 <p>In a distributed deployment, each Clair process runs in its own OS process. Typically this will be a Kubernetes or OpenShift Pod.</p>
 <p>A load balancer <strong>must</strong> be setup in this deployment model. The load balancer will route traffic between Clair nodes along with routing API requests via <a href="https://devcentral.f5.com/s/articles/the-three-http-routing-patterns-you-should-know-30764">path based routing</a> to the correct services. In a Kubernetes or OpenShift deployment this is usually handled with the Service and Routes abstractions. If deploying on bare metal, a load balancer will need to be configured appropriately. </p>
@@ -224,9 +224,9 @@ notifier:
     ...
 </code></pre>
 <p>Keep in mind a config file per process is not need. Processes only use the values necessary for their configured mode.</p>
-<h2><a class="header" href="#tls-termination" id="tls-termination">TLS Termination</a></h2>
+<h2 id="tls-termination"><a class="header" href="#tls-termination">TLS Termination</a></h2>
 <p>Currently Clair offloads TLS termination to the load balancing infrastructure. This design choice is due to the ubiquity of Kubernetes and OpenShift infrastructure already providing this facility.</p>
-<h2><a class="header" href="#more-on-path-routing" id="more-on-path-routing">More On Path Routing</a></h2>
+<h2 id="more-on-path-routing"><a class="header" href="#more-on-path-routing">More On Path Routing</a></h2>
 <p>If you are considering a distributed deployment you will need more details on <a href="https://devcentral.f5.com/s/articles/the-three-http-routing-patterns-you-should-know-30764">path based routing</a>. </p>
 <p>Learn how to grab our OpenAPI spec <a href="./api.mw">here</a> and either start up a local dev instance of the swagger editor or load the spec file into the <a href="https://petstore.swagger.io/#/">online editor</a></p>
 <p>You will notice particular API paths are grouped by the services which implement them. This is your guide to configure your layer 7 load balancer correctly. </p>

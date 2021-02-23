@@ -167,26 +167,26 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#what-is-clair" id="what-is-clair">What is Clair</a></h1>
+                        <h1 id="what-is-clair"><a class="header" href="#what-is-clair">What is Clair</a></h1>
 <p>Clair is an application for parsing image contents and reporting vulnerabilities affecting the contents. This is done via static analysis and not at runtime.</p>
-<h2><a class="header" href="#architecture" id="architecture">Architecture</a></h2>
+<h2 id="architecture"><a class="header" href="#architecture">Architecture</a></h2>
 <p>Clair v4 utilizes the <a href="https://quay.github.io/claircore/">ClairCore</a> library as its engine for examining contents and reporting vulnerabilities. At a high level you can consider Clair a service wrapper to the functionality provided in the ClairCore library. </p>
 <p><img src="./clairv4_arch.png" alt="diagram of clairV4 highlevel architecture" /></p>
 <p>The above diagram expresses the separation of concerns between Clair and the ClairCore library. Most development involving new distributions, vulnerability sources, and layer indexing will occur in ClairCore.</p>
-<h2><a class="header" href="#how-clair-works" id="how-clair-works">How Clair Works</a></h2>
+<h2 id="how-clair-works"><a class="header" href="#how-clair-works">How Clair Works</a></h2>
 <p>Clair's analysis is broken into three distinct parts.</p>
-<h3><a class="header" href="#indexing" id="indexing">Indexing</a></h3>
+<h3 id="indexing"><a class="header" href="#indexing">Indexing</a></h3>
 <p>Indexing starts with submitting a Manifest to Clair. On receipt, Clair will fetch layers, scan their contents, and return an intermediate representation called an IndexReport. </p>
 <p>Manifests are Clair's representation of a container image. Clair leverages the fact that OCI Manifests and Layers are content-addressed to reduce duplicated work.</p>
 <p>Once a Manifest is indexed, the IndexReport is persisted for later retrieval. </p>
-<h3><a class="header" href="#matching" id="matching">Matching</a></h3>
+<h3 id="matching"><a class="header" href="#matching">Matching</a></h3>
 <p>Matching is taking an IndexReport and correlating vulnerabilities affecting the manifest the report represents. </p>
 <p>Clair is continually ingesting new security data and a request to the matcher will always provide you with the most up to date vulnerability analysis of an IndexReport.</p>
 <p><em>How we implement indexing and matching in detail is covered in <a href="https://quay.github.io/claircore/">ClairCore's</a> documentation.</em></p>
-<h3><a class="header" href="#notifications" id="notifications">Notifications</a></h3>
+<h3 id="notifications"><a class="header" href="#notifications">Notifications</a></h3>
 <p>Clair implements a notification service. </p>
 <p>When new vulnerabilities are discovered, the notifier service will determine if these vulnerabilities affect any indexed Manifests. The notifier will then take action according to its configuration.</p>
-<h3><a class="header" href="#getting-started" id="getting-started">Getting Started</a></h3>
+<h3 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h3>
 <p>At this point you'll probably want to check out <a href="./howto/getting_started.html">Getting Started With Clair</a>.</p>
 
                     </main>

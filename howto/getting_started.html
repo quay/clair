@@ -167,27 +167,27 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1><a class="header" href="#getting-started-with-clair" id="getting-started-with-clair">Getting Started With Clair</a></h1>
-<h2><a class="header" href="#releases" id="releases">Releases</a></h2>
+                        <h1 id="getting-started-with-clair"><a class="header" href="#getting-started-with-clair">Getting Started With Clair</a></h1>
+<h2 id="releases"><a class="header" href="#releases">Releases</a></h2>
 <p>All of the source code needed to build clair is packaged as an archive and
 attached to the release. Releases are tracked at the <a href="https://github.com/quay/clair/releases">github releases</a>.</p>
 <p>The release artifacts also include the clairctl command line tool.</p>
-<h2><a class="header" href="#official-containers" id="official-containers">Official Containers</a></h2>
+<h2 id="official-containers"><a class="header" href="#official-containers">Official Containers</a></h2>
 <p>Clair is officially packaged and released as a container at
 <a href="https://quay.io/repository/projectquay/clair">quay.io/projectquay/clair</a>. The <code>latest</code> tag tracks the git development branch,
 and version tags are built from the corresponding release.</p>
-<h2><a class="header" href="#running-clair" id="running-clair">Running Clair</a></h2>
+<h2 id="running-clair"><a class="header" href="#running-clair">Running Clair</a></h2>
 <p>The easiest way to get Clair up and running for test purposes is to use our <a href="./testing.html">local dev environment</a></p>
 <p>If you're the hands on type who wants to get into the details however, continue reading.</p>
-<h2><a class="header" href="#modes" id="modes">Modes</a></h2>
+<h2 id="modes"><a class="header" href="#modes">Modes</a></h2>
 <p>Clair can run in several modes. <a href="../reference/indexer.html">Indexer</a>, <a href="../reference/matcher.html">matcher</a>, <a href="../reference/notifier.html">notifier</a> or combo mode. In combo mode, everything runs in a single OS process. </p>
 <p>If you are just starting with Clair you will most likely want to start with combo mode and venture out to a distributed deployment once acquainted. </p>
 <p>This how-to will demonstrate combo mode and introduce some further reading on a distributed deployment.</p>
-<h2><a class="header" href="#postgres" id="postgres">Postgres</a></h2>
+<h2 id="postgres"><a class="header" href="#postgres">Postgres</a></h2>
 <p>Clair uses PostgreSQL for its data persistence. Migrations are supported so you should only need to point Clair to a fresh database and have it do the setup for you.</p>
 <p>We will assume you have setup a postgres database and it's reachable with the following connection string:
 <code>host=clair-db port=5432 user=clair dbname=clair sslmode=disable</code>. Adjust for your environment accordingly. </p>
-<h2><a class="header" href="#starting-clair-in-combo-mode" id="starting-clair-in-combo-mode">Starting Clair In Combo Mode</a></h2>
+<h2 id="starting-clair-in-combo-mode"><a class="header" href="#starting-clair-in-combo-mode">Starting Clair In Combo Mode</a></h2>
 <p>At this point, you should either have built Clair from source or have pulled the container. In either case, we will assume that the <code>clair-db</code> hostname will resolve to your postgres database. </p>
 <p><em>You may need to configure <a href="https://docs.docker.com/network/">docker</a> or <a href="https://podman.io/getting-started/network.html">podman</a> networking if you are utilizing containers. This is out of scope for this how-to.</em></p>
 <p>A basic config for combo mode can be found <a href="https://github.com/quay/clair/blob/main/config.yaml.sample">here</a>. Make sure to edit this config with your database settings and set &quot;migrations&quot; to <code>true</code> for all mode stanzas. In this basic combo mode, all &quot;connstring&quot; fields should point to the same database and any *_addr fields are simply ignored. For more details see the <a href="../reference/config.html">config reference</a> and <a href="./deployment.html">deployment models</a></p>
@@ -204,7 +204,7 @@ CLAIR_CONF=/path/to/mounted/config.yaml
 <p>If you are running a Clair binary directly, its likely easiest to use the command line.</p>
 <pre><code>clair -conf &quot;path/to/config.yaml&quot; -mode &quot;combo&quot;
 </code></pre>
-<h2><a class="header" href="#submitting-a-manifest" id="submitting-a-manifest">Submitting A Manifest</a></h2>
+<h2 id="submitting-a-manifest"><a class="header" href="#submitting-a-manifest">Submitting A Manifest</a></h2>
 <p>The simplest way to submit a manifest to your running Clair is utilizing <a href="../reference/clairctl.html">clairctl</a>. This is a CLI tool capable of grabbing image manifests from public repositories and and submitting them for analysis. 
 The command will be in the Clair container, but can also be installed locally by running the following command:</p>
 <pre><code>GO111MODULE=on go get github.com/quay/clair/v4/cmd/clairctl@latest
@@ -242,7 +242,7 @@ ubuntu:focal found libc6       2.31-0ubuntu9          CVE-2016-10228
 ubuntu:focal found libc6       2.31-0ubuntu9          CVE-2020-6096
 ubuntu:focal found libgcrypt20 1.8.5-5ubuntu1         CVE-2019-12904
 </code></pre>
-<h2><a class="header" href="#whats-next" id="whats-next">What's Next</a></h2>
+<h2 id="whats-next"><a class="header" href="#whats-next">What's Next</a></h2>
 <p>Now that you see the basic usage of Clair, you can checkout our <a href="./deployment.html">deployment models</a> to learn different ways of deploying.</p>
 <p>You may also be curious about how <code>clairctl</code> did that work. Check out our <a href="./api.html">API definition</a> to understand how an application interacts with Clair.</p>
 
