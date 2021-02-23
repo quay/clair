@@ -20,13 +20,16 @@ $ clair -conf ./path/to/config.yaml -mode matcher
     "indexer": runs just the indexer node
     "matcher": runs just the matcher node
     "notifier": runs just the notifier node
-    "combo":	will run both indexer and matcher on the same node.
+    "combo": will run all services on the same node.
 -conf
     (also specified by CLAIR_CONF env variable)
     A file system path to Clair's config file
 ```
 
-The above example starts two Clair nodes using the same configuration. One will only run the indexing facilities while the other will only run the matching facilities.
+The above example starts two Clair nodes using the same configuration. 
+One will only run the indexing facilities while the other will only run the matching facilities.
+
+If running in "combo" mode you **must** supply the `indexer`, `matcher`, and `notifier` configuration blocks in the configuration.
 
 ## Config Reference
 
@@ -40,6 +43,7 @@ indexer:
     layer_scan_concurrency: 0
     migrations: false
     scanner: {}
+    airgap: false
 matcher:
     connstring: ""
     max_conn_pool: 0
@@ -48,6 +52,9 @@ matcher:
     period: ""
     disable_updaters: false
     update_retention: 2
+updaters:
+    sets: nil
+    config: nil
 notifier:
     connstring: ""
     migrations: false
@@ -59,7 +66,8 @@ notifier:
     webhook: null
     amqp: null
     stomp: null
-auth: {}
+auth: 
+  psk: nil
 trace:
     name: ""
     probability: null
@@ -71,7 +79,7 @@ trace:
             username: null
             password: null
         service_name: ""
-        tags: {}
+        tags: nil
         buffer_max: 0
 metrics:
     name: ""
@@ -223,6 +231,44 @@ This should be set to a safe MAX value based on database size constraints.
 Defaults to 10
 
 If a value of 0 is provided GC is disabled.
+```
+
+### updaters: \<object\>
+
+```
+Updaters provides configuration for the Matcher's update manager.
+```
+
+#### &emsp;sets: []string
+```
+A list of string values informing the update manager which Updaters to run.
+
+If the value is nil the default set of Updaters will run:
+    "alpine"
+    "aws"
+    "debian"
+    "oracle"
+    "photon"
+    "pyupio"
+    "rhel"
+    "suse"
+    "ubuntu"
+
+If an empty list is provided zero updaters will run.
+```
+
+#### &emsp;config: {}
+```
+Provides configuration to specific updater sets.
+
+A map keyed by the name of the updater set name containing a sub-object which will be provided to the updater set's constructor. 
+
+A hypothetical  example:
+  config:
+    ubuntu:
+      security_tracker_url: http://security.url
+      ignore_distributions: 
+        - cosmic
 ```
 
 ### notifier: \<object\>
