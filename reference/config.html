@@ -183,12 +183,14 @@ $ clair -conf ./path/to/config.yaml -mode matcher
     &quot;indexer&quot;: runs just the indexer node
     &quot;matcher&quot;: runs just the matcher node
     &quot;notifier&quot;: runs just the notifier node
-    &quot;combo&quot;:	will run both indexer and matcher on the same node.
+    &quot;combo&quot;: will run all services on the same node.
 -conf
     (also specified by CLAIR_CONF env variable)
     A file system path to Clair's config file
 </code></pre>
-<p>The above example starts two Clair nodes using the same configuration. One will only run the indexing facilities while the other will only run the matching facilities.</p>
+<p>The above example starts two Clair nodes using the same configuration. 
+One will only run the indexing facilities while the other will only run the matching facilities.</p>
+<p>If running in &quot;combo&quot; mode you <strong>must</strong> supply the <code>indexer</code>, <code>matcher</code>, and <code>notifier</code> configuration blocks in the configuration.</p>
 <h2 id="config-reference"><a class="header" href="#config-reference">Config Reference</a></h2>
 <pre><code>http_listen_addr: &quot;&quot;
 introspection_addr: &quot;&quot;
@@ -199,6 +201,7 @@ indexer:
     layer_scan_concurrency: 0
     migrations: false
     scanner: {}
+    airgap: false
 matcher:
     connstring: &quot;&quot;
     max_conn_pool: 0
@@ -207,6 +210,9 @@ matcher:
     period: &quot;&quot;
     disable_updaters: false
     update_retention: 2
+updaters:
+    sets: nil
+    config: nil
 notifier:
     connstring: &quot;&quot;
     migrations: false
@@ -218,7 +224,8 @@ notifier:
     webhook: null
     amqp: null
     stomp: null
-auth: {}
+auth: 
+  psk: nil
 trace:
     name: &quot;&quot;
     probability: null
@@ -230,7 +237,7 @@ trace:
             username: null
             password: null
         service_name: &quot;&quot;
-        tags: {}
+        tags: nil
         buffer_max: 0
 metrics:
     name: &quot;&quot;
@@ -347,6 +354,37 @@ This should be set to a safe MAX value based on database size constraints.
 Defaults to 10
 
 If a value of 0 is provided GC is disabled.
+</code></pre>
+<h3 id="updaters-object"><a class="header" href="#updaters-object">updaters: &lt;object&gt;</a></h3>
+<pre><code>Updaters provides configuration for the Matcher's update manager.
+</code></pre>
+<h4 id="sets-string"><a class="header" href="#sets-string"> sets: []string</a></h4>
+<pre><code>A list of string values informing the update manager which Updaters to run.
+
+If the value is nil the default set of Updaters will run:
+    &quot;alpine&quot;
+    &quot;aws&quot;
+    &quot;debian&quot;
+    &quot;oracle&quot;
+    &quot;photon&quot;
+    &quot;pyupio&quot;
+    &quot;rhel&quot;
+    &quot;suse&quot;
+    &quot;ubuntu&quot;
+
+If an empty list is provided zero updaters will run.
+</code></pre>
+<h4 id="config-"><a class="header" href="#config-"> config: {}</a></h4>
+<pre><code>Provides configuration to specific updater sets.
+
+A map keyed by the name of the updater set name containing a sub-object which will be provided to the updater set's constructor. 
+
+A hypothetical  example:
+  config:
+    ubuntu:
+      security_tracker_url: http://security.url
+      ignore_distributions: 
+        - cosmic
 </code></pre>
 <h3 id="notifier-object"><a class="header" href="#notifier-object">notifier: &lt;object&gt;</a></h3>
 <pre><code>Notifier provides Clair Notifier node configuration
