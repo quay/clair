@@ -3,6 +3,7 @@ package notifier
 import (
 	"context"
 	"fmt"
+	"sort"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -243,6 +244,10 @@ func testProcessorCreate(t *testing.T) {
 			if opts.NotificationID == uuid.Nil {
 				t.Fatalf("malformed notification id: %v", opts.NotificationID)
 			}
+			// Need some sort of stable order here:
+			sort.Slice(opts.Notifications, func(i, j int) bool {
+				return opts.Notifications[i].Reason < opts.Notifications[j].Reason
+			})
 			if !cmp.Equal(opts.Notifications, notifications, cmpopts.IgnoreUnexported(claircore.Digest{})) {
 				t.Fatalf("%v", cmp.Diff(opts.Notifications, notifications, cmpopts.IgnoreUnexported(claircore.Digest{})))
 			}

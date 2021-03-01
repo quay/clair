@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/google/uuid"
 	"github.com/quay/claircore"
@@ -126,24 +127,35 @@ func (p *Processor) create(ctx context.Context, e Event, prev uuid.UUID) error {
 	}
 	log.Debug().Int("removed", len(diff.Removed)).Int("added", len(diff.Added)).Msg("diff results")
 
-	added := &claircore.AffectedManifests{
-		Vulnerabilities:     make(map[string]*claircore.Vulnerability),
-		VulnerableManifests: make(map[string][]string),
-	}
-	removed := &claircore.AffectedManifests{
-		Vulnerabilities:     make(map[string]*claircore.Vulnerability),
-		VulnerableManifests: make(map[string][]string),
+	tab := notifTab{
+		N:      make([]Notification, 0),
+		lookup: make(map[string]int),
 	}
 	eg, wctx := errgroup.WithContext(ctx)
-	eg.Go(getAffected(wctx, p.indexer, diff.Added, added))
-	eg.Go(getAffected(wctx, p.indexer, diff.Removed, removed))
+	eg.Go(getAffected(wctx, p.indexer, p.NoSummary, diff.Added, Added, &tab))
+	eg.Go(getAffected(wctx, p.indexer, p.NoSummary, diff.Removed, Removed, &tab))
 	if err := eg.Wait(); err != nil {
 		return fmt.Errorf("failed to get affected manifests: %v", err)
 	}
 
-	log.Debug().Int("added", len(added.VulnerableManifests)).Int("removed", len(removed.VulnerableManifests)).Msg("affected manifest counts")
+	// Don't count up the affected manifests unless we're going to print it.
+	if ev := log.Debug(); ev.Enabled() {
+		var added, removed int
+		for _, n := range tab.N {
+			switch n.Reason {
+			case Added:
+				added++
+			case Removed:
+				removed++
+			}
+		}
+		ev.
+			Int("added", added).
+			Int("removed", removed).
+			Msg("affected manifest counts")
+	}
 
-	if len(added.VulnerableManifests) == 0 && len(removed.VulnerableManifests) == 0 {
+	if len(tab.N) == 0 {
 		// directly add a "delivered" receipt, this will stop subsequent processing
 		// of this update operation and also avoid delivery attempts.
 		r := Receipt{
@@ -159,45 +171,11 @@ func (p *Processor) create(ctx context.Context, e Event, prev uuid.UUID) error {
 		return nil
 	}
 
-	notifications := []Notification{}
-	create := func(r Reason, affected *claircore.AffectedManifests) error {
-		for manifest, vulns := range affected.VulnerableManifests {
-			digest, err := claircore.ParseDigest(manifest)
-			if err != nil {
-				return err
-			}
-			// The vulns slice is sorted most severe to lease severe.
-			for i := range vulns {
-				vuln := affected.Vulnerabilities[vulns[i]]
-
-				n := Notification{
-					Manifest: digest,
-					Reason:   r,
-				}
-				n.Vulnerability.FromVulnerability(vuln)
-
-				notifications = append(notifications, n)
-
-				if !p.NoSummary {
-					break
-				}
-			}
-		}
-		return nil
-	}
-	err = create(Added, added)
-	if err != nil {
-		return err
-	}
-	err = create(Removed, removed)
-	if err != nil {
-		return err
-	}
 	opts := PutOpts{
 		Updater:        e.updater,
 		UpdateID:       e.uo.Ref,
 		NotificationID: uuid.New(),
-		Notifications:  notifications,
+		Notifications:  tab.N,
 	}
 	err = p.store.PutNotifications(ctx, opts)
 	if err != nil {
@@ -213,10 +191,19 @@ func min(a, b int) int {
 	return b
 }
 
+// NotifTab is a handle for a slice of Notifications.
+//
+// It has supporting structures for concurrent use and summaries.
+type notifTab struct {
+	sync.Mutex
+	N      []Notification
+	lookup map[string]int // only used in "summary" mode
+}
+
 // GetAffected issues AffectedManifest calls in chunks and merges the result.
 //
 // Its signature is weird to make use in an errgroup a little bit nicer.
-func getAffected(ctx context.Context, ic indexer.Service, vs []claircore.Vulnerability, out *claircore.AffectedManifests) func() error {
+func getAffected(ctx context.Context, ic indexer.Service, nosummary bool, vs []claircore.Vulnerability, r Reason, out *notifTab) func() error {
 	const chunk = 1000
 	return func() error {
 		var s []claircore.Vulnerability
@@ -232,14 +219,65 @@ func getAffected(ctx context.Context, ic indexer.Service, vs []claircore.Vulnera
 			if err != nil {
 				return err
 			}
-			for k, v := range a.Vulnerabilities {
-				out.Vulnerabilities[k] = v
-			}
-			for k, v := range a.VulnerableManifests {
-				out.VulnerableManifests[k] = append(out.VulnerableManifests[k], v...)
+			for manifest, vulns := range a.VulnerableManifests {
+				digest, err := claircore.ParseDigest(manifest)
+				if err != nil {
+					return err
+				}
+				// The vulns slice is sorted most severe to lease severe, so
+				// when in summary mode, we only need to check the initial vuln.
+				if !nosummary {
+					vuln := a.Vulnerabilities[vulns[0]]
+					key := digest.String()
+					var n *Notification
+					out.Lock()
+					// First, lookup if there's a notification for this
+					// manifest.
+					i, ok := out.lookup[key]
+					if ok {
+						n = &out.N[i]
+					}
+					if n == nil {
+						// If this is the first appearance of this manifest,
+						// insert it.
+						i := len(out.N)
+						out.N = append(out.N, Notification{
+							Manifest: digest,
+							Reason:   r,
+						})
+						out.lookup[key] = i
+						n = &out.N[i]
+						n.Vulnerability.FromVulnerability(vuln)
+					} else {
+						// If we've seen this before, check the severity and
+						// swap if the new vuln is more severe.
+						var sev claircore.Severity
+						if err := sev.UnmarshalText([]byte(n.Vulnerability.Severity)); err != nil {
+							out.Unlock()
+							return err
+						}
+						if sev < vuln.NormalizedSeverity {
+							n.Vulnerability.FromVulnerability(vuln)
+						}
+					}
+					out.Unlock()
+					continue
+				}
+				// If not in summary, create all the notifications.
+				for idx := range vulns {
+					vuln := a.Vulnerabilities[vulns[idx]]
+					out.Lock()
+					i := len(out.N)
+					out.N = append(out.N, Notification{
+						Manifest: digest,
+						Reason:   r,
+					})
+					n := &out.N[i]
+					n.Vulnerability.FromVulnerability(vuln)
+					out.Unlock()
+				}
 			}
 		}
-		out.Sort()
 		return nil
 	}
 }
