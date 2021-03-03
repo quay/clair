@@ -1,9 +1,10 @@
 # Config
 
-## CLI Flags And ENV Vars
+## CLI Flags And Environment Variables
 
-ClairV4 is provided a structured yaml configuration. 
-Each ClairV4 node will specify what mode it will run in and config path via cli flag or environment variable.
+Clair is configured by a structured yaml file. 
+Each Clair node needs to specify what mode it will run in and a path to a
+configuration file via CLI flags or environment variables.
 
 For example:
 ```shell
@@ -26,12 +27,21 @@ $ clair -conf ./path/to/config.yaml -mode matcher
     A file system path to Clair's config file
 ```
 
-The above example starts two Clair nodes using the same configuration. 
-One will only run the indexing facilities while the other will only run the matching facilities.
+The above example starts two Clair nodes using the same configuration.
+One will only run the indexing facilities while the other will only run the
+matching facilities.
 
-If running in "combo" mode you **must** supply the `indexer`, `matcher`, and `notifier` configuration blocks in the configuration.
+Environment variables respected by the Go standard library can be specified
+if needed. Some notable examples:
 
-## Config Reference
+* `HTTP_PROXY`
+* `HTTPS_PROXY`
+* `SSL_CERT_DIR`
+
+If running in "combo" mode you **must** supply the `indexer`, `matcher`,
+and `notifier` configuration blocks in the configuration.
+
+## Configuration Reference
 
 ```
 http_listen_addr: ""
@@ -92,649 +102,487 @@ metrics:
         url: ""
 ```
 
-### http_listen_addr: ""
-```
-A string in <host>:<port> format where <host> can be an empty string.
+Note: the above just lists every key for completeness. Copy-pasting the above as
+a starting point for configuration will result in some options not having their
+defaults set normally.
 
-exposes Clair node's functionality to the network.
-see /openapi/v1 for api spec.
-```
+### `$.http_listen_addr`
+A string in `<host>:<port>` format where `<host>` can be an empty string.
 
-### introspection_addr: ""
-```
-A string in <host>:<port> format where <host> can be an empty string.
+This configures where the HTTP API is exposed.
+See `/openapi/v1` for the API spec.
 
-exposes Clair's metrics and health endpoints.
-```
+### `$.introspection_addr`
+A string in `<host>:<port>` format where `<host>` can be an empty string.
 
-### log_level: ""
-```
+This configures where Clair's metrics and health endpoints are exposed.
+
+### `$.log_level`
 Set the logging level.
 
 One of the following strings:
-"debug-color"
-"debug"
-"info"
-"warn"
-"error"
-"fatal"
-"panic"
-```
+* debug-color
+* debug
+* info
+* warn
+* error
+* fatal
+* panic
 
-### indexer: \<object\>
-```
-Indexer provides Clair Indexer node configuration
-```
+### `$.indexer`
+Indexer provides Clair Indexer node configuration.
 
-#### &emsp;connstring: ""
-```
+#### `$.indexer.connstring`
 A Postgres connection string.
 
-formats:
-url: "postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"
-or
-string: "user=pqgotest dbname=pqgotest sslmode=verify-full"
-```
+Accepts a format as a url (e.g.,
+`postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full`)
+or a libpq connection string (e.g.,
+`user=pqgotest dbname=pqgotest sslmode=verify-full`).
 
-#### &emsp;scanlock_retry: 0
-```
-A positive value representing seconds.
+#### `$.indexer.scanlock_retry`
+A positive integer representing seconds.
 
 Concurrent Indexers lock on manifest scans to avoid clobbering.
 This value tunes how often a waiting Indexer will poll for the lock.
-TODO: Move to async operating mode
-```
+<!--TODO: Move to async operating mode -->
 
-#### &emsp;layer_scan_concurrency: 0
-```
-A positive values represeting quantity.
+#### `$.indexer.layer_scan_concurrency`
+Positive integer limiting the number of concurrent layer scans.
 
 Indexers will index a Manifest's layers concurrently.
 This value tunes the number of layers an Indexer will scan in parallel.
-```
 
-#### &emsp;migrations: false
-```
-A "true" or "false" value
+#### `$.indexer.migrations`
+A boolean value.
 
 Whether Indexer nodes handle migrations to their database.
-```
 
-#### &emsp;scanner: {}
-```  
-A map with the name of a particular scanner and arbitrary yaml as a value
+#### `$.indexer.scanner`
+A map with the name of a particular scanner and arbitrary yaml as a value.
 
 Scanner allows for passing configuration options to layer scanners.
-The scanner will have this configuration passed to it on construction if designed to do so.
-```
+The scanner will have this configuration passed to it on construction if
+designed to do so.
 
-### matcher: \<object\>
-```
-Matcher provides Clair matcher node configuration
-```
+### `$.matcher`
+Matcher provides Clair matcher node configuration.
 
-#### &emsp;connstring: ""
-```
+#### `$.matcher.connstring`
 A Postgres connection string.
 
-Formats:
-url: "postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"
-or
-string: "user=pqgotest dbname=pqgotest sslmode=verify-full"
-```
+Accepts a format as a url (e.g.,
+`postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full`)
+or a libpq connection string (e.g.,
+`user=pqgotest dbname=pqgotest sslmode=verify-full`).
 
 
-#### &emsp;max_conn_pool: 0
-```
-A positive integer
+#### `$.matcher.max_conn_pool`
+A positive integer limiting the database connection pool size.
 
 Clair allows for a custom connection pool size.
-This number will directly set how many active sql
+This number will directly set how many active database
 connections are allowed concurrently.
-```
 
-#### &emsp;indexer_addr: ""
-```
-A string in <host>:<port> format where <host> can be an empty string.
+#### `$.matcher.indexer_addr`
+A string in `<host>:<port>` format where `<host>` can be an empty string.
 
 A Matcher contacts an Indexer to create a VulnerabilityReport.
 The location of this Indexer is required.
-```
 
-#### &emsp;migrations: false
-```
-A "true" or "false" value
+#### `$.matcher.migrations`
+A boolean value.
 
 Whether Matcher nodes handle migrations to their databases.
-```
 
-#### &emsp;period: ""
-```
-A time.ParseDuration parsable string
+#### `$.matcher.period`
+A time.ParseDuration parseable string.
 
 Determines how often updates for new security advisories will take place.
 
 Defaults to 30 minutes.
-```
 
-#### &emsp;disable_updaters: ""
-```
-A "true" or "false" value
+#### `$.matcher.disable_updaters`
+A boolean value.
 
 Whether to run background updates or not.
-```
 
-#### &emsp;update_retention: ""
-```
-An integer value 
+#### `$.matcher.update_retention`
+An integer value limiting the number of update operations kept in the database.
 
-Sets the number of update operations to retain between garbage collection cycles.
-This should be set to a safe MAX value based on database size constraints. 
+Sets the number of update operations to retain between garbage collection
+cycles. This should be set to a safe MAX value based on database size
+constraints.
 
-Defaults to 10
+Defaults to 10.
 
-If a value of 0 is provided GC is disabled.
-```
+If a value of 0 is provided, GC is disabled.
 
-### matchers: \<object\>
-
-```
+### `$.matchers`
 Matchers provides configuration for the in-tree Matchers and RemoteMatchers.
-```
 
-#### &emsp;names: []string
-```
+#### `$.matchers.names`
 A list of string values informing the matcher factory about enabled matchers.
 
 If the value is nil the default list of Matchers will run:
-    "alpine"
-    "aws"
-    "debian"
-    "oracle"
-    "photon"
-    "python"
-    "rhel"
-    "suse"
-    "ubuntu"
-    "crda"
+* alpine
+* aws
+* debian
+* oracle
+* photon
+* python
+* rhel
+* suse
+* ubuntu
+* crda
 
 If an empty list is provided zero matchers will run.
-```
 
-#### &emsp;config: {}
-```
+#### `$.matchers.config`
 Provides configuration to specific matcher.
 
-A map keyed by the name of the matcher containing a sub-object which will be provided to the matchers factory constructor.
+A map keyed by the name of the matcher containing a sub-object which
+will be provided to the matchers factory constructor.
 
-A hypothetical  example:
-  config:
-    python:
-      ignore_vulns:
-        - CVE-XYZ
-        - CVE-ABC
-```
+A hypothetical example:
 
-### updaters: \<object\>
+    config:
+      python:
+        ignore_vulns:
+          - CVE-XYZ
+          - CVE-ABC
 
-```
+### `$.updaters`
 Updaters provides configuration for the Matcher's update manager.
-```
 
-#### &emsp;sets: []string
-```
+#### `$.updaters.sets`
 A list of string values informing the update manager which Updaters to run.
 
-If the value is nil the default set of Updaters will run:
-    "alpine"
-    "aws"
-    "debian"
-    "oracle"
-    "photon"
-    "pyupio"
-    "rhel"
-    "suse"
-    "ubuntu"
+If the value is nil (or `null` in yaml) the default set of Updaters will run:
+* alpine
+* aws
+* debian
+* oracle
+* photon
+* pyupio
+* rhel
+* suse
+* ubuntu
 
 If an empty list is provided zero updaters will run.
-```
 
-#### &emsp;config: {}
-```
+#### `$.updaters.config`
 Provides configuration to specific updater sets.
 
-A map keyed by the name of the updater set name containing a sub-object which will be provided to the updater set's constructor. 
+A map keyed by the name of the updater set name containing a sub-object
+which will be provided to the updater set's constructor.
 
-A hypothetical  example:
-  config:
-    ubuntu:
-      security_tracker_url: http://security.url
-      ignore_distributions: 
-        - cosmic
-```
+A hypothetical example:
 
-### notifier: \<object\>
-```
-Notifier provides Clair Notifier node configuration
-```
+    config:
+      ubuntu:
+        security_tracker_url: http://security.url
+        ignore_distributions: 
+          - cosmic
 
-#### &emsp;connstring: ""
-```
+### `$.notifier`
+Notifier provides Clair notifier node configuration.
 
+#### `$.notifier.connstring`
 A Postgres connection string.
 
-Formats:
-url: "postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"
-or
-string: "user=pqgotest dbname=pqgotest sslmode=verify-full"
-```
+Accepts a format as a url (e.g.,
+`postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full`)
+or a libpq connection string (e.g.,
+`user=pqgotest dbname=pqgotest sslmode=verify-full`).
 
-#### &emsp;migrations: false
-```
-A "true" or "false" value
+#### `$.notifier.migrations`
+A boolean value.
 
 Whether Notifier nodes handle migrations to their database.
-```
 
-#### &emsp;indexer_addr: ""
-```
-A string in <host>:<port> format where <host> can be an empty string.
+#### `$.notifier.indexer_addr`
+A string in `<host>:<port>` format where `<host>` can be an empty string.
 
-A Notifier contacts an Indexer to create obtain manifests affected by vulnerabilities.
-The location of this Indexer is required.
-```
+A Notifier contacts an Indexer to create obtain manifests affected by
+vulnerabilities. The location of this Indexer is required.
 
-#### &emsp;matcher_addr: ""
-```
-A string in <host>:<port> format where <host> can be an empty string.
+#### `$.notifier.matcher_addr`
+A string in `<host>:<port>` format where `<host>` can be an empty string.
 
 A Notifier contacts a Matcher to list update operations and acquire diffs.
 The location of this Indexer is required.
-```
 
-#### &emsp;poll_interval: ""
-```
-A time.ParseDuration parsable string
+#### `$.notifier.poll_interval`
+A time.ParseDuration parsable string.
 
 The frequency at which the notifier will query at Matcher for Update Operations.
-```
 
-#### &emsp;delivery_interval: ""
-```
-A time.ParseDuration parsable string
+#### `$.notifier.delivery_interval`
+A time.ParseDuration parsable string.
 
-The frequency at which the notifier attempt delivery of created or previously failed
-notifications
-```
+The frequency at which the notifier attempt delivery of created or previously
+failed notifications.
 
-#### &emsp;disable_summary: false
-```
-A boolean
+#### `$.notifier.disable_summary`
+A boolean.
 
 Controls whether notifications should be summarized to one per manifest or not.
-```
 
-#### &emsp;webhook: \<object\>
-```
-Configures the notifier for webhook delivery
-```
-#### &emsp;&emsp;target: ""
-```
-URL where our webhook will be delivered
+#### `$.notifier.webhook`
+Configures the notifier for webhook delivery.
 
-```
-#### &emsp;&emsp;callback: ""
-```
-The callback url where notifications can be received
-The notification will be appended to this url
-This will typically be where the clair notifier is hosted
-```
-#### &emsp;&emsp;headers: ""
-```
-{ "header": [ "value" ] }
+#### `$.notifier.webhook.target`
+URL where the webhook will be delivered.
 
-A map associating header names to a list of header values
-```
-#### &emsp;&emsp;signed: ""
-```
-A "true" or "false" value
+#### `$.notifier.webhook.callback`
+The callback url where notifications can be retrieved.
+The notification ID will be appended to this url.
 
-If true the Notifier will use its internal key server to sign out going webhooks.
-```
+This will typically be where the clair notifier is hosted.
 
-#### &emsp;amqp: \<object\>
-```
+#### `$.notifier.webhook.headers`
+A map associating a header name to a list of values.
+
+#### `$.notifier.amqp`
 Configures the notifier for AMQP delivery.
-Note: Clair does not declare any AMQP components on its own.
-All attempts to use an exchange or queue are passive only and will fail
-The broker administrators should setup exchanges and queues ahead of time.
-```
 
-#### &emsp;&emsp;direct: ""
-```
-A "true" or "false" value
+Note: Clair does not declare any AMQP components on its own.  All attempts
+to use an exchange or queue are passive only and will fail The broker
+administrators should setup exchanges and queues ahead of time.
 
-If true the Notifier will deliver individual notifications (not a callback) to the configured AMQP broker.
-```
+#### `$.notifier.amqp.direct`
+A boolean value.
 
-#### &emsp;&emsp;rollup: ""
-```
+If true the Notifier will deliver individual notifications (not a callback)
+to the configured AMQP broker.
+
+#### `$.notifier.amqp.rollup`
 Integer 0 or greater.
 
-If direct is true this value will inform notifier how many notifications to send in a single direct delivery. 
-For example if direct is set to true and rollup is set to 5 the notifier will deliver no more then 5 notifications in a single json payload to the broker.
-```
+If `direct` is true this value will inform notifier how many notifications
+to send in a single direct delivery.  For example, if `direct` is set to
+`true` and `rollup` is set to `5`, the notifier will deliver no more then
+5 notifications in a single json payload to the broker.
 
-#### &emsp;&emsp;exchange: \<object\>
-```
+#### `$.notifier.amqp.exchange`
 The AMQP Exchange to connect to.
-```
 
-#### &emsp;&emsp;&emsp;name: ""
-```
+#### `$.notifier.amqp.exchange.name`
 string value
 
 The name of the exchange to connect to.
-```
 
-#### &emsp;&emsp;&emsp;type: ""
-```
+#### `$.notifier.amqp.exchange.type`
 string value
 
 The type of the exchange. Typically:
-"direct"
-"fanout"
-"topic"
-"headers"
-```
+* direct
+* fanout
+* topic
+* headers
 
-#### &emsp;&emsp;&emsp;durability: false
-```
+#### `$.notifier.amqp.exchange.durability`
 bool value
 
 Whether the configured queue is durable or not.
-```
 
-#### &emsp;&emsp;&emsp;auto_delete: false
-```
+#### `$.notifier.amqp.exchange.auto_delete`
 bool value
 
 Whether the configured queue uses an auto_delete policy.
-```
 
-#### &emsp;&emsp;&emsp;routing_key: ""
-```
+#### `$.notifier.amqp.exchange.routing_key`
 string value
 
 The name of the routing key each notification will be sent with.
-```
 
-#### &emsp;&emsp;callback: ""
-```
-a URL string 
+#### `$.notifier.amqp.callback`
+a URL string
 
-If direct is false this URL is provided in the notificaition callback sent to the broker.
-This URL should point to Clair's notification API endpoint.
-```
+If `direct` is `false`, this URL is provided in the notification callback sent
+to the broker. This URL should point to Clair's notification API endpoint.
 
-#### &emsp;&emsp;uris: []
-```
-list of URL string
+#### `$.notifier.amqp.uris`
+list of URL strings
 
-A list of one or more AMQP brokers to connect to in priority order.
-Clair will attempt to connect to the first one in the list and if this
-fails will try any subsuquent in specified order.
-```
+A list of one or more AMQP brokers to connect to, in priority order.
 
-#### &emsp;&emsp;tls: \<object\>
-```
-Configures TLS connection to AMQP broker
-```
+#### `$.notifier.amqp.tls`
+Configures TLS connection to AMQP broker.
 
-#### &emsp;&emsp;&emsp;root_ca: ""
-```
+#### `$.notifier.amqp.tls.root_ca`
 string value
 
 The filesystem path where a root CA can be read.
-```
 
-#### &emsp;&emsp;&emsp;cert: ""
-```
+#### `$.notifier.amqp.tls.cert`
 string value
 
-The filesystem path where a tls certificate can be read.
-```
+The filesystem path where a tls certificate can be read. Note that clair
+also respects `SSL_CERT_DIR`, as documented for the Go `crypto/x509` package.
 
-#### &emsp;&emsp;&emsp;key: ""
-```
+#### `$.notifier.amqp.tls.key`
 string value
 
-The filesystem path where a tls private key can be read.
-```
+The filesystem path where a TLS private key can be read.
 
-#### &emsp;stomp: \<object\>
-```
+#### `$.notifier.stomp`
 Configures the notifier for STOMP delivery.
-```
 
-#### &emsp;&emsp;direct: ""
-```
-A "true" or "false" value
+#### `$.notifier.stomp.direct`
+A boolean value.
 
-If true the Notifier will deliver individual notifications (not a callback) to the configured STOMP broker.
-```
+If `true`, the Notifier will deliver individual notifications (not a
+callback) to the configured STOMP broker.
 
-#### &emsp;&emsp;rollup: ""
-```
+#### `$.notifier.stomp.rollup`
 Integer 0 or greater.
 
-If direct is true this value will inform notifier how many notifications to send in a single direct delivery. 
-For example if direct is set to true and rollup is set to 5 the notifier will deliver no more then 5 notifications in a single json payload to the broker.
-```
+If `direct` is `true`, this value will limit the number of notifications
+sent in a single direct delivery.  For example, if `direct` is set to
+`true` and `rollup` is set to `5`, the notifier will deliver no more
+then 5 notifications in a single json payload to the broker.
 
-#### &emsp;&emsp;callback: ""
-```
-a URL string 
+#### `$.notifier.stomp.callback`
+a URL string
 
-If direct is false this URL is provided in the notificaition callback sent to the broker.
-This URL should point to Clair's notification API endpoint.
-```
+If `direct` is `false`, this URL is provided in the notification callback sent
+to the broker. This URL should point to Clair's notification API endpoint.
 
-#### &emsp;&emsp;destination: ""
-```
+#### `$.notifier.stomp.destination`
 a string value
 
 The STOMP destination to deliver notifications to. 
-```
 
-#### &emsp;&emsp;uris: []
-```
-list of URL string
+#### `$.notifier.stomp.uris`
+list of URL strings
 
 A list of one or more STOMP brokers to connect to in priority order.
-Clair will attempt to connect to the first one in the list and if this
-fails will try any subsuquent in specified order.
-```
 
-#### &emsp;&emsp;tls: \<object\>
-```
-Configures TLS connection to STOMP broker
-```
+#### `$.notifier.stomp.tls`
+Configures TLS connection to STOMP broker.
 
-#### &emsp;&emsp;&emsp;root_ca: ""
-```
+#### `$.notifier.stomp.tls.root_ca`
 string value
 
 The filesystem path where a root CA can be read.
-```
+Note that clair also respects `SSL_CERT_DIR`, as documented for the Go
+`crypto/x509` package.
 
-#### &emsp;&emsp;&emsp;cert: ""
-```
+#### `$.notifier.stomp.tls.cert`
 string value
 
 The filesystem path where a tls certificate can be read.
-```
 
-#### &emsp;&emsp;&emsp;key: ""
-```
+#### `$.notifier.stomp.tls.key`
 string value
 
 The filesystem path where a tls private key can be read.
-```
 
-#### &emsp;&emsp;&emsp;user: \<object\>
-```
-Configures login information for conneting to a STOMP broker
-```
+#### `$.notifier.stomp.tls.user`
+Configures login information for connecting to a STOMP broker.
 
-#### &emsp;&emsp;&emsp;login: ""
-```
+#### `$.notifier.stomp.tls.login`
 string value
 
 The STOMP login to connect with.
-```
 
-#### &emsp;&emsp;&emsp;passcode: ""
-```
+#### `$.notifier.stomp.tls.passcode`
 string value
 
 The STOMP passcode to connect with.
-```
 
-### auth: \<object\>
-```
+### `$.auth`
 Defines ClairV4's external and intra-service JWT based authentication.
 
-If multiple auth mechanisms are defined the Keyserver is preferred.
-```
+If multiple auth mechanisms are defined, the Keyserver is preferred.
 
-### &emsp;psk: \<object\>
-```
-Defines pre-shard-key authentication
-```
+### `$.auth.psk`
+Defines preshared key authentication.
 
-#### &emsp;&emsp;key: ""
-```
+#### `$.auth.psk.key`
 a string value
 
-A shared base64 encoded key distributed between all parties signing and verifying JWTs.
-```
+A shared base64 encoded key distributed between all parties signing and
+verifying JWTs.
 
-#### &emsp;&emsp;iss: []string
-```
+#### `$.auth.psk.iss`
 a list of string value
 
-A list of jwt issuers to verify. An empty list will accept any issuer in a jwt claim.
-```
+A list of JWT issuers to verify. An empty list will accept any issuer in a
+JWT claim.
 
-### &emsp;keyserver: \<object\>
-```
-Defines Quay keyserver authentication
-```
+### `$.auth.keyserver`
+Defines Quay keyserver authentication.
 
-#### &emsp;&emsp;api: ""
-```
+#### `$.auth.keyserver.api`
 a string value
 
 The API where Quay Keyserver can be reached.
-```
 
-#### &emsp;&emsp;intraservice: ""
-```
+#### `$.auth.keyserver.intraservice`
 a string value
 
 A key shared between all Clair nodes for intra-service JWT authentication.
-```
 
-### trace: \<object\>
-```
-Defines distributed tracing configuration based on OpenTelemtry
-```
+### `$.trace`
+Defines distributed tracing configuration based on OpenTelemetry.
 
-#### &emsp;name: ""
-```
+#### `$.trace.name`
 a string value
 
 The name of the application traces will belong to.
-```
 
-#### &emsp;probability: 0.0
-```
+#### `$.trace.probability`
 a float value
 
-The probabality a trace will occur
-```
+The probability a trace will occur.
 
-#### &emsp;Jaeger: \<object\>
-```
-Defines values for Jaeger tracing
-```
+#### `$.trace.jaeger`
+Defines values for Jaeger tracing.
 
-#### &emsp;&emsp;agent: \<object\>
-```
-Defines values for a Jaeger agent
-```
+#### `$.trace.jaeger.agent`
+Defines values for configuring delivery to a Jaeger agent.
 
-#### &emsp;&emsp;&emsp;endpoint: ""
-```
+#### `$.trace.jaeger.agent.endpoint`
 a string value
 
-An address in <host>:<post> syntax where the agent will deliver traces.
-```
+An address in `<host>:<post>` syntax where traces can be submitted.
 
-#### &emsp;&emsp;&emsp;collector: \<object\>
-```
-Defines values for a Jaeger collector
-```
+#### `$.trace.jaeger.collector`
+Defines values for configuring delivery to a Jaeger collector.
 
-#### &emsp;&emsp;&emsp;endpoint: ""
-```
+#### `$.trace.jaeger.collector.endpoint`
 a string value
 
-An address in <host>:<post> syntax where the agent will deliver traces.
-```
+An address in `<host>:<post>` syntax where traces can be submitted.
 
-#### &emsp;&emsp;&emsp;username: ""
-```
+#### `$.trace.jaeger.collector.username`
 a string value
-```
 
-#### &emsp;&emsp;&emsp;passwordd: ""
-```
+#### `$.trace.jaeger.collector.passwordd`
 a string value
-```
 
-#### &emsp;&emsp;service_name: ""
-```
+#### `$.trace.jaeger.service_name`
 a string value
-```
 
-#### &emsp;&emsp;tags: {}
-```
+#### `$.trace.jaeger.tags`
 a mapping of a string to a string
-```
 
-#### &emsp;&emsp;buffer_max: 0
-```
-a integer value
-```
+#### `$.trace.jaeger.buffer_max`
+an integer value
 
-### metrics: \<object\>
-```
-Defines distributed tracing configuration based on OpenTelemtry
-```
+### `$.metrics`
+Defines distributed tracing configuration based on OpenTelemetry.
 
-#### &emsp;name: ""
-```
+#### `$.metrics.name`
 a string value
-```
 
-### &emsp;prometheus: \<object\>
-```
-Defines distributed tracing configuration based on OpenTelemtry
-```
+### `$.metrics.prometheus`
+Configuration for a prometheus metrics exporter.
 
-#### &emsp;&emsp;endpoint: ""
-```
+#### `$.metrics.prometheus.endpoint`
 a string value
-```
+
+Defines the path where metrics will be served.
