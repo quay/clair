@@ -9,7 +9,9 @@ import (
 	"github.com/quay/claircore/libindex"
 	"github.com/quay/claircore/libvuln"
 	"github.com/quay/claircore/libvuln/driver"
-	"github.com/rs/zerolog"
+	"github.com/quay/zlog"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/label"
 	"gopkg.in/square/go-jose.v2/jwt"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
@@ -45,9 +47,11 @@ type Srv struct {
 // Services configures the services needed for a given mode according to the
 // provided configuration.
 func Services(ctx context.Context, cfg *config.Config) (*Srv, error) {
-	log := zerolog.Ctx(ctx).With().Str("component", "init/Services").Logger()
-	log.Info().Msg("begin service initialization")
-	defer log.Info().Msg("end service initialization")
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "initialize/Services"),
+	)
+	zlog.Info(ctx).Msg("begin service initialization")
+	defer zlog.Info(ctx).Msg("end service initialization")
 
 	var srv Srv
 	var err error

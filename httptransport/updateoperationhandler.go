@@ -9,7 +9,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/quay/claircore/libvuln/driver"
 	je "github.com/quay/claircore/pkg/jsonerr"
-	"github.com/rs/zerolog"
+	"github.com/quay/zlog"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/label"
 
 	"github.com/quay/clair/v4/internal/codec"
 	"github.com/quay/clair/v4/matcher"
@@ -56,7 +58,9 @@ func (h *UOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Clients may provide an 'If-None-Match' header with the etag value to receive
 // a StatusNotModified when no new UpdateOperations have been created.
 func (h *UOHandler) Get(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	ctx := baggage.ContextWithValues(r.Context(),
+		label.String("component", "httptransport/UOHandler.Get"),
+	)
 	// handle conditional request. this is an optimization
 	if ref, err := h.serv.LatestUpdateOperation(ctx); err == nil {
 		validator := `"` + ref.String() + `"`
@@ -93,8 +97,9 @@ func (h *UOHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 // Delete removes an UpdateOperation models from the system.
 func (h *UOHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	log := zerolog.Ctx(ctx)
+	ctx := baggage.ContextWithValues(r.Context(),
+		label.String("component", "httptransport/UOHandler.Delete"),
+	)
 	path := r.URL.Path
 	id := filepath.Base(path)
 	uuid, err := uuid.Parse(id)
@@ -103,7 +108,7 @@ func (h *UOHandler) Delete(w http.ResponseWriter, r *http.Request) {
 			Code:    "bad-request",
 			Message: fmt.Sprintf("could not deserialize manifest: %v", err),
 		}
-		log.Warn().Err(err).Msg("could not deserialize manifest")
+		zlog.Warn(ctx).Err(err).Msg("could not deserialize manifest")
 		je.Error(w, resp, http.StatusBadRequest)
 		return
 	}

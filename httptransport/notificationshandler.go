@@ -8,7 +8,9 @@ import (
 
 	"github.com/google/uuid"
 	je "github.com/quay/claircore/pkg/jsonerr"
-	"github.com/rs/zerolog"
+	"github.com/quay/zlog"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/label"
 
 	"github.com/quay/clair/v4/internal/codec"
 	"github.com/quay/clair/v4/notifier"
@@ -50,8 +52,9 @@ func (h *NotifHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *NotifHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	log := zerolog.Ctx(ctx)
+	ctx := baggage.ContextWithValues(r.Context(),
+		label.String("component", "httptransport/NotifHander.Delete"),
+	)
 	path := r.URL.Path
 	id := filepath.Base(path)
 	notificationID, err := uuid.Parse(id)
@@ -60,7 +63,7 @@ func (h *NotifHandler) Delete(w http.ResponseWriter, r *http.Request) {
 			Code:    "bad-request",
 			Message: fmt.Sprintf("could not parse notification id: %v", err),
 		}
-		log.Warn().Err(err).Msg("could not parse notification id")
+		zlog.Warn(ctx).Err(err).Msg("could not parse notification id")
 		je.Error(w, resp, http.StatusBadRequest)
 		return
 	}
@@ -71,15 +74,16 @@ func (h *NotifHandler) Delete(w http.ResponseWriter, r *http.Request) {
 			Code:    "internal-server-error",
 			Message: fmt.Sprintf("could not delete notification: %v", err),
 		}
-		log.Warn().Err(err).Msg("could not delete notification")
+		zlog.Warn(ctx).Err(err).Msg("could not delete notification")
 		je.Error(w, resp, http.StatusInternalServerError)
 	}
 }
 
-// NotificaitonsHandler will return paginated notifications to the caller.
+// Get will return paginated notifications to the caller.
 func (h *NotifHandler) Get(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	log := zerolog.Ctx(ctx)
+	ctx := baggage.ContextWithValues(r.Context(),
+		label.String("component", "httptransport/NotifHander.Get"),
+	)
 	path := r.URL.Path
 	id := filepath.Base(path)
 	notificationID, err := uuid.Parse(id)
@@ -88,7 +92,7 @@ func (h *NotifHandler) Get(w http.ResponseWriter, r *http.Request) {
 			Code:    "bad-request",
 			Message: fmt.Sprintf("could not parse notification id: %v", err),
 		}
-		log.Warn().Err(err).Msg("could not parse notification id")
+		zlog.Warn(ctx).Err(err).Msg("could not parse notification id")
 		je.Error(w, resp, http.StatusBadRequest)
 		return
 	}

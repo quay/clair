@@ -8,7 +8,9 @@ import (
 	"net"
 
 	gostomp "github.com/go-stomp/stomp"
-	"github.com/rs/zerolog"
+	"github.com/quay/zlog"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/label"
 )
 
 // failOver will return the first successful connection made against the provided
@@ -64,15 +66,16 @@ func (f *failOver) Dial(uri string) (*gostomp.Conn, error) {
 // The caller MUST call conn.Disconnect() to close the underlying tcp connection
 // when finished.
 func (f *failOver) Connection(ctx context.Context) (*gostomp.Conn, error) {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/stomp/failover").
-		Logger()
-	ctx = log.WithContext(ctx)
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/stomp/failOver.Connection"),
+	)
 
 	for _, uri := range f.URIs {
 		conn, err := f.Dial(uri)
 		if err != nil {
-			log.Debug().Str("broker", uri).Msg("failed to dial broker. attempting next")
+			zlog.Debug(ctx).
+				Str("broker", uri).
+				Msg("failed to dial broker. attempting next")
 			continue
 		}
 		return conn, nil

@@ -10,9 +10,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/quay/zlog"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/label"
+
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/notifier"
-	"github.com/rs/zerolog"
 )
 
 var _ notifier.KeyStore = (*KeyStore)(nil)
@@ -30,9 +33,9 @@ func NewKeyStore(pool *pgxpool.Pool) *KeyStore {
 }
 
 func (k *KeyStore) Keys(ctx context.Context) ([]notifier.Key, error) {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/postgres/keystore.Keys").
-		Logger()
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/postgres/KeyStore.Keys"),
+	)
 	const (
 		query = `SELECT id, expiration, pub_key FROM key WHERE expiration > CURRENT_TIMESTAMP;`
 	)
@@ -59,7 +62,9 @@ func (k *KeyStore) Keys(ctx context.Context) ([]notifier.Key, error) {
 		tmps = append(tmps, t)
 	}
 	rows.Close()
-	log.Debug().Int("len", len(tmps)).Msg("discovered keys")
+	zlog.Debug(ctx).
+		Int("len", len(tmps)).
+		Msg("discovered keys")
 
 	// process tmp keys, rows are closed so time taken here
 	// won't starve conn pool.
@@ -120,7 +125,7 @@ func (k *KeyStore) PutKey(ctx context.Context, ID uuid.UUID, key *rsa.PublicKey,
 		return err
 	}
 	if tag.RowsAffected() <= 0 {
-		return fmt.Errorf("insertion did ont affect any rows")
+		return fmt.Errorf("insertion did not affect any rows")
 	}
 	return nil
 }

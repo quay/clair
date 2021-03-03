@@ -5,9 +5,11 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/rs/zerolog"
+	"github.com/quay/zlog"
 	othttp "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/label"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/config"
@@ -52,11 +54,6 @@ type Server struct {
 }
 
 func New(ctx context.Context, conf config.Config, indexer indexer.Service, matcher matcher.Service, notifier notifier.Service) (*Server, error) {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "init/NewHttpTransport").
-		Logger()
-	ctx = log.WithContext(ctx)
-
 	serv := &http.Server{
 		Addr: conf.HTTPListenAddr,
 		// use the passed in global context as the base context
@@ -73,11 +70,14 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 		notifier: notifier,
 		traceOpt: othttp.WithTracerProvider(otel.GetTracerProvider()),
 	}
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "httptransport/New"),
+	)
 
 	if err := t.configureDiscovery(ctx); err != nil {
-		log.Warn().Err(err).Msg("configuring openapi discovery failed")
+		zlog.Warn(ctx).Err(err).Msg("configuring openapi discovery failed")
 	} else {
-		log.Info().Str("path", OpenAPIV1Path).Msg("openapi discovery configured")
+		zlog.Info(ctx).Str("path", OpenAPIV1Path).Msg("openapi discovery configured")
 	}
 
 	var e error
@@ -112,7 +112,9 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 	if conf.Auth.Any() {
 		err := t.configureWithAuth(ctx)
 		if err != nil {
-			log.Warn().Err(err).Msg("received error configuring auth middleware")
+			zlog.Warn(ctx).
+				Err(err).
+				Msg("received error configuring auth middleware")
 		}
 	}
 

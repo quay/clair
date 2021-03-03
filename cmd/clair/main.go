@@ -11,7 +11,9 @@ import (
 	"time"
 
 	_ "github.com/quay/claircore/updater/defaults"
-	"github.com/rs/zerolog"
+	"github.com/quay/zlog"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/label"
 	"golang.org/x/sync/errgroup"
 	yaml "gopkg.in/yaml.v3"
 
@@ -59,35 +61,36 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ctx, err = initialize.Logging(ctx, &conf)
-	if err != nil {
+	if err := initialize.Logging(ctx, &conf); err != nil {
 		golog.Fatalf("failed to set up logging: %v", err)
 	}
-	logger := zerolog.Ctx(ctx).With().Str("component", "main").Logger()
-	logger.Info().Str("version", Version).Msg("starting")
+	ctx = baggage.ContextWithValues(ctx, label.String("component", "main"))
+	zlog.Info(ctx).
+		Str("version", Version).
+		Msg("starting")
 
 	// Some machinery for starting and stopping server goroutines
 	down := &Shutdown{}
 	srvs, srvctx := errgroup.WithContext(ctx)
 
 	srvs.Go(func() (_ error) {
-		logger.Info().Msg("launching introspection server")
+		zlog.Info(ctx).Msg("launching introspection server")
 		i, err := introspection.New(ctx, conf, nil)
 		if err != nil {
-			logger.Warn().
+			zlog.Warn(ctx).
 				Err(err).Msg("introspection server configuration failed. continuing anyway")
 			return
 		}
 		down.Add(i.Server)
 		if err := i.ListenAndServe(); err != http.ErrServerClosed {
-			logger.Warn().
+			zlog.Warn(ctx).
 				Err(err).Msg("introspection server failed to launch. continuing anyway")
 		}
 		return
 	})
 
 	srvs.Go(func() error {
-		logger.Info().Msg("launching http transport")
+		zlog.Info(ctx).Msg("launching http transport")
 		srvs, err := initialize.Services(ctx, &conf)
 		if err != nil {
 			return fmt.Errorf("service initialization failed: %w", err)
@@ -105,21 +108,21 @@ func main() {
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
-	logger.Info().Msg("registered signal handler")
-	logger.Info().Str("version", Version).Msg("ready")
+	zlog.Info(ctx).Msg("registered signal handler")
+	zlog.Info(ctx).Str("version", Version).Msg("ready")
 	select {
 	case sig := <-c:
-		logger.Info().
-			Str("signal", sig.String()).
+		zlog.Info(ctx).
+			Stringer("signal", sig).
 			Msg("gracefully shutting down")
 		tctx, done := context.WithTimeout(ctx, 10*time.Second)
 		err := down.Shutdown(tctx)
 		done()
 		if err != nil {
-			logger.Error().Err(err).Msg("error shutting down server")
+			zlog.Error(ctx).Err(err).Msg("error shutting down server")
 		}
 	case <-srvctx.Done():
-		logger.Error().Err(srvctx.Err()).Msg("initialization failed")
+		zlog.Error(ctx).Err(srvctx.Err()).Msg("initialization failed")
 		os.Exit(1)
 	}
 }

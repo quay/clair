@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/rs/zerolog"
+	"github.com/quay/zlog"
 	samqp "github.com/streadway/amqp"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/label"
 )
 
 // failOver will return the first successful connection made against the provided
@@ -25,20 +27,21 @@ type failOver struct {
 // f's Config field must have it's Validate() method called before this method
 // is used.
 func (f *failOver) Connection(ctx context.Context) (*samqp.Connection, error) {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/amqp/failover").
-		Logger()
-	ctx = log.WithContext(ctx)
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/amqp/failOver.Connection"),
+	)
 
 	f.RLock()
 	if f.conn != nil && !f.conn.IsClosed() {
-		log.Debug().Msg("existing connection exist and is not closed. returning this connection")
+		zlog.Debug(ctx).
+			Msg("existing connection exist and is not closed. returning this connection")
 		f.RUnlock()
 		return f.conn, nil
 	}
 	f.RUnlock()
 
 	for _, uri := range f.URIs {
+		ctx := baggage.ContextWithValues(ctx, label.String("broker", uri))
 		// safe to always call DialTLS per docs:
 		// 'DialTLS will use the provided tls.Config when it encounters an amqps:// scheme and will dial a plain connection when it encounters an amqp:// scheme.'
 		conn, err := samqp.DialTLS(uri, f.tls)
@@ -46,7 +49,8 @@ func (f *failOver) Connection(ctx context.Context) (*samqp.Connection, error) {
 			if conn != nil {
 				conn.Close()
 			}
-			log.Info().Str("broker", uri).Msg("failed to connect to AMQP broker. attempting next broker")
+			zlog.Info(ctx).
+				Msg("failed to connect to AMQP broker. attempting next broker")
 			continue
 		}
 		ch, err := conn.Channel()
@@ -54,7 +58,8 @@ func (f *failOver) Connection(ctx context.Context) (*samqp.Connection, error) {
 			if conn != nil {
 				conn.Close()
 			}
-			log.Info().Str("broker", uri).Msg("could not obtain initial AMQP channel for passive exchange declare. attempting next broker")
+			zlog.Info(ctx).
+				Msg("could not obtain initial AMQP channel for passive exchange declare. attempting next broker")
 			continue
 		}
 		// if the name is "" it's the default exchange which
@@ -74,7 +79,8 @@ func (f *failOver) Connection(ctx context.Context) (*samqp.Connection, error) {
 				if conn != nil {
 					conn.Close()
 				}
-				log.Info().Str("broker", uri).Msg("could not obtain initial AMQP channel for passive exchange declare. attempting next broker")
+				zlog.Info(ctx).
+					Msg("could not obtain initial AMQP channel for passive exchange declare. attempting next broker")
 				continue
 			}
 		}

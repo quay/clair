@@ -10,7 +10,10 @@ import (
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/claircore/pkg/distlock"
-	"github.com/rs/zerolog"
+	"github.com/quay/zlog"
+	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/label"
 	"golang.org/x/sync/errgroup"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
@@ -39,7 +42,7 @@ type Processor struct {
 	// a store instance to persist notifications
 	store Store
 	// a integer id used for logging
-	id uint8
+	id int
 }
 
 func NewProcessor(id int, distLock distlock.Locker, indexer indexer.Service, matcher matcher.Service, store Store) *Processor {
@@ -48,7 +51,7 @@ func NewProcessor(id int, distLock distlock.Locker, indexer indexer.Service, mat
 		indexer:  indexer,
 		matcher:  matcher,
 		store:    store,
-		id:       uint8(id),
+		id:       id,
 	}
 }
 
@@ -65,31 +68,33 @@ func (p *Processor) Process(ctx context.Context, c <-chan Event) {
 //
 // implements the blocking event loop of a processor.
 func (p *Processor) process(ctx context.Context, c <-chan Event) {
-	log := zerolog.Ctx(ctx).With().
-		Uint8("processor_id", p.id).
-		Str("component", "notifier/processor/Processor.process").Logger()
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/Processor.process"),
+		label.Int("processor_id", p.id),
+	)
 
-	log.Debug().Msg("processing events")
+	zlog.Debug(ctx).Msg("processing events")
 	for {
 		select {
 		case <-ctx.Done():
-			log.Info().Msg("context canceled: ending event processing")
+			zlog.Info(ctx).Msg("context canceled: ending event processing")
+			return
 		case e := <-c:
-			uoid := e.uo.Ref.String()
-			log := zerolog.Ctx(ctx).With().
-				Str("component", "notifier/processor/Processor.process").
-				Str("updater", e.updater).
-				Str("UOID", uoid).
-				Uint8("processor_id", p.id).
-				Logger()
-			log.Debug().Msg("processing")
-			locked, err := p.distLock.TryLock(ctx, uoid)
+			ctx := baggage.ContextWithValues(ctx,
+				label.String("updater", e.updater),
+				label.Stringer("UOID", e.uo.Ref),
+			)
+			zlog.Debug(ctx).Msg("processing")
+			locked, err := p.distLock.TryLock(ctx, e.uo.Ref.String())
 			if err != nil {
-				log.Error().Err(err).Msg("received error trying lock. backing off till next UOID")
+				zlog.Error(ctx).
+					Err(err).
+					Msg("received error trying lock. backing off till next UOID")
 				continue
 			}
 			if !locked {
-				log.Debug().Msg("lock acquired by another processor. will not process")
+				zlog.Debug(ctx).
+					Msg("lock acquired by another processor. will not process")
 				continue
 			}
 			// function used to schedule unlock via defer
@@ -102,7 +107,9 @@ func (p *Processor) process(ctx context.Context, c <-chan Event) {
 				return p.create(ctx, e, prev)
 			}()
 			if err != nil {
-				log.Error().Err(err).Msg("failed to create notifications")
+				zlog.Error(ctx).
+					Err(err).
+					Msg("failed to create notifications")
 			}
 		}
 	}
@@ -113,19 +120,21 @@ func (p *Processor) process(ctx context.Context, c <-chan Event) {
 //
 // will be performed under a distributed lock
 func (p *Processor) create(ctx context.Context, e Event, prev uuid.UUID) error {
-	uoid := e.uo.Ref.String()
-	log := zerolog.Ctx(ctx).With().
-		Uint8("processor_id", p.id).
-		Str("component", "notifier/processor/Processor.create").
-		Str("updater", e.updater).
-		Str("UOID", uoid).
-		Logger()
-	log.Debug().Str("prev", prev.String()).Str("cur", uoid).Msg("retrieving diff")
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/Processor.create"),
+	)
+	zlog.Debug(ctx).
+		Stringer("prev", prev).
+		Stringer("cur", e.uo.Ref).
+		Msg("retrieving diff")
 	diff, err := p.matcher.UpdateDiff(ctx, prev, e.uo.Ref)
 	if err != nil {
 		return fmt.Errorf("failed to get update diff: %v", err)
 	}
-	log.Debug().Int("removed", len(diff.Removed)).Int("added", len(diff.Added)).Msg("diff results")
+	zlog.Debug(ctx).
+		Int("removed", len(diff.Removed)).
+		Int("added", len(diff.Added)).
+		Msg("diff results")
 
 	tab := notifTab{
 		N:      make([]Notification, 0),
@@ -163,7 +172,8 @@ func (p *Processor) create(ctx context.Context, e Event, prev uuid.UUID) error {
 			UOID:           e.uo.Ref,
 			Status:         Delivered,
 		}
-		log.Debug().Str("update_operation", e.uo.Ref.String()).Msg("no affected manifests for update operation, setting to delivered.")
+		zlog.Debug(ctx).
+			Msg("no affected manifests for update operation, setting to delivered.")
 		err := p.store.PutReceipt(ctx, e.uo.Updater, r)
 		if err != nil {
 			return fmt.Errorf("failed to put receipt: %v", err)
@@ -290,13 +300,9 @@ func getAffected(ctx context.Context, ic indexer.Service, nosummary bool, vs []c
 //
 // will be performed under a distributed lock.
 func (p *Processor) safe(ctx context.Context, e Event) (bool, uuid.UUID) {
-	uoid := e.uo.Ref.String()
-	log := zerolog.Ctx(ctx).With().
-		Uint8("processor_id", p.id).
-		Str("component", "notifier/processor/Processor.Process").
-		Str("updater", e.updater).
-		Str("UOID", uoid).
-		Logger()
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/Processor.safe"),
+	)
 
 	// confirm we are not making duplicate notifications
 	var errNoReceipt clairerror.ErrNoReceipt
@@ -305,10 +311,13 @@ func (p *Processor) safe(ctx context.Context, e Event) (bool, uuid.UUID) {
 	case errors.As(err, &errNoReceipt):
 		// hop out of switch
 	case err != nil:
-		log.Error().Err(err).Msg("received error getting receipt by UOID")
+		zlog.Error(ctx).
+			Err(err).
+			Msg("received error getting receipt by UOID")
 		return false, uuid.Nil
 	default:
-		log.Info().Msg("receipt created by another processor. will not process notifications")
+		zlog.Info(ctx).
+			Msg("receipt created by another processor. will not process notifications")
 		return false, uuid.Nil
 	}
 
@@ -318,11 +327,14 @@ func (p *Processor) safe(ctx context.Context, e Event) (bool, uuid.UUID) {
 	// but code path is not implemented. implement this to optimize.
 	all, err := p.matcher.UpdateOperations(ctx)
 	if err != nil {
-		log.Error().Err(err).Msg("received error getting update operations from matcher")
+		zlog.Error(ctx).
+			Err(err).
+			Msg("received error getting update operations from matcher")
 		return false, uuid.Nil
 	}
 	if _, ok := all[e.updater]; !ok {
-		log.Warn().Msg("updater missing from update operations returned from matcher. matcher may have garbage collected")
+		zlog.Warn(ctx).
+			Msg("updater missing from update operations returned from matcher. matcher may have garbage collected")
 		return false, uuid.Nil
 	}
 
@@ -339,7 +351,9 @@ func (p *Processor) safe(ctx context.Context, e Event) (bool, uuid.UUID) {
 	}
 
 	if current.Ref.String() != e.uo.Ref.String() {
-		log.Info().Str("new", current.Ref.String()).Msg("newer update operation is present, will not process notifications")
+		zlog.Info(ctx).
+			Stringer("new", current.Ref).
+			Msg("newer update operation is present, will not process notifications")
 		return false, uuid.Nil
 	}
 	return true, prev.Ref

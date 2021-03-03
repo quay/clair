@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/rs/zerolog"
+	"github.com/quay/zlog"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/label"
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
 
@@ -76,10 +78,10 @@ func (d *Deliverer) sign(ctx context.Context, req *http.Request, kp keymanager.K
 //
 // Deliver POSTS a webhook data structure to the configured target.
 func (d *Deliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/webhook/deliverer.Deliver").
-		Str("notification_id", nID.String()).
-		Logger()
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/webhook/Deliverer.Deliver"),
+		label.Stringer("notification_id", nID),
+	)
 
 	callback, err := d.conf.callback.Parse(nID.String())
 	if err != nil {
@@ -108,12 +110,12 @@ func (d *Deliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
 		if err != nil {
 			return fmt.Errorf("failed to sign request: %v", err)
 		}
-		log.Debug().Msg("successfully signed request")
+		zlog.Debug(ctx).Msg("successfully signed request")
 	}
 
-	log.Info().Str("notification_id", nID.String()).
-		Str("callback", callback.String()).
-		Str("target", d.conf.Target).
+	zlog.Info(ctx).
+		Stringer("callback", callback).
+		Stringer("target", d.conf.target).
 		Msg("dispatching webhook")
 
 	resp, err := d.c.Do(req)

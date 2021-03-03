@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rs/zerolog"
+	"github.com/quay/zlog"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/label"
 	"gopkg.in/square/go-jose.v2/jwt"
 )
 
@@ -28,32 +30,31 @@ func NewPSK(key []byte, issuer []string) (*PSK, error) {
 
 // Check implements AuthCheck
 func (p *PSK) Check(_ context.Context, r *http.Request) bool {
-	ctx := r.Context()
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "middleware/auth/PSK.Check").
-		Logger()
-	ctx = log.WithContext(ctx)
+	ctx := baggage.ContextWithValues(r.Context(),
+		label.String("component", "middleware/auth/PSK.Check"),
+	)
 
 	wt, ok := fromHeader(r)
 	if !ok {
-		log.Debug().Msg("failed to retrieve jwt from header")
+		zlog.Debug(ctx).Msg("failed to retrieve jwt from header")
 		return false
 	}
 	tok, err := jwt.ParseSigned(wt)
 	if err != nil {
-		log.Debug().Err(err).Msg("failed to parse jwt")
+		zlog.Debug(ctx).Err(err).Msg("failed to parse jwt")
 		return false
 	}
 	cl := jwt.Claims{}
 	if err := tok.Claims(p.key, &cl); err != nil {
-		log.Debug().Err(err).Msg("failed to parse jwt")
+		zlog.Debug(ctx).Err(err).Msg("failed to parse jwt")
 		return false
 	}
 
+	ctx = baggage.ContextWithValues(ctx, label.String("iss", cl.Issuer))
 	if err := cl.ValidateWithLeeway(jwt.Expected{
 		Time: time.Now(),
 	}, 15*time.Second); err != nil {
-		log.Debug().Err(err).Str("iss", cl.Issuer).Msg("could not validate claims")
+		zlog.Debug(ctx).Err(err).Msg("could not validate claims")
 		return false
 	}
 
@@ -62,7 +63,7 @@ func (p *PSK) Check(_ context.Context, r *http.Request) bool {
 			break
 		}
 		if i == len(p.iss)-1 {
-			log.Debug().Err(err).Str("iss", cl.Issuer).Msg("could not verify issuer")
+			zlog.Debug(ctx).Err(err).Msg("could not verify issuer")
 			return false
 		}
 	}

@@ -5,9 +5,9 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
+
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/notifier"
-	"github.com/rs/zerolog"
 )
 
 func notifications(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID, page *notifier.Page) ([]notifier.Notification, notifier.Page, error) {
@@ -15,10 +15,6 @@ func notifications(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID, page *
 		query      = "SELECT id, body FROM notification_body WHERE notification_id = $1"
 		pagedQuery = "SELECT id, body FROM notification_body WHERE notification_id = $1 AND id > $2 ORDER BY id ASC LIMIT $3"
 	)
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/postgres/notifications/notifications").
-		Logger()
-	ctx = log.WithContext(ctx)
 
 	// if no page argument early return all notifications
 	if page == nil {

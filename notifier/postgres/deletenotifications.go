@@ -5,16 +5,20 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/quay/zlog"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/label"
+
 	clairerror "github.com/quay/clair/v4/clair-error"
-	"github.com/rs/zerolog"
 )
 
 // deleteNotifications garbage collects notifications and their associated
 // id and receipt rows
 func deleteNotifications(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID) error {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/postgres/deleteNotification").
-		Logger()
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/postgres/deleteNotifications"),
+		label.Stringer("notification_id", id),
+	)
 
 	const (
 		deleteNotificationID = `DELETE FROM notification WHERE id = $1`
@@ -32,7 +36,7 @@ func deleteNotifications(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID) 
 		return clairerror.ErrDeleteNotification{id, err}
 	}
 	if tag.RowsAffected() <= 0 {
-		log.Warn().Str("notification_id", id.String()).Msg("no notification bodies deleted")
+		zlog.Warn(ctx).Msg("no notification bodies deleted")
 	}
 
 	tag, err = tx.Exec(ctx, deleteReceipt, id.String())
@@ -40,7 +44,7 @@ func deleteNotifications(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID) 
 		return clairerror.ErrDeleteNotification{id, err}
 	}
 	if tag.RowsAffected() <= 0 {
-		log.Warn().Str("notification_id", id.String()).Msg("no notification receipt deleted")
+		zlog.Warn(ctx).Msg("no notification receipt deleted")
 	}
 
 	tag, err = tx.Exec(ctx, deleteNotificationID, id.String())
@@ -48,7 +52,7 @@ func deleteNotifications(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID) 
 		return clairerror.ErrDeleteNotification{id, err}
 	}
 	if tag.RowsAffected() <= 0 {
-		log.Warn().Str("notification_id", id.String()).Msg("no notification id deleted")
+		zlog.Warn(ctx).Msg("no notification id deleted")
 	}
 
 	err = tx.Commit(ctx)

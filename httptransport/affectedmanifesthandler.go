@@ -5,7 +5,6 @@ import (
 
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/pkg/jsonerr"
-	"github.com/rs/zerolog"
 
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/internal/codec"
@@ -14,11 +13,6 @@ import (
 func AffectedManifestHandler(serv indexer.Affected) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		log := zerolog.Ctx(ctx).With().
-			Str("method", "index").
-			Logger()
-		ctx = log.WithContext(ctx)
-
 		if r.Method != http.MethodPost {
 			resp := &jsonerr.Response{
 				Code:    "method-not-allowed",

@@ -5,10 +5,13 @@ import (
 	"errors"
 	"time"
 
+	"github.com/quay/claircore/libvuln/driver"
+	"github.com/quay/zlog"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/label"
+
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/matcher"
-	"github.com/quay/claircore/libvuln/driver"
-	"github.com/rs/zerolog"
 )
 
 const (
@@ -62,13 +65,14 @@ func (p *Poller) Poll(ctx context.Context) <-chan Event {
 //
 // implements a blocking event loop via a time.Ticker
 func (p *Poller) poll(ctx context.Context, c chan<- Event) {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/updatepoller/Poller.poll").
-		Logger()
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/Poller.poll"),
+	)
 
 	defer close(c)
 	if err := ctx.Err(); err != nil {
-		log.Info().Msg("context canceled before polling began")
+		zlog.Info(ctx).
+			Msg("context canceled before polling began")
 		return
 	}
 
@@ -78,10 +82,12 @@ func (p *Poller) poll(ctx context.Context, c chan<- Event) {
 	for {
 		select {
 		case <-ctx.Done():
-			log.Info().Msg("context canceled. polling ended")
+			zlog.Info(ctx).
+				Msg("context canceled. polling ended")
 			return
 		case <-t.C:
-			log.Debug().Msg("poll interval tick")
+			zlog.Debug(ctx).
+				Msg("poll interval tick")
 			p.onTick(ctx, c)
 		}
 	}
@@ -90,22 +96,27 @@ func (p *Poller) poll(ctx context.Context, c chan<- Event) {
 // onTick retrieves the latest update operations for all known
 // updaters and delivers an event if notification creation is necessary.
 func (p *Poller) onTick(ctx context.Context, c chan<- Event) {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/updatepoller/Poller.onTick").
-		Logger()
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/Poller.onTick"),
+	)
 
 	latest, err := p.differ.LatestUpdateOperations(ctx)
 	if err != nil {
-		log.Error().Err(err).Msg("client error retreiving latest update operations. backing off until next interval")
+		zlog.Error(ctx).
+			Err(err).
+			Msg("client error retrieving latest update operations. backing off until next interval")
 		return
 	}
 
 	for updater, uo := range latest {
+		ctx := baggage.ContextWithValues(ctx, label.String("updater", updater))
 		if len(uo) == 0 {
-			log.Debug().Msg("received 0 update operations after polling Matcher")
-			return
+			zlog.Debug(ctx).
+				Msg("received 0 update operations after polling Matcher")
+			return // Should this be a continue?
 		}
 		latest := uo[0]
+		ctx = baggage.ContextWithValues(ctx, label.Stringer("UOID", latest.Ref))
 		// confirm notifications were never created for this UOID.
 		var errNoReceipt clairerror.ErrNoReceipt
 		_, err := p.store.ReceiptByUOID(ctx, latest.Ref)
@@ -117,20 +128,16 @@ func (p *Poller) onTick(ctx context.Context, c chan<- Event) {
 			select {
 			case c <- e:
 			default:
-				log.Warn().
-					Str("updater", updater).
-					Str("UOID", latest.Ref.String()).
+				zlog.Warn(ctx).
 					Msg("could not deliver event to channel. skipping updater now")
 			}
 			continue
 		}
 		if err != nil {
-			log.Error().Err(err).
-				Str("updater", updater).
-				Str("UOID", latest.Ref.String()).
+			zlog.Error(ctx).
+				Err(err).
 				Msg("received error getting receipt by UOID. backing off till next tick")
 			return
 		}
 	}
-	return
 }

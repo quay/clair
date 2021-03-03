@@ -6,9 +6,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/claircore/pkg/distlock"
-	"github.com/rs/zerolog"
+	"github.com/quay/zlog"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/label"
+
+	clairerror "github.com/quay/clair/v4/clair-error"
 )
 
 // Delivery handles the business logic of delivering
@@ -23,7 +26,7 @@ type Delivery struct {
 	// distributed lock used for mutual exclusion
 	distLock distlock.Locker
 	// a integer id used for logging
-	id uint8
+	id int
 }
 
 func NewDelivery(id int, d Deliverer, interval time.Duration, store Store, distLock distlock.Locker) *Delivery {
@@ -32,7 +35,7 @@ func NewDelivery(id int, d Deliverer, interval time.Duration, store Store, distL
 		interval:  interval,
 		store:     store,
 		distLock:  distLock,
-		id:        uint8(id),
+		id:        id,
 	}
 }
 
@@ -40,10 +43,13 @@ func NewDelivery(id int, d Deliverer, interval time.Duration, store Store, distL
 //
 // Canceling the ctx will end delivery.
 func (d *Delivery) Deliver(ctx context.Context) {
-	log := zerolog.Ctx(ctx).With().Uint8("id", d.id).
-		Str("deliverer", d.Deliverer.Name()).
-		Str("component", "notifier/delivery/Delivery.Deliver").Logger()
-	log.Info().Msg("delivering notifications")
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("deliverer", d.Deliverer.Name()),
+		label.String("component", "notifier/Delivery.Deliver"),
+		label.Int("id", d.id),
+	)
+	zlog.Info(ctx).
+		Msg("delivering notifications")
 	go d.deliver(ctx)
 }
 
@@ -51,10 +57,9 @@ func (d *Delivery) Deliver(ctx context.Context) {
 //
 // implements a blocking event loop via a time.Ticker
 func (d *Delivery) deliver(ctx context.Context) error {
-	log := zerolog.Ctx(ctx).With().
-		Str("deliverer", d.Deliverer.Name()).
-		Uint8("id", d.id).
-		Str("component", "notifier/delivery/Delivery.deliver").Logger()
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/Delivery.deliver"),
+	)
 
 	ticker := time.NewTicker(d.interval)
 	defer ticker.Stop()
@@ -63,10 +68,13 @@ func (d *Delivery) deliver(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			log.Debug().Msg("delivery tick")
+			zlog.Debug(ctx).
+				Msg("delivery tick")
 			err := d.RunDelivery(ctx)
 			if err != nil {
-				log.Error().Err(err).Msg("encountered error on tick")
+				zlog.Error(ctx).
+					Err(err).
+					Msg("encountered error on tick")
 			}
 		}
 	}
@@ -75,25 +83,34 @@ func (d *Delivery) deliver(ctx context.Context) error {
 // RunDelivery determines notifications to deliver and
 // calls the implemented Deliverer to perform the actions.
 func (d *Delivery) RunDelivery(ctx context.Context) error {
-	log := zerolog.Ctx(ctx).With().
-		Str("deliverer", d.Deliverer.Name()).
-		Uint8("id", d.id).
-		Str("component", "notifier/delivery/Delivery.RunDelivery").Logger()
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("deliverer", d.Deliverer.Name()),
+		label.Int("id", d.id),
+		label.String("component", "notifier/Delivery.RunDelivery"),
+	)
 
 	toDeliver := []uuid.UUID{}
 	// get created
-	if created, err := d.store.Created(ctx); err != nil {
+	created, err := d.store.Created(ctx)
+	if err != nil {
 		return err
-	} else {
-		log.Info().Int("created", len(created)).Msg("notification ids in created status")
+	}
+	if sz := len(created); sz != 0 {
+		zlog.Info(ctx).
+			Int("created", sz).
+			Msg("notification ids in created status")
 		toDeliver = append(toDeliver, created...)
 	}
 
 	// get failed
-	if failed, err := d.store.Failed(ctx); err != nil {
+	failed, err := d.store.Failed(ctx)
+	if err != nil {
 		return err
-	} else {
-		log.Info().Int("failed", len(failed)).Msg("notification ids in failed status")
+	}
+	if sz := len(failed); sz != 0 {
+		zlog.Info(ctx).
+			Int("failed", sz).
+			Msg("notification ids in failed status")
 		toDeliver = append(toDeliver, failed...)
 	}
 
@@ -104,7 +121,9 @@ func (d *Delivery) RunDelivery(ctx context.Context) error {
 			return err
 		}
 		if !ok {
-			log.Debug().Str("notification_id", nID.String()).Msg("another process is deliverying this notification")
+			zlog.Debug(ctx).
+				Stringer("notification_id", nID).
+				Msg("another process is delivering this notification")
 			// another process is working on this notification
 			continue
 		}
@@ -123,14 +142,15 @@ func (d *Delivery) RunDelivery(ctx context.Context) error {
 //
 // do's actions should be performed under a distributed lock.
 func (d *Delivery) do(ctx context.Context, nID uuid.UUID) error {
-	log := zerolog.Ctx(ctx).With().
-		Str("deliverer", d.Deliverer.Name()).
-		Uint8("id", d.id).
-		Str("component", "notifier/delivery/Delivery.do").Logger()
+	ctx = baggage.ContextWithValues(ctx,
+		label.Stringer("notification_id", nID),
+		label.String("component", "notifier/Delivery.do"),
+	)
 
 	// if we have a direct deliverer provide the notifications to it.
 	if dd, ok := d.Deliverer.(DirectDeliverer); ok {
-		log.Debug().Msg("providing direct deliverer notifications")
+		zlog.Debug(ctx).
+			Msg("providing direct deliverer notifications")
 		notifications, _, err := d.store.Notifications(ctx, nID, nil)
 		if err != nil {
 			return err
@@ -148,7 +168,8 @@ func (d *Delivery) do(ctx context.Context, nID uuid.UUID) error {
 		if errors.As(err, &dErr) {
 			// OK for this to fail, notification will stay in Created status.
 			// store is failing, lets back off it tho until next tick.
-			log.Info().Str("notifcation_id", nID.String()).Msg("failed to deliver notifications")
+			zlog.Info(ctx).
+				Msg("failed to deliver notifications")
 			err := d.store.SetDeliveryFailed(ctx, nID)
 			if err != nil {
 				return err
@@ -172,6 +193,7 @@ func (d *Delivery) do(ctx context.Context, nID uuid.UUID) error {
 			return err
 		}
 	}
-	log.Info().Str("notifcation_id", nID.String()).Msg("successfully delivered notifications")
+	zlog.Info(ctx).
+		Msg("successfully delivered notifications")
 	return nil
 }

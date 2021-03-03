@@ -12,8 +12,10 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	pgdl "github.com/quay/claircore/pkg/distlock/postgres"
+	"github.com/quay/zlog"
 	"github.com/remind101/migrate"
-	"github.com/rs/zerolog"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/label"
 
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
@@ -90,10 +92,9 @@ type Opts struct {
 // Canceling the ctx will kill any concurrent routines affiliated with
 // the notifier.
 func New(ctx context.Context, opts Opts) (*service, error) {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/service/Init").
-		Logger()
-	ctx = log.WithContext(ctx)
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/service/New"),
+	)
 
 	// initialize store and dist lock pool
 	store, keystore, lockPool, err := storeInit(ctx, opts)
@@ -109,17 +110,23 @@ func New(ctx context.Context, opts Opts) (*service, error) {
 
 	// check for test mode
 	if tm := os.Getenv("NOTIFIER_TEST_MODE"); tm != "" {
-		log.Info().Str("interval", opts.PollInterval.String()).Msg("NOTIFIER TEST MODE ENABLED. NOTIFIER WILL CREATE TEST NOTIFICATIONS ON A SET INTERVAL")
+		zlog.Warn(ctx).
+			Stringer("interval", opts.PollInterval).
+			Msg("NOTIFIER TEST MODE ENABLED. NOTIFIER WILL CREATE TEST NOTIFICATIONS ON A SET INTERVAL")
 		testModeInit(ctx, &opts)
 	}
 
 	// kick off the poller
-	log.Info().Str("interval", opts.PollInterval.String()).Msg("initializing poller")
+	zlog.Info(ctx).
+		Stringer("interval", opts.PollInterval).
+		Msg("initializing poller")
 	poller := notifier.NewPoller(opts.PollInterval, store, opts.Matcher)
 	c := poller.Poll(ctx)
 
 	// kick off the processors
-	log.Info().Int("count", processors).Msg("initializing processors")
+	zlog.Info(ctx).
+		Int("count", processors).
+		Msg("initializing processors")
 	for i := 0; i < processors; i++ {
 		// processors only use try locks
 		distLock := pgdl.NewPool(lockPool, 0)
@@ -170,10 +177,9 @@ func testModeInit(ctx context.Context, opts *Opts) error {
 }
 
 func storeInit(ctx context.Context, opts Opts) (*postgres.Store, *postgres.KeyStore, *pgxpool.Pool, error) {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/service/storeInit").
-		Logger()
-	ctx = log.WithContext(ctx)
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/service/storeInit"),
+	)
 
 	cfg, err := pgxpool.ParseConfig(opts.ConnString)
 	if err != nil {
@@ -193,7 +199,7 @@ func storeInit(ctx context.Context, opts Opts) (*postgres.Store, *postgres.KeySt
 
 	// do migrations if requested
 	if opts.Migrations {
-		log.Info().Msg("performing notifier migrations")
+		zlog.Info(ctx).Msg("performing notifier migrations")
 		migrator := migrate.NewPostgresMigrator(db)
 		migrator.Table = migrations.MigrationTable
 		err := migrator.Exec(migrate.Up, migrations.Migrations...)
@@ -202,19 +208,18 @@ func storeInit(ctx context.Context, opts Opts) (*postgres.Store, *postgres.KeySt
 		}
 	}
 
-	log.Info().Msg("initializing notifier store")
+	zlog.Info(ctx).Msg("initializing notifier store")
 	store := postgres.NewStore(pool)
 	keystore := postgres.NewKeyStore(pool)
 	return store, keystore, pool, nil
 }
 
 func keyManagerInit(ctx context.Context, keystore notifier.KeyStore) (*keymanager.Manager, error) {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/service/keyManagerInit").
-		Logger()
-	ctx = log.WithContext(ctx)
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/service/keyManagerInit"),
+	)
 
-	log.Debug().Msg("initializing keymanager")
+	zlog.Debug(ctx).Msg("initializing keymanager")
 	mgr, err := keymanager.NewManager(ctx, keystore)
 	if err != nil {
 		return nil, err
@@ -223,11 +228,12 @@ func keyManagerInit(ctx context.Context, keystore notifier.KeyStore) (*keymanage
 }
 
 func webhookDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, store notifier.Store, keymanager *keymanager.Manager) error {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/service/webhookInit").
-		Logger()
-	ctx = log.WithContext(ctx)
-	log.Info().Int("count", deliveries).Msg("initializing webhook deliverers")
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/service/webhookDeliveries"),
+	)
+	zlog.Info(ctx).
+		Int("count", deliveries).
+		Msg("initializing webhook deliverers")
 
 	conf, err := opts.Webhook.Validate()
 	if err != nil {
@@ -251,10 +257,9 @@ func webhookDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, s
 }
 
 func amqpDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, store notifier.Store) error {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/service/amqpInit").
-		Logger()
-	ctx = log.WithContext(ctx)
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/service/amqpDeliveries"),
+	)
 
 	conf, err := opts.AMQP.Validate()
 	if err != nil {
@@ -262,7 +267,8 @@ func amqpDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, stor
 	}
 
 	if len(conf.URIs) == 0 {
-		log.Warn().Msg("amqp delivery was configured with no broker URIs to connect to. delivery of notifications will not occur.")
+		zlog.Warn(ctx).
+			Msg("amqp delivery was configured with no broker URIs to connect to. delivery of notifications will not occur.")
 		return nil
 	}
 
@@ -293,10 +299,9 @@ func amqpDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, stor
 }
 
 func stompDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, store notifier.Store) error {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/service/stompInit").
-		Logger()
-	ctx = log.WithContext(ctx)
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/service/stompDeliveries"),
+	)
 
 	conf, err := opts.STOMP.Validate()
 	if err != nil {
@@ -304,7 +309,8 @@ func stompDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, sto
 	}
 
 	if len(conf.URIs) == 0 {
-		log.Warn().Msg("stomp delivery was configured with no broker URIs to connect to. delivery of notifications will not occur.")
+		zlog.Warn(ctx).
+			Msg("stomp delivery was configured with no broker URIs to connect to. delivery of notifications will not occur.")
 		return nil
 	}
 

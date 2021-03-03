@@ -12,9 +12,12 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/quay/zlog"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/label"
+
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/notifier"
-	"github.com/rs/zerolog"
 )
 
 const (
@@ -59,9 +62,9 @@ type Manager struct {
 //
 // Ensure cancelation of ctx to avoid go routine leakage.
 func NewManager(ctx context.Context, store notifier.KeyStore) (*Manager, error) {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/keymanager/NewManager").
-		Logger()
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/keymanager/NewManager"),
+	)
 
 	var m *Manager = &Manager{
 		kp:    atomic.Value{},
@@ -80,7 +83,8 @@ func NewManager(ctx context.Context, store notifier.KeyStore) (*Manager, error) 
 	// kick off event loop
 	go m.loop(ctx)
 
-	log.Info().Msg("key manager initialized.")
+	zlog.Info(ctx).
+		Msg("key manager initialized")
 	return m, nil
 }
 
@@ -98,9 +102,9 @@ func (m *Manager) KeyPair() (KeyPair, error) {
 
 // genKeyPair creates a RSA key pair.
 func (m *Manager) genKeyPair(ctx context.Context) (KeyPair, error) {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/keymanager/Manager.genKeyPair").
-		Logger()
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/keymanager/Manager.genKeyPair"),
+	)
 
 	reader := cRand.Reader
 	key, err := rsa.GenerateKey(reader, bitSize)
@@ -114,7 +118,9 @@ func (m *Manager) genKeyPair(ctx context.Context) (KeyPair, error) {
 
 	id := uuid.New()
 
-	log.Debug().Str("id", id.String()).Msg("new key pair generated")
+	zlog.Debug(ctx).
+		Stringer("id", id).
+		Msg("new key pair generated")
 	return KeyPair{
 		ID:      id,
 		Private: key,
@@ -125,9 +131,9 @@ func (m *Manager) genKeyPair(ctx context.Context) (KeyPair, error) {
 
 // loop is a blocking event loop.
 func (m *Manager) loop(ctx context.Context) {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/keymanager/Manager.loop").
-		Logger()
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/keymanager/Manager.loop"),
+	)
 	t := time.NewTicker(interval)
 	defer t.Stop()
 	for {
@@ -135,9 +141,11 @@ func (m *Manager) loop(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-t.C:
-			log.Debug().Msg("keymanager tick")
+			zlog.Debug(ctx).Msg("keymanager tick")
 			err := m.bump(ctx)
-			log.Error().Err(err).Msg("received error when bumping public key expiration")
+			zlog.Error(ctx).
+				Err(err).
+				Msg("received error when bumping public key expiration")
 
 			// 1/4 chance of running gc
 			if rand.Int()%4 == 0 {
@@ -148,22 +156,27 @@ func (m *Manager) loop(ctx context.Context) {
 }
 
 func (m *Manager) gc(ctx context.Context) {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/keymanager/Manager.gc").
-		Logger()
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/keymanager/Manager.gc"),
+	)
 
-	log.Info().Msg("gc starting")
+	zlog.Info(ctx).
+		Msg("gc starting")
 	var total int64
 	var err error
 	var n int64 = -1
 	for n != 0 {
 		n, err = m.store.GC(ctx)
 		if err != nil {
-			log.Error().Err(err).Msg("received error while performing gc")
+			zlog.Error(ctx).
+				Err(err).
+				Msg("received error while performing gc")
 		}
 		total += n
 	}
-	log.Info().Int64("deleted", total).Msg("gc complete")
+	zlog.Info(ctx).
+		Int64("deleted", total).
+		Msg("gc complete")
 }
 
 // bump will attempt a bump of the currently managed
@@ -171,9 +184,9 @@ func (m *Manager) gc(ctx context.Context) {
 //
 // if the key pair is not found a new key pair is created and managed.
 func (m *Manager) bump(ctx context.Context) error {
-	log := zerolog.Ctx(ctx).With().
-		Str("component", "notifier/keymanager/Manager.bump").
-		Logger()
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "notifier/keymanager/Manager.bump"),
+	)
 
 	var kp *KeyPair = (m.kp.Load()).(*KeyPair)
 	if kp == nil {
@@ -198,6 +211,8 @@ func (m *Manager) bump(ctx context.Context) error {
 	default:
 		return err
 	}
-	log.Debug().Str("id", kp.ID.String()).Msg("succesfully bump key expiration")
+	zlog.Debug(ctx).
+		Stringer("id", kp.ID).
+		Msg("successfully bumped key expiration")
 	return nil
 }

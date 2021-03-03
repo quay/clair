@@ -8,7 +8,7 @@ import (
 	"net/http/pprof"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/rs/zerolog"
+	"github.com/quay/zlog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/exporters/stdout"
@@ -17,7 +17,6 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 
 	"github.com/quay/clair/v4/config"
-	"github.com/quay/zlog"
 )
 
 const (
@@ -46,12 +45,16 @@ type Server struct {
 }
 
 func New(ctx context.Context, conf config.Config, health func() bool) (*Server, error) {
-	logger := zerolog.Ctx(ctx).With().Str("component", "introspection").Logger()
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "introspection/New"),
+	)
 
 	var addr string
 	if conf.IntrospectionAddr == "" {
 		addr = DefaultIntrospectionAddr
-		logger.Info().Str("address", addr).Msg("no introspection address provied. using default")
+		zlog.Info(ctx).
+			Str("address", addr).
+			Msg("no introspection address provided; using default")
 	} else {
 		addr = conf.IntrospectionAddr
 	}
@@ -67,7 +70,7 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Server, 
 
 	// check for health
 	if health == nil {
-		logger.Warn().Msg("no health check configured; unconditionally reporting OK")
+		zlog.Warn(ctx).Msg("no health check configured; unconditionally reporting OK")
 		i.health = func() bool { return true }
 	}
 
@@ -111,7 +114,7 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Server, 
 			return nil, fmt.Errorf("error configuring jaeger tracing: %v", err)
 		}
 	default:
-		logger.Info().Msg("no distributed tracing enabled")
+		zlog.Info(ctx).Msg("no distributed tracing enabled")
 	}
 
 	// configure diagnostics
@@ -160,9 +163,6 @@ func (i *Server) withStdOut(_ context.Context, traceOpts []sdktrace.TracerProvid
 
 // withJaeger configures the Jaeger exporter for distributed tracing.
 func (i *Server) withJaeger(ctx context.Context, traceOpts []sdktrace.TracerProviderOption) error {
-	logger := zerolog.Ctx(ctx).With().
-		Str("component", "introspection/Introspection.withJaeger").
-		Logger()
 	conf := i.conf.Trace.Jaeger
 	var mode string
 	var endpoint string
@@ -180,14 +180,18 @@ func (i *Server) withJaeger(ctx context.Context, traceOpts []sdktrace.TracerProv
 		mode = "agent"
 		endpoint = DefaultJaegerEndpoint
 	}
+	ctx = baggage.ContextWithValues(ctx,
+		label.String("component", "introspection/Server.withJaeger"),
+		label.String("endpoint", endpoint),
+	)
 
 	var e jaeger.EndpointOption
 	switch mode {
 	case "agent":
-		logger.Info().Str("endpoint", endpoint).Msg("configuring jaeger exporter to push to agent")
+		zlog.Info(ctx).Msg("configuring jaeger exporter to push to agent")
 		e = jaeger.WithAgentEndpoint(endpoint)
 	case "collector":
-		logger.Info().Str("endpoint", endpoint).Msg("configuring jaeger exporter to push to collector")
+		zlog.Info(ctx).Msg("configuring jaeger exporter to push to collector")
 		var opt []jaeger.CollectorEndpointOption
 		u, p := conf.Collector.Username, conf.Collector.Password
 		if u != nil {
@@ -234,13 +238,14 @@ func (i *Server) withJaeger(ctx context.Context, traceOpts []sdktrace.TracerProv
 // endpoint to i's servemux.
 func (i *Server) withPrometheus(ctx context.Context) error {
 	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "introspection/Introspection.withPrometheus"),
+		label.String("component", "introspection/Server.withPrometheus"),
 	)
 	endpoint := DefaultPromEndpoint
 	if i.conf.Metrics.Prometheus.Endpoint != nil {
 		endpoint = *i.conf.Metrics.Prometheus.Endpoint
 	}
-	zlog.Info(ctx).Str("endpoint", endpoint).
+	zlog.Info(ctx).
+		Str("endpoint", endpoint).
 		Str("server", i.Addr).
 		Msg("configuring prometheus")
 

@@ -5,43 +5,41 @@ import (
 	"os"
 	"strings"
 
+	"github.com/quay/zlog"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"github.com/quay/clair/v4/config"
 )
 
-// LogLevel does a string-to-level mapping.
-func LogLevel(level string) zerolog.Level {
-	level = strings.ToLower(level)
-	switch level {
+// Logging configures zlog according to the provided configuration.
+func Logging(ctx context.Context, cfg *config.Config) error {
+	l := zerolog.New(os.Stderr)
+	switch strings.ToLower(cfg.LogLevel) {
 	case "debug-color":
-		// set global logger to use ConsoleWriter for colorized output
-		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-		return zerolog.DebugLevel
+		// set logger to use ConsoleWriter for colorized output
+		l = l.Level(zerolog.DebugLevel).
+			Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	case "debug":
-		return zerolog.DebugLevel
+		l = l.Level(zerolog.DebugLevel)
 	case "info":
-		return zerolog.InfoLevel
+		l = l.Level(zerolog.InfoLevel)
 	case "warn":
-		return zerolog.WarnLevel
+		l = l.Level(zerolog.WarnLevel)
 	case "error":
-		return zerolog.ErrorLevel
+		l = l.Level(zerolog.ErrorLevel)
 	case "fatal":
-		return zerolog.FatalLevel
+		l = l.Level(zerolog.FatalLevel)
 	case "panic":
-		return zerolog.PanicLevel
+		l = l.Level(zerolog.PanicLevel)
 	default:
-		return zerolog.InfoLevel
+		l = l.Level(zerolog.InfoLevel)
 	}
-}
-
-// Logging configures a logger according to the provided configuration and returns
-// a configured Context.
-func Logging(ctx context.Context, cfg *config.Config) (context.Context, error) {
-	zerolog.SetGlobalLevel(LogLevel(cfg.LogLevel))
-	l := log.With().Timestamp().Logger()
-	ctx = l.WithContext(ctx)
+	l = l.With().
+		Timestamp().
+		Logger()
+	zlog.Set(&l)
+	log.Logger = zerolog.Nop()
 	l.Debug().Str("component", "initialize/Logging").Msg("logging initialized")
-	return ctx, nil
+	return nil
 }
