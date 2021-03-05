@@ -219,7 +219,7 @@ func (t *Server) configureNotifierMode(ctx context.Context) error {
 		intromw.InstrumentedHandler(KeysAPIPath, t.traceOpt, KeysHandler(ks)))
 
 	t.Handle(KeyByIDAPIPath,
-		intromw.InstrumentedHandler(KeyByIDAPIPath, t.traceOpt, KeyByIDHandler(ks)))
+		intromw.InstrumentedHandler(KeyByIDAPIPath+"_KEY", t.traceOpt, KeyByIDHandler(ks)))
 
 	return nil
 }
