@@ -236,3 +236,9 @@ func (c *HTTP) UpdateDiff(ctx context.Context, prev, cur uuid.UUID) (*driver.Upd
 	}
 	return &d, nil
 }
+
+// Initialized is present to fulfill the interface, but isn't exposed as part of
+// the HTTP API. This method is stubbed out.
+func (c *HTTP) Initialized(_ context.Context) (bool, error) {
+	return true, nil
+}

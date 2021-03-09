@@ -19,6 +19,7 @@ type Service interface {
 
 // Scanner is an interface providing a claircore.VulnerabilityReport given a claircore.IndexReport
 type Scanner interface {
+	Initialized(context.Context) (bool, error)
 	Scan(ctx context.Context, ir *claircore.IndexReport) (*claircore.VulnerabilityReport, error)
 }
 

@@ -22,6 +22,7 @@ type Mock struct {
 	LatestUpdateOperations_ func(context.Context) (map[string][]driver.UpdateOperation, error)
 	UpdateDiff_             func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error)
 	Scan_                   func(context.Context, *claircore.IndexReport) (*claircore.VulnerabilityReport, error)
+	Initialized_            func(context.Context) (bool, error)
 	// TestUOs provide memory for the mock.
 	// usage of this field can be dictated by the test case's needs.
 	sync.Mutex
@@ -76,4 +77,11 @@ func (d *Mock) Scan(ctx context.Context, ir *claircore.IndexReport) (*claircore.
 		panic("mock matcher: unexpected call to Scan")
 	}
 	return d.Scan_(ctx, ir)
+}
+
+func (d *Mock) Initialized(ctx context.Context) (bool, error) {
+	if d.Initialized_ == nil {
+		panic("mock matcher: unexpected call to Initialized")
+	}
+	return d.Initialized_(ctx)
 }
