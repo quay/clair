@@ -36,6 +36,21 @@ matcher:
   - "rhel"
   - "suse"
   - "ubuntu"
+matchers:
+  names:
+  - "alpine"
+  - "aws"
+  - "debian"
+  - "oracle"
+  - "photon"
+  - "python"
+  - "rhel"
+  - "suse"
+  - "ubuntu"
+  - "crda"
+  config:
+    crda:
+      url: https://f8a-analytics-preview-2445582058137.production.gw.apicast.io/?user_key=3e42fa66f65124e6b1266a23431e3d08
 notifier:
   indexer_addr: http://clair-indexer:8080/
   matcher_addr: http://clair-matcher:8080/

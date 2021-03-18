@@ -50,6 +50,7 @@ type Config struct {
 	LogLevel string   `yaml:"log_level" json:"log_level"`
 	Indexer  Indexer  `yaml:"indexer" json:"indexer"`
 	Matcher  Matcher  `yaml:"matcher" json:"matcher"`
+	Matchers Matchers `yaml:"matchers" json:"matchers"`
 	Updaters Updaters `yaml:"updaters,omitempty" json:"updaters,omitempty"`
 	Notifier Notifier `yaml:"notifier" json:"notifier"`
 	Auth     Auth     `yaml:"auth" json:"auth"`

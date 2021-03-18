@@ -176,6 +176,10 @@ func localMatcher(ctx context.Context, cfg *config.Config) (matcher.Service, err
 	for name, node := range cfg.Updaters.Config {
 		updaterConfigs[name] = node.Decode
 	}
+	matcherConfigs := make(map[string]driver.MatcherConfigUnmarshaler)
+	for name, node := range cfg.Matchers.Config {
+		matcherConfigs[name] = node.Decode
+	}
 	s, err := libvuln.New(ctx, &libvuln.Opts{
 		MaxConnPool:     int32(cfg.Matcher.MaxConnPool),
 		ConnString:      cfg.Matcher.ConnString,
@@ -184,6 +188,8 @@ func localMatcher(ctx context.Context, cfg *config.Config) (matcher.Service, err
 		UpdateInterval:  cfg.Matcher.Period,
 		UpdaterConfigs:  updaterConfigs,
 		UpdateRetention: cfg.Matcher.UpdateRetention,
+		MatcherNames:    cfg.Matchers.Names,
+		MatcherConfigs:  matcherConfigs,
 	})
 	if err != nil {
 		return nil, mkErr(err)
