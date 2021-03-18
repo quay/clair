@@ -52,6 +52,9 @@ matcher:
     period: ""
     disable_updaters: false
     update_retention: 2
+matchers:
+    names: nil
+    config: nil
 updaters:
     sets: nil
     config: nil
@@ -231,6 +234,45 @@ This should be set to a safe MAX value based on database size constraints.
 Defaults to 10
 
 If a value of 0 is provided GC is disabled.
+```
+
+### matchers: \<object\>
+
+```
+Matchers provides configuration for the in-tree Matchers and RemoteMatchers.
+```
+
+#### &emsp;names: []string
+```
+A list of string values informing the matcher factory about enabled matchers.
+
+If the value is nil the default list of Matchers will run:
+    "alpine"
+    "aws"
+    "debian"
+    "oracle"
+    "photon"
+    "python"
+    "rhel"
+    "suse"
+    "ubuntu"
+    "crda"
+
+If an empty list is provided zero matchers will run.
+```
+
+#### &emsp;config: {}
+```
+Provides configuration to specific matcher.
+
+A map keyed by the name of the matcher containing a sub-object which will be provided to the matchers factory constructor.
+
+A hypothetical  example:
+  config:
+    python:
+      ignore_vulns:
+        - CVE-XYZ
+        - CVE-ABC
 ```
 
 ### updaters: \<object\>
