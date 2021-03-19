@@ -25,7 +25,7 @@ jobs:
       - name: Changelog
         shell: bash
         run: |
-          curl -o /tmp/git-chglog -L https://github.com/git-chglog/git-chglog/releases/download/0.9.1/git-chglog_linux_amd64
+          curl -o /tmp/git-chglog -L https://github.com/ldelossa/git-chglog/releases/download/v0.11.2-sortbysemver/linux.amd64.git-chglog
           chmod u+x /tmp/git-chglog
           echo "creating change log for tag: ${{ github.event.inputs.tag }}"
           /tmp/git-chglog --tag-filter-pattern "v4" --next-tag "${{ github.event.inputs.tag }}" -o CHANGELOG.md v4.0.0-alpha.2..
