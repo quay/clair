@@ -23,7 +23,7 @@ import (
 	"github.com/quay/clair/v4/introspection"
 )
 
-// Version is a version string, optionally injected at build time.
+// Version is a version string, injected at build time for release builds.
 var Version string
 
 const (
@@ -46,6 +46,12 @@ func main() {
 	if confFile.String() == "" {
 		golog.Fatalf("must provide a -conf flag or set %q in the environment", envConfig)
 	}
+	fail := false
+	defer func() {
+		if fail {
+			os.Exit(1)
+		}
+	}()
 
 	// validate config
 	err := yaml.NewDecoder(confFile.file).Decode(&conf)
@@ -69,33 +75,35 @@ func main() {
 		Str("version", Version).
 		Msg("starting")
 
-	// Some machinery for starting and stopping server goroutines
+	// Some machinery for starting and stopping server goroutines:
 	down := &Shutdown{}
 	srvs, srvctx := errgroup.WithContext(ctx)
 
+	// Introspection server goroutine.
 	srvs.Go(func() (_ error) {
-		zlog.Info(ctx).Msg("launching introspection server")
-		i, err := introspection.New(ctx, conf, nil)
+		zlog.Info(srvctx).Msg("launching introspection server")
+		i, err := introspection.New(srvctx, conf, nil)
 		if err != nil {
-			zlog.Warn(ctx).
+			zlog.Warn(srvctx).
 				Err(err).Msg("introspection server configuration failed. continuing anyway")
 			return
 		}
 		down.Add(i.Server)
 		if err := i.ListenAndServe(); err != http.ErrServerClosed {
-			zlog.Warn(ctx).
+			zlog.Warn(srvctx).
 				Err(err).Msg("introspection server failed to launch. continuing anyway")
 		}
 		return
 	})
 
+	// HTTP API server goroutine.
 	srvs.Go(func() error {
-		zlog.Info(ctx).Msg("launching http transport")
-		srvs, err := initialize.Services(ctx, &conf)
+		zlog.Info(srvctx).Msg("launching http transport")
+		srvs, err := initialize.Services(srvctx, &conf)
 		if err != nil {
 			return fmt.Errorf("service initialization failed: %w", err)
 		}
-		h, err := httptransport.New(ctx, conf, srvs.Indexer, srvs.Matcher, srvs.Notifier)
+		h, err := httptransport.New(srvctx, conf, srvs.Indexer, srvs.Matcher, srvs.Notifier)
 		if err != nil {
 			return fmt.Errorf("http transport configuration failed: %w", err)
 		}
@@ -106,23 +114,50 @@ func main() {
 		return nil
 	})
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	zlog.Info(ctx).Msg("registered signal handler")
-	zlog.Info(ctx).Str("version", Version).Msg("ready")
-	select {
-	case sig := <-c:
-		zlog.Info(ctx).
-			Stringer("signal", sig).
-			Msg("gracefully shutting down")
+	// Signal handler goroutine.
+	srvs.Go(func() error {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt)
+		defer func() {
+			signal.Stop(c)
+			close(c)
+			zlog.Info(ctx).Msg("unregistered signal handler")
+		}()
+		zlog.Info(ctx).Msg("registered signal handler")
+		select {
+		case sig := <-c:
+			zlog.Info(ctx).
+				Stringer("signal", sig).
+				Msg("gracefully shutting down")
+			// Note that we're using the root context here, so that we get a
+			// full timeout if one errgroup goroutine returns uncleanly.
+			tctx, done := context.WithTimeout(ctx, 10*time.Second)
+			err := down.Shutdown(tctx)
+			done()
+			if err != nil {
+				zlog.Error(ctx).Err(err).Msg("error shutting down server")
+			}
+		case <-srvctx.Done():
+		}
+		return nil
+	})
+	// Spawn a goroutine outside to wait on the errgroup.
+	//
+	// This is needed to call shutdown and cause the servers to return when only
+	// one has returned an error.
+	go func() {
+		<-srvctx.Done()
 		tctx, done := context.WithTimeout(ctx, 10*time.Second)
 		err := down.Shutdown(tctx)
 		done()
 		if err != nil {
 			zlog.Error(ctx).Err(err).Msg("error shutting down server")
 		}
-	case <-srvctx.Done():
-		zlog.Error(ctx).Err(srvctx.Err()).Msg("initialization failed")
-		os.Exit(1)
+	}()
+
+	zlog.Info(ctx).Str("version", Version).Msg("ready")
+	if err := srvs.Wait(); err != nil {
+		zlog.Error(ctx).Err(err).Msg("fatal error")
+		fail = true
 	}
 }
