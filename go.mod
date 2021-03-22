@@ -32,8 +32,8 @@ require (
 	go.opentelemetry.io/otel/exporters/trace/jaeger v0.16.0
 	go.opentelemetry.io/otel/sdk v0.16.0
 	golang.org/x/mod v0.4.2 // indirect
+	golang.org/x/net v0.0.0-20210316092652-d523dce5a7f4
 	golang.org/x/sync v0.0.0-20201207232520-09787c993a3a
-	golang.org/x/sys v0.0.0-20210122093101-04d7465088b8 // indirect
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
 	golang.org/x/tools v0.1.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.4.1

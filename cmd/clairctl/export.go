@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 
 	"github.com/quay/claircore/libvuln/driver"
@@ -11,6 +12,8 @@ import (
 	"github.com/quay/claircore/libvuln/updates"
 	_ "github.com/quay/claircore/updater/defaults"
 	"github.com/urfave/cli/v2"
+
+	"github.com/quay/clair/v4/internal/httputil"
 )
 
 // ExportCmd is the "export-updaters" subcommand.
@@ -62,7 +65,8 @@ func exportAction(c *cli.Context) error {
 		cfgs[name] = node.Decode
 	}
 
-	cl, _, err := cfg.Client(nil, commonClaim)
+	tr := http.DefaultTransport.(*http.Transport).Clone()
+	cl, _, err := cfg.Client(httputil.RateLimiter(tr), commonClaim)
 	if err != nil {
 		return err
 	}

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/http/cookiejar"
 	"time"
 
 	"github.com/quay/claircore/libindex"
@@ -13,6 +14,7 @@ import (
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/label"
+	"golang.org/x/net/publicsuffix"
 	"gopkg.in/square/go-jose.v2/jwt"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
@@ -20,6 +22,7 @@ import (
 	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/httptransport/client"
 	"github.com/quay/clair/v4/indexer"
+	"github.com/quay/clair/v4/internal/httputil"
 	"github.com/quay/clair/v4/matcher"
 	notifier "github.com/quay/clair/v4/notifier/service"
 )
@@ -163,7 +166,8 @@ func remoteIndexer(ctx context.Context, cfg *config.Config, addr string) (indexe
 }
 
 func remoteClient(ctx context.Context, cfg *config.Config, claim jwt.Claims, addr string) (*client.HTTP, error) {
-	c, auth, err := cfg.Client(nil, claim)
+	tr := http.DefaultTransport.(*http.Transport).Clone()
+	c, auth, err := cfg.Client(tr, claim)
 	switch {
 	case err != nil:
 		return nil, err
@@ -182,6 +186,17 @@ func localMatcher(ctx context.Context, cfg *config.Config) (matcher.Service, err
 		}
 	}
 
+	tr := http.DefaultTransport.(*http.Transport).Clone()
+	jar, err := cookiejar.New(&cookiejar.Options{
+		PublicSuffixList: publicsuffix.List,
+	})
+	if err != nil {
+		return nil, err
+	}
+	cl := &http.Client{
+		Jar:       jar,
+		Transport: httputil.RateLimiter(tr),
+	}
 	updaterConfigs := make(map[string]driver.ConfigUnmarshaler)
 	for name, node := range cfg.Updaters.Config {
 		updaterConfigs[name] = node.Decode
@@ -200,6 +215,7 @@ func localMatcher(ctx context.Context, cfg *config.Config) (matcher.Service, err
 		UpdateRetention: cfg.Matcher.UpdateRetention,
 		MatcherNames:    cfg.Matchers.Names,
 		MatcherConfigs:  matcherConfigs,
+		Client:          cl,
 	})
 	if err != nil {
 		return nil, mkErr(err)
@@ -227,7 +243,8 @@ func localNotifier(ctx context.Context, cfg *config.Config, i indexer.Service, m
 		}
 	}
 
-	c, _, err := cfg.Client(nil, notifierClaim)
+	tr := http.DefaultTransport.(*http.Transport).Clone()
+	c, _, err := cfg.Client(tr, notifierClaim)
 	if err != nil {
 		return nil, mkErr(err)
 	}

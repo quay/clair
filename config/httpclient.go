@@ -2,8 +2,10 @@ package config
 
 import (
 	"net/http"
+	"net/http/cookiejar"
 	"time"
 
+	"golang.org/x/net/publicsuffix"
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
 )
@@ -13,7 +15,7 @@ import (
 //
 // It returns an *http.Client and a boolean indicating whether the client is
 // configured for authentication, or an error that occurred during construction.
-func (cfg *Config) Client(next *http.Transport, cl jwt.Claims) (c *http.Client, authed bool, err error) {
+func (cfg *Config) Client(next http.RoundTripper, cl jwt.Claims) (c *http.Client, authed bool, err error) {
 	if next == nil {
 		next = http.DefaultTransport.(*http.Transport).Clone()
 	}
@@ -29,11 +31,20 @@ func (cfg *Config) Client(next *http.Transport, cl jwt.Claims) (c *http.Client, 
 		sk.Key = cfg.Auth.PSK.Key
 	default:
 	}
+	jar, err := cookiejar.New(&cookiejar.Options{
+		PublicSuffixList: publicsuffix.List,
+	})
+	if err != nil {
+		return nil, false, err
+	}
 	rt := &transport{
 		next: next,
 		base: cl,
 	}
-	c = &http.Client{Transport: rt}
+	c = &http.Client{
+		Jar:       jar,
+		Transport: rt,
+	}
 
 	// Both of the JWT-based methods set the signing key.
 	if sk.Key != nil {
