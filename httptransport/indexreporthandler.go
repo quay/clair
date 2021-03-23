@@ -78,6 +78,7 @@ func IndexReportHandler(serv indexer.StateReporter) http.HandlerFunc {
 			return
 		}
 
+		w.Header().Set("content-type", "application/json")
 		w.Header().Add("etag", validator)
 		defer writerError(w, &err)()
 		enc := codec.GetEncoder(w)
