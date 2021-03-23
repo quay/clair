@@ -18,6 +18,7 @@ import (
 	yaml "gopkg.in/yaml.v3"
 
 	"github.com/quay/clair/v4/config"
+	"github.com/quay/clair/v4/health"
 	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/initialize"
 	"github.com/quay/clair/v4/introspection"
@@ -108,6 +109,7 @@ func main() {
 			return fmt.Errorf("http transport configuration failed: %w", err)
 		}
 		down.Add(h.Server)
+		health.Ready()
 		if err := h.ListenAndServe(); err != http.ErrServerClosed {
 			return fmt.Errorf("http transport failed to launch: %w", err)
 		}

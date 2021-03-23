@@ -17,6 +17,7 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 
 	"github.com/quay/clair/v4/config"
+	"github.com/quay/clair/v4/health"
 )
 
 const (
@@ -27,6 +28,7 @@ const (
 	Jaeger                   = "jaeger"
 	DefaultJaegerEndpoint    = "localhost:6831"
 	HealthEndpoint           = "/healthz"
+	ReadyEndpoint            = "/readyz"
 	DefaultIntrospectionAddr = ":8089"
 )
 
@@ -122,6 +124,9 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Server, 
 	if err != nil {
 		return nil, fmt.Errorf("error configuring diagnostics: %v", err)
 	}
+	if err := i.withReady(ctx); err != nil {
+		return nil, fmt.Errorf("error configuring ready: %v", err)
+	}
 
 	// attach Introspection to server, this works because we embed http.ServeMux
 	i.Server.Handler = i
@@ -146,6 +151,11 @@ func (i *Server) withDiagnostics(_ context.Context) error {
 	i.HandleFunc("/debug/pprof/profile", pprof.Profile)
 	i.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	i.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	return nil
+}
+
+func (i *Server) withReady(_ context.Context) error {
+	i.ServeMux.Handle(ReadyEndpoint, health.ReadinessHandler())
 	return nil
 }
 

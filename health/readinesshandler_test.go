@@ -36,7 +36,7 @@ func TestReadinessHandler(t *testing.T) {
 	}
 
 	// signal to handler that process is unready. should return StatusServiceUnavailable
-	health.UnReady()
+	health.Unready()
 	resp, err = client.Do(req)
 	if err != nil {
 		t.Fatalf("failed to do request: %v", err)
