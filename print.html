@@ -2478,6 +2478,9 @@ matcher:
     period: &quot;&quot;
     disable_updaters: false
     update_retention: 2
+matchers:
+    names: nil
+    config: nil
 updaters:
     sets: nil
     config: nil
@@ -2623,6 +2626,38 @@ Defaults to 10
 
 If a value of 0 is provided GC is disabled.
 </code></pre>
+<h3 id="matchers-object"><a class="header" href="#matchers-object">matchers: &lt;object&gt;</a></h3>
+<pre><code>Matchers provides configuration for the in-tree Matchers and RemoteMatchers.
+</code></pre>
+<h4 id="names-string"><a class="header" href="#names-string"> names: []string</a></h4>
+<pre><code>A list of string values informing the matcher factory about enabled matchers.
+
+If the value is nil the default list of Matchers will run:
+    &quot;alpine&quot;
+    &quot;aws&quot;
+    &quot;debian&quot;
+    &quot;oracle&quot;
+    &quot;photon&quot;
+    &quot;python&quot;
+    &quot;rhel&quot;
+    &quot;suse&quot;
+    &quot;ubuntu&quot;
+    &quot;crda&quot;
+
+If an empty list is provided zero matchers will run.
+</code></pre>
+<h4 id="config-"><a class="header" href="#config-"> config: {}</a></h4>
+<pre><code>Provides configuration to specific matcher.
+
+A map keyed by the name of the matcher containing a sub-object which will be provided to the matchers factory constructor.
+
+A hypothetical  example:
+  config:
+    python:
+      ignore_vulns:
+        - CVE-XYZ
+        - CVE-ABC
+</code></pre>
 <h3 id="updaters-object"><a class="header" href="#updaters-object">updaters: &lt;object&gt;</a></h3>
 <pre><code>Updaters provides configuration for the Matcher's update manager.
 </code></pre>
@@ -2642,7 +2677,7 @@ If the value is nil the default set of Updaters will run:
 
 If an empty list is provided zero updaters will run.
 </code></pre>
-<h4 id="config-"><a class="header" href="#config-"> config: {}</a></h4>
+<h4 id="config--1"><a class="header" href="#config--1"> config: {}</a></h4>
 <pre><code>Provides configuration to specific updater sets.
 
 A map keyed by the name of the updater set name containing a sub-object which will be provided to the updater set's constructor. 
