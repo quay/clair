@@ -2,9 +2,19 @@
 ## [Unreleased]
 
 
-<a name="v4.0.3"></a>
-## [v4.0.3] - 2021-03-11
+<a name="v4.0.4"></a>
+## [v4.0.4] - 2021-03-25
 ### Chore
+- [4ff4c90](https://github.com/quay/clair/commit/4ff4c9082573cadf8c96b6e4f5e67aa46ac31699): bump cc to stable v0.1.24
+### Cicd
+- [0800ba4](https://github.com/quay/clair/commit/0800ba46b160c30c623f0ad7062fe7882604233e): sort changelog by semver
+### Initialize
+- [7c4787b](https://github.com/quay/clair/commit/7c4787bfb1585d54f0ef371487228cb4941db5a0): wire up DisableUpdaters option
+
+<a name="v4.0.3"></a>
+## [v4.0.3] - 2021-03-12
+### Chore
+- [a844fb2](https://github.com/quay/clair/commit/a844fb2290bdaeb2d6f99c013e1ea3ab2b17dc6f): v4.0.3 changelog bump
 - [a26eb80](https://github.com/quay/clair/commit/a26eb80d83bf0e993ccd7df977be6bc456a0de4c): bump cc stable to v0.1.23
 
 <a name="v4.0.2"></a>
@@ -1358,7 +1368,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.3...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.0.4...HEAD
+[v4.0.4]: https://github.com/quay/clair/compare/v4.0.3...v4.0.4
 [v4.0.3]: https://github.com/quay/clair/compare/v4.0.2...v4.0.3
 [v4.0.2]: https://github.com/quay/clair/compare/v4.0.1...v4.0.2
 [v4.0.1]: https://github.com/quay/clair/compare/v4.0.0...v4.0.1
