@@ -4,6 +4,7 @@ info:
   title: CHANGELOG
   repository_url: https://github.com/quay/clair
 options:
+  tag_sort_by: semver
   commits:
     sort_by: Scope
   commit_groups:
