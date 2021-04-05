@@ -586,8 +586,8 @@ github.com/prometheus/procfs v0.3.0 h1:Uehi/mxLK0eiUc0H0++5tpMGTexB8wZ598MIgU8Vp
 github.com/prometheus/procfs v0.3.0/go.mod h1:lV6e/gmhEcM9IjHGsFOCxxuZ+z1YqCvr4OA4YeYWdaU=
 github.com/quay/alas v1.0.1 h1:MuFpGGXyZlDD7+F/hrnMZmzhS8P2bjRzX9DyGmyLA+0=
 github.com/quay/alas v1.0.1/go.mod h1:pseepSrG9pwry1joG7RO/RNRFJaWqiqx9qeoomeYwEk=
-github.com/quay/claircore v0.3.3 h1:MIF3RLA30bwemwFo3Uoe7Q6C94h0Zc1vuWAPlUB/3po=
-github.com/quay/claircore v0.3.3/go.mod h1:WqS0z0rnQfCPoFpoSNUYK6TilcFcVSyfIq7QmYa7lSg=
+github.com/quay/claircore v0.4.0 h1:ugTFGUH9GC2/E3Su0ml+tUzf+O8y6bPg6B/TWaMReg0=
+github.com/quay/claircore v0.4.0/go.mod h1:vVxEN6ugwcneOkiVEMJC50QoJnRDbPRGNInH094FLZY=
 github.com/quay/goval-parser v0.8.6 h1:h1Xg3SZR/6I7UVa1LcsQZvQft/q7sJbosmFrjzSmdqE=
 github.com/quay/goval-parser v0.8.6/go.mod h1:Y0NTNfPYOC7yxsYKzJOrscTWUPq1+QbtHw4XpPXWPMc=
 github.com/quay/zlog v0.0.0-20210113185248-ce16eed1dcec h1:v6gbUFTnms8pwArSDyE4rVK1ySLbxy9EQrbQqdOhAyY=
