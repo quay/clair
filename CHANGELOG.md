@@ -7,6 +7,7 @@
 ### All
 - [a5bfaeb](https://github.com/quay/clair/commit/a5bfaeb33cc43350234345aba0059a02098f0d67): switch to using codec package
 ### Chore
+- [4734435](https://github.com/quay/clair/commit/473443575e0160cdc83574dcd48982d9922ddf4e): v4.1.0-alpha.1 changelog bump
 - [6e8a838](https://github.com/quay/clair/commit/6e8a838305c6bdc6a71e3b3a9ee5735660ebbd22): bump cc to v0.4.0
 - [5a6f1c3](https://github.com/quay/clair/commit/5a6f1c3b24f9c178838e905a1435078f9706a7b9): update claircore version for database fix
 - [ea0378d](https://github.com/quay/clair/commit/ea0378d4d67376ebb924b7fb78d4d4f22ad9e1de): bump cc v0.3.0
