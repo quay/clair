@@ -2,8 +2,109 @@
 ## [Unreleased]
 
 
+<a name="v4.1.0-alpha.1"></a>
+## [v4.1.0-alpha.1] - 2021-04-05
+### All
+- [a5bfaeb](https://github.com/quay/clair/commit/a5bfaeb33cc43350234345aba0059a02098f0d67): switch to using codec package
+### Chore
+- [6e8a838](https://github.com/quay/clair/commit/6e8a838305c6bdc6a71e3b3a9ee5735660ebbd22): bump cc to v0.4.0
+- [5a6f1c3](https://github.com/quay/clair/commit/5a6f1c3b24f9c178838e905a1435078f9706a7b9): update claircore version for database fix
+- [ea0378d](https://github.com/quay/clair/commit/ea0378d4d67376ebb924b7fb78d4d4f22ad9e1de): bump cc v0.3.0
+- [6e195c9](https://github.com/quay/clair/commit/6e195c99a14139360c8d09f90c94024eb7d27b67): fix yaml file indentation issue
+### Cicd
+- [b1145e3](https://github.com/quay/clair/commit/b1145e3a1c5e8faf3d1a64a403de940386b73102): sort changelog by semver
+- [7dc55fa](https://github.com/quay/clair/commit/7dc55fa9bb0b968ab580c7d6d0ea4ffa053eaba0): bump in go.16, bump out go1.14
+- [d5e57af](https://github.com/quay/clair/commit/d5e57afb594d58cf817a962d9e282c820ab6577e): enable CI on stable branches
+- [f7737e5](https://github.com/quay/clair/commit/f7737e58cfca3640d4a901a658317becb47ba2af): fix openshift ci/cd script
+- [30c0311](https://github.com/quay/clair/commit/30c0311a8b1584a40f5b956b3b3d9e9ab7eee18a): update golang container for go-mod in app-sre
+- [cb656df](https://github.com/quay/clair/commit/cb656dfbd69ff1ce11976c7de672b50277091ab8): add notifier to app interface
+- [9254ab6](https://github.com/quay/clair/commit/9254ab66ea7f1b9711242026045da35b7ffa2782): use quay.io image in CI and Dockerfile
+### Clair
+- [ecd8999](https://github.com/quay/clair/commit/ecd8999cbfd6b9140f0aa8aebc11a67cbefcb4d2): fix initialization error logging
+- [dc2f893](https://github.com/quay/clair/commit/dc2f8936a564fbc234e1b8f00a3eb4778452f2ec): reorganize initialization
+- [391c2f7](https://github.com/quay/clair/commit/391c2f766bcbf9c2392c12dca2bb9f225f1ef424): add Shutdown struct
+### Claircore
+- [f183421](https://github.com/quay/clair/commit/f1834212272b07f02228b04a67e9339001dc51f8): bump to v0.2.0
+### Clairctl
+- [5740a1b](https://github.com/quay/clair/commit/5740a1b0427c81ae5f447add372db43a1ec73dbf): Add subpath to clairctl
+### Client
+- [bd50a95](https://github.com/quay/clair/commit/bd50a9570d996578e0209286a66ec3d7f41d6aaf): remove request body buffering
+- [ce11fd7](https://github.com/quay/clair/commit/ce11fd7077c2fb10715b37a8248b42583d930462): fix panic on request failure
+ -  [#1186](https://github.com/quay/clair/issues/1186)### Codec
+- [1fb6dcf](https://github.com/quay/clair/commit/1fb6dcfd32143520aa348b184e865be7a6081134): add package for codec pooling
+### Config
+- [e9390fa](https://github.com/quay/clair/commit/e9390fadc24e53e455360f709e79674f752c4a29): add matchers settings
+- [eb519e0](https://github.com/quay/clair/commit/eb519e0752d3cf7f5f8daeefd4ad9bd29cbfa8c2): allow gc to be disabled
+- [f2d7313](https://github.com/quay/clair/commit/f2d731341722e3d59c9351c10b7e8eedbe74f276): rework into specific validators
+### Docs
+- [0f230f9](https://github.com/quay/clair/commit/0f230f99f22150a00b36654ee8a5a7674e5507f7): add support matrix
+- [102ae88](https://github.com/quay/clair/commit/102ae88dd84c1f769b8c037226d92b301d887aab): update cli reference
+- [9d0a2b2](https://github.com/quay/clair/commit/9d0a2b20a6808f0e86cbd4f2a6046a6c7abdc2ea): fix psk related config references
+- [44303dc](https://github.com/quay/clair/commit/44303dccfd26935fd66ff041e22602c709c4a428): install clairctl correctly
+- [a3bb1b6](https://github.com/quay/clair/commit/a3bb1b6d8caebf228ac39b8793d5326bea0d1b55): use correct clairctl subcommands
+ - Closes [#1122](https://github.com/quay/clair/issues/1122)### Documentation
+- [2e65925](https://github.com/quay/clair/commit/2e6592500fbe9c3197782133965de6503b07b6ab): modified testing.md for clarity
+ -  [#1180](https://github.com/quay/clair/issues/1180)### Httptransport
+- [21dc720](https://github.com/quay/clair/commit/21dc720a7f1e63e731eadbf72cf192913bf88c39): add mime type to indexer and matcher handler
+- [8616cc6](https://github.com/quay/clair/commit/8616cc68b030fc417c693b3d2dc7208015ce9f4e): return Accepted when not ready
+- [1ac26da](https://github.com/quay/clair/commit/1ac26daf5501876495ec09f4e67b50eaca4bd1a5): fix panic in metrics registration
+- [7305b3d](https://github.com/quay/clair/commit/7305b3d735786e340833e045e2cd5888c8af866b): use correct handler for state endpoint
+- [df5e7f9](https://github.com/quay/clair/commit/df5e7f9658b1fed55d067013656115b062127c23): check for err before deferring resp.Body.Close()
+### Initialize
+- [8a2df09](https://github.com/quay/clair/commit/8a2df099fe2e69a572e8d81b352f688f82de341a): remove New function
+- [2d27ae5](https://github.com/quay/clair/commit/2d27ae5cd3fe55737c2fa02b46616ec09ade47c5): add standalone initialization functions
+### Instrospection
+- [b78f954](https://github.com/quay/clair/commit/b78f954dbf3210f7deb87dc371b1d35cba216d78): bump to opentelemetry 0.16.0
+### Introspection
+- [1ece08f](https://github.com/quay/clair/commit/1ece08f49434828c8c672f08ec45844b99187983): database metrics for notifier
+- [84ba35f](https://github.com/quay/clair/commit/84ba35f29ee81849cb2f424b3624895f9bd05a79): implement prometheus http
+### Local-Dev
+- [1c85589](https://github.com/quay/clair/commit/1c85589abdef98b5af8d4f6e2cd9eb5db6a723a0): remove unintented change in config.yaml
+### Logging
+- [9f3d167](https://github.com/quay/clair/commit/9f3d167d5d85d345c7d0ee666be075a545a553f4): move to zlog throughout
+### Matcher
+- [858c540](https://github.com/quay/clair/commit/858c540b2ef9b8d7f71d16bbe3ba797f73f654ab): add Initialized method
+### Notifier
+- [e7bf3b1](https://github.com/quay/clair/commit/e7bf3b1730e04ad10ec4baef1643556bf5626090): construct notification objects directly
+- [9962202](https://github.com/quay/clair/commit/99622021c594149a0b0d183b6349e2ee7139e5d2): do AffectedManifests calls in chunks
+### Severity_mapping
+- [8e39fa4](https://github.com/quay/clair/commit/8e39fa40eebca7b50ab29f0001686fa7c5c49e1e): remove defcon1 severity
+### Updaters
+- [8105b03](https://github.com/quay/clair/commit/8105b033fb53f0907373f6af76af954fe95a856d): plumb update retention in
+
+<a name="v4.0.4"></a>
+## [v4.0.4] - 2021-03-25
+### Chore
+- [4bfd7d1](https://github.com/quay/clair/commit/4bfd7d11c3f1290af889e258283f585f5f4abbd4): v4.0.4 changelog bump
+- [4ff4c90](https://github.com/quay/clair/commit/4ff4c9082573cadf8c96b6e4f5e67aa46ac31699): bump cc to stable v0.1.24
+### Cicd
+- [0800ba4](https://github.com/quay/clair/commit/0800ba46b160c30c623f0ad7062fe7882604233e): sort changelog by semver
+### Initialize
+- [7c4787b](https://github.com/quay/clair/commit/7c4787bfb1585d54f0ef371487228cb4941db5a0): wire up DisableUpdaters option
+
+<a name="v4.0.3"></a>
+## [v4.0.3] - 2021-03-12
+### Chore
+- [a844fb2](https://github.com/quay/clair/commit/a844fb2290bdaeb2d6f99c013e1ea3ab2b17dc6f): v4.0.3 changelog bump
+- [a26eb80](https://github.com/quay/clair/commit/a26eb80d83bf0e993ccd7df977be6bc456a0de4c): bump cc stable to v0.1.23
+
+<a name="v4.0.2"></a>
+## [v4.0.2] - 2021-02-18
+### Chore
+- [5c236e6](https://github.com/quay/clair/commit/5c236e6d2afe05c92245f817337341ae6478125d): 4.0.2 changelog bump
+### Client
+- [8b63953](https://github.com/quay/clair/commit/8b63953e99e0246a9428205cf51c66ec3af65ba3): fix panic on request failure
+ -  [#1186](https://github.com/quay/clair/issues/1186) -  [#1188](https://github.com/quay/clair/issues/1188)
+<a name="v4.0.1"></a>
+## [v4.0.1] - 2021-02-15
+### Chore
+- [8a392f1](https://github.com/quay/clair/commit/8a392f1bd3a381e98ece87e9ccd4842113563bb4): v4.0.1 changelog bump
+- [c47be87](https://github.com/quay/clair/commit/c47be87d6fbb0a34960001a45246d3936e5f8710): bump cc to v0.1.22 stable
+
 <a name="v4.0.0"></a>
-## [v4.0.0] - 2020-12-14
+## [v4.0.0] - 2020-12-15
+### Chore
+- [73cdf7d](https://github.com/quay/clair/commit/73cdf7d904a1aa6341a27c3ecae11c89d7444e39): v4.0.0 changelog bump
 ### Reverts
 - Dockerfile: Get build image from Quay instead of DockerHub
 - cicd: use golang image from quay.io
@@ -1338,7 +1439,12 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.0.0...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.1.0-alpha.1...HEAD
+[v4.1.0-alpha.1]: https://github.com/quay/clair/compare/v4.0.4...v4.1.0-alpha.1
+[v4.0.4]: https://github.com/quay/clair/compare/v4.0.3...v4.0.4
+[v4.0.3]: https://github.com/quay/clair/compare/v4.0.2...v4.0.3
+[v4.0.2]: https://github.com/quay/clair/compare/v4.0.1...v4.0.2
+[v4.0.1]: https://github.com/quay/clair/compare/v4.0.0...v4.0.1
 [v4.0.0]: https://github.com/quay/clair/compare/v4.0.0-rc.24...v4.0.0
 [v4.0.0-rc.24]: https://github.com/quay/clair/compare/v4.0.0-rc.23...v4.0.0-rc.24
 [v4.0.0-rc.23]: https://github.com/quay/clair/compare/v4.0.0-rc.22...v4.0.0-rc.23
