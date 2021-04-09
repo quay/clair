@@ -89,8 +89,7 @@ By default, Quay displays security scanner results on the Tags page of the given
 
 You may want to play with either Clair or Quay's configuration. 
 If so, the configuration files can be found inside the repository at
-`local-dev/quay/config.yaml` and `local-dev/clair.yaml`.
-
+local-dev/quay/config.yaml` and `local-dev/clair/config.yaml`.
 Any changes to the configs will require a restart of the relevant service. Take a look at the `Makefile` for the various restart targets.
 
 ## Tearing it down
