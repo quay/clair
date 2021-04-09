@@ -1,11 +1,13 @@
 package codec
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 )
@@ -70,5 +72,30 @@ func BenchmarkDecodeStdlib(b *testing.B) {
 		if !cmp.Equal(got, want) {
 			b.Error(cmp.Diff(got, want))
 		}
+	}
+}
+
+func TestTimeNotNull(t *testing.T) {
+	type s struct {
+		Time time.Time
+	}
+	var b bytes.Buffer
+	enc := GetEncoder(&b)
+	defer PutEncoder(enc)
+
+	// Example encoding of a populated time:
+	if err := enc.Encode(s{Time: time.Unix(0, 0).UTC()}); err != nil {
+		t.Error(err)
+	}
+	t.Log(b.String())
+	b.Reset()
+
+	// Now encode a zero time and make sure it's a string.
+	if err := enc.Encode(s{}); err != nil {
+		t.Error(err)
+	}
+	t.Log(b.String())
+	if strings.Contains(b.String(), "null") {
+		t.Error("wanted non-null encoding")
 	}
 }

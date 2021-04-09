@@ -15,6 +15,10 @@ func init() {
 	// This is documented to cause "smart buffering".
 	jsonHandle.WriterBufferSize = 4096
 	jsonHandle.ReaderBufferSize = 4096
+	// Force calling time.Time's Marshal function. This causes an allocation on
+	// every time.Time value, but is the same behavior as the stdlib json
+	// encoder. If we decide nulls are OK, this should get removed.
+	jsonHandle.TimeNotBuiltin = true
 }
 
 // Encoder and decoder pools, to reuse if possible.
