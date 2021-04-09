@@ -2,11 +2,20 @@
 ## [Unreleased]
 
 
+<a name="v4.1.0-alpha.2"></a>
+## [v4.1.0-alpha.2] - 2021-04-09
+### Codec
+- [d5cac13](https://github.com/quay/clair/commit/d5cac1315481a87f596f395e1c2da2bf57eaf18c): use stdlib time.Time encoding
+ - Closes [#1231](https://github.com/quay/clair/issues/1231)### Docs
+- [60f9684](https://github.com/quay/clair/commit/60f9684accfd7e6b9e1bd585a55874803e1160f5): minor updates
+- [cbdc9ca](https://github.com/quay/clair/commit/cbdc9caab450489377ab1d6bb19429d54df639cc): update configuration file reference
+
 <a name="v4.1.0-alpha.1"></a>
 ## [v4.1.0-alpha.1] - 2021-04-05
 ### All
 - [a5bfaeb](https://github.com/quay/clair/commit/a5bfaeb33cc43350234345aba0059a02098f0d67): switch to using codec package
 ### Chore
+- [493beb1](https://github.com/quay/clair/commit/493beb13d3a9d0739bcffa74217f7e2107f8438d): v4.1.0-alpha.1 changelog bump
 - [4734435](https://github.com/quay/clair/commit/473443575e0160cdc83574dcd48982d9922ddf4e): v4.1.0-alpha.1 changelog bump
 - [6e8a838](https://github.com/quay/clair/commit/6e8a838305c6bdc6a71e3b3a9ee5735660ebbd22): bump cc to v0.4.0
 - [5a6f1c3](https://github.com/quay/clair/commit/5a6f1c3b24f9c178838e905a1435078f9706a7b9): update claircore version for database fix
@@ -1440,7 +1449,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.1.0-alpha.1...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.1.0-alpha.2...HEAD
+[v4.1.0-alpha.2]: https://github.com/quay/clair/compare/v4.1.0-alpha.1...v4.1.0-alpha.2
 [v4.1.0-alpha.1]: https://github.com/quay/clair/compare/v4.0.4...v4.1.0-alpha.1
 [v4.0.4]: https://github.com/quay/clair/compare/v4.0.3...v4.0.4
 [v4.0.3]: https://github.com/quay/clair/compare/v4.0.2...v4.0.3
