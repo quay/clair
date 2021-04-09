@@ -230,8 +230,7 @@ podman push --tls-verify=false localhost:8080/clairv4-org/testing:latest
 <h2 id="making-changes-to-configuration"><a class="header" href="#making-changes-to-configuration">Making changes to configuration</a></h2>
 <p>You may want to play with either Clair or Quay's configuration. 
 If so, the configuration files can be found inside the repository at
-<code>local-dev/quay/config.yaml</code> and <code>local-dev/clair.yaml</code>.</p>
-<p>Any changes to the configs will require a restart of the relevant service. Take a look at the <code>Makefile</code> for the various restart targets.</p>
+local-dev/quay/config.yaml<code>and</code>local-dev/clair/config.yaml<code>. Any changes to the configs will require a restart of the relevant service. Take a look at the </code>Makefile` for the various restart targets.</p>
 <h2 id="tearing-it-down"><a class="header" href="#tearing-it-down">Tearing it down</a></h2>
 <pre><code>make local-dev-down
 </code></pre>
