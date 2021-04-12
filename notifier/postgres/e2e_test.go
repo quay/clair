@@ -20,13 +20,13 @@ const (
 )
 
 // TestE2E performs an end to end test ensuring creating,
-// retreiving, bookkeeping, and deleting of notifications
-// and asssociated data works correctly
+// retrieving, bookkeeping, and deleting of notifications
+// and associated data works correctly.
 func TestE2E(t *testing.T) {
 	integration.Skip(t)
 	digest, _ := claircore.ParseDigest("sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a")
 	notificationID := uuid.New()
-	// this function puts a single noification undertest
+	// this function puts a single notification under test
 	vuln, vsummary := cctest.GenUniqueVulnerabilities(1, updater)[0], notifier.VulnSummary{}
 	vsummary.FromVulnerability(vuln)
 	notifications := []notifier.Notification{
@@ -37,7 +37,7 @@ func TestE2E(t *testing.T) {
 		},
 	}
 	ctx := context.Background()
-	db, store, _, teardown := TestStore(ctx, t)
+	db, store, teardown := TestStore(ctx, t)
 	defer teardown()
 	e := e2e{
 		notificaitonID: notificationID,

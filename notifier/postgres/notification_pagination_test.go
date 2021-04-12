@@ -73,7 +73,8 @@ func TestNotePagination(t *testing.T) {
 			t.Parallel()
 			ctx := context.Background()
 			ctx = zlog.Test(ctx, t)
-			_, store, _, _ := TestStore(ctx, t)
+			_, store, teardown := TestStore(ctx, t)
+			defer teardown()
 
 			noteID := uuid.New()
 			updateID := uuid.New()
