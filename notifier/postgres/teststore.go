@@ -35,6 +35,7 @@ func TestStore(ctx context.Context, t testing.TB) (*sqlx.DB, *Store, func()) {
 	cfg := db.Config()
 	cfg.ConnConfig.LogLevel = pgx.LogLevelError
 	cfg.ConnConfig.Logger = testingadapter.NewLogger(t)
+	ProfileSetup(cfg)
 	// we are going to use pgx for more control over connection pool and
 	// and a cleaner api around bulk inserts
 	pool, err := pgxpool.ConnectConfig(ctx, cfg)

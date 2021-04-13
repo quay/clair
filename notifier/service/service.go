@@ -175,6 +175,7 @@ func storeInit(ctx context.Context, opts Opts) (*postgres.Store, *pgxpool.Pool, 
 			Msg("set database connection limit to minimum")
 	}
 	cfg.MaxConns = int32(lim)
+	postgres.ProfileSetup(cfg)
 	pool, err := pgxpool.ConnectConfig(ctx, cfg)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create ConnPool: %v", err)
