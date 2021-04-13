@@ -63,6 +63,7 @@ type Opts struct {
 	DeliveryInterval time.Duration
 	Migrations       bool
 	ConnString       string
+	ConnLimit        int
 	Matcher          matcher.Service
 	Indexer          indexer.Service
 	DisableSummary   bool
@@ -162,7 +163,18 @@ func storeInit(ctx context.Context, opts Opts) (*postgres.Store, *pgxpool.Pool, 
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to parse ConnString: %v", err)
 	}
-	cfg.MaxConns = 30
+	lim := processors * 2
+	if opts.ConnLimit > lim {
+		lim = opts.ConnLimit
+		zlog.Debug(ctx).
+			Int("limit", lim).
+			Msg("configured database connection limit")
+	} else {
+		zlog.Info(ctx).
+			Int("limit", lim).
+			Msg("set database connection limit to minimum")
+	}
+	cfg.MaxConns = int32(lim)
 	pool, err := pgxpool.ConnectConfig(ctx, cfg)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create ConnPool: %v", err)
