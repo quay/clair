@@ -159,3 +159,8 @@ docs-build:
 	mdbook build
 	rsync --recursive --delete-after --exclude 'v4.*' --exclude .git\
 		./book/ $(DOCS_DIR)/
+
+# runs unit tests
+.PHONY: unit
+unit:
+	go test -race ./...
