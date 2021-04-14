@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"sync/atomic"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -216,13 +217,13 @@ func testProcessorCreate(t *testing.T) {
 			}, nil
 		},
 	}
-	count := 0
+	count := uint64(0)
 	im := &indexer.Mock{
 		AffectedManifests_: func(ctx context.Context, vulns []claircore.Vulnerability) (*claircore.AffectedManifests, error) {
-			if count > 1 {
+			if atomic.LoadUint64(&count) > 1 {
 				return nil, fmt.Errorf("unexpected number of calls")
 			}
-			count++
+			atomic.AddUint64(&count, 1)
 			switch vulns[0].ID {
 			case "0":
 				return affectedManifestsAdd, nil
