@@ -52,10 +52,11 @@ func TestUpdateEndpoints(t *testing.T) {
 	if err := s.configureMatcherMode(ctx); err != nil {
 		t.Error(err)
 	}
-	srv := httptest.NewServer(s)
+	srv := httptest.NewUnstartedServer(s)
 	srv.Config.BaseContext = func(_ net.Listener) context.Context {
 		return ctx
 	}
+	srv.Start()
 	defer srv.Close()
 	u, err := url.Parse(srv.URL)
 	if err != nil {
