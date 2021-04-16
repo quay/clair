@@ -25,10 +25,25 @@ jobs:
       - name: Changelog
         shell: bash
         run: |
-          curl -o /tmp/git-chglog -L https://github.com/ldelossa/git-chglog/releases/download/v0.11.2-sortbysemver/linux.amd64.git-chglog
+          curl -o /tmp/git-chglog.tar.gz -fsSL\
+            https://github.com/git-chglog/git-chglog/releases/download/v0.14.0/git-chglog_0.14.0_linux_amd64.tar.gz
+          tar xvf /tmp/git-chglog.tar.gz --directory /tmp
           chmod u+x /tmp/git-chglog
           echo "creating change log for tag: ${{ github.event.inputs.tag }}"
-          /tmp/git-chglog --tag-filter-pattern "v4" --next-tag "${{ github.event.inputs.tag }}" -o CHANGELOG.md v4.0.0-alpha.2..
+
+          # if this is a release branch filter our change
+          # log to only include logs with the same minor
+          # versions
+          # otherwise just filter v4 for full v4 history
+          # on main branch
+          filter_tag="--tag-filter-pattern v4"
+          branch=${{ github.event.inputs.branch }}
+          echo "discovered branch $branch"
+          if [[ ${branch%-*} == "release" ]]; then 
+            filter_tag="--tag-filter-pattern v${branch#release-}"
+          fi
+
+          /tmp/git-chglog $filter_tag --next-tag "${{ github.event.inputs.tag }}" -o CHANGELOG.md v4.0.0-alpha.2..
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v3.5.1
         with:

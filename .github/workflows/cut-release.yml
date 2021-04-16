@@ -35,7 +35,9 @@ jobs:
             touch changelog
             exit 0
           fi
-          curl -o /tmp/git-chglog -L https://github.com/ldelossa/git-chglog/releases/download/v0.11.2-sortbysemver/linux.amd64.git-chglog
+          curl -o /tmp/git-chglog.tar.gz -fsSL\
+            https://github.com/git-chglog/git-chglog/releases/download/v0.14.0/git-chglog_0.14.0_linux_amd64.tar.gz
+          tar xvf /tmp/git-chglog.tar.gz --directory /tmp
           chmod u+x /tmp/git-chglog
           echo "creating change log for tag: $TAG"
           /tmp/git-chglog "${TAG}" > changelog
