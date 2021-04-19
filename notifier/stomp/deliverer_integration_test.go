@@ -2,10 +2,13 @@ package stomp
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
+	"github.com/go-stomp/stomp"
 	"github.com/google/uuid"
 	"github.com/quay/claircore/test/integration"
 	"github.com/quay/zlog"
@@ -26,10 +29,11 @@ func TestDeliverer(t *testing.T) {
 	)
 
 	var (
-		uri  = os.Getenv("STOMP_CONNECTION_STRING")
-		conf = Config{
+		uri   = os.Getenv("STOMP_CONNECTION_STRING")
+		queue = uuid.New().String()
+		conf  = Config{
 			Callback:    callback,
-			Destination: "notifications",
+			Destination: queue,
 			Direct:      false,
 		}
 	)
@@ -63,5 +67,52 @@ func TestDeliverer(t *testing.T) {
 	}
 	if err := g.Wait(); err != nil {
 		t.Fatalf("test failed: %v", err)
+	}
+
+	// create consumer
+	conn, err := stomp.Dial("tcp", uri)
+	if err != nil {
+		t.Fatalf("failed to connect to broker at %s: %v", uri, err)
+	}
+	defer conn.Disconnect()
+
+	sub, err := conn.Subscribe(queue, stomp.AckClient)
+	if err != nil {
+		t.Fatalf("failed to subscribe to %s: %v", queue, err)
+	}
+	defer sub.Unsubscribe()
+
+	// read messages
+	for i := 0; i < 4; i++ {
+		m, err := sub.Read()
+		if err != nil {
+			t.Fatalf("cannot read msg from subscription: %v", err)
+		}
+		if m.ContentType != "application/json" {
+			t.Errorf("msg content type mismatch: expected %s, got %s", "application/json", m.ContentType)
+		}
+		var msgBody map[string]string
+		if err = json.Unmarshal(m.Body, &msgBody); err != nil {
+			t.Errorf("cannot unmarshall msg body into map: %v", err)
+		}
+		nid, ok := msgBody["notification_id"]
+		if !ok {
+			t.Errorf("cannot find \"notification_id\" key in msg body")
+		}
+		cb, ok := msgBody["callback"]
+		if !ok {
+			t.Errorf("cannot find \"callback\" key in msg body")
+		}
+		if cb != fmt.Sprintf("%s/%s", callback, nid) {
+			t.Errorf("callback mismatch: expected: %s, got %s", fmt.Sprintf("%s/%s", callback, nid), cb)
+		}
+		conn.Ack(m)
+	}
+
+	// check if no msgs are left in the queue
+	select {
+	case m := <-sub.C:
+		t.Fatalf("there is still msg in subscription channel: %#v", m)
+	case <-time.After(1 * time.Millisecond): // no msg found, as expected
 	}
 }

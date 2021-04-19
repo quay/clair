@@ -2,9 +2,11 @@ package amqp
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"golang.org/x/sync/errgroup"
 
@@ -56,10 +58,14 @@ func TestDeliverer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to connect to broker at %v: %v", uri, err)
 	}
+	defer conn.Close()
+
 	ch, err := conn.Channel()
 	if err != nil {
 		t.Fatalf("failed to obtain channel from broker %v: %v", uri, err)
 	}
+	defer ch.Close()
+
 	// this queue will autobind to the default "direct" exchange
 	// and the queue name may be used as the routing key.
 	_, err = ch.QueueDeclare(
@@ -96,4 +102,63 @@ func TestDeliverer(t *testing.T) {
 		t.Fatalf("test failed: %v", err)
 	}
 
+	// create consumer
+	consumerConn, err := samqp.Dial(uri)
+	if err != nil {
+		t.Fatalf("failed to create consumer connection: %v", err)
+	}
+	defer consumerConn.Close()
+
+	consumerCh, err := consumerConn.Channel()
+	if err != nil {
+		t.Fatalf("failed to create consumer channel: %v", err)
+	}
+	defer consumerCh.Close()
+
+	msgs, err := consumerCh.Consume(
+		queueAndKey,
+		"test",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		t.Fatalf("failed to start consuming messages: %v", err)
+	}
+
+	// read messages
+	for i := 0; i < 4; i++ {
+		m := <-msgs
+		if m.ContentType != "application/json" {
+			t.Errorf("msg content type mismatch: expected %s, got %s", "application/json", m.ContentType)
+		}
+		if m.AppId != "clairV4-notifier" {
+			t.Errorf("msg app ID mismatch: expected %s, got %s", "clairV4-notifier", m.AppId)
+		}
+		var msgBody map[string]string
+		if err = json.Unmarshal(m.Body, &msgBody); err != nil {
+			t.Errorf("cannot unmarshall msg body into map: %v", err)
+		}
+		nid, ok := msgBody["notification_id"]
+		if !ok {
+			t.Errorf("cannot find \"notification_id\" key in msg body")
+		}
+		cb, ok := msgBody["callback"]
+		if !ok {
+			t.Errorf("cannot find \"callback\" key in msg body")
+		}
+		if cb != fmt.Sprintf("%s/%s", callback, nid) {
+			t.Errorf("callback mismatch: expected: %s, got %s", fmt.Sprintf("%s/%s", callback, nid), cb)
+		}
+		m.Ack(false)
+	}
+
+	// check if msgs channel is empty
+	select {
+	case m := <-msgs:
+		t.Fatalf("there is still msg in msgs channel: %#v", m)
+	case <-time.After(1 * time.Millisecond): // no msg found, as expected
+	}
 }
