@@ -363,7 +363,8 @@ Integer 0 or greater.
 If `direct` is true this value will inform notifier how many notifications
 to send in a single direct delivery.  For example, if `direct` is set to
 `true` and `rollup` is set to `5`, the notifier will deliver no more then
-5 notifications in a single json payload to the broker.
+5 notifications in a single json payload to the broker. Setting the value
+to 0 will effectively set it to 1.
 
 #### `$.notifier.amqp.exchange`
 The AMQP Exchange to connect to.
@@ -442,7 +443,8 @@ Integer 0 or greater.
 If `direct` is `true`, this value will limit the number of notifications
 sent in a single direct delivery.  For example, if `direct` is set to
 `true` and `rollup` is set to `5`, the notifier will deliver no more
-then 5 notifications in a single json payload to the broker.
+then 5 notifications in a single json payload to the broker. Setting the value
+to 0 will effectively set it to 1.
 
 #### `$.notifier.stomp.callback`
 a URL string

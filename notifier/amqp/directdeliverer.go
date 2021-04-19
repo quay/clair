@@ -64,6 +64,7 @@ func (d *DirectDeliverer) Deliver(ctx context.Context, _ uuid.UUID) error {
 	if err != nil {
 		return &clairerror.ErrDeliveryFailed{err}
 	}
+	defer conn.Close()
 
 	ch, err := conn.Channel()
 	if err != nil {

@@ -2,9 +2,11 @@ package amqp
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/quay/clair/v4/notifier"
@@ -20,44 +22,52 @@ func TestDirectDeliverer(t *testing.T) {
 	integration.Skip(t)
 	// test start
 	table := []struct {
-		name   string
-		rollup int
-		notes  int
+		name         string
+		rollup       int
+		notes        int
+		expectedMsgs int
 	}{
 		{
-			name:   "check 0",
-			rollup: 0,
-			notes:  1,
+			name:         "check 0",
+			rollup:       0,
+			notes:        1,
+			expectedMsgs: 1,
 		},
 		{
-			name:   "check 1",
-			rollup: 1,
-			notes:  5,
+			name:         "check 1",
+			rollup:       1,
+			notes:        5,
+			expectedMsgs: 5,
 		},
 		{
-			name:   "check rollup overflow",
-			rollup: 10,
-			notes:  5,
+			name:         "check rollup overflow",
+			rollup:       10,
+			notes:        5,
+			expectedMsgs: 1,
 		},
 		{
-			name:   "check odds",
-			rollup: 3,
-			notes:  7,
+			name:         "check odds",
+			rollup:       3,
+			notes:        7,
+			expectedMsgs: 3,
 		},
 		{
-			name:   "check odds rollup",
-			rollup: 3,
-			notes:  8,
+			name:         "check odds rollup",
+			rollup:       3,
+			notes:        8,
+			expectedMsgs: 3,
 		},
 		{
-			name:   "check odds notes",
-			rollup: 4,
-			notes:  7,
+			name:         "check odds notes",
+			rollup:       4,
+			notes:        7,
+			expectedMsgs: 2,
 		},
 		{
-			name:   "check large",
-			rollup: 100,
-			notes:  1000,
+			name:         "check large",
+			rollup:       100,
+			notes:        1000,
+			expectedMsgs: 10,
 		},
 	}
 
@@ -69,6 +79,7 @@ func TestDirectDeliverer(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to connect to broker at %v: %v", uri, err)
 	}
+	defer conn.Close()
 	// our test assumes a default exchange
 	exchange := Exchange{
 		Name:       "",
@@ -76,7 +87,6 @@ func TestDirectDeliverer(t *testing.T) {
 		Durable:    true,
 		AutoDelete: false,
 	}
-	defer conn.Close()
 	for _, tt := range table {
 		t.Run(tt.name, func(t *testing.T) {
 			// rabbitmq queue declare
@@ -87,6 +97,7 @@ func TestDirectDeliverer(t *testing.T) {
 			if err != nil {
 				t.Fatalf("failed to obtain channel from broker %v: %v", uri, err)
 			}
+			defer ch.Close()
 			// this queue will autobind to the default "direct" exchange
 			// and the queue name may be used as the routing key.
 			_, err = ch.QueueDeclare(
@@ -153,6 +164,63 @@ func TestDirectDeliverer(t *testing.T) {
 			}
 			if err := g.Wait(); err != nil {
 				t.Fatalf("test failed: %v", err)
+			}
+
+			// create consumer
+			consumerConn, err := samqp.Dial(uri)
+			if err != nil {
+				t.Fatalf("failed to create consumer connection: %v", err)
+			}
+			defer consumerConn.Close()
+
+			consumerCh, err := consumerConn.Channel()
+			if err != nil {
+				t.Fatalf("failed to create consumer channel: %v", err)
+			}
+			defer consumerCh.Close()
+
+			msgs, err := consumerCh.Consume(
+				queueAndKey,
+				"test",
+				false,
+				false,
+				false,
+				false,
+				nil,
+			)
+			if err != nil {
+				t.Fatalf("failed to start consuming messages: %v", err)
+			}
+
+			// read messages
+			totalExpectedMsgs := tt.expectedMsgs * 4
+			for i := 0; i < totalExpectedMsgs; i++ {
+				m := <-msgs
+				if m.ContentType != "application/json" {
+					t.Errorf("msg content type mismatch: expected %s, got %s", "application/json", m.ContentType)
+				}
+				if m.AppId != "clairV4-notifier" {
+					t.Errorf("msg app ID mismatch: expected %s, got %s", "clairV4-notifier", m.AppId)
+				}
+				var msgBody []notifier.Notification
+				if err = json.Unmarshal(m.Body, &msgBody); err != nil {
+					t.Errorf("cannot unmarshall msg body into slice of notifications: %v", err)
+				}
+				rollup := tt.rollup
+				if tt.rollup == 0 {
+					rollup++
+				}
+				if len(msgBody) > rollup {
+					t.Errorf("found more notifications in msg than expected: rollup %d, got %d", rollup, len(msgBody))
+				}
+				m.Ack(false)
+			}
+
+			// check if msgs channel is empty
+			select {
+			case <-msgs:
+				t.Fatal("there is still msg in msgs channel")
+			case <-time.After(1 * time.Millisecond): // no msg found, as expected
 			}
 		})
 	}
