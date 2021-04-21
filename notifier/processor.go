@@ -11,7 +11,6 @@ import (
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/claircore/pkg/distlock"
 	"github.com/quay/zlog"
-	"github.com/rs/zerolog/log"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/label"
 	"golang.org/x/sync/errgroup"
@@ -148,7 +147,7 @@ func (p *Processor) create(ctx context.Context, e Event, prev uuid.UUID) error {
 	}
 
 	// Don't count up the affected manifests unless we're going to print it.
-	if ev := log.Debug(); ev.Enabled() {
+	if ev := zlog.Debug(ctx); ev.Enabled() {
 		var added, removed int
 		for _, n := range tab.N {
 			switch n.Reason {
