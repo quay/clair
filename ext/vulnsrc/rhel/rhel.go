@@ -269,10 +269,14 @@ func toFeatureVersions(criteria criteria) []database.FeatureVersion {
 			err            error
 		)
 
+		const (
+			rhelPrefix = "Red Hat Enterprise Linux "
+		)
+
 		// Attempt to parse package data from trees of criterions.
 		for _, c := range criterions {
-			if strings.Contains(c.Comment, " is installed") {
-				const prefixLen = len("Red Hat Enterprise Linux ")
+			if strings.Contains(c.Comment, " is installed") && strings.HasPrefix(c.Comment, rhelPrefix) {
+				const prefixLen = len(rhelPrefix)
 				osVersion, err = strconv.Atoi(strings.TrimSpace(c.Comment[prefixLen : prefixLen+strings.Index(c.Comment[prefixLen:], " ")]))
 				if err != nil {
 					log.WithField("criterion comment", c.Comment).Warning("could not parse Red Hat release version from criterion comment")
