@@ -65,7 +65,7 @@ type Notifier struct {
 	STOMP *stomp.Config `yaml:"stomp" json:"stomp"`
 }
 
-func (n *Notifier) Validate() error {
+func (n *Notifier) Validate(combo bool) error {
 	const (
 		DefaultPollInterval     = 5 * time.Second
 		DefaultDeliveryInterval = 5 * time.Second
@@ -73,17 +73,19 @@ func (n *Notifier) Validate() error {
 	if n.ConnString == "" {
 		return fmt.Errorf("notifier mode requires a database connection string")
 	}
-	if n.IndexerAddr == "" {
-		return fmt.Errorf("notifier mode requires a remote Indexer")
-	}
-	if n.MatcherAddr == "" {
-		return fmt.Errorf("notifier mode requires a remote Matcher")
-	}
 	if n.PollInterval < 1*time.Second {
 		n.PollInterval = DefaultPollInterval
 	}
 	if n.DeliveryInterval < 1*time.Second {
 		n.DeliveryInterval = DefaultDeliveryInterval
+	}
+	if !combo {
+		if n.IndexerAddr == "" {
+			return fmt.Errorf("notifier mode requires a remote Indexer")
+		}
+		if n.MatcherAddr == "" {
+			return fmt.Errorf("notifier mode requires a remote Matcher")
+		}
 	}
 	return nil
 }
