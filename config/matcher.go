@@ -48,27 +48,28 @@ type Matcher struct {
 	UpdateRetention int `yaml:"update_retention" json:"update_retention"`
 }
 
-func (m *Matcher) Validate() error {
+func (m *Matcher) Validate(combo bool) error {
 	const (
 		DefaultPeriod    = 30 * time.Minute
 		DefaultRetention = 10
 	)
 	if m.ConnString == "" {
-		return fmt.Errorf("matcher requies a database connection string")
-	}
-	if m.IndexerAddr == "" {
-		return fmt.Errorf("matcher mode requires a remote Indexer address")
-	}
-
-	_, err := url.Parse(m.IndexerAddr)
-	if err != nil {
-		return fmt.Errorf("failed to url parse matcher mode IndexAddr string: %v", err)
+		return fmt.Errorf("matcher requires a database connection string")
 	}
 	if m.Period == 0 {
 		m.Period = DefaultPeriod
 	}
 	if m.UpdateRetention == 1 || m.UpdateRetention < 0 {
 		m.UpdateRetention = DefaultRetention
+	}
+	if !combo {
+		if m.IndexerAddr == "" {
+			return fmt.Errorf("matcher mode requires a remote Indexer address")
+		}
+		_, err := url.Parse(m.IndexerAddr)
+		if err != nil {
+			return fmt.Errorf("failed to parse matcher mode IndexerAddr string: %v", err)
+		}
 	}
 	return nil
 }

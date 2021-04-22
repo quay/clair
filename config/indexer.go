@@ -37,7 +37,7 @@ type Indexer struct {
 	Airgap bool `yaml:"airgap" json:"airgap"`
 }
 
-func (i *Indexer) Validate() error {
+func (i *Indexer) Validate(combo bool) error {
 	const (
 		DefaultScanLockRetry = 1
 	)
@@ -45,7 +45,7 @@ func (i *Indexer) Validate() error {
 		return fmt.Errorf("indexer mode requires a database connection string")
 	}
 	if i.ScanLockRetry == 0 {
-		i.ScanLockRetry = 1
+		i.ScanLockRetry = DefaultScanLockRetry
 	}
 	return nil
 }

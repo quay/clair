@@ -59,32 +59,32 @@ type Config struct {
 }
 
 // Validate confirms the necessary values to support
-// the desired Clair Mode exist
+// the desired Clair mode exist.
 func Validate(conf *Config) error {
 	if conf.HTTPListenAddr == "" {
 		conf.HTTPListenAddr = DefaultAddress
 	}
 	switch strings.ToLower(conf.Mode) {
 	case ComboMode:
-		if err := conf.Indexer.Validate(); err != nil {
+		if err := conf.Indexer.Validate(true); err != nil {
 			return err
 		}
-		if err := conf.Matcher.Validate(); err != nil {
+		if err := conf.Matcher.Validate(true); err != nil {
 			return err
 		}
-		if err := conf.Notifier.Validate(); err != nil {
+		if err := conf.Notifier.Validate(true); err != nil {
 			return err
 		}
 	case IndexerMode:
-		if err := conf.Indexer.Validate(); err != nil {
+		if err := conf.Indexer.Validate(false); err != nil {
 			return err
 		}
 	case MatcherMode:
-		if err := conf.Matcher.Validate(); err != nil {
+		if err := conf.Matcher.Validate(false); err != nil {
 			return err
 		}
 	case NotifierMode:
-		if err := conf.Notifier.Validate(); err != nil {
+		if err := conf.Notifier.Validate(false); err != nil {
 			return err
 		}
 	default:
