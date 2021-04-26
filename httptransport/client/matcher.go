@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 
@@ -151,7 +152,9 @@ func (c *HTTP) LatestUpdateOperations(ctx context.Context) (map[string][]driver.
 	if err != nil {
 		return nil, err
 	}
-	u.Query().Add("latest", "true")
+	v := url.Values{}
+	v.Add("latest", "true")
+	u.RawQuery = v.Encode()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
