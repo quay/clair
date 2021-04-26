@@ -2,13 +2,13 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
-	"regexp"
 
-	"github.com/quay/claircore/libvuln"
 	"github.com/quay/claircore/libvuln/driver"
-	"github.com/quay/claircore/updater"
+	"github.com/quay/claircore/libvuln/jsonblob"
+	"github.com/quay/claircore/libvuln/updates"
 	_ "github.com/quay/claircore/updater/defaults"
 	"github.com/urfave/cli/v2"
 )
@@ -57,10 +57,6 @@ func exportAction(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	filter, err := regexp.Compile(cfg.Updaters.Filter)
-	if err != nil {
-		return err
-	}
 	cfgs := make(map[string]driver.ConfigUnmarshaler, len(cfg.Updaters.Config))
 	for name, node := range cfg.Updaters.Config {
 		cfgs[name] = node.Decode
@@ -71,22 +67,24 @@ func exportAction(c *cli.Context) error {
 		return err
 	}
 
-	u, err := libvuln.NewOfflineUpdater(cfgs, filter.MatchString, out)
+	store, err := jsonblob.New()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := store.Store(out); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+	}()
+	mgr, err := updates.NewManager(ctx, store, updates.LocalLockSource(), cl,
+		updates.WithConfigs(cfgs),
+		updates.WithEnabled(cfg.Updaters.Sets),
+	)
 	if err != nil {
 		return err
 	}
 
-	defs := updater.Registered()
-	cfg.Updaters.FilterSets(defs)
-	if err := updater.Configure(ctx, defs, cfgs, cl); err != nil {
-		return err
-	}
-	ufs := make([]driver.UpdaterSetFactory, 0, len(defs))
-	for _, u := range defs {
-		ufs = append(ufs, u)
-	}
-
-	if err := u.RunUpdaters(ctx, ufs...); err != nil {
+	if err := mgr.Run(ctx); err != nil {
 		// Don't exit non-zero if we run into errors, unless the strict flag was
 		// provided.
 		code := 0
