@@ -133,7 +133,16 @@ func localIndexer(ctx context.Context, cfg *config.Config) (indexer.Service, err
 			opts.ScannerConfig.Repo[name] = node.Decode
 		}
 	}
-	s, err := libindex.New(ctx, &opts)
+	tr := http.DefaultTransport.(*http.Transport).Clone()
+	// Use an empty claim because this shouldn't be talking to something that
+	// needs preconfigured authz. Callers should be providing credentials to the
+	// indexing process in the submitted manifest.
+	c, _, err := cfg.Client(tr, jwt.Claims{})
+	if err != nil {
+		return nil, mkErr(err)
+	}
+
+	s, err := libindex.New(ctx, &opts, c)
 	if err != nil {
 		return nil, mkErr(err)
 	}
