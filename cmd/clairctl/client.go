@@ -13,6 +13,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/quay/claircore"
+	"github.com/quay/zlog"
 	"github.com/tomnomnom/linkheader"
 
 	"github.com/quay/clair/v4/httptransport"
@@ -84,7 +85,10 @@ func (c *Client) getValidator(path string) string {
 }
 
 func (c *Client) setValidator(path, v string) {
-	debug.Printf("setting validator %q → %q", path, v)
+	zlog.Debug(context.Background()).
+		Str("path", path).
+		Str("validator", v).
+		Msg("setting validator")
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.validator[path] = v
@@ -99,7 +103,9 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 	)
 	fp, err := c.host.Parse(path.Join(c.host.RequestURI(), httptransport.IndexReportAPIPath, id.String()))
 	if err != nil {
-		debug.Printf("unable to construct index_report url: %v", err)
+		zlog.Debug(ctx).
+			Err(err).
+			Msg("unable to construct index_report url")
 		return err
 	}
 	req = c.request(ctx, fp, http.MethodGet)
@@ -109,13 +115,22 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 		res.Body.Close()
 	}
 	if err != nil {
-		debug.Printf("request failed for url %q: %v", req.URL.String(), err)
+		zlog.Debug(ctx).
+			Err(err).
+			Stringer("url", req.URL).
+			Msg("request failed")
 		return err
 	}
-	debug.Printf("%s %s: %s", res.Request.Method, res.Request.URL.Path, res.Status)
+	zlog.Debug(ctx).
+		Str("method", res.Request.Method).
+		Str("path", res.Request.URL.Path).
+		Str("status", res.Status).
+		Send()
 	switch res.StatusCode {
 	case http.StatusOK, http.StatusNotFound:
-		debug.Printf("need to post manifest %v", id)
+		zlog.Debug(ctx).
+			Stringer("manifest", id).
+			Msg("need to post manifest")
 	case http.StatusNotModified:
 		return nil
 	default:
@@ -123,12 +138,16 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 	}
 
 	if m == nil {
-		debug.Printf("don't have needed manifest %v", id)
+		zlog.Debug(ctx).
+			Stringer("manifest", id).
+			Msg("don't have needed manifest")
 		return errNeedManifest
 	}
 	ru, err := c.host.Parse(path.Join(c.host.RequestURI(), httptransport.IndexAPIPath))
 	if err != nil {
-		debug.Printf("unable to construct index_report url: %v", err)
+		zlog.Debug(ctx).
+			Err(err).
+			Msg("unable to construct index_report url")
 		return err
 	}
 
@@ -136,11 +155,18 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 	req.Body = codec.JSONReader(m)
 	res, err = c.client.Do(req)
 	if err != nil {
-		debug.Printf("request failed for url %q: %v", req.URL.String(), err)
+		zlog.Debug(ctx).
+			Err(err).
+			Stringer("url", req.URL).
+			Msg("request failed")
 		return err
 	}
 	defer res.Body.Close()
-	debug.Printf("%s %s: %s", res.Request.Method, res.Request.URL.Path, res.Status)
+	zlog.Debug(ctx).
+		Str("method", res.Request.Method).
+		Str("path", res.Request.URL.Path).
+		Str("status", res.Status).
+		Send()
 	switch res.StatusCode {
 	case http.StatusOK:
 	case http.StatusCreated:
@@ -152,7 +178,9 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 	dec := codec.GetDecoder(res.Body)
 	defer codec.PutDecoder(dec)
 	if err := dec.Decode(&report); err != nil {
-		debug.Printf("unable to decode json payload: %v", err)
+		zlog.Debug(ctx).
+			Err(err).
+			Msg("unable to decode json payload")
 		return err
 	}
 	if !report.Success && report.Err != "" {
@@ -179,17 +207,26 @@ func (c *Client) VulnerabilityReport(ctx context.Context, id claircore.Digest) (
 	)
 	u, err := c.host.Parse(path.Join(c.host.RequestURI(), httptransport.VulnerabilityReportPath, id.String()))
 	if err != nil {
-		debug.Printf("unable to construct vulnerability_report url: %v", err)
+		zlog.Debug(ctx).
+			Err(err).
+			Msg("unable to construct vulnerability_report url")
 		return nil, err
 	}
 	req = c.request(ctx, u, http.MethodGet)
 	res, err = c.client.Do(req)
 	if err != nil {
-		debug.Printf("request failed for url %q: %v", req.URL.String(), err)
+		zlog.Debug(ctx).
+			Err(err).
+			Stringer("url", req.URL).
+			Msg("request failed")
 		return nil, err
 	}
 	defer res.Body.Close()
-	debug.Printf("%s %s: %s", res.Request.Method, res.Request.URL.Path, res.Status)
+	zlog.Debug(ctx).
+		Str("method", res.Request.Method).
+		Str("path", res.Request.URL.Path).
+		Str("status", res.Status).
+		Send()
 	switch res.StatusCode {
 	case http.StatusOK:
 	case http.StatusNotModified:
@@ -202,7 +239,9 @@ func (c *Client) VulnerabilityReport(ctx context.Context, id claircore.Digest) (
 	dec := codec.GetDecoder(res.Body)
 	defer codec.PutDecoder(dec)
 	if err := dec.Decode(&report); err != nil {
-		debug.Printf("unable to decode json payload: %v", err)
+		zlog.Debug(ctx).
+			Err(err).
+			Msg("unable to decode json payload")
 		return nil, err
 	}
 

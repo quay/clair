@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/quay/claircore"
+	"github.com/quay/zlog"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sync/errgroup"
 
@@ -62,23 +64,23 @@ func (o *outFmt) String() string {
 	return o.fmt
 }
 
-func (o *outFmt) Formatter(w io.WriteCloser) Formatter {
+func (o *outFmt) Formatter(ctx context.Context, w io.WriteCloser) Formatter {
 	switch o.fmt {
 	case "", "text":
-		debug.Println("using text output")
+		zlog.Debug(ctx).Msg("using text output")
 		r, err := newTextFormatter(w)
 		if err != nil {
 			panic(err)
 		}
 		return r
 	case "json":
-		debug.Println("using json output")
+		zlog.Debug(ctx).Msg("using json output")
 		return &jsonFormatter{
 			enc: codec.GetEncoder(w),
 			c:   w,
 		}
 	case "xml":
-		debug.Println("using xml output")
+		zlog.Debug(ctx).Msg("using xml output")
 		return &xmlFormatter{
 			enc: xml.NewEncoder(w),
 			c:   w,
@@ -137,7 +139,7 @@ func reportAction(c *cli.Context) error {
 	go func() {
 		defer close(done)
 		out := c.Generic("out").(*outFmt)
-		f := out.Formatter(os.Stdout)
+		f := out.Formatter(ctx, os.Stdout)
 		defer f.Close()
 		for r := range result {
 			if err := f.Format(r); err != nil {
@@ -148,14 +150,22 @@ func reportAction(c *cli.Context) error {
 
 	for i := 0; i < args.Len(); i++ {
 		ref := args.Get(i)
-		debug.Printf("%s: fetching", ref)
+		zlog.Debug(ctx).
+			Str("ref", ref).
+			Msg("fetching")
 		eg.Go(func() error {
 			d, err := resolveRef(ref)
 			if err != nil {
-				debug.Printf("%s: error: %v", ref, err)
+				zlog.Debug(ctx).
+					Str("ref", ref).
+					Err(err).
+					Send()
 				return err
 			}
-			debug.Printf("%s: manifest: %v", ref, d)
+			zlog.Debug(ctx).
+				Str("ref", ref).
+				Stringer("digest", d).
+				Msg("found manifest")
 
 			// This bit is tricky:
 			//
@@ -171,12 +181,18 @@ func reportAction(c *cli.Context) error {
 			case errors.Is(err, errNeedManifest):
 				m, err = Inspect(ctx, ref)
 				if err != nil {
-					debug.Printf("%s: manifest error: %v", ref, err)
+					zlog.Debug(ctx).
+						Str("ref", ref).
+						Err(err).
+						Msg("manifest error")
 					return err
 				}
 				goto Again
 			default:
-				debug.Printf("%s: index error: %v", ref, err)
+				zlog.Debug(ctx).
+					Str("ref", ref).
+					Err(err).
+					Msg("index error")
 				return err
 			}
 
