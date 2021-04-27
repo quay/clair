@@ -416,6 +416,16 @@ localhost:8081 --- Postgres GUI (pgadmin4)
 localhost:8082 --- OpenAPI Swagger Editor.
                    You can view ClairV4's public API here.
 
+localhost:8087 --- RabbitMQ management GUI
+                   Login:
+                     username: guest
+                     password: guest
+
+localhost:8161 --- ActiveMQ management GUI
+                   Login:
+                     username: admin
+                     password: admin
+
 localhost:7000 --- Traefik Web UI.
                    Good for troubleshooting http issues.
 
@@ -2717,7 +2727,8 @@ to the configured AMQP broker.</p>
 <p>If <code>direct</code> is true this value will inform notifier how many notifications
 to send in a single direct delivery.  For example, if <code>direct</code> is set to
 <code>true</code> and <code>rollup</code> is set to <code>5</code>, the notifier will deliver no more then
-5 notifications in a single json payload to the broker.</p>
+5 notifications in a single json payload to the broker. Setting the value
+to 0 will effectively set it to 1.</p>
 <h4 id="notifieramqpexchange"><a class="header" href="#notifieramqpexchange"><code>$.notifier.amqp.exchange</code></a></h4>
 <p>The AMQP Exchange to connect to.</p>
 <h4 id="notifieramqpexchangename"><a class="header" href="#notifieramqpexchangename"><code>$.notifier.amqp.exchange.name</code></a></h4>
@@ -2771,7 +2782,8 @@ callback) to the configured STOMP broker.</p>
 <p>If <code>direct</code> is <code>true</code>, this value will limit the number of notifications
 sent in a single direct delivery.  For example, if <code>direct</code> is set to
 <code>true</code> and <code>rollup</code> is set to <code>5</code>, the notifier will deliver no more
-then 5 notifications in a single json payload to the broker.</p>
+then 5 notifications in a single json payload to the broker. Setting the value
+to 0 will effectively set it to 1.</p>
 <h4 id="notifierstompcallback"><a class="header" href="#notifierstompcallback"><code>$.notifier.stomp.callback</code></a></h4>
 <p>a URL string</p>
 <p>If <code>direct</code> is <code>false</code>, this URL is provided in the notification callback sent
