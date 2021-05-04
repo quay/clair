@@ -2,8 +2,28 @@
 ## [Unreleased]
 
 
+<a name="v4.1.0-alpha.3"></a>
+## [v4.1.0-alpha.3] - 2021-05-04
+### Chore
+- [01c44cc](https://github.com/quay/clair/commit/01c44cc39dd5d5c644d6849dfe204a1ffd02bab8): update claircore revision
+### Cicd
+- [4535b9f](https://github.com/quay/clair/commit/4535b9f41c310b3d590e2e0d8e3758d0d39d5105): changelog fixups
+### Config
+- [1f9b565](https://github.com/quay/clair/commit/1f9b56577957ce28044b221af58b160328a671a2): validate based on combo mode or not
+### Httptransport
+- [9e67501](https://github.com/quay/clair/commit/9e67501d818045749c4f263128b72e7cb6856bd1): fix LatestUpdateOperations method
+### Notifier
+- [6d33153](https://github.com/quay/clair/commit/6d331530c7a8714a16d32ce3ca6e74ec8afc5184): check msg contents in integration tests
+- [cc4a10f](https://github.com/quay/clair/commit/cc4a10ffedfc2edaae229cd953b3602ca16da2ec): remove direct zerolog use
+### Tests
+- [08734ab](https://github.com/quay/clair/commit/08734ab233457dc4bba1b071331f0c8024f6b4dd): fix small unit test race
+- [6e50ec2](https://github.com/quay/clair/commit/6e50ec2eec4eb50711ac48f14181e5a7ca075a70): add testing command
+- [1e92bd2](https://github.com/quay/clair/commit/1e92bd241ba42eec3cca6c8e983ba937caa23bd9): fix small race
+
 <a name="v4.1.0-alpha.2"></a>
 ## [v4.1.0-alpha.2] - 2021-04-09
+### Chore
+- [e0eea38](https://github.com/quay/clair/commit/e0eea383b9e791b5b041136b88f1b69b3d4841bb): v4.1.0-alpha.2 changelog bump
 ### Codec
 - [d5cac13](https://github.com/quay/clair/commit/d5cac1315481a87f596f395e1c2da2bf57eaf18c): use stdlib time.Time encoding
  - Closes [#1231](https://github.com/quay/clair/issues/1231)### Docs
@@ -81,6 +101,12 @@
 - [8e39fa4](https://github.com/quay/clair/commit/8e39fa40eebca7b50ab29f0001686fa7c5c49e1e): remove defcon1 severity
 ### Updaters
 - [8105b03](https://github.com/quay/clair/commit/8105b033fb53f0907373f6af76af954fe95a856d): plumb update retention in
+
+<a name="v4.0.5"></a>
+## [v4.0.5] - 2021-04-16
+### Chore
+- [b92ba98](https://github.com/quay/clair/commit/b92ba981540bf13344f5fe48d5683fd2c600e92b): v4.0.5 changelog bump
+- [486ccfb](https://github.com/quay/clair/commit/486ccfb9d8baac5f468acf0cc0752d7d2d9f8ce4): bump cc stable to v0.1.25
 
 <a name="v4.0.4"></a>
 ## [v4.0.4] - 2021-03-25
@@ -1449,9 +1475,11 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.1.0-alpha.2...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.1.0-alpha.3...HEAD
+[v4.1.0-alpha.3]: https://github.com/quay/clair/compare/v4.1.0-alpha.2...v4.1.0-alpha.3
 [v4.1.0-alpha.2]: https://github.com/quay/clair/compare/v4.1.0-alpha.1...v4.1.0-alpha.2
-[v4.1.0-alpha.1]: https://github.com/quay/clair/compare/v4.0.4...v4.1.0-alpha.1
+[v4.1.0-alpha.1]: https://github.com/quay/clair/compare/v4.0.5...v4.1.0-alpha.1
+[v4.0.5]: https://github.com/quay/clair/compare/v4.0.4...v4.0.5
 [v4.0.4]: https://github.com/quay/clair/compare/v4.0.3...v4.0.4
 [v4.0.3]: https://github.com/quay/clair/compare/v4.0.2...v4.0.3
 [v4.0.2]: https://github.com/quay/clair/compare/v4.0.1...v4.0.2
