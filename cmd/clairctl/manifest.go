@@ -12,6 +12,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/quay/claircore"
+	"github.com/quay/zlog"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sync/errgroup"
 
@@ -26,7 +27,8 @@ var ManifestCmd = &cli.Command{
 }
 
 func manifestAction(c *cli.Context) error {
-	debug.Println("manifest")
+	ctx := c.Context
+	zlog.Debug(ctx).Msg("manifest")
 	args := c.Args()
 	if args.Len() == 0 {
 		return errors.New("missing needed arguments")
@@ -46,14 +48,19 @@ func manifestAction(c *cli.Context) error {
 
 	for i := 0; i < args.Len(); i++ {
 		name := args.Get(i)
-		debug.Printf("%s: fetching", name)
+		zlog.Debug(ctx).Str("name", name).Msg("fetching")
 		eg.Go(func() error {
 			m, err := Inspect(ctx, name)
 			if err != nil {
-				debug.Printf("%s: err: %v", name, err)
+				zlog.Debug(ctx).
+					Str("name", name).
+					Err(err).
+					Send()
 				return err
 			}
-			debug.Printf("%s: ok", name)
+			zlog.Debug(ctx).
+				Str("name", name).
+				Msg("ok")
 			result <- m
 			return nil
 		})
@@ -93,13 +100,19 @@ func Inspect(ctx context.Context, r string) (*claircore.Manifest, error) {
 		return nil, err
 	}
 	out := claircore.Manifest{Hash: ccd}
-	debug.Printf("%s: found manifest %v", r, ccd)
+	zlog.Debug(ctx).
+		Str("ref", r).
+		Stringer("digest", ccd).
+		Msg("found manifest")
 
 	ls, err := img.Layers()
 	if err != nil {
 		return nil, err
 	}
-	debug.Printf("%s: found %d layers", r, len(ls))
+	zlog.Debug(ctx).
+		Str("ref", r).
+		Int("count", len(ls)).
+		Msg("found layers")
 
 	repo := ref.Context()
 	rURL := url.URL{
