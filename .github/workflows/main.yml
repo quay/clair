@@ -44,7 +44,7 @@ jobs:
   tidy:
     name: Tidy
     runs-on: ubuntu-latest
-    container: quay.io/claircore/golang:1.15
+    container: quay.io/projectquay/golang:1.15
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -68,7 +68,7 @@ jobs:
   tests:
     name: Tests
     runs-on: ubuntu-latest
-    container: quay.io/claircore/golang:${{ matrix.go }}
+    container: quay.io/projectquay/golang:${{ matrix.go }}
     env:
       POSTGRES_CONNECTION_STRING: "host=clair-db port=5432 user=clair dbname=clair sslmode=disable"
       RABBITMQ_CONNECTION_STRING: "amqp://guest:guest@clair-rabbitmq:5672/"

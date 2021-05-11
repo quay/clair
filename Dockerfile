@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM quay.io/claircore/golang:1.15 AS build
+FROM quay.io/projectquay/golang:1.15 AS build
 WORKDIR /build/
 ADD . /build/
 ARG CLAIR_VERSION=dev
