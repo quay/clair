@@ -129,16 +129,19 @@ func (c *HTTP) DeleteUpdateOperations(ctx context.Context, ref ...uuid.UUID) (in
 
 // LatestUpdateOperation shouldn't be used by client code and is implemented
 // only to satisfy the matcher.Differ interface.
-func (c *HTTP) LatestUpdateOperation(_ context.Context) (uuid.UUID, error) {
+func (c *HTTP) LatestUpdateOperation(_ context.Context, _ driver.UpdateKind) (uuid.UUID, error) {
 	return uuid.Nil, nil
 }
 
 // UpdateOperations returns all the known UpdateOperations per updater.
-func (c *HTTP) UpdateOperations(ctx context.Context, updaters ...string) (map[string][]driver.UpdateOperation, error) {
+func (c *HTTP) UpdateOperations(ctx context.Context, k driver.UpdateKind, updaters ...string) (map[string][]driver.UpdateOperation, error) {
 	u, err := c.addr.Parse(httptransport.UpdateOperationAPIPath)
 	if err != nil {
 		return nil, err
 	}
+	v := url.Values{}
+	v.Add("kind", string(k))
+	u.RawQuery = v.Encode()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
@@ -147,13 +150,14 @@ func (c *HTTP) UpdateOperations(ctx context.Context, updaters ...string) (map[st
 }
 
 // LatestUpdateOperations returns the most recent UpdateOperation per updater.
-func (c *HTTP) LatestUpdateOperations(ctx context.Context) (map[string][]driver.UpdateOperation, error) {
+func (c *HTTP) LatestUpdateOperations(ctx context.Context, k driver.UpdateKind) (map[string][]driver.UpdateOperation, error) {
 	u, err := c.addr.Parse(httptransport.UpdateOperationAPIPath)
 	if err != nil {
 		return nil, err
 	}
 	v := url.Values{}
 	v.Add("latest", "true")
+	v.Add("kind", string(k))
 	u.RawQuery = v.Encode()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)

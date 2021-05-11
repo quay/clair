@@ -32,10 +32,10 @@ type Differ interface {
 	// "Prev" can be `uuid.Nil` to indicate "earliest known ref."
 	UpdateDiff(_ context.Context, prev, cur uuid.UUID) (*driver.UpdateDiff, error)
 	// UpdateOperations returns all the known UpdateOperations per updater.
-	UpdateOperations(context.Context, ...string) (map[string][]driver.UpdateOperation, error)
+	UpdateOperations(context.Context, driver.UpdateKind, ...string) (map[string][]driver.UpdateOperation, error)
 	// LatestUpdateOperations returns the most recent UpdateOperation per updater.
-	LatestUpdateOperations(context.Context) (map[string][]driver.UpdateOperation, error)
+	LatestUpdateOperations(context.Context, driver.UpdateKind) (map[string][]driver.UpdateOperation, error)
 	// LatestUpdateOperation returns a ref for the most recent update operation
 	// across all updaters.
-	LatestUpdateOperation(context.Context) (uuid.UUID, error)
+	LatestUpdateOperation(context.Context, driver.UpdateKind) (uuid.UUID, error)
 }

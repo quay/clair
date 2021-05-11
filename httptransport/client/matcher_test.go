@@ -13,10 +13,10 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
+	"github.com/quay/claircore/libvuln/driver"
 
 	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/httptransport/client"
-	"github.com/quay/claircore/libvuln/driver"
 )
 
 // TestDiffer puts the Differ methods of the client through its paces.
@@ -118,7 +118,7 @@ func TestDiffer(t *testing.T) {
 
 			t.Run("Initial", func(t *testing.T) {
 				// Do the call.
-				got, err := c.LatestUpdateOperations(ctx)
+				got, err := c.LatestUpdateOperations(ctx, driver.VulnerabilityKind)
 				if err != nil {
 					t.Error(err)
 				}
@@ -129,7 +129,7 @@ func TestDiffer(t *testing.T) {
 			// second attempt will be served from cache
 			t.Run("Second", func(t *testing.T) {
 				// Do the call.
-				got, err := c.LatestUpdateOperations(ctx)
+				got, err := c.LatestUpdateOperations(ctx, driver.VulnerabilityKind)
 				if err != nil {
 					t.Error(err)
 				}

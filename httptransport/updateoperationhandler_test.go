@@ -9,8 +9,9 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/quay/clair/v4/matcher"
 	"github.com/quay/claircore/libvuln/driver"
+
+	"github.com/quay/clair/v4/matcher"
 )
 
 // TestUpdateOperationHandler is a parallel harness for testing a UpdateOperation handler.
@@ -31,13 +32,13 @@ func testUpdateOperationHandlerErrors(t *testing.T) {
 	h := UpdateOperationHandler(&matcher.Mock{
 		DeleteUpdateOperations_: func(context.Context, ...uuid.UUID) (int64, error) { return 0, ErrExpected },
 		// this will not immediately fail the handler
-		LatestUpdateOperation_: func(context.Context) (uuid.UUID, error) {
+		LatestUpdateOperation_: func(context.Context, driver.UpdateKind) (uuid.UUID, error) {
 			return uuid.Nil, ErrExpected
 		},
-		LatestUpdateOperations_: func(context.Context) (map[string][]driver.UpdateOperation, error) {
+		LatestUpdateOperations_: func(context.Context, driver.UpdateKind) (map[string][]driver.UpdateOperation, error) {
 			return nil, ErrExpected
 		},
-		UpdateOperations_: func(context.Context, ...string) (map[string][]driver.UpdateOperation, error) {
+		UpdateOperations_: func(context.Context, driver.UpdateKind, ...string) (map[string][]driver.UpdateOperation, error) {
 			return nil, ErrExpected
 		},
 	})
@@ -143,14 +144,14 @@ func testUpdateOperationHandlerGet(t *testing.T) {
 	var called bool
 	var latestCalled bool
 	h := UpdateOperationHandler(&matcher.Mock{
-		LatestUpdateOperation_: func(context.Context) (uuid.UUID, error) {
+		LatestUpdateOperation_: func(context.Context, driver.UpdateKind) (uuid.UUID, error) {
 			return id, nil
 		},
-		LatestUpdateOperations_: func(context.Context) (map[string][]driver.UpdateOperation, error) {
+		LatestUpdateOperations_: func(context.Context, driver.UpdateKind) (map[string][]driver.UpdateOperation, error) {
 			latestCalled = true
 			return nil, nil
 		},
-		UpdateOperations_: func(context.Context, ...string) (map[string][]driver.UpdateOperation, error) {
+		UpdateOperations_: func(context.Context, driver.UpdateKind, ...string) (map[string][]driver.UpdateOperation, error) {
 			called = true
 			return nil, nil
 		},

@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/quay/clair/v4/indexer"
-	"github.com/quay/clair/v4/matcher"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
+
+	"github.com/quay/clair/v4/indexer"
+	"github.com/quay/clair/v4/matcher"
 )
 
 // indexerForTestMode configures a mock Indexer service for notifier test mode.
@@ -56,7 +57,7 @@ func indexerForTestMode(mock *indexer.Mock) {
 // finally a notifier.Processor will request to "matcher.UpdateDiff" will be created where a mock added vulnerability
 // will be returned.
 func matcherForTestMode(mock *matcher.Mock) {
-	latestUpdateOperations := func(context.Context) (map[string][]driver.UpdateOperation, error) {
+	latestUpdateOperations := func(context.Context, driver.UpdateKind) (map[string][]driver.UpdateOperation, error) {
 		latest := driver.UpdateOperation{
 			Ref:         uuid.New(),
 			Updater:     "test-updater",
@@ -79,7 +80,7 @@ func matcherForTestMode(mock *matcher.Mock) {
 		}
 		return m, nil
 	}
-	updateOperations := func(context.Context, ...string) (map[string][]driver.UpdateOperation, error) {
+	updateOperations := func(context.Context, driver.UpdateKind, ...string) (map[string][]driver.UpdateOperation, error) {
 		mock.Lock()
 		defer mock.Unlock()
 		m := map[string][]driver.UpdateOperation{}

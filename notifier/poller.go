@@ -100,7 +100,7 @@ func (p *Poller) onTick(ctx context.Context, c chan<- Event) {
 		label.String("component", "notifier/Poller.onTick"),
 	)
 
-	latest, err := p.differ.LatestUpdateOperations(ctx)
+	latest, err := p.differ.LatestUpdateOperations(ctx, driver.VulnerabilityKind)
 	if err != nil {
 		zlog.Error(ctx).
 			Err(err).

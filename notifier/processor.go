@@ -324,7 +324,7 @@ func (p *Processor) safe(ctx context.Context, e Event) (bool, uuid.UUID) {
 	// if no previous UOID, return false, we don't want a full diff of notifications
 	// TODO(louis) UpdateOperations signature supports getting "all" for a given updater
 	// but code path is not implemented. implement this to optimize.
-	all, err := p.matcher.UpdateOperations(ctx)
+	all, err := p.matcher.UpdateOperations(ctx, driver.VulnerabilityKind)
 	if err != nil {
 		zlog.Error(ctx).
 			Err(err).

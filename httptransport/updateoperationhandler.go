@@ -61,8 +61,23 @@ func (h *UOHandler) Get(w http.ResponseWriter, r *http.Request) {
 	ctx := baggage.ContextWithValues(r.Context(),
 		label.String("component", "httptransport/UOHandler.Get"),
 	)
+
+	kind := driver.VulnerabilityKind
+	switch k := r.URL.Query().Get("kind"); k {
+	case "enrichment":
+		kind = driver.EnrichmentKind
+	case "", "vulnerability":
+		// Leave as default
+	default:
+		je.Error(w, &je.Response{
+			Code:    "bad-request",
+			Message: fmt.Sprintf("unknown kind: %q", k),
+		}, http.StatusBadRequest)
+		return
+	}
+
 	// handle conditional request. this is an optimization
-	if ref, err := h.serv.LatestUpdateOperation(ctx); err == nil {
+	if ref, err := h.serv.LatestUpdateOperation(ctx, kind); err == nil {
 		validator := `"` + ref.String() + `"`
 		if unmodified(r, validator) {
 			w.WriteHeader(http.StatusNotModified)
@@ -76,9 +91,9 @@ func (h *UOHandler) Get(w http.ResponseWriter, r *http.Request) {
 	var uos map[string][]driver.UpdateOperation
 	var err error
 	if b, _ := strconv.ParseBool(latest); b {
-		uos, err = h.serv.LatestUpdateOperations(ctx)
+		uos, err = h.serv.LatestUpdateOperations(ctx, kind)
 	} else {
-		uos, err = h.serv.UpdateOperations(ctx)
+		uos, err = h.serv.UpdateOperations(ctx, kind)
 	}
 	if err != nil {
 		resp := &je.Response{

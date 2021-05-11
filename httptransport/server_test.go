@@ -10,13 +10,14 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/quay/clair/v4/indexer"
-	"github.com/quay/clair/v4/matcher"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/zlog"
 	othttp "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
+
+	"github.com/quay/clair/v4/indexer"
+	"github.com/quay/clair/v4/matcher"
 )
 
 // TestUpdateEndpoints registers the handlers and tests that they're registered
@@ -24,9 +25,11 @@ import (
 func TestUpdateEndpoints(t *testing.T) {
 	m := &matcher.Mock{
 		DeleteUpdateOperations_: func(context.Context, ...uuid.UUID) (int64, error) { return 0, nil },
-		UpdateOperations_:       func(context.Context, ...string) (map[string][]driver.UpdateOperation, error) { return nil, nil },
-		LatestUpdateOperation_:  func(context.Context) (uuid.UUID, error) { return uuid.Nil, nil },
-		LatestUpdateOperations_: func(context.Context) (map[string][]driver.UpdateOperation, error) { return nil, nil },
+		UpdateOperations_: func(context.Context, driver.UpdateKind, ...string) (map[string][]driver.UpdateOperation, error) {
+			return nil, nil
+		},
+		LatestUpdateOperation_:  func(context.Context, driver.UpdateKind) (uuid.UUID, error) { return uuid.Nil, nil },
+		LatestUpdateOperations_: func(context.Context, driver.UpdateKind) (map[string][]driver.UpdateOperation, error) { return nil, nil },
 		UpdateDiff_:             func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error) { return nil, nil },
 		Scan_:                   func(context.Context, *claircore.IndexReport) (*claircore.VulnerabilityReport, error) { return nil, nil },
 	}

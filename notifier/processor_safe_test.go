@@ -7,9 +7,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/quay/claircore/libvuln/driver"
+
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/matcher"
-	"github.com/quay/claircore/libvuln/driver"
 )
 
 var (
@@ -54,7 +55,7 @@ func testSafe(t *testing.T) {
 		},
 	}
 	mm := &matcher.Mock{
-		UpdateOperations_: func(context.Context, ...string) (map[string][]driver.UpdateOperation, error) {
+		UpdateOperations_: func(context.Context, driver.UpdateKind, ...string) (map[string][]driver.UpdateOperation, error) {
 			return processorUpdateOps, nil
 		},
 	}
@@ -81,7 +82,7 @@ func testUnsafeStoreErr(t *testing.T) {
 		},
 	}
 	mm := &matcher.Mock{
-		UpdateOperations_: func(context.Context, ...string) (map[string][]driver.UpdateOperation, error) {
+		UpdateOperations_: func(context.Context, driver.UpdateKind, ...string) (map[string][]driver.UpdateOperation, error) {
 			return processorUpdateOps, nil
 		},
 	}
@@ -110,7 +111,7 @@ func testUnsafeMatcherErr(t *testing.T) {
 		},
 	}
 	mm := &matcher.Mock{
-		UpdateOperations_: func(context.Context, ...string) (map[string][]driver.UpdateOperation, error) {
+		UpdateOperations_: func(context.Context, driver.UpdateKind, ...string) (map[string][]driver.UpdateOperation, error) {
 			return processorUpdateOps, fmt.Errorf("expected")
 		},
 	}
@@ -140,7 +141,7 @@ func testUnsafeStaleUOID(t *testing.T) {
 		},
 	}
 	mm := &matcher.Mock{
-		UpdateOperations_: func(context.Context, ...string) (map[string][]driver.UpdateOperation, error) {
+		UpdateOperations_: func(context.Context, driver.UpdateKind, ...string) (map[string][]driver.UpdateOperation, error) {
 			return processorUpdateOps, nil
 		},
 	}
@@ -171,7 +172,7 @@ func testUnsafeDuplications(t *testing.T) {
 		},
 	}
 	mm := &matcher.Mock{
-		UpdateOperations_: func(context.Context, ...string) (map[string][]driver.UpdateOperation, error) {
+		UpdateOperations_: func(context.Context, driver.UpdateKind, ...string) (map[string][]driver.UpdateOperation, error) {
 			return processorUpdateOps, nil
 		},
 	}

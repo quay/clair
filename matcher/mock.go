@@ -17,9 +17,9 @@ var _ Service = (*Mock)(nil)
 // will occur on call.
 type Mock struct {
 	DeleteUpdateOperations_ func(context.Context, ...uuid.UUID) (int64, error)
-	UpdateOperations_       func(context.Context, ...string) (map[string][]driver.UpdateOperation, error)
-	LatestUpdateOperation_  func(context.Context) (uuid.UUID, error)
-	LatestUpdateOperations_ func(context.Context) (map[string][]driver.UpdateOperation, error)
+	UpdateOperations_       func(context.Context, driver.UpdateKind, ...string) (map[string][]driver.UpdateOperation, error)
+	LatestUpdateOperation_  func(context.Context, driver.UpdateKind) (uuid.UUID, error)
+	LatestUpdateOperations_ func(context.Context, driver.UpdateKind) (map[string][]driver.UpdateOperation, error)
 	UpdateDiff_             func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error)
 	Scan_                   func(context.Context, *claircore.IndexReport) (*claircore.VulnerabilityReport, error)
 	Initialized_            func(context.Context) (bool, error)
@@ -48,28 +48,28 @@ func (d *Mock) UpdateDiff(ctx context.Context, prev uuid.UUID, cur uuid.UUID) (*
 }
 
 // UpdateOperations returns all the known UpdateOperations per updater.
-func (d *Mock) UpdateOperations(ctx context.Context, updaters ...string) (map[string][]driver.UpdateOperation, error) {
+func (d *Mock) UpdateOperations(ctx context.Context, k driver.UpdateKind, updaters ...string) (map[string][]driver.UpdateOperation, error) {
 	if d.UpdateOperations_ == nil {
 		panic("mock matcher: unexpected call to UpdateOperations")
 	}
-	return d.UpdateOperations_(ctx, updaters...)
+	return d.UpdateOperations_(ctx, k, updaters...)
 }
 
 // LatestUpdateOperations returns the most recent UpdateOperation per updater.
-func (d *Mock) LatestUpdateOperations(ctx context.Context) (map[string][]driver.UpdateOperation, error) {
+func (d *Mock) LatestUpdateOperations(ctx context.Context, k driver.UpdateKind) (map[string][]driver.UpdateOperation, error) {
 	if d.LatestUpdateOperations_ == nil {
 		panic("mock matcher: unexpected call to LatestUpdateOperations")
 	}
-	return d.LatestUpdateOperations_(ctx)
+	return d.LatestUpdateOperations_(ctx, k)
 }
 
 // LatestUpdateOperation returns a ref for the most recent update operation
 // across all updaters.
-func (d *Mock) LatestUpdateOperation(ctx context.Context) (uuid.UUID, error) {
+func (d *Mock) LatestUpdateOperation(ctx context.Context, k driver.UpdateKind) (uuid.UUID, error) {
 	if d.LatestUpdateOperation_ == nil {
 		panic("mock matcher: unexpected call to LatestUpdateOperation")
 	}
-	return d.LatestUpdateOperation_(ctx)
+	return d.LatestUpdateOperation_(ctx, k)
 }
 
 func (d *Mock) Scan(ctx context.Context, ir *claircore.IndexReport) (*claircore.VulnerabilityReport, error) {
