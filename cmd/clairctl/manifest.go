@@ -136,10 +136,11 @@ func Inspect(ctx context.Context, r string) (*claircore.Manifest, error) {
 		if err != nil {
 			return nil, err
 		}
-		req, err := http.NewRequestWithContext(ctx, http.MethodHead, u.String(), nil)
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 		if err != nil {
 			return nil, err
 		}
+		req.Header.Add("Range", "bytes=0-0")
 		res, err := c.Do(req)
 		if err != nil {
 			return nil, err
@@ -147,6 +148,7 @@ func Inspect(ctx context.Context, r string) (*claircore.Manifest, error) {
 		res.Body.Close()
 
 		res.Request.Header.Del("User-Agent")
+		res.Request.Header.Del("Range")
 		out.Layers = append(out.Layers, &claircore.Layer{
 			Hash:    ccd,
 			URI:     res.Request.URL.String(),
