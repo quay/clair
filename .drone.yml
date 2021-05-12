@@ -1,0 +1,32 @@
+kind: pipeline
+type: kubernetes
+name: default
+
+steps:
+  - name: fetch-with-tags
+    image: docker:git
+    commands:
+      - git fetch --tags
+
+  - name: define-image-tags
+    image: alpine
+    commands:
+      - echo -n "${DRONE_BRANCH}," > .tags || true
+      - test "${DRONE_BRANCH}" == "main" && echo -n "latest,${DRONE_COMMIT}," > .tags || true
+      - test -n "${DRONE_TAG}" && echo -n "${DRONE_TAG}," >> .tags || true
+      - sed -i "s/,$//" .tags
+
+  - name: build-and-publish
+    image: plugins/docker
+    settings:
+      username:
+        from_secret: DOCKER_USERNAME
+      password:
+        from_secret: DOCKER_PASSWORD
+      repo: quay.io/${DRONE_REPO}
+      registry: quay.io
+
+trigger:
+  event:
+    exclude:
+      - pull_request
