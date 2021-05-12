@@ -136,7 +136,14 @@ func Inspect(ctx context.Context, r string) (*claircore.Manifest, error) {
 		if err != nil {
 			return nil, err
 		}
-		req, err := http.NewRequestWithContext(ctx, http.MethodHead, u.String(), nil)
+
+		// If the request is for our registry, use a GET request to avoid issue #1264
+		method := http.MethodHead
+		if strings.Contains(u.String(), "registry.uw.systems") {
+			method = http.MethodGet
+		}
+
+		req, err := http.NewRequestWithContext(ctx, method, u.String(), nil)
 		if err != nil {
 			return nil, err
 		}
