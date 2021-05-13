@@ -2,9 +2,31 @@
 ## [Unreleased]
 
 
+<a name="v4.1.0"></a>
+## [v4.1.0] - 2021-03-23
+### All
+- [6638793](https://github.com/quay/clair/commit/66387930f2b80087a32a1aeddc9b1ef16eec01e1): use RateLimiter where it seems appropriate
+### Chore
+- [04f2cb7](https://github.com/quay/clair/commit/04f2cb71acc8eceac0d1a7766c5ebfcfa01150ee): bump claircore version
+### Cicd
+- [8b0cdb3](https://github.com/quay/clair/commit/8b0cdb38fa8f4d701e0ef804e37728721798f564): use golang major version tag for dev env
+- [c1895c4](https://github.com/quay/clair/commit/c1895c433dfc3a872cce2c1468801ecdddf2e962): use quay.io/projectquay/golang image
+### Claircore
+- [bc2b059](https://github.com/quay/clair/commit/bc2b0591d3ea3a07498820bc625f7dc9cd5ce934): update to use new libvuln API
+### Clairctl
+- [c80a99d](https://github.com/quay/clair/commit/c80a99d14ed96e539a79212fb23f608a03ee636c): move to updates.Manager interface
+- [30f8696](https://github.com/quay/clair/commit/30f86961b88b7a590157f28fc6cb8f22f16dfa06): move to zlog
+### Httputil
+- [ed8ffc5](https://github.com/quay/clair/commit/ed8ffc50b56c9b11873f00bb2deb4fba9107ec95): create package and RateLimiter
+### Initialize
+- [5df82e1](https://github.com/quay/clair/commit/5df82e19e971c67ebdecf3f92682d4ae897db53a): update call to Libindex contstructor
+### Introspection
+- [ec59a43](https://github.com/quay/clair/commit/ec59a431032713654e2eb7a29ad7c446dd16a490): enable readiness endpoint
+
 <a name="v4.1.0-alpha.3"></a>
 ## [v4.1.0-alpha.3] - 2021-05-04
 ### Chore
+- [f3d64ff](https://github.com/quay/clair/commit/f3d64ffc3f3b8ebcf4d91d60117e8a268d840fd8): v4.1.0-alpha.3 changelog bump
 - [01c44cc](https://github.com/quay/clair/commit/01c44cc39dd5d5c644d6849dfe204a1ffd02bab8): update claircore revision
 ### Cicd
 - [4535b9f](https://github.com/quay/clair/commit/4535b9f41c310b3d590e2e0d8e3758d0d39d5105): changelog fixups
@@ -1475,7 +1497,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.1.0-alpha.3...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.1.0...HEAD
+[v4.1.0]: https://github.com/quay/clair/compare/v4.1.0-alpha.3...v4.1.0
 [v4.1.0-alpha.3]: https://github.com/quay/clair/compare/v4.1.0-alpha.2...v4.1.0-alpha.3
 [v4.1.0-alpha.2]: https://github.com/quay/clair/compare/v4.1.0-alpha.1...v4.1.0-alpha.2
 [v4.1.0-alpha.1]: https://github.com/quay/clair/compare/v4.0.5...v4.1.0-alpha.1
