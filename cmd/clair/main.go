@@ -117,43 +117,25 @@ func main() {
 	})
 
 	// Signal handler goroutine.
-	srvs.Go(func() error {
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, os.Interrupt)
+	go func() {
+		ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
 		defer func() {
-			signal.Stop(c)
-			close(c)
+			// Note that we're using a background context here, so that we get a
+			// full timeout if the signal handler has fired.
+			tctx, done := context.WithTimeout(context.Background(), 10*time.Second)
+			err := down.Shutdown(tctx)
+			if err != nil {
+				zlog.Error(ctx).Err(err).Msg("error shutting down server")
+			}
+			done()
+			stop()
 			zlog.Info(ctx).Msg("unregistered signal handler")
 		}()
 		zlog.Info(ctx).Msg("registered signal handler")
 		select {
-		case sig := <-c:
-			zlog.Info(ctx).
-				Stringer("signal", sig).
-				Msg("gracefully shutting down")
-			// Note that we're using the root context here, so that we get a
-			// full timeout if one errgroup goroutine returns uncleanly.
-			tctx, done := context.WithTimeout(ctx, 10*time.Second)
-			err := down.Shutdown(tctx)
-			done()
-			if err != nil {
-				zlog.Error(ctx).Err(err).Msg("error shutting down server")
-			}
+		case <-ctx.Done():
+			zlog.Info(ctx).Stringer("signal", os.Interrupt).Msg("gracefully shutting down")
 		case <-srvctx.Done():
-		}
-		return nil
-	})
-	// Spawn a goroutine outside to wait on the errgroup.
-	//
-	// This is needed to call shutdown and cause the servers to return when only
-	// one has returned an error.
-	go func() {
-		<-srvctx.Done()
-		tctx, done := context.WithTimeout(ctx, 10*time.Second)
-		err := down.Shutdown(tctx)
-		done()
-		if err != nil {
-			zlog.Error(ctx).Err(err).Msg("error shutting down server")
 		}
 	}()
 
