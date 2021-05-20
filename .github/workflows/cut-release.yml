@@ -53,7 +53,7 @@ jobs:
   release-binaries:
     name: Create Release Binaries
     runs-on: 'ubuntu-latest'
-    container: quay.io/projectquay/golang:1.15
+    container: quay.io/projectquay/golang:1.16
     needs: release-archive
     strategy:
       matrix:
