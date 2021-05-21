@@ -12,9 +12,8 @@ import (
 
 func Test_Config_Validate_Failure(t *testing.T) {
 	var table = []struct {
-		name   string
-		conf   config.Config
-		expect bool
+		name string
+		conf config.Config
 	}{
 		{
 			name: "No Mode",
@@ -66,6 +65,68 @@ func Test_Config_Validate_Failure(t *testing.T) {
 		t.Run(tab.name, func(t *testing.T) {
 			if err := config.Validate(&tab.conf); err == nil {
 				log.Fatalf("expected error for test case: %s", tab.name)
+			}
+		})
+	}
+}
+
+func TestConfigDisableUpdaters(t *testing.T) {
+	var table = []struct {
+		name string
+		conf config.Config
+	}{
+		{
+			name: "ComboMode, disable updaters",
+			conf: config.Config{
+				Mode:           config.ComboMode,
+				HTTPListenAddr: "localhost:8080",
+				Indexer: config.Indexer{
+					ConnString: "example@example/db",
+				},
+				Notifier: config.Notifier{
+					ConnString: "example@example/db",
+				},
+				Matcher: config.Matcher{
+					ConnString:      "example@example/db",
+					IndexerAddr:     "example@example/db",
+					DisableUpdaters: true,
+				},
+				Updaters: config.Updaters{
+					Sets: []string{
+						"alpine",
+						"aws",
+					},
+				},
+			},
+		},
+		{
+			name: "MatcherMode, disable updaters",
+			conf: config.Config{
+				Mode:           config.MatcherMode,
+				HTTPListenAddr: "localhost:8080",
+				Matcher: config.Matcher{
+					ConnString:      "example@example/db",
+					IndexerAddr:     "example@example/db",
+					DisableUpdaters: true,
+				},
+				Updaters: config.Updaters{
+					Sets: []string{
+						"alpine",
+						"aws",
+					},
+				},
+			},
+		},
+	}
+
+	for _, tab := range table {
+		t.Run(tab.name, func(t *testing.T) {
+			err := config.Validate(&tab.conf)
+			if err != nil {
+				log.Fatalf("expected no errors but got: %s, for test case: %s", err, tab.name)
+			}
+			if len(tab.conf.Updaters.Sets) != 0 {
+				log.Fatalf("expected updaters sets to be empty but was: %s, for test case: %s", tab.conf.Updaters.Sets, tab.name)
 			}
 		})
 	}

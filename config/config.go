@@ -64,6 +64,9 @@ func Validate(conf *Config) error {
 	if conf.HTTPListenAddr == "" {
 		conf.HTTPListenAddr = DefaultAddress
 	}
+	if conf.Matcher.DisableUpdaters {
+		conf.Updaters.Sets = []string{}
+	}
 	switch strings.ToLower(conf.Mode) {
 	case ComboMode:
 		if err := conf.Indexer.Validate(true); err != nil {
