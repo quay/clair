@@ -93,7 +93,7 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 
 ```
 
-`DELETE notifier/api/v1/notification/{notification_id}`
+`DELETE /notifier/api/v1/notification/{notification_id}`
 
 Issues a delete of the provided notification id and all associated
 notifications. After this delete clients will no longer be able to
@@ -192,7 +192,7 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 
 ```
 
-`GET notifier/api/v1/notification/{notification_id}`
+`GET /notifier/api/v1/notification/{notification_id}`
 
 By performing a GET with a notification_id as a path parameter, the
 client will retrieve a paginated response of notification objects.
@@ -372,7 +372,7 @@ fetch('/indexer/api/v1/index_report',
 
 ```
 
-`POST indexer/api/v1/index_report`
+`POST /indexer/api/v1/index_report`
 
 By submitting a Manifest object to this endpoint Clair will fetch the
 layers, scan each layer's contents, and provide an index of discovered
@@ -536,7 +536,7 @@ fetch('/indexer/api/v1/index_report/{manifest_hash}',
 
 ```
 
-`GET indexer/api/v1/index_report/{manifest_hash}`
+`GET /indexer/api/v1/index_report/{manifest_hash}`
 
 Given a Manifest's content addressable hash an IndexReport will
 be retrieved if exists.
@@ -683,7 +683,7 @@ fetch('/indexer/api/v1/index_state',
 
 ```
 
-`GET indexer/api/v1/index_state`
+`GET /indexer/api/v1/index_state`
 
 The index state endpoint returns a json structure indicating the
 indexer's internal configuration state.
@@ -784,7 +784,7 @@ fetch('/matcher/api/v1/vulnerability_report/{manifest_hash}',
 
 ```
 
-`GET matcher/api/v1/vulnerability_report/{manifest_hash}`
+`GET /matcher/api/v1/vulnerability_report/{manifest_hash}`
 
 Given a Manifest's content addressable hash a VulnerabilityReport
 will be created. The Manifest **must** have been Indexed first

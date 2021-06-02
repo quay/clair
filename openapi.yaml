@@ -16,7 +16,7 @@ info:
     url: "http://www.apache.org/licenses/"
 
 paths:
-  notifier/api/v1/notification/{notification_id}:
+  /notifier/api/v1/notification/{notification_id}:
     delete:
       tags:
         - Notifier
@@ -82,7 +82,7 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  indexer/api/v1/index_report:
+  /indexer/api/v1/index_report:
     post:
       tags:
         - Indexer
@@ -112,7 +112,7 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  indexer/api/v1/index_report/{manifest_hash}:
+  /indexer/api/v1/index_report/{manifest_hash}:
     get:
       tags:
         - Indexer
@@ -146,7 +146,7 @@ paths:
         500:
           $ref: '#/components/responses/InternalServerError'
 
-  matcher/api/v1/vulnerability_report/{manifest_hash}:
+  /matcher/api/v1/vulnerability_report/{manifest_hash}:
     get:
       tags:
         - Matcher
@@ -182,7 +182,8 @@ paths:
           $ref: '#/components/responses/MethodNotAllowed'
         500:
           $ref: '#/components/responses/InternalServerError'
-  indexer/api/v1/index_state:
+
+  /indexer/api/v1/index_state:
     get:
       tags:
         - Indexer
