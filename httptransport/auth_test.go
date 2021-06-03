@@ -64,7 +64,7 @@ func (tc *authTestcase) Run(t *testing.T) {
 	}
 
 	// Create a client that has auth according to the config.
-	c, authed, err := tc.Config.Client(nil, *tc.Claims)
+	c, authed, err := tc.Config.Client(nil, tc.Claims)
 	if err != nil {
 		t.Error(err)
 	}
