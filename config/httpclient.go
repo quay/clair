@@ -13,38 +13,44 @@ import (
 // Client returns an http.Client configured according to the supplied
 // configuration.
 //
+// If nil is passed for a claim, the returned client does no signing.
+//
 // It returns an *http.Client and a boolean indicating whether the client is
 // configured for authentication, or an error that occurred during construction.
-func (cfg *Config) Client(next http.RoundTripper, cl jwt.Claims) (c *http.Client, authed bool, err error) {
+func (cfg *Config) Client(next http.RoundTripper, cl *jwt.Claims) (c *http.Client, authed bool, err error) {
 	if next == nil {
 		next = http.DefaultTransport.(*http.Transport).Clone()
 	}
 	authed = false
-	sk := jose.SigningKey{Algorithm: jose.HS256}
-
-	// Keep this organized from "best" to "worst". That way, we can add methods
-	// and keep everything working with some careful cluster rolling.
-	switch {
-	case cfg.Auth.Keyserver != nil:
-		sk.Key = cfg.Auth.Keyserver.Intraservice
-	case cfg.Auth.PSK != nil:
-		sk.Key = cfg.Auth.PSK.Key
-	default:
-	}
 	jar, err := cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
 	if err != nil {
 		return nil, false, err
 	}
+	c = &http.Client{
+		Jar: jar,
+	}
+
+	sk := jose.SigningKey{Algorithm: jose.HS256}
+	// Keep this organized from "best" to "worst". That way, we can add methods
+	// and keep everything working with some careful cluster rolling.
+	switch {
+	case cl == nil: // Skip signing
+	case cfg.Auth.Keyserver != nil:
+		sk.Key = cfg.Auth.Keyserver.Intraservice
+	case cfg.Auth.PSK != nil:
+		sk.Key = cfg.Auth.PSK.Key
+	default:
+	}
 	rt := &transport{
 		next: next,
-		base: cl,
 	}
-	c = &http.Client{
-		Jar:       jar,
-		Transport: rt,
+	// If we have a claim, make a copy into the transport.
+	if cl != nil {
+		rt.base = *cl
 	}
+	c.Transport = rt
 
 	// Both of the JWT-based methods set the signing key.
 	if sk.Key != nil {

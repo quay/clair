@@ -121,7 +121,7 @@ func reportAction(c *cli.Context) error {
 		if e != nil {
 			return e
 		}
-		hc, _, e := cfg.Client(nil, commonClaim)
+		hc, _, e := cfg.Client(nil, &commonClaim)
 		if e != nil {
 			return e
 		}

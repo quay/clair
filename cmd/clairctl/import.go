@@ -35,7 +35,7 @@ func importAction(c *cli.Context) error {
 		return err
 	}
 
-	cl, _, err := cfg.Client(nil, commonClaim)
+	cl, _, err := cfg.Client(nil, &commonClaim)
 	if err != nil {
 		return err
 	}
