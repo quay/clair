@@ -142,13 +142,15 @@
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
                         
+                        
+
                     </div>
                 </div>
 
                 
                 <div id="search-wrapper" class="hidden">
                     <form id="searchbar-outer" class="searchbar-outer">
-                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
                     </form>
                     <div id="searchresults-outer" class="searchresults-outer hidden">
                         <div id="searchresults-header" class="searchresults-header"></div>
@@ -203,7 +205,7 @@
 <p>When new vulnerabilities are discovered, the notifier service will determine if these vulnerabilities affect any indexed Manifests. The notifier will then take action according to its configuration.</p>
 <h3 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h3>
 <p>At this point you'll probably want to check out <a href="./howto/getting_started.html">Getting Started With Clair</a>.</p>
-<h1 id="how-tos"><a class="header" href="#how-tos">How Tos</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="how-tos"><a class="header" href="#how-tos">How Tos</a></h1>
 <p>The following sections provide instructions on accomplish specific goals in Clair.</p>
 <ul>
 <li><a href="./howto/api.html">API Definition</a></li>
@@ -211,7 +213,7 @@
 <li><a href="./howto/getting_started.html">Getting Started</a></li>
 <li><a href="./howto/testing.html">Testing ClairV4</a></li>
 </ul>
-<h1 id="getting-started-with-clair"><a class="header" href="#getting-started-with-clair">Getting Started With Clair</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="getting-started-with-clair"><a class="header" href="#getting-started-with-clair">Getting Started With Clair</a></h1>
 <h2 id="releases"><a class="header" href="#releases">Releases</a></h2>
 <p>All of the source code needed to build clair is packaged as an archive and
 attached to the release. Releases are tracked at the <a href="https://github.com/quay/clair/releases">github releases</a>.</p>
@@ -289,7 +291,7 @@ ubuntu:focal found libgcrypt20 1.8.5-5ubuntu1         CVE-2019-12904
 <h2 id="whats-next"><a class="header" href="#whats-next">What's Next</a></h2>
 <p>Now that you see the basic usage of Clair, you can checkout our <a href="howto/./deployment.html">deployment models</a> to learn different ways of deploying.</p>
 <p>You may also be curious about how <code>clairctl</code> did that work. Check out our <a href="howto/./api.html">API definition</a> to understand how an application interacts with Clair.</p>
-<h1 id="deploying-clair"><a class="header" href="#deploying-clair">Deploying Clair</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="deploying-clair"><a class="header" href="#deploying-clair">Deploying Clair</a></h1>
 <p>Clair v4 was designed with flexible deployment architectures in mind. The operator is free to choose a deployment model which scales to their use cases.</p>
 <h2 id="configuration"><a class="header" href="#configuration">Configuration</a></h2>
 <p>Before jumping directly into the models its important to note that Clair is designed to use a single configuration file across all node types. This design decision makes it very easy to deploy on systems like Kubernetes and OpenShift.</p>
@@ -362,7 +364,7 @@ notifier:
 </code></pre>
 <p>This configuration is saying &quot;take any paths prefixes of /notifier/ and send them to the notifier services on port 6000&quot;</p>
 <p>Every load balancer will have their own way to perform path routing. Check the documentation for your infrastructure of choice.</p>
-<h1 id="api-definition"><a class="header" href="#api-definition">API Definition</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="api-definition"><a class="header" href="#api-definition">API Definition</a></h1>
 <p>Clair provides its API definition via an OpenAPI specification. You can view our OpenAPI spec <a href="https://raw.githubusercontent.com/quay/clair/main/openapi.yaml">here</a></p>
 <p>The OpenAPI spec can be used in a variety of ways.</p>
 <ul>
@@ -373,7 +375,7 @@ notifier:
 </ul>
 <p>See <a href="howto/./testing.html">Testing Clair</a> to learn how the local dev tooling starts a local swagger editor. This is handy for making changes to the spec in real time.</p>
 <p>See <a href="howto/../reference/api.html">API Reference</a> for a markdown rendered API reference.</p>
-<h1 id="testing-clair"><a class="header" href="#testing-clair">Testing Clair</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="testing-clair"><a class="header" href="#testing-clair">Testing Clair</a></h1>
 <p>We provide dev tooling in order to quickly get a fully configured Clair and Quay environment stood up locally. This environment can be used to test and develop Clair.</p>
 <h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
 <h3 id="make"><a class="header" href="#make">Make</a></h3>
@@ -455,7 +457,7 @@ local-dev/quay/config.yaml<code>and</code>local-dev/clair/config.yaml<code>. Any
 <p>The most common issue encountered when standing up the dev environment is port conflicts. Make sure that you do not have any other processes listening on any of the ports outlined above.</p>
 <p>The second issue you may face is your Docker resource settings maybe too constrained to support the local dev stack. This is typically seen on Docker4Mac since a VM is used with a specific set of resources configured. See <a href="https://docs.docker.com/docker-for-mac/">Docker For Mac Manual</a> for instructions on how to change these resources.</p>
 <p>Lastly, you can view traefik's ui at <code>localhost:7000</code>. If traefik is reporting no routers or services its likely SELinux has blocked its access to <code>/var/run/docker.socket</code>. Place SELinuse in permissive mode and restart the local development environment.</p>
-<h1 id="concepts"><a class="header" href="#concepts">Concepts</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="concepts"><a class="header" href="#concepts">Concepts</a></h1>
 <p>The following sections give a conceptual overview of how Clair works internally.</p>
 <ul>
 <li><a href="./concepts/api_internal.html">Internal API</a></li>
@@ -463,7 +465,7 @@ local-dev/quay/config.yaml<code>and</code>local-dev/clair/config.yaml<code>. Any
 <li><a href="./concepts/notifications.html">Notifications</a></li>
 <li><a href="./concepts/updatersandairgap.html">Updaters and Airgap</a></li>
 </ul>
-<h1 id="internal"><a class="header" href="#internal">Internal</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="internal"><a class="header" href="#internal">Internal</a></h1>
 <p>Internal endpoints are underneath <code>/api/v1/internal</code> and are meant for
 communication between Clair microservices. If Clair is operating in combo mode,
 these endpoints may not exist. Any sort of API ingress should disallow clients
@@ -479,7 +481,7 @@ This is used by the notifier to determine if new updates have occured and trigge
 <h2 id="affectedmanifest"><a class="header" href="#affectedmanifest">AffectedManifest</a></h2>
 <p>The <code>affected_manifest</code> endpoint exposes the api for retreiving affected manifests given a list of Vulnerabilities.
 This is used by the notifier to determine the manifests that need to have a notification generated.</p>
-<h1 id="authentication"><a class="header" href="#authentication">Authentication</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="authentication"><a class="header" href="#authentication">Authentication</a></h1>
 <p>Previous versions of Clair used <a href="https://github.com/quay/jwtproxy">jwtproxy</a> to gate authentication. For ease of
 building and deployment, v4 handles authentication itself.</p>
 <p>Authentication is configured by specifying configuration objects underneath the
@@ -521,7 +523,7 @@ encoded symmetric key for validating the requests.</p>
     iss: 'issuer'
 </code></pre>
 <p>Desired updaters should be selected by the normal configuration mechanism.</p>
-<h1 id="notifications-1"><a class="header" href="#notifications-1">Notifications</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="notifications-1"><a class="header" href="#notifications-1">Notifications</a></h1>
 <p>ClairV4 implements a notification system.</p>
 <p>The notifier service will keep track of new security database updates and inform an interested client if new or removed vulnerabilites affect an indexed manifest.</p>
 <p>The interested client can subscribe to notifications via several mechanisms:</p>
@@ -621,7 +623,7 @@ while (page.Next != None) {
 <p>The notifier has a testing mode enabled when it sees the &quot;NOTIFIER_TEST_MODE&quot; environment variable set. It can be set to any value as we only check to see if it exists.</p>
 <p>When this environment variable is set, the notifier will begin sending fake notifications to the configured delivery mechanism every &quot;poll_interval&quot; interval. This provides an easy way to implement and test new or existing deliverers.</p>
 <p>The notifier will run in this mode until the environment variable is cleared and the service is restarted.</p>
-<h2 id="updaters"><a class="header" href="#updaters">Updaters</a></h2>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h2 id="updaters"><a class="header" href="#updaters">Updaters</a></h2>
 <p>Clair utilizes go packages we call &quot;updaters&quot; that encapsulate the logic of
 fetching and parsing different vulnerability databases. Updaters are usually
 pared with a matcher to interpret if and how any vulnerability is related to a
@@ -705,13 +707,13 @@ automatic updaters running.</p>
       name:
         key: value
 </code></pre>
-<h1 id="contribuion"><a class="header" href="#contribuion">Contribuion</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="contribuion"><a class="header" href="#contribuion">Contribuion</a></h1>
 <p>The following sections provides information on how to contribute to Clair.</p>
 <ul>
 <li><a href="./contribution/commit_style.html">Commit Style</a></li>
 <li><a href="./contribution/releases.html">Releases</a></li>
 </ul>
-<h1 id="releases-1"><a class="header" href="#releases-1">Releases</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="releases-1"><a class="header" href="#releases-1">Releases</a></h1>
 <p>Clair releases are cut roughly every three months and actively maintained for
 six.</p>
 <p>This means that bugfixes should be landed on <code>master</code> (if applicable) and then
@@ -743,7 +745,7 @@ release, and the container is pushed to the
 <a href="https://quay.io/repository/projectquay/clair"><code>quay.io/projectquay/clair</code></a>
 repository.</p>
 <p>This is all powered by a Github Action in <code>.github/workflows/cut-release.yml</code>.</p>
-<h1 id="commit-style"><a class="header" href="#commit-style">Commit Style</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="commit-style"><a class="header" href="#commit-style">Commit Style</a></h1>
 <p>The Clair project utilizes well structured commits to keep the history useful and help with release automation.
 We suggest signing off on your commits as well.</p>
 <p>A typical commit will take on the following structure:</p>
@@ -767,7 +769,7 @@ Signed-Off By: &lt;email&gt;
 <p>Body should be full of detail.</p>
 <p>Explain what this commit is doing and why it is necessary.</p>
 <p>You may include references to issues and pull requests as well. Our automated changelog process will discover references prefixed with &quot;Fixes&quot;, &quot;Closed&quot; and &quot;Pull Request&quot;</p>
-<h1 id="reference"><a class="header" href="#reference">Reference</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="reference"><a class="header" href="#reference">Reference</a></h1>
 <p>The following sections provide reference information useful when exploring the documentation or working with Clair directly.</p>
 <ul>
 <li><a href="./reference/api.html">API</a></li>
@@ -777,7 +779,7 @@ Signed-Off By: &lt;email&gt;
 <li><a href="./reference/matcher.html">Matcher</a></li>
 <li><a href="./reference/notifier.html">Notifier</a></li>
 </ul>
-<hr />
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><hr />
 <p>title: ClairV4 v0.1
 language_tabs:</p>
 <ul>
@@ -861,7 +863,7 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 });
 
 </code></pre>
-<p><code>DELETE notifier/api/v1/notification/{notification_id}</code></p>
+<p><code>DELETE /notifier/api/v1/notification/{notification_id}</code></p>
 <p>Issues a delete of the provided notification id and all associated
 notifications. After this delete clients will no longer be able to
 retrieve notifications.</p>
@@ -946,7 +948,7 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 });
 
 </code></pre>
-<p><code>GET notifier/api/v1/notification/{notification_id}</code></p>
+<p><code>GET /notifier/api/v1/notification/{notification_id}</code></p>
 <p>By performing a GET with a notification_id as a path parameter, the
 client will retrieve a paginated response of notification objects.</p>
 <h3 id="retrieve-a-paginated-result-of-notifications-for-the-provided-id.-parameters">Parameters</h3>
@@ -1108,7 +1110,7 @@ fetch('/indexer/api/v1/index_report',
 });
 
 </code></pre>
-<p><code>POST indexer/api/v1/index_report</code></p>
+<p><code>POST /indexer/api/v1/index_report</code></p>
 <p>By submitting a Manifest object to this endpoint Clair will fetch the
 layers, scan each layer's contents, and provide an index of discovered
 packages, repository and distribution information.</p>
@@ -1257,7 +1259,7 @@ fetch('/indexer/api/v1/index_report/{manifest_hash}',
 });
 
 </code></pre>
-<p><code>GET indexer/api/v1/index_report/{manifest_hash}</code></p>
+<p><code>GET /indexer/api/v1/index_report/{manifest_hash}</code></p>
 <p>Given a Manifest's content addressable hash an IndexReport will
 be retrieved if exists.</p>
 <h3 id="retrieve-an-indexreport-for-the-given-manifest-hash-if-exists.-parameters">Parameters</h3>
@@ -1388,7 +1390,7 @@ fetch('/indexer/api/v1/index_state',
 });
 
 </code></pre>
-<p><code>GET indexer/api/v1/index_state</code></p>
+<p><code>GET /indexer/api/v1/index_state</code></p>
 <p>The index state endpoint returns a json structure indicating the
 indexer's internal configuration state.</p>
 <p>A client may be interested in this as a signal that manifests may need
@@ -1473,7 +1475,7 @@ fetch('/matcher/api/v1/vulnerability_report/{manifest_hash}',
 });
 
 </code></pre>
-<p><code>GET matcher/api/v1/vulnerability_report/{manifest_hash}</code></p>
+<p><code>GET /matcher/api/v1/vulnerability_report/{manifest_hash}</code></p>
 <p>Given a Manifest's content addressable hash a VulnerabilityReport
 will be created. The Manifest <strong>must</strong> have been Indexed first
 via the Index endpoint.</p>
@@ -2362,7 +2364,7 @@ This operation does not require authentication
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>Digest</td><td>string</td><td>false</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
 </tbody></table>
-<h1 id="clairctl"><a class="header" href="#clairctl">Clairctl</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="clairctl"><a class="header" href="#clairctl">Clairctl</a></h1>
 <p><code>clairctl</code> is a command line tool for working with Clair.
 This CLI is capable of generating manifests from most public registries
 (dockerhub, quay.io, Red Hat Container Catalog) and submitting them for
@@ -2444,7 +2446,7 @@ DESCRIPTION:
    A configuration file is needed to run this command, see 'clairctl help'
    for how to specify one.
 </code></pre>
-<h1 id="config"><a class="header" href="#config">Config</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="config"><a class="header" href="#config">Config</a></h1>
 <h2 id="cli-flags-and-environment-variables"><a class="header" href="#cli-flags-and-environment-variables">CLI Flags And Environment Variables</a></h2>
 <p>Clair is configured by a structured yaml file. 
 Each Clair node needs to specify what mode it will run in and a path to a
@@ -2875,11 +2877,11 @@ JWT claim.</p>
 <h4 id="metricsprometheusendpoint"><a class="header" href="#metricsprometheusendpoint"><code>$.metrics.prometheus.endpoint</code></a></h4>
 <p>a string value</p>
 <p>Defines the path where metrics will be served.</p>
-<h1 id="indexer-1"><a class="header" href="#indexer-1">Indexer</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="indexer-1"><a class="header" href="#indexer-1">Indexer</a></h1>
 <p>When Clair is running in Indexer mode, it is responsible for receiving Manifests and generating IndexReports. An IndexReport is an intermediate representation of a manifest's content and is used to discover vulnerabilities.</p>
-<h1 id="matcher-1"><a class="header" href="#matcher-1">Matcher</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="matcher-1"><a class="header" href="#matcher-1">Matcher</a></h1>
 <p>When Clair is running in Matcher mode it is responsible for receiving IndexReports and generating VulnerabilityReports. A VulnerabilityReport describes the contents of a manifest and any vulnerabilities affecting it.</p>
-<h1 id="notifier-1"><a class="header" href="#notifier-1">Notifier</a></h1>
+<div id="chapter_begin" style="break-before: page; page-break-before: always;"></div><h1 id="notifier-1"><a class="header" href="#notifier-1">Notifier</a></h1>
 <p>When Clair is running in Notifier mode, it is responsible for generating notifications when new vulnerabilities affecting a previously indexed manifest enters the system. The notifier will send notifications via the configured mechanisms.</p>
 
                     </main>

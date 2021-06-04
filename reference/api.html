@@ -140,13 +140,15 @@
                             <i id="git-repository-button" class="fa fa-github"></i>
                         </a>
                         
+                        
+
                     </div>
                 </div>
 
                 
                 <div id="search-wrapper" class="hidden">
                     <form id="searchbar-outer" class="searchbar-outer">
-                        <input type="search" name="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
                     </form>
                     <div id="searchresults-outer" class="searchresults-outer hidden">
                         <div id="searchresults-header" class="searchresults-header"></div>
@@ -251,7 +253,7 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 });
 
 </code></pre>
-<p><code>DELETE notifier/api/v1/notification/{notification_id}</code></p>
+<p><code>DELETE /notifier/api/v1/notification/{notification_id}</code></p>
 <p>Issues a delete of the provided notification id and all associated
 notifications. After this delete clients will no longer be able to
 retrieve notifications.</p>
@@ -336,7 +338,7 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 });
 
 </code></pre>
-<p><code>GET notifier/api/v1/notification/{notification_id}</code></p>
+<p><code>GET /notifier/api/v1/notification/{notification_id}</code></p>
 <p>By performing a GET with a notification_id as a path parameter, the
 client will retrieve a paginated response of notification objects.</p>
 <h3 id="retrieve-a-paginated-result-of-notifications-for-the-provided-id.-parameters">Parameters</h3>
@@ -498,7 +500,7 @@ fetch('/indexer/api/v1/index_report',
 });
 
 </code></pre>
-<p><code>POST indexer/api/v1/index_report</code></p>
+<p><code>POST /indexer/api/v1/index_report</code></p>
 <p>By submitting a Manifest object to this endpoint Clair will fetch the
 layers, scan each layer's contents, and provide an index of discovered
 packages, repository and distribution information.</p>
@@ -647,7 +649,7 @@ fetch('/indexer/api/v1/index_report/{manifest_hash}',
 });
 
 </code></pre>
-<p><code>GET indexer/api/v1/index_report/{manifest_hash}</code></p>
+<p><code>GET /indexer/api/v1/index_report/{manifest_hash}</code></p>
 <p>Given a Manifest's content addressable hash an IndexReport will
 be retrieved if exists.</p>
 <h3 id="retrieve-an-indexreport-for-the-given-manifest-hash-if-exists.-parameters">Parameters</h3>
@@ -778,7 +780,7 @@ fetch('/indexer/api/v1/index_state',
 });
 
 </code></pre>
-<p><code>GET indexer/api/v1/index_state</code></p>
+<p><code>GET /indexer/api/v1/index_state</code></p>
 <p>The index state endpoint returns a json structure indicating the
 indexer's internal configuration state.</p>
 <p>A client may be interested in this as a signal that manifests may need
@@ -863,7 +865,7 @@ fetch('/matcher/api/v1/vulnerability_report/{manifest_hash}',
 });
 
 </code></pre>
-<p><code>GET matcher/api/v1/vulnerability_report/{manifest_hash}</code></p>
+<p><code>GET /matcher/api/v1/vulnerability_report/{manifest_hash}</code></p>
 <p>Given a Manifest's content addressable hash a VulnerabilityReport
 will be created. The Manifest <strong>must</strong> have been Indexed first
 via the Index endpoint.</p>
