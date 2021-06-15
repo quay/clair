@@ -187,6 +187,9 @@ func localMatcher(ctx context.Context, cfg *config.Config) (matcher.Service, err
 	}
 
 	tr := http.DefaultTransport.(*http.Transport).Clone()
+	// Some servers return weak validators when the Content-Encoding is not
+	// "identity". Setting this prevents automatically negotiating up to "gzip".
+	tr.DisableCompression = true
 	jar, err := cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
