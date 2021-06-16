@@ -222,7 +222,7 @@ services:
     image: quay.io/projectquay/quay:latest
     privileged: true
     volumes:
-      - "./local-dev/quay:/conf/stack"
+      - "./local-dev/quay:/quay-registry/conf/stack"
     ports:
       - "8080:8080" 
     environment:
