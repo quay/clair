@@ -72,6 +72,11 @@ localhost:7000 --- Traefik Web UI.
                    Good for troubleshooting http issues.
 
 localhost:9090 --- Prometheus
+
+localhost:3000 --- Grafana
+                   Login:
+                     username: admin
+                     password: admin
 ```
 
 ## Pushing to the Local Quay

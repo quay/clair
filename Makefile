@@ -36,6 +36,7 @@ local-dev-up: vendor
 	$(docker-compose) up -d traefik
 	$(docker-compose) up -d jaeger
 	$(docker-compose) up -d prometheus
+	$(docker-compose) up -d grafana
 	$(docker-compose) up -d rabbitmq
 	$(docker-compose) up -d activemq
 	$(docker-compose) up -d clair-db
@@ -52,6 +53,7 @@ local-dev-up-with-quay: vendor
 	$(docker-compose) up -d traefik
 	$(docker-compose) up -d jaeger
 	$(docker-compose) up -d prometheus
+	$(docker-compose) up -d grafana
 	$(docker-compose) up -d rabbitmq
 	$(docker-compose) up -d activemq
 	$(docker-compose) up -d clair-db

@@ -196,6 +196,7 @@ services:
     environment:
       COLLECTOR_ZIPKIN_HTTP_PORT: 9411
 
+
   prometheus:
     container_name: clair-prometheus
     image: prom/prometheus:latest
@@ -208,6 +209,17 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
     ports:
       - "9090:9090"
+
+  grafana:
+    container_name: clair-grafana
+    image: grafana/grafana:8.0.3
+    ports:
+      - 3000:3000
+    user: "472"
+    volumes:
+      - ./local-dev/grafana/provisioning/:/etc/grafana/provisioning/
+    depends_on:
+      - prometheus
 
   ## QUAY ##
   redis:
