@@ -11,9 +11,10 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	_ "github.com/jackc/pgx/v4/stdlib" // Needed for sqlx.Open
 	"github.com/jmoiron/sqlx"
-	"github.com/quay/clair/v4/notifier/migrations"
 	"github.com/quay/claircore/test/integration"
 	"github.com/remind101/migrate"
+
+	"github.com/quay/clair/v4/notifier/migrations"
 )
 
 const (
@@ -21,7 +22,7 @@ const (
 	DefaultDSN = `host=localhost port=5432 user=clair dbname=clair sslmode=disable`
 )
 
-func TestStore(ctx context.Context, t testing.TB) (*sqlx.DB, *Store, *KeyStore, func()) {
+func TestStore(ctx context.Context, t testing.TB) (*sqlx.DB, *Store, func()) {
 	if os.Getenv(integration.EnvPGConnString) == "" {
 		os.Setenv(integration.EnvPGConnString, DefaultDSN)
 	}
@@ -34,6 +35,7 @@ func TestStore(ctx context.Context, t testing.TB) (*sqlx.DB, *Store, *KeyStore, 
 	cfg := db.Config()
 	cfg.ConnConfig.LogLevel = pgx.LogLevelError
 	cfg.ConnConfig.Logger = testingadapter.NewLogger(t)
+	ProfileSetup(cfg)
 	// we are going to use pgx for more control over connection pool and
 	// and a cleaner api around bulk inserts
 	pool, err := pgxpool.ConnectConfig(ctx, cfg)
@@ -57,8 +59,7 @@ func TestStore(ctx context.Context, t testing.TB) (*sqlx.DB, *Store, *KeyStore, 
 	}
 
 	s := NewStore(pool)
-	ks := NewKeyStore(pool)
-	return sx, s, ks, func() {
+	return sx, s, func() {
 		sx.Close()
 		pool.Close()
 		db.Close(ctx, t)
