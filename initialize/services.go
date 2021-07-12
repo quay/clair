@@ -8,6 +8,7 @@ import (
 	"net/http/cookiejar"
 	"time"
 
+	"github.com/quay/claircore/enricher/cvss"
 	"github.com/quay/claircore/libindex"
 	"github.com/quay/claircore/libvuln"
 	"github.com/quay/claircore/libvuln/driver"
@@ -219,6 +220,9 @@ func localMatcher(ctx context.Context, cfg *config.Config) (matcher.Service, err
 		MatcherNames:    cfg.Matchers.Names,
 		MatcherConfigs:  matcherConfigs,
 		Client:          cl,
+		Enrichers: []driver.Enricher{
+			&cvss.Enricher{},
+		},
 	})
 	if err != nil {
 		return nil, mkErr(err)

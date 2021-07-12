@@ -1,6 +1,6 @@
 module github.com/quay/clair/v4
 
-go 1.13
+go 1.15
 
 require (
 	github.com/docker/docker v1.13.1 // indirect
@@ -16,7 +16,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/prometheus/client_golang v1.9.0
 	github.com/prometheus/procfs v0.3.0 // indirect
-	github.com/quay/claircore v0.4.3
+	github.com/quay/claircore v0.5.0
 	github.com/quay/zlog v0.0.0-20210113185248-ce16eed1dcec
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
 	github.com/rs/zerolog v1.20.0

@@ -586,8 +586,8 @@ github.com/prometheus/procfs v0.3.0 h1:Uehi/mxLK0eiUc0H0++5tpMGTexB8wZ598MIgU8Vp
 github.com/prometheus/procfs v0.3.0/go.mod h1:lV6e/gmhEcM9IjHGsFOCxxuZ+z1YqCvr4OA4YeYWdaU=
 github.com/quay/alas v1.0.1 h1:MuFpGGXyZlDD7+F/hrnMZmzhS8P2bjRzX9DyGmyLA+0=
 github.com/quay/alas v1.0.1/go.mod h1:pseepSrG9pwry1joG7RO/RNRFJaWqiqx9qeoomeYwEk=
-github.com/quay/claircore v0.4.3 h1:Mtxd4tPm1gfnbEHpF4ire/noXVQ66/bcW+U+gFVHo0I=
-github.com/quay/claircore v0.4.3/go.mod h1:9t/esyUw/KCuPTXVVtKMZpNRGiYCtqU13sDRKIGea1k=
+github.com/quay/claircore v0.5.0 h1:zZL48S9Fcl4eMXzEG6xSeW32LcYOwZqlYLEzPhrC8cc=
+github.com/quay/claircore v0.5.0/go.mod h1:C5GzMHjVQtMCseWyeQt9zbbVYoNmF1wtsO3j8+3E3h8=
 github.com/quay/goval-parser v0.8.6 h1:h1Xg3SZR/6I7UVa1LcsQZvQft/q7sJbosmFrjzSmdqE=
 github.com/quay/goval-parser v0.8.6/go.mod h1:Y0NTNfPYOC7yxsYKzJOrscTWUPq1+QbtHw4XpPXWPMc=
 github.com/quay/zlog v0.0.0-20210113185248-ce16eed1dcec h1:v6gbUFTnms8pwArSDyE4rVK1ySLbxy9EQrbQqdOhAyY=
@@ -656,8 +656,6 @@ github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5
 github.com/stretchr/testify v1.6.1 h1:hDPOHmpOpP40lSULcqw7IrRb/u7w6RpDC9399XyoNd0=
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/syndtr/gocapability v0.0.0-20170704070218-db04d3cc01c8/go.mod h1:hkRG7XYTFWNJGYcbNJQlaLq0fg1yr4J4t/NcTQtrfww=
-github.com/tadasv/go-dpkg v0.0.0-20160704224136-c2cf9188b763 h1:9+CrSWP3mpB6e6sxXU5o/RIrf1A2DV/sOg9Cb9/+XNs=
-github.com/tadasv/go-dpkg v0.0.0-20160704224136-c2cf9188b763/go.mod h1:F1AdFgT4EQYvMcvrrWTQuX/25WmY7JCOs1Zxf0LevSw=
 github.com/temoto/robotstxt v1.1.1/go.mod h1:+1AmkuG3IYkh1kv0d2qEB9Le88ehNO0zwOr3ujewlOo=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20170815181823-89b8d40f7ca8/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80 h1:nrZ3ySNYwJbSpD6ce9duiP+QkD3JuLCcWkdaehUS/3Y=
@@ -668,6 +666,7 @@ github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8/go.mod h1:VFNgLljT
 github.com/ugorji/go/codec v1.2.4 h1:C5VurWRRCKjuENsbM6GYVw8W++WVW9rSxoACKIvxzz8=
 github.com/ugorji/go/codec v1.2.4/go.mod h1:bWBu1+kIRWcF8uMklKaJrR6fTWQOwAlrIzX22pHwryA=
 github.com/ulikunitz/xz v0.5.6/go.mod h1:2bypXElzHzzJZwzH67Y6wb67pO62Rzfn7BSiF4ABRW8=
+github.com/ulikunitz/xz v0.5.7 h1:YvTNdFzX6+W5m9msiYg/zpkSURPPtOlzbqYjrFn7Yt4=
 github.com/ulikunitz/xz v0.5.7/go.mod h1:nbz6k7qbPmH4IRqmfOplQw/tblSgqTqBwxkY0oWt/14=
 github.com/urfave/cli v0.0.0-20171014202726-7bc6a0acffa5/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
 github.com/urfave/cli v1.20.0/go.mod h1:70zkFmudgCuE/ngEzBv17Jvp/497gISqfk5gWijbERA=
