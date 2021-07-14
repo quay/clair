@@ -7,7 +7,6 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
 	"github.com/quay/claircore"
 	cctest "github.com/quay/claircore/test"
 	"github.com/quay/claircore/test/integration"
@@ -37,14 +36,12 @@ func TestE2E(t *testing.T) {
 		},
 	}
 	ctx := context.Background()
-	db, store, teardown := TestStore(ctx, t)
-	defer teardown()
+	store := TestStore(ctx, t)
 	e := e2e{
 		notificaitonID: notificationID,
 		updater:        updater,
 		updateID:       uuid.New(),
 		notification:   notifications[0],
-		db:             db,
 		store:          store,
 		ctx:            ctx,
 	}
@@ -70,8 +67,6 @@ type e2e struct {
 	notification notifier.Notification
 	// whether any of the tests have failed
 	failed bool
-	// a sqldb instance to the test database
-	db *sqlx.DB
 	// a store instance implementing notification persistence methods
 	store *Store
 	// root ctx tests may derive off

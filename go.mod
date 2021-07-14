@@ -11,7 +11,6 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/jackc/pgx/v4 v4.7.2
-	github.com/jmoiron/sqlx v1.2.0
 	github.com/klauspost/compress v1.10.11
 	github.com/ldelossa/responserecorder v1.0.2-0.20210711162258-40bec93a9325
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
