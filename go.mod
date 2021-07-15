@@ -13,7 +13,7 @@ require (
 	github.com/jackc/pgx/v4 v4.7.2
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/klauspost/compress v1.10.11
-	github.com/ldelossa/responserecorder v1.0.1
+	github.com/ldelossa/responserecorder v1.0.2-0.20210711162258-40bec93a9325
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/prometheus/client_golang v1.9.0
 	github.com/prometheus/procfs v0.3.0 // indirect
