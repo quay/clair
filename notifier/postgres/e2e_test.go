@@ -10,6 +10,7 @@ import (
 	"github.com/quay/claircore"
 	cctest "github.com/quay/claircore/test"
 	"github.com/quay/claircore/test/integration"
+	"github.com/quay/zlog"
 
 	"github.com/quay/clair/v4/notifier"
 )
@@ -22,7 +23,8 @@ const (
 // retreiving, bookkeeping, and deleting of notifications
 // and asssociated data works correctly
 func TestE2E(t *testing.T) {
-	integration.Skip(t)
+	integration.NeedDB(t)
+	ctx := zlog.Test(nil, t)
 	digest, _ := claircore.ParseDigest("sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a")
 	notificationID := uuid.New()
 	// this function puts a single noification undertest
@@ -35,7 +37,6 @@ func TestE2E(t *testing.T) {
 			Vulnerability: vsummary,
 		},
 	}
-	ctx := context.Background()
 	store := TestStore(ctx, t)
 	e := e2e{
 		notificaitonID: notificationID,
