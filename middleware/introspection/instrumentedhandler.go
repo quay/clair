@@ -67,7 +67,7 @@ func InstrumentedHandler(endpoint string, traceOpts othttp.Option, next http.Han
 	h = promhttp.InstrumentHandlerTimeToWriteHeader(RequestDuration, h)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		recorder := rr.NewResponseRecorder(w)
-		h.ServeHTTP(w, r)
+		h.ServeHTTP(recorder, r)
 		zlog.Info(r.Context()).
 			Str("remote_addr", r.RemoteAddr).
 			Str("method", r.Method).
