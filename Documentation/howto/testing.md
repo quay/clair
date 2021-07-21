@@ -122,4 +122,4 @@ The most common issue encountered when standing up the dev environment is port c
 
 The second issue you may face is your Docker resource settings maybe too constrained to support the local dev stack. This is typically seen on Docker4Mac since a VM is used with a specific set of resources configured. See [Docker For Mac Manual](https://docs.docker.com/docker-for-mac/) for instructions on how to change these resources.
 
-Lastly, you can view traefik's ui at `localhost:7000`. If traefik is reporting no routers or services its likely SELinux has blocked its access to `/var/run/docker.socket`. Place SELinuse in permissive mode and restart the local development environment.
+Lastly, you can view traefik's ui at `localhost:7000`. If traefik is reporting no routers or services its likely SELinux has blocked its access to `/var/run/docker.socket`. Place SELinux in permissive mode and restart the local development environment.
