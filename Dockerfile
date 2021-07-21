@@ -23,7 +23,7 @@ RUN go build\
   ./cmd/clairctl
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal AS final
-RUN microdnf install tar
+RUN microdnf install --disablerepo=* --enablerepo=ubi-8-baseos --enablerepo=ubi-8-appstream tar
 RUN curl -L -o /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64 && chmod +x /usr/local/bin/dumb-init 
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--", "/bin/clair"]
 VOLUME /config
