@@ -21,6 +21,7 @@ import (
 	"github.com/quay/clair/v4/health"
 	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/initialize"
+	"github.com/quay/clair/v4/initialize/auto"
 	"github.com/quay/clair/v4/introspection"
 )
 
@@ -75,6 +76,7 @@ func main() {
 	zlog.Info(ctx).
 		Str("version", Version).
 		Msg("starting")
+	auto.Logs(ctx)
 
 	// Some machinery for starting and stopping server goroutines:
 	down := &Shutdown{}
