@@ -89,3 +89,8 @@ func (n *Notifier) Validate(combo bool) error {
 	}
 	return nil
 }
+
+// Any reports if any delivery mechanism was specified in the configuration.
+func (n *Notifier) Any() bool {
+	return n != nil && (n.Webhook != nil || n.AMQP != nil || n.STOMP != nil)
+}

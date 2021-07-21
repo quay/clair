@@ -1,0 +1,7 @@
+---
+indexer:
+  connstring: "real dsn"
+matcher:
+  connstring: "real dsn"
+notifier: null
+updaters: {}
