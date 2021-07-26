@@ -26,6 +26,11 @@ type Indexer struct {
 	// Indexers will index a Manifest's layers concurrently.
 	// This value tunes the number of layers an Indexer will scan in parallel.
 	LayerScanConcurrency int `yaml:"layer_scan_concurrency" json:"layer_scan_concurrency"`
+	// Rate limits the number if index report creation requests.
+	//
+	// Any value below 1 is considered unlimited.
+	// The API will return a 429 status code if concurrency is exceeded.
+	IndexReportRequestConcurrency int `yaml:"index_report_request_concurrency" json:"index_report_request_concurrency"`
 	// A "true" or "false" value
 	//
 	// Whether Indexer nodes handle migrations to their database.

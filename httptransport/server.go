@@ -16,6 +16,7 @@ import (
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
 	intromw "github.com/quay/clair/v4/middleware/introspection"
+	"github.com/quay/clair/v4/middleware/rate"
 	notifier "github.com/quay/clair/v4/notifier/service"
 )
 
@@ -166,11 +167,14 @@ func (t *Server) configureIndexerMode(_ context.Context) error {
 		return clairerror.ErrNotInitialized{Msg: "IndexerMode requires an indexer service"}
 	}
 
+	ratelimitMW := rate.NewRateLimitMiddleware(t.conf.Indexer.IndexReportRequestConcurrency)
+
 	t.Handle(AffectedManifestAPIPath,
 		intromw.InstrumentedHandler(AffectedManifestAPIPath, t.traceOpt, AffectedManifestHandler(t.indexer)))
 
 	t.Handle(IndexAPIPath,
-		intromw.InstrumentedHandler(IndexAPIPath, t.traceOpt, IndexHandler(t.indexer)))
+		ratelimitMW.Handler(IndexAPIPath,
+			intromw.InstrumentedHandler(IndexAPIPath, t.traceOpt, IndexHandler(t.indexer))))
 
 	t.Handle(IndexReportAPIPath,
 		intromw.InstrumentedHandler(IndexReportAPIPath+"GET", t.traceOpt, IndexReportHandler(t.indexer)))
