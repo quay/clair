@@ -173,8 +173,7 @@ func (t *Server) configureIndexerMode(_ context.Context) error {
 		intromw.InstrumentedHandler(AffectedManifestAPIPath, t.traceOpt, AffectedManifestHandler(t.indexer)))
 
 	t.Handle(IndexAPIPath,
-		ratelimitMW.Handler(IndexAPIPath,
-			intromw.InstrumentedHandler(IndexAPIPath, t.traceOpt, IndexHandler(t.indexer))))
+		intromw.InstrumentedHandler(IndexAPIPath, t.traceOpt, ratelimitMW.Handler(IndexAPIPath, IndexHandler(t.indexer))))
 
 	t.Handle(IndexReportAPIPath,
 		intromw.InstrumentedHandler(IndexReportAPIPath+"GET", t.traceOpt, IndexReportHandler(t.indexer)))
