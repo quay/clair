@@ -2,9 +2,19 @@
 ## [Unreleased]
 
 
+<a name="v4.1.2"></a>
+## [v4.1.2] - 2021-08-06
+### Chore
+- [1e130f2](https://github.com/quay/clair/commit/1e130f2844d26ceac4a26f0548d8bc2bea79a91f): bump claircore version
+### Introspection
+- [804cbed](https://github.com/quay/clair/commit/804cbedbd6724bc22f9adac02186f45bf77c703f): use the response recorder
+ -  [#1318](https://github.com/quay/clair/issues/1318)### Services
+- [bc60dcc](https://github.com/quay/clair/commit/bc60dcc29d4440636f68911e79b08b188ac8e81e): disable transport compression in matcher
+
 <a name="v4.1.1"></a>
 ## [v4.1.1] - 2021-06-15
 ### Chore
+- [6528f73](https://github.com/quay/clair/commit/6528f738a2a0cf303625040459d5590050f75294): v4.1.1 changelog bump
 - [a3a8020](https://github.com/quay/clair/commit/a3a8020c2225de42e248352503b06704d7167839): bump claircore version
 ### Clairctl
 - [343e7da](https://github.com/quay/clair/commit/343e7da0f82f83e40f88a6fb64c5f6441ad2f27a): add support for s3 registries using V4
@@ -1272,7 +1282,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.1.1...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.1.2...HEAD
+[v4.1.2]: https://github.com/quay/clair/compare/v4.1.1...v4.1.2
 [v4.1.1]: https://github.com/quay/clair/compare/v4.1.0...v4.1.1
 [v4.1.0]: https://github.com/quay/clair/compare/v4.1.0-alpha.3...v4.1.0
 [v4.1.0-alpha.3]: https://github.com/quay/clair/compare/v4.1.0-alpha.2...v4.1.0-alpha.3
