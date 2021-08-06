@@ -1,0 +1,72 @@
+
+type Query {
+  report(digest: Digest!): ReportResponse!
+  #vulnerabilities(digest: Digest!): [Vulnerability!]!
+  #vulnerability_report(digest: Digest!): VulnerabilityReport!
+}
+
+type VulnerabilityReport {
+	digest: Digest!
+	packages: [Package!]!
+	distributions: [Distribution!]!
+	repositories: [Repository!]!
+	environments: [Environment!]!
+	vulnerabilities: [Vulnerability!]!
+	enrichments: [Enrichment!]!
+	package_vulnerabilities: [PackageVulnerability!]!
+}
+
+# Backed by the claircore.Digest
+scalar Digest
+
+# Backed by json.RawMessage
+scalar JSONObject
+
+type Package {
+	id: ID!
+	# TODO Fill out this object.
+}
+
+type Distribution {
+	id: ID!
+	# TODO Fill out this object.
+}
+
+type Repository {
+	id: ID!
+	# TODO Fill out this object.
+}
+
+type Environment {
+	id: ID!
+	# TODO Fill out this object.
+}
+
+type Vulnerability {
+	id: ID!
+	# TODO Fill out this object.
+}
+
+# Enrichment is the map in the claircore type turned into an array.
+type Enrichment {
+	type: String!
+	enrichment: [JSONObject!]!
+}
+
+type PackageVulnerability {
+	id: ID!
+	vulnerabilities: [ID!]!
+}
+
+type ReportResponse {
+	packages: [PackageReport!]!
+	enrichments: [Enrichment!]!
+}
+
+type PackageReport {
+	id: ID!
+	# package...
+	vulnerability: [Vulnerability!]
+	distribution: Distribution
+	repository: [Repository!]
+}

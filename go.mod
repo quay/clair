@@ -3,6 +3,7 @@ module github.com/quay/clair/v4
 go 1.15
 
 require (
+	github.com/99designs/gqlgen v0.13.0
 	github.com/docker/docker v1.13.1 // indirect
 	github.com/go-stomp/stomp v2.0.6+incompatible
 	github.com/golang/mock v1.5.0 // indirect
@@ -24,6 +25,7 @@ require (
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/ugorji/go/codec v1.2.4
 	github.com/urfave/cli/v2 v2.3.0
+	github.com/vektah/gqlparser/v2 v2.1.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.16.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.16.0
 	go.opentelemetry.io/otel v0.16.0
