@@ -13,6 +13,8 @@ import (
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/config"
+	"github.com/quay/clair/v4/feature"
+	"github.com/quay/clair/v4/graphql"
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
 	intromw "github.com/quay/clair/v4/middleware/introspection"
@@ -185,7 +187,7 @@ func (t *Server) configureIndexerMode(_ context.Context) error {
 }
 
 // configureMatcherMode configures HttpTransport
-func (t *Server) configureMatcherMode(_ context.Context) error {
+func (t *Server) configureMatcherMode(ctx context.Context) error {
 	// requires both an indexer and matcher service. indexer service
 	// is assumed to be a remote call over the network
 	if t.indexer == nil || t.matcher == nil {
@@ -200,6 +202,15 @@ func (t *Server) configureMatcherMode(_ context.Context) error {
 
 	t.Handle(UpdateDiffAPIPath,
 		intromw.InstrumentedHandler(UpdateDiffAPIPath, t.traceOpt, UpdateDiffHandler(t.matcher)))
+
+	if feature.GraphQL {
+		const path = matcherRoot + apiRoot + "graphql"
+		gh, err := graphql.New(ctx, t.indexer, t.matcher)
+		if err != nil {
+			return err
+		}
+		t.Handle(path, intromw.InstrumentedHandler(path, t.traceOpt, gh))
+	}
 
 	return nil
 }
