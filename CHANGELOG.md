@@ -2,11 +2,92 @@
 ## [Unreleased]
 
 
+<a name="v4.2.0"></a>
+## [v4.2.0] - 2021-08-10
+### Chore
+- [1e0a43a](https://github.com/quay/clair/commit/1e0a43aa1d6714c79a5b9f5b4568c0de16d3e127): bump claircore to v0.5.2
+### Http
+- [4cd0952](https://github.com/quay/clair/commit/4cd0952833b7048ccf8fbf024a7c61a3c4a6c34b): rate limit index report requests
+### Introspection
+- [5b129ad](https://github.com/quay/clair/commit/5b129ad997fb33b02c6ac1c605fb8444399a5c43): capture rate-limited requests
+
+<a name="v4.2.0-rc.2"></a>
+## [v4.2.0-rc.2] - 2021-07-29
+### Chore
+- [263d667](https://github.com/quay/clair/commit/263d6677e6cf661c281de6087bb93628b79c3ee0): update claircore
+### Deployment
+- [c888a3f](https://github.com/quay/clair/commit/c888a3f21b6397355761b6eb056d95487bbf3eca): Fix microdnf install inconsistencies
+
+<a name="v4.2.0-rc.1"></a>
+## [v4.2.0-rc.1] - 2021-07-20
+### All
+- [9ce2af3](https://github.com/quay/clair/commit/9ce2af3fbc3b7040de37ef47accf37e055e0d730): remove jzelinskie from codeowners
+### Chore
+- [72df357](https://github.com/quay/clair/commit/72df35774fcb65e772214378b25da870fd5c7adb): update CODEOWNERS
+- [248e796](https://github.com/quay/clair/commit/248e796184f8da454b21564b3ec6e43020391b92): update responserecorder
+- [5354f10](https://github.com/quay/clair/commit/5354f1073cf073202c7c98388c13abc6b6743d08): bump claircore version
+### Clairctl
+- [45538e0](https://github.com/quay/clair/commit/45538e0ccee4d4ee12247da11f295ff32dcbe4ff): add support for s3 registries using V4
+ - Fixes [#1264](https://github.com/quay/clair/issues/1264)### Config
+- [af6a1f4](https://github.com/quay/clair/commit/af6a1f49b35f10faff1102a5d776050eb74cd0d0): omit Authorization header for empty claims
+ - Fixes [#1283](https://github.com/quay/clair/issues/1283)### Docker
+- [22ee21d](https://github.com/quay/clair/commit/22ee21df6f712a7461c9dfd6c48b06c1da5b8670): reflect quay Dockerfile updates
+### Httptransport
+- [fee8bc5](https://github.com/quay/clair/commit/fee8bc5ae70ee6030f7c2d6ad9b901e6fb7aaaea): remove key management API
+### Initialize
+- [1e26de5](https://github.com/quay/clair/commit/1e26de5737f369b1c55f873471c43a1fa1919fef): use new enrichers
+### Introspection
+- [8d12890](https://github.com/quay/clair/commit/8d128903a1990e33c036edab6f02bd3c28472407): use the response recorder
+### Keymanager
+- [dc0b707](https://github.com/quay/clair/commit/dc0b70791b4ed37fbb6bb697c40cafb4824adfab): remove package
+### Local-Dev
+- [0285c30](https://github.com/quay/clair/commit/0285c3000abc1bf588b9773dfb225fa74afcf2cb): add grafana to docker-compose
+- [5df0b7b](https://github.com/quay/clair/commit/5df0b7b4c46a88e9f476e99a4b0c03ede88722ea): remove whitelist env var for quay conf
+### Matcher
+- [49bfd4d](https://github.com/quay/clair/commit/49bfd4d791c087634df749f9895caebd0e5c4f41): disable updaters creates empty updater sets
+ - Fixes [#1273](https://github.com/quay/clair/issues/1273)### Migrations
+- [cef8142](https://github.com/quay/clair/commit/cef8142a725016c49425b4dd27d61708fec899e3): add future key table removal
+### Notifier
+- [85ac7bb](https://github.com/quay/clair/commit/85ac7bb877d7cb2154d5a59c6cf13bb690d8179c): remove KeyStore interface
+### Openapi
+- [5d03223](https://github.com/quay/clair/commit/5d032233ad90b10728bb564e92019b8b9b9b1197): fix paths
+ -  [#1280](https://github.com/quay/clair/issues/1280)### Postgres
+- [a5ae342](https://github.com/quay/clair/commit/a5ae34261ee7e4451ed3d6d27b28e0a7d472f44d): update to new test database harness
+- [6184ce3](https://github.com/quay/clair/commit/6184ce332fd1531d11bc27e2150fe16b899d6449): update test harness
+- [0ca77ce](https://github.com/quay/clair/commit/0ca77cec0af74b4304c2ccf805ee3dea642cad37): remove KeyStore implementation and tests
+### Service
+- [d1ca564](https://github.com/quay/clair/commit/d1ca564c59f844ce27538c41527ddf639aabb3e4): remove KeyManager and KeyStore
+### Services
+- [b3e490d](https://github.com/quay/clair/commit/b3e490dbc1022a5d08f7ceef8565928fdd19be98): disable transport compression in matcher
+### Webhook
+- [79089a4](https://github.com/quay/clair/commit/79089a44122587eea8ceab246b7d34615ebcf9dd): remove keymanager usage
+
+<a name="v4.1.2"></a>
+## [v4.1.2] - 2021-08-06
+### Chore
+- [e6c9bc2](https://github.com/quay/clair/commit/e6c9bc2890b75b91a7d3a7aa5257a37b25d05dfb): v4.1.2 changelog bump
+- [1e130f2](https://github.com/quay/clair/commit/1e130f2844d26ceac4a26f0548d8bc2bea79a91f): bump claircore version
+### Introspection
+- [804cbed](https://github.com/quay/clair/commit/804cbedbd6724bc22f9adac02186f45bf77c703f): use the response recorder
+ -  [#1318](https://github.com/quay/clair/issues/1318)### Services
+- [bc60dcc](https://github.com/quay/clair/commit/bc60dcc29d4440636f68911e79b08b188ac8e81e): disable transport compression in matcher
+
+<a name="v4.1.1"></a>
+## [v4.1.1] - 2021-06-15
+### Chore
+- [6528f73](https://github.com/quay/clair/commit/6528f738a2a0cf303625040459d5590050f75294): v4.1.1 changelog bump
+- [a3a8020](https://github.com/quay/clair/commit/a3a8020c2225de42e248352503b06704d7167839): bump claircore version
+### Clairctl
+- [343e7da](https://github.com/quay/clair/commit/343e7da0f82f83e40f88a6fb64c5f6441ad2f27a): add support for s3 registries using V4
+ - Fixes [#1264](https://github.com/quay/clair/issues/1264)### Config
+- [ad9eccf](https://github.com/quay/clair/commit/ad9eccf9c93a00bda4300ae783b42753d2c10d35): omit Authorization header for empty claims
+ -  [#1284](https://github.com/quay/clair/issues/1284)
 <a name="v4.1.0"></a>
-## [v4.1.0] - 2021-03-23
+## [v4.1.0] - 2021-05-13
 ### All
 - [6638793](https://github.com/quay/clair/commit/66387930f2b80087a32a1aeddc9b1ef16eec01e1): use RateLimiter where it seems appropriate
 ### Chore
+- [8bcbbf1](https://github.com/quay/clair/commit/8bcbbf1be8b14051a05cc86bc404834b5778a6e8): v4.1.0 changelog bump
 - [04f2cb7](https://github.com/quay/clair/commit/04f2cb71acc8eceac0d1a7766c5ebfcfa01150ee): bump claircore version
 ### Cicd
 - [8b0cdb3](https://github.com/quay/clair/commit/8b0cdb38fa8f4d701e0ef804e37728721798f564): use golang major version tag for dev env
@@ -124,6 +205,16 @@
 ### Updaters
 - [8105b03](https://github.com/quay/clair/commit/8105b033fb53f0907373f6af76af954fe95a856d): plumb update retention in
 
+<a name="v4.0.6"></a>
+## [v4.0.6] - 2021-06-15
+### Chore
+- [d169414](https://github.com/quay/clair/commit/d16941471a9d2e7e5434dab9173b70c1966f75f9): v4.0.6 changelog bump
+- [73adee2](https://github.com/quay/clair/commit/73adee2f86d17460a41c0b7f08a320442ff18b91): bump claircore to v0.1.26
+### Cicd
+- [cd64d3f](https://github.com/quay/clair/commit/cd64d3ffebdb4bf3f42ebb8f755f86ad7866d5d5): changelog fixups
+### Clairctl
+- [f745d45](https://github.com/quay/clair/commit/f745d455a26145ab06fca2efa23a9fd9da7cda2d): add support for s3 registries using V4
+ - Fixes [#1264](https://github.com/quay/clair/issues/1264)
 <a name="v4.0.5"></a>
 ## [v4.0.5] - 2021-04-16
 ### Chore
@@ -1497,11 +1588,17 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.1.0...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.2.0...HEAD
+[v4.2.0]: https://github.com/quay/clair/compare/v4.2.0-rc.2...v4.2.0
+[v4.2.0-rc.2]: https://github.com/quay/clair/compare/v4.2.0-rc.1...v4.2.0-rc.2
+[v4.2.0-rc.1]: https://github.com/quay/clair/compare/v4.1.2...v4.2.0-rc.1
+[v4.1.2]: https://github.com/quay/clair/compare/v4.1.1...v4.1.2
+[v4.1.1]: https://github.com/quay/clair/compare/v4.1.0...v4.1.1
 [v4.1.0]: https://github.com/quay/clair/compare/v4.1.0-alpha.3...v4.1.0
 [v4.1.0-alpha.3]: https://github.com/quay/clair/compare/v4.1.0-alpha.2...v4.1.0-alpha.3
 [v4.1.0-alpha.2]: https://github.com/quay/clair/compare/v4.1.0-alpha.1...v4.1.0-alpha.2
-[v4.1.0-alpha.1]: https://github.com/quay/clair/compare/v4.0.5...v4.1.0-alpha.1
+[v4.1.0-alpha.1]: https://github.com/quay/clair/compare/v4.0.6...v4.1.0-alpha.1
+[v4.0.6]: https://github.com/quay/clair/compare/v4.0.5...v4.0.6
 [v4.0.5]: https://github.com/quay/clair/compare/v4.0.4...v4.0.5
 [v4.0.4]: https://github.com/quay/clair/compare/v4.0.3...v4.0.4
 [v4.0.3]: https://github.com/quay/clair/compare/v4.0.2...v4.0.3
