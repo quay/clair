@@ -39,8 +39,7 @@ const (
 	OpenAPIV1Path           = "/openapi/v1"
 )
 
-// Server is the primary http server
-// Clair exposes it's functionality on.
+// Server is the primary http server Clair exposes its functionality on.
 type Server struct {
 	// Server embeds a http.Server and http.ServeMux.
 	// The http.Server will be configured with the ServeMux on successful
@@ -57,8 +56,8 @@ type Server struct {
 func New(ctx context.Context, conf config.Config, indexer indexer.Service, matcher matcher.Service, notifier notifier.Service) (*Server, error) {
 	serv := &http.Server{
 		Addr: conf.HTTPListenAddr,
-		// use the passed in global context as the base context
-		// for all http requests handled by this server
+		// use the passed in global context as the base context for all http
+		// requests handled by this server
 		BaseContext: func(net.Listener) context.Context { return ctx },
 	}
 	mux := http.NewServeMux()
@@ -108,7 +107,7 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 	// attach HttpTransport to server, this works because we embed http.ServeMux
 	t.Server.Handler = t
 
-	// add endpoint authentication if configured add auth. must happen after
+	// Add endpoint authentication if configured to add auth. Must happen after
 	// mux was configured for given mode.
 	if conf.Auth.Any() {
 		err := t.configureWithAuth(ctx)
@@ -122,16 +121,15 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 	return t, nil
 }
 
-// configureDiscovery() creates a discovery handler
-// for serving the v1 open api specification
+// ConfigureDiscovery creates a discovery handler for serving the v1 OpenAPI
+// specification.
 func (t *Server) configureDiscovery(_ context.Context) error {
 	t.Handle(OpenAPIV1Path,
 		intromw.InstrumentedHandler(OpenAPIV1Path, t.traceOpt, DiscoveryHandler()))
 	return nil
 }
 
-// configureDevMode configures the HttpTrasnport for
-// ComboMode.
+// ConfigureComboMode configures the HttpTransport for ComboMode.
 //
 // This mode runs both Indexer and Matcher in a single process.
 func (t *Server) configureComboMode(ctx context.Context) error {
@@ -158,7 +156,7 @@ func (t *Server) configureComboMode(ctx context.Context) error {
 	return nil
 }
 
-// configureIndexerMode configures the HttpTransport for IndexerMode.
+// ConfigureIndexerMode configures the HttpTransport for IndexerMode.
 //
 // This mode runs only an Indexer in a single process.
 func (t *Server) configureIndexerMode(_ context.Context) error {
@@ -184,7 +182,9 @@ func (t *Server) configureIndexerMode(_ context.Context) error {
 	return nil
 }
 
-// configureMatcherMode configures HttpTransport
+// ConfigureMatcherMode configures HttpTransport for MatcherMode.
+//
+// This mode runs only a Matcher in a single process.
 func (t *Server) configureMatcherMode(_ context.Context) error {
 	// requires both an indexer and matcher service. indexer service
 	// is assumed to be a remote call over the network
@@ -204,7 +204,9 @@ func (t *Server) configureMatcherMode(_ context.Context) error {
 	return nil
 }
 
-// configureMatcherMode configures HttpTransport
+// ConfigureNotifierMode configures HttpTransport for NotifierMode.
+//
+// This mode runs only a Notifier in a single process.
 func (t *Server) configureNotifierMode(ctx context.Context) error {
 	// requires both an indexer and matcher service. indexer service
 	// is assumed to be a remote call over the network
@@ -228,10 +230,10 @@ func (t *Server) configureNotifierMode(ctx context.Context) error {
 // mint its own JWTs.
 const IntraserviceIssuer = `clair-intraservice`
 
-// configureWithAuth will take the current serve mux and wrap it
-// in an Auth middleware handler.
+// ConfigureWithAuth will take the current serve mux and wrap it in an Auth
+// middleware handler.
 //
-// must be ran after the config*Mode method of choice.
+// Must be ran after the config*Mode method of choice.
 func (t *Server) configureWithAuth(_ context.Context) error {
 	h, err := authHandler(&t.conf, t.Server.Handler)
 	if err != nil {
@@ -253,7 +255,7 @@ func unmodified(r *http.Request, v string) bool {
 	return false
 }
 
-// writerError is a helper that closes over an error that may be returned after
+// WriterError is a helper that closes over an error that may be returned after
 // writing a response body starts.
 //
 // The normal error flow can't be used, because the HTTP status code will have
