@@ -46,6 +46,12 @@ type Matcher struct {
 	//
 	// A value of 0 disables GC.
 	UpdateRetention int `yaml:"update_retention" json:"update_retention"`
+	// CacheAge controls how long clients should be hinted to cache responses
+	// for.
+	//
+	// If empty, the duration set in "Period" will be used. This means client
+	// may cache "stale" results for 2(Period) - 1 seconds.
+	CacheAge time.Duration `yaml:"cache_age,omitempty" json:"cache_age,omitempty"`
 }
 
 func (m *Matcher) Validate(combo bool) error {
@@ -61,6 +67,9 @@ func (m *Matcher) Validate(combo bool) error {
 	}
 	if m.UpdateRetention == 1 || m.UpdateRetention < 0 {
 		m.UpdateRetention = DefaultRetention
+	}
+	if m.CacheAge == 0 {
+		m.CacheAge = m.Period
 	}
 	if !combo {
 		if m.IndexerAddr == "" {
