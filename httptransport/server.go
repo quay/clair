@@ -2,8 +2,10 @@ package httptransport
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/quay/zlog"
 	othttp "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -192,8 +194,14 @@ func (t *Server) configureMatcherMode(_ context.Context) error {
 		return clairerror.ErrNotInitialized{Msg: "MatcherMode requires both indexer and matcher services"}
 	}
 
+	reportHandler := &VulnerabilityReportHandler{
+		Indexer: t.indexer,
+		Matcher: t.matcher,
+		Cache:   t.conf.Matcher.CacheAge,
+	}
+
 	t.Handle(VulnerabilityReportPath,
-		intromw.InstrumentedHandler(VulnerabilityReportPath, t.traceOpt, VulnerabilityReportHandler(t.matcher, t.indexer)))
+		intromw.InstrumentedHandler(VulnerabilityReportPath, t.traceOpt, reportHandler))
 
 	t.Handle(UpdateOperationAPIPath,
 		intromw.InstrumentedHandler(UpdateOperationAPIPath, t.traceOpt, UpdateOperationHandler(t.matcher)))
@@ -276,4 +284,12 @@ func writerError(w http.ResponseWriter, e *error) func() {
 		}
 		w.Header().Add(errHeader, (*e).Error())
 	}
+}
+
+// SetCacheControl sets the "Cache-Control" header on the response.
+func setCacheControl(w http.ResponseWriter, age time.Duration) {
+	// The odd format string means "print float as wide as needed and to 0
+	// precision."
+	const f = `max-age=%.f`
+	w.Header().Set("cache-control", fmt.Sprintf(f, age.Seconds()))
 }
