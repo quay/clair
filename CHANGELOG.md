@@ -2,9 +2,15 @@
 ## [Unreleased]
 
 
+<a name="v4.2.2"></a>
+## [v4.2.2] - 2021-08-17
+### Chore
+- [90f2909](https://github.com/quay/clair/commit/90f2909ed8d29b90dad205f9ad92bbbf9660f88c): bump claircore version
+
 <a name="v4.2.1"></a>
 ## [v4.2.1] - 2021-08-16
 ### Chore
+- [1882e1e](https://github.com/quay/clair/commit/1882e1eed86bfcd1e9a9667bc1900fdb1da081db): v4.2.1 changelog bump
 - [b48814b](https://github.com/quay/clair/commit/b48814b6b79fc75fb91dce858490e2d4a8f2db3d): bump claircore version
 
 <a name="v4.2.0"></a>
@@ -1290,7 +1296,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.2.1...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.2.2...HEAD
+[v4.2.2]: https://github.com/quay/clair/compare/v4.2.1...v4.2.2
 [v4.2.1]: https://github.com/quay/clair/compare/v4.2.0...v4.2.1
 [v4.2.0]: https://github.com/quay/clair/compare/v4.2.0-rc.2...v4.2.0
 [v4.2.0-rc.2]: https://github.com/quay/clair/compare/v4.2.0-rc.1...v4.2.0-rc.2
