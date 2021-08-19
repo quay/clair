@@ -70,6 +70,102 @@ func Test_Config_Validate_Failure(t *testing.T) {
 	}
 }
 
+func TestConfigUpateRetention(t *testing.T) {
+	var table = []struct {
+		name              string
+		conf              config.Config
+		expectedRetention int
+	}{
+		{
+			name:              "Retention less than 0",
+			expectedRetention: 0,
+			conf: config.Config{
+				Mode:           config.ComboMode,
+				HTTPListenAddr: "localhost:8080",
+				Indexer: config.Indexer{
+					ConnString: "example@example/db",
+				},
+				Notifier: config.Notifier{
+					ConnString: "example@example/db",
+				},
+				Matcher: config.Matcher{
+					ConnString:      "example@example/db",
+					IndexerAddr:     "example@example/db",
+					UpdateRetention: -1,
+				},
+			},
+		},
+		{
+			name:              "Retention of 0",
+			expectedRetention: 10,
+			conf: config.Config{
+				Mode:           config.ComboMode,
+				HTTPListenAddr: "localhost:8080",
+				Indexer: config.Indexer{
+					ConnString: "example@example/db",
+				},
+				Notifier: config.Notifier{
+					ConnString: "example@example/db",
+				},
+				Matcher: config.Matcher{
+					ConnString:      "example@example/db",
+					IndexerAddr:     "example@example/db",
+					UpdateRetention: 0,
+				},
+			},
+		},
+		{
+			name:              "Retention less than 2",
+			expectedRetention: 10,
+			conf: config.Config{
+				Mode:           config.ComboMode,
+				HTTPListenAddr: "localhost:8080",
+				Indexer: config.Indexer{
+					ConnString: "example@example/db",
+				},
+				Notifier: config.Notifier{
+					ConnString: "example@example/db",
+				},
+				Matcher: config.Matcher{
+					ConnString:      "example@example/db",
+					IndexerAddr:     "example@example/db",
+					UpdateRetention: 1,
+				},
+			},
+		},
+		{
+			name:              "Retention of 2",
+			expectedRetention: 2,
+			conf: config.Config{
+				Mode:           config.ComboMode,
+				HTTPListenAddr: "localhost:8080",
+				Indexer: config.Indexer{
+					ConnString: "example@example/db",
+				},
+				Notifier: config.Notifier{
+					ConnString: "example@example/db",
+				},
+				Matcher: config.Matcher{
+					ConnString:      "example@example/db",
+					IndexerAddr:     "example@example/db",
+					UpdateRetention: 2,
+				},
+			},
+		},
+	}
+	for _, tab := range table {
+		t.Run(tab.name, func(t *testing.T) {
+			err := config.Validate(&tab.conf)
+			if err != nil {
+				log.Fatalf("expected no errors but got: %s, for test case: %s", err, tab.name)
+			}
+			if tab.conf.Matcher.UpdateRetention != tab.expectedRetention {
+				t.Fatalf("expected UpdateRetention of %d but got %d", tab.expectedRetention, tab.conf.Matcher.UpdateRetention)
+			}
+		})
+	}
+}
+
 func TestConfigDisableUpdaters(t *testing.T) {
 	var table = []struct {
 		name string
