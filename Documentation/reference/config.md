@@ -216,7 +216,8 @@ constraints.
 
 Defaults to 10.
 
-If a value of 0 is provided, GC is disabled.
+If a value less than 0 is provided, GC is disabled. 2 is the minimum value to
+ensure updates can be compared for notifications. 
 
 ### `$.matchers`
 Matchers provides configuration for the in-tree Matchers and RemoteMatchers.

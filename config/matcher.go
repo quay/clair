@@ -65,7 +65,12 @@ func (m *Matcher) Validate(combo bool) error {
 	if m.Period == 0 {
 		m.Period = DefaultPeriod
 	}
-	if m.UpdateRetention == 1 || m.UpdateRetention < 0 {
+	switch {
+	case m.UpdateRetention < 0:
+		// Less than 0 means GC is off.
+		m.UpdateRetention = 0
+	case m.UpdateRetention < 2:
+		// Anything less than 2 gets the default.
 		m.UpdateRetention = DefaultRetention
 	}
 	if m.CacheAge == 0 {
