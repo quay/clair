@@ -2599,7 +2599,8 @@ The location of this Indexer is required.</p>
 cycles. This should be set to a safe MAX value based on database size
 constraints.</p>
 <p>Defaults to 10.</p>
-<p>If a value of 0 is provided, GC is disabled.</p>
+<p>If a value less than 0 is provided, GC is disabled. 2 is the minimum value to
+ensure updates can be compared for notifications. </p>
 <h3 id="matchers"><a class="header" href="#matchers"><code>$.matchers</code></a></h3>
 <p>Matchers provides configuration for the in-tree Matchers and RemoteMatchers.</p>
 <h4 id="matchersnames"><a class="header" href="#matchersnames"><code>$.matchers.names</code></a></h4>
