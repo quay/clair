@@ -9,7 +9,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
-	"github.com/quay/claircore/pkg/distlock"
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/label"
@@ -33,7 +32,7 @@ type Processor struct {
 	// makes the defaults line up better.
 
 	// distributed lock used for mutual exclusion
-	distLock distlock.Locker
+	locks Locker
 	// a handle to an indexer service
 	indexer indexer.Service
 	// a handle to a matcher service
@@ -44,13 +43,13 @@ type Processor struct {
 	id int
 }
 
-func NewProcessor(id int, distLock distlock.Locker, indexer indexer.Service, matcher matcher.Service, store Store) *Processor {
+func NewProcessor(id int, l Locker, indexer indexer.Service, matcher matcher.Service, store Store) *Processor {
 	return &Processor{
-		distLock: distLock,
-		indexer:  indexer,
-		matcher:  matcher,
-		store:    store,
-		id:       id,
+		locks:   l,
+		indexer: indexer,
+		matcher: matcher,
+		store:   store,
+		id:      id,
 	}
 }
 
@@ -72,6 +71,11 @@ func (p *Processor) process(ctx context.Context, c <-chan Event) {
 		label.Int("processor_id", p.id),
 	)
 
+	defer func() {
+		if err := p.locks.Close(ctx); err != nil {
+			zlog.Warn(ctx).Err(err).Msg("error closing locker")
+		}
+	}()
 	zlog.Debug(ctx).Msg("processing events")
 	for {
 		select {
@@ -84,28 +88,18 @@ func (p *Processor) process(ctx context.Context, c <-chan Event) {
 				label.Stringer("UOID", e.uo.Ref),
 			)
 			zlog.Debug(ctx).Msg("processing")
-			locked, err := p.distLock.TryLock(ctx, e.uo.Ref.String())
-			if err != nil {
-				zlog.Error(ctx).
-					Err(err).
-					Msg("received error trying lock. backing off till next UOID")
-				continue
-			}
-			if !locked {
-				zlog.Debug(ctx).
-					Msg("lock acquired by another processor. will not process")
-				continue
-			}
-			// function used to schedule unlock via defer
-			err = func() error {
-				defer p.distLock.Unlock()
+			if err := func() error {
+				ctx, done := p.locks.TryLock(ctx, e.uo.Ref.String())
+				defer done()
+				if err := ctx.Err(); err != nil {
+					return err
+				}
 				safe, prev := p.safe(ctx, e)
 				if !safe {
 					return nil
 				}
 				return p.create(ctx, e, prev)
-			}()
-			if err != nil {
+			}(); err != nil {
 				zlog.Error(ctx).
 					Err(err).
 					Msg("failed to create notifications")

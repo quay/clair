@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
 	_ "github.com/jackc/pgx/v4/stdlib"
-	pgdl "github.com/quay/claircore/pkg/distlock/postgres"
+	"github.com/quay/claircore/pkg/ctxlock"
 	"github.com/quay/zlog"
 	"github.com/remind101/migrate"
 	"go.opentelemetry.io/otel/baggage"
@@ -107,11 +107,15 @@ func New(ctx context.Context, opts Opts) (*service, error) {
 		Int("count", processors).
 		Msg("initializing processors")
 	for i := 0; i < processors; i++ {
-		// processors only use try locks
-		distLock := pgdl.NewPool(lockPool, 0)
+		// Can't re-use a locker because the Process method unconditionally
+		// spawns background goroutines.
+		l, err := ctxlock.New(ctx, lockPool)
+		if err != nil {
+			return nil, err
+		}
 		p := notifier.NewProcessor(
 			i,
-			distLock,
+			l,
 			opts.Indexer,
 			opts.Matcher,
 			store,
@@ -205,12 +209,17 @@ func webhookDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, s
 
 	ds := make([]*notifier.Delivery, 0, deliveries)
 	for i := 0; i < deliveries; i++ {
-		distLock := pgdl.NewPool(lockPool, 0)
+		// Can't share a ctxlock because the Deliverer object unconditionally
+		// spawns background goroutines.
+		l, err := ctxlock.New(ctx, lockPool)
+		if err != nil {
+			return fmt.Errorf("failed to create locker: %w", err)
+		}
 		wh, err := webhook.New(conf, opts.Client)
 		if err != nil {
 			return fmt.Errorf("failed to create webhook deliverer: %v", err)
 		}
-		delivery := notifier.NewDelivery(i, wh, opts.DeliveryInterval, store, distLock)
+		delivery := notifier.NewDelivery(i, wh, opts.DeliveryInterval, store, l)
 		ds = append(ds, delivery)
 	}
 	for _, d := range ds {
@@ -237,20 +246,25 @@ func amqpDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, stor
 
 	ds := make([]*notifier.Delivery, 0, deliveries)
 	for i := 0; i < deliveries; i++ {
-		distLock := pgdl.NewPool(lockPool, 0)
+		// Can't share a ctxlock because the Deliverer object unconditionally
+		// spawns background goroutines.
+		l, err := ctxlock.New(ctx, lockPool)
+		if err != nil {
+			return fmt.Errorf("failed to create locker: %w", err)
+		}
 		if conf.Direct {
 			q, err := namqp.NewDirectDeliverer(conf)
 			if err != nil {
 				return fmt.Errorf("failed to create AMQP deliverer: %v", err)
 			}
-			delivery := notifier.NewDelivery(i, q, opts.DeliveryInterval, store, distLock)
+			delivery := notifier.NewDelivery(i, q, opts.DeliveryInterval, store, l)
 			ds = append(ds, delivery)
 		} else {
 			q, err := namqp.New(conf)
 			if err != nil {
 				return fmt.Errorf("failed to create AMQP deliverer: %v", err)
 			}
-			delivery := notifier.NewDelivery(i, q, opts.DeliveryInterval, store, distLock)
+			delivery := notifier.NewDelivery(i, q, opts.DeliveryInterval, store, l)
 			ds = append(ds, delivery)
 		}
 	}
@@ -279,20 +293,25 @@ func stompDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, sto
 
 	ds := make([]*notifier.Delivery, 0, deliveries)
 	for i := 0; i < deliveries; i++ {
-		distLock := pgdl.NewPool(lockPool, 0)
+		// Can't share a ctxlock because the Deliverer object unconditionally
+		// spawns background goroutines.
+		l, err := ctxlock.New(ctx, lockPool)
+		if err != nil {
+			return fmt.Errorf("failed to create locker: %w", err)
+		}
 		if conf.Direct {
 			q, err := stomp.NewDirectDeliverer(conf)
 			if err != nil {
 				return fmt.Errorf("failed to create STOMP direct deliverer: %v", err)
 			}
-			delivery := notifier.NewDelivery(i, q, opts.DeliveryInterval, store, distLock)
+			delivery := notifier.NewDelivery(i, q, opts.DeliveryInterval, store, l)
 			ds = append(ds, delivery)
 		} else {
 			q, err := stomp.New(conf)
 			if err != nil {
 				return fmt.Errorf("failed to create STOMP deliverer: %v", err)
 			}
-			delivery := notifier.NewDelivery(i, q, opts.DeliveryInterval, store, distLock)
+			delivery := notifier.NewDelivery(i, q, opts.DeliveryInterval, store, l)
 			ds = append(ds, delivery)
 		}
 	}

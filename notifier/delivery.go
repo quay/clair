@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/quay/claircore/pkg/distlock"
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/label"
@@ -17,24 +16,24 @@ import (
 // Delivery handles the business logic of delivering
 // notifications.
 type Delivery struct {
-	// a Deliverer implemention to invoke.
+	// a Deliverer implementation to invoke.
 	Deliverer Deliverer
 	// the interval at which we will attempt delivery of notifications.
 	interval time.Duration
 	// a store to retrieve notifications and update their receipts
 	store Store
 	// distributed lock used for mutual exclusion
-	distLock distlock.Locker
+	locks Locker
 	// a integer id used for logging
 	id int
 }
 
-func NewDelivery(id int, d Deliverer, interval time.Duration, store Store, distLock distlock.Locker) *Delivery {
+func NewDelivery(id int, d Deliverer, interval time.Duration, store Store, l Locker) *Delivery {
 	return &Delivery{
 		Deliverer: d,
 		interval:  interval,
 		store:     store,
-		distLock:  distLock,
+		locks:     l,
 		id:        id,
 	}
 }
@@ -61,6 +60,11 @@ func (d *Delivery) deliver(ctx context.Context) error {
 		label.String("component", "notifier/Delivery.deliver"),
 	)
 
+	defer func() {
+		if err := d.locks.Close(ctx); err != nil {
+			zlog.Warn(ctx).Err(err).Msg("error closing lock source")
+		}
+	}()
 	ticker := time.NewTicker(d.interval)
 	defer ticker.Stop()
 	for {
@@ -115,21 +119,17 @@ func (d *Delivery) RunDelivery(ctx context.Context) error {
 	}
 
 	for _, nID := range toDeliver {
-		ok, err := d.distLock.TryLock(ctx, nID.String())
-		if err != nil {
-			// distlock failed, back off till next tick
-			return err
-		}
-		if !ok {
+		var err error
+		ctx, done := d.locks.TryLock(ctx, nID.String())
+		if ok := ctx.Err(); !errors.Is(ok, nil) {
 			zlog.Debug(ctx).
+				Err(ok).
 				Stringer("notification_id", nID).
-				Msg("another process is delivering this notification")
-			// another process is working on this notification
-			continue
+				Msg("unable to get lock")
+		} else {
+			err = d.do(ctx, nID)
 		}
-		// an error means we should back off until next tick
-		err = d.do(ctx, nID)
-		d.distLock.Unlock()
+		done()
 		if err != nil {
 			return err
 		}
