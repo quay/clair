@@ -31,7 +31,7 @@ var (
 	rtMap = map[string]http.RoundTripper{}
 )
 
-func rt(ref string) (http.RoundTripper, error) {
+func rt(ctx context.Context, ref string) (http.RoundTripper, error) {
 	r, err := name.ParseReference(ref)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,10 @@ func rt(ref string) (http.RoundTripper, error) {
 	if err != nil {
 		return nil, err
 	}
-	rt, err := transport.New(repo.Registry, auth, http.DefaultTransport, []string{repo.Scope("pull")})
+	rt := http.DefaultTransport
+	rt = transport.NewUserAgent(rt, userAgent)
+	rt = transport.NewRetry(rt)
+	rt, err = transport.NewWithContext(ctx, repo.Registry, auth, rt, []string{repo.Scope(transport.PullScope)})
 	if err != nil {
 		return nil, err
 	}

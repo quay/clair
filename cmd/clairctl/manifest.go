@@ -74,7 +74,7 @@ func manifestAction(c *cli.Context) error {
 }
 
 func Inspect(ctx context.Context, r string) (*claircore.Manifest, error) {
-	rt, err := rt(r)
+	rt, err := rt(ctx, r)
 	if err != nil {
 		return nil, err
 	}

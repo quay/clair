@@ -155,7 +155,7 @@ func reportAction(c *cli.Context) error {
 			Str("ref", ref).
 			Msg("fetching")
 		eg.Go(func() error {
-			d, err := resolveRef(ref)
+			d, err := resolveRef(ctx, ref)
 			if err != nil {
 				zlog.Debug(ctx).
 					Str("ref", ref).
@@ -213,9 +213,9 @@ func reportAction(c *cli.Context) error {
 	return nil
 }
 
-func resolveRef(r string) (claircore.Digest, error) {
+func resolveRef(ctx context.Context, r string) (claircore.Digest, error) {
 	var d claircore.Digest
-	rt, err := rt(r)
+	rt, err := rt(ctx, r)
 	if err != nil {
 		return d, err
 	}
