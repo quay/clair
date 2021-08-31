@@ -14,6 +14,8 @@ import (
 	"github.com/quay/claircore"
 	"github.com/quay/zlog"
 	"github.com/urfave/cli/v2"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/label"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/quay/clair/v4/internal/codec"
@@ -40,6 +42,17 @@ var ReportCmd = &cli.Command{
 			Usage:       "output format: text, json, xml",
 			DefaultText: "text",
 			Value:       &outFmt{},
+		},
+		&cli.BoolFlag{
+			Name:    "keep-going",
+			Aliases: []string{"k"},
+			Usage:   "when requesting more than one report, don't stop at the first error reported",
+			Value:   false,
+		},
+		&cli.BoolFlag{
+			Name:  "novel",
+			Usage: "only upload novel manifests",
+			Value: false,
 		},
 	},
 }
@@ -101,9 +114,9 @@ type Formatter interface {
 //
 // Users should examine Err first to determine if the request succeeded.
 type Result struct {
-	Name   string
-	Err    error
 	Report *claircore.VulnerabilityReport
+	Err    error
+	Name   string
 }
 
 func reportAction(c *cli.Context) error {
@@ -136,6 +149,7 @@ func reportAction(c *cli.Context) error {
 
 	result := make(chan *Result)
 	done := make(chan struct{})
+	keepgoing := c.Bool("keep-going") && args.Len() > 1
 	eg, ctx := errgroup.WithContext(c.Context)
 	go func() {
 		defer close(done)
@@ -151,21 +165,19 @@ func reportAction(c *cli.Context) error {
 
 	for i := 0; i < args.Len(); i++ {
 		ref := args.Get(i)
+		ctx := baggage.ContextWithValues(ctx, label.String("ref", ref))
 		zlog.Debug(ctx).
-			Str("ref", ref).
 			Msg("fetching")
 		eg.Go(func() error {
 			d, err := resolveRef(ctx, ref)
 			if err != nil {
 				zlog.Debug(ctx).
-					Str("ref", ref).
 					Err(err).
 					Send()
 				return err
 			}
+			ctx := baggage.ContextWithValues(ctx, label.Stringer("digest", d))
 			zlog.Debug(ctx).
-				Str("ref", ref).
-				Stringer("digest", d).
 				Msg("found manifest")
 
 			// This bit is tricky:
@@ -175,25 +187,47 @@ func reportAction(c *cli.Context) error {
 			//
 			// If we need the manifest, populate the manifest and jump to Again.
 			var m *claircore.Manifest
+			ct := 1
 		Again:
+			if ct > 20 {
+				return errors.New("too many attempts")
+			}
+			zlog.Debug(ctx).
+				Int("attempt", ct).
+				Msg("requesting index_report")
 			err = cc.IndexReport(ctx, d, m)
 			switch {
 			case err == nil:
 			case errors.Is(err, errNeedManifest):
+				if c.Bool("novel") {
+					zlog.Debug(ctx).
+						Msg("manifest already known, skipping upload")
+					break
+				}
+				fallthrough
+			case errors.Is(err, errNovelManifest):
 				m, err = Inspect(ctx, ref)
 				if err != nil {
 					zlog.Debug(ctx).
-						Str("ref", ref).
 						Err(err).
 						Msg("manifest error")
+					if keepgoing {
+						zlog.Info(ctx).
+							Err(err).
+							Msg("ignoring manifest error")
+						return nil
+					}
 					return err
 				}
+				ct++
 				goto Again
 			default:
 				zlog.Debug(ctx).
-					Str("ref", ref).
 					Err(err).
 					Msg("index error")
+				if keepgoing {
+					return nil
+				}
 				return err
 			}
 
@@ -201,6 +235,9 @@ func reportAction(c *cli.Context) error {
 				Name: ref,
 			}
 			r.Report, r.Err = cc.VulnerabilityReport(ctx, d)
+			if r.Err != nil {
+				r.Err = fmt.Errorf("%s(%v): %w", ref, d, r.Err)
+			}
 			result <- &r
 			return nil
 		})
