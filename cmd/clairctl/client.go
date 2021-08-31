@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"path"
@@ -59,7 +61,8 @@ type Client struct {
 	host   *url.URL
 	client *http.Client
 
-	mu        sync.RWMutex
+	mu sync.RWMutex
+	// TODO Back this on disk to minimize resubmissions.
 	validator map[string]string
 }
 
@@ -78,14 +81,14 @@ func NewClient(c *http.Client, root string) (*Client, error) {
 	}, nil
 }
 
-func (c *Client) getValidator(path string) string {
+func (c *Client) getValidator(_ context.Context, path string) string {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.validator[path]
 }
 
-func (c *Client) setValidator(path, v string) {
-	zlog.Debug(context.Background()).
+func (c *Client) setValidator(ctx context.Context, path, v string) {
+	zlog.Debug(ctx).
 		Str("path", path).
 		Str("validator", v).
 		Msg("setting validator")
@@ -94,7 +97,10 @@ func (c *Client) setValidator(path, v string) {
 	c.validator[path] = v
 }
 
-var errNeedManifest = errors.New("manifest needed but not supplied")
+var (
+	errNeedManifest  = errors.New("manifest needed but not supplied")
+	errNovelManifest = errors.New("manifest unknown to the system")
+)
 
 func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *claircore.Manifest) error {
 	var (
@@ -110,10 +116,6 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 	}
 	req = c.request(ctx, fp, http.MethodGet)
 	res, err = c.client.Do(req)
-	if res != nil {
-		// Don't actually care.
-		res.Body.Close()
-	}
 	if err != nil {
 		zlog.Debug(ctx).
 			Err(err).
@@ -121,16 +123,19 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 			Msg("request failed")
 		return err
 	}
-	zlog.Debug(ctx).
+	defer res.Body.Close()
+	ev := zlog.Debug(ctx).
 		Str("method", res.Request.Method).
 		Str("path", res.Request.URL.Path).
-		Str("status", res.Status).
-		Send()
+		Str("status", res.Status)
+	if ev.Enabled() && res.ContentLength > 0 && res.ContentLength <= 256 {
+		var buf bytes.Buffer
+		buf.ReadFrom(io.LimitReader(res.Body, 256))
+		ev.Stringer("body", &buf)
+	}
+	ev.Send()
 	switch res.StatusCode {
-	case http.StatusOK, http.StatusNotFound:
-		zlog.Debug(ctx).
-			Stringer("manifest", id).
-			Msg("need to post manifest")
+	case http.StatusNotFound, http.StatusOK:
 	case http.StatusNotModified:
 		return nil
 	default:
@@ -138,9 +143,13 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 	}
 
 	if m == nil {
-		zlog.Debug(ctx).
-			Stringer("manifest", id).
-			Msg("don't have needed manifest")
+		ev := zlog.Debug(ctx).
+			Stringer("manifest", id)
+		if res.StatusCode == http.StatusNotFound {
+			ev.Msg("don't have needed manifest")
+			return errNovelManifest
+		}
+		ev.Msg("manifest may be out-of-date")
 		return errNeedManifest
 	}
 	ru, err := c.host.Parse(path.Join(c.host.RequestURI(), httptransport.IndexAPIPath))
@@ -174,8 +183,25 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 	default:
 		return fmt.Errorf("unexpected return status: %d", res.StatusCode)
 	}
+	var rd io.Reader
+	switch {
+	case res.ContentLength < 32+9:
+		// Less than the size of the digest representation, something's up.
+		var buf bytes.Buffer
+		// Ignore error, because what would we do with it here?
+		ct, _ := buf.ReadFrom(res.Body)
+		zlog.Info(ctx).
+			Int64("size", ct).
+			Stringer("response", &buf).
+			Msg("body seems short")
+		rd = &buf
+	case res.ContentLength < 0: // Streaming
+		fallthrough
+	default:
+		rd = res.Body
+	}
 	var report claircore.IndexReport
-	dec := codec.GetDecoder(res.Body)
+	dec := codec.GetDecoder(rd)
 	defer codec.PutDecoder(dec)
 	if err := dec.Decode(&report); err != nil {
 		zlog.Debug(ctx).
@@ -194,7 +220,7 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 			if err != nil {
 				return err
 			}
-			c.setValidator(u.Path, v)
+			c.setValidator(ctx, u.Path, v)
 		}
 	}
 	return nil
@@ -261,7 +287,7 @@ func (c *Client) request(ctx context.Context, u *url.URL, m string) *http.Reques
 	}
 	req = req.WithContext(ctx)
 	req.Header.Set("user-agent", userAgent)
-	if v := c.getValidator(u.EscapedPath()); v != "" {
+	if v := c.getValidator(ctx, u.EscapedPath()); v != "" {
 		req.Header.Set("if-none-match", v)
 	}
 	return req
