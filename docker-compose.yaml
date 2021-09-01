@@ -74,7 +74,7 @@ services:
       
   notifier:
     container_name: clair-notifier
-    image: quay.io/projectquay/golang:1.15
+    image: quay.io/projectquay/golang:1.16
     volumes:
       - "./:/src/clair/"
     environment:
@@ -93,7 +93,7 @@ services:
   # this should only be created and deleted via the make target "local-dev-notifier-test"
   notifier-test-mode:
     container_name: clair-notifier
-    image: quay.io/projectquay/golang:1.15
+    image: quay.io/projectquay/golang:1.16
     volumes:
       - "./:/src/clair/"
     environment:
@@ -112,7 +112,7 @@ services:
 
   indexer:
     container_name: clair-indexer
-    image: quay.io/projectquay/golang:1.15
+    image: quay.io/projectquay/golang:1.16
     volumes:
       - "./:/src/clair/"
     environment:
@@ -134,7 +134,7 @@ services:
   ## allows layer fetching over localhost
   indexer-quay:
     container_name: clair-indexer
-    image: quay.io/projectquay/golang:1.15
+    image: quay.io/projectquay/golang:1.16
     volumes:
       - "./:/src/clair/"
     environment:
@@ -152,10 +152,11 @@ services:
       - "traefik.http.services.indexer.loadbalancer.server.port=6000"
     depends_on:
       - quay
+      - clair-db
 
   matcher:
     container_name: clair-matcher
-    image: quay.io/projectquay/golang:1.15
+    image: quay.io/projectquay/golang:1.16
     volumes:
       - "./:/src/clair/"
     environment:
