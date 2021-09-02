@@ -80,7 +80,7 @@ func exportAction(c *cli.Context) error {
 			fmt.Fprintln(os.Stderr, err)
 		}
 	}()
-	mgr, err := updates.NewManager(ctx, store, updates.LocalLockSource(), cl,
+	mgr, err := updates.NewManager(ctx, store, updates.NewLocalLockSource(), cl,
 		updates.WithConfigs(cfgs),
 		updates.WithEnabled(cfg.Updaters.Sets),
 	)
