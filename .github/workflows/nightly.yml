@@ -1,0 +1,106 @@
+---
+name: Nightly
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Claircore branch to reference'
+        required: false
+      go_version:
+        description: 'Go version to be used throughout'
+        required: false
+      tag:
+        description: 'Tag to push resulting image to'
+        required: false
+  schedule:
+    - cron: '30 5 * * *'
+
+jobs:
+  build:
+    name: Build and Push container
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Setup
+        # This step uses defaults written in the shell script instead of the
+        # nicer workflow inputs so that the cron trigger works.
+        run: |
+          br=$(test -n "${{github.event.inputs.branch}}" && echo "${{github.event.inputs.branch}}" || echo main)
+          t=$(test -n "${{github.event.inputs.tag}}" && echo "${{github.event.inputs.tag}}" || echo nightly)
+          gv=$(test -n "${{github.event.inputs.go_version}}" && echo "${{github.event.inputs.go_version}}" || echo 1.17.1)
+          echo "CLAIRCORE_BRANCH=${br}" >> $GITHUB_ENV
+          echo "TAG=quay.io/projectquay/clair:${t}" >> $GITHUB_ENV
+          echo "GO_VERSION=${gv}" >> $GITHUB_ENV
+          if test "${#gv}" -gt 4; then
+            echo "GO_MINOR=${gv%.*}" >> $GITHUB_ENV
+          else
+            echo "GO_MINOR=${gv}" >> $GITHUB_ENV
+          fi
+          echo "QUAY_USER=projectquay+clair_github" >> $GITHUB_ENV
+          if test -n "${{ secrets.QUAY_TOKEN }}"; then echo "DO_PUSH=1" >> $GITHUB_ENV; fi
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@master
+        with:
+          platforms: all
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Cache Go Toolchain
+        uses: actions/cache@v2
+        id: go-toolchain-cache
+        with:
+          path: ~/.local/go
+          key: golang-${{ env.GO_VERSION }}-${{ runner.os }}
+      - name: Get a supported go version
+        if: steps.go-toolchain-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/.local
+          curl -sSLf "https://golang.org/dl/go${GO_VERSION}.$(go env GOOS)-$(go env GOARCH).tar.gz" |\
+            tar -xzC ~/.local
+      - name: Use correct go
+        run: |
+          echo "${HOME}/.local/go/bin" >> $GITHUB_PATH
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Cache Go Builds
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/go-build
+          key: go-build-${{ env.GO_VERSION }}-${{ runner.os }}
+          restore-keys: |
+            go-build-${{ env.GO_VERSION }}
+            go-build
+      - name: Cache Go Modules
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: go-mod-${{ env.GO_VERSION }}-${{ runner.os }}-${{ hashFiles('./go.*') }}
+          restore-keys: |
+            go-mod-${{ env.GO_VERSION }}-${{ runner.os }}
+            go-mod-${{ env.GO_VERSION }}
+            go-mod
+      - name: Modify module
+        run: ./.github/script/nightly-module.sh
+      - name: Login
+        if: ${{ env.DO_PUSH }}
+        run: |
+          docker login -u "${QUAY_USER}" -p '${{ secrets.QUAY_TOKEN }}' quay.io
+      - name: Build
+        run: |
+          echo '::group::QEMU'
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          echo '::endgroup::'
+          echo '::group::Build'
+          docker buildx build\
+            --platform linux/amd64,linux/arm64\
+            -f Dockerfile\
+            -t "${TAG}"\
+            --build-arg "GO_VERSION=${GO_MINOR}"\
+            --build-arg "CLAIR_VERSION=$(git describe --tags --always --dirty)"\
+            .
+          echo '::endgroup::'
+      - name: Push
+        if: ${{ env.DO_PUSH }}
+        run: |
+          docker push "${TAG}"

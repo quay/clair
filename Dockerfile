@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM quay.io/projectquay/golang:1.16 AS build
+ARG GO_VERSION=1.17
+FROM quay.io/projectquay/golang:${GO_VERSION} AS build
 WORKDIR /build/
 ADD . /build/
 ARG CLAIR_VERSION=dev
@@ -24,7 +25,12 @@ RUN go build\
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal AS final
 RUN microdnf install --disablerepo=* --enablerepo=ubi-8-baseos --enablerepo=ubi-8-appstream tar
-RUN curl -L -o /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64 && chmod +x /usr/local/bin/dumb-init 
+RUN case "$(uname -m)" in \
+		x86_64) export ARCH=amd64 ;; \
+		aarch64) export ARCH=arm64 ;; \
+	esac; \
+	curl -L -o /usr/local/bin/dumb-init "https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_${ARCH}" && \
+	chmod +x /usr/local/bin/dumb-init
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--", "/bin/clair"]
 VOLUME /config
 EXPOSE 6060
