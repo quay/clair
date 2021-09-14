@@ -11,3 +11,4 @@ go mod edit "-go=${GO_VERSION}"\
 git diff
 test -d vendor && rm -rf vendor
 go mod tidy
+go mod vendor
