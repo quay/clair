@@ -10,7 +10,7 @@ objects:
   # indexer deployment
   #
   - apiVersion: apps/v1
-    kind: Deployment
+    kind: StatefulSet
     metadata:
       name: clair-indexer
       labels:
@@ -22,6 +22,15 @@ objects:
         matchLabels:
           service: indexer
           app: clair
+      volumeClaimTemplates:
+        - metadata:
+            name: indexer-layer-storage
+          spec:
+            accessModes: [ "ReadWriteOnce" ]
+            storageClassName: ${{STORAGE_CLASS_NAME}}
+            resources:
+              requests:
+                storage: ${{INDEXER_STORAGE_REQS}}
       template:
         metadata:
           name: clair-indexer
@@ -72,6 +81,9 @@ objects:
               volumeMounts:
                 - name: clair-config
                   mountPath: /etc/clair
+                - name: indexer-layer-storage
+                  mountPath: /tmp
+
   #
   # matcher deployment
   #
@@ -284,7 +296,7 @@ parameters:
   # indexer params
   #
   - name: INDEXER_DEPLOYMENT_REPLICAS
-    value: "4"
+    value: "40"
     displayName: the number of indexers deployed
   - name: INDEXER_CPU_LIMITS
     value: "4"
@@ -294,15 +306,18 @@ parameters:
     displayName: the indexer's cpu requests in vCPUs
   - name: INDEXER_MEM_LIMITS
     value: "8192Mi"
-    displayName: the indexer's memory limits in vCPUs
+    displayName: the indexer's memory limits
   - name: INDEXER_MEM_REQS
     value: "4096Mi"
-    displayName: the indexer's memory requests in vCPUs
+    displayName: the indexer's memory requests
+  - name: INDEXER_STORAGE_REQS
+    value: "200Gi"
+    displayName: the indexer's VPC volume size
   #
   # matcher params
   #
   - name: MATCHER_DEPLOYMENT_REPLICAS
-    value: "4"
+    value: "10"
     displayName: the number of matchers deployed
   - name: MATCHER_CPU_LIMITS
     value: "4"
@@ -320,7 +335,7 @@ parameters:
   # notifier params
   #
   - name: NOTIFIER_DEPLOYMENT_REPLICAS
-    value: "2"
+    value: "10"
     displayName: the number of matchers deployed
   - name: NOTIFIER_CPU_LIMITS
     value: "4"
@@ -358,3 +373,6 @@ parameters:
   - name: HEALTH_PORT
     value: "8089"
     displayName: the port to clair's health check endpoint
+  - name: STORAGE_CLASS_NAME
+    value: "gp2"
+    displayName: the storage class to use when creating VPCs
