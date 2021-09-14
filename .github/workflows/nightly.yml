@@ -98,9 +98,6 @@ jobs:
             -t "${TAG}"\
             --build-arg "GO_VERSION=${GO_MINOR}"\
             --build-arg "CLAIR_VERSION=$(git describe --tags --always --dirty)"\
+            ${DO_PUSH+--push}\
             .
           echo '::endgroup::'
-      - name: Push
-        if: ${{ env.DO_PUSH }}
-        run: |
-          docker push "${TAG}"
