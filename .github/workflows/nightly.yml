@@ -22,24 +22,31 @@ jobs:
     runs-on: 'ubuntu-latest'
     steps:
       - name: Setup
+        id: setup
+        env:
+          QUAY_TOKEN: ${{ secrets.QUAY_TOKEN }}
+          QUAY_API_TOKEN: ${{ secrets.QUAY_API_TOKEN }}
         # This step uses defaults written in the shell script instead of the
         # nicer workflow inputs so that the cron trigger works.
         run: |
           br=$(test -n "${{github.event.inputs.branch}}" && echo "${{github.event.inputs.branch}}" || echo main)
-          t=$(test -n "${{github.event.inputs.tag}}" && echo "${{github.event.inputs.tag}}" || echo nightly)
           gv=$(test -n "${{github.event.inputs.go_version}}" && echo "${{github.event.inputs.go_version}}" || echo 1.17.1)
-          echo "CLAIRCORE_BRANCH=${br}" >> $GITHUB_ENV
-          echo "TAG=quay.io/projectquay/clair:${t}" >> $GITHUB_ENV
-          echo "GO_VERSION=${gv}" >> $GITHUB_ENV
-          if test "${#gv}" -gt 4; then
-            echo "GO_MINOR=${gv%.*}" >> $GITHUB_ENV
-          else
-            echo "GO_MINOR=${gv}" >> $GITHUB_ENV
-          fi
-          echo "QUAY_USER=projectquay+clair_github" >> $GITHUB_ENV
-          if test -n "${{ secrets.QUAY_TOKEN }}"; then echo "DO_PUSH=1" >> $GITHUB_ENV; fi
+          : "${repo:=$GITHUB_REPOSITORY}"
+          test "${repo%%/*}" = quay && repo="projectquay/${repo##*/}" ||:
+          printf '::set-output name=push::%s\n' "${{ env.QUAY_TOKEN != '' }}"
+          printf '::set-output name=api::%s\n' "${{ env.QUAY_API_TOKEN != '' }}"
+          printf '::set-output name=date::%s\n' "$(date -u '+%Y-%m-%d')"
+          printf '::set-output name=expiration::%s\n' "$(($(date -u '+%s') + 1209600))"
+          printf '::set-output name=tag::%s\n' "$(test -n "${{github.event.inputs.tag}}" && echo "${{github.event.inputs.tag}}" || echo nightly)"
+          printf '::set-output name=claircore_branch::%s\n' "${br}"
+          printf '::set-output name=go_version::%s\n' "${gv}"
+          printf '::set-output name=repo::%s\n' "${repo}"
+          # Environment variables
+          printf 'CLAIRCORE_BRANCH=%s\n' "${br}" >> $GITHUB_ENV
+          printf 'GO_VERSION=%s\n' "$(test "${#gv}" -gt 4 && echo "${gv%.*}" || echo "${gv}")" >> $GITHUB_ENV
+          printf '%s/.local/go/bin\n' "$HOME" >> $GITHUB_PATH
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@master
+        uses: docker/setup-qemu-action@v1
         with:
           platforms: all
       - name: Set up Docker Buildx
@@ -49,16 +56,13 @@ jobs:
         id: go-toolchain-cache
         with:
           path: ~/.local/go
-          key: golang-${{ env.GO_VERSION }}-${{ runner.os }}
+          key: golang-${{ steps.setup.outputs.go_version }}-${{ runner.os }}
       - name: Get a supported go version
         if: steps.go-toolchain-cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p ~/.local
-          curl -sSLf "https://golang.org/dl/go${GO_VERSION}.$(go env GOOS)-$(go env GOARCH).tar.gz" |\
+          curl -sSLf "https://golang.org/dl/go${{ steps.setup.outputs.go_version }}.$(go env GOOS)-$(go env GOARCH).tar.gz" |\
             tar -xzC ~/.local
-      - name: Use correct go
-        run: |
-          echo "${HOME}/.local/go/bin" >> $GITHUB_PATH
       - name: Checkout
         uses: actions/checkout@v2
         with:
@@ -67,37 +71,54 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ~/.cache/go-build
-          key: go-build-${{ env.GO_VERSION }}-${{ runner.os }}
+          key: go-build-${{ steps.setup.outputs.go_version }}-${{ runner.os }}
           restore-keys: |
-            go-build-${{ env.GO_VERSION }}
+            go-build-${{ steps.setup.outputs.go_version }}
             go-build
       - name: Cache Go Modules
         uses: actions/cache@v2
         with:
           path: ~/go/pkg/mod
-          key: go-mod-${{ env.GO_VERSION }}-${{ runner.os }}-${{ hashFiles('./go.*') }}
+          key: go-mod-${{ steps.setup.outputs.go_version }}-${{ runner.os }}-${{ hashFiles('./go.*') }}
           restore-keys: |
-            go-mod-${{ env.GO_VERSION }}-${{ runner.os }}
-            go-mod-${{ env.GO_VERSION }}
+            go-mod-${{ steps.setup.outputs.go_version }}-${{ runner.os }}
+            go-mod-${{ steps.setup.outputs.go_version }}
             go-mod
       - name: Modify module
+        id: mod
         run: ./.github/script/nightly-module.sh
       - name: Login
-        if: ${{ env.DO_PUSH }}
-        run: |
-          docker login -u "${QUAY_USER}" -p '${{ secrets.QUAY_TOKEN }}' quay.io
+        if: steps.setup.outputs.push
+        uses: docker/login-action@v1
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_USER }}
+          password: ${{ secrets.QUAY_TOKEN }}
       - name: Build
+        uses: docker/build-push-action@v2
+        with:
+          build-args: |
+            GO_VERSION=${{ env.GO_VERSION }}
+            CLAIR_VERSION=${{ steps.mod.outputs.clair_version }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ steps.setup.outputs.push }}
+          tags: |
+            quay.io/${{ steps.setup.outputs.repo }}:${{ steps.setup.outputs.tag }}
+            quay.io/${{ steps.setup.outputs.repo }}:${{ steps.setup.outputs.tag }}-${{ steps.setup.outputs.date }}
+      - name: Set Expiration
+        if: steps.setup.outputs.push && steps.setup.outputs.api
         run: |
-          echo '::group::QEMU'
-          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-          echo '::endgroup::'
-          echo '::group::Build'
-          docker buildx build\
-            --platform linux/amd64,linux/arm64\
-            -f Dockerfile\
-            -t "${TAG}"\
-            --build-arg "GO_VERSION=${GO_MINOR}"\
-            --build-arg "CLAIR_VERSION=$(git describe --tags --always --dirty)"\
-            ${DO_PUSH+--push}\
-            .
-          echo '::endgroup::'
+          curl --config - <<.
+          silent
+          show-error
+          fail-with-body
+          data-raw=$(jq -n '{expiration: ${{ steps.setup.outputs.expiration }}}|tostring')
+          header="Authorization: Bearer ${{ secrets.QUAY_API_TOKEN }}"
+          header="Content-Type: application/json"
+          header="Accept: application/json"
+          request=PUT
+          url="https://quay.io/api/v1/repository/${{ steps.setup.outputs.repo }}/tag/${{ steps.setup.outputs.tag }}-${{ steps.setup.outputs.date }}"
+          .
