@@ -17,7 +17,6 @@ jobs:
       is_prerelease: ${{ startsWith(github.ref, 'refs/tags/') && (contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc')) }}
       image_tag: ${{ steps.setup.outputs.image_tag }}
       image_repo: ${{ steps.setup.outputs.image_repo }}
-      expiration: ${{ steps.setup.outputs.expiration }}
       build_image: ${{ steps.setup.outputs.build_image }}
       build_go_version: ${{ steps.setup.outputs.build_go_version }}
       build_cache_key: ${{ steps.go.outputs.cache_key }}
@@ -36,7 +35,6 @@ jobs:
           printf '::set-output name=tar_prefix::%s\n' "clair-${tag}"
           printf '::set-output name=image_tag::%s\n' "${tag#v}"
           printf '::set-output name=image_repo::%s\n' "${REPO}"
-          printf '::set-output name=expiration::%s\n' "$(($(date -u '+%s') + 1209600))"
           printf '::set-output name=build_image::%s\n' "${BUILD_IMAGE}"
           printf '::set-output name=build_go_version::%s\n' "${BUILD_IMAGE##*:}"
       - name: Check go version
@@ -215,6 +213,13 @@ jobs:
           push: true
           tags: |
             quay.io/${{ needs.config.outputs.image_repo }}:${{ needs.config.outputs.image_tag }}
+      - name: Set Expiration
+        if: needs.config.outputs.is_prerelease
+        uses: ./.github/actions/set-image-expiration
+        with:
+          repo: ${{ needs.config.outputs.image_repo }}
+          tag: ${{ needs.config.outputs.image_tag }}
+          token: ${{ secrets.QUAY_API_TOKEN }}
 
   deploy-documentation:
     name: Deploy Documentation

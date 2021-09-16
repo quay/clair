@@ -102,15 +102,8 @@ jobs:
             quay.io/${{ steps.setup.outputs.repo }}:${{ steps.setup.outputs.tag }}-${{ steps.setup.outputs.date }}
       - name: Set Expiration
         if: steps.setup.outputs.push && steps.setup.outputs.api
-        run: |
-          curl --config - <<.
-          silent
-          show-error
-          fail-with-body
-          data-raw=$(jq -n '{expiration: ${{ steps.setup.outputs.expiration }}}|tostring')
-          header="Authorization: Bearer ${{ secrets.QUAY_API_TOKEN }}"
-          header="Content-Type: application/json"
-          header="Accept: application/json"
-          request=PUT
-          url="https://quay.io/api/v1/repository/${{ steps.setup.outputs.repo }}/tag/${{ steps.setup.outputs.tag }}-${{ steps.setup.outputs.date }}"
-          .
+        uses: ./.github/actions/set-image-expiration
+        with:
+          repo: ${{ steps.setup.outputs.repo }}
+          tag: ${{ steps.setup.outputs.tag }}-${{ steps.setup.outputs.date }}
+          token: ${{ secrets.QUAY_API_TOKEN }}
