@@ -44,14 +44,24 @@ jobs:
   tidy:
     name: Tidy
     runs-on: ubuntu-latest
-    container: quay.io/projectquay/golang:1.16
+    strategy:
+      matrix:
+        go: ['1.16']
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Go Tidy
-        run: go mod tidy
-      - name: Git Diff
-        run: git diff --exit-code
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go${{ matrix.go }}
+      - uses: actions/checkout@v2
+      - run: go mod tidy
+      - run: git diff --exit-code
 
   documentation:
     name: Documentation
@@ -96,14 +106,17 @@ jobs:
       matrix:
         go: ['1.16', '1.17']
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Go Dependencies
-        run: go mod vendor
-      - name: Tests
-        run: go test -tags integration ./...
-      - name: Create Artifact on Failure
-        uses: actions/upload-artifact@v2
+      - uses: actions/checkout@v2
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go${{ matrix.go }}
+      - run: go test -tags integration ./...
+      - uses: actions/upload-artifact@v2
         if: failure()
         with:
           name: workspace-${{matrix.go}}
