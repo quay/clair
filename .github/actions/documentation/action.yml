@@ -1,0 +1,32 @@
+name: 'Documentation'
+description: 'build with mdBook and optionally push'
+inputs:
+  publish:
+    description: 'push resulting files to gh-pages'
+    default: 'true'
+  token:
+    description: 'github token'
+    default: ${{ github.token }}
+runs:
+  using: 'composite'
+  steps:
+    - uses: peaceiris/actions-mdbook@v1
+      with:
+        mdbook-version: 'latest'
+    - shell: sh
+      run: |
+        d="$(echo "${GITHUB_REF#refs/tags/}" | sed '/^refs\/heads\//d')"
+        if test -z "$d"; then
+          exec mdbook build
+        else
+          exec mdbook build --dest-dir "./book/${d}"
+        fi
+    - uses: peaceiris/actions-gh-pages@v3
+      # This conditional doesn't exist yet.
+      if: ${{ inputs.publish }}
+      with:
+        user_name: 'github-actions[bot]'
+        user_email: 'github-actions[bot]@users.noreply.github.com'
+        github_token: ${{ inputs.token }}
+        publish_dir: ./book
+        keep_files: true

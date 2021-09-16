@@ -1,0 +1,47 @@
+name: 'Set Image Expiration'
+description: 'Use the Quay API to set an expiration time on an image'
+inputs:
+  quay:
+    description: 'Quay instance to issue calls to.'
+    required: false
+    default: 'quay.io'
+  duration:
+    description: 'Duration (in seconds) into the future to expire the image.'
+    required: false
+    default: 1209600
+  repo:
+    description: 'Namespace & repository'
+    required: true
+  tag:
+    description: 'image tag'
+    required: true
+  token:
+    description: 'API token'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - id: add-mask
+      shell: sh
+      run: |
+        printf '::add-mask::%s\n' "${{ inputs.token }}"
+    - id: write-script
+      shell: sh
+      run: |
+        jq -n -c --argjson e "$(($(date -u +%s) + ${{ inputs.duration }}))" '{expiration: $e}' > "${RUNNER_TEMP}/expiration.json"
+        cat <<. >"${RUNNER_TEMP}/run"
+        #!/usr/bin/env -S curl -K
+        silent
+        show-error
+        fail-with-body
+        data-binary="@${RUNNER_TEMP}/expiration.json"
+        header="Authorization: Bearer ${{ inputs.token }}"
+        header="Content-Type: application/json"
+        header="Accept: application/json"
+        request=PUT
+        url="https://${{ inputs.quay }}/api/v1/repository/${{ inputs.repo }}/tag/${{ inputs.tag }}"
+        .
+        chmod +x "${RUNNER_TEMP}/run"
+    - id: call
+      shell: sh
+      run: '${RUNNER_TEMP}/run'
