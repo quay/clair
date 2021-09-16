@@ -226,19 +226,5 @@ jobs:
     runs-on: ubuntu-latest
     needs: [release]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup
-        uses: peaceiris/actions-mdbook@v1
-        with:
-          mdbook-version: 'latest'
-      - name: Build
-        run: mdbook build --dest-dir "./book/${GITHUB_REF#refs/tags/}"
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./book
-          keep_files: true
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/documentation

@@ -67,13 +67,10 @@ jobs:
     name: Documentation
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup
-        uses: peaceiris/actions-mdbook@v1
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/documentation
         with:
-          mdbook-version: 'latest'
-      - run: mdbook build
+          publish: false
 
   tests:
     name: Tests

@@ -13,18 +13,5 @@ jobs:
     name: Deploy Documentation
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Setup
-        uses: peaceiris/actions-mdbook@v1
-        with:
-          mdbook-version: 'latest'
-      - run: mdbook build
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          user_name: 'github-actions[bot]'
-          user_email: 'github-actions[bot]@users.noreply.github.com'
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./book
-          keep_files: true
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/documentation
