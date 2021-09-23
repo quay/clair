@@ -148,7 +148,7 @@ func (e *e2e) Created(t *testing.T) {
 
 	receipt, err = e.store.ReceiptByUOID(e.ctx, e.updateID)
 	if err != nil {
-		t.Fatalf("failed to retrieve receipt by OUID")
+		t.Fatalf("failed to retrieve receipt by UOID")
 	}
 	if !cmp.Equal(receipt.NotificationID, e.notificationID) {
 		t.Fatal(cmp.Diff(receipt.NotificationID, e.notificationID))
