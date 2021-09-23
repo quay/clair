@@ -20,7 +20,7 @@ const (
 )
 
 // TestE2E performs an end to end test ensuring creating,
-// retreiving, bookkeeping, and deleting of notifications
+// retrieving, bookkeeping, and deleting of notifications
 // and associated data works correctly
 func TestE2E(t *testing.T) {
 	integration.NeedDB(t)

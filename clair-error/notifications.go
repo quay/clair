@@ -55,7 +55,7 @@ func (e ErrNoReceipt) Error() string {
 	return fmt.Sprintf("no receipt exists for notification id %s", e.NotificationID)
 }
 
-// ErrReceipt indicates an error retreiving a receipt for referenced notification id.
+// ErrReceipt indicates an error retrieving a receipt for referenced notification id.
 type ErrReceipt struct {
 	NotificationID uuid.UUID
 	E              error

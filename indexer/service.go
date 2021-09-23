@@ -36,7 +36,7 @@ type Indexer interface {
 	Index(ctx context.Context, manifest *claircore.Manifest) (*claircore.IndexReport, error)
 }
 
-// Reporter is an interface for retreiving an IndexReport given a manifest digest.
+// Reporter is an interface for retrieving an IndexReport given a manifest digest.
 type Reporter interface {
 	IndexReport(ctx context.Context, digest claircore.Digest) (*claircore.IndexReport, bool, error)
 }

@@ -20,5 +20,5 @@ This is used by the notifier to determine if new updates have occurred and trigg
 
 ## AffectedManifest
 
-The `affected_manifest` endpoint exposes the api for retreiving affected manifests given a list of Vulnerabilities.
+The `affected_manifest` endpoint exposes the api for retrieving affected manifests given a list of Vulnerabilities.
 This is used by the notifier to determine the manifests that need to have a notification generated.
