@@ -23,7 +23,7 @@ type notificationJSONB notifier.Notification
 // operation for the provide updater, and creates a receipt in created status for the
 // notification id.
 //
-// these operations occur under a transcation to preserve an atomic operation.
+// these operations occur under a transaction to preserve an atomic operation.
 func putNotifications(ctx context.Context, pool *pgxpool.Pool, opts notifier.PutOpts) error {
 	const (
 		insertNotification    = `INSERT INTO notification (id) VALUES ($1);`
