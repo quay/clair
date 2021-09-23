@@ -773,7 +773,7 @@
 - [627b98e](https://github.com/quay/clair/commit/627b98ef3126d517d3e80aef4c2ab9ed3d14b893): fix SQL error reporting
 ### Db/Pgsql/Migration
 - [8df8170](https://github.com/quay/clair/commit/8df8170ba54d945cf2e2ad201bcdb8cc09fddc06): convert to pure SQL
-### Dckerfile
+### Dockerfile
 - [80f150f](https://github.com/quay/clair/commit/80f150f93bf3b12e6c9bcea2d71ccfa956bd50c9): Add docker-compose.yml
 ### Detectors/Feature
 - [fc908e6](https://github.com/quay/clair/commit/fc908e65ba6c0ad3edb344cfb263adff8efe6f4e): add apk feature detector
