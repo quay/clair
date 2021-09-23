@@ -178,7 +178,7 @@ func (c *HTTP) LatestUpdateOperations(ctx context.Context, k driver.UpdateKind) 
 // updateOperations is a private method implementing the common bits for retrieving UpdateOperations
 //
 // an ouCache is passed in by the caller to cache any responses providing an etag.
-// if a subsequent response provides a StatusNotModified status, the map of UpdateOprations is served from cache.
+// if a subsequent response provides a StatusNotModified status, the map of UpdateOperations is served from cache.
 func (c *HTTP) updateOperations(ctx context.Context, req *http.Request, cache *uoCache) (map[string][]driver.UpdateOperation, error) {
 	res, err := c.c.Do(req)
 	if err != nil {
