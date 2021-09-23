@@ -16,7 +16,7 @@ This is used by the notifier to determine the added and removed vulnerabilities 
 ## Update Operation
 
 The `update_operation` endpoint exposes the api for viewing updaters' activity. 
-This is used by the notifier to determine if new updates have occured and triggers an update diff to see what has changed.
+This is used by the notifier to determine if new updates have occurred and triggers an update diff to see what has changed.
 
 ## AffectedManifest
 
