@@ -984,7 +984,7 @@
 - [eeb13a0](https://github.com/quay/clair/commit/eeb13a02baa5db60b997454af8f059a6381f42da): add index on Vulnerability_Notification.deleted_at
 - [7cff31a](https://github.com/quay/clair/commit/7cff31a058230a94838b7fd8493380d444c31f5a): add ldfv compound index
 ### Pkg
-- [c3904c9](https://github.com/quay/clair/commit/c3904c9696bddc20a27db9b4142ae704350bbe3f): Add fsutil to contian file system utility functions
+- [c3904c9](https://github.com/quay/clair/commit/c3904c9696bddc20a27db9b4142ae704350bbe3f): Add fsutil to contain file system utility functions
 - [78cef02](https://github.com/quay/clair/commit/78cef02fdad4afd12a2a00df51d457c796278bfa): cerrors -> commonerr
 - [03bac0f](https://github.com/quay/clair/commit/03bac0f1b6f504a416937e309a62fdfc308dc397): utils/tar.go -> pkg/tarutil
 ### Pkg/Gitutil
