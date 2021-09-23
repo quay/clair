@@ -21,7 +21,7 @@ const (
 
 // TestE2E performs an end to end test ensuring creating,
 // retreiving, bookkeeping, and deleting of notifications
-// and asssociated data works correctly
+// and associated data works correctly
 func TestE2E(t *testing.T) {
 	integration.NeedDB(t)
 	ctx := zlog.Test(nil, t)
