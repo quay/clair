@@ -137,7 +137,7 @@ func (t *Server) configureDiscovery(_ context.Context) error {
 func (t *Server) configureComboMode(ctx context.Context) error {
 	// requires both indexer and matcher services
 	if t.indexer == nil || t.matcher == nil {
-		return clairerror.ErrNotInitialized{Msg: "Combo mode requires both indexer and macher services"}
+		return clairerror.ErrNotInitialized{Msg: "Combo mode requires both indexer and matcher services"}
 	}
 
 	err := t.configureIndexerMode(ctx)
