@@ -647,7 +647,7 @@
 - [162e8cd](https://github.com/quay/clair/commit/162e8cdafc66be28b021f83da736a2b612ddda99): enable suse updater
 - [0609ed9](https://github.com/quay/clair/commit/0609ed964b0673806462a24147e6028da85d8a38): removed worker config
 - [af2c688](https://github.com/quay/clair/commit/af2c68863482ae9f93a2db1533be260468a6ea2d): not properly loaded error ([#140](https://github.com/quay/clair/issues/140))
- -  [#140](https://github.com/quay/clair/issues/140) - fixes [#134](https://github.com/quay/clair/issues/134)- [30055af](https://github.com/quay/clair/commit/30055af03e357b44cfbacb3088eab337a94e51e8): fallover correctly to default config
+ -  [#140](https://github.com/quay/clair/issues/140) - fixes [#134](https://github.com/quay/clair/issues/134)- [30055af](https://github.com/quay/clair/commit/30055af03e357b44cfbacb3088eab337a94e51e8): failover correctly to default config
 - [20af787](https://github.com/quay/clair/commit/20af78743774b18795cbf5210cc97cc172b1880d): fix default fallback
 - [4fc32d2](https://github.com/quay/clair/commit/4fc32d22713a47eabf5b12b81897fdd34d59935b): add top-level YAML namespace 'clair'
  - Fixes [#95](https://github.com/quay/clair/issues/95)- [bb7745f](https://github.com/quay/clair/commit/bb7745f3fe21e85b5fe37919e11d6d121e08b9a1): better document example
