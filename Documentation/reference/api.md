@@ -3,7 +3,7 @@ title: ClairV4 v0.1
 language_tabs:
   - python: Python
   - go: Golang
-  - javascript: Javascript
+  - javascript: JavaScript
 language_clients:
   - python: ""
   - go: ""
