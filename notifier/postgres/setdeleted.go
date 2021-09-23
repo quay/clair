@@ -32,7 +32,7 @@ var (
 	)
 )
 
-// setDeleted will update the receipt's status to "deleted" for the provied
+// setDeleted will update the receipt's status to "deleted" for the provided
 // notification id
 func setDeleted(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID) error {
 	const (

@@ -32,7 +32,7 @@ var (
 	)
 )
 
-// setDeliveryFailed will update the receipt's status to "delivery_failed" for the provied
+// setDeliveryFailed will update the receipt's status to "delivery_failed" for the provided
 // notification id
 func setDeliveryFailed(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID) error {
 	const (
