@@ -19,7 +19,7 @@
 ### Httputil
 - [ed8ffc5](https://github.com/quay/clair/commit/ed8ffc50b56c9b11873f00bb2deb4fba9107ec95): create package and RateLimiter
 ### Initialize
-- [5df82e1](https://github.com/quay/clair/commit/5df82e19e971c67ebdecf3f92682d4ae897db53a): update call to Libindex contstructor
+- [5df82e1](https://github.com/quay/clair/commit/5df82e19e971c67ebdecf3f92682d4ae897db53a): update call to Libindex constructor
 ### Introspection
 - [ec59a43](https://github.com/quay/clair/commit/ec59a431032713654e2eb7a29ad7c446dd16a490): enable readiness endpoint
 
