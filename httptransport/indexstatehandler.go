@@ -10,7 +10,7 @@ import (
 )
 
 // IndexStateHandler utilizes a Stater to report the
-// curent runtime state of an Indexer.
+// current runtime state of an Indexer.
 //
 // Indexers running with different scanner versions
 // will produce unique states and indicate to clients
