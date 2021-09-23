@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// ErrNoUpdateOperation inidcates that the queried updater has no
+// ErrNoUpdateOperation indicates that the queried updater has no
 // update operations associated.
 type ErrNoUpdateOperation struct {
 	Updater string
