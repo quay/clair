@@ -114,7 +114,7 @@ func (c *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Find the first accept-encoding we support.
 	// See https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.1 for
-	// all the sematics.
+	// all the semantics.
 	for _, a := range ae {
 		switch a.Type {
 		case "gzip":
