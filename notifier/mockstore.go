@@ -91,7 +91,7 @@ func (m *MockStore) SetDelivered(ctx context.Context, id uuid.UUID) error {
 	return m.SetDelivered_(ctx, id)
 }
 
-// SetDeliveryFailed marks the provided notification id failed to be delivere
+// SetDeliveryFailed marks the provided notification id failed to be delivered
 func (m *MockStore) SetDeliveryFailed(ctx context.Context, id uuid.UUID) error {
 	return m.SetDeliveredFailed_(ctx, id)
 }
