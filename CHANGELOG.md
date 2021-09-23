@@ -480,7 +480,7 @@
 ### Config
 - [b2666e5](https://github.com/quay/clair/commit/b2666e57202d7c690a40d7c86975c13e0b3db56e): set a canonical default port
 ### Dockerfile
-- [33da12a](https://github.com/quay/clair/commit/33da12a3bb9a28fdbcc6302caa4212d38a2acbbb): run as unprivledged user by default
+- [33da12a](https://github.com/quay/clair/commit/33da12a3bb9a28fdbcc6302caa4212d38a2acbbb): run as unprivileged user by default
 ### Documentation
 - [fe324a5](https://github.com/quay/clair/commit/fe324a58e6be8c36da74afcd5487d0da4a547d5b): start writing v4-specific docs
 ### Httptransport
