@@ -100,7 +100,7 @@ func (e *e2e) Run(t *testing.T) {
 }
 
 // PutNotifications adds a set of notifications to the database
-// and confims no error occurs
+// and confirms no error occurs
 func (e *e2e) PutNotifications(t *testing.T) {
 	defer func() {
 		e.failed = t.Failed()
