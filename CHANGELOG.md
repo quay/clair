@@ -200,7 +200,7 @@
 ### Clairctl
 - [835af27](https://github.com/quay/clair/commit/835af272fad49342f51adb4633ff639de3cc14a1): fix and codify import arguments
 - [b9ef107](https://github.com/quay/clair/commit/b9ef1073ca48ed5ed7caaa3e0fbad03a7d83592c): update import and export online help
-- [9883e80](https://github.com/quay/clair/commit/9883e80f331190e60de711b0705e9b37017fc5b1): unifiy config, client handling
+- [9883e80](https://github.com/quay/clair/commit/9883e80f331190e60de711b0705e9b37017fc5b1): unify config, client handling
 ### Config
 - [dc8ba89](https://github.com/quay/clair/commit/dc8ba8912fa482378ef393aa51b4e9528d2877f2): expose notification summary toggle
 - [bb3cd66](https://github.com/quay/clair/commit/bb3cd669f66345aaa0fc5df6f502f34922cc069e): add 'omitempty' to 'updaters' config struct for correct marshalling
