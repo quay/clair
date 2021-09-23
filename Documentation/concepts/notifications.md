@@ -2,7 +2,7 @@
 
 ClairV4 implements a notification system.
 
-The notifier service will keep track of new security database updates and inform an interested client if new or removed vulnerabilites affect an indexed manifest.
+The notifier service will keep track of new security database updates and inform an interested client if new or removed vulnerabilities affect an indexed manifest.
 
 The interested client can subscribe to notifications via several mechanisms:
 * Webhook delivery
