@@ -443,7 +443,7 @@
 ### Config
 - [3ccc6e0](https://github.com/quay/clair/commit/3ccc6e03be0ce1b6c439d5c0649ee785dc7c559f): add support for per-scanner configuration
 ### Dockerfile
-- [5a73cb4](https://github.com/quay/clair/commit/5a73cb49d64e839d7675979b5e3f348d94dd26a5): make -mod=vendor opportunisitic ([#999](https://github.com/quay/clair/issues/999))
+- [5a73cb4](https://github.com/quay/clair/commit/5a73cb49d64e839d7675979b5e3f348d94dd26a5): make -mod=vendor opportunistic ([#999](https://github.com/quay/clair/issues/999))
  -  [#999](https://github.com/quay/clair/issues/999)### Dockerfile: Update To Alpine
 - [de32b07](https://github.com/quay/clair/commit/de32b0728ccdbafb85988e2f87618c9d576fc87e): 3.11 for newest rpm
 ### Go.Mod
