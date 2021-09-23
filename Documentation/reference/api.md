@@ -1184,7 +1184,7 @@ Notification
 |---|---|---|---|---|
 |id|string|false|none|a unique identifier for this notification|
 |manifest|string|false|none|The hash of the manifest affected by the provided vulnerability.|
-|reason|string|false|none|the reason for the notifcation, [added | removed]|
+|reason|string|false|none|the reason for the notification, [added | removed]|
 |vulnerability|[VulnSummary](#schemavulnsummary)|false|none|A summary of a vulnerability|
 
 <h2 id="tocS_Environment">Environment</h2>

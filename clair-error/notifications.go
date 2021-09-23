@@ -31,7 +31,7 @@ func (e ErrBadNotification) Unwrap() error {
 	return e.E
 }
 
-// ErrDeleteNotification indicates an error while deleting notifcations.
+// ErrDeleteNotification indicates an error while deleting notifications.
 // The wrapped error will contain further details.
 type ErrDeleteNotification struct {
 	NotificationID uuid.UUID
