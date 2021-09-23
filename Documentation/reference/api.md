@@ -1285,7 +1285,7 @@ IndexReport
 |» **additionalProperties**|[Distribution](#schemadistribution)|false|none|An indexed distribution discovered in a layer. See<br>https://www.freedesktop.org/software/systemd/man/os-release.html<br>for explanations and example of fields.|
 |environments|object|true|none|A map of lists containing Environment objects keyed by the<br>associated Package.id.|
 |» **additionalProperties**|[[Environment](#schemaenvironment)]|false|none|[The environment a particular package was discovered in.]|
-|success|boolean|true|none|A bool indicating succcessful index|
+|success|boolean|true|none|A bool indicating successful index|
 |err|string|true|none|An error message on event of unsuccessful index|
 
 <h2 id="tocS_VulnerabilityReport">VulnerabilityReport</h2>

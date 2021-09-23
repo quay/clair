@@ -547,7 +547,7 @@ components:
               $ref: '#/components/schemas/Environment'
         success:
           type: boolean
-          description: "A bool indicating succcessful index"
+          description: "A bool indicating successful index"
           example: true
         err:
           type: string
