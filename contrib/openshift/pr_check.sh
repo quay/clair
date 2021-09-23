@@ -30,5 +30,4 @@ if [ ! set_root ]; then
     exit 1
 fi
 
-go mod vendor
 make container-build
