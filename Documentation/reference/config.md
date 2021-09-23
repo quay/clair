@@ -564,7 +564,7 @@ An address in `<host>:<post>` syntax where traces can be submitted.
 #### `$.trace.jaeger.collector.username`
 a string value
 
-#### `$.trace.jaeger.collector.passwordd`
+#### `$.trace.jaeger.collector.password`
 a string value
 
 #### `$.trace.jaeger.service_name`
