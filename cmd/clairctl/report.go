@@ -210,7 +210,6 @@ func reportAction(c *cli.Context) error {
 	close(result)
 	<-done
 	return nil
-
 }
 
 func resolveRef(r string) (claircore.Digest, error) {

@@ -1,13 +1,9 @@
 package config
 
-import (
-	"gopkg.in/yaml.v3"
-)
-
 type Matchers struct {
 	// Config holds configuration blocks for MatcherFactories and Matchers,
 	// keyed by name.
-	Config map[string]yaml.Node `yaml:"config" json:"config"`
+	Config map[string]interface{} `yaml:"config" json:"config"`
 	// A slice of strings representing which
 	// matchers will be used.
 	//

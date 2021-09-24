@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -62,7 +63,14 @@ func exportAction(c *cli.Context) error {
 	}
 	cfgs := make(map[string]driver.ConfigUnmarshaler, len(cfg.Updaters.Config))
 	for name, node := range cfg.Updaters.Config {
-		cfgs[name] = node.Decode
+		node := node
+		cfgs[name] = func(v interface{}) error {
+			b, err := json.Marshal(node)
+			if err != nil {
+				return err
+			}
+			return json.Unmarshal(b, v)
+		}
 	}
 
 	tr := http.DefaultTransport.(*http.Transport).Clone()

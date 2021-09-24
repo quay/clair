@@ -2,6 +2,7 @@ package initialize
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -123,19 +124,40 @@ func localIndexer(ctx context.Context, cfg *config.Config) (indexer.Service, err
 	if cfg.Indexer.Scanner.Package != nil {
 		opts.ScannerConfig.Package = make(map[string]func(interface{}) error, len(cfg.Indexer.Scanner.Package))
 		for name, node := range cfg.Indexer.Scanner.Package {
-			opts.ScannerConfig.Package[name] = node.Decode
+			node := node
+			opts.ScannerConfig.Package[name] = func(v interface{}) error {
+				b, err := json.Marshal(node)
+				if err != nil {
+					return err
+				}
+				return json.Unmarshal(b, v)
+			}
 		}
 	}
 	if cfg.Indexer.Scanner.Dist != nil {
 		opts.ScannerConfig.Dist = make(map[string]func(interface{}) error, len(cfg.Indexer.Scanner.Dist))
 		for name, node := range cfg.Indexer.Scanner.Dist {
-			opts.ScannerConfig.Dist[name] = node.Decode
+			node := node
+			opts.ScannerConfig.Dist[name] = func(v interface{}) error {
+				b, err := json.Marshal(node)
+				if err != nil {
+					return err
+				}
+				return json.Unmarshal(b, v)
+			}
 		}
 	}
 	if cfg.Indexer.Scanner.Repo != nil {
 		opts.ScannerConfig.Repo = make(map[string]func(interface{}) error, len(cfg.Indexer.Scanner.Repo))
 		for name, node := range cfg.Indexer.Scanner.Repo {
-			opts.ScannerConfig.Repo[name] = node.Decode
+			node := node
+			opts.ScannerConfig.Repo[name] = func(v interface{}) error {
+				b, err := json.Marshal(node)
+				if err != nil {
+					return err
+				}
+				return json.Unmarshal(b, v)
+			}
 		}
 	}
 	tr := http.DefaultTransport.(*http.Transport).Clone()
@@ -203,11 +225,25 @@ func localMatcher(ctx context.Context, cfg *config.Config) (matcher.Service, err
 	}
 	updaterConfigs := make(map[string]driver.ConfigUnmarshaler)
 	for name, node := range cfg.Updaters.Config {
-		updaterConfigs[name] = node.Decode
+		node := node
+		updaterConfigs[name] = func(v interface{}) error {
+			b, err := json.Marshal(node)
+			if err != nil {
+				return err
+			}
+			return json.Unmarshal(b, v)
+		}
 	}
 	matcherConfigs := make(map[string]driver.MatcherConfigUnmarshaler)
 	for name, node := range cfg.Matchers.Config {
-		matcherConfigs[name] = node.Decode
+		node := node
+		matcherConfigs[name] = func(v interface{}) error {
+			b, err := json.Marshal(node)
+			if err != nil {
+				return err
+			}
+			return json.Unmarshal(b, v)
+		}
 	}
 	s, err := libvuln.New(ctx, &libvuln.Opts{
 		MaxConnPool:     int32(cfg.Matcher.MaxConnPool),

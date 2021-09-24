@@ -2,8 +2,6 @@ package config
 
 import (
 	"fmt"
-
-	"gopkg.in/yaml.v3"
 )
 
 // Indexer provides Clair Indexer node configuration
@@ -56,7 +54,7 @@ func (i *Indexer) Validate(combo bool) error {
 }
 
 type ScannerConfig struct {
-	Package map[string]yaml.Node `yaml:"package" json:"package"`
-	Dist    map[string]yaml.Node `yaml:"dist" json:"dist"`
-	Repo    map[string]yaml.Node `yaml:"repo" json:"repo"`
+	Package map[string]interface{} `yaml:"package" json:"package"`
+	Dist    map[string]interface{} `yaml:"dist" json:"dist"`
+	Repo    map[string]interface{} `yaml:"repo" json:"repo"`
 }
