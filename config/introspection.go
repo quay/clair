@@ -9,23 +9,23 @@ type Trace struct {
 
 // Jager specific distributed tracing configuration.
 type Jaeger struct {
+	Tags  map[string]string `yaml:"tags" json:"tags"`
 	Agent struct {
 		Endpoint string `yaml:"endpoint" json:"endpoint"`
 	} `yaml:"agent" json:"agent"`
 	Collector struct {
-		Endpoint string  `yaml:"endpoint" json:"endpoint"`
 		Username *string `yaml:"username" json:"username"`
 		Password *string `yaml:"password" json:"password"`
+		Endpoint string  `yaml:"endpoint" json:"endpoint"`
 	} `yaml:"collector" json:"collector"`
-	ServiceName string            `yaml:"service_name" json:"service_name"`
-	Tags        map[string]string `yaml:"tags" json:"tags"`
-	BufferMax   int               `yaml:"buffer_max" json:"buffer_max"`
+	ServiceName string `yaml:"service_name" json:"service_name"`
+	BufferMax   int    `yaml:"buffer_max" json:"buffer_max"`
 }
 
 // Configure Metrics.
 type Metrics struct {
-	Name       string     `yaml:"name" json:"name"`
 	Prometheus Prometheus `yaml:"prometheus" json:"prometheus"`
+	Name       string     `yaml:"name" json:"name"`
 }
 
 // Prometheus specific metrics configuration

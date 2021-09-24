@@ -18,10 +18,6 @@ type Notifier struct {
 	// or
 	// string: "user=pqgotest dbname=pqgotest sslmode=verify-full"
 	ConnString string `yaml:"connstring" json:"connstring"`
-	// A "true" or "false" value
-	//
-	// Whether Notifier nodes handle migrations to their database.
-	Migrations bool `yaml:"migrations" json:"migrations"`
 	// A string in <host>:<port> format where <host> can be an empty string.
 	//
 	// A Notifier contacts an Indexer to create obtain manifests affected by vulnerabilities.
@@ -63,6 +59,10 @@ type Notifier struct {
 	AMQP *amqp.Config `yaml:"amqp" json:"amqp"`
 	// Configures the notifier for STOMP delivery.
 	STOMP *stomp.Config `yaml:"stomp" json:"stomp"`
+	// A "true" or "false" value
+	//
+	// Whether Notifier nodes handle migrations to their database.
+	Migrations bool `yaml:"migrations" json:"migrations"`
 }
 
 func (n *Notifier) Validate(combo bool) error {

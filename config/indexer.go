@@ -8,6 +8,8 @@ import (
 
 // Indexer provides Clair Indexer node configuration
 type Indexer struct {
+	// Scanner allows for passing configuration options to layer scanners.
+	Scanner ScannerConfig `yaml:"scanner" json:"scanner"`
 	// A Postgres connection string.
 	//
 	// formats
@@ -35,8 +37,6 @@ type Indexer struct {
 	//
 	// Whether Indexer nodes handle migrations to their database.
 	Migrations bool `yaml:"migrations" json:"migrations"`
-	// Scanner allows for passing configuration options to layer scanners.
-	Scanner ScannerConfig `yaml:"scanner" json:"scanner"`
 	// Airgap disables scanners that have signaled they expect to talk to the
 	// Internet.
 	Airgap bool `yaml:"airgap" json:"airgap"`

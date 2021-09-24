@@ -6,6 +6,18 @@ import (
 
 // Updaters configures updater behavior.
 type Updaters struct {
+	// Filter is a regexp that disallows updaters that do not match from
+	// running.
+	// TODO(louis): this is only used in clairctl, should we keep this?
+	// it may offer an escape hatch for a particular updater name
+	// from running, vs disabling the updater set completely.
+	Filter string `yaml:"filter" json:"filter"`
+	// Config holds configuration blocks for UpdaterFactories and Updaters,
+	// keyed by name.
+	//
+	// These are defined by the updater implementation and can't be documented
+	// here. Improving the documentation for these is an open issue.
+	Config map[string]yaml.Node `yaml:"config" json:"config"`
 	// A slice of strings representing which
 	// updaters will be used.
 	//
@@ -22,16 +34,4 @@ type Updaters struct {
 	// "suse"
 	// "ubuntu"
 	Sets []string `yaml:"sets,omitempty" json:"sets,omitempty"`
-	// Config holds configuration blocks for UpdaterFactories and Updaters,
-	// keyed by name.
-	//
-	// These are defined by the updater implementation and can't be documented
-	// here. Improving the documentation for these is an open issue.
-	Config map[string]yaml.Node `yaml:"config" json:"config"`
-	// Filter is a regexp that disallows updaters that do not match from
-	// running.
-	// TODO(louis): this is only used in clairctl, should we keep this?
-	// it may offer an escape hatch for a particular updater name
-	// from running, vs disabling the updater set completely.
-	Filter string `yaml:"filter" json:"filter"`
 }

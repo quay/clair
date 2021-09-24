@@ -1,7 +1,6 @@
 package config_test
 
 import (
-	"log"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -10,10 +9,10 @@ import (
 	"github.com/quay/clair/v4/config"
 )
 
-func Test_Config_Validate_Failure(t *testing.T) {
-	var table = []struct {
-		name string
+func TestConfigValidateFailure(t *testing.T) {
+	table := []struct {
 		conf config.Config
+		name string
 	}{
 		{
 			name: "No Mode",
@@ -64,16 +63,16 @@ func Test_Config_Validate_Failure(t *testing.T) {
 	for _, tab := range table {
 		t.Run(tab.name, func(t *testing.T) {
 			if err := config.Validate(&tab.conf); err == nil {
-				log.Fatalf("expected error for test case: %s", tab.name)
+				t.Fatalf("expected error for test case: %s", tab.name)
 			}
 		})
 	}
 }
 
 func TestConfigUpateRetention(t *testing.T) {
-	var table = []struct {
-		name              string
+	table := []struct {
 		conf              config.Config
+		name              string
 		expectedRetention int
 	}{
 		{
@@ -157,7 +156,7 @@ func TestConfigUpateRetention(t *testing.T) {
 		t.Run(tab.name, func(t *testing.T) {
 			err := config.Validate(&tab.conf)
 			if err != nil {
-				log.Fatalf("expected no errors but got: %s, for test case: %s", err, tab.name)
+				t.Fatalf("expected no errors but got: %s, for test case: %s", err, tab.name)
 			}
 			if tab.conf.Matcher.UpdateRetention != tab.expectedRetention {
 				t.Fatalf("expected UpdateRetention of %d but got %d", tab.expectedRetention, tab.conf.Matcher.UpdateRetention)
@@ -167,7 +166,7 @@ func TestConfigUpateRetention(t *testing.T) {
 }
 
 func TestConfigDisableUpdaters(t *testing.T) {
-	var table = []struct {
+	table := []struct {
 		name string
 		conf config.Config
 	}{
@@ -219,10 +218,10 @@ func TestConfigDisableUpdaters(t *testing.T) {
 		t.Run(tab.name, func(t *testing.T) {
 			err := config.Validate(&tab.conf)
 			if err != nil {
-				log.Fatalf("expected no errors but got: %s, for test case: %s", err, tab.name)
+				t.Fatalf("expected no errors but got: %s, for test case: %s", err, tab.name)
 			}
 			if len(tab.conf.Updaters.Sets) != 0 {
-				log.Fatalf("expected updaters sets to be empty but was: %s, for test case: %s", tab.conf.Updaters.Sets, tab.name)
+				t.Fatalf("expected updaters sets to be empty but was: %s, for test case: %s", tab.conf.Updaters.Sets, tab.name)
 			}
 		})
 	}
@@ -234,7 +233,7 @@ func TestAuthUnmarshal(t *testing.T) {
 			In   string
 			Want config.AuthPSK
 		}
-		var tt = []testcase{
+		tt := []testcase{
 			{
 				In: `---
 key: >-
@@ -268,7 +267,7 @@ iss:
 			In   string
 			Want config.AuthKeyserver
 		}
-		var tt = []testcase{
+		tt := []testcase{
 			{
 				In: `---
 api: quay/keys

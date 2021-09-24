@@ -5,6 +5,9 @@ import (
 )
 
 type Matchers struct {
+	// Config holds configuration blocks for MatcherFactories and Matchers,
+	// keyed by name.
+	Config map[string]yaml.Node `yaml:"config" json:"config"`
 	// A slice of strings representing which
 	// matchers will be used.
 	//
@@ -22,7 +25,4 @@ type Matchers struct {
 	// "ubuntu"
 	// "crda" - remotematcher calls hosted api via RPC.
 	Names []string `yaml:"names" json:"names"`
-	// Config holds configuration blocks for MatcherFactories and Matchers,
-	// keyed by name.
-	Config map[string]yaml.Node `yaml:"config" json:"config"`
 }
