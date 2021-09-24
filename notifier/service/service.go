@@ -203,11 +203,6 @@ func webhookDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, s
 		Int("count", deliveries).
 		Msg("initializing webhook deliverers")
 
-	conf := opts.Webhook
-	if err := conf.Validate(); err != nil {
-		return err
-	}
-
 	ds := make([]*notifier.Delivery, 0, deliveries)
 	for i := 0; i < deliveries; i++ {
 		// Can't share a ctxlock because the Deliverer object unconditionally
@@ -216,7 +211,7 @@ func webhookDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, s
 		if err != nil {
 			return fmt.Errorf("failed to create locker: %w", err)
 		}
-		wh, err := webhook.New(conf, opts.Client)
+		wh, err := webhook.New(opts.Webhook, opts.Client)
 		if err != nil {
 			return fmt.Errorf("failed to create webhook deliverer: %v", err)
 		}
@@ -235,10 +230,6 @@ func amqpDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, stor
 	)
 
 	conf := opts.AMQP
-	if err := conf.Validate(); err != nil {
-		return fmt.Errorf("amqp validation failed: %v", err)
-	}
-
 	if len(conf.URIs) == 0 {
 		zlog.Warn(ctx).
 			Msg("amqp delivery was configured with no broker URIs to connect to. delivery of notifications will not occur.")
@@ -282,10 +273,6 @@ func stompDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, sto
 	)
 
 	conf := opts.STOMP
-	if err := opts.STOMP.Validate(); err != nil {
-		return fmt.Errorf("stomp validation failed: %v", err)
-	}
-
 	if len(conf.URIs) == 0 {
 		zlog.Warn(ctx).
 			Msg("stomp delivery was configured with no broker URIs to connect to. delivery of notifications will not occur.")
