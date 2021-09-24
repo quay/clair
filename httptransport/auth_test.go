@@ -12,10 +12,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/quay/zlog"
 	"gopkg.in/square/go-jose.v2/jwt"
 
 	"github.com/quay/clair/v4/config"
-	"github.com/quay/zlog"
+	"github.com/quay/clair/v4/internal/httputil"
 )
 
 type authTestcase struct {
@@ -71,11 +72,14 @@ func (tc *authTestcase) Run(ctx context.Context) func(*testing.T) {
 		}
 
 		// Create a client that has auth according to the config.
-		c, authed, err := tc.Config.Client(nil, tc.Claims)
+		c, authed, err := httputil.Client(nil, tc.Claims, &tc.Config)
 		if err != nil {
 			t.Error(err)
 		}
 		t.Logf("authed: %v", authed)
+		if c == nil {
+			t.FailNow()
+		}
 
 		// Make the request.
 		res, err := c.Get(srv.URL)

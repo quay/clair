@@ -12,6 +12,8 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/quay/claircore/libvuln"
 	"github.com/urfave/cli/v2"
+
+	"github.com/quay/clair/v4/internal/httputil"
 )
 
 // ImportCmd is the "import-updaters" subcommand.
@@ -35,7 +37,7 @@ func importAction(c *cli.Context) error {
 		return err
 	}
 
-	cl, _, err := cfg.Client(nil, &commonClaim)
+	cl, _, err := httputil.Client(nil, &commonClaim, cfg)
 	if err != nil {
 		return err
 	}

@@ -17,6 +17,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/quay/clair/v4/internal/codec"
+	"github.com/quay/clair/v4/internal/httputil"
 )
 
 // ReportCmd is the "report" subcommand.
@@ -121,7 +122,7 @@ func reportAction(c *cli.Context) error {
 		if e != nil {
 			return e
 		}
-		hc, _, e := cfg.Client(nil, &commonClaim)
+		hc, _, e := httputil.Client(nil, &commonClaim, cfg)
 		if e != nil {
 			return e
 		}

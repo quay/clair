@@ -164,7 +164,7 @@ func localIndexer(ctx context.Context, cfg *config.Config) (indexer.Service, err
 	// Use an empty claim because this shouldn't be talking to something that
 	// needs preconfigured authz. Callers should be providing credentials to the
 	// indexing process in the submitted manifest.
-	c, _, err := cfg.Client(tr, nil)
+	c, _, err := httputil.Client(tr, nil, cfg)
 	if err != nil {
 		return nil, mkErr(err)
 	}
@@ -190,7 +190,7 @@ func remoteIndexer(ctx context.Context, cfg *config.Config, addr string) (indexe
 
 func remoteClient(ctx context.Context, cfg *config.Config, claim jwt.Claims, addr string) (*client.HTTP, error) {
 	tr := http.DefaultTransport.(*http.Transport).Clone()
-	c, auth, err := cfg.Client(tr, &claim)
+	c, auth, err := httputil.Client(tr, &claim, cfg)
 	switch {
 	case err != nil:
 		return nil, err
@@ -287,7 +287,7 @@ func localNotifier(ctx context.Context, cfg *config.Config, i indexer.Service, m
 	}
 
 	tr := http.DefaultTransport.(*http.Transport).Clone()
-	c, _, err := cfg.Client(tr, &notifierClaim)
+	c, _, err := httputil.Client(tr, &notifierClaim, cfg)
 	if err != nil {
 		return nil, mkErr(err)
 	}

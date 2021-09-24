@@ -1,4 +1,4 @@
-package config
+package httputil
 
 import (
 	"net/http"
@@ -8,6 +8,8 @@ import (
 	"golang.org/x/net/publicsuffix"
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
+
+	"github.com/quay/clair/v4/config"
 )
 
 // Client returns an http.Client configured according to the supplied
@@ -17,7 +19,7 @@ import (
 //
 // It returns an *http.Client and a boolean indicating whether the client is
 // configured for authentication, or an error that occurred during construction.
-func (cfg *Config) Client(next http.RoundTripper, cl *jwt.Claims) (c *http.Client, authed bool, err error) {
+func Client(next http.RoundTripper, cl *jwt.Claims, cfg *config.Config) (c *http.Client, authed bool, err error) {
 	if next == nil {
 		next = http.DefaultTransport.(*http.Transport).Clone()
 	}
