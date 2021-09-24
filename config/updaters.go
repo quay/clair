@@ -1,7 +1,6 @@
 package config
 
 import (
-	"github.com/quay/claircore/libvuln/driver"
 	"gopkg.in/yaml.v3"
 )
 
@@ -35,19 +34,4 @@ type Updaters struct {
 	// it may offer an escape hatch for a particular updater name
 	// from running, vs disabling the updater set completely.
 	Filter string `yaml:"filter" json:"filter"`
-}
-
-func (u *Updaters) FilterSets(m map[string]driver.UpdaterSetFactory) {
-	if u.Sets != nil {
-	Outer:
-		for k := range m {
-			for _, n := range u.Sets {
-				if k == n {
-					continue Outer
-				}
-			}
-			delete(m, k)
-		}
-	}
-	return
 }
