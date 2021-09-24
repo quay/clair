@@ -38,9 +38,9 @@ func (cfg *Config) Client(next http.RoundTripper, cl *jwt.Claims) (c *http.Clien
 	switch {
 	case cl == nil: // Skip signing
 	case cfg.Auth.Keyserver != nil:
-		sk.Key = cfg.Auth.Keyserver.Intraservice
+		sk.Key = []byte(cfg.Auth.Keyserver.Intraservice)
 	case cfg.Auth.PSK != nil:
-		sk.Key = cfg.Auth.PSK.Key
+		sk.Key = []byte(cfg.Auth.PSK.Key)
 	default:
 	}
 	rt := &transport{
