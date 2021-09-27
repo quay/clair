@@ -1,0 +1,27 @@
+name: 'Manage v2 Issues'
+on:
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Run in debug mode (i.e. dry-run)'
+        required: false
+        default: false
+  schedule:
+    - cron: '30 1 * * *'
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v4
+        with:
+          only-labels: 'V2'
+          exempt-issue-labels: 'V2/active'
+          days-before-stale: 14
+          days-before-issue-stale: 0
+          days-before-close: 14
+          remove-stale-when-updated: false
+          ignore-updates: true
+          debug-only: ${{ github.event.inputs.debug || false }}
+          enable-statistics: true
+          operations-per-run: 1000
