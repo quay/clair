@@ -10,35 +10,28 @@ import (
 	"github.com/google/uuid"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
+	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/notifier"
 )
 
 // Deliverer is a STOMP deliverer which publishes a notifier.Callback to the
 // the broker.
 type DirectDeliverer struct {
-	conf Config
-	n    []notifier.Notification
-	fo   *failOver
+	Deliverer
+	n []notifier.Notification
 }
 
-func NewDirectDeliverer(conf Config) (*DirectDeliverer, error) {
-	var c Config
-	var err error
-	if c, err = conf.Validate(); err != nil {
+func NewDirectDeliverer(conf *config.STOMP) (*DirectDeliverer, error) {
+	var d DirectDeliverer
+	if err := d.load(conf); err != nil {
 		return nil, err
 	}
-	fo := &failOver{
-		Config: c,
-	}
-	return &DirectDeliverer{
-		conf: c,
-		n:    []notifier.Notification{},
-		fo:   fo,
-	}, nil
+	d.n = make([]notifier.Notification, 0, 1024)
+	return &d, nil
 }
 
 func (d *DirectDeliverer) Name() string {
-	return fmt.Sprintf("stomp-direct-%s", d.conf.Destination)
+	return fmt.Sprintf("stomp-direct-%s", d.destination)
 }
 
 // Notifications will copy the provided notifications into a buffer for STOMP
@@ -50,7 +43,7 @@ func (d *DirectDeliverer) Notifications(ctx context.Context, n []notifier.Notifi
 		copy(d.n, n)
 		return nil
 	}
-	tmp := make([]notifier.Notification, len(n), len(n))
+	tmp := make([]notifier.Notification, len(n))
 	copy(tmp, n)
 	d.n = tmp
 	return nil
@@ -69,7 +62,7 @@ func (d *DirectDeliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
 	}
 
 	// block loop publishing smaller blocks of max(rollup) length via reslicing.
-	var rollup int = d.conf.Rollup
+	rollup := d.rollup
 	if rollup == 0 {
 		rollup++
 	}
@@ -91,7 +84,7 @@ func (d *DirectDeliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
 			tx.Abort()
 			return &clairerror.ErrDeliveryFailed{err}
 		}
-		err = tx.Send(d.conf.Destination, "application/json", buf.Bytes(), gostomp.SendOpt.Receipt)
+		err = tx.Send(d.destination, "application/json", buf.Bytes(), gostomp.SendOpt.Receipt)
 		if err != nil {
 			tx.Abort()
 			return &clairerror.ErrDeliveryFailed{err}

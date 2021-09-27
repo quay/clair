@@ -7,9 +7,11 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	clairerror "github.com/quay/clair/v4/clair-error"
-	"github.com/quay/clair/v4/notifier"
 	samqp "github.com/streadway/amqp"
+
+	clairerror "github.com/quay/clair/v4/clair-error"
+	"github.com/quay/clair/v4/config"
+	"github.com/quay/clair/v4/notifier"
 )
 
 // DirectDeliverer is an AMQP deliverer which publishes notifications
@@ -19,29 +21,21 @@ import (
 // Administrators should configure the Exchange, Queue, and Bindings before starting
 // this deliverer.
 type DirectDeliverer struct {
-	conf Config
-	n    []notifier.Notification
-	fo   *failOver
+	n []notifier.Notification
+	Deliverer
 }
 
-func NewDirectDeliverer(conf Config) (*DirectDeliverer, error) {
-	var c Config
-	var err error
-	if c, err = conf.Validate(); err != nil {
+func NewDirectDeliverer(conf *config.AMQP) (*DirectDeliverer, error) {
+	var d DirectDeliverer
+	if err := d.load(conf); err != nil {
 		return nil, err
 	}
-	fo := &failOver{
-		Config: c,
-	}
-	return &DirectDeliverer{
-		conf: c,
-		n:    []notifier.Notification{},
-		fo:   fo,
-	}, nil
+	d.n = make([]notifier.Notification, 0, 1024)
+	return &d, nil
 }
 
 func (d *DirectDeliverer) Name() string {
-	return fmt.Sprintf("amqp-direct-%s", d.conf.Exchange.Name)
+	return fmt.Sprintf("amqp-direct-%s", d.exchange.Name)
 }
 
 // Notifications will copy the provided notifications into a buffer for AMQP
@@ -53,7 +47,7 @@ func (d *DirectDeliverer) Notifications(ctx context.Context, n []notifier.Notifi
 		copy(d.n, n)
 		return nil
 	}
-	tmp := make([]notifier.Notification, len(n), len(n))
+	tmp := make([]notifier.Notification, len(n))
 	copy(tmp, n)
 	d.n = tmp
 	return nil
@@ -79,7 +73,7 @@ func (d *DirectDeliverer) Deliver(ctx context.Context, _ uuid.UUID) error {
 	// TODO: can tx.Rollback be safely defered?
 
 	// block loop publishing smaller blocks of max(rollup) length via reslicing.
-	var rollup int = d.conf.Rollup
+	rollup := d.rollup
 	if rollup == 0 {
 		rollup++
 	}
@@ -107,8 +101,8 @@ func (d *DirectDeliverer) Deliver(ctx context.Context, _ uuid.UUID) error {
 			Body:        buf.Bytes(),
 		}
 		err = ch.Publish(
-			d.conf.Exchange.Name,
-			d.conf.RoutingKey,
+			d.exchange.Name,
+			d.routingKey,
 			false,
 			false,
 			msg,

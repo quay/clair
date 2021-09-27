@@ -6,14 +6,18 @@ import (
 	"net/url"
 	"strings"
 	"time"
-
-	"github.com/quay/clair/v4/notifier/amqp"
-	"github.com/quay/clair/v4/notifier/stomp"
-	"github.com/quay/clair/v4/notifier/webhook"
 )
 
 // Notifier provides Clair Notifier node configuration
 type Notifier struct {
+	// Only one of the following should be provided in the configuration
+	//
+	// Configures the notifier for webhook delivery
+	Webhook *Webhook `yaml:"webhook" json:"webhook"`
+	// Configures the notifier for AMQP delivery.
+	AMQP *AMQP `yaml:"amqp" json:"amqp"`
+	// Configures the notifier for STOMP delivery.
+	STOMP *STOMP `yaml:"stomp" json:"stomp"`
 	// A Postgres connection string.
 	//
 	// Formats:
@@ -54,14 +58,6 @@ type Notifier struct {
 	// For a machine-consumption use case, it may be easier to instead have the
 	// notifier push all the data.
 	DisableSummary bool `yaml:"disable_summary" json:"disable_summary"`
-	// Only one of the following should be provided in the configuration
-	//
-	// Configures the notifier for webhook delivery
-	Webhook *webhook.Config `yaml:"webhook" json:"webhook"`
-	// Configures the notifier for AMQP delivery.
-	AMQP *amqp.Config `yaml:"amqp" json:"amqp"`
-	// Configures the notifier for STOMP delivery.
-	STOMP *stomp.Config `yaml:"stomp" json:"stomp"`
 	// A "true" or "false" value
 	//
 	// Whether Notifier nodes handle migrations to their database.

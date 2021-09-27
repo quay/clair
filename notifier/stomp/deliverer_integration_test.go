@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-stomp/stomp"
 	"github.com/google/uuid"
+	"github.com/quay/clair/v4/config"
 	"github.com/quay/claircore/test/integration"
 	"github.com/quay/zlog"
 	"golang.org/x/sync/errgroup"
@@ -25,13 +26,13 @@ func TestDeliverer(t *testing.T) {
 	integration.Skip(t)
 	ctx := zlog.Test(context.Background(), t)
 	const (
-		callback = "http://clair-notifier/notifier/api/v1/notifications"
+		callback = "http://clair-notifier/notifier/api/v1/notifications/"
 	)
 
 	var (
 		uri   = os.Getenv("STOMP_CONNECTION_STRING")
 		queue = uuid.New().String()
-		conf  = Config{
+		conf  = config.STOMP{
 			Callback:    callback,
 			Destination: queue,
 			Direct:      false,
@@ -42,9 +43,9 @@ func TestDeliverer(t *testing.T) {
 	}
 	conf.URIs = []string{
 		// give a few bogus URIs to confirm failover mechanisms are working
-		"nohost1:5672/",
-		"nohost2:5672/",
-		"nohost3:5672/",
+		"nohost1:5672",
+		"nohost2:5672",
+		"nohost3:5672",
 		uri,
 	}
 
@@ -53,7 +54,7 @@ func TestDeliverer(t *testing.T) {
 	for i := 0; i < 4; i++ {
 		g.Go(func() error {
 			noteID := uuid.New()
-			d, err := New(conf)
+			d, err := New(&conf)
 			if err != nil {
 				return fmt.Errorf("could not create deliverer: %v", err)
 			}
@@ -103,8 +104,8 @@ func TestDeliverer(t *testing.T) {
 		if !ok {
 			t.Errorf("cannot find \"callback\" key in msg body")
 		}
-		if cb != fmt.Sprintf("%s/%s", callback, nid) {
-			t.Errorf("callback mismatch: expected: %s, got %s", fmt.Sprintf("%s/%s", callback, nid), cb)
+		if got, want := cb, callback+nid; got != want {
+			t.Errorf("callback mismatch: got: %q, want: %q", got, want)
 		}
 		conn.Ack(m)
 	}

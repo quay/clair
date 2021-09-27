@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/quay/claircore/libvuln/driver"
+	"github.com/quay/zlog"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/matcher"
@@ -48,7 +49,7 @@ func TestProcessorSafe(t *testing.T) {
 // testSafe confirms when all safety guards pass the processor will
 // create notifications.
 func testSafe(t *testing.T) {
-	ctx := context.TODO()
+	ctx := zlog.Test(context.Background(), t)
 	sm := &MockStore{
 		ReceiptByUOID_: func(ctx context.Context, id uuid.UUID) (Receipt, error) {
 			return Receipt{}, clairerror.ErrNoReceipt{}
@@ -75,7 +76,7 @@ func testSafe(t *testing.T) {
 
 // testUnsafeStoreErr confirms notifications will not be created if Store is returning an error.
 func testUnsafeStoreErr(t *testing.T) {
-	ctx := context.TODO()
+	ctx := zlog.Test(context.Background(), t)
 	sm := &MockStore{
 		ReceiptByUOID_: func(ctx context.Context, id uuid.UUID) (Receipt, error) {
 			return Receipt{}, fmt.Errorf("expected")
@@ -104,7 +105,7 @@ func testUnsafeStoreErr(t *testing.T) {
 
 // testUnsafeMatcherErr confirms notifications will not be created if Matcher is returning an error.
 func testUnsafeMatcherErr(t *testing.T) {
-	ctx := context.TODO()
+	ctx := zlog.Test(context.Background(), t)
 	sm := &MockStore{
 		ReceiptByUOID_: func(ctx context.Context, id uuid.UUID) (Receipt, error) {
 			return Receipt{}, clairerror.ErrNoReceipt{}
@@ -134,7 +135,7 @@ func testUnsafeMatcherErr(t *testing.T) {
 // testSafeStaleUOID confirms the guard against creating stale notifications
 // works correctly.
 func testUnsafeStaleUOID(t *testing.T) {
-	ctx := context.TODO()
+	ctx := zlog.Test(context.Background(), t)
 	sm := &MockStore{
 		ReceiptByUOID_: func(ctx context.Context, id uuid.UUID) (Receipt, error) {
 			return Receipt{}, clairerror.ErrNoReceipt{}
@@ -165,7 +166,7 @@ func testUnsafeStaleUOID(t *testing.T) {
 // testSafeDuplications confirms the guard against creating
 // duplicate notifications works correctly.
 func testUnsafeDuplications(t *testing.T) {
-	ctx := context.TODO()
+	ctx := zlog.Test(context.Background(), t)
 	sm := &MockStore{
 		ReceiptByUOID_: func(ctx context.Context, id uuid.UUID) (Receipt, error) {
 			return Receipt{}, nil

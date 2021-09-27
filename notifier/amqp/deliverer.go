@@ -4,12 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"path"
 
 	"github.com/google/uuid"
-	clairerror "github.com/quay/clair/v4/clair-error"
-	"github.com/quay/clair/v4/notifier"
 	samqp "github.com/streadway/amqp"
+
+	clairerror "github.com/quay/clair/v4/clair-error"
+	"github.com/quay/clair/v4/config"
+	"github.com/quay/clair/v4/notifier"
 )
 
 // Deliverer is an AMQP deliverer which publishes a notifier.Callback to the
@@ -19,27 +22,53 @@ import (
 // Administrators should configure the Exchange, Queue, and Bindings before starting
 // this deliverer.
 type Deliverer struct {
-	conf Config
-	fo   *failOver
+	callback   *url.URL
+	fo         failOver
+	routingKey string
+	exchange   exchange
+	rollup     int
+	direct     bool
 }
 
-func New(conf Config) (*Deliverer, error) {
-	var c Config
-	var err error
-	if c, err = conf.Validate(); err != nil {
+func New(conf *config.AMQP) (*Deliverer, error) {
+	var d Deliverer
+	if err := d.load(conf); err != nil {
 		return nil, err
 	}
-	fo := &failOver{
-		Config: c,
+	return &d, nil
+}
+
+func (d *Deliverer) load(conf *config.AMQP) error {
+	var err error
+	if !conf.Direct {
+		d.callback, err = url.Parse(conf.Callback)
+		if err != nil {
+			return err
+		}
 	}
-	return &Deliverer{
-		conf: c,
-		fo:   fo,
-	}, nil
+	d.fo.tls, err = loadTLSConfig(conf)
+	if err != nil {
+		return err
+	}
+
+	// Copy everything else out of the config:
+	d.direct = conf.Direct
+	d.rollup = conf.Rollup
+	d.exchange = exchangeFrom(conf)
+	d.routingKey = conf.RoutingKey
+	d.fo.uris = make([]*url.URL, len(conf.URIs))
+	for i, u := range conf.URIs {
+		d.fo.uris[i], err = url.Parse(u)
+		if err != nil {
+			return err
+		}
+	}
+	d.fo.exchange = &d.exchange
+	return nil
 }
 
 func (d *Deliverer) Name() string {
-	return fmt.Sprintf("amqp-%s", d.conf.Exchange.Name)
+	return fmt.Sprintf("amqp-%s", d.exchange.Name)
 }
 
 func (d *Deliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
@@ -55,7 +84,7 @@ func (d *Deliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
 	}
 	defer ch.Close()
 
-	callback := d.conf.callback
+	callback := *d.callback
 	callback.Path = path.Join(callback.Path, nID.String())
 
 	cb := notifier.Callback{
@@ -72,8 +101,8 @@ func (d *Deliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
 		Body:        b,
 	}
 	err = ch.Publish(
-		d.conf.Exchange.Name,
-		d.conf.RoutingKey,
+		d.exchange.Name,
+		d.routingKey,
 		false,
 		false,
 		msg,

@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
+	"github.com/quay/zlog"
 
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
@@ -79,7 +80,7 @@ func TestProcessCreate(t *testing.T) {
 // available
 func testProcessorStoreErr(t *testing.T) {
 	t.Parallel()
-	ctx := context.TODO()
+	ctx := zlog.Test(context.Background(), t)
 	e := Event{
 		updater: testUpdater,
 		uo:      processorUpdateOps[testUpdater][0],
@@ -117,14 +118,13 @@ func testProcessorStoreErr(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected err")
 	}
-
 }
 
 // testProcessorIndexerErr confirms create fails when the indexer is not
 // available
 func testProcessorIndexerErr(t *testing.T) {
 	t.Parallel()
-	ctx := context.TODO()
+	ctx := zlog.Test(context.Background(), t)
 	e := Event{
 		updater: testUpdater,
 		uo:      processorUpdateOps[testUpdater][0],
@@ -159,14 +159,13 @@ func testProcessorIndexerErr(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected err")
 	}
-
 }
 
 // testProcessorMatcherErr confirms create fails when the matcher is not
 // available
 func testProcessorMatcherErr(t *testing.T) {
 	t.Parallel()
-	ctx := context.TODO()
+	ctx := zlog.Test(context.Background(), t)
 	e := Event{
 		updater: testUpdater,
 		uo:      processorUpdateOps[testUpdater][0],
@@ -198,13 +197,12 @@ func testProcessorMatcherErr(t *testing.T) {
 	if err == nil {
 		t.Fatalf("expected err")
 	}
-
 }
 
 // testProcessorCreate confirms notifications are created correctly.
 func testProcessorCreate(t *testing.T) {
 	t.Parallel()
-	ctx := context.TODO()
+	ctx := zlog.Test(context.Background(), t)
 	e := Event{
 		updater: testUpdater,
 		uo:      processorUpdateOps[testUpdater][0],

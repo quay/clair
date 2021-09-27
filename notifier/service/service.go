@@ -17,6 +17,7 @@ import (
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/label"
 
+	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
 	"github.com/quay/clair/v4/notifier"
@@ -67,9 +68,9 @@ type Opts struct {
 	Indexer          indexer.Service
 	DisableSummary   bool
 	Client           *http.Client
-	Webhook          *webhook.Config
-	AMQP             *namqp.Config
-	STOMP            *stomp.Config
+	Webhook          *config.Webhook
+	AMQP             *config.AMQP
+	STOMP            *config.STOMP
 }
 
 // New kicks off the notifier subsystem.
@@ -202,8 +203,8 @@ func webhookDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, s
 		Int("count", deliveries).
 		Msg("initializing webhook deliverers")
 
-	conf, err := opts.Webhook.Validate()
-	if err != nil {
+	conf := opts.Webhook
+	if err := conf.Validate(); err != nil {
 		return err
 	}
 
@@ -233,8 +234,8 @@ func amqpDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, stor
 		label.String("component", "notifier/service/amqpDeliveries"),
 	)
 
-	conf, err := opts.AMQP.Validate()
-	if err != nil {
+	conf := opts.AMQP
+	if err := conf.Validate(); err != nil {
 		return fmt.Errorf("amqp validation failed: %v", err)
 	}
 
@@ -280,8 +281,8 @@ func stompDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, sto
 		label.String("component", "notifier/service/stompDeliveries"),
 	)
 
-	conf, err := opts.STOMP.Validate()
-	if err != nil {
+	conf := opts.STOMP
+	if err := opts.STOMP.Validate(); err != nil {
 		return fmt.Errorf("stomp validation failed: %v", err)
 	}
 

@@ -14,11 +14,12 @@ import (
 	"github.com/google/uuid"
 	"github.com/quay/zlog"
 
+	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/notifier"
 )
 
 var (
-	callback = "http://clair-notifier/notifier/api/v1/notification"
+	callback = "http://clair-notifier/notifier/api/v1/notification/"
 	noteID   = uuid.New()
 )
 
@@ -29,7 +30,7 @@ func TestDeliverer(t *testing.T) {
 		sync.Mutex
 		cb notifier.Callback
 	}
-	var server *httptest.Server = httptest.NewServer(http.HandlerFunc(
+	server := httptest.NewServer(http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			if r.Method != http.MethodPost {
 				w.WriteHeader(http.StatusMethodNotAllowed)
@@ -44,22 +45,16 @@ func TestDeliverer(t *testing.T) {
 			whResult.Lock()
 			whResult.cb = cb
 			whResult.Unlock()
-			return
 		},
 	))
 	defer server.Close()
 	ctx := zlog.Test(context.Background(), t)
-	conf := Config{
+	conf := config.Webhook{
 		Callback: callback,
 		Target:   server.URL,
 	}
-	var err error
-	conf, err = conf.Validate()
-	if err != nil {
-		t.Fatalf("failed to validate webhook config: %v", err)
-	}
 
-	d, err := New(conf, server.Client())
+	d, err := New(&conf, server.Client())
 	if err != nil {
 		t.Fatalf("failed to create new webhook deliverer: %v", err)
 	}
@@ -82,7 +77,7 @@ func TestDeliverer(t *testing.T) {
 	}
 	cbURL.Path = path.Join(cbURL.Path, noteID.String())
 
-	if !cmp.Equal(wh.Callback, *cbURL) {
-		t.Fatalf("got: %v, wanted: %v", wh.Callback, cbURL)
+	if got, want := wh.Callback.String(), cbURL.String(); got != want {
+		t.Fatalf("got: %v, wanted: %v", got, want)
 	}
 }

@@ -11,7 +11,9 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/google/uuid"
+	"github.com/quay/clair/v4/config"
 	"github.com/quay/claircore/test/integration"
+	"github.com/quay/zlog"
 	samqp "github.com/streadway/amqp"
 )
 
@@ -23,6 +25,7 @@ const (
 // callback is successfully delivered to the amqp broker.
 func TestDeliverer(t *testing.T) {
 	integration.Skip(t)
+	ctx := zlog.Test(context.Background(), t)
 	const (
 		callback = "http://clair-notifier/notifier/api/v1/notifications"
 	)
@@ -30,15 +33,14 @@ func TestDeliverer(t *testing.T) {
 		uri         = os.Getenv("RABBITMQ_CONNECTION_STRING")
 		queueAndKey = uuid.New().String()
 		// our test assumes a default exchange
-		exchange = Exchange{
-			Name:       "",
-			Type:       "direct",
-			Durable:    true,
-			AutoDelete: false,
-		}
-		conf = Config{
-			Callback:   callback,
-			Exchange:   exchange,
+		conf = config.AMQP{
+			Callback: callback,
+			Exchange: config.Exchange{
+				Name:       "",
+				Type:       "direct",
+				Durable:    true,
+				AutoDelete: false,
+			},
 			RoutingKey: queueAndKey,
 		}
 	)
@@ -85,13 +87,13 @@ func TestDeliverer(t *testing.T) {
 	for i := 0; i < 4; i++ {
 		g.Go(func() error {
 			noteID := uuid.New()
-			d, err := New(conf)
+			d, err := New(&conf)
 			if err != nil {
 				return fmt.Errorf("could not create deliverer: %v", err)
 			}
 			// we simply need to check for an error. amqp
 			// will error if message cannot be delivered to broker
-			err = d.Deliver(context.TODO(), noteID)
+			err = d.Deliver(ctx, noteID)
 			if err != nil {
 				return fmt.Errorf("failed to deliver message: %v", err)
 			}
