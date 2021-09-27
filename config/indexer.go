@@ -21,7 +21,7 @@ type Indexer struct {
 	// This value tunes how often a waiting Indexer will poll for the lock.
 	// TODO: Move to async operating mode
 	ScanLockRetry int `yaml:"scanlock_retry" json:"scanlock_retry"`
-	// A positive values represeting quantity.
+	// A positive values representing quantity.
 	//
 	// Indexers will index a Manifest's layers concurrently.
 	// This value tunes the number of layers an Indexer will scan in parallel.
@@ -51,6 +51,46 @@ func (i *Indexer) Validate(combo bool) error {
 		i.ScanLockRetry = DefaultScanLockRetry
 	}
 	return nil
+}
+
+func (i *Indexer) lint() (ws []Warning, err error) {
+	ws, err = checkDSN(i.ConnString)
+	if err != nil {
+		return ws, err
+	}
+	for i := range ws {
+		ws[i].path = ".connstring"
+	}
+	if i.ScanLockRetry > 10 { // Guess at what a "large" value is here.
+		ws = append(ws, Warning{
+			path: ".scanlock_retry",
+			msg:  `large values will increase latency`,
+		})
+	}
+	switch {
+	case i.LayerScanConcurrency == 0:
+		// Skip, autosized.
+	case i.LayerScanConcurrency < 4:
+		ws = append(ws, Warning{
+			path: ".layer_scan_concurrency",
+			msg:  `small values will limit resource utilization and increase latency`,
+		})
+	case i.LayerScanConcurrency > 32:
+		ws = append(ws, Warning{
+			path: ".layer_scan_concurrency",
+			msg:  `large values may exceed resource quotas`,
+		})
+	}
+	if i.IndexReportRequestConcurrency < 1 {
+		// Remove this lint if we come up with a heuristic instead of just
+		// "unlimited".
+		ws = append(ws, Warning{
+			path: ".index_report_request_concurrency",
+			msg:  `unlimited concurrent requests may exceed resource quotas`,
+		})
+	}
+
+	return ws, nil
 }
 
 type ScannerConfig struct {

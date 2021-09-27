@@ -8,6 +8,11 @@ import (
 	"os"
 )
 
+// TLS describes some TLS settings.
+//
+// These are currently only used in the Notifier. Using the environment
+// variables "SSL_CERT_DIR" or "SSL_CERT_FILE" or modifying the system's trust
+// store are the ways to modify root CAs for all outgoing TLS connections.
 type TLS struct {
 	// The filesystem path where a root CA can be read.
 	//
@@ -30,7 +35,7 @@ func (t *TLS) Config() (*tls.Config, error) {
 		return &cfg, nil
 	}
 
-	if t.Cert == "" || t.Key == "" {
+	if (t.Cert != "" || t.Key != "") && (t.Cert == "" || t.Key == "") {
 		return nil, errors.New("both tls cert and key are required")
 	}
 	if t.RootCA != "" {
@@ -55,4 +60,14 @@ func (t *TLS) Config() (*tls.Config, error) {
 	cfg.Certificates = append(cfg.Certificates, cert)
 
 	return &cfg, nil
+}
+
+func (t *TLS) lint() ([]Warning, error) {
+	if t.RootCA != "" {
+		return []Warning{{
+			path:  ".root_ca",
+			inner: fmt.Errorf(`use environment variables "SSL_CERT_FILE" or "SSL_CERT_DIR": %w`, ErrDeprecated),
+		}}, nil
+	}
+	return nil, nil
 }

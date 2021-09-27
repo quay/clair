@@ -1,5 +1,7 @@
 package config
 
+import "fmt"
+
 // Configure distributed tracing via OTEL
 type Trace struct {
 	Name        string   `yaml:"name" json:"name"`
@@ -7,7 +9,20 @@ type Trace struct {
 	Jaeger      Jaeger   `yaml:"jaeger" json:"jaeger"`
 }
 
-// Jager specific distributed tracing configuration.
+func (t *Trace) lint() ([]Warning, error) {
+	switch t.Name {
+	case "":
+	case "jaeger":
+	default:
+		return []Warning{{
+			path: ".name",
+			msg:  fmt.Sprintf(`unrecognized trace provider: %q`, t.Name),
+		}}, nil
+	}
+	return nil, nil
+}
+
+// Jaeger specific distributed tracing configuration.
 type Jaeger struct {
 	Tags  map[string]string `yaml:"tags" json:"tags"`
 	Agent struct {
@@ -26,6 +41,19 @@ type Jaeger struct {
 type Metrics struct {
 	Prometheus Prometheus `yaml:"prometheus" json:"prometheus"`
 	Name       string     `yaml:"name" json:"name"`
+}
+
+func (m *Metrics) lint() ([]Warning, error) {
+	switch m.Name {
+	case "":
+	case "prometheus":
+	default:
+		return []Warning{{
+			path: ".name",
+			msg:  fmt.Sprintf(`unrecognized metrics provider: %q`, m.Name),
+		}}, nil
+	}
+	return nil, nil
 }
 
 // Prometheus specific metrics configuration

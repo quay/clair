@@ -3,6 +3,7 @@ package config
 import (
 	"encoding"
 	"encoding/base64"
+	"fmt"
 )
 
 // Base64 is a byte slice that encodes to and from base64-encoded strings.
@@ -48,6 +49,15 @@ func (a Auth) Any() bool {
 		a.Keyserver != nil
 }
 
+func (a *Auth) lint() ([]Warning, error) {
+	if a.PSK != nil && a.Keyserver != nil {
+		return []Warning{{
+			msg: `both "PSK" and "Keyserver" authentication methods are defined`,
+		}}, nil
+	}
+	return nil, nil
+}
+
 // AuthKeyserver is the configuration for doing authentication with the Quay
 // keyserver protocol.
 //
@@ -58,10 +68,32 @@ type AuthKeyserver struct {
 	Intraservice Base64 `yaml:"intraservice" json:"intraservice"`
 }
 
+func (a *AuthKeyserver) lint() ([]Warning, error) {
+	return []Warning{{
+		inner: fmt.Errorf(`authentication method deprecated: %w`, ErrDeprecated),
+	}}, nil
+}
+
 // AuthPSK is the configuration for doing pre-shared key based authentication.
 //
 // The "Issuer" key is what the service expects to verify as the "issuer" claim.
 type AuthPSK struct {
 	Key    Base64   `yaml:"key" json:"key"`
 	Issuer []string `yaml:"iss" json:"iss"`
+}
+
+func (a *AuthPSK) lint() (ws []Warning, err error) {
+	if len(a.Key) == 0 {
+		ws = append(ws, Warning{
+			path: ".key",
+			msg:  "key is empty",
+		})
+	}
+	if len(a.Issuer) == 0 {
+		ws = append(ws, Warning{
+			path: ".iss",
+			msg:  "no issuers defined",
+		})
+	}
+	return ws, nil
 }

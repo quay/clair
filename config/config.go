@@ -20,6 +20,8 @@ const (
 // DefaultAddress is used if an http_listen_addr is not provided in the config.
 const DefaultAddress = ":6060"
 
+// Config is the configuration object for the commands in
+// github.com/quay/clair/v4/cmd/...
 type Config struct {
 	// One of the following strings
 	// Sets which mode the clair instances will run in
@@ -94,4 +96,20 @@ func Validate(conf *Config) error {
 		return fmt.Errorf("unknown mode received: %v", conf.Mode)
 	}
 	return nil
+}
+
+func (c *Config) lint() (ws []Warning, err error) {
+	if c.HTTPListenAddr == "" {
+		ws = append(ws, Warning{
+			path: ".http_listen_addr",
+			msg:  `http listen address not provided, default will be used`,
+		})
+	}
+	if c.IntrospectionAddr == "" {
+		ws = append(ws, Warning{
+			path: ".introspection_addr",
+			msg:  `introspection address not provided, default will be used`,
+		})
+	}
+	return ws, nil
 }

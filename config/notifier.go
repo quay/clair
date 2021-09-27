@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 	"time"
 )
@@ -64,19 +65,20 @@ type Notifier struct {
 	Migrations bool `yaml:"migrations" json:"migrations"`
 }
 
+const (
+	notifierDefaultPollInterval     = 5 * time.Second
+	notifierDefaultDeliveryInterval = 5 * time.Second
+)
+
 func (n *Notifier) Validate(combo bool) error {
-	const (
-		DefaultPollInterval     = 5 * time.Second
-		DefaultDeliveryInterval = 5 * time.Second
-	)
 	if n.ConnString == "" {
 		return fmt.Errorf("notifier mode requires a database connection string")
 	}
 	if n.PollInterval < 1*time.Second {
-		n.PollInterval = DefaultPollInterval
+		n.PollInterval = notifierDefaultPollInterval
 	}
 	if n.DeliveryInterval < 1*time.Second {
-		n.DeliveryInterval = DefaultDeliveryInterval
+		n.DeliveryInterval = notifierDefaultDeliveryInterval
 	}
 	if !combo {
 		if n.IndexerAddr == "" {
@@ -87,6 +89,57 @@ func (n *Notifier) Validate(combo bool) error {
 		}
 	}
 	return nil
+}
+
+func (n *Notifier) lint() (ws []Warning, err error) {
+	ws, err = checkDSN(n.ConnString)
+	if err != nil {
+		return ws, err
+	}
+	for i := range ws {
+		ws[i].path = ".connstring"
+	}
+	got := 0
+	if n.AMQP != nil {
+		got++
+	}
+	if n.STOMP != nil {
+		got++
+	}
+	if n.Webhook != nil {
+		got++
+	}
+	switch {
+	case got == 0 && !reflect.ValueOf(n).Elem().IsZero():
+		ws = append(ws, Warning{
+			msg: "no delivery mechanisms specified",
+		})
+	case got > 1:
+		ws = append(ws, Warning{
+			msg: "multiple delivery mechanisms specified",
+		})
+	}
+
+	if n.PollInterval < notifierDefaultPollInterval {
+		ws = append(ws, Warning{
+			path: ".poll_interval",
+			msg:  "interval is very fast: may result in increased workload",
+		})
+	}
+	if n.DeliveryInterval < notifierDefaultDeliveryInterval {
+		ws = append(ws, Warning{
+			path: ".delivery_interval",
+			msg:  "interval is very fast: may result in increased workload",
+		})
+	}
+	if n.DisableSummary {
+		ws = append(ws, Warning{
+			path: ".disable_summary",
+			msg:  "disabling notification summary significantly increases memory consumption",
+		})
+	}
+
+	return ws, nil
 }
 
 type Webhook struct {
@@ -105,21 +158,31 @@ type Webhook struct {
 
 // Validate will return a copy of the Config on success.
 // If any validation fails an error will be returned.
-func (c *Webhook) Validate() error {
-	if _, err := url.Parse(c.Target); err != nil {
+func (w *Webhook) Validate() error {
+	if _, err := url.Parse(w.Target); err != nil {
 		return fmt.Errorf("failed to parse target url")
 	}
 
 	// Require trailing slash so url.Parse() can easily append notification id.
-	if !strings.HasSuffix(c.Callback, "/") {
-		c.Callback = c.Callback + "/"
+	if !strings.HasSuffix(w.Callback, "/") {
+		w.Callback = w.Callback + "/"
 	}
 
-	if _, err := url.Parse(c.Callback); err != nil {
+	if _, err := url.Parse(w.Callback); err != nil {
 		return fmt.Errorf("failed to parse callback url: %w", err)
 	}
 
 	return nil
+}
+
+func (w *Webhook) lint() ([]Warning, error) {
+	if w.Signed {
+		return []Warning{{
+			path:  ".signed",
+			inner: ErrDeprecated,
+		}}, nil
+	}
+	return nil, nil
 }
 
 // Exchange are the required fields necessary to check
@@ -214,6 +277,20 @@ func (c *AMQP) Validate() error {
 	return nil
 }
 
+func (c *AMQP) lint(w []Warning) ([]Warning, error) {
+	if c.Rollup == 1 {
+		w = append(w, Warning{
+			msg: "`Rollup` set to 1: this means nothing",
+		})
+	}
+	if c.Direct && c.Callback != "" {
+		w = append(w, Warning{
+			msg: "`Callback` and `Direct` set: `Callback` will be ignored",
+		})
+	}
+	return w, nil
+}
+
 type Login struct {
 	Login    string `yaml:"login" json:"login"`
 	Passcode string `yaml:"passcode" json:"passcode"`
@@ -262,4 +339,18 @@ func (c *STOMP) Validate() error {
 		}
 	}
 	return nil
+}
+
+func (c *STOMP) lint(w []Warning) ([]Warning, error) {
+	if c.Rollup == 1 {
+		w = append(w, Warning{
+			msg: "`Rollup` set to 1: this means nothing",
+		})
+	}
+	if c.Direct && c.Callback != "" {
+		w = append(w, Warning{
+			msg: "`Callback` and `Direct` set: `Callback` will be ignored",
+		})
+	}
+	return w, nil
 }

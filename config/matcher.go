@@ -54,16 +54,17 @@ type Matcher struct {
 	DisableUpdaters bool `yaml:"disable_updaters" json:"disable_updaters"`
 }
 
+const (
+	defaultMatcherPeriod   = 30 * time.Minute
+	defaultMacherRetention = 10
+)
+
 func (m *Matcher) Validate(combo bool) error {
-	const (
-		DefaultPeriod    = 30 * time.Minute
-		DefaultRetention = 10
-	)
 	if m.ConnString == "" {
 		return fmt.Errorf("matcher requires a database connection string")
 	}
 	if m.Period == 0 {
-		m.Period = DefaultPeriod
+		m.Period = defaultMatcherPeriod
 	}
 	switch {
 	case m.UpdateRetention < 0:
@@ -71,7 +72,7 @@ func (m *Matcher) Validate(combo bool) error {
 		m.UpdateRetention = 0
 	case m.UpdateRetention < 2:
 		// Anything less than 2 gets the default.
-		m.UpdateRetention = DefaultRetention
+		m.UpdateRetention = defaultMacherRetention
 	}
 	if m.CacheAge == 0 {
 		m.CacheAge = m.Period
@@ -86,4 +87,35 @@ func (m *Matcher) Validate(combo bool) error {
 		}
 	}
 	return nil
+}
+
+func (m *Matcher) lint() (ws []Warning, err error) {
+	ws, err = checkDSN(m.ConnString)
+	if err != nil {
+		return ws, err
+	}
+	for i := range ws {
+		ws[i].path = ".connstring"
+	}
+
+	if m.Period < defaultMatcherPeriod {
+		ws = append(ws, Warning{
+			path: ".period",
+			msg:  "updater period is very aggressive: most sources are updated daily",
+		})
+	}
+	if m.CacheAge < m.Period/2 {
+		ws = append(ws, Warning{
+			path: ".cache_age",
+			msg:  "expiry very low: may result in increased workload",
+		})
+	}
+	if m.UpdateRetention == 0 {
+		ws = append(ws, Warning{
+			path: ".update_retention",
+			msg:  "update garbage collection is off",
+		})
+	}
+
+	return ws, nil
 }
