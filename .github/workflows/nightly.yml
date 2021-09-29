@@ -36,7 +36,6 @@ jobs:
           printf '::set-output name=push::%s\n' "${{ env.QUAY_TOKEN != '' }}"
           printf '::set-output name=api::%s\n' "${{ env.QUAY_API_TOKEN != '' }}"
           printf '::set-output name=date::%s\n' "$(date -u '+%Y-%m-%d')"
-          printf '::set-output name=expiration::%s\n' "$(($(date -u '+%s') + 1209600))"
           printf '::set-output name=tag::%s\n' "$(test -n "${{github.event.inputs.tag}}" && echo "${{github.event.inputs.tag}}" || echo nightly)"
           printf '::set-output name=claircore_branch::%s\n' "${br}"
           printf '::set-output name=go_version::%s\n' "${gv}"
@@ -79,8 +78,14 @@ jobs:
       - name: Modify module
         id: mod
         run: ./.github/script/nightly-module.sh
+      - name: Check Novelty
+        id: novelty
+        uses: actions/cache@v2
+        with:
+          path: go.sum
+          key: novelty-${{ github.sha }}-${{ hashFiles('./go.*') }}
       - name: Login
-        if: steps.setup.outputs.push
+        if: steps.setup.outputs.push && steps.novelty.outputs.cache-hit != 'true'
         uses: docker/login-action@v1
         with:
           registry: quay.io
@@ -96,12 +101,12 @@ jobs:
           cache-to: type=gha,mode=max
           context: .
           platforms: linux/amd64,linux/arm64
-          push: ${{ steps.setup.outputs.push }}
+          push: ${{ steps.setup.outputs.push && steps.novelty.outputs.cache-hit != 'true' }}
           tags: |
             quay.io/${{ steps.setup.outputs.repo }}:${{ steps.setup.outputs.tag }}
             quay.io/${{ steps.setup.outputs.repo }}:${{ steps.setup.outputs.tag }}-${{ steps.setup.outputs.date }}
       - name: Set Expiration
-        if: steps.setup.outputs.push && steps.setup.outputs.api
+        if: steps.setup.outputs.push && steps.setup.outputs.api && steps.novelty.outputs.cache-hit != 'true'
         uses: ./.github/actions/set-image-expiration
         with:
           repo: ${{ steps.setup.outputs.repo }}
