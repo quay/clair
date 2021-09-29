@@ -41,9 +41,9 @@ objects:
           volumes:
             - name: clair-config
               secret:
-                secretName: ${{CLAIR_SECRET}}
+                secretName: config
                 items:
-                  - key: config
+                  - key: ${{CLAIR_SECRET}}
                     path: clair.conf
           containers:
             - name: clair-indexer
@@ -110,9 +110,9 @@ objects:
           volumes:
             - name: clair-config
               secret:
-                secretName: ${{CLAIR_SECRET}}
+                secretName: config
                 items:
-                  - key: config
+                  - key: ${{CLAIR_SECRET}}
                     path: clair.conf
           containers:
             - name: clair-matcher
@@ -176,9 +176,9 @@ objects:
           volumes:
             - name: clair-config
               secret:
-                secretName: ${{CLAIR_SECRET}}
+                secretName: config
                 items:
-                  - key: config
+                  - key: ${{CLAIR_SECRET}}
                     path: clair.conf
           containers:
             - name: clair-notifier
