@@ -55,6 +55,15 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - name: Cache Go Modules
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: go-mod-${{ needs.config.outputs.go_version }}-${{ runner.os }}-${{ hashFiles('./go.*') }}
+          restore-keys: |
+            go-mod-${{ needs.config.outputs.go_version }}-${{ runner.os }}
+            go-mod-${{ needs.config.outputs.go_version }}
+            go-mod
       - name: Create Release Archive
         run: |
           go mod vendor
@@ -62,7 +71,23 @@ jobs:
           tar -rf clair.tar --transform 's,^,${{ needs.config.outputs.tar_prefix }},' vendor
           gzip clair.tar
           mv clair.tar.gz clair-${{ needs.config.outputs.version }}.tar.gz
-      - name: ChangeLog
+      - name: Cache Changelog
+        uses: actions/cache@v2
+        id: chlog-cache
+        if: github.event_name != 'workflow_dispatch'
+        with:
+          path: /usr/local/bin/git-chlog
+          key: changelog-${{ needs.config.output.chlog_version }}
+      - name: Fetch Changelog
+        if: steps.chlog-cache.outputs.cache-hit != 'true' && github.event_name != 'workflow_dispatch'
+        run: |
+          cd "$RUNNER_TEMP"
+          v="${{ needs.config.output.chlog_version }}"
+          f="git-chglog_${v}_linux_amd64.tar.gz"
+          curl -fsOSL "https://github.com/git-chglog/git-chglog/releases/download/v${v}/${f}"
+          tar xvf "${f}"
+          install git-chlog /usr/local/bin
+      - name: Generate changelog
         shell: bash
         if: github.event_name != 'workflow_dispatch'
         run: |
@@ -106,6 +131,14 @@ jobs:
         id: download
         with:
           name: release
+      - name: Cache Go Builds
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/go-build
+          key: go-build-${{ needs.config.outputs.build_cache_key }}-${{ runner.os }}
+          restore-keys: |
+            go-build-${{ needs.config.outputs.build_cache_key }}
+            go-build
       - name: Unpack and Build
         run: |
           tar -xz -f ${{steps.download.outputs.download-path}}/clair-${{ needs.config.outputs.version }}.tar.gz --strip-components=1
