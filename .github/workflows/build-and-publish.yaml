@@ -1,0 +1,44 @@
+---
+name: Build and Publish
+
+on:
+  push:
+    branches:
+      - redhat-** # IMPORTANT! this must match the jobs.build-and-publish.env.BRANCH_PREFIX (save the **).
+
+jobs:
+  build-and-publish:
+    name: Publish container image
+    env:
+      BRANCH_PREFIX: redhat- # IMPORTANT! this must match the .on.push.branches prefix!
+      REGISTRY: quay.io/projectquay
+      REPO_NAME: ${{ github.event.repository.name }}
+      TAG_SUFFIX: -unstable
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+
+      - name: Set version from branch name
+        id: version-from-branch
+        if: startsWith('env.BRANCH_PREFIX', env.GITHUB_REF)
+        run: |
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+          echo "::set-output name=version::${BRANCH_NAME/${{ env.BRANCH_PREFIX }}/}"
+
+      - name: Login to Quay.io
+        uses: docker/login-action@v1
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_USER }}
+          password: ${{ secrets.QUAY_TOKEN }}
+
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        env:
+          TAG: ${{ steps.version-from-branch.outputs.version }}${{ env.TAG_SUFFIX }}
+        with:
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.REPO_NAME }}:${{ env.TAG }}
+
