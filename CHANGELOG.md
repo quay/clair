@@ -2,9 +2,17 @@
 ## [Unreleased]
 
 
+<a name="v4.3.0"></a>
+## [v4.3.0] - 2021-09-29
+### Contrib
+- [2cee4e1](https://github.com/quay/clair/commit/2cee4e1c6b06179f8166b3090526d6d5d592433c): update secrets path
+### Dockerfile
+- [5493bbc](https://github.com/quay/clair/commit/5493bbc0d5cdd67c52c4d1786ddc3226086403d6): remove dumb-init, tar
+
 <a name="v4.3.0-rc.0"></a>
 ## [v4.3.0-rc.0] - 2021-09-28
 ### Chore
+- [b5ea27b](https://github.com/quay/clair/commit/b5ea27bc324308e359adf3084b92301441457001): v4.3.0-rc.0 changelog bump
 - [d65432d](https://github.com/quay/clair/commit/d65432d3cc7dbe57de1b7be7cfd4745005e44159): update claircore version
 - [5ab6c76](https://github.com/quay/clair/commit/5ab6c76121a03543f8edf748fa511a7d486df54c): automation around v2 issues
 - [b53aeb7](https://github.com/quay/clair/commit/b53aeb714aa3536dd7aa295ea6306a20e69e03cf): update claircore version
@@ -1665,7 +1673,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.3.0-rc.0...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.3.0...HEAD
+[v4.3.0]: https://github.com/quay/clair/compare/v4.3.0-rc.0...v4.3.0
 [v4.3.0-rc.0]: https://github.com/quay/clair/compare/v4.2.3...v4.3.0-rc.0
 [v4.2.3]: https://github.com/quay/clair/compare/v4.2.2...v4.2.3
 [v4.2.2]: https://github.com/quay/clair/compare/v4.2.1...v4.2.2
