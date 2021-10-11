@@ -42,9 +42,6 @@ objects:
             - name: clair-config
               secret:
                 secretName: config
-                items:
-                  - key: ${{CLAIR_SECRET}}
-                    path: clair.conf
           containers:
             - name: clair-indexer
               resources:
@@ -57,7 +54,7 @@ objects:
               command: [clair]
               env:
                 - name: CLAIR_CONF
-                  value: '/etc/clair/clair.conf'
+                  value: '/etc/clair/config.yaml'
                 - name: CLAIR_MODE
                   value: indexer
               image: ${CLAIR_IMAGE}:${IMAGE_TAG}
@@ -111,9 +108,6 @@ objects:
             - name: clair-config
               secret:
                 secretName: config
-                items:
-                  - key: ${{CLAIR_SECRET}}
-                    path: clair.conf
           containers:
             - name: clair-matcher
               resources:
@@ -126,7 +120,7 @@ objects:
               command: [clair]
               env:
                 - name: CLAIR_CONF
-                  value: '/etc/clair/clair.conf'
+                  value: '/etc/clair/config.yaml'
                 - name: CLAIR_MODE
                   value: matcher
               image: ${CLAIR_IMAGE}:${IMAGE_TAG}
@@ -177,9 +171,6 @@ objects:
             - name: clair-config
               secret:
                 secretName: config
-                items:
-                  - key: ${{CLAIR_SECRET}}
-                    path: clair.conf
           containers:
             - name: clair-notifier
               resources:
@@ -192,7 +183,7 @@ objects:
               command: [clair]
               env:
                 - name: CLAIR_CONF
-                  value: '/etc/clair/clair.conf'
+                  value: '/etc/clair/config.yaml'
                 - name: CLAIR_MODE
                   value: notifier
               image: ${CLAIR_IMAGE}:${IMAGE_TAG}
@@ -352,9 +343,6 @@ parameters:
   #
   # shared params
   #
-  - name: CLAIR_SECRET
-    value: "clair"
-    displayName: the vault secret containing clair's config
   - name: CLAIR_IMAGE
     value: "quay.io/app-sre/clair"
     displayName: the image of clair v4 to deploy
