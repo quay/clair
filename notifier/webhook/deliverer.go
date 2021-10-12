@@ -105,12 +105,10 @@ func (d *Deliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
 		Msg("dispatching webhook")
 
 	resp, err := d.c.Do(req)
-	if resp != nil {
-		defer resp.Body.Close()
-	}
 	if err != nil {
 		return &clairerror.ErrDeliveryFailed{E: err}
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return &clairerror.ErrDeliveryFailed{
 			E: &clairerror.ErrRequestFail{
