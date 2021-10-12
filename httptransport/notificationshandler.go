@@ -145,7 +145,7 @@ func (h *NotifHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var response = Response{
+	response := Response{
 		Page:          outP,
 		Notifications: notifications,
 	}
