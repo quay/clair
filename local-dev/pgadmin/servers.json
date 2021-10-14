@@ -1,11 +1,11 @@
 {
     "Servers": {
         "1": {
-            "Name": "clair-db",
+            "Name": "clair",
             "Group": "Servers",
             "Port": 5432,
-            "Username": "clair",
-            "Host": "clair-db",
+            "Username": "postgres",
+            "Host": "clair-database",
             "SSLMode": "disable",
             "MaintenanceDB": "postgres",
             "PassFile": "/pgadmin4/config/passfile.txt"

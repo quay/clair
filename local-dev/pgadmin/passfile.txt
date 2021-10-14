@@ -1,2 +1,4 @@
 # hostname:port:database:username:password
-clair-db:5432:clair-db:clair:clair
+clair-database:5432:notifier:clair:clair
+clair-database:5432:matcher:clair:clair
+clair-database:5432:indexer:clair:clair
