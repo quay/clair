@@ -8,12 +8,17 @@ scrape_configs:
   - job_name: indexer
     metrics_path: "/metrics"
     static_configs:
-      - targets: ['indexer:8089']
+      - targets: ['clair-indexer:8089']
 
   - job_name: matcher
     metrics_path: "/metrics"
     static_configs:
-      - targets: ['matcher:8089']
+      - targets: ['clair-matcher:8089']
+
+  - job_name: notifier
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ['clair-notifier:8089']
 
   - job_name: notifier
     metrics_path: "/metrics"
