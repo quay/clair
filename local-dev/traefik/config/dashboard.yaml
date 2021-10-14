@@ -1,0 +1,17 @@
+---
+http:
+  routers:
+    api:
+      entryPoints: [traefik]
+      rule: 'PathPrefix(`/api`) || PathPrefix(`/dashboard`)'
+      service: 'api@internal'
+    dashboard-redirect:
+      entryPoints: [traefik]
+      rule: 'Path(`/`)'
+      middlewares: [dashboard-redirect]
+      service: 'api@internal'
+  middlewares:
+    dashboard-redirect:
+      redirectRegex:
+        regex: '.*'
+        replacement: '${1}/dashboard/'

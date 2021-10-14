@@ -1,0 +1,14 @@
+---
+http:
+  routers:
+    grafana:
+      entryPoints: [traefik]
+      rule: 'PathPrefix(`/grafana`)'
+      service: grafana
+  services:
+    grafana:
+      loadBalancer:
+        servers:
+        - url: "http://clair-grafana:3000/"
+        healthCheck:
+          path: /grafana/api/health

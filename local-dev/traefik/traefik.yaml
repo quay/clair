@@ -1,0 +1,20 @@
+---
+global:
+  sendAnonymousUsage: false
+api:
+  insecure: false
+  dashboard: true
+entryPoints:
+  traefik:
+    address: ':8080'
+  clair:
+    address: ':6060'
+  postgresql:
+    address: ':5432'
+providers:
+  file:
+    directory: /etc/traefik/config
+metrics:
+  prometheus:
+    addServicesLabels: true
+accessLog: {}

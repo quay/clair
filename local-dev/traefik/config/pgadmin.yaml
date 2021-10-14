@@ -1,0 +1,14 @@
+---
+http:
+  routers:
+    pgadmin:
+      entryPoints: [traefik]
+      rule: 'PathPrefix(`/pgadmin`)'
+      service: pgadmin
+  services:
+    pgadmin:
+      loadBalancer:
+        servers:
+        - url: "http://clair-pgadmin/"
+        healthCheck:
+          path: /pgadmin

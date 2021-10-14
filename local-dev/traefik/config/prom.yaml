@@ -1,0 +1,14 @@
+---
+http:
+  routers:
+    prom:
+      entryPoints: [traefik]
+      rule: 'PathPrefix(`/prom`)'
+      service: prom
+  services:
+    prom:
+      loadBalancer:
+        servers:
+        - url: "http://clair-prometheus:9090/"
+        healthCheck:
+          path: /prom/-/healthy

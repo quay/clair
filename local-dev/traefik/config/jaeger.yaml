@@ -1,0 +1,14 @@
+---
+http:
+  routers:
+    jaeger:
+      entryPoints: [traefik]
+      rule: 'PathPrefix(`/jaeger`)'
+      service: jaeger
+  services:
+    jaeger:
+      loadBalancer:
+        servers:
+        - url: "http://clair-jaeger:16686/"
+        healthCheck:
+          path: /

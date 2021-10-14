@@ -1,0 +1,13 @@
+---
+tcp:
+  routers:
+    postgresql:
+      entryPoints: [postgresql]
+      service: postgresql
+      # Traefik docs say this hack is needed if not using TLS.
+      rule: 'HostSNI(`*`)'
+  services:
+    postgresql:
+      loadBalancer:
+        servers:
+          - address: 'clair-database:5432'

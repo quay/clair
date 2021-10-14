@@ -1,0 +1,40 @@
+---
+http:
+  entrypoint:
+    clair:
+      address: ':6060'
+  routers:
+    indexer:
+      entryPoints: [clair]
+      rule: 'PathPrefix(`/indexer`)'
+      service: indexer
+    matcher:
+      entryPoints: [clair]
+      rule: 'PathPrefix(`/matcher`)'
+      service: matcher
+    notifier:
+      entryPoints: [clair]
+      rule: 'PathPrefix(`/notifier`)'
+      service: notifier
+  services:
+    indexer:
+      loadBalancer:
+        servers:
+        - url: "http://clair-indexer:6060/"
+        healthCheck:
+          path: /healthz
+          port: 8089
+    matcher:
+      loadBalancer:
+        servers:
+        - url: "http://clair-matcher:6060/"
+        healthCheck:
+          path: /healthz
+          port: 8089
+    notifier:
+      loadBalancer:
+        servers:
+        - url: "http://clair-notifier:6060/"
+        healthCheck:
+          path: /healthz
+          port: 8089
