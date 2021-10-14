@@ -7,6 +7,8 @@ api:
 entryPoints:
   traefik:
     address: ':8080'
+  quay:
+    address: ':8443'
   clair:
     address: ':6060'
   postgresql:

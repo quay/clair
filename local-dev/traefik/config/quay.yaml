@@ -1,0 +1,20 @@
+---
+http:
+  routers:
+    quay:
+      entryPoints: [quay]
+      rule: 'PathPrefix(`/`)'
+      service: quay
+    quay-api:
+      entryPoints: [traefik]
+      rule: 'PathPrefix(`/v2`)'
+      service: quay
+  services:
+    quay:
+      loadBalancer:
+        passHostHeader: false
+        servers:
+        - url: "http://clair-quay:8080/"
+        healthCheck:
+          path: /health
+          port: 8080
