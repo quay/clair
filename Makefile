@@ -14,142 +14,46 @@
 docker ?= docker
 docker-compose ?= docker-compose
 
-# formats all imports to place local modules
-# below out of tree modules
+# Formats all imports to place local packages below out of tree packages.
 .PHONY: goimports-local
 goimports-local:
 	go list -f '{{$$d := .Dir}}{{range .GoFiles}}{{printf "%s/%s\n" $$d .}}{{end}}' ./... | xargs sed -i'' '/import (/,/)/{ /^$$/d }'
 	go list -f '{{.Dir}}' ./... | xargs goimports -local "$$(go list -m)" -w
 
-# https://github.com/Mermade/widdershins used to convert openapi.yaml to markdown
-# you'll need to have npx to run this gen.
-.PHONY: gen-api-reference
-gen-api-reference:
-	npx widdershins --search false --language_tabs 'python:Python' 'go:Golang' 'javascript:Javascript' --summary ./openapi.yaml -o ./Documentation/reference/api.md
+# Use https://github.com/Mermade/widdershins to convert openapi.yaml to
+# markdown. You'll need to have npx to run this.
+Documentation/reference/api.md: openapi.yaml
+	npx widdershins --search false --language_tabs 'python:Python' 'go:Golang' 'javascript:Javascript' --summary $< -o $@
 
-# start a local development environment. 
-# each services runs in it's own container to test service->service communication.
+local-dev/clair/quay.yaml: local-dev/clair/config.yaml
+	sed '/target:/s,webhook-target/,clair-quay:8443/secscan/notification,' <$< >$@
+
+# Start a local development environment.
 #
-# local dev configuration can be found in "./local-dev/clair/config.yaml"
-.PHONY: local-dev-up
-local-dev-up: vendor
-	$(docker-compose) up -d traefik
-	$(docker-compose) up -d jaeger
-	$(docker-compose) up -d prometheus
-	$(docker-compose) up -d grafana
-	$(docker-compose) up -d rabbitmq
-	$(docker-compose) up -d activemq
-	$(docker-compose) up -d clair-db
-	$(docker) exec -it clair-db bash -c 'while ! pg_isready; do echo "waiting for postgres"; sleep 2; done'
-	$(docker-compose) up -d pgadmin
-	$(docker-compose) up -d indexer
-	$(docker-compose) up -d matcher
-	$(docker-compose) up -d notifier
-	$(docker-compose) up -d swagger-ui
+# Each service runs in its own container to test service-to-service
+# communication.  Local dev configuration can be found in
+# "./local-dev/clair/config.yaml"
+.PHONY: local-dev
+local-dev: vendor
+	$(docker-compose) up -d
+	@printf 'postgresql on port:\t%s\n' "$$($(docker-compose) port traefik 5432)"
 
-.PHONY: local-dev-up-with-quay
-local-dev-up-with-quay: vendor
-	## clair ##
-	$(docker-compose) up -d traefik
-	$(docker-compose) up -d jaeger
-	$(docker-compose) up -d prometheus
-	$(docker-compose) up -d grafana
-	$(docker-compose) up -d rabbitmq
-	$(docker-compose) up -d activemq
-	$(docker-compose) up -d clair-db
-	$(docker) exec -it clair-db bash -c 'while ! pg_isready; do echo "waiting for clair postgres"; sleep 2; done'
-	$(docker-compose) up -d pgadmin
-	$(docker-compose) up -d indexer-quay
-	$(docker-compose) up -d matcher
-	$(docker-compose) up -d notifier
-	$(docker-compose) up -d swagger-ui
-	## quay ##
-	$(docker-compose) up -d redis
-	$(docker-compose) up -d quay-db
-	$(docker) exec -it quay-db bash -c 'while ! pg_isready; do echo "waiting for quay postgres"; sleep 2; done'
-	$(docker) exec -it quay-db /bin/bash -c 'echo "CREATE EXTENSION IF NOT EXISTS pg_trgm" | psql -d quay -U quay'
-	$(docker-compose) up -d quay
+compose_profiles = $(patsubst %,local-dev-%,quay notifier debug)
+.PHONY: $(compose_profiles)
+local-dev-%: vendor
+	$(docker-compose) --profile $* up -d
+	@printf 'postgresql on port:\t%s\n' "$$($(docker-compose) port traefik 5432)"
 
-.PHONY: local-dev-restart-quay
-local-dev-restart-quay: 
-	$(docker-compose) up -d --force-recreate quay
+local-dev-quay: local-dev/clair/quay.yaml vendor
+	CLAIR_CONFIG=$(<F) $(docker-compose) --profile quay up -d
+	@printf 'postgresql on port:\t%s\n' "$$($(docker-compose) port traefik 5432)"
+	@printf 'quay on port:\t%s\n' "$$($(docker-compose) port traefik 8443)"
 
-# starts a local dev environment for testing notifier
-# the notifier will create a notification on very notifier.poll_interval value in the local dev configuration.
-# 
-# the notifier will deliver the notification to the configured deliverer in the local dev configuration. 
-# the default deliverer is rabbitmq/amqp
-#
-# local dev configuration can be found in "./local-dev/clair/config.yaml"
-.PHONY: local-dev-notifier-test
-local-dev-notifier-test: vendor
-	$(docker-compose) up -d traefik
-	$(docker-compose) up -d jaeger
-	$(docker-compose) up -d prometheus
-	$(docker-compose) up -d rabbitmq
-	$(docker-compose) up -d activemq
-	$(docker-compose) up -d clair-db
-	$(docker) exec -it clair-db bash -c 'while ! pg_isready; do echo "waiting for postgres"; sleep 2; done'
-	$(docker-compose) up -d notifier-test-mode
-	$(docker-compose) up -d swagger-ui
-
-.PHONY: local-dev-notifier-test-restart
-local-dev-notifier-test-restart: vendor
-	$(docker-compose) up -d --force-recreate notifier-test-mode
-
+.PHONY: vendor
 vendor: vendor/modules.txt
 
 vendor/modules.txt: go.mod
 	go mod vendor
-
-# tear down the entire local development environment
-.PHONY: local-dev-down
-local-dev-down:
-	$(docker-compose) down
-
-# restart the local development database, clearing all it's contents
-# often a service should be restarted as well to run migrations on the now schemaless database.
-.PHONY: local-dev-db-restart
-local-dev-db-restart:
-	$(docker) kill clair-db && $(docker) rm clair-db
-	$(docker-compose) up -d --force-recreate clair-db
-
-# restart the local development indexer, any local code changes will take effect
-.PHONY: local-dev-indexer-restart
-local-dev-indexer-restart:
-	$(docker-compose) up -d --force-recreate indexer
-
-# restart the local development matcher, any local code changes will take effect
-.PHONY: local-dev-matcher-restart
-local-dev-matcher-restart:
-	$(docker-compose) up -d --force-recreate matcher
-
-# restart the local development notifier, any local code changes will take effect
-.PHONY: local-dev-notifier-restart
-local-dev-notifier-restart:
-	$(docker-compose) up -d --force-recreate notifier
-
-# restart all clair instances
-.PHONY: local-dev-clair-restart
-local-dev-clair-restart:
-	$(docker-compose) up -d --force-recreate indexer
-	$(docker-compose) up -d --force-recreate matcher
-	$(docker-compose) up -d --force-recreate notifier
-
-# restart the local development rabbitmq
-.PHONY: local-dev-rabbitmq-restart
-local-dev-rabbitmq-restart:
-	$(docker-compose) up -d --force-recreate rabbitmq
-
-# restart the local development swagger-ui, any local code changes will take effect
-.PHONY: local-dev-swagger-ui-restart
-local-dev-swagger-ui-restart:
-	$(docker-compose) up -d --force-recreate swagger-ui
-	 
-# restart the local development swagger-ui, any local code changes will take effect
-.PHONY: local-dev-traefik-restart
-local-dev-traefik-restart:
-	$(docker-compose) up -d --force-recreate traefik
 
 .PHONY: container-build
 container-build:
