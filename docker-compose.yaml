@@ -1,259 +1,197 @@
-# if you are using firewalld add this consistent bridge name
-# to your trusted zone
-# sudo firewall-cmd --zone=trusted --add-interface=clair --permanent
-# sudo firewall-cmd --reload
-networks:
-  default:
-    driver_opts:
-      com.docker.network.bridge.name: clair
-
+---
 version: "3.7"
-services:
-  clair-db:
-    container_name: clair-db
-    image: postgres:12.1
-    environment:
-      POSTGRES_USER: "clair"
-      POSTGRES_DB: "clair"
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U clair -d clair"]
-      interval: 10s
-      timeout: 9s
-      retries: 3
-      start_period: 10s
+# This is just to hold a bunch of yaml anchors and try to consolidate parts of
+# the config.
+x-anchors:
+  postgres: &postgres-image docker.io/library/postgres:12
+  traefik: &traefik-image docker.io/library/traefik:v2.2
+  pgadmin: &pgadmin-image docker.io/dpage/pgadmin4:5.7
+  jaeger: &jaeger-image docker.io/jaegertracing/all-in-one:1.26
+  prom: &prom-image docker.io/prom/prometheus:v2.30.2
+  grafana: &grafana-image docker.io/grafana/grafana:8.0.3
+  quay: &quay-image quay.io/projectquay/quay:latest
+  redis: &redis-image docker.io/library/redis:6.2
+  go: &go-image quay.io/projectquay/golang:1.17
+  clair-service: &clair-service
+    image: *go-image
+    depends_on:
+      clair-database:
+        condition: service_healthy
+    volumes:
+      - "./local-dev/clair/${CLAIR_CONFIG:-config.yaml}:/etc/clair.yaml:ro"
+      - ".:/src"
+    # Can't specify the config via environment because maps are not recursively
+    # merged.
+    command:
+      - go
+      - run
+      - -mod=vendor
+      - .
+      - -conf
+      - /etc/clair.yaml
+    restart: unless-stopped
+    working_dir: /src/cmd/clair
 
+services:
+  indexer:
+    <<: *clair-service
+    container_name: clair-indexer
+    environment:
+      CLAIR_MODE: "indexer"
+  matcher:
+    <<: *clair-service
+    container_name: clair-matcher
+    environment:
+      CLAIR_MODE: "matcher"
+  clair-database:
+    container_name: clair-database
+    image: *postgres-image
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - type: bind
+        source: ./local-dev/clair/init.sql
+        target: /docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "pg_isready -U postgres"
+      interval: 5s
+      timeout: 4s
+      retries: 12
+      start_period: 10s
+  traefik:
+    container_name: clair-traefik
+    image: *traefik-image
+    depends_on:
+      - matcher
+      - indexer
+    ports:
+      - '6060:6060'
+      - '8080:8080'
+      - '8443'
+      - '5432'
+    volumes:
+      - './local-dev/traefik/:/etc/traefik/:ro'
+
+  # Debugging services -- use profile 'debug'
   pgadmin:
     container_name: clair-pgadmin
-    image: dpage/pgadmin4:latest
+    profiles:
+      - debug
+    image: *pgadmin-image
     environment:
       PGADMIN_DEFAULT_EMAIL: clair@clair.com
       PGADMIN_DEFAULT_PASSWORD: clair
       PGADMIN_SERVER_JSON_FILE: /pgadmin4/config/servers.json
-      PGADMIN_LISTEN_PORT: 8081
-    ports:
-      - "8081:8081"
+      SCRIPT_NAME: /pgadmin
     volumes:
       - "./local-dev/pgadmin:/pgadmin4/config"
     depends_on:
-      - clair-db
-
-  traefik:
-    container_name: clair-traefik
-    image: traefik:v2.2
-    command: 
-      - "--api.insecure=true"
-      - "--providers.docker=true"
-      - "--entrypoints.clair.address=:6060"
-      - "--providers.docker.exposedbydefault=false"
-      - "--accesslog=true"
-    ports: 
-      - "6060:6060"
-      - "7000:8080"
+      - clair-database
+  jaeger:
+    container_name: clair-jaeger
+    profiles:
+      - debug
+    image: *jaeger-image
+    environment:
+      QUERY_BASE_PATH: '/jaeger'
+  prometheus:
+    container_name: clair-prometheus
+    profiles:
+      - debug
+    image: *prom-image
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+      - "./local-dev/prometheus:/etc/prometheus/"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.external-url=http://localhost:8080/prom/'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+  grafana:
+    container_name: clair-grafana
+    profiles:
+      - debug
+    image: *grafana-image
+    user: "472"
+    environment:
+      GF_SERVER_ROOT_URL: /grafana
+      GF_SERVER_SERVE_FROM_SUB_PATH: 'true'
+    volumes:
+      - ./local-dev/grafana/provisioning/:/etc/grafana/provisioning/
+    depends_on:
+      - prometheus
+
+  # Notifier services -- use profile 'notifier'
+  notifier: &notifier
+    <<: *clair-service
+    container_name: clair-notifier
+    profiles:
+      - notifier
+    environment:
+      CLAIR_MODE: "notifier"
+      NOTIFIER_TEST_MODE: "true"
+  webhook-target:
+    <<: *clair-service
+    container_name: webhook-target
+    profiles:
+      - notifier
+    working_dir: /src
+    depends_on: {}
+    command:
+      - go
+      - run
+      - ./notifier/webhook/debug_server.go
+      - -D
+      - -key
+      - c2VjcmV0
 
   activemq:
     container_name: clair-activemq
+    profiles:
+      - TODO
     hostname: clair-activemq
-    image: webcenter/activemq:5.14.3
+    image: docker.io/webcenter/activemq:5.14.3
     ports:
       - "8161:8161"
       - "61613:61613"
 
   rabbitmq:
     container_name: clair-rabbitmq
+    profiles:
+      - TODO
     hostname: clair-rabbitmq
-    image: rabbitmq:3.8.5-management
+    image: docker.io/library/rabbitmq:3.8.5-management
     ports:
       - "5672:5672"
       - "8087:15672"
     environment:
       RABBITMQ_VM_MEMORY_HIGH_WATERMARK: "85%"
-      
-  notifier:
-    container_name: clair-notifier
-    image: quay.io/projectquay/golang:1.17
-    volumes:
-      - "./:/src/clair/"
-    environment:
-      CLAIR_CONF: "/src/clair/local-dev/clair/config.yaml"
-      CLAIR_MODE: "notifier"
-    command:
-      ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor ."]
-    labels:
-      - "traefik.enable=true"
 
-      - "traefik.http.routers.notifier.entrypoints=clair"
-      - "traefik.http.routers.notifier.rule=PathPrefix(`/notifier`)"
-      - "traefik.http.routers.notifier.service=notifier"
-      - "traefik.http.services.notifier.loadbalancer.server.port=6000"
-
-  # this should only be created and deleted via the make target "local-dev-notifier-test"
-  notifier-test-mode:
-    container_name: clair-notifier
-    image: quay.io/projectquay/golang:1.17
-    volumes:
-      - "./:/src/clair/"
-    environment:
-      CLAIR_CONF: "/src/clair/local-dev/clair/config.yaml"
-      CLAIR_MODE: "notifier"
-      NOTIFIER_TEST_MODE: "true"
-    command:
-      ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor ."]
-    labels:
-      - "traefik.enable=true"
-
-      - "traefik.http.routers.notifier.entrypoints=clair"
-      - "traefik.http.routers.notifier.rule=PathPrefix(`/notifier`)"
-      - "traefik.http.routers.notifier.service=notifier"
-      - "traefik.http.services.notifier.loadbalancer.server.port=6000"
-
-  indexer:
-    container_name: clair-indexer
-    image: quay.io/projectquay/golang:1.17
-    volumes:
-      - "./:/src/clair/"
-    environment:
-      CLAIR_CONF: "/src/clair/local-dev/clair/config.yaml"
-      CLAIR_MODE: "indexer"
-    command:
-      ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor ."]
-    labels:
-      - "traefik.enable=true"
-
-      - "traefik.http.routers.indexer.rule=PathPrefix(`/indexer`)"
-      - "traefik.http.routers.indexer.entrypoints=clair"
-      - "traefik.http.routers.indexer.service=indexer"
-      - "traefik.http.services.indexer.loadbalancer.server.port=6000"
-
-  ## like the indexer service above, but mounts quay's http port into local
-  ## network namespace.
-  ## 
-  ## allows layer fetching over localhost
-  indexer-quay:
-    container_name: clair-indexer
-    image: quay.io/projectquay/golang:1.17
-    volumes:
-      - "./:/src/clair/"
-    environment:
-      CLAIR_CONF: "/src/clair/local-dev/clair/config.yaml"
-      CLAIR_MODE: "indexer"
-    network_mode: "service:quay"
-    command:
-      ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor ."]
-    labels:
-      - "traefik.enable=true"
-
-      - "traefik.http.routers.indexer.rule=PathPrefix(`/indexer`)"
-      - "traefik.http.routers.indexer.entrypoints=clair"
-      - "traefik.http.routers.indexer.service=indexer"
-      - "traefik.http.services.indexer.loadbalancer.server.port=6000"
-    depends_on:
-      - quay
-      - clair-db
-
-  matcher:
-    container_name: clair-matcher
-    image: quay.io/projectquay/golang:1.17
-    volumes:
-      - "./:/src/clair/"
-    environment:
-      CLAIR_CONF: "/src/clair/local-dev/clair/config.yaml"
-      CLAIR_MODE: "matcher"
-    command:
-      ["bash", "-c", "cd /src/clair/cmd/clair; go run -mod vendor ."]
-    labels:
-      - "traefik.enable=true"
-
-      - "traefik.http.routers.matcher.rule=PathPrefix(`/matcher`)"
-      - "traefik.http.routers.matcher.entrypoints=clair"
-      - "traefik.http.routers.matcher.service=matcher"
-      - "traefik.http.services.matcher.loadbalancer.server.port=6000"
-
-  swagger-ui:
-    container_name: clair-swagger
-    image: swaggerapi/swagger-ui
-    ports:
-      - "8082:8080"
-    volumes:
-      - "./:/clair"
-    environment:
-      SWAGGER_JSON: "/clair/openapi.yaml"
-
-  jaeger:
-    container_name: clair-jaeger
-    image: jaegertracing/all-in-one:1.17
-    ports:
-        - "5775:5775/udp" 
-        - "6831:6831/udp" 
-        - "6832:6832/udp"
-        - "5778:5778"
-        - "16686:16686"
-        - "14268:14268"
-        - "14250:14250"
-        - "9411:9411"
-    environment:
-      COLLECTOR_ZIPKIN_HTTP_PORT: 9411
-
-
-  prometheus:
-    container_name: clair-prometheus
-    image: prom/prometheus:latest
-    volumes:
-      - "./local-dev/prometheus:/etc/prometheus/"
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    ports:
-      - "9090:9090"
-
-  grafana:
-    container_name: clair-grafana
-    image: grafana/grafana:8.0.3
-    ports:
-      - 3000:3000
-    user: "472"
-    volumes:
-      - ./local-dev/grafana/provisioning/:/etc/grafana/provisioning/
-    depends_on:
-      - prometheus
-
-  ## QUAY ##
-  redis:
-    container_name: clair-redis
-    image: redis:latest
-    ports:
-      - "6379:6379"
-
-  ## quay MUST be bound to port 8080
+  # Quay -- starts a Quay stack for integration testing.
+  # Use profile 'quay'
   quay:
     container_name: clair-quay
-    image: quay.io/projectquay/quay:latest
-    privileged: true
+    profiles:
+      - quay
+    image: *quay-image
     volumes:
       - "./local-dev/quay:/quay-registry/conf/stack"
-    ports:
-      - "8080:8080" 
     environment:
       DEBUGLOG: "true"
       IGNORE_VALIDATION: "true"
-
-  quay-db:
-    container_name: quay-db
-    image: postgres:12.1
+    depends_on:
+      - redis
+      - clair-database
+  redis:
+    container_name: quay-redis
+    profiles:
+      - quay
+    image: *redis-image
+  quay-notifier:
+    <<: *notifier
+    profiles:
+      - quay
     environment:
-      POSTGRES_USER: "quay"
-      POSTGRES_DB: "quay"
-    ports:
-      - "5433:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U quay -d quay"]
-      interval: 10s
-      timeout: 9s
-      retries: 3
-      start_period: 10s
-
+      CLAIR_MODE: "notifier"
