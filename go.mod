@@ -13,6 +13,7 @@ require (
 	github.com/ldelossa/responserecorder v1.0.2-0.20210711162258-40bec93a9325
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/prometheus/client_golang v1.9.0
+	github.com/quay/clair/config v1.0.0
 	github.com/quay/claircore v1.1.1
 	github.com/quay/zlog v0.0.0-20210113185248-ce16eed1dcec
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
@@ -33,3 +34,5 @@ require (
 	gopkg.in/square/go-jose.v2 v2.5.1
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )
+
+replace github.com/quay/clair/config => ./config

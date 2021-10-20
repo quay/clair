@@ -9,6 +9,7 @@ import (
 	"net/http/cookiejar"
 	"time"
 
+	"github.com/quay/clair/config"
 	"github.com/quay/claircore/enricher/cvss"
 	"github.com/quay/claircore/libindex"
 	"github.com/quay/claircore/libvuln"
@@ -20,7 +21,6 @@ import (
 	"gopkg.in/square/go-jose.v2/jwt"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
-	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/httptransport/client"
 	"github.com/quay/clair/v4/indexer"

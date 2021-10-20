@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
 	othttp "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
@@ -14,7 +15,6 @@ import (
 	"go.opentelemetry.io/otel/label"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
-	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
 	intromw "github.com/quay/clair/v4/middleware/introspection"

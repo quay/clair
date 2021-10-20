@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-stomp/stomp"
 	"github.com/google/uuid"
-	"github.com/quay/clair/v4/config"
+	"github.com/quay/clair/config"
 	"github.com/quay/claircore/test/integration"
 	"github.com/quay/zlog"
 	"golang.org/x/sync/errgroup"

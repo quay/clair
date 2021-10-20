@@ -9,13 +9,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/quay/clair/v4/config"
-	"github.com/quay/clair/v4/notifier"
+	"github.com/quay/clair/config"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/test/integration"
 	"github.com/quay/zlog"
 	samqp "github.com/streadway/amqp"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/quay/clair/v4/notifier"
 )
 
 // TestDirectDeliverer confirms delivery of notifications directly

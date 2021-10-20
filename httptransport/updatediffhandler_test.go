@@ -9,8 +9,9 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/quay/clair/v4/matcher"
 	"github.com/quay/claircore/libvuln/driver"
+
+	"github.com/quay/clair/v4/matcher"
 )
 
 // TestUpdateDiffHandler is a parallel harness for testing a UpdateDiff handler.

@@ -7,10 +7,10 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
+	"github.com/quay/clair/config"
 	samqp "github.com/streadway/amqp"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
-	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/notifier"
 )
 

@@ -8,11 +8,10 @@ import (
 	"net"
 
 	gostomp "github.com/go-stomp/stomp"
+	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/label"
-
-	"github.com/quay/clair/v4/config"
 )
 
 // failOver will return the first successful connection made against the provided

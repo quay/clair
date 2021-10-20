@@ -8,6 +8,7 @@ import (
 	"net/http/pprof"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/baggage"
@@ -16,7 +17,6 @@ import (
 	"go.opentelemetry.io/otel/label"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 
-	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/health"
 )
 

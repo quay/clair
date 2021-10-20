@@ -5,11 +5,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-
-	"github.com/quay/clair/v4/config"
 )
 
 // Logging configures zlog according to the provided configuration.

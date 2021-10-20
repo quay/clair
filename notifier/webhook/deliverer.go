@@ -8,12 +8,12 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/label"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
-	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/internal/codec"
 	"github.com/quay/clair/v4/notifier"
 )

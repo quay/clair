@@ -10,6 +10,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
+
 	"github.com/quay/clair/v4/notifier"
 	"github.com/quay/clair/v4/notifier/service"
 )

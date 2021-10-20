@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	"github.com/quay/clair/v4/config"
+	"github.com/quay/clair/config"
 )
 
 func TestConfigValidateFailure(t *testing.T) {

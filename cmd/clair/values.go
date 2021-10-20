@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/quay/clair/v4/config"
+	"github.com/quay/clair/config"
 )
 
 // ConfValue implements the flag.Value interface

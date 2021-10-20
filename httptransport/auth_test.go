@@ -12,10 +12,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
 	"gopkg.in/square/go-jose.v2/jwt"
 
-	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/internal/httputil"
 )
 

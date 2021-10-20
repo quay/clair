@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
+
 	"github.com/quay/clair/v4/notifier"
 )
 

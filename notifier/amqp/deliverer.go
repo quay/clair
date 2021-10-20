@@ -8,10 +8,10 @@ import (
 	"path"
 
 	"github.com/google/uuid"
+	"github.com/quay/clair/config"
 	samqp "github.com/streadway/amqp"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
-	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/notifier"
 )
 
@@ -25,7 +25,7 @@ type Deliverer struct {
 	callback   *url.URL
 	fo         failOver
 	routingKey string
-	exchange   exchange
+	exchange   config.Exchange
 	rollup     int
 	direct     bool
 }
@@ -46,15 +46,17 @@ func (d *Deliverer) load(conf *config.AMQP) error {
 			return err
 		}
 	}
-	d.fo.tls, err = loadTLSConfig(conf)
-	if err != nil {
-		return err
+	if conf.TLS != nil {
+		d.fo.tls, err = conf.TLS.Config()
+		if err != nil {
+			return err
+		}
 	}
 
 	// Copy everything else out of the config:
 	d.direct = conf.Direct
 	d.rollup = conf.Rollup
-	d.exchange = exchangeFrom(conf)
+	d.exchange = conf.Exchange
 	d.routingKey = conf.RoutingKey
 	d.fo.uris = make([]*url.URL, len(conf.URIs))
 	for i, u := range conf.URIs {

@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"sync"
 
+	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
 	samqp "github.com/streadway/amqp"
 	"go.opentelemetry.io/otel/baggage"
@@ -21,7 +22,7 @@ type failOver struct {
 	sync.RWMutex
 	conn     *samqp.Connection
 	tls      *tls.Config
-	exchange *exchange
+	exchange *config.Exchange
 	uris     []*url.URL
 }
 

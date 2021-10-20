@@ -19,7 +19,7 @@ docker-compose ?= docker-compose
 .PHONY: goimports-local
 goimports-local:
 	go list -f '{{$$d := .Dir}}{{range .GoFiles}}{{printf "%s/%s\n" $$d .}}{{end}}' ./... | xargs sed -i'' '/import (/,/)/{ /^$$/d }'
-	go list -f '{{.Dir}}' ./... | xargs goimports -local "$(go list -m)" -w
+	go list -f '{{.Dir}}' ./... | xargs goimports -local "$$(go list -m)" -w
 
 # https://github.com/Mermade/widdershins used to convert openapi.yaml to markdown
 # you'll need to have npx to run this gen.

@@ -9,8 +9,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/claircore"
+
+	"github.com/quay/clair/v4/indexer"
 )
 
 // TestAffectedManifestHandler is a parallel harness for testing an AffectedManifest handler.

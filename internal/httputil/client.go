@@ -5,11 +5,10 @@ import (
 	"net/http/cookiejar"
 	"time"
 
+	"github.com/quay/clair/config"
 	"golang.org/x/net/publicsuffix"
 	"gopkg.in/square/go-jose.v2"
 	"gopkg.in/square/go-jose.v2/jwt"
-
-	"github.com/quay/clair/v4/config"
 )
 
 // Client returns an http.Client configured according to the supplied

@@ -7,9 +7,10 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/quay/claircore/pkg/microbatch"
+
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/notifier"
-	"github.com/quay/claircore/pkg/microbatch"
 )
 
 const (

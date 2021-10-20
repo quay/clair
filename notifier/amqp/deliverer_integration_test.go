@@ -11,7 +11,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/google/uuid"
-	"github.com/quay/clair/v4/config"
+	"github.com/quay/clair/config"
 	"github.com/quay/claircore/test/integration"
 	"github.com/quay/zlog"
 	samqp "github.com/streadway/amqp"

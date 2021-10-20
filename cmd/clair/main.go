@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/quay/clair/config"
 	_ "github.com/quay/claircore/updater/defaults"
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/otel/baggage"
@@ -17,7 +18,6 @@ import (
 	"golang.org/x/sync/errgroup"
 	yaml "gopkg.in/yaml.v3"
 
-	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/health"
 	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/initialize"

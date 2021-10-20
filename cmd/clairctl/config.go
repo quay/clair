@@ -3,9 +3,8 @@ package main
 import (
 	"os"
 
+	"github.com/quay/clair/config"
 	"gopkg.in/yaml.v3"
-
-	"github.com/quay/clair/v4/config"
 )
 
 func loadConfig(n string) (*config.Config, error) {

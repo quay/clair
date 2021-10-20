@@ -12,9 +12,9 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
+	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
 
-	"github.com/quay/clair/v4/config"
 	"github.com/quay/clair/v4/notifier"
 )
 

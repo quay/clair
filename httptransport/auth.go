@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/quay/clair/v4/config"
+	"github.com/quay/clair/config"
+
 	"github.com/quay/clair/v4/middleware/auth"
 )
 
