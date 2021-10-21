@@ -62,7 +62,7 @@ func Services(ctx context.Context, cfg *config.Config) (*Srv, error) {
 	var srv Srv
 	var err error
 	switch cfg.Mode {
-	case config.ComboMode.String():
+	case config.ComboMode:
 		srv.Indexer, err = localIndexer(ctx, cfg)
 		if err != nil {
 			return nil, err
@@ -75,12 +75,12 @@ func Services(ctx context.Context, cfg *config.Config) (*Srv, error) {
 		if err != nil {
 			return nil, err
 		}
-	case config.IndexerMode.String():
+	case config.IndexerMode:
 		srv.Indexer, err = localIndexer(ctx, cfg)
 		if err != nil {
 			return nil, err
 		}
-	case config.MatcherMode.String():
+	case config.MatcherMode:
 		srv.Matcher, err = localMatcher(ctx, cfg)
 		if err != nil {
 			return nil, err
@@ -89,7 +89,7 @@ func Services(ctx context.Context, cfg *config.Config) (*Srv, error) {
 		if err != nil {
 			return nil, err
 		}
-	case config.NotifierMode.String():
+	case config.NotifierMode:
 		srv.Indexer, err = remoteIndexer(ctx, cfg, cfg.Notifier.IndexerAddr)
 		if err != nil {
 			return nil, err

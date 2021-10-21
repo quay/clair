@@ -86,7 +86,7 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Server, 
 	// sampler
 	var sampler sdktrace.Sampler
 	switch {
-	case i.conf.LogLevel == "debug":
+	case i.conf.LogLevel == config.DebugLog || i.conf.LogLevel == config.DebugColorLog:
 		sampler = sdktrace.AlwaysSample()
 	case i.conf.Trace.Probability != nil:
 		p := *i.conf.Trace.Probability
@@ -219,7 +219,7 @@ func (i *Server) withJaeger(ctx context.Context, traceOpts []sdktrace.TracerProv
 		opts = append(opts, jaeger.WithBufferMaxCount(conf.BufferMax))
 	}
 	p := jaeger.Process{
-		ServiceName: "clairv4/" + i.conf.Mode,
+		ServiceName: fmt.Sprintf("clairv4/%v", i.conf.Mode),
 	}
 	if len(conf.Tags) != 0 {
 		for k, v := range conf.Tags {
@@ -236,9 +236,6 @@ func (i *Server) withJaeger(ctx context.Context, traceOpts []sdktrace.TracerProv
 	i.RegisterOnShutdown(exporter.Flush)
 
 	tp := sdktrace.NewTracerProvider(traceOpts...)
-	if err != nil {
-		return err
-	}
 	otel.SetTracerProvider(tp)
 	return nil
 }

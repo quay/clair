@@ -17,20 +17,20 @@ func TestConfigValidateFailure(t *testing.T) {
 		{
 			name: "No Mode",
 			conf: config.Config{
-				Mode: "",
+				Mode: config.Mode(-1),
 			},
 		},
 		{
 			name: "ComboMode, Malformed Global HTTP Listen Addr",
 			conf: config.Config{
-				Mode:           config.ComboMode.String(),
+				Mode:           config.ComboMode,
 				HTTPListenAddr: "xyz",
 			},
 		},
 		{
 			name: "MatcherMode, No IndexerAddr",
 			conf: config.Config{
-				Mode:           config.MatcherMode.String(),
+				Mode:           config.MatcherMode,
 				HTTPListenAddr: "localhost:8080",
 				Matcher: config.Matcher{
 					ConnString:  "example@example/db",
@@ -59,7 +59,7 @@ func TestConfigUpateRetention(t *testing.T) {
 			name:              "Retention less than 0",
 			expectedRetention: 0,
 			conf: config.Config{
-				Mode:           config.ComboMode.String(),
+				Mode:           config.ComboMode,
 				HTTPListenAddr: "localhost:8080",
 				Indexer: config.Indexer{
 					ConnString: "example@example/db",
@@ -78,7 +78,7 @@ func TestConfigUpateRetention(t *testing.T) {
 			name:              "Retention of 0",
 			expectedRetention: 10,
 			conf: config.Config{
-				Mode:           config.ComboMode.String(),
+				Mode:           config.ComboMode,
 				HTTPListenAddr: "localhost:8080",
 				Indexer: config.Indexer{
 					ConnString: "example@example/db",
@@ -97,7 +97,7 @@ func TestConfigUpateRetention(t *testing.T) {
 			name:              "Retention less than 2",
 			expectedRetention: 10,
 			conf: config.Config{
-				Mode:           config.ComboMode.String(),
+				Mode:           config.ComboMode,
 				HTTPListenAddr: "localhost:8080",
 				Indexer: config.Indexer{
 					ConnString: "example@example/db",
@@ -116,7 +116,7 @@ func TestConfigUpateRetention(t *testing.T) {
 			name:              "Retention of 2",
 			expectedRetention: 2,
 			conf: config.Config{
-				Mode:           config.ComboMode.String(),
+				Mode:           config.ComboMode,
 				HTTPListenAddr: "localhost:8080",
 				Indexer: config.Indexer{
 					ConnString: "example@example/db",
@@ -153,7 +153,7 @@ func TestConfigDisableUpdaters(t *testing.T) {
 		{
 			name: "ComboMode, disable updaters",
 			conf: config.Config{
-				Mode:           config.ComboMode.String(),
+				Mode:           config.ComboMode,
 				HTTPListenAddr: "localhost:8080",
 				Indexer: config.Indexer{
 					ConnString: "example@example/db",
@@ -177,7 +177,7 @@ func TestConfigDisableUpdaters(t *testing.T) {
 		{
 			name: "MatcherMode, disable updaters",
 			conf: config.Config{
-				Mode:           config.MatcherMode.String(),
+				Mode:           config.MatcherMode,
 				HTTPListenAddr: "localhost:8080",
 				Matcher: config.Matcher{
 					ConnString:      "example@example/db",

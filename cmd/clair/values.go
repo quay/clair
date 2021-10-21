@@ -37,55 +37,24 @@ func (v *ConfValue) Set(s string) error {
 	return nil
 }
 
-const (
-	_ ConfMode = iota
-	ModeCombo
-	ModeIndexer
-	ModeMatcher
-	ModeNotifier
-)
-
-// ConfMode enumerates the arguments that are acceptable "modes".
-type ConfMode int
-
-func (v *ConfMode) String() string {
-	if v == nil {
-		return ""
-	}
-	switch *v {
-	case ModeCombo:
-		return config.ComboMode.String()
-	case ModeIndexer:
-		return config.IndexerMode.String()
-	case ModeMatcher:
-		return config.MatcherMode.String()
-	case ModeNotifier:
-		return config.NotifierMode.String()
-	default:
-	}
-	return "invalid"
+// ConfMode enumerates the arguments that are acceptable modes: "combo",
+// "indexer", "matcher", "notifier".
+//
+// See also: github.com/quay/clair/config.ParseMode
+type ConfMode struct {
+	config.Mode
 }
 
-// Get implements flag.Getter
-func (v *ConfMode) Get() interface{} {
-	return *v
-}
-
-// Set implements flag.Value
-func (v *ConfMode) Set(s string) error {
-	switch s {
-	case "", "dev":
-		fallthrough
-	case "combo", "combination", "pizza": // "Pizza", of course, being the best Combos flavor.
-		*v = ModeCombo
-	case "index", "indexer":
-		*v = ModeIndexer
-	case "match", "matcher":
-		*v = ModeMatcher
-	case "notify", "notifier":
-		*v = ModeNotifier
-	default:
-		return fmt.Errorf("unknown mode argument %q", s)
+// Set implements flag.Value.
+//
+// An empty string is interpreted as "combo".
+func (v *ConfMode) Set(s string) (err error) {
+	if s == "" {
+		s = "combo"
+	}
+	v.Mode, err = config.ParseMode(s)
+	if err != nil {
+		return err
 	}
 	return nil
 }

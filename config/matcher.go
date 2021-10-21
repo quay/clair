@@ -55,8 +55,8 @@ type Matcher struct {
 }
 
 const (
-	defaultMatcherPeriod   = 30 * time.Minute
-	defaultMacherRetention = 10
+	DefaultMatcherPeriod    = 30 * time.Minute
+	DefaultMatcherRetention = 10
 )
 
 func (m *Matcher) validate(mode Mode) ([]Warning, error) {
@@ -64,7 +64,7 @@ func (m *Matcher) validate(mode Mode) ([]Warning, error) {
 		return nil, nil
 	}
 	if m.Period == 0 {
-		m.Period = defaultMatcherPeriod
+		m.Period = DefaultMatcherPeriod
 	}
 	switch {
 	case m.UpdateRetention < 0:
@@ -72,7 +72,7 @@ func (m *Matcher) validate(mode Mode) ([]Warning, error) {
 		m.UpdateRetention = 0
 	case m.UpdateRetention < 2:
 		// Anything less than 2 gets the default.
-		m.UpdateRetention = defaultMacherRetention
+		m.UpdateRetention = DefaultMatcherRetention
 	}
 	if m.CacheAge == 0 {
 		m.CacheAge = m.Period
@@ -102,7 +102,7 @@ func (m *Matcher) lint() (ws []Warning, err error) {
 		ws[i].path = ".connstring"
 	}
 
-	if m.Period < defaultMatcherPeriod {
+	if m.Period < DefaultMatcherPeriod {
 		ws = append(ws, Warning{
 			path: ".period",
 			msg:  "updater period is very aggressive: most sources are updated daily",

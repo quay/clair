@@ -11,13 +11,8 @@ const DefaultAddress = ":6060"
 // Config is the configuration object for the commands in
 // github.com/quay/clair/v4/cmd/...
 type Config struct {
-	// One of the following strings
-	// Sets which mode the clair instances will run in
-	//
-	// "indexer": runs just the indexer node
-	// "matcher": runs just the matcher node
-	// "combo":	will run both indexer and matcher on the same node.
-	Mode string `yaml:"-" json:"-"`
+	// Sets which mode the clair instance will run.
+	Mode Mode `yaml:"-" json:"-"`
 	// A string in <host>:<port> format where <host> can be an empty string.
 	//
 	// exposes Clair node's functionality to the network.
@@ -28,16 +23,7 @@ type Config struct {
 	// exposes Clair's metrics and health endpoints.
 	IntrospectionAddr string `yaml:"introspection_addr" json:"introspection_addr"`
 	// Set the logging level.
-	//
-	// One of the following strings:
-	// "debug-color"
-	// "debug"
-	// "info"
-	// "warn"
-	// "error"
-	// "fatal"
-	// "panic"
-	LogLevel string   `yaml:"log_level" json:"log_level"`
+	LogLevel LogLevel `yaml:"log_level" json:"log_level"`
 	Indexer  Indexer  `yaml:"indexer" json:"indexer"`
 	Matcher  Matcher  `yaml:"matcher" json:"matcher"`
 	Matchers Matchers `yaml:"matchers" json:"matchers"`

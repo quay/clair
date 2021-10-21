@@ -59,7 +59,7 @@ func main() {
 	if err != nil {
 		golog.Fatalf("failed to decode yaml config: %v", err)
 	}
-	conf.Mode = runMode.String()
+	conf.Mode = runMode.Mode
 	_, err = config.Validate(&conf)
 	if err != nil {
 		golog.Fatalf("failed to validate config: %v", err)

@@ -2,8 +2,8 @@ package initialize
 
 import (
 	"context"
+	"fmt"
 	"os"
-	"strings"
 
 	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
@@ -14,31 +14,31 @@ import (
 // Logging configures zlog according to the provided configuration.
 func Logging(ctx context.Context, cfg *config.Config) error {
 	l := zerolog.New(os.Stderr)
-	switch strings.ToLower(cfg.LogLevel) {
-	case "debug-color":
+	switch cfg.LogLevel {
+	case config.DebugColorLog:
 		// set logger to use ConsoleWriter for colorized output
 		l = l.Level(zerolog.DebugLevel).
 			Output(zerolog.ConsoleWriter{Out: os.Stderr})
-	case "debug":
+	case config.DebugLog:
 		l = l.Level(zerolog.DebugLevel)
-	case "info":
+	case config.InfoLog:
 		l = l.Level(zerolog.InfoLevel)
-	case "warn":
+	case config.WarnLog:
 		l = l.Level(zerolog.WarnLevel)
-	case "error":
+	case config.ErrorLog:
 		l = l.Level(zerolog.ErrorLevel)
-	case "fatal":
+	case config.FatalLog:
 		l = l.Level(zerolog.FatalLevel)
-	case "panic":
+	case config.PanicLog:
 		l = l.Level(zerolog.PanicLevel)
 	default:
-		l = l.Level(zerolog.InfoLevel)
+		return fmt.Errorf("unknown log level: %v", cfg.LogLevel)
 	}
 	l = l.With().
 		Timestamp().
 		Logger()
 	zlog.Set(&l)
 	log.Logger = zerolog.Nop()
-	l.Debug().Str("component", "initialize/Logging").Msg("logging initialized")
+	zlog.Debug(ctx).Str("component", "initialize/Logging").Msg("logging initialized")
 	return nil
 }
