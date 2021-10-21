@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Matcher is the configuration for the matcher service.
 type Matcher struct {
 	// A Postgres connection string.
 	//

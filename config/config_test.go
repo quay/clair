@@ -1,268 +1,427 @@
 package config_test
 
 import (
-	"encoding/json"
+	"fmt"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-
 	"github.com/quay/clair/config"
 )
 
-func TestConfigValidateFailure(t *testing.T) {
-	table := []struct {
-		conf config.Config
-		name string
-	}{
+type ValidateTestcase struct {
+	Name  string
+	Check func(*testing.T, *config.Config, error)
+	Conf  config.Config
+}
+
+func (tc ValidateTestcase) Run(t *testing.T) {
+	ws, err := config.Validate(&tc.Conf)
+	for _, w := range ws {
+		t.Logf("lint: %v", &w)
+	}
+	if tc.Check != nil {
+		tc.Check(t, &tc.Conf, err)
+	} else {
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+	}
+}
+
+// This test looks a little sprawling, but it's structured by the field name
+// into subtests, with the leaf test being the element triggering the failure.
+//
+// Doing this means the go test "run" flag is much easier to use.
+func TestValidateFailure(t *testing.T) {
+	shouldFail := func(t *testing.T, _ *config.Config, err error) {
+		if err == nil {
+			t.Error("unexpected success")
+		}
+	}
+
+	// Tests on the base Config struct.
+	tt := []ValidateTestcase{
 		{
-			name: "No Mode",
-			conf: config.Config{
+			Name: "InvalidMode",
+			Conf: config.Config{
 				Mode: config.Mode(-1),
 			},
+			Check: shouldFail,
 		},
 		{
-			name: "ComboMode, Malformed Global HTTP Listen Addr",
-			conf: config.Config{
+			Name: "MalformedListenAddr",
+			Conf: config.Config{
 				Mode:           config.ComboMode,
 				HTTPListenAddr: "xyz",
 			},
+			Check: shouldFail,
 		},
-		{
-			name: "MatcherMode, No IndexerAddr",
-			conf: config.Config{
-				Mode:           config.MatcherMode,
-				HTTPListenAddr: "localhost:8080",
-				Matcher: config.Matcher{
-					ConnString:  "example@example/db",
-					IndexerAddr: "",
-				},
-			},
-		},
+	}
+	for _, tc := range tt {
+		t.Run(tc.Name, tc.Run)
 	}
 
-	for _, tab := range table {
-		t.Run(tab.name, func(t *testing.T) {
-			if _, err := config.Validate(&tab.conf); err == nil {
-				t.Fatalf("expected error for test case: %s", tab.name)
-			}
-		})
-	}
-}
-
-func TestConfigUpateRetention(t *testing.T) {
-	table := []struct {
-		conf              config.Config
-		name              string
-		expectedRetention int
-	}{
-		{
-			name:              "Retention less than 0",
-			expectedRetention: 0,
-			conf: config.Config{
-				Mode:           config.ComboMode,
-				HTTPListenAddr: "localhost:8080",
-				Indexer: config.Indexer{
-					ConnString: "example@example/db",
-				},
-				Notifier: config.Notifier{
-					ConnString: "example@example/db",
-				},
-				Matcher: config.Matcher{
-					ConnString:      "example@example/db",
-					IndexerAddr:     "example@example/db",
-					UpdateRetention: -1,
-				},
-			},
-		},
-		{
-			name:              "Retention of 0",
-			expectedRetention: 10,
-			conf: config.Config{
-				Mode:           config.ComboMode,
-				HTTPListenAddr: "localhost:8080",
-				Indexer: config.Indexer{
-					ConnString: "example@example/db",
-				},
-				Notifier: config.Notifier{
-					ConnString: "example@example/db",
-				},
-				Matcher: config.Matcher{
-					ConnString:      "example@example/db",
-					IndexerAddr:     "example@example/db",
-					UpdateRetention: 0,
-				},
-			},
-		},
-		{
-			name:              "Retention less than 2",
-			expectedRetention: 10,
-			conf: config.Config{
-				Mode:           config.ComboMode,
-				HTTPListenAddr: "localhost:8080",
-				Indexer: config.Indexer{
-					ConnString: "example@example/db",
-				},
-				Notifier: config.Notifier{
-					ConnString: "example@example/db",
-				},
-				Matcher: config.Matcher{
-					ConnString:      "example@example/db",
-					IndexerAddr:     "example@example/db",
-					UpdateRetention: 1,
-				},
-			},
-		},
-		{
-			name:              "Retention of 2",
-			expectedRetention: 2,
-			conf: config.Config{
-				Mode:           config.ComboMode,
-				HTTPListenAddr: "localhost:8080",
-				Indexer: config.Indexer{
-					ConnString: "example@example/db",
-				},
-				Notifier: config.Notifier{
-					ConnString: "example@example/db",
-				},
-				Matcher: config.Matcher{
-					ConnString:      "example@example/db",
-					IndexerAddr:     "example@example/db",
-					UpdateRetention: 2,
-				},
-			},
-		},
-	}
-	for _, tab := range table {
-		t.Run(tab.name, func(t *testing.T) {
-			_, err := config.Validate(&tab.conf)
-			if err != nil {
-				t.Fatalf("expected no errors but got: %s, for test case: %s", err, tab.name)
-			}
-			if tab.conf.Matcher.UpdateRetention != tab.expectedRetention {
-				t.Fatalf("expected UpdateRetention of %d but got %d", tab.expectedRetention, tab.conf.Matcher.UpdateRetention)
-			}
-		})
-	}
-}
-
-func TestConfigDisableUpdaters(t *testing.T) {
-	table := []struct {
-		name string
-		conf config.Config
-	}{
-		{
-			name: "ComboMode, disable updaters",
-			conf: config.Config{
-				Mode:           config.ComboMode,
-				HTTPListenAddr: "localhost:8080",
-				Indexer: config.Indexer{
-					ConnString: "example@example/db",
-				},
-				Notifier: config.Notifier{
-					ConnString: "example@example/db",
-				},
-				Matcher: config.Matcher{
-					ConnString:      "example@example/db",
-					IndexerAddr:     "example@example/db",
-					DisableUpdaters: true,
-				},
-				Updaters: config.Updaters{
-					Sets: []string{
-						"alpine",
-						"aws",
-					},
-				},
-			},
-		},
-		{
-			name: "MatcherMode, disable updaters",
-			conf: config.Config{
-				Mode:           config.MatcherMode,
-				HTTPListenAddr: "localhost:8080",
-				Matcher: config.Matcher{
-					ConnString:      "example@example/db",
-					IndexerAddr:     "example@example/db",
-					DisableUpdaters: true,
-				},
-				Updaters: config.Updaters{
-					Sets: []string{
-						"alpine",
-						"aws",
-					},
-				},
-			},
-		},
-	}
-
-	for _, tab := range table {
-		t.Run(tab.name, func(t *testing.T) {
-			_, err := config.Validate(&tab.conf)
-			if err != nil {
-				t.Fatalf("expected no errors but got: %s, for test case: %s", err, tab.name)
-			}
-			if len(tab.conf.Updaters.Sets) != 0 {
-				t.Fatalf("expected updaters sets to be empty but was: %s, for test case: %s", tab.conf.Updaters.Sets, tab.name)
-			}
-		})
-	}
-}
-
-func TestAuthUnmarshal(t *testing.T) {
-	t.Run("PSK", func(t *testing.T) {
-		type testcase struct {
-			In   string
-			Want config.AuthPSK
-		}
-		tt := []testcase{
+	t.Run("Matcher", func(t *testing.T) {
+		tt := []ValidateTestcase{
 			{
-				In: `{"key":"ZGVhZGJlZWZkZWFkYmVlZg==","iss":["iss"]}`,
-				Want: config.AuthPSK{
-					Key:    []byte("deadbeefdeadbeef"),
-					Issuer: []string{"iss"},
+				Name: "IndexerAddr",
+				Conf: config.Config{
+					Mode:           config.MatcherMode,
+					HTTPListenAddr: "localhost:8080",
+					Matcher: config.Matcher{
+						IndexerAddr: "",
+					},
 				},
+				Check: shouldFail,
 			},
-		}
-
-		check := func(t *testing.T, tc testcase) {
-			v := config.AuthPSK{}
-			if err := json.Unmarshal([]byte(tc.In), &v); err != nil {
-				t.Error(err)
-			}
-			if got, want := v, tc.Want; !cmp.Equal(got, want) {
-				t.Error(cmp.Diff(got, want))
-			}
 		}
 		for _, tc := range tt {
-			check(t, tc)
+			t.Run(tc.Name, tc.Run)
 		}
 	})
 
-	t.Run("Keyserver", func(t *testing.T) {
-		type testcase struct {
-			In   string
-			Want config.AuthKeyserver
-		}
-		tt := []testcase{
+	t.Run("Auth", func(t *testing.T) {
+		tt := []ValidateTestcase{
 			{
-				In: `{"api":"quay/keys","intraservice":"ZGVhZGJlZWZkZWFkYmVlZg=="}`,
-				Want: config.AuthKeyserver{
-					API:          "quay/keys",
-					Intraservice: []byte("deadbeefdeadbeef"),
+				Name: "BadPSKKey",
+				Conf: config.Config{
+					Mode: config.IndexerMode,
+					Auth: config.Auth{
+						PSK: &config.AuthPSK{},
+					},
 				},
+				Check: shouldFail,
+			},
+			{
+				Name: "BadPSKIssuer",
+				Conf: config.Config{
+					Mode: config.IndexerMode,
+					Auth: config.Auth{
+						PSK: &config.AuthPSK{
+							Key: config.Base64([]byte{0xde, 0xad, 0xbe, 0xef}),
+						},
+					},
+				},
+				Check: shouldFail,
 			},
 		}
-
-		check := func(t *testing.T, tc testcase) {
-			v := config.AuthKeyserver{}
-			if err := json.Unmarshal([]byte(tc.In), &v); err != nil {
-				t.Error(err)
-			}
-			if got, want := v, tc.Want; !cmp.Equal(got, want) {
-				t.Error(cmp.Diff(got, want))
-			}
-		}
 		for _, tc := range tt {
-			check(t, tc)
+			t.Run(tc.Name, tc.Run)
 		}
 	})
+
+	t.Run("Notifier", func(t *testing.T) {
+		tt := []ValidateTestcase{
+			{
+				Name: "Multiple",
+				Conf: config.Config{
+					Mode: config.NotifierMode,
+					Notifier: config.Notifier{
+						AMQP:    &config.AMQP{},
+						STOMP:   &config.STOMP{},
+						Webhook: &config.Webhook{},
+					},
+				},
+				Check: shouldFail,
+			},
+		}
+		for _, tc := range tt {
+			t.Run(tc.Name, tc.Run)
+		}
+
+		t.Run("Webhook", func(t *testing.T) {
+			tt := []ValidateTestcase{
+				{
+					Name: "Target",
+					Conf: config.Config{
+						Mode: config.NotifierMode,
+						Notifier: config.Notifier{
+							IndexerAddr: "http://example.com/",
+							MatcherAddr: "http://example.com/",
+							Webhook: &config.Webhook{
+								Target: " http://example.com/",
+							},
+						},
+					},
+					Check: shouldFail,
+				},
+				{
+					Name: "Callback",
+					Conf: config.Config{
+						Mode: config.NotifierMode,
+						Notifier: config.Notifier{
+							IndexerAddr: "http://example.com/",
+							MatcherAddr: "http://example.com/",
+							Webhook: &config.Webhook{
+								Callback: " http://example.com/",
+							},
+						},
+					},
+					Check: shouldFail,
+				},
+			}
+			for _, tc := range tt {
+				t.Run(tc.Name, tc.Run)
+			}
+		})
+
+		t.Run("AMQP", func(t *testing.T) {
+			tt := []ValidateTestcase{
+				{
+					Name: "RoutingKey",
+					Conf: config.Config{
+						Mode: config.NotifierMode,
+						Notifier: config.Notifier{
+							IndexerAddr: "http://example.com/",
+							MatcherAddr: "http://example.com/",
+							AMQP:        &config.AMQP{},
+						},
+					},
+					Check: shouldFail,
+				},
+				{
+					Name: "URIs",
+					Conf: config.Config{
+						Mode: config.NotifierMode,
+						Notifier: config.Notifier{
+							IndexerAddr: "http://example.com/",
+							MatcherAddr: "http://example.com/",
+							AMQP: &config.AMQP{
+								RoutingKey: "test",
+							},
+						},
+					},
+					Check: shouldFail,
+				},
+				{
+					Name: "InvalidURI",
+					Conf: config.Config{
+						Mode: config.NotifierMode,
+						Notifier: config.Notifier{
+							IndexerAddr: "http://example.com/",
+							MatcherAddr: "http://example.com/",
+							AMQP: &config.AMQP{
+								RoutingKey: "test",
+								URIs:       []string{" amqp://"},
+							},
+						},
+					},
+					Check: shouldFail,
+				},
+				{
+					Name: "Callback",
+					Conf: config.Config{
+						Mode: config.NotifierMode,
+						Notifier: config.Notifier{
+							IndexerAddr: "http://example.com/",
+							MatcherAddr: "http://example.com/",
+							AMQP: &config.AMQP{
+								RoutingKey: "test",
+								URIs:       []string{"amqp://"},
+								Callback:   " http://example.com",
+							},
+						},
+					},
+					Check: shouldFail,
+				},
+			}
+			for _, tc := range tt {
+				t.Run(tc.Name, tc.Run)
+			}
+		})
+
+		t.Run("STOMP", func(t *testing.T) {
+			tt := []ValidateTestcase{
+				{
+					Name: "URIs",
+					Conf: config.Config{
+						Mode: config.NotifierMode,
+						Notifier: config.Notifier{
+							IndexerAddr: "http://example.com/",
+							MatcherAddr: "http://example.com/",
+							STOMP:       &config.STOMP{},
+						},
+					},
+					Check: shouldFail,
+				},
+				{
+					Name: "InvalidURI",
+					Conf: config.Config{
+						Mode: config.NotifierMode,
+						Notifier: config.Notifier{
+							IndexerAddr: "http://example.com/",
+							MatcherAddr: "http://example.com/",
+							STOMP: &config.STOMP{
+								URIs: []string{"::42"},
+							},
+						},
+					},
+					Check: shouldFail,
+				},
+				{
+					Name: "Callback",
+					Conf: config.Config{
+						Mode: config.NotifierMode,
+						Notifier: config.Notifier{
+							IndexerAddr: "http://example.com/",
+							MatcherAddr: "http://example.com/",
+							STOMP: &config.STOMP{
+								URIs:     []string{"stomp:567"},
+								Callback: " http://example.com",
+							},
+						},
+					},
+					Check: shouldFail,
+				},
+			}
+			for _, tc := range tt {
+				t.Run(tc.Name, tc.Run)
+			}
+
+			t.Run("TLS", func(t *testing.T) {
+				tt := []ValidateTestcase{
+					{
+						Name: "Key",
+						Conf: config.Config{
+							Mode: config.NotifierMode,
+							Notifier: config.Notifier{
+								IndexerAddr: "http://example.com/",
+								MatcherAddr: "http://example.com/",
+								STOMP: &config.STOMP{
+									URIs:     []string{"stomp:567"},
+									Callback: "http://example.com/",
+									TLS: &config.TLS{
+										Cert: "fail.crt",
+									},
+								},
+							},
+						},
+						Check: shouldFail,
+					},
+					{
+						Name: "Cert",
+						Conf: config.Config{
+							Mode: config.NotifierMode,
+							Notifier: config.Notifier{
+								IndexerAddr: "http://example.com/",
+								MatcherAddr: "http://example.com/",
+								STOMP: &config.STOMP{
+									URIs:     []string{"stomp:567"},
+									Callback: "http://example.com/",
+									TLS: &config.TLS{
+										Key: "fail.key",
+									},
+								},
+							},
+						},
+						Check: shouldFail,
+					},
+					{
+						Name: "RootCA",
+						Conf: config.Config{
+							Mode: config.NotifierMode,
+							Notifier: config.Notifier{
+								IndexerAddr: "http://example.com/",
+								MatcherAddr: "http://example.com/",
+								STOMP: &config.STOMP{
+									URIs:     []string{"stomp:567"},
+									Callback: "http://example.com/",
+									TLS: &config.TLS{
+										RootCA: "fail.pem",
+									},
+								},
+							},
+						},
+						Check: shouldFail,
+					},
+				}
+				for _, tc := range tt {
+					t.Run(tc.Name, tc.Run)
+				}
+			})
+		})
+	})
+}
+
+func TestUpdateRetention(t *testing.T) {
+	expect := func(n int) func(*testing.T, *config.Config, error) {
+		return func(t *testing.T, c *config.Config, err error) {
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+			if got, want := c.Matcher.UpdateRetention, n; got != want {
+				t.Errorf("got: %d, want: %d", got, want)
+			}
+		}
+	}
+
+	// Construct a bunch of test cases from (in, out) pairs.
+	tt := func(p [][2]int) (tt []ValidateTestcase) {
+		for _, p := range p {
+			tt = append(tt, ValidateTestcase{
+				Name: fmt.Sprintf("%d", p[0]),
+				Conf: config.Config{
+					Mode:           config.ComboMode,
+					HTTPListenAddr: "localhost:8080",
+					Matcher: config.Matcher{
+						UpdateRetention: p[0],
+					},
+				},
+				Check: expect(p[1]),
+			})
+		}
+		return
+	}([][2]int{
+		{-1, 0},
+		{0, config.DefaultUpdateRetention},
+		{1, config.DefaultUpdateRetention},
+		{2, 2},
+	})
+	for _, tc := range tt {
+		t.Run(tc.Name, tc.Run)
+	}
+}
+
+func TestDisableUpdaters(t *testing.T) {
+	setsEmpty := func(t *testing.T, c *config.Config, err error) {
+		if err != nil {
+			t.Errorf("unexpected error: %v", err)
+		}
+		if !cmp.Equal(c.Updaters.Sets, []string{}) {
+			t.Error(cmp.Diff(c.Updaters.Sets, []string{}))
+		}
+	}
+	tt := []ValidateTestcase{
+		{
+			Name: "ComboMode",
+			Conf: config.Config{
+				Mode: config.ComboMode,
+				Matcher: config.Matcher{
+					DisableUpdaters: true,
+				},
+				Updaters: config.Updaters{
+					Sets: []string{"alpine", "aws"},
+				},
+			},
+			Check: setsEmpty,
+		},
+		{
+			Name: "MatcherMode",
+			Conf: config.Config{
+				Mode: config.MatcherMode,
+				Matcher: config.Matcher{
+					IndexerAddr:     "http://example.com/",
+					DisableUpdaters: true,
+				},
+				Updaters: config.Updaters{
+					Sets: []string{"alpine", "aws"},
+				},
+			},
+			Check: setsEmpty,
+		},
+	}
+
+	for _, tc := range tt {
+		t.Run(tc.Name, tc.Run)
+	}
 }

@@ -1,5 +1,6 @@
 package config
 
+// Matchers configures the individual matchers run by the matcher system.
 type Matchers struct {
 	// Config holds configuration blocks for MatcherFactories and Matchers,
 	// keyed by name.

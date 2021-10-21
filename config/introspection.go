@@ -2,7 +2,11 @@ package config
 
 import "fmt"
 
-// Configure distributed tracing via OTEL
+// Trace specifies how to configure Clair's tracing support.
+//
+// The "Name" key must match the provider to use.
+//
+// Currently, only "jaeger" is supported.
 type Trace struct {
 	Name        string   `yaml:"name" json:"name"`
 	Probability *float64 `yaml:"probability" json:"probability"`
@@ -37,7 +41,11 @@ type Jaeger struct {
 	BufferMax   int    `yaml:"buffer_max" json:"buffer_max"`
 }
 
-// Configure Metrics.
+// Metrics specifies how to configure Clair's metrics exporting.
+//
+// The "Name" key must match the provider to use.
+//
+// Currently, only "prometheus" is supported.
 type Metrics struct {
 	Prometheus Prometheus `yaml:"prometheus" json:"prometheus"`
 	Name       string     `yaml:"name" json:"name"`
@@ -56,7 +64,7 @@ func (m *Metrics) lint() ([]Warning, error) {
 	return nil, nil
 }
 
-// Prometheus specific metrics configuration
+// Prometheus specific metrics configuration.
 type Prometheus struct {
 	// Endpoint is a URL path where
 	// Prometheus metrics will be hosted.

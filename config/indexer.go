@@ -87,6 +87,8 @@ func (i *Indexer) lint() (ws []Warning, err error) {
 	return ws, nil
 }
 
+// ScannerConfig is the object consulted for configuring the various types of
+// scanners.
 type ScannerConfig struct {
 	Package map[string]interface{} `yaml:"package" json:"package"`
 	Dist    map[string]interface{} `yaml:"dist" json:"dist"`

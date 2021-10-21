@@ -142,6 +142,7 @@ func (n *Notifier) lint() (ws []Warning, err error) {
 	return ws, nil
 }
 
+// Webhook configures the "webhook" notification mechanism.
 type Webhook struct {
 	// any HTTP headers necessary for the request to Target
 	Headers http.Header `yaml:"headers" json:"headers"`
@@ -223,7 +224,7 @@ func (e *Exchange) validate(_ Mode) ([]Warning, error) {
 	return nil, nil
 }
 
-// AMQP provides configuration for an AMQP deliverer.
+// AMQP configures the AMQP notification mechanism.
 type AMQP struct {
 	TLS *TLS `yaml:"tls" json:"tls"`
 	// The AMQP exchange notifications will be delivered to.
@@ -309,11 +310,13 @@ func (c *AMQP) lint() (w []Warning, err error) {
 	return w, nil
 }
 
+// Login is the login details for a STOMP broker.
 type Login struct {
 	Login    string `yaml:"login" json:"login"`
 	Passcode string `yaml:"passcode" json:"passcode"`
 }
 
+// STOMP configures the STOMP notification mechanism.
 type STOMP struct {
 	// optional tls portion of config
 	TLS *TLS `yaml:"tls" json:"tls"`
@@ -325,6 +328,8 @@ type STOMP struct {
 	Destination string `yaml:"destination" json:"destination"`
 	// a list of URIs to send messages to.
 	// a linear search of this list is always performed.
+	//
+	// Note that "URI" is a misnomer, this must be host:port pairs.
 	URIs []string `yaml:"uris" json:"uris"`
 	// Specifies the number of notifications delivered in single STOMP message
 	// when Direct is true.
