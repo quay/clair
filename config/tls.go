@@ -35,9 +35,6 @@ func (t *TLS) Config() (*tls.Config, error) {
 		return &cfg, nil
 	}
 
-	if (t.Cert != "" || t.Key != "") && (t.Cert == "" || t.Key == "") {
-		return nil, errors.New("both tls cert and key are required")
-	}
 	if t.RootCA != "" {
 		p, err := x509.SystemCertPool()
 		if err != nil {
@@ -68,6 +65,22 @@ func (t *TLS) lint() ([]Warning, error) {
 			path:  ".root_ca",
 			inner: fmt.Errorf(`use environment variables "SSL_CERT_FILE" or "SSL_CERT_DIR": %w`, ErrDeprecated),
 		}}, nil
+	}
+	return nil, nil
+}
+
+func (t *TLS) validate(_ Mode) ([]Warning, error) {
+	if (t.Cert != "" || t.Key != "") && (t.Cert == "" || t.Key == "") {
+		return nil, errors.New("both tls cert and key are required")
+	}
+	for _, n := range []string{t.RootCA, t.Cert, t.Key} {
+		if n == "" {
+			continue
+		}
+		_, err := os.Stat(n)
+		if err != nil {
+			return nil, fmt.Errorf(`error accessing %q: %w`, n, err)
+		}
 	}
 	return nil, nil
 }

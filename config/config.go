@@ -2,19 +2,7 @@ package config
 
 import (
 	"fmt"
-	"strings"
-)
-
-// Clair Modes
-const (
-	// Run this mode to create receive Manifests and create IndexReports.
-	IndexerMode = "indexer"
-	// Run this mode to retrieve IndexReports and create VulnerabilityReports.
-	MatcherMode = "matcher"
-	// Run this mode to run all modes in a single Clair instance.
-	ComboMode = "combo"
-	// Run this mode to listen for Updates and send notifications when they occur.
-	NotifierMode = "notifier"
+	"net"
 )
 
 // DefaultAddress is used if an http_listen_addr is not provided in the config.
@@ -60,42 +48,23 @@ type Config struct {
 	Metrics  Metrics  `yaml:"metrics" json:"metrics"`
 }
 
-// Validate confirms the necessary values to support
-// the desired Clair mode exist.
-func Validate(conf *Config) error {
-	if conf.HTTPListenAddr == "" {
-		conf.HTTPListenAddr = DefaultAddress
+func (c *Config) validate(mode Mode) ([]Warning, error) {
+	if c.HTTPListenAddr == "" {
+		c.HTTPListenAddr = DefaultAddress
 	}
-	if conf.Matcher.DisableUpdaters {
-		conf.Updaters.Sets = []string{}
+	if c.Matcher.DisableUpdaters {
+		c.Updaters.Sets = []string{}
 	}
-	switch strings.ToLower(conf.Mode) {
-	case ComboMode:
-		if err := conf.Indexer.Validate(true); err != nil {
-			return err
-		}
-		if err := conf.Matcher.Validate(true); err != nil {
-			return err
-		}
-		if err := conf.Notifier.Validate(true); err != nil {
-			return err
-		}
-	case IndexerMode:
-		if err := conf.Indexer.Validate(false); err != nil {
-			return err
-		}
-	case MatcherMode:
-		if err := conf.Matcher.Validate(false); err != nil {
-			return err
-		}
-	case NotifierMode:
-		if err := conf.Notifier.Validate(false); err != nil {
-			return err
-		}
+	switch mode {
+	case ComboMode, IndexerMode, MatcherMode, NotifierMode:
+		// OK
 	default:
-		return fmt.Errorf("unknown mode received: %v", conf.Mode)
+		return nil, fmt.Errorf("unknown mode: %q", mode)
 	}
-	return nil
+	if _, _, err := net.SplitHostPort(c.HTTPListenAddr); err != nil {
+		return nil, err
+	}
+	return c.lint()
 }
 
 func (c *Config) lint() (ws []Warning, err error) {

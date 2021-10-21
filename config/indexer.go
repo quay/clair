@@ -1,9 +1,5 @@
 package config
 
-import (
-	"fmt"
-)
-
 // Indexer provides Clair Indexer node configuration
 type Indexer struct {
 	// Scanner allows for passing configuration options to layer scanners.
@@ -40,17 +36,15 @@ type Indexer struct {
 	Airgap bool `yaml:"airgap" json:"airgap"`
 }
 
-func (i *Indexer) Validate(combo bool) error {
-	const (
-		DefaultScanLockRetry = 1
-	)
-	if i.ConnString == "" {
-		return fmt.Errorf("indexer mode requires a database connection string")
+func (i *Indexer) validate(mode Mode) (ws []Warning, err error) {
+	const DefaultScanLockRetry = 1
+	if mode != ComboMode && mode != IndexerMode {
+		return nil, nil
 	}
 	if i.ScanLockRetry == 0 {
 		i.ScanLockRetry = DefaultScanLockRetry
 	}
-	return nil
+	return i.lint()
 }
 
 func (i *Indexer) lint() (ws []Warning, err error) {

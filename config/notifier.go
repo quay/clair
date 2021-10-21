@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -70,9 +71,9 @@ const (
 	notifierDefaultDeliveryInterval = 5 * time.Second
 )
 
-func (n *Notifier) Validate(combo bool) error {
-	if n.ConnString == "" {
-		return fmt.Errorf("notifier mode requires a database connection string")
+func (n *Notifier) validate(mode Mode) ([]Warning, error) {
+	if mode != ComboMode && mode != NotifierMode {
+		return nil, nil
 	}
 	if n.PollInterval < 1*time.Second {
 		n.PollInterval = notifierDefaultPollInterval
@@ -80,15 +81,19 @@ func (n *Notifier) Validate(combo bool) error {
 	if n.DeliveryInterval < 1*time.Second {
 		n.DeliveryInterval = notifierDefaultDeliveryInterval
 	}
-	if !combo {
+	switch mode {
+	case ComboMode:
+	case NotifierMode:
 		if n.IndexerAddr == "" {
-			return fmt.Errorf("notifier mode requires a remote Indexer")
+			return nil, fmt.Errorf("notifier mode requires a remote Indexer")
 		}
 		if n.MatcherAddr == "" {
-			return fmt.Errorf("notifier mode requires a remote Matcher")
+			return nil, fmt.Errorf("notifier mode requires a remote Matcher")
 		}
+	default:
+		panic("programmer error")
 	}
-	return nil
+	return n.lint()
 }
 
 func (n *Notifier) lint() (ws []Warning, err error) {
@@ -158,21 +163,33 @@ type Webhook struct {
 
 // Validate will return a copy of the Config on success.
 // If any validation fails an error will be returned.
-func (w *Webhook) Validate() error {
+func (w *Webhook) validate(mode Mode) ([]Warning, error) {
+	if mode != ComboMode && mode != NotifierMode {
+		return nil, nil
+	}
+	var ws []Warning
 	if _, err := url.Parse(w.Target); err != nil {
-		return fmt.Errorf("failed to parse target url")
+		return nil, fmt.Errorf("failed to parse target url: %w", err)
 	}
 
 	// Require trailing slash so url.Parse() can easily append notification id.
 	if !strings.HasSuffix(w.Callback, "/") {
 		w.Callback = w.Callback + "/"
+		ws = append(ws, Warning{
+			path: ".callback",
+			msg:  `URL should end in a "/"`,
+		})
 	}
 
 	if _, err := url.Parse(w.Callback); err != nil {
-		return fmt.Errorf("failed to parse callback url: %w", err)
+		return nil, fmt.Errorf("failed to parse callback url: %w", err)
 	}
-
-	return nil
+	ls, err := w.lint()
+	ws = append(ws, ls...)
+	if err != nil {
+		return ws, err
+	}
+	return ws, nil
 }
 
 func (w *Webhook) lint() ([]Warning, error) {
@@ -202,6 +219,13 @@ type Exchange struct {
 	Durable bool `yaml:"durability" json:"durability"`
 	// Whether bound consumers define the lifecycle of the Exchange.
 	AutoDelete bool `yaml:"auto_delete" json:"auto_delete"`
+}
+
+func (e *Exchange) validate(_ Mode) ([]Warning, error) {
+	if e.Type == "" {
+		return nil, fmt.Errorf("field required")
+	}
+	return nil, nil
 }
 
 // AMQP provides configuration for an AMQP deliverer.
@@ -239,45 +263,44 @@ type AMQP struct {
 }
 
 // Validate confirms configuration is valid.
-func (c *AMQP) Validate() error {
-	if c.Exchange.Type == "" {
-		return fmt.Errorf("AMQP config requires the exchange.type field")
+func (c *AMQP) validate(mode Mode) ([]Warning, error) {
+	if mode != ComboMode && mode != NotifierMode {
+		return nil, nil
 	}
+	var ws []Warning
 	if c.RoutingKey == "" {
-		return fmt.Errorf("AMQP config requires the routing key field")
+		return nil, fmt.Errorf("AMQP config requires the routing key field")
+	}
+	if len(c.URIs) == 0 {
+		return nil, fmt.Errorf("missing URIs for AMQP broker")
 	}
 	for _, uri := range c.URIs {
-		if strings.HasPrefix(uri, "amqps://") {
-			if c.TLS.RootCA == "" {
-				return fmt.Errorf("amqps:// broker requires tls_root_ca")
-			}
-			if c.TLS.Cert == "" {
-				return fmt.Errorf("amqps:// broker requires tls_cert")
-			}
-			if c.TLS.Key == "" {
-				return fmt.Errorf("amqps:// broker requires tls_key")
-			}
-		}
-	}
-
-	if c.TLS != nil {
-		if c.TLS.Cert == "" || c.TLS.Key == "" {
-			return fmt.Errorf("both tls cert and key are required")
+		if _, err := url.Parse(uri); err != nil {
+			return nil, fmt.Errorf("invalid URI %q: %w", uri, err)
 		}
 	}
 
 	if !c.Direct {
 		if !strings.HasSuffix(c.Callback, "/") {
 			c.Callback = c.Callback + "/"
+			ws = append(ws, Warning{
+				path: ".callback",
+				msg:  `URL should end in a "/"`,
+			})
 		}
 		if _, err := url.Parse(c.Callback); err != nil {
-			return fmt.Errorf("failed to parse callback url: %w", err)
+			return nil, fmt.Errorf("failed to parse callback url: %w", err)
 		}
 	}
-	return nil
+	ls, err := c.lint()
+	ws = append(ws, ls...)
+	if err != nil {
+		return ws, err
+	}
+	return ws, nil
 }
 
-func (c *AMQP) lint(w []Warning) ([]Warning, error) {
+func (c *AMQP) lint() (w []Warning, err error) {
 	if c.Rollup == 1 {
 		w = append(w, Warning{
 			msg: "`Rollup` set to 1: this means nothing",
@@ -324,24 +347,40 @@ type STOMP struct {
 	Direct bool `yaml:"direct" json:"direct"`
 }
 
-func (c *STOMP) Validate() error {
+func (c *STOMP) validate(mode Mode) ([]Warning, error) {
+	if mode != ComboMode && mode != NotifierMode {
+		return nil, nil
+	}
+	var ws []Warning
+	if len(c.URIs) == 0 {
+		return nil, fmt.Errorf("missing URIs for STOMP broker")
+	}
+	for _, u := range c.URIs {
+		if _, _, err := net.SplitHostPort(u); err != nil {
+			return nil, fmt.Errorf("bad host:port %q: %w", u, err)
+		}
+	}
 	if !c.Direct {
 		if !strings.HasSuffix(c.Callback, "/") {
 			c.Callback = c.Callback + "/"
+			ws = append(ws, Warning{
+				path: ".callback",
+				msg:  `URL should end in a "/"`,
+			})
 		}
 		if _, err := url.Parse(c.Callback); err != nil {
-			return fmt.Errorf("failed to parse callback url: %w", err)
+			return nil, fmt.Errorf("failed to parse callback url: %w", err)
 		}
 	}
-	if c.TLS != nil {
-		if c.TLS.Cert == "" || c.TLS.Key == "" {
-			return fmt.Errorf("both tls cert and key are required")
-		}
+	ls, err := c.lint()
+	ws = append(ws, ls...)
+	if err != nil {
+		return ws, err
 	}
-	return nil
+	return ws, nil
 }
 
-func (c *STOMP) lint(w []Warning) ([]Warning, error) {
+func (c *STOMP) lint() (w []Warning, err error) {
 	if c.Rollup == 1 {
 		w = append(w, Warning{
 			msg: "`Rollup` set to 1: this means nothing",

@@ -54,13 +54,13 @@ func (v *ConfMode) String() string {
 	}
 	switch *v {
 	case ModeCombo:
-		return config.ComboMode
+		return config.ComboMode.String()
 	case ModeIndexer:
-		return config.IndexerMode
+		return config.IndexerMode.String()
 	case ModeMatcher:
-		return config.MatcherMode
+		return config.MatcherMode.String()
 	case ModeNotifier:
-		return config.NotifierMode
+		return config.NotifierMode.String()
 	default:
 	}
 	return "invalid"

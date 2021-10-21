@@ -24,7 +24,5 @@ func ExampleLint() {
 	// warning: interval is very fast: may result in increased workload (at $.notifier.poll_interval)
 	// warning: interval is very fast: may result in increased workload (at $.notifier.delivery_interval)
 	// warning: both "PSK" and "Keyserver" authentication methods are defined (at $.auth)
-	// warning: key is empty (at $.auth.psk.key)
-	// warning: no issuers defined (at $.auth.psk.iss)
 	// warning: authentication method deprecated: setting will be removed in a future release (at $.auth.keyserver)
 }

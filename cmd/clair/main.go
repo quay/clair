@@ -60,7 +60,7 @@ func main() {
 		golog.Fatalf("failed to decode yaml config: %v", err)
 	}
 	conf.Mode = runMode.String()
-	err = config.Validate(&conf)
+	_, err = config.Validate(&conf)
 	if err != nil {
 		golog.Fatalf("failed to validate config: %v", err)
 	}

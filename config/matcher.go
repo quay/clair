@@ -59,9 +59,9 @@ const (
 	defaultMacherRetention = 10
 )
 
-func (m *Matcher) Validate(combo bool) error {
-	if m.ConnString == "" {
-		return fmt.Errorf("matcher requires a database connection string")
+func (m *Matcher) validate(mode Mode) ([]Warning, error) {
+	if mode != ComboMode && mode != MatcherMode {
+		return nil, nil
 	}
 	if m.Period == 0 {
 		m.Period = defaultMatcherPeriod
@@ -77,16 +77,20 @@ func (m *Matcher) Validate(combo bool) error {
 	if m.CacheAge == 0 {
 		m.CacheAge = m.Period
 	}
-	if !combo {
+	switch mode {
+	case ComboMode:
+	case MatcherMode:
 		if m.IndexerAddr == "" {
-			return fmt.Errorf("matcher mode requires a remote Indexer address")
+			return nil, fmt.Errorf("matcher mode requires a remote Indexer address")
 		}
 		_, err := url.Parse(m.IndexerAddr)
 		if err != nil {
-			return fmt.Errorf("failed to parse matcher mode IndexerAddr string: %v", err)
+			return nil, fmt.Errorf("failed to parse matcher mode IndexerAddr string: %v", err)
 		}
+	default:
+		panic("programmer error")
 	}
-	return nil
+	return m.lint()
 }
 
 func (m *Matcher) lint() (ws []Warning, err error) {

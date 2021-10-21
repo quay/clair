@@ -84,22 +84,22 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 
 	var e error
 	switch conf.Mode {
-	case config.ComboMode:
+	case config.ComboMode.String():
 		e = t.configureComboMode(ctx)
 		if e != nil {
 			return nil, e
 		}
-	case config.IndexerMode:
+	case config.IndexerMode.String():
 		e = t.configureIndexerMode(ctx)
 		if e != nil {
 			return nil, e
 		}
-	case config.MatcherMode:
+	case config.MatcherMode.String():
 		e = t.configureMatcherMode(ctx)
 		if e != nil {
 			return nil, e
 		}
-	case config.NotifierMode:
+	case config.NotifierMode.String():
 		e = t.configureNotifierMode(ctx)
 		if e != nil {
 			return nil, e

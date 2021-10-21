@@ -82,18 +82,17 @@ type AuthPSK struct {
 	Issuer []string `yaml:"iss" json:"iss"`
 }
 
-func (a *AuthPSK) lint() (ws []Warning, err error) {
+func (a *AuthPSK) validate(_ Mode) ([]Warning, error) {
 	if len(a.Key) == 0 {
-		ws = append(ws, Warning{
-			path: ".key",
-			msg:  "key is empty",
-		})
+		return nil, &Warning{
+			msg: "key is empty",
+		}
 	}
 	if len(a.Issuer) == 0 {
-		ws = append(ws, Warning{
+		return nil, &Warning{
 			path: ".iss",
 			msg:  "no issuers defined",
-		})
+		}
 	}
-	return ws, nil
+	return nil, nil
 }
