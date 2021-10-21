@@ -66,20 +66,15 @@ type Notifier struct {
 	Migrations bool `yaml:"migrations" json:"migrations"`
 }
 
-const (
-	notifierDefaultPollInterval     = 5 * time.Second
-	notifierDefaultDeliveryInterval = 5 * time.Second
-)
-
 func (n *Notifier) validate(mode Mode) ([]Warning, error) {
 	if mode != ComboMode && mode != NotifierMode {
 		return nil, nil
 	}
 	if n.PollInterval < 1*time.Second {
-		n.PollInterval = notifierDefaultPollInterval
+		n.PollInterval = DefaultNotifierPollInterval
 	}
 	if n.DeliveryInterval < 1*time.Second {
-		n.DeliveryInterval = notifierDefaultDeliveryInterval
+		n.DeliveryInterval = DefaultNotifierDeliveryInterval
 	}
 	switch mode {
 	case ComboMode:
@@ -125,13 +120,13 @@ func (n *Notifier) lint() (ws []Warning, err error) {
 		})
 	}
 
-	if n.PollInterval < notifierDefaultPollInterval {
+	if n.PollInterval < DefaultNotifierPollInterval {
 		ws = append(ws, Warning{
 			path: ".poll_interval",
 			msg:  "interval is very fast: may result in increased workload",
 		})
 	}
-	if n.DeliveryInterval < notifierDefaultDeliveryInterval {
+	if n.DeliveryInterval < DefaultNotifierDeliveryInterval {
 		ws = append(ws, Warning{
 			path: ".delivery_interval",
 			msg:  "interval is very fast: may result in increased workload",

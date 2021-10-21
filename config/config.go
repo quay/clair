@@ -5,9 +5,6 @@ import (
 	"net"
 )
 
-// DefaultAddress is used if an http_listen_addr is not provided in the config.
-const DefaultAddress = ":6060"
-
 // Config is the configuration object for the commands in
 // github.com/quay/clair/v4/cmd/...
 type Config struct {

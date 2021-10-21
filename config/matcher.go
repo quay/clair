@@ -54,11 +54,6 @@ type Matcher struct {
 	DisableUpdaters bool `yaml:"disable_updaters" json:"disable_updaters"`
 }
 
-const (
-	DefaultMatcherPeriod    = 30 * time.Minute
-	DefaultMatcherRetention = 10
-)
-
 func (m *Matcher) validate(mode Mode) ([]Warning, error) {
 	if mode != ComboMode && mode != MatcherMode {
 		return nil, nil
@@ -72,7 +67,7 @@ func (m *Matcher) validate(mode Mode) ([]Warning, error) {
 		m.UpdateRetention = 0
 	case m.UpdateRetention < 2:
 		// Anything less than 2 gets the default.
-		m.UpdateRetention = DefaultMatcherRetention
+		m.UpdateRetention = DefaultUpdateRetention
 	}
 	if m.CacheAge == 0 {
 		m.CacheAge = m.Period
