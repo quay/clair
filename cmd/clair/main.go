@@ -60,7 +60,8 @@ func main() {
 		golog.Fatalf("failed to decode yaml config: %v", err)
 	}
 	conf.Mode = runMode.Mode
-	_, err = config.Validate(&conf)
+	// Grab the warnings to print after the logger is configured.
+	ws, err := config.Validate(&conf)
 	if err != nil {
 		golog.Fatalf("failed to validate config: %v", err)
 	}
@@ -75,6 +76,10 @@ func main() {
 	zlog.Info(ctx).
 		Str("version", Version).
 		Msg("starting")
+	for _, w := range ws {
+		zlog.Info(ctx).
+			AnErr("lint", &w).Send()
+	}
 
 	// Some machinery for starting and stopping server goroutines:
 	down := &Shutdown{}
