@@ -167,7 +167,7 @@ CONTRIB_DIR ?= contrib/openshift
 # avoid maintaining two versions
 .PHONY: grafana-configmap-gen
 grafana-configmap-gen:
-	sed -e '/GRAFANA_MANIFEST/{r local-dev/grafana/provisioning/dashboards/dashboard.json' -e 'd' -e '}' \
+	sed "s/GRAFANA_MANIFEST/$$(sed -e 's/[\&/]/\\&/g' -e 's/$$/\\n/' -e 's/^/    /' local-dev/grafana/provisioning/dashboards/dashboard.json | tr -d '\n')/" \
 	$(CONTRIB_DIR)/grafana/dashboard-clair.configmap.yaml.tpl \
 	> $(CONTRIB_DIR)/grafana/dashboard-clair.configmap.yaml
 

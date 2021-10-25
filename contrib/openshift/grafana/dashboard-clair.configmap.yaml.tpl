@@ -1,8 +1,4 @@
 apiVersion: v1
-data:
-  clair-dashboard.json: |
-    GRAFANA_MANIFEST
-
 kind: ConfigMap
 metadata:
   creationTimestamp: null
@@ -11,4 +7,6 @@ metadata:
     grafana_dashboard: "true"
   annotations:
     grafana-folder: /grafana-dashboard-definitions/Clair
-
+data:
+  clair-dashboard.json: |-
+GRAFANA_MANIFEST
