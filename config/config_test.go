@@ -1,10 +1,10 @@
 package config_test
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"gopkg.in/yaml.v3"
 
 	"github.com/quay/clair/v4/config"
 )
@@ -235,12 +235,7 @@ func TestAuthUnmarshal(t *testing.T) {
 		}
 		tt := []testcase{
 			{
-				In: `---
-key: >-
-  ZGVhZGJlZWZkZWFkYmVlZg==
-iss: 
-  - iss
-`,
+				In: `{"key":"ZGVhZGJlZWZkZWFkYmVlZg==","iss":["iss"]}`,
 				Want: config.AuthPSK{
 					Key:    []byte("deadbeefdeadbeef"),
 					Issuer: []string{"iss"},
@@ -250,7 +245,7 @@ iss:
 
 		check := func(t *testing.T, tc testcase) {
 			v := config.AuthPSK{}
-			if err := yaml.Unmarshal([]byte(tc.In), &v); err != nil {
+			if err := json.Unmarshal([]byte(tc.In), &v); err != nil {
 				t.Error(err)
 			}
 			if got, want := v, tc.Want; !cmp.Equal(got, want) {
@@ -269,11 +264,7 @@ iss:
 		}
 		tt := []testcase{
 			{
-				In: `---
-api: quay/keys
-intraservice: >-
-  ZGVhZGJlZWZkZWFkYmVlZg==
-`,
+				In: `{"api":"quay/keys","intraservice":"ZGVhZGJlZWZkZWFkYmVlZg=="}`,
 				Want: config.AuthKeyserver{
 					API:          "quay/keys",
 					Intraservice: []byte("deadbeefdeadbeef"),
@@ -283,7 +274,7 @@ intraservice: >-
 
 		check := func(t *testing.T, tc testcase) {
 			v := config.AuthKeyserver{}
-			if err := yaml.Unmarshal([]byte(tc.In), &v); err != nil {
+			if err := json.Unmarshal([]byte(tc.In), &v); err != nil {
 				t.Error(err)
 			}
 			if got, want := v, tc.Want; !cmp.Equal(got, want) {
