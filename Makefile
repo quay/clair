@@ -169,7 +169,7 @@ CONTRIB_DIR ?= contrib/openshift
 grafana-configmap-gen:
 	sed "s/GRAFANA_MANIFEST/$$(sed -e 's/[\&/]/\\&/g' -e 's/$$/\\n/' -e 's/^/    /' local-dev/grafana/provisioning/dashboards/dashboard.json | tr -d '\n')/" \
 	$(CONTRIB_DIR)/grafana/dashboard-clair.configmap.yaml.tpl \
-	> $(CONTRIB_DIR)/grafana/dashboard-clair.configmap.yaml
+	> $(CONTRIB_DIR)/grafana/dashboards/dashboard-clair.configmap.yaml
 
 # runs unit tests
 .PHONY: unit
