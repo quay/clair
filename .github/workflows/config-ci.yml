@@ -1,0 +1,68 @@
+---
+name: Config module CI
+
+on:
+  push:
+    paths:
+      - config/**
+    branches:
+      - main
+      - release-4.*
+  pull_request:
+    paths:
+      - config/**
+    branches:
+      - main
+      - release-4.*
+
+jobs:
+  commit-check:
+    name: Commit Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: commit check
+        uses: gsactions/commit-message-checker@v1
+        with:
+          pattern: |
+            ^(.*):\s*(.*)\n.*$
+          error: 'Commit must begin with <scope>: <subject>'
+          flags: 'gm'
+          excludeTitle: true
+          excludeDescription: true
+          checkAllCommitMessages: true
+          accessToken: ${{ secrets.GITHUB_TOKEN }}
+  tidy:
+    name: Tidy
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: ['1.16']
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - uses: ./.github/actions/go-tidy
+        with:
+          go: ${{ matrix.go }}
+          dir: ./config
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: ['1.16', '1.17']
+    steps:
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/go-cache
+        with:
+          go: ${{ matrix.go }}
+      - run: cd config && go test ./...
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: workspace-${{matrix.go}}
+          path: ${{ github.workspace }}
