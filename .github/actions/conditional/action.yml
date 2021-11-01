@@ -1,0 +1,30 @@
+# Copied from https://github.com/actions/runner/issues/834
+#
+# This is a dirty hack around composite actions not supporting conditional steps.
+---
+inputs:
+  if:
+    description: Your condition
+    default: true
+  step:
+    description: Your step to run if the condition is met
+runs:
+  using: composite
+  steps:
+  - uses: actions/github-script@v4
+    with:
+      github-token: none
+      script: |
+        var fs = require('fs');
+        try {
+          fs.mkdirSync('./.github/conditional/tmp', {recursive: true});
+        } catch {
+        }
+        if(${{fromJSON(inputs.if)}}) {
+          fs.writeFileSync('./.github/conditional/tmp/action.yml', 'runs:\n  using: composite\n  steps:\n  - ' + process.env['STEP'].replace(/\n/g, '\n    '));
+        } else {
+          fs.writeFileSync('./.github/conditional/tmp/action.yml', 'runs: {using: composite, steps: []}');
+        }
+    env:
+      STEP: ${{inputs.step}}
+  - uses: ./.github/conditional/tmp
