@@ -51,17 +51,10 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ matrix.go }}
-      - uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go${{ matrix.go }}
       - uses: actions/checkout@v2
-      - run: go mod tidy
-      - run: git diff --exit-code
+      - uses: ./.github/actions/go-tidy
+        with:
+          go: ${{ matrix.go }}
 
   documentation:
     name: Documentation
@@ -104,14 +97,9 @@ jobs:
         go: ['1.16', '1.17']
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/cache@v2
+      - uses: ./.github/actions/go-cache
         with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go${{ matrix.go }}
+          go: ${{ matrix.go }}
       - run: go test -tags integration ./...
       - uses: actions/upload-artifact@v2
         if: failure()

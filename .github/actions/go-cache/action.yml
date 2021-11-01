@@ -1,0 +1,22 @@
+name: 'Go cache'
+description: 'cache go modules, and build artifacts'
+inputs:
+  go:
+    description: 'Go version to use'
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go${{ inputs.go }}-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go${{ inputs.go }}
+    - shell: bash
+      run: |
+        find . -name go.mod -type f -printf '%h\n' | while read dir; do
+          cd "$dir"
+          go mod download
+        done

@@ -1,0 +1,19 @@
+name: 'Go tidy'
+description: 'check that all modules are tidy-clean'
+inputs:
+  go:
+    description: 'Go version to use'
+  dir:
+    description: 'module root directory'
+    default: '.'
+runs:
+  using: 'composite'
+  steps:
+    - uses: ./.github/actions/go-cache
+      with:
+        go: ${{ inputs.go }}
+    - run: |
+        cd "${{ inputs.dir }}"
+        go mod tidy
+        git diff --exit-code
+      shell: bash

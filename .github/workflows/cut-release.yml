@@ -53,15 +53,9 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Cache Go Modules
-        uses: actions/cache@v2
+      - uses: ./.github/actions/go-cache
         with:
-          path: ~/go/pkg/mod
-          key: go-mod-${{ needs.config.outputs.go_version }}-${{ runner.os }}-${{ hashFiles('./go.*') }}
-          restore-keys: |
-            go-mod-${{ needs.config.outputs.go_version }}-${{ runner.os }}
-            go-mod-${{ needs.config.outputs.go_version }}
-            go-mod
+          go: ${{ steps.config.outputs.go_version }}
       - name: Create Release Archive
         run: |
           go mod vendor
@@ -129,14 +123,9 @@ jobs:
         id: download
         with:
           name: release
-      - name: Cache Go Builds
-        uses: actions/cache@v2
+      - uses: ./.github/actions/go-cache
         with:
-          path: ~/.cache/go-build
-          key: go-build-${{ needs.config.outputs.build_cache_key }}-${{ runner.os }}
-          restore-keys: |
-            go-build-${{ needs.config.outputs.build_cache_key }}
-            go-build
+          go: ${{ steps.config.outputs.go_version }}
       - name: Unpack and Build
         run: |
           tar -xz -f ${{steps.download.outputs.download-path}}/clair-${{ needs.config.outputs.version }}.tar.gz --strip-components=1
