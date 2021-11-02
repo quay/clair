@@ -15,6 +15,11 @@ scrape_configs:
     static_configs:
       - targets: ['matcher:8089']
 
+  - job_name: notifier
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ['notifier:8089']
+
   - job_name: indexer-quay
     metrics_path: "/metrics"
     static_configs:
