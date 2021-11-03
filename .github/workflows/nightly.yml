@@ -44,41 +44,33 @@ jobs:
           printf 'CLAIRCORE_BRANCH=%s\n' "${br}" >> $GITHUB_ENV
           printf 'GO_VERSION=%s\n' "$(test "${#gv}" -gt 4 && echo "${gv%.*}" || echo "${gv}")" >> $GITHUB_ENV
           printf '%s/.local/go/bin\n' "$HOME" >> $GITHUB_PATH
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+      - uses: docker/setup-qemu-action@v1
         with:
           platforms: all
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-      - name: Setup Go
-        uses: actions/setup-go@v2
+      - uses: docker/setup-buildx-action@v1
+      - uses: actions/setup-go@v2
         with:
-          go-version: ${{ steps.setup.output.go_version }}
-      - name: Checkout
-        uses: actions/checkout@v2
+          go-version: ${{ steps.setup.outputs.go_version }}
+      - uses: actions/checkout@v2
         with:
           fetch-depth: 0
       - uses: ./.github/actions/go-cache
         with:
           go: ${{ steps.setup.outputs.go_version }}
-      - name: Modify module
-        id: mod
+      - id: mod
         run: ./.github/script/nightly-module.sh
-      - name: Check Novelty
-        id: novelty
+      - id: novelty
         uses: actions/cache@v2
         with:
           path: go.sum
           key: novelty-${{ github.sha }}-${{ hashFiles('./go.*') }}
-      - name: Login
+      - uses: docker/login-action@v1
         if: steps.setup.outputs.push && steps.novelty.outputs.cache-hit != 'true'
-        uses: docker/login-action@v1
         with:
           registry: quay.io
           username: ${{ secrets.QUAY_USER }}
           password: ${{ secrets.QUAY_TOKEN }}
-      - name: Build
-        uses: docker/build-push-action@v2
+      - uses: docker/build-push-action@v2
         with:
           build-args: |
             GO_VERSION=${{ env.GO_VERSION }}
@@ -91,9 +83,8 @@ jobs:
           tags: |
             quay.io/${{ steps.setup.outputs.repo }}:${{ steps.setup.outputs.tag }}
             quay.io/${{ steps.setup.outputs.repo }}:${{ steps.setup.outputs.tag }}-${{ steps.setup.outputs.date }}
-      - name: Set Expiration
+      - uses: ./.github/actions/set-image-expiration
         if: steps.setup.outputs.push && steps.setup.outputs.api && steps.novelty.outputs.cache-hit != 'true'
-        uses: ./.github/actions/set-image-expiration
         with:
           repo: ${{ steps.setup.outputs.repo }}
           tag: ${{ steps.setup.outputs.tag }}-${{ steps.setup.outputs.date }}
