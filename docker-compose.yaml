@@ -12,6 +12,7 @@ x-anchors:
   quay: &quay-image quay.io/projectquay/quay:latest
   redis: &redis-image docker.io/library/redis:6.2
   go: &go-image quay.io/projectquay/golang:1.17
+  skopeo: &skopeo-image quay.io/skopeo/stable:latest
   clair-service: &clair-service
     image: *go-image
     depends_on:
@@ -195,3 +196,11 @@ services:
       - quay
     environment:
       CLAIR_MODE: "notifier"
+  skopeo:
+    container_name: quay-skopeo
+    profiles:
+      - quay
+    image: *skopeo-image
+    entrypoint:
+      - sleep
+      - inf

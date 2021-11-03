@@ -62,17 +62,11 @@ Creating an account named `admin` will ensure you are a super user.
 An email is required, but is not validated.
 You'll also need to create a namespace.
 
-The easiest way to push to Quay is using podman:
+To push to Quay, you'll need to exec into the skopeo container:
 
+```sh
+podman exec -it quay-skopeo /usr/bin/skopeo copy --dst-creds '<user>:<pass>' --dst-tls-verify=false <src> clair-quay:8080/<namespace>/<repo>:<tag>
 ```
-podman pull ubuntu:latest
-podman login --tls-verify=false localhost:8443 # use account created in above steps
-podman tag ubuntu:latest localhost:8443/<namespace>/<repo>:latest
-podman push --tls-verify=false localhost:8443/<namespace>/<repo>:latest
-```
-
-Using docker to push is possible, however you will need to add "localhost:8443" as an insecure repository.
-See [Insecure Repository](https://docs.docker.com/registry/insecure/)
 
 ## Viewing Results
 
