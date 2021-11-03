@@ -70,17 +70,17 @@ For example:
 
 ```sh
 # On a workstation, run:
-clairctl export-updaters updates.gz
+clairctl export-updaters updates.json.gz
 ```
 
 ```sh
 # Move the resulting file to a place reachable by the cluster:
-scp updates.gz internal-webserver:/var/www/
+scp updates.json.gz internal-webserver:/var/www/
 ```
 
 ```sh
 # On a pod inside the cluster, import the file:
-clairctl import-updaters http://web.svc/updates.gz
+clairctl import-updaters http://web.svc/updates.json.gz
 ```
 
 Note that a configuration file is needed to run these commands.
