@@ -2,7 +2,7 @@
 
 ClairV4 implements a notification system.
 
-The notifier service will keep track of new security database updates and inform an interested client if new or removed vulnerabilites affect an indexed manifest.
+The notifier service will keep track of new security database updates and inform an interested client if new or removed vulnerabilities affect an indexed manifest.
 
 The interested client can subscribe to notifications via several mechanisms:
 * Webhook delivery
@@ -58,7 +58,7 @@ When you configure notifier for webhook delivery you provide the service with th
 When the notifier has determined an updated security database has changed the affected status of an indexed manifest, it will deliver the following JSON body to the configured target:
 ```json
 {
-  "notifiction_id": {uuid_string},
+  "notification_id": {uuid_string},
   "callback": {url_to_notifications}
 }
 ```

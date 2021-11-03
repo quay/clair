@@ -8,18 +8,18 @@ import (
 
 // MockStore implements a mock Store.
 type MockStore struct {
-	Notifications_        func(ctx context.Context, id uuid.UUID, page *Page) ([]Notification, Page, error)
-	PutNotifications_     func(ctx context.Context, opts PutOpts) error
-	PutReceipt_           func(ctx context.Context, updater string, r Receipt) error
-	DeleteNotitfications_ func(ctx context.Context, id uuid.UUID) error
-	Receipt_              func(ctx context.Context, id uuid.UUID) (Receipt, error)
-	ReceiptByUOID_        func(ctx context.Context, id uuid.UUID) (Receipt, error)
-	Created_              func(ctx context.Context) ([]uuid.UUID, error)
-	Failed_               func(ctx context.Context) ([]uuid.UUID, error)
-	Deleted_              func(ctx context.Context) ([]uuid.UUID, error)
-	SetDelivered_         func(ctx context.Context, id uuid.UUID) error
-	SetDeliveredFailed_   func(ctx context.Context, id uuid.UUID) error
-	SetDeleted_           func(ctx context.Context, id uuid.UUID) error
+	Notifications_       func(ctx context.Context, id uuid.UUID, page *Page) ([]Notification, Page, error)
+	PutNotifications_    func(ctx context.Context, opts PutOpts) error
+	PutReceipt_          func(ctx context.Context, updater string, r Receipt) error
+	DeleteNotifications_ func(ctx context.Context, id uuid.UUID) error
+	Receipt_             func(ctx context.Context, id uuid.UUID) (Receipt, error)
+	ReceiptByUOID_       func(ctx context.Context, id uuid.UUID) (Receipt, error)
+	Created_             func(ctx context.Context) ([]uuid.UUID, error)
+	Failed_              func(ctx context.Context) ([]uuid.UUID, error)
+	Deleted_             func(ctx context.Context) ([]uuid.UUID, error)
+	SetDelivered_        func(ctx context.Context, id uuid.UUID) error
+	SetDeliveredFailed_  func(ctx context.Context, id uuid.UUID) error
+	SetDeleted_          func(ctx context.Context, id uuid.UUID) error
 }
 
 // Notifications retrieves the list of notifications associated with a
@@ -58,7 +58,7 @@ func (m *MockStore) PutReceipt(ctx context.Context, updater string, r Receipt) e
 // set deleted after some period of time, thus this condition should not
 // be checked.
 func (m *MockStore) DeleteNotifications(ctx context.Context, id uuid.UUID) error {
-	return m.DeleteNotitfications_(ctx, id)
+	return m.DeleteNotifications_(ctx, id)
 }
 
 // Receipt returns the Receipt for a given notification id
@@ -91,7 +91,7 @@ func (m *MockStore) SetDelivered(ctx context.Context, id uuid.UUID) error {
 	return m.SetDelivered_(ctx, id)
 }
 
-// SetDeliveryFailed marks the provided notification id failed to be delivere
+// SetDeliveryFailed marks the provided notification id failed to be delivered
 func (m *MockStore) SetDeliveryFailed(ctx context.Context, id uuid.UUID) error {
 	return m.SetDeliveredFailed_(ctx, id)
 }

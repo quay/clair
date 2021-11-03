@@ -20,14 +20,14 @@ const (
 )
 
 // TestE2E performs an end to end test ensuring creating,
-// retreiving, bookkeeping, and deleting of notifications
-// and asssociated data works correctly
+// retrieving, bookkeeping, and deleting of notifications
+// and associated data works correctly
 func TestE2E(t *testing.T) {
 	integration.NeedDB(t)
 	ctx := zlog.Test(nil, t)
 	digest, _ := claircore.ParseDigest("sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a")
 	notificationID := uuid.New()
-	// this function puts a single noification undertest
+	// this function puts a single notification undertest
 	vuln, vsummary := cctest.GenUniqueVulnerabilities(1, updater)[0], notifier.VulnSummary{}
 	vsummary.FromVulnerability(vuln)
 	notifications := []notifier.Notification{
@@ -39,7 +39,7 @@ func TestE2E(t *testing.T) {
 	}
 	store := TestStore(ctx, t)
 	e := e2e{
-		notificaitonID: notificationID,
+		notificationID: notificationID,
 		updater:        updater,
 		updateID:       uuid.New(),
 		notification:   notifications[0],
@@ -59,7 +59,7 @@ func TestE2E(t *testing.T) {
 // failure
 type e2e struct {
 	// the notification ID this e2e test will use
-	notificaitonID uuid.UUID
+	notificationID uuid.UUID
 	// the updater associated with the set of notifications under test
 	updater string
 	// the update operation ID associated with the set of notifications under test
@@ -100,14 +100,14 @@ func (e *e2e) Run(t *testing.T) {
 }
 
 // PutNotifications adds a set of notifications to the database
-// and confims no error occurs
+// and confirms no error occurs
 func (e *e2e) PutNotifications(t *testing.T) {
 	defer func() {
 		e.failed = t.Failed()
 	}()
 	opts := notifier.PutOpts{
 		Updater:        e.updater,
-		NotificationID: e.notificaitonID,
+		NotificationID: e.notificationID,
 		Notifications:  []notifier.Notification{e.notification},
 		UpdateID:       e.updateID,
 	}
@@ -131,16 +131,16 @@ func (e *e2e) Created(t *testing.T) {
 	if len(ids) != 1 {
 		t.Fatalf("expected a single notification id. got: %v", ids)
 	}
-	if !cmp.Equal(ids[0], e.notificaitonID) {
-		t.Fatalf(cmp.Diff(ids[0], e.notificaitonID))
+	if !cmp.Equal(ids[0], e.notificationID) {
+		t.Fatalf(cmp.Diff(ids[0], e.notificationID))
 	}
 
-	receipt, err := e.store.Receipt(e.ctx, e.notificaitonID)
+	receipt, err := e.store.Receipt(e.ctx, e.notificationID)
 	if err != nil {
 		t.Fatalf("failed to retrieve receipt by notification id")
 	}
-	if !cmp.Equal(receipt.NotificationID, e.notificaitonID) {
-		t.Fatal(cmp.Diff(receipt.NotificationID, e.notificaitonID))
+	if !cmp.Equal(receipt.NotificationID, e.notificationID) {
+		t.Fatal(cmp.Diff(receipt.NotificationID, e.notificationID))
 	}
 	if !cmp.Equal(receipt.Status, notifier.Created) {
 		t.Fatal(cmp.Diff(receipt.Status, notifier.Delivered))
@@ -148,10 +148,10 @@ func (e *e2e) Created(t *testing.T) {
 
 	receipt, err = e.store.ReceiptByUOID(e.ctx, e.updateID)
 	if err != nil {
-		t.Fatalf("failed to retrieve receipt by OUID")
+		t.Fatalf("failed to retrieve receipt by UOID")
 	}
-	if !cmp.Equal(receipt.NotificationID, e.notificaitonID) {
-		t.Fatal(cmp.Diff(receipt.NotificationID, e.notificaitonID))
+	if !cmp.Equal(receipt.NotificationID, e.notificationID) {
+		t.Fatal(cmp.Diff(receipt.NotificationID, e.notificationID))
 	}
 	if !cmp.Equal(receipt.Status, notifier.Created) {
 		t.Fatal(cmp.Diff(receipt.Status, notifier.Delivered))
@@ -164,12 +164,12 @@ func (e *e2e) Notifcations(t *testing.T) {
 	defer func() {
 		e.failed = t.Failed()
 	}()
-	notifications, _, err := e.store.Notifications(e.ctx, e.notificaitonID, nil)
+	notifications, _, err := e.store.Notifications(e.ctx, e.notificationID, nil)
 	if err != nil {
 		t.Fatalf("failed to retrieve persisted notification: %v", err)
 	}
 	if len(notifications) != 1 {
-		t.Fatalf("expected a single notifcation to be returned for notification id %v but received %d", e.notificaitonID, len(notifications))
+		t.Fatalf("expected a single notification to be returned for notification id %v but received %d", e.notificationID, len(notifications))
 	}
 	opts := cmpopts.IgnoreUnexported(claircore.Digest{})
 	if !cmp.Equal(notifications[0].Manifest, e.notification.Manifest, opts) {
@@ -190,16 +190,16 @@ func (e *e2e) SetDelivered(t *testing.T) {
 	defer func() {
 		e.failed = t.Failed()
 	}()
-	err := e.store.SetDelivered(e.ctx, e.notificaitonID)
+	err := e.store.SetDelivered(e.ctx, e.notificationID)
 	if err != nil {
 		t.Fatalf("failed to set notification receipt to delivered")
 	}
-	receipt, err := e.store.Receipt(e.ctx, e.notificaitonID)
+	receipt, err := e.store.Receipt(e.ctx, e.notificationID)
 	if err != nil {
 		t.Fatalf("failed to retrieve receipt after setting it's status to delivered")
 	}
-	if !cmp.Equal(receipt.NotificationID, e.notificaitonID) {
-		t.Fatal(cmp.Diff(receipt.NotificationID, e.notificaitonID))
+	if !cmp.Equal(receipt.NotificationID, e.notificationID) {
+		t.Fatal(cmp.Diff(receipt.NotificationID, e.notificationID))
 	}
 	if !cmp.Equal(receipt.Status, notifier.Delivered) {
 		t.Fatal(cmp.Diff(receipt.Status, notifier.Delivered))
@@ -212,16 +212,16 @@ func (e *e2e) SetDeliveryFailed(t *testing.T) {
 	defer func() {
 		e.failed = t.Failed()
 	}()
-	err := e.store.SetDeliveryFailed(e.ctx, e.notificaitonID)
+	err := e.store.SetDeliveryFailed(e.ctx, e.notificationID)
 	if err != nil {
 		t.Fatalf("failed to set notification receipt to delivered")
 	}
-	receipt, err := e.store.Receipt(e.ctx, e.notificaitonID)
+	receipt, err := e.store.Receipt(e.ctx, e.notificationID)
 	if err != nil {
 		t.Fatalf("failed to retrieve receipt after setting it's status to delete")
 	}
-	if !cmp.Equal(receipt.NotificationID, e.notificaitonID) {
-		t.Fatal(cmp.Diff(receipt.NotificationID, e.notificaitonID))
+	if !cmp.Equal(receipt.NotificationID, e.notificationID) {
+		t.Fatal(cmp.Diff(receipt.NotificationID, e.notificationID))
 	}
 	if !cmp.Equal(receipt.Status, notifier.DeliveryFailed) {
 		t.Fatal(cmp.Diff(receipt.Status, notifier.DeliveryFailed))
@@ -233,8 +233,8 @@ func (e *e2e) SetDeliveryFailed(t *testing.T) {
 	if len(ids) != 1 {
 		t.Fatalf("expected a single notification id. got: %v", ids)
 	}
-	if !cmp.Equal(ids[0], e.notificaitonID) {
-		t.Fatalf(cmp.Diff(ids[0], e.notificaitonID))
+	if !cmp.Equal(ids[0], e.notificationID) {
+		t.Fatalf(cmp.Diff(ids[0], e.notificationID))
 	}
 
 }
@@ -245,16 +245,16 @@ func (e *e2e) SetDeleted(t *testing.T) {
 	defer func() {
 		e.failed = t.Failed()
 	}()
-	err := e.store.SetDeleted(e.ctx, e.notificaitonID)
+	err := e.store.SetDeleted(e.ctx, e.notificationID)
 	if err != nil {
 		t.Fatalf("failed to set notification receipt to delivered")
 	}
-	receipt, err := e.store.Receipt(e.ctx, e.notificaitonID)
+	receipt, err := e.store.Receipt(e.ctx, e.notificationID)
 	if err != nil {
 		t.Fatalf("failed to retrieve receipt after setting it's status to delete")
 	}
-	if !cmp.Equal(receipt.NotificationID, e.notificaitonID) {
-		t.Fatal(cmp.Diff(receipt.NotificationID, e.notificaitonID))
+	if !cmp.Equal(receipt.NotificationID, e.notificationID) {
+		t.Fatal(cmp.Diff(receipt.NotificationID, e.notificationID))
 	}
 	if !cmp.Equal(receipt.Status, notifier.Deleted) {
 		t.Fatal(cmp.Diff(receipt.Status, notifier.Deleted))

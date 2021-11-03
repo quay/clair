@@ -11,14 +11,14 @@ Further information and usage is an effort left to the reader.
 ## Updates Diffs
 
 The `update_diff/` endpoint exposes the api for diffing two update operations. 
-This is used by the notifier to determine the added and removed vulnerabilities on security databsae update.
+This is used by the notifier to determine the added and removed vulnerabilities on security database update.
 
 ## Update Operation
 
 The `update_operation` endpoint exposes the api for viewing updaters' activity. 
-This is used by the notifier to determine if new updates have occured and triggers an update diff to see what has changed.
+This is used by the notifier to determine if new updates have occurred and triggers an update diff to see what has changed.
 
 ## AffectedManifest
 
-The `affected_manifest` endpoint exposes the api for retreiving affected manifests given a list of Vulnerabilities.
+The `affected_manifest` endpoint exposes the api for retrieving affected manifests given a list of Vulnerabilities.
 This is used by the notifier to determine the manifests that need to have a notification generated.

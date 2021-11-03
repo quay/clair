@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// PutOpts is provided to Notificationer.Put
+// PutOpts is provided to Notifier.Put
 // with fields necessary to persist a notification id
 type PutOpts struct {
 	// the updater triggering a notification
@@ -24,12 +24,12 @@ type PutOpts struct {
 // Store is an aggregate interface implementing all methods
 // necessary for a notifier persistence layer
 type Store interface {
-	Notificationer
+	Notifier
 	Receipter
 }
 
-// Notificationer implements persistence methods for Notification models
-type Notificationer interface {
+// Notifier implements persistence methods for Notification models
+type Notifier interface {
 	// Notifications retrieves the list of notifications associated with a
 	// notification id
 	//

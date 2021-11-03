@@ -22,7 +22,7 @@ func TestUpdateOperationHandler(t *testing.T) {
 	t.Run("Errors", testUpdateOperationHandlerErrors)
 }
 
-// testUpdateOperationHandlerErrors confirms the handler perfoms the correct
+// testUpdateOperationHandlerErrors confirms the handler performs the correct
 // actions when a matcher.Differ is failing.
 func testUpdateOperationHandlerErrors(t *testing.T) {
 	t.Parallel()

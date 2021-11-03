@@ -1,6 +1,6 @@
 # Indexing
 
-The [Indexer](../reference/indexer.md) service is responsble for "indexing a manifest".
+The [Indexer](../reference/indexer.md) service is responsible for "indexing a manifest".
 
 Indexing involves taking a manifest representing a container image and computing its constituent parts. The indexer is trying to discover what packages exist in the image, what distribution the image is derived from, and what package repositories are used within the image. Once this information is computed it is persisted in an IndexReport.
 

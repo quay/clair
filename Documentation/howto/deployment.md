@@ -14,7 +14,7 @@ In a combined deployment, all the Clair processes run in a single OS process. Th
 
 A load balancer is still recommended if you plan on performing TLS termination. Typically this will be a OpenShift route or a Kubernetes ingress.
 
-![combo mode single db deployment diagran](./clairv4_combo_single_db.png)
+![combo mode single db deployment diagram](./clairv4_combo_single_db.png)
 
 In the above diagram, Clair is running in combo mode and talking to a single database. To configure this model you will provide all node types the same database and start Clair in **combo** mode.
 
@@ -33,7 +33,7 @@ In this mode, any configuration informing Clair how to talk to other nodes is ig
 
 For added flexibility, it's also supported to split the databases while in combo mode.
 
-![combo mode multiple db deployment diagran](./clairv4_combo_multi_db.png)
+![combo mode multiple db deployment diagram](./clairv4_combo_multi_db.png)
 
 In the above diagram, Clair is running in combo mode but database load is split between multiple databases. Since Clair is conceptually a set of micro-services, its processes do not share database tables even when combined into the same OS process.
 
@@ -58,7 +58,7 @@ In a distributed deployment, each Clair process runs in its own OS process. Typi
 
 A load balancer **must** be setup in this deployment model. The load balancer will route traffic between Clair nodes along with routing API requests via [path based routing](https://devcentral.f5.com/s/articles/the-three-http-routing-patterns-you-should-know-30764) to the correct services. In a Kubernetes or OpenShift deployment this is usually handled with the Service and Routes abstractions. If deploying on bare metal, a load balancer will need to be configured appropriately. 
 
-![distributed mode multiple db deployment diagran](./clairv4_distributed_multi_db.png)
+![distributed mode multiple db deployment diagram](./clairv4_distributed_multi_db.png)
 
 In the above diagram, a load balancer is configured to route traffic coming from the client to the correct service. This routing is path based routing and requires a layer 7 load balancer. Traefik, Nginx, and HAProxy are all capable of this. As mentioned above, this functionality is native to OpenShift and Kubernetes.
 

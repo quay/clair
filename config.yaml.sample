@@ -76,10 +76,10 @@ notifier:
     callback: "http://clair-notifier/notifier/api/v1/notifications"
     tls:
      root_ca: "optional/path/to/rootca"
-     cert: "madatory/path/to/cert"
-     key: "madatory/path/to/key"
+     cert: "mandatory/path/to/cert"
+     key: "mandatory/path/to/key"
   stomp:
-    desitnation: "notifications"
+    destination: "notifications"
     direct: false
     callback: "http://clair-notifier/notifier/api/v1/notifications"
     login:
@@ -87,8 +87,8 @@ notifier:
       passcode: "passcode"
     tls:
      root_ca: "optional/path/to/rootca"
-     cert: "madatory/path/to/cert"
-     key: "madatory/path/to/key"
+     cert: "mandatory/path/to/cert"
+     key: "mandatory/path/to/key"
 
 
 

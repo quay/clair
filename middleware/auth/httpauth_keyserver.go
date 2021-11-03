@@ -117,7 +117,7 @@ HeaderSearch:
 	jwk, ok := s.cache[ck]
 	s.mu.RUnlock()
 	// If not in our deserialized cache or our response has been served from the
-	// remote server, do the deserializtion and cache it.
+	// remote server, do the deserialization and cache it.
 	if !ok || res.Header.Get(httpcache.XFromCache) != "" {
 		jwk = &jose.JSONWebKey{}
 		dec := codec.GetDecoder(res.Body)

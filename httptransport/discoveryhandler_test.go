@@ -43,7 +43,7 @@ func TestDiscoveryEndpoint(t *testing.T) {
 	if _, ok := m["openapi"]; !ok {
 		t.Fatalf("returned json did not container openapi key at the root")
 	}
-	t.Logf("openapi verion: %v", m["openapi"])
+	t.Logf("openapi version: %v", m["openapi"])
 }
 
 func TestDiscoveryFailure(t *testing.T) {

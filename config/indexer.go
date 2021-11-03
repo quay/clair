@@ -21,7 +21,7 @@ type Indexer struct {
 	// This value tunes how often a waiting Indexer will poll for the lock.
 	// TODO: Move to async operating mode
 	ScanLockRetry int `yaml:"scanlock_retry" json:"scanlock_retry"`
-	// A positive values represeting quantity.
+	// A positive values representing quantity.
 	//
 	// Indexers will index a Manifest's layers concurrently.
 	// This value tunes the number of layers an Indexer will scan in parallel.

@@ -49,10 +49,10 @@ func indexerForTestMode(mock *indexer.Mock) {
 // MatcherForTestMode configures a mock Matcher service for notifier test mode.
 //
 // in notifier test mode a notifier.Poller will request "matcher.LatestUpdateOperations" at which point
-// a new UO pair will be smithed.
+// a new UO pair will be created.
 //
 // next a notifier.Processor will request "matcher.UpdateOperations" and look for "test-updater" UOs in which
-// the smithed pair will be returned.
+// the created pair will be returned.
 //
 // finally a notifier.Processor will request to "matcher.UpdateDiff" will be created where a mock added vulnerability
 // will be returned.

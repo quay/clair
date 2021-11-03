@@ -466,7 +466,7 @@ components:
           example: |-
             sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
         reason:
-          description: "the reason for the notifcation, [added | removed]"
+          description: "the reason for the notification, [added | removed]"
           type: string
           example: "added"
         vulnerability:
@@ -547,7 +547,7 @@ components:
               $ref: '#/components/schemas/Environment'
         success:
           type: boolean
-          description: "A bool indicating succcessful index"
+          description: "A bool indicating successful index"
           example: true
         err:
           type: string

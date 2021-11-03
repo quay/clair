@@ -76,7 +76,7 @@ func (d *DirectDeliverer) Deliver(ctx context.Context, _ uuid.UUID) error {
 	if err != nil {
 		return &clairerror.ErrDeliveryFailed{err}
 	}
-	// TODO: can tx.Rollback be safely defered?
+	// TODO: can tx.Rollback be safely deferred?
 
 	// block loop publishing smaller blocks of max(rollup) length via reslicing.
 	var rollup int = d.conf.Rollup

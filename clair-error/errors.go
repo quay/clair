@@ -16,7 +16,7 @@ func (e *ErrRequestFail) Error() string {
 	return fmt.Sprintf("code: %v status %v", e.Code, e.Status)
 }
 
-// ErrBadManifest inidcates a manifest could not be parsed
+// ErrBadManifest indicates a manifest could not be parsed
 type ErrBadManifest struct {
 	E error
 }
@@ -29,7 +29,7 @@ func (e *ErrBadManifest) Unwrap() error {
 	return e.E
 }
 
-// ErrBadManifest inidcates a manifest could not be parsed
+// ErrBadManifest indicates a manifest could not be parsed
 type ErrBadIndexReport struct {
 	E error
 }

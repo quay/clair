@@ -107,7 +107,7 @@ func TestNotePagination(t *testing.T) {
 
 			for outPage.Next != nil {
 				if err != nil {
-					t.Fatalf("failed to retreive initial page: %v", err)
+					t.Fatalf("failed to retrieve initial page: %v", err)
 				}
 				if outPage.Size != tt.pageSize {
 					t.Fatalf("got: %v, want: %v", outPage.Size, tt.pageSize)

@@ -16,7 +16,7 @@ type Config struct {
 	// the notification will be appended to this url
 	Callback string `yaml:"callback" json:"callback"`
 	callback *url.URL
-	// any htp headers necessary for the request to Target
+	// any http headers necessary for the request to Target
 	Headers http.Header `yaml:"headers" json:"headers"`
 	// whether the webhook deliverer will sign out going.
 	// if true webhooks will be sent with a jwt signed by

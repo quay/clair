@@ -70,7 +70,7 @@ func Test_Config_Validate_Failure(t *testing.T) {
 	}
 }
 
-func TestConfigUpateRetention(t *testing.T) {
+func TestConfigUpdateRetention(t *testing.T) {
 	var table = []struct {
 		name              string
 		conf              config.Config

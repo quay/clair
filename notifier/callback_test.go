@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func TestCallbackSerializtion(t *testing.T) {
+func TestCallbackSerialization(t *testing.T) {
 	var want = []byte(`{"callback":"https://example.com","notification_id":"00000000-0000-0000-0000-000000000000"}`)
 	cb := Callback{
 		NotificationID: uuid.Nil,

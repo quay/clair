@@ -25,7 +25,7 @@ goimports-local:
 # you'll need to have npx to run this gen.
 .PHONY: gen-api-reference
 gen-api-reference:
-	npx widdershins --search false --language_tabs 'python:Python' 'go:Golang' 'javascript:Javascript' --summary ./openapi.yaml -o ./Documentation/reference/api.md
+	npx widdershins --search false --language_tabs 'python:Python' 'go:Golang' 'javascript:JavaScript' --summary ./openapi.yaml -o ./Documentation/reference/api.md
 
 # start a local development environment. 
 # each services runs in it's own container to test service->service communication.

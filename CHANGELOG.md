@@ -185,7 +185,7 @@
 ### Httputil
 - [ed8ffc5](https://github.com/quay/clair/commit/ed8ffc50b56c9b11873f00bb2deb4fba9107ec95): create package and RateLimiter
 ### Initialize
-- [5df82e1](https://github.com/quay/clair/commit/5df82e19e971c67ebdecf3f92682d4ae897db53a): update call to Libindex contstructor
+- [5df82e1](https://github.com/quay/clair/commit/5df82e19e971c67ebdecf3f92682d4ae897db53a): update call to Libindex constructor
 ### Introspection
 - [ec59a43](https://github.com/quay/clair/commit/ec59a431032713654e2eb7a29ad7c446dd16a490): enable readiness endpoint
 
@@ -277,7 +277,7 @@
 - [1ece08f](https://github.com/quay/clair/commit/1ece08f49434828c8c672f08ec45844b99187983): database metrics for notifier
 - [84ba35f](https://github.com/quay/clair/commit/84ba35f29ee81849cb2f424b3624895f9bd05a79): implement prometheus http
 ### Local-Dev
-- [1c85589](https://github.com/quay/clair/commit/1c85589abdef98b5af8d4f6e2cd9eb5db6a723a0): remove unintented change in config.yaml
+- [1c85589](https://github.com/quay/clair/commit/1c85589abdef98b5af8d4f6e2cd9eb5db6a723a0): remove unintended change in config.yaml
 ### Logging
 - [9f3d167](https://github.com/quay/clair/commit/9f3d167d5d85d345c7d0ee666be075a545a553f4): move to zlog throughout
 ### Matcher
@@ -376,7 +376,7 @@
 ### Clairctl
 - [835af27](https://github.com/quay/clair/commit/835af272fad49342f51adb4633ff639de3cc14a1): fix and codify import arguments
 - [b9ef107](https://github.com/quay/clair/commit/b9ef1073ca48ed5ed7caaa3e0fbad03a7d83592c): update import and export online help
-- [9883e80](https://github.com/quay/clair/commit/9883e80f331190e60de711b0705e9b37017fc5b1): unifiy config, client handling
+- [9883e80](https://github.com/quay/clair/commit/9883e80f331190e60de711b0705e9b37017fc5b1): unify config, client handling
 ### Config
 - [dc8ba89](https://github.com/quay/clair/commit/dc8ba8912fa482378ef393aa51b4e9528d2877f2): expose notification summary toggle
 - [bb3cd66](https://github.com/quay/clair/commit/bb3cd669f66345aaa0fc5df6f502f34922cc069e): add 'omitempty' to 'updaters' config struct for correct marshalling
@@ -619,7 +619,7 @@
 ### Config
 - [3ccc6e0](https://github.com/quay/clair/commit/3ccc6e03be0ce1b6c439d5c0649ee785dc7c559f): add support for per-scanner configuration
 ### Dockerfile
-- [5a73cb4](https://github.com/quay/clair/commit/5a73cb49d64e839d7675979b5e3f348d94dd26a5): make -mod=vendor opportunisitic ([#999](https://github.com/quay/clair/issues/999))
+- [5a73cb4](https://github.com/quay/clair/commit/5a73cb49d64e839d7675979b5e3f348d94dd26a5): make -mod=vendor opportunistic ([#999](https://github.com/quay/clair/issues/999))
  -  [#999](https://github.com/quay/clair/issues/999)### Dockerfile: Update To Alpine
 - [de32b07](https://github.com/quay/clair/commit/de32b0728ccdbafb85988e2f87618c9d576fc87e): 3.11 for newest rpm
 ### Go.Mod
@@ -656,7 +656,7 @@
 ### Config
 - [b2666e5](https://github.com/quay/clair/commit/b2666e57202d7c690a40d7c86975c13e0b3db56e): set a canonical default port
 ### Dockerfile
-- [33da12a](https://github.com/quay/clair/commit/33da12a3bb9a28fdbcc6302caa4212d38a2acbbb): run as unprivledged user by default
+- [33da12a](https://github.com/quay/clair/commit/33da12a3bb9a28fdbcc6302caa4212d38a2acbbb): run as unprivileged user by default
 ### Documentation
 - [fe324a5](https://github.com/quay/clair/commit/fe324a58e6be8c36da74afcd5487d0da4a547d5b): start writing v4-specific docs
 ### Httptransport
@@ -823,7 +823,7 @@
 - [162e8cd](https://github.com/quay/clair/commit/162e8cdafc66be28b021f83da736a2b612ddda99): enable suse updater
 - [0609ed9](https://github.com/quay/clair/commit/0609ed964b0673806462a24147e6028da85d8a38): removed worker config
 - [af2c688](https://github.com/quay/clair/commit/af2c68863482ae9f93a2db1533be260468a6ea2d): not properly loaded error ([#140](https://github.com/quay/clair/issues/140))
- -  [#140](https://github.com/quay/clair/issues/140) - fixes [#134](https://github.com/quay/clair/issues/134)- [30055af](https://github.com/quay/clair/commit/30055af03e357b44cfbacb3088eab337a94e51e8): fallover correctly to default config
+ -  [#140](https://github.com/quay/clair/issues/140) - fixes [#134](https://github.com/quay/clair/issues/134)- [30055af](https://github.com/quay/clair/commit/30055af03e357b44cfbacb3088eab337a94e51e8): failover correctly to default config
 - [20af787](https://github.com/quay/clair/commit/20af78743774b18795cbf5210cc97cc172b1880d): fix default fallback
 - [4fc32d2](https://github.com/quay/clair/commit/4fc32d22713a47eabf5b12b81897fdd34d59935b): add top-level YAML namespace 'clair'
  - Fixes [#95](https://github.com/quay/clair/issues/95)- [bb7745f](https://github.com/quay/clair/commit/bb7745f3fe21e85b5fe37919e11d6d121e08b9a1): better document example
@@ -949,7 +949,7 @@
 - [627b98e](https://github.com/quay/clair/commit/627b98ef3126d517d3e80aef4c2ab9ed3d14b893): fix SQL error reporting
 ### Db/Pgsql/Migration
 - [8df8170](https://github.com/quay/clair/commit/8df8170ba54d945cf2e2ad201bcdb8cc09fddc06): convert to pure SQL
-### Dckerfile
+### Dockerfile
 - [80f150f](https://github.com/quay/clair/commit/80f150f93bf3b12e6c9bcea2d71ccfa956bd50c9): Add docker-compose.yml
 ### Detectors/Feature
 - [fc908e6](https://github.com/quay/clair/commit/fc908e65ba6c0ad3edb344cfb263adff8efe6f4e): add apk feature detector
@@ -1160,7 +1160,7 @@
 - [eeb13a0](https://github.com/quay/clair/commit/eeb13a02baa5db60b997454af8f059a6381f42da): add index on Vulnerability_Notification.deleted_at
 - [7cff31a](https://github.com/quay/clair/commit/7cff31a058230a94838b7fd8493380d444c31f5a): add ldfv compound index
 ### Pkg
-- [c3904c9](https://github.com/quay/clair/commit/c3904c9696bddc20a27db9b4142ae704350bbe3f): Add fsutil to contian file system utility functions
+- [c3904c9](https://github.com/quay/clair/commit/c3904c9696bddc20a27db9b4142ae704350bbe3f): Add fsutil to contain file system utility functions
 - [78cef02](https://github.com/quay/clair/commit/78cef02fdad4afd12a2a00df51d457c796278bfa): cerrors -> commonerr
 - [03bac0f](https://github.com/quay/clair/commit/03bac0f1b6f504a416937e309a62fdfc308dc397): utils/tar.go -> pkg/tarutil
 ### Pkg/Gitutil

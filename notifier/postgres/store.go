@@ -82,7 +82,7 @@ func (s *Store) SetDelivered(ctx context.Context, id uuid.UUID) error {
 	return setDelivered(ctx, s.pool, id)
 }
 
-// SetDeliveryFailed marks the provided notification id failed to be delivere
+// SetDeliveryFailed marks the provided notification id failed to be delivered
 func (s *Store) SetDeliveryFailed(ctx context.Context, id uuid.UUID) error {
 	return setDeliveryFailed(ctx, s.pool, id)
 }

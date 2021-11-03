@@ -134,7 +134,7 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Server, 
 	return i, nil
 }
 
-// withDiagnotics enables healthz and pprof endpoints
+// withDiagnostics enables healthz and pprof endpoints
 func (i *Server) withDiagnostics(_ context.Context) error {
 	health := i.health
 	i.HandleFunc(HealthEndpoint, func(w http.ResponseWriter, r *http.Request) {

@@ -3,7 +3,7 @@ title: ClairV4 v0.1
 language_tabs:
   - python: Python
   - go: Golang
-  - javascript: Javascript
+  - javascript: JavaScript
 language_clients:
   - python: ""
   - go: ""
@@ -1184,7 +1184,7 @@ Notification
 |---|---|---|---|---|
 |id|string|false|none|a unique identifier for this notification|
 |manifest|string|false|none|The hash of the manifest affected by the provided vulnerability.|
-|reason|string|false|none|the reason for the notifcation, [added | removed]|
+|reason|string|false|none|the reason for the notification, [added | removed]|
 |vulnerability|[VulnSummary](#schemavulnsummary)|false|none|A summary of a vulnerability|
 
 <h2 id="tocS_Environment">Environment</h2>
@@ -1285,7 +1285,7 @@ IndexReport
 |» **additionalProperties**|[Distribution](#schemadistribution)|false|none|An indexed distribution discovered in a layer. See<br>https://www.freedesktop.org/software/systemd/man/os-release.html<br>for explanations and example of fields.|
 |environments|object|true|none|A map of lists containing Environment objects keyed by the<br>associated Package.id.|
 |» **additionalProperties**|[[Environment](#schemaenvironment)]|false|none|[The environment a particular package was discovered in.]|
-|success|boolean|true|none|A bool indicating succcessful index|
+|success|boolean|true|none|A bool indicating successful index|
 |err|string|true|none|An error message on event of unsuccessful index|
 
 <h2 id="tocS_VulnerabilityReport">VulnerabilityReport</h2>
