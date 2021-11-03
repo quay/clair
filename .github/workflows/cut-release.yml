@@ -69,12 +69,12 @@ jobs:
         if: github.event_name != 'workflow_dispatch'
         with:
           path: /usr/local/bin/git-chlog
-          key: changelog-${{ needs.config.output.chlog_version }}
+          key: changelog-${{ needs.config.outputs.chlog_version }}
       - name: Fetch Changelog
         if: steps.chlog-cache.outputs.cache-hit != 'true' && github.event_name != 'workflow_dispatch'
         run: |
           cd "$RUNNER_TEMP"
-          v="${{ needs.config.output.chlog_version }}"
+          v="${{ needs.config.outputs.chlog_version }}"
           f="git-chglog_${v}_linux_amd64.tar.gz"
           curl -fsOSL "https://github.com/git-chglog/git-chglog/releases/download/v${v}/${f}"
           tar xvf "${f}"
