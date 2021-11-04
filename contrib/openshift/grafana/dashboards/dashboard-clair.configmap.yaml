@@ -1,3 +1,5 @@
+# WARNING: This is generated from local-dev/grafana/data/dashboards/dashboard.json
+# please modify there and run make contrib/openshift/grafana/dashboards/dashboard-clair.configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
