@@ -52,6 +52,7 @@ documentation on defaults and use.
 http_listen_addr: ""
 introspection_addr: ""
 log_level: ""
+tls: {}
 indexer:
     connstring: ""
     scanlock_retry: 0
@@ -133,6 +134,16 @@ One of the following strings:
 * error
 * fatal
 * panic
+
+### `$.tls`
+TLS is a map containing the config for serving the HTTP API over TLS (and
+HTTP/2).
+
+#### `$.tls.cert`
+The TLS certificate to be used. Must be a full-chain certificate, as in nginx.
+
+#### `$.tls.key`
+A key file for the TLS certificate. Encryption is not supported on the key.
 
 ### `$.indexer`
 Indexer provides Clair Indexer node configuration.

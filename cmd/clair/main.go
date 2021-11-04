@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"flag"
 	"fmt"
 	golog "log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -115,9 +117,21 @@ func main() {
 		if err != nil {
 			return fmt.Errorf("http transport configuration failed: %w", err)
 		}
+		l, err := net.Listen("tcp", conf.HTTPListenAddr)
+		if err != nil {
+			return fmt.Errorf("http transport configuration failed: %w", err)
+		}
+		if conf.TLS != nil {
+			cfg, err := conf.TLS.Config()
+			if err != nil {
+				return fmt.Errorf("tls configuration failed: %w", err)
+			}
+			cfg.NextProtos = []string{"h2"}
+			l = tls.NewListener(l, cfg)
+		}
 		down.Add(h.Server)
 		health.Ready()
-		if err := h.ListenAndServe(); err != http.ErrServerClosed {
+		if err := h.Serve(l); err != http.ErrServerClosed {
 			return fmt.Errorf("http transport failed to launch: %w", err)
 		}
 		return nil
