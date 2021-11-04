@@ -162,14 +162,11 @@ docs-build:
 	rsync --recursive --delete-after --exclude 'v4.*' --exclude .git\
 		./book/ $(DOCS_DIR)/
 
-CONTRIB_DIR ?= contrib/openshift
-# Updates the contrib grafana with the contents of the local-dev version to 
-# avoid maintaining two versions
-.PHONY: grafana-configmap-gen
-grafana-configmap-gen:
-	sed "s/GRAFANA_MANIFEST/$$(sed -e 's/[\&/]/\\&/g' -e 's/$$/\\n/' -e 's/^/    /' local-dev/grafana/provisioning/dashboards/dashboard.json | tr -d '\n')/" \
-	$(CONTRIB_DIR)/grafana/dashboard-clair.configmap.yaml.tpl \
-	> $(CONTRIB_DIR)/grafana/dashboards/dashboard-clair.configmap.yaml
+contrib/openshift/grafana/dashboards/dashboard-clair.configmap.yaml: local-dev/grafana/provisioning/dashboards/dashboard.json contrib/openshift/grafana/dashboard-clair.configmap.yaml.tpl
+	sed "s/GRAFANA_MANIFEST/$$(sed -e 's/[\&/]/\\&/g' -e 's/$$/\\n/' -e 's/^/    /' $< | tr -d '\n')/" \
+	$(word 2,$^) \
+	> $@
+
 
 # runs unit tests
 .PHONY: unit
