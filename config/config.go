@@ -8,6 +8,16 @@ import (
 // Config is the configuration object for the commands in
 // github.com/quay/clair/v4/cmd/...
 type Config struct {
+	// TLS configures HTTPS support.
+	//
+	// Note that any non-trivial deployment means the certificate provided here
+	// will need to be for the name the load balancer uses to connect to a given
+	// Clair instance.
+	//
+	// This is not used for outgoing requests; setting the SSL_CERT_DIR
+	// environment variable is the recommended way to do that. The release
+	// container has `/var/run/certs` added to the list already.
+	TLS *TLS `yaml:"tls,omitempty" json:"tls,omitempty"`
 	// Sets which mode the clair instance will run.
 	Mode Mode `yaml:"-" json:"-"`
 	// A string in <host>:<port> format where <host> can be an empty string.
