@@ -2,9 +2,15 @@
 ## [Unreleased]
 
 
+<a name="v4.3.4"></a>
+## [v4.3.4] - 2021-11-05
+### Chore
+- [41d2593](https://github.com/quay/clair/commit/41d25933ad25b8ae5deb4b6da84336c2a4d400fe): update changelog to cope with submodule tags
+ -  [#1421](https://github.com/quay/clair/issues/1421)
 <a name="v4.3.3"></a>
 ## [v4.3.3] - 2021-11-05
 ### Chore
+- [4aca7b5](https://github.com/quay/clair/commit/4aca7b5a8bd82826d4c6e41dcafcb52d72696d3a): v4.3.3 changelog bump
 - [5e06013](https://github.com/quay/clair/commit/5e060135111e07fcc3d0c2fc6c6570a98021dde7): update claircore version
  -  [#1418](https://github.com/quay/clair/issues/1418)
 <a name="v4.3.2"></a>
@@ -340,7 +346,8 @@
 - [ac1cdd0](https://github.com/quay/clair/commit/ac1cdd03c9e31ddaea627e076704f38a0d4719fb): move grafana and compose here
 - [5540d02](https://github.com/quay/clair/commit/5540d02bc225a240ebc1b04cc83c1adae680da39): delete unsupported tools
 - [f3840f3](https://github.com/quay/clair/commit/f3840f30b9228319751435fee5ed9a25202aa4ab): Revert "Merge pull request [#367](https://github.com/quay/clair/issues/367) from jzelinskie/analyze-layers-v2"
- -  [#367](https://github.com/quay/clair/issues/367)- [e772be5](https://github.com/quay/clair/commit/e772be5f6f75af54bff1c2febd3c863308d53956): only extract layers from history
+ -  [#367](https://github.com/quay/clair/issues/367)- [d76c549](https://github.com/quay/clair/commit/d76c549dfb18267ce72bd4e1e2fcb18f0d3bdc1a): add missing :=
+ -  [#367](https://github.com/quay/clair/issues/367) - Fixes [#368](https://github.com/quay/clair/issues/368)- [e772be5](https://github.com/quay/clair/commit/e772be5f6f75af54bff1c2febd3c863308d53956): only extract layers from history
 - [ff3c6ec](https://github.com/quay/clair/commit/ff3c6eccc849c7bce27e872e59584e646081b02c): Catch signals to delete tmp folder in local-analyze-images
 - [55e9c0d](https://github.com/quay/clair/commit/55e9c0d8547e7dbd03da09fd17c1f68f17cac092): Fix dead link from analyze-local-images' README
 - [1040dbb](https://github.com/quay/clair/commit/1040dbbff9ea395700d1232b4906b73e0de32a8f): Use `return` instead of `os.Exit(1)` in analyze-local-images
@@ -363,9 +370,7 @@
 - [e103528](https://github.com/quay/clair/commit/e10352864da16a7484fa445c2bba07998123e153): use exit(1) when there are vulnerabilities
 ### Contrib/Helm/Clair
 - [13be17a](https://github.com/quay/clair/commit/13be17a69082d30996d53d3087b7265007bae555): fix the ingress template
-### Contrib: Add Missing 
-- [d76c549](https://github.com/quay/clair/commit/d76c549dfb18267ce72bd4e1e2fcb18f0d3bdc1a): =
- -  [#367](https://github.com/quay/clair/issues/367) - Fixes [#368](https://github.com/quay/clair/issues/368)### Convert
+### Convert
 - [f2ce832](https://github.com/quay/clair/commit/f2ce8325b975a15c977654d3be1084ad1e890bf3): return nil when detector is empty
 ### Database
 - [506698a](https://github.com/quay/clair/commit/506698a4246e24bb3a72bd626d95bd47dc38beb8): add mapping for Ubuntu Eoan (19.10)
@@ -474,21 +479,20 @@
 ### Docker
 - [22ee21d](https://github.com/quay/clair/commit/22ee21df6f712a7461c9dfd6c48b06c1da5b8670): reflect quay Dockerfile updates
 ### Dockerfile
-- [2ca92d0](https://github.com/quay/clair/commit/2ca92d00754b1d1859e9d6f3169d67d6b96d6bee): bump Go to 1.13
-- [c1e0f61](https://github.com/quay/clair/commit/c1e0f618caad4464d90ba20e13baaa1fb1617cb9): add git dependency
-- [8918f40](https://github.com/quay/clair/commit/8918f40599685c5781d5b6b53ec99120bedc65f4): update deps and move to Go 1.6
-- [ea193d3](https://github.com/quay/clair/commit/ea193d3ae72a3a52e56289dceebf1fbda9949c4c): syntax updates and s/xz/xz-utils
-### Dockerfile
 - [c18563d](https://github.com/quay/clair/commit/c18563d90b5ca9d6185f1e503c54912bcdee7564): Get build image from Quay instead of DockerHub
 - [5a73cb4](https://github.com/quay/clair/commit/5a73cb49d64e839d7675979b5e3f348d94dd26a5): make -mod=vendor opportunisitic ([#999](https://github.com/quay/clair/issues/999))
- -  [#999](https://github.com/quay/clair/issues/999)- [33da12a](https://github.com/quay/clair/commit/33da12a3bb9a28fdbcc6302caa4212d38a2acbbb): run as unprivledged user by default
+ -  [#999](https://github.com/quay/clair/issues/999)- [de32b07](https://github.com/quay/clair/commit/de32b0728ccdbafb85988e2f87618c9d576fc87e): update to alpine:3.11 for newest rpm
+- [33da12a](https://github.com/quay/clair/commit/33da12a3bb9a28fdbcc6302caa4212d38a2acbbb): run as unprivledged user by default
 - [e56b95a](https://github.com/quay/clair/commit/e56b95aca0085067f91f90e3b32dab9d04e7fb48): use environment variables
 - [33b3224](https://github.com/quay/clair/commit/33b3224df13b9c2aa8b0281f120997abce82eaf9): update for clair v4
 - [df4f277](https://github.com/quay/clair/commit/df4f277d0e36405dc2e607730097464dfd45c1f3): use alpine linux 3.5 (bis)
 - [4721e92](https://github.com/quay/clair/commit/4721e92b17d96f7a229112288f25d2a03c741ef7): use alpine linux 3.5
 - [6b23520](https://github.com/quay/clair/commit/6b23520710396877e941611f62f4e12fa002db99): remove useless volume
-### Dockerfile: Update To Alpine
-- [de32b07](https://github.com/quay/clair/commit/de32b0728ccdbafb85988e2f87618c9d576fc87e): 3.11 for newest rpm
+### Dockerfile
+- [2ca92d0](https://github.com/quay/clair/commit/2ca92d00754b1d1859e9d6f3169d67d6b96d6bee): bump Go to 1.13
+- [c1e0f61](https://github.com/quay/clair/commit/c1e0f618caad4464d90ba20e13baaa1fb1617cb9): add git dependency
+- [8918f40](https://github.com/quay/clair/commit/8918f40599685c5781d5b6b53ec99120bedc65f4): update deps and move to Go 1.6
+- [ea193d3](https://github.com/quay/clair/commit/ea193d3ae72a3a52e56289dceebf1fbda9949c4c): syntax updates and s/xz/xz-utils
 ### Docs
 - [60f9684](https://github.com/quay/clair/commit/60f9684accfd7e6b9e1bd585a55874803e1160f5): minor updates
 - [cbdc9ca](https://github.com/quay/clair/commit/cbdc9caab450489377ab1d6bb19429d54df639cc): update configuration file reference
@@ -517,14 +521,14 @@
 - [7b608ce](https://github.com/quay/clair/commit/7b608ceda50be838a801a40c00012e26a32bffc2): Add missing field in API Example
 - [ec0decf](https://github.com/quay/clair/commit/ec0decfcafd32edc9212ed7c1a94e96df10924d6): fix a typo in the model
  - Fixes [#43](https://github.com/quay/clair/issues/43)### Documentation
-- [fe324a5](https://github.com/quay/clair/commit/fe324a58e6be8c36da74afcd5487d0da4a547d5b): start writing v4-specific docs
-- [c1a58bf](https://github.com/quay/clair/commit/c1a58bf9224bbcd7e0f02ea4065650d220654f29): add new 3rd party tool
-### Documentation
 - [28b78c5](https://github.com/quay/clair/commit/28b78c5415696ab23a1465f5b631f0be2cb97704): fix typo
 - [2e65925](https://github.com/quay/clair/commit/2e6592500fbe9c3197782133965de6503b07b6ab): modified testing.md for clarity
  -  [#1180](https://github.com/quay/clair/issues/1180)- [d962bef](https://github.com/quay/clair/commit/d962bef8140516c739e322a7406c0068e2164d45): update links in howto/api
 - [3e6896c](https://github.com/quay/clair/commit/3e6896c6a4e5cdd04d91927d762b332b62e1d4fe): fix links to presentations
- - Closes [#661](https://github.com/quay/clair/issues/661) - Closes [#665](https://github.com/quay/clair/issues/665) - Closes [#560](https://github.com/quay/clair/issues/560)### Driver
+ - Closes [#661](https://github.com/quay/clair/issues/661) - Closes [#665](https://github.com/quay/clair/issues/665) - Closes [#560](https://github.com/quay/clair/issues/560)### Documentation
+- [fe324a5](https://github.com/quay/clair/commit/fe324a58e6be8c36da74afcd5487d0da4a547d5b): start writing v4-specific docs
+- [c1a58bf](https://github.com/quay/clair/commit/c1a58bf9224bbcd7e0f02ea4065650d220654f29): add new 3rd party tool
+### Driver
 - [5c58575](https://github.com/quay/clair/commit/5c5857548d43fa866d46a4c98309b2dfa88be418): Add proxy support
 ### Drone
 - [0fd9cd3](https://github.com/quay/clair/commit/0fd9cd3b59bd42ef0e508f0f415028a0ee8fa44f): remove broken drone CI
@@ -608,10 +612,10 @@
 - [81430ff](https://github.com/quay/clair/commit/81430ffbb252990ebfd74b0bba284c7564b69dae): also add option for nodeSelector
 - [6a94d8c](https://github.com/quay/clair/commit/6a94d8ccd267cc428dd2161bb1e5b71dd3cd244f): add option for tolerations
 ### Helm
-- [710c655](https://github.com/quay/clair/commit/710c65530f4524693e6a863075b4d3760901a3bc): allow for ingress path configuration in values.yml
-### Helm
 - [690d26e](https://github.com/quay/clair/commit/690d26edbac2605b19900549b70d74fa47bdfef9): change postgresql connection string format in configmap template
  - Fixes [#561](https://github.com/quay/clair/issues/561)- [7a06a7a](https://github.com/quay/clair/commit/7a06a7a2b4a68c2567a5bcc41c497fdb9d8d2c15): Fixed a typo in maintainers field.
+### Helm
+- [710c655](https://github.com/quay/clair/commit/710c65530f4524693e6a863075b4d3760901a3bc): allow for ingress path configuration in values.yml
 ### Helm Chart
 - [bc6f37f](https://github.com/quay/clair/commit/bc6f37f1ae0df5a7c01184ef1483a889e82e86ba): Use Secret for config file. Fix some minor issues
  - Fixes [#581](https://github.com/quay/clair/issues/581)### Http
@@ -697,6 +701,8 @@
 ### New API
 - [a541e96](https://github.com/quay/clair/commit/a541e964e07ea0e9a70f2ebee68897edf852bcba): list vulnerabilities by namespace
 ### Notifier
+- [673bd0f](https://github.com/quay/clair/commit/673bd0fe32d5422e8eb3dff3716a2bfce81b891c): fix poller loop
+### Notifier
 - [0f6d0e4](https://github.com/quay/clair/commit/0f6d0e4a6950c64c74f18f1c4d0dee3fbc2eaf01): move to ctxlock
 - [85ac7bb](https://github.com/quay/clair/commit/85ac7bb877d7cb2154d5a59c6cf13bb690d8179c): remove KeyStore interface
 - [6d33153](https://github.com/quay/clair/commit/6d331530c7a8714a16d32ce3ca6e74ec8afc5184): check msg contents in integration tests
@@ -725,9 +731,7 @@
 - [3ff8bfa](https://github.com/quay/clair/commit/3ff8bfaa9311ca5923809b89b92299eed558be2c): Allow custom notifiers to be registered.
 - [b3828c9](https://github.com/quay/clair/commit/b3828c9c4c622891426da8a65f1de471fdd3ecbe): add ServerName configuration for TLS
 - [20a126c](https://github.com/quay/clair/commit/20a126c84ae8fad5f9a9ee3bc042866407d48308): Refactor and add client certificate authentification support.
- - Fixes [#23](https://github.com/quay/clair/issues/23)### Notifier
-- [673bd0f](https://github.com/quay/clair/commit/673bd0fe32d5422e8eb3dff3716a2bfce81b891c): fix poller loop
-### Notifier/Database
+ - Fixes [#23](https://github.com/quay/clair/issues/23)### Notifier/Database
 - [ad0531a](https://github.com/quay/clair/commit/ad0531acc7614cf6fa68d9ce7c66ff293832dfcf): refactor notification system and add initial Prometheus support
 - [c60d005](https://github.com/quay/clair/commit/c60d0054fa0f11dac76547f30f2bd25410d4bf9f): draft new notification system
 ### Nvd
@@ -1324,7 +1328,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.3.3...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.3.4...HEAD
+[v4.3.4]: https://github.com/quay/clair/compare/v4.3.3...v4.3.4
 [v4.3.3]: https://github.com/quay/clair/compare/v4.3.2...v4.3.3
 [v4.3.2]: https://github.com/quay/clair/compare/v4.3.1...v4.3.2
 [v4.3.1]: https://github.com/quay/clair/compare/v4.3.0...v4.3.1
