@@ -4,13 +4,14 @@ info:
   title: CHANGELOG
   repository_url: https://github.com/quay/clair
 options:
+  tag_filter_pattern: '^v'
   sort: semver
   commits:
     sort_by: Scope
   commit_groups:
     group_by: Scope
   header:
-    pattern: '^(.*):\s*(.*)$'
+    pattern: '^(.*?):\s*(.*)$'
     pattern_maps:
       - Scope
       - Subject
