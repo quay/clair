@@ -14,7 +14,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.11.0 // indirect
 	github.com/prometheus/client_golang v1.9.0
 	github.com/quay/clair/config v1.0.0
-	github.com/quay/claircore v1.1.1
+	github.com/quay/claircore v1.1.2
 	github.com/quay/zlog v0.0.0-20210113185248-ce16eed1dcec
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
 	github.com/rs/zerolog v1.20.0
