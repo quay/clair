@@ -2,8 +2,15 @@
 ## [Unreleased]
 
 
+<a name="v4.3.3"></a>
+## [v4.3.3] - 2021-11-05
+### Chore
+- [5e06013](https://github.com/quay/clair/commit/5e060135111e07fcc3d0c2fc6c6570a98021dde7): update claircore version
+ -  [#1418](https://github.com/quay/clair/issues/1418)
 <a name="v4.3.2"></a>
 ## [v4.3.2] - 2021-10-29
+### Chore
+- [bfd9718](https://github.com/quay/clair/commit/bfd971861e88bb21e4480ac98b8b0b7e1abf1501): v4.3.2 changelog bump
 ### Go.Mod
 - [f8dff8b](https://github.com/quay/clair/commit/f8dff8b8691ad58508457b2022425a7c533fca3c): update go-containerregistry
  -  [#1407](https://github.com/quay/clair/issues/1407)
@@ -1317,7 +1324,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.3.2...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.3.3...HEAD
+[v4.3.3]: https://github.com/quay/clair/compare/v4.3.2...v4.3.3
 [v4.3.2]: https://github.com/quay/clair/compare/v4.3.1...v4.3.2
 [v4.3.1]: https://github.com/quay/clair/compare/v4.3.0...v4.3.1
 [v4.3.0]: https://github.com/quay/clair/compare/v4.3.0-rc.0...v4.3.0
