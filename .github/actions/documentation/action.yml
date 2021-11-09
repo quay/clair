@@ -21,14 +21,9 @@ runs:
         else
           exec mdbook build --dest-dir "./book/${d}"
         fi
-    - uses: ./.github/actions/conditional
+    - if: ${{ inputs.publish == 'true' }}
+      uses: peaceiris/actions-gh-pages@v3.8.0
       with:
-        if: ${{ inputs.publish }}
-        step: |
-          - uses: peaceiris/actions-gh-pages@v3
-            with:
-              user_name: 'github-actions[bot]'
-              user_email: 'github-actions[bot]@users.noreply.github.com'
-              github_token: ${{ inputs.token }}
-              publish_dir: ./book
-              keep_files: true
+        github_token: ${{ inputs.token }}
+        publish_dir: ./book
+        keep_files: true
