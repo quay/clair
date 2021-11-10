@@ -8,6 +8,12 @@
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
         "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
         "type": "dashboard"
       }
     ]
@@ -15,7 +21,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 1,
-  "iteration": 1635879789495,
+  "iteration": 1636586444738,
   "links": [],
   "panels": [
     {
@@ -720,6 +726,7 @@
         {
           "exemplar": true,
           "expr": "histogram_quantile($dbquantile, rate(claircore_vulnstore_get_duration_seconds_bucket[$rate]))",
+          "hide": false,
           "interval": "",
           "legendFormat": "VulnStoreGet: {{instance }}: {{ query }}",
           "refId": "A"
@@ -817,6 +824,170 @@
         "w": 12,
         "x": 0,
         "y": 34
+      },
+      "id": 43,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "rate(claircore_vulnstore_gc_total[$rate])",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "GarbageCollection: {{instance }}: {{ query }}",
+          "refId": "E"
+        }
+      ],
+      "title": "Database query count GC (matcher)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 30,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 34
+      },
+      "id": 44,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "histogram_quantile($dbquantile, rate(claircore_vulnstore_gc_duration_seconds_bucket[$rate]))",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "UpdateVulnerabilities: {{instance }}: {{ query }}",
+          "refId": "F"
+        }
+      ],
+      "title": "Database query duration GC (matcher) (p$dbquantile)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "$datasource",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 42
       },
       "id": 36,
       "options": {
@@ -921,7 +1092,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 34
+        "y": 42
       },
       "id": 38,
       "options": {
@@ -977,7 +1148,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 42
+        "y": 50
       },
       "id": 2,
       "panels": [],
@@ -1040,7 +1211,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 43
+        "y": 51
       },
       "id": 4,
       "options": {
@@ -1122,7 +1293,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 43
+        "y": 51
       },
       "id": 15,
       "options": {
@@ -1205,7 +1376,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 51
+        "y": 59
       },
       "id": 7,
       "options": {
@@ -1288,7 +1459,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 51
+        "y": 59
       },
       "id": 14,
       "options": {
@@ -1370,7 +1541,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 59
+        "y": 67
       },
       "id": 6,
       "options": {
@@ -1453,7 +1624,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 59
+        "y": 67
       },
       "id": 13,
       "options": {
@@ -1535,7 +1706,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 67
+        "y": 75
       },
       "id": 5,
       "options": {
@@ -1617,7 +1788,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 67
+        "y": 75
       },
       "id": 16,
       "options": {
@@ -1699,7 +1870,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 75
+        "y": 83
       },
       "id": 41,
       "options": {
@@ -1781,7 +1952,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 75
+        "y": 83
       },
       "id": 40,
       "options": {
@@ -1863,7 +2034,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 83
+        "y": 91
       },
       "id": 39,
       "options": {
@@ -1945,7 +2116,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 83
+        "y": 91
       },
       "id": 42,
       "options": {
@@ -1978,7 +2149,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 91
+        "y": 99
       },
       "id": 9,
       "panels": [],
@@ -2041,7 +2212,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 92
+        "y": 100
       },
       "id": 11,
       "options": {
@@ -2123,7 +2294,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 92
+        "y": 100
       },
       "id": 12,
       "options": {
@@ -2149,7 +2320,7 @@
       "type": "timeseries"
     }
   ],
-  "refresh": "10s",
+  "refresh": false,
   "schemaVersion": 30,
   "style": "dark",
   "tags": [],
@@ -2235,8 +2406,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "0.90",
-          "value": "0.90"
+          "text": "0.95",
+          "value": "0.95"
         },
         "description": null,
         "error": null,
@@ -2247,12 +2418,12 @@
         "name": "dbquantile",
         "options": [
           {
-            "selected": false,
+            "selected": true,
             "text": "0.95",
             "value": "0.95"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "0.90",
             "value": "0.90"
           },
@@ -2280,7 +2451,7 @@
       {
         "allValue": null,
         "current": {
-          "selected": true,
+          "selected": false,
           "text": "0.20",
           "value": "0.20"
         },
@@ -2347,7 +2518,7 @@
     ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-1h",
     "to": "now"
   },
   "timepicker": {},
