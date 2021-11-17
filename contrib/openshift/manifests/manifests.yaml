@@ -17,6 +17,7 @@ objects:
         service: indexer
         app: clair
     spec:
+      podManagementPolicy: Parallel
       replicas: ${{INDEXER_DEPLOYMENT_REPLICAS}}
       selector:
         matchLabels:
