@@ -15,7 +15,7 @@ scrape_configs:
     static_configs:
       - targets: ['clair-matcher:8089']
 
-  - job_name: notifier
+  - job_name: clair-notifier
     metrics_path: "/metrics"
     static_configs:
       - targets: ['clair-notifier:8089']
