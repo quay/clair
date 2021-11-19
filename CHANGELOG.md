@@ -2,9 +2,17 @@
 ## [Unreleased]
 
 
+<a name="v4.3.5"></a>
+## [v4.3.5] - 2021-11-19
+### Chore
+- [bef331e](https://github.com/quay/clair/commit/bef331e67e1b00a1e6f2139c0c817907de93d7d4): Revert "chore: v3.4.5 changelog bump"
+- [c01d88c](https://github.com/quay/clair/commit/c01d88c6ac2513cb728703f5721ce61ff839f5a3): v3.4.5 changelog bump
+- [8849c61](https://github.com/quay/clair/commit/8849c61360520230b6c987bdc243db03b7340c9f): update claircore version
+ -  [#1437](https://github.com/quay/clair/issues/1437)
 <a name="v4.3.4"></a>
 ## [v4.3.4] - 2021-11-05
 ### Chore
+- [dddb910](https://github.com/quay/clair/commit/dddb910b6f51e7b69042ba3db98c2a0d6cc1caa2): v4.3.4 changelog bump
 - [41d2593](https://github.com/quay/clair/commit/41d25933ad25b8ae5deb4b6da84336c2a4d400fe): update changelog to cope with submodule tags
  -  [#1421](https://github.com/quay/clair/issues/1421)
 <a name="v4.3.3"></a>
@@ -1328,7 +1336,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.3.4...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.3.5...HEAD
+[v4.3.5]: https://github.com/quay/clair/compare/v4.3.4...v4.3.5
 [v4.3.4]: https://github.com/quay/clair/compare/v4.3.3...v4.3.4
 [v4.3.3]: https://github.com/quay/clair/compare/v4.3.2...v4.3.3
 [v4.3.2]: https://github.com/quay/clair/compare/v4.3.1...v4.3.2
