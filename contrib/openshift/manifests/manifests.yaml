@@ -81,6 +81,14 @@ objects:
                   mountPath: /etc/clair
                 - name: indexer-layer-storage
                   mountPath: /tmp
+          initContainers:
+            - name: init-wipe-vpc
+              image: ${{UBI_IMAGE}}:${{UBI_IMAGE_TAG}}
+              command: ['sh', '-c', "rm -rf /tmp/*"]
+              volumeMounts:
+                - name: indexer-layer-storage
+                  mountPath: /tmp
+
 
   #
   # matcher deployment
