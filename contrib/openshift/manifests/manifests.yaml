@@ -83,7 +83,7 @@ objects:
                   mountPath: /tmp
           initContainers:
             - name: init-wipe-vpc
-              image: ${{UBI_IMAGE}}:${{UBI_IMAGE_TAG}}
+              image: ${UBI_IMAGE}:${UBI_IMAGE_TAG}
               command: ['sh', '-c', "rm -rf /tmp/*"]
               volumeMounts:
                 - name: indexer-layer-storage
