@@ -358,6 +358,12 @@ parameters:
   - name: IMAGE_TAG
     value: "latest"
     displayName: the image tag of clair v4 to deploy
+  - name: UBI_IMAGE
+    value: "quay.io/app-sre/ubi8-ubi-minimal"
+    displayName: the image of UBI to deploy
+  - name: UBI_IMAGE_TAG
+    value: "8.5-204"
+    displayName: the image tag of UBI to deploy
   - name: HTTP_TRANSPORT_PORT
     value: "8080"
     displayName: http port where clair's main functionality is provided
