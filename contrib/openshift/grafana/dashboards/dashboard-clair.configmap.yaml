@@ -32,10 +32,13 @@ data:
         ]
       },
       "editable": true,
+      "fiscalYearStartMonth": 0,
       "gnetId": null,
       "graphTooltip": 1,
-      "iteration": 1636586444738,
+      "id": 162,
+      "iteration": 1637602132532,
       "links": [],
+      "liveNow": false,
       "panels": [
         {
           "datasource": "$datasource",
@@ -121,18 +124,10 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "rate(claircore_indexer_scanned_manifests{scanned_before=\"true\"}[$rate])",
+              "expr": "sum by (scanned_before) (rate(claircore_indexer_scanned_manifests[$rate]))",
               "interval": "",
-              "legendFormat": "scanned",
+              "legendFormat": "{{scanned_before}}",
               "refId": "A"
-            },
-            {
-              "exemplar": true,
-              "expr": "rate(claircore_indexer_scanned_manifests{scanned_before=\"false\"}[$rate])",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "not scanned",
-              "refId": "B"
             }
           ],
           "title": "Previously scanned",
@@ -183,18 +178,10 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "rate(claircore_indexer_scanned_manifests{scanned_before=\"true\"}[$rate])",
+              "expr": "sum by (scanned_before) (rate(claircore_indexer_scanned_manifests[$rate]))",
               "interval": "",
-              "legendFormat": "scanned",
+              "legendFormat": "{{scanned_before}}",
               "refId": "A"
-            },
-            {
-              "exemplar": true,
-              "expr": "rate(claircore_indexer_scanned_manifests{scanned_before=\"false\"}[$rate])",
-              "hide": false,
-              "interval": "",
-              "legendFormat": "not scanned",
-              "refId": "B"
             }
           ],
           "title": "Previously scanned rate",
@@ -1573,7 +1560,7 @@ data:
               "expr": "sum by (code) (rate(clair_http_indexer_api_v1_index_state_request_total[$rate]))",
               "instant": false,
               "interval": "",
-              "legendFormat": "Status {{ code }} ",
+              "legendFormat": "Status {{code}}",
               "refId": "A"
             }
           ],
@@ -2241,7 +2228,7 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "go_goroutines",
+              "expr": "sum by (job)(go_goroutines)",
               "interval": "",
               "legendFormat": "{{ job }}",
               "refId": "A"
@@ -2323,7 +2310,7 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "go_memstats_heap_inuse_bytes",
+              "expr": "sum by (job)(go_memstats_heap_inuse_bytes)",
               "interval": "",
               "legendFormat": "{{ job }}",
               "refId": "A"
@@ -2334,7 +2321,7 @@ data:
         }
       ],
       "refresh": false,
-      "schemaVersion": 30,
+      "schemaVersion": 31,
       "style": "dark",
       "tags": [],
       "templating": {
@@ -2538,6 +2525,6 @@ data:
       "timezone": "",
       "title": "Clair V4",
       "uid": "I1JBFlRnz",
-      "version": 2
+      "version": 1
     }
 
