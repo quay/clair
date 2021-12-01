@@ -21,12 +21,15 @@ func TestDiscoveryEndpoint(t *testing.T) {
 
 	r := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "/openapi/v1", nil)
-	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Accept", "application/yaml, application/json; q=0.4, application/vnd.oai.openapi+json; q=1.0")
 	h.ServeHTTP(r, req)
 
 	resp := r.Result()
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("got status code: %v want status code: %v", resp.StatusCode, http.StatusOK)
+	}
+	if got, want := resp.Header.Get("content-type"), "application/vnd.oai.openapi+json"; got != want {
+		t.Errorf("got: %q, want: %q", got, want)
 	}
 
 	buf, err := ioutil.ReadAll(resp.Body)
@@ -55,8 +58,8 @@ func TestDiscoveryFailure(t *testing.T) {
 	h.ServeHTTP(r, req)
 
 	resp := r.Result()
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Fatalf("got status code: %v want status code: %v", resp.StatusCode, http.StatusBadRequest)
+	if got, want := resp.StatusCode, http.StatusUnsupportedMediaType; got != want {
+		t.Fatalf("got status code: %v want status code: %v", got, want)
 	}
 }
 
