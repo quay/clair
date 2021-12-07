@@ -2439,9 +2439,12 @@ if needed. Some notable examples:</p>
 <p>If running in &quot;combo&quot; mode you <strong>must</strong> supply the <code>indexer</code>, <code>matcher</code>,
 and <code>notifier</code> configuration blocks in the configuration.</p>
 <h2 id="configuration-reference"><a class="header" href="#configuration-reference">Configuration Reference</a></h2>
+<p>Please see the <a href="https://pkg.go.dev/github.com/quay/clair/config">go module documentation</a> for additional
+documentation on defaults and use.</p>
 <pre><code>http_listen_addr: &quot;&quot;
 introspection_addr: &quot;&quot;
 log_level: &quot;&quot;
+tls: {}
 indexer:
     connstring: &quot;&quot;
     scanlock_retry: 0
@@ -2518,6 +2521,13 @@ See <code>/openapi/v1</code> for the API spec.</p>
 <li>fatal</li>
 <li>panic</li>
 </ul>
+<h3 id="tls"><a class="header" href="#tls"><code>$.tls</code></a></h3>
+<p>TLS is a map containing the config for serving the HTTP API over TLS (and
+HTTP/2).</p>
+<h4 id="tlscert"><a class="header" href="#tlscert"><code>$.tls.cert</code></a></h4>
+<p>The TLS certificate to be used. Must be a full-chain certificate, as in nginx.</p>
+<h4 id="tlskey"><a class="header" href="#tlskey"><code>$.tls.key</code></a></h4>
+<p>A key file for the TLS certificate. Encryption is not supported on the key.</p>
 <h3 id="indexer"><a class="header" href="#indexer"><code>$.indexer</code></a></h3>
 <p>Indexer provides Clair Indexer node configuration.</p>
 <h4 id="indexerconnstring"><a class="header" href="#indexerconnstring"><code>$.indexer.connstring</code></a></h4>
