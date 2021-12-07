@@ -43,6 +43,11 @@ and `notifier` configuration blocks in the configuration.
 
 ## Configuration Reference
 
+Please see the [go module documentation][godoc_config] for additional
+documentation on defaults and use.
+
+[godoc_config]: https://pkg.go.dev/github.com/quay/clair/config
+
 ```
 http_listen_addr: ""
 introspection_addr: ""
