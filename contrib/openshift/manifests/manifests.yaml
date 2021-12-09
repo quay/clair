@@ -238,7 +238,6 @@ objects:
           protocol: TCP
           port: 8089
           targetPort: ${{INTROSPECTION_PORT}}
-      clusterIP: None
       selector:
         service: indexer
         app: clair
