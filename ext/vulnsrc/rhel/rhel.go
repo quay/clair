@@ -17,6 +17,8 @@
 package rhel
 
 import (
+	"compress/bzip2"
+	"compress/gzip"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -129,8 +131,18 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 			continue
 		}
 
+		var reader io.Reader
+		switch r.Header.Get("Content-Type") {
+		case "application/gzip":
+			reader, _ = gzip.NewReader(r.Body)
+		case "application/x-bzip2":
+			reader = bzip2.NewReader(r.Body)
+		default:
+			reader = r.Body
+		}
+
 		// Parse the XML.
-		vs, err := parseRHSA(r.Body)
+		vs, err := parseRHSA(reader)
 		if err != nil {
 			return resp, err
 		}
