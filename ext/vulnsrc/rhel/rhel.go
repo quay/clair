@@ -135,6 +135,10 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 		switch r.Header.Get("Content-Type") {
 		case "application/gzip":
 			reader, _ = gzip.NewReader(r.Body)
+			if err != nil {
+				log.WithError(err).Error("could not decompress RHEL's XML with Gzip")
+				return resp, err
+			}
 		case "application/x-bzip2":
 			reader = bzip2.NewReader(r.Body)
 		default:
