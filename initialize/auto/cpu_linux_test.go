@@ -72,6 +72,19 @@ func TestCPUDetection(t *testing.T) {
 				},
 				Want: 1,
 			},
+			{
+				Name: "RootFallback",
+				In: fstest.MapFS{
+					"proc/self/cgroup": &fstest.MapFile{Data: []byte(cgmap)},
+					"sys/fs/cgroup/cpu,cpuacct/cpu.cfs_quota_us": &fstest.MapFile{
+						Data: []byte("100000\n"),
+					},
+					"sys/fs/cgroup/cpu,cpuacct/cpu.cfs_period_us": &fstest.MapFile{
+						Data: []byte("100000\n"),
+					},
+				},
+				Want: 1,
+			},
 		}
 		ctx := zlog.Test(ctx, t)
 		for _, tc := range tt {

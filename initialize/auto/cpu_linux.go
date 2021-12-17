@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"io/fs"
 	"os"
 	"path"
@@ -97,6 +98,18 @@ func cgLookup(r fs.FS) (int, error) {
 			zlog.Debug(ctx).Msg("found cgroups v1 and cpu controller")
 		})
 		prefix := path.Join("sys/fs/cgroup", string(ctls), string(pb))
+		// Check for the existence of the named cgroup. If it doesn't exist,
+		// look at the root of the controller. The named group not existing
+		// probably means the process is in a container and is having remounting
+		// tricks done. If, for some reason this is actually the root cgroup,
+		// it'll be unlimited and fall back to the default.
+		if _, err := fs.Stat(r, prefix); errors.Is(err, fs.ErrNotExist) {
+			msgs = append(msgs, func(ctx context.Context) {
+				zlog.Debug(ctx).Msg("falling back to root hierarchy")
+			})
+			prefix = path.Join("sys/fs/cgroup", string(ctls))
+		}
+
 		b, err = fs.ReadFile(r, path.Join(prefix, "cpu.cfs_quota_us"))
 		if err != nil {
 			return gmp, err
