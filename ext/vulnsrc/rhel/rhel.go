@@ -130,15 +130,18 @@ func (u *updater) Update(datastore database.Datastore) (resp vulnsrc.UpdateRespo
 			log.WithField("package", "Red Hat").Debugf("%s request failed with %s", url, r.Status)
 			continue
 		}
+		defer r.Body.Close()
 
 		var reader io.Reader
 		switch r.Header.Get("Content-Type") {
 		case "application/gzip":
-			reader, _ = gzip.NewReader(r.Body)
+			var greader, err = gzip.NewReader(r.Body)
 			if err != nil {
 				log.WithError(err).Error("could not decompress RHEL's XML with Gzip")
 				return resp, err
 			}
+			defer greader.Close()
+			reader = greader
 		case "application/x-bzip2":
 			reader = bzip2.NewReader(r.Body)
 		default:
