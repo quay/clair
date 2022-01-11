@@ -5,10 +5,27 @@ import (
 	"fmt"
 	"mime"
 	"net/http"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/quay/claircore"
 )
+
+const (
+	metricNamespace = `clair`
+	metricSubsystem = `http`
+)
+
+// GetDigest removes the last path element and parses it as a digest.
+func getDigest(_ http.ResponseWriter, r *http.Request) (d claircore.Digest, err error) {
+	dStr := path.Base(r.URL.Path)
+	if dStr == "" {
+		return d, errors.New("provide a single manifest hash")
+	}
+	return claircore.ParseDigest(dStr)
+}
 
 // PickContentType sets the response's "Content-Type" header.
 //
