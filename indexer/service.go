@@ -34,6 +34,7 @@ type StateIndexer interface {
 // Indexer is an interface for computing a IndexReport given a Manifest.
 type Indexer interface {
 	Index(ctx context.Context, manifest *claircore.Manifest) (*claircore.IndexReport, error)
+	DeleteManifests(context.Context, ...claircore.Digest) ([]claircore.Digest, error)
 }
 
 // Reporter is an interface for retreiving an IndexReport given a manifest digest.

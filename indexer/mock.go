@@ -17,6 +17,7 @@ type Mock struct {
 	IndexReport_       func(ctx context.Context, digest claircore.Digest) (*claircore.IndexReport, bool, error)
 	State_             func(ctx context.Context) (string, error)
 	AffectedManifests_ func(ctx context.Context, vulns []claircore.Vulnerability) (*claircore.AffectedManifests, error)
+	DeleteManifests_   func(context.Context, ...claircore.Digest) ([]claircore.Digest, error)
 }
 
 func (i *Mock) Index(ctx context.Context, manifest *claircore.Manifest) (*claircore.IndexReport, error) {
@@ -45,4 +46,11 @@ func (i *Mock) AffectedManifests(ctx context.Context, vulns []claircore.Vulnerab
 		panic("mock indexer: unexpected call to AffectedManifests")
 	}
 	return i.AffectedManifests_(ctx, vulns)
+}
+
+func (i *Mock) DeleteManifests(ctx context.Context, d ...claircore.Digest) ([]claircore.Digest, error) {
+	if i.DeleteManifests_ == nil {
+		panic("mock indexer: unexpected call to DeleteManifests")
+	}
+	return i.DeleteManifests_(ctx, d...)
 }
