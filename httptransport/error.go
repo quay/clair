@@ -27,6 +27,8 @@ func apiError(w http.ResponseWriter, code int, f string, v ...interface{}) {
 		buf.WriteString("method-not-allowed")
 	case http.StatusNotFound:
 		buf.WriteString("not-found")
+	case http.StatusTooManyRequests:
+		buf.WriteString("too-many-requests")
 	default:
 		buf.WriteString("internal-error")
 	}
