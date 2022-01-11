@@ -13,12 +13,12 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/label"
+	"golang.org/x/sync/semaphore"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
 	intromw "github.com/quay/clair/v4/middleware/introspection"
-	"github.com/quay/clair/v4/middleware/rate"
 	notifier "github.com/quay/clair/v4/notifier/service"
 )
 
@@ -161,26 +161,32 @@ func (t *Server) configureComboMode(ctx context.Context) error {
 // ConfigureIndexerMode configures the HttpTransport for IndexerMode.
 //
 // This mode runs only an Indexer in a single process.
-func (t *Server) configureIndexerMode(_ context.Context) error {
+func (t *Server) configureIndexerMode(ctx context.Context) error {
 	// requires only indexer service
 	if t.indexer == nil {
 		return clairerror.ErrNotInitialized{Msg: "IndexerMode requires an indexer service"}
 	}
+	prefix := indexerRoot + apiRoot
 
-	ratelimitMW := rate.NewRateLimitMiddleware(t.conf.Indexer.IndexReportRequestConcurrency)
-
-	t.Handle(AffectedManifestAPIPath,
-		intromw.InstrumentedHandler(AffectedManifestAPIPath, t.traceOpt, AffectedManifestHandler(t.indexer)))
-
-	t.Handle(IndexAPIPath,
-		intromw.InstrumentedHandler(IndexAPIPath, t.traceOpt, ratelimitMW.Handler(IndexAPIPath, IndexHandler(t.indexer))))
-
-	t.Handle(IndexReportAPIPath,
-		intromw.InstrumentedHandler(IndexReportAPIPath+"GET", t.traceOpt, IndexReportHandler(t.indexer)))
-
-	t.Handle(IndexStateAPIPath,
-		intromw.InstrumentedHandler(IndexStateAPIPath, t.traceOpt, IndexStateHandler(t.indexer)))
-
+	v1, err := NewIndexerV1(ctx, prefix, t.indexer, t.traceOpt)
+	if err != nil {
+		return fmt.Errorf("indexer configuration: %w", err)
+	}
+	var sem *semaphore.Weighted
+	if ct := t.conf.Indexer.IndexReportRequestConcurrency; ct > 0 {
+		sem = semaphore.NewWeighted(int64(ct))
+	}
+	rl := &limitHandler{
+		Check: func(r *http.Request) (*semaphore.Weighted, string) {
+			if r.Method != http.MethodPost && r.URL.Path != IndexAPIPath {
+				return nil, ""
+			}
+			// Nil if the relevant config option isn't set.
+			return sem, IndexAPIPath
+		},
+		Next: v1,
+	}
+	t.Handle(prefix, rl)
 	return nil
 }
 
