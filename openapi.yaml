@@ -2,10 +2,10 @@
 openapi: "3.0.2"
 info:
   title: "ClairV4"
-  description: |
+  description: >-
     ClairV4 is a set of cooperating microservices which scan, index, and
     match your container's content with known vulnerabilities.
-  version: "0.1"
+  version: "1.1"
   termsOfService: ""
   contact:
     name: "Clair Team"
@@ -21,7 +21,7 @@ paths:
       tags:
         - Notifier
       operationId: "DeleteNotification"
-      description: |
+      description: >-
         Issues a delete of the provided notification id and all associated
         notifications. After this delete clients will no longer be able to
         retrieve notifications.
@@ -45,7 +45,7 @@ paths:
         - Notifier
       operationId: "GetNotification"
       summary: Retrieve a paginated result of notifications for the provided id.
-      description: |
+      description: >-
         By performing a GET with a notification_id as a path parameter, the
         client will retrieve a paginated response of notification objects.
       parameters:
@@ -58,13 +58,13 @@ paths:
           name: page_size
           schema:
             type: int
-          description: |
+          description: >-
             The maximum number of notifications to deliver in a single page.
         - in: query
           name: next
           schema:
             type: string
-          description: |
+          description: >-
             The next page to fetch via id. Typically this number is provided
             on initial response in the page.next field.
             The first GET request may omit this field.
@@ -88,7 +88,7 @@ paths:
         - Indexer
       operationId: "Index"
       summary: "Index the contents of a Manifest"
-      description: |
+      description: >-
         By submitting a Manifest object to this endpoint Clair will fetch the
         layers, scan each layer's contents, and provide an index of discovered
         packages, repository and distribution information.
@@ -111,20 +111,73 @@ paths:
           $ref: '#/components/responses/MethodNotAllowed'
         500:
           $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Indexer
+      operationId: "DeleteManifests"
+      summary: >-
+        Delete the IndexReport and associated information for the given
+        Manifest hashes, if they exist.
+      description: >-
+        Given a Manifest's content addressable hash, any data related to it
+        will be removed if it exists.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkDelete'
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkDelete'
+        400:
+          $ref: '#/components/responses/BadRequest'
+        500:
+          $ref: '#/components/responses/InternalServerError'
 
   /indexer/api/v1/index_report/{manifest_hash}:
+    delete:
+      tags:
+        - Indexer
+      operationId: "DeleteManifest"
+      summary: >-
+        Delete the IndexReport and associated information for the given
+        Manifest hash, if exists.
+      description: >-
+        Given a Manifest's content addressable hash, any data related to it
+        will be removed it it exists.
+      parameters:
+        - name: manifest_hash
+          in: path
+          description: >-
+            A digest of a manifest that has been indexed previous to this
+            request.
+          required: true
+          schema:
+            $ref: '#/components/schemas/Digest'
+      responses:
+        204:
+          description: "OK"
+        400:
+          $ref: '#/components/responses/BadRequest'
+        500:
+          $ref: '#/components/responses/InternalServerError'
     get:
       tags:
         - Indexer
       operationId: "GetIndexReport"
       summary: "Retrieve an IndexReport for the given Manifest hash if exists."
-      description: |
+      description: >-
         Given a Manifest's content addressable hash an IndexReport will
         be retrieved if exists.
       parameters:
         - name: manifest_hash
           in: path
-          description: |
+          description: >-
             A digest of a manifest that has been indexed previous to this
             request.
           required: true
@@ -151,17 +204,17 @@ paths:
       tags:
         - Matcher
       operationId: "GetVulnerabilityReport"
-      summary: |
+      summary: >-
         Retrieve a VulnerabilityReport for a given manifest's content
         addressable hash.
-      description: |
+      description: >-
         Given a Manifest's content addressable hash a VulnerabilityReport
         will be created. The Manifest **must** have been Indexed first
         via the Index endpoint.
       parameters:
         - name: manifest_hash
           in: path
-          description: |
+          description: >-
             A digest of a manifest that has been indexed previous to this
             request.
           required: true
@@ -189,7 +242,7 @@ paths:
         - Indexer
       operationId: IndexState
       summary: Report the indexer's internal configuration and state.
-      description: |
+      description: >-
         The index state endpoint returns a json structure indicating the
         indexer's internal configuration state.
 
@@ -243,7 +296,7 @@ components:
     Environment:
       value:
         package_db: "var/lib/dpkg/status"
-        introduced_in: |-
+        introduced_in: >-
           sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
         distribution_id: "1"
 
@@ -252,13 +305,13 @@ components:
         id: "356835"
         updater: ""
         name: "CVE-2009-5155"
-        description: |
+        description: >-
           In the GNU C Library (aka glibc or libc6) before 2.28,
           parse_reg_exp in posix/regcomp.c misparses alternatives,
           which allows attackers to cause a denial of service (assertion
           failure and application exit) or trigger an incorrect result
           by attempting a regular-expression match."
-        links: |
+        links: >-
           https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155
           http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html
           https://sourceware.org/bugzilla/show_bug.cgi?id=11053
@@ -326,7 +379,7 @@ components:
     VulnSummary:
       value:
         name: "CVE-2009-5155"
-        description: |
+        description: >-
           In the GNU C Library (aka glibc or libc6) before 2.28,
           parse_reg_exp in posix/regcomp.c misparses alternatives,
           which allows attackers to cause a denial of service (assertion
@@ -362,7 +415,7 @@ components:
   schemas:
     Page:
       title: Page
-      description: |
+      description: >-
         A page object indicating to the client how to retrieve multiple pages of
         a particular entity.
       properties:
@@ -381,7 +434,7 @@ components:
       description: "A page object followed by a list of notifications"
       properties:
         page:
-          description: |
+          description: >-
             A page object informing the client the next page to retrieve.
             If page.next becomes "-1" the client should stop paging.
           type: object
@@ -406,7 +459,7 @@ components:
         callback:
           description: "the url where notifications can be retrieved"
           type: string
-          example: |-
+          example: >-
             http://clair-notifier/notifier/api/v1/notifications/269886f3-0146-4f08-9bf7-cb1138d48643
 
     VulnSummary:
@@ -419,7 +472,7 @@ components:
           type: string
           example: "CVE-2009-5155"
         fixed_in_version:
-          description: |
+          description: >-
             The version which the vulnerability is fixed in. Empty if not fixed.
           type: string
           example: "v0.0.1"
@@ -430,14 +483,14 @@ components:
         description:
           description: "the vulnerability name"
           type: string
-          example: |
+          example: >-
             In the GNU C Library (aka glibc or libc6) before 2.28,
             parse_reg_exp in posix/regcomp.c misparses alternatives,
             which allows attackers to cause a denial of service (assertion
             failure and application exit) or trigger an incorrect result
             by attempting a regular-expression match."
         normalized_severity:
-          description: |
+          description: >-
             A well defined set of severity strings guaranteed to be present.
           type: string
           enum: [Unknown, Negligible, Low, Medium, High, Critical]
@@ -451,7 +504,7 @@ components:
     Notification:
       title: Notification
       type: object
-      description: |
+      description: >-
         A notification expressing a change in a manifest affected by a
         vulnerability.
       properties:
@@ -460,10 +513,10 @@ components:
           type: string
           example: "5e4b387e-88d3-4364-86fd-063447a6fad2"
         manifest:
-          description: |
+          description: >-
             The hash of the manifest affected by the provided vulnerability.
           type: string
-          example: |-
+          example: >-
             sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
         reason:
           description: "the reason for the notifcation, [added | removed]"
@@ -478,14 +531,14 @@ components:
       description: "The environment a particular package was discovered in."
       properties:
         package_db:
-          description: |
+          description: >-
             The filesystem path or unique identifier of a package database.
           type: string
           example: "var/lib/dpkg/status"
         introduced_in:
           $ref: '#/components/schemas/Digest'
         distribution_id:
-          description: |
+          description: >-
             The distribution ID found in an associated IndexReport or
             VulnerabilityReport.
           type: string
@@ -498,7 +551,7 @@ components:
     IndexReport:
       title: IndexReport
       type: object
-      description: |
+      description: >-
         A report of the Index process for a particular manifest. A
         client's usage of this is largely information. Clair uses this
         report for matching Vulnerabilities.
@@ -519,7 +572,7 @@ components:
             $ref: '#/components/schemas/Package'
         distributions:
           type: object
-          description: |
+          description: >-
             A map of Distribution objects keyed by their Distribution.id
             discovered in the manifest.
           example:
@@ -529,7 +582,7 @@ components:
             $ref: '#/components/schemas/Distribution'
         environments:
           type: object
-          description: |
+          description: >-
             A map of lists containing Environment objects keyed by the
             associated Package.id.
           example:
@@ -537,7 +590,7 @@ components:
               # swagger bug does not allow inline reference here -_-
               # - $ref: '#/components/examples/Environment/value'
               - package_db: "var/lib/dpkg/status"
-                introduced_in: |-
+                introduced_in: >-
                   sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
                 distribution_id: "1"
 
@@ -565,7 +618,7 @@ components:
     VulnerabilityReport:
       title: VulnerabilityReport
       type: object
-      description: |
+      description: >-
         A report expressing discovered packages, package environments,
         and package vulnerabilities within a Manifest.
       properties:
@@ -581,7 +634,7 @@ components:
             $ref: '#/components/schemas/Package'
         distributions:
           type: object
-          description: |
+          description: >-
             A map of Distribution objects indexed by Distribution.id.
           example:
             "1":
@@ -596,7 +649,7 @@ components:
               # swagger bug does not allow inline reference here -_-
               # - $ref: '#/components/examples/Environment/value'
               - package_db: "var/lib/dpkg/status"
-                introduced_in: |-
+                introduced_in: >-
                   sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
                 distribution_id: "1"
           additionalProperties:
@@ -612,7 +665,7 @@ components:
           additionalProperties:
             $ref: '#/components/schemas/Vulnerability'
         package_vulnerabilities:
-          description: |
+          description: >-
             A mapping of Vulnerability.id lists indexed by Package.id.
           example:
             "10":
@@ -649,15 +702,15 @@ components:
           description: "A description of this specific vulnerability."
           type: string
         links:
-          description: |
+          description: >-
             A space separate list of links to any external information.
           type: string
         severity:
-          description: |
+          description: >-
             A severity keyword taken verbatim from the vulnerability source.
           type: string
         normalized_severity:
-          description: |
+          description: >-
             A well defined set of severity strings guaranteed to be present.
           type: string
           enum: [Unknown, Negligible, Low, Medium, High, Critical]
@@ -668,11 +721,11 @@ components:
         repository:
           $ref: '#/components/schemas/Repository'
         issued:
-          description: |
+          description: >-
             The timestamp in which the vulnerability was issued
           type: string
         range:
-          description: |
+          description: >-
             The range of package versions affected by this vulnerability.
           type: string
         fixed_in_version:
@@ -691,7 +744,7 @@ components:
     Distribution:
       title: Distribution
       type: object
-      description: |
+      description: >-
         An indexed distribution discovered in a layer. See
         https://www.freedesktop.org/software/systemd/man/os-release.html
         for explanations and example of fields.
@@ -819,17 +872,17 @@ components:
     Version:
       title: Version
       type: string
-      description: |
+      description: >-
         Version is a normalized claircore version, composed of a "kind" and an
         array of integers such that two versions of the same kind have the
         correct ordering when the integers are compared pair-wise.
-      example: |-
+      example: >-
         pep440:0.0.0.0.0.0.0.0.0
 
     Manifest:
       title: Manifest
       type: object
-      description: |
+      description: >-
         A Manifest representing a container. The 'layers' array must
         preserve the original container's layer order for accurate usage.
       properties:
@@ -852,15 +905,15 @@ components:
           $ref: '#/components/schemas/Digest'
         uri:
           type: string
-          description: |
+          description: >-
             A URI describing where the layer may be found. Implementations
             MUST support http(s) schemes and MAY support additional
             schemes.
-          example: |
+          example: >-
             https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36
         headers:
           type: object
-          description: |
+          description: >-
             map of arrays of header values keyed by header
             value. e.g. map[string][]string
           additionalProperties:
@@ -871,6 +924,13 @@ components:
         - hash
         - uri
         - headers
+
+    BulkDelete:
+      title: 'BulkDelete'
+      type: array
+      description: 'An array of Digests to be deleted.'
+      items:
+        $ref: '#/components/schemas/Digest'
 
     Error:
       title: Error
@@ -900,10 +960,10 @@ components:
     Digest:
       title: Digest
       type: string
-      description: |
+      description: >-
         A digest string with prefixed algorithm. The format is described here:
         https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests
 
         Digests are used throughout the API to identify Layers and Manifests.
-      example: |-
+      example: >-
         sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3
