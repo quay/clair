@@ -126,7 +126,8 @@ func (s *HTTP) IndexReport(ctx context.Context, manifest claircore.Digest) (*cla
 			E: &clairerror.ErrRequestFail{
 				Code:   resp.StatusCode,
 				Status: resp.Status,
-			}}
+			},
+		}
 	}
 
 	ir := &claircore.IndexReport{}
@@ -157,4 +158,34 @@ func (s *HTTP) State(ctx context.Context) (string, error) {
 		return "", err
 	}
 	return buf.String(), nil
+}
+
+// DeleteManifests deletes the specified manifests.
+//
+// Passing a digest of an unknown manifest is not an error.
+func (s *HTTP) DeleteManifests(ctx context.Context, d ...claircore.Digest) ([]claircore.Digest, error) {
+	// This implementation always uses the bulk delete endpoint.
+	u, err := s.addr.Parse(httptransport.IndexAPIPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %v", err)
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodDelete, u.String(), codec.JSONReader(d))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %v", err)
+	}
+	resp, err := s.c.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to do request: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected response status: %v", resp.Status)
+	}
+	var ret []claircore.Digest
+	dec := codec.GetDecoder(resp.Body)
+	defer codec.PutDecoder(dec)
+	if err := dec.Decode(&ret); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+	return ret, nil
 }
