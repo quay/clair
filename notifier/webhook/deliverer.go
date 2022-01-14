@@ -65,7 +65,7 @@ func (d *Deliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
 
 	req := &http.Request{
 		URL:    d.conf.target,
-		Header: d.conf.Headers,
+		Header: d.conf.Headers.Clone(),
 		Body:   codec.JSONReader(&wh),
 		Method: http.MethodPost,
 	}
