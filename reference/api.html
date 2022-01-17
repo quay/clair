@@ -138,7 +138,7 @@
                 <div id="content" class="content">
                     <main>
                         <hr />
-<p>title: ClairV4 v0.1
+<p>title: ClairV4 v1.1
 language_tabs:</p>
 <ul>
 <li>python: Python</li>
@@ -156,12 +156,11 @@ headingLevel: 2</li>
 </ul>
 <hr />
 <!-- Generator: Widdershins v4.0.1 -->
-<h1 id="clairv4">ClairV4 v0.1</h1>
+<h1 id="clairv4">ClairV4 v1.1</h1>
 <blockquote>
 <p>Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.</p>
 </blockquote>
-<p>ClairV4 is a set of cooperating microservices which scan, index, and
-match your container's content with known vulnerabilities.</p>
+<p>ClairV4 is a set of cooperating microservices which scan, index, and match your container's content with known vulnerabilities.</p>
 <p>Email: <a href="mailto:quay-devel@redhat.com">Clair Team</a> Web: <a href="http://github.com/quay/clair">Clair Team</a> 
 License: <a href="http://www.apache.org/licenses/">Apache License 2.0</a></p>
 <h1 id="clairv4-notifier">Notifier</h1>
@@ -222,9 +221,7 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 
 </code></pre>
 <p><code>DELETE /notifier/api/v1/notification/{notification_id}</code></p>
-<p>Issues a delete of the provided notification id and all associated
-notifications. After this delete clients will no longer be able to
-retrieve notifications.</p>
+<p>Issues a delete of the provided notification id and all associated notifications. After this delete clients will no longer be able to retrieve notifications.</p>
 <h3 id="deletenotification-parameters">Parameters</h3>
 <table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
 <tr><td>notification_id</td><td>path</td><td>string</td><td>false</td><td>A notification ID returned by a callback</td></tr>
@@ -307,19 +304,13 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 
 </code></pre>
 <p><code>GET /notifier/api/v1/notification/{notification_id}</code></p>
-<p>By performing a GET with a notification_id as a path parameter, the
-client will retrieve a paginated response of notification objects.</p>
+<p>By performing a GET with a notification_id as a path parameter, the client will retrieve a paginated response of notification objects.</p>
 <h3 id="retrieve-a-paginated-result-of-notifications-for-the-provided-id.-parameters">Parameters</h3>
 <table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
 <tr><td>notification_id</td><td>path</td><td>string</td><td>false</td><td>A notification ID returned by a callback</td></tr>
 <tr><td>page_size</td><td>query</td><td>int</td><td>false</td><td>The maximum number of notifications to deliver in a single page.</td></tr>
-<tr><td>next</td><td>query</td><td>string</td><td>false</td><td>The next page to fetch via id. Typically this number is provided</td></tr>
+<tr><td>next</td><td>query</td><td>string</td><td>false</td><td>The next page to fetch via id. Typically this number is provided on initial response in the page.next field. The first GET request may omit this field.</td></tr>
 </tbody></table>
-<h4 id="detailed-descriptions"><a class="header" href="#detailed-descriptions">Detailed descriptions</a></h4>
-<p><strong>page_size</strong>: The maximum number of notifications to deliver in a single page.</p>
-<p><strong>next</strong>: The next page to fetch via id. Typically this number is provided
-on initial response in the page.next field.
-The first GET request may omit this field.</p>
 <blockquote>
 <p>Example responses</p>
 </blockquote>
@@ -340,7 +331,7 @@ The first GET request may omit this field.</p>
         &quot;name&quot;: &quot;CVE-2009-5155&quot;,
         &quot;fixed_in_version&quot;: &quot;v0.0.1&quot;,
         &quot;links&quot;: &quot;http://link-to-advisory&quot;,
-        &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28,\nparse_reg_exp in posix/regcomp.c misparses alternatives,\nwhich allows attackers to cause a denial of service (assertion\nfailure and application exit) or trigger an incorrect result\nby attempting a regular-expression match.\&quot;\n&quot;,
+        &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
         &quot;normalized_severity&quot;: &quot;Unknown&quot;,
         &quot;package&quot;: {
           &quot;id&quot;: &quot;10&quot;,
@@ -438,7 +429,7 @@ func main() {
   &quot;layers&quot;: [
     {
       &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-      &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36\n&quot;,
+      &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36&quot;,
       &quot;headers&quot;: {
         &quot;property1&quot;: [
           &quot;string&quot;
@@ -469,9 +460,7 @@ fetch('/indexer/api/v1/index_report',
 
 </code></pre>
 <p><code>POST /indexer/api/v1/index_report</code></p>
-<p>By submitting a Manifest object to this endpoint Clair will fetch the
-layers, scan each layer's contents, and provide an index of discovered
-packages, repository and distribution information.</p>
+<p>By submitting a Manifest object to this endpoint Clair will fetch the layers, scan each layer's contents, and provide an index of discovered packages, repository and distribution information.</p>
 <blockquote>
 <p>Body parameter</p>
 </blockquote>
@@ -480,7 +469,7 @@ packages, repository and distribution information.</p>
   &quot;layers&quot;: [
     {
       &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-      &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36\n&quot;,
+      &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36&quot;,
       &quot;headers&quot;: {
         &quot;property1&quot;: [
           &quot;string&quot;
@@ -561,6 +550,181 @@ packages, repository and distribution information.</p>
 <aside class="success">
 This operation does not require authentication
 </aside>
+<h2 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes-if-they-exist"><a class="header" href="#delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes-if-they-exist">Delete the IndexReport and associated information for the given Manifest hashes, if they exist.</a></h2>
+<p><a id="opIdDeleteManifests"></a></p>
+<blockquote>
+<p>Code samples</p>
+</blockquote>
+<pre><code class="language-python">import requests
+headers = {
+  'Content-Type': 'application/json',
+  'Accept': 'application/json'
+}
+
+r = requests.delete('/indexer/api/v1/index_report', headers = headers)
+
+print(r.json())
+
+</code></pre>
+<pre><code class="language-go">package main
+
+import (
+       &quot;bytes&quot;
+       &quot;net/http&quot;
+)
+
+func main() {
+
+    headers := map[string][]string{
+        &quot;Content-Type&quot;: []string{&quot;application/json&quot;},
+        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest(&quot;DELETE&quot;, &quot;/indexer/api/v1/index_report&quot;, data)
+    req.Header = headers
+
+    client := &amp;http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+</code></pre>
+<pre><code class="language-javascript">const inputBody = '[
+  &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;
+]';
+const headers = {
+  'Content-Type':'application/json',
+  'Accept':'application/json'
+};
+
+fetch('/indexer/api/v1/index_report',
+{
+  method: 'DELETE',
+  body: inputBody,
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+</code></pre>
+<p><code>DELETE /indexer/api/v1/index_report</code></p>
+<p>Given a Manifest's content addressable hash, any data related to it will be removed if it exists.</p>
+<blockquote>
+<p>Body parameter</p>
+</blockquote>
+<pre><code class="language-json">[
+  &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;
+]
+</code></pre>
+<h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes,-if-they-exist.-parameters">Parameters</h3>
+<table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
+<tr><td>body</td><td>body</td><td><a href="#schemabulkdelete">BulkDelete</a></td><td>true</td><td>none</td></tr>
+</tbody></table>
+<blockquote>
+<p>Example responses</p>
+</blockquote>
+<blockquote>
+<p>200 Response</p>
+</blockquote>
+<pre><code class="language-json">[
+  &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;
+]
+</code></pre>
+<h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes,-if-they-exist.-responses">Responses</h3>
+<table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
+<tr><td>200</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td><td>OK</td><td><a href="#schemabulkdelete">BulkDelete</a></td></tr>
+<tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="#schemaerror">Error</a></td></tr>
+<tr><td>500</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.6.1">Internal Server Error</a></td><td>Internal Server Error</td><td><a href="#schemaerror">Error</a></td></tr>
+</tbody></table>
+<aside class="success">
+This operation does not require authentication
+</aside>
+<h2 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hash-if-exists"><a class="header" href="#delete-the-indexreport-and-associated-information-for-the-given-manifest-hash-if-exists">Delete the IndexReport and associated information for the given Manifest hash, if exists.</a></h2>
+<p><a id="opIdDeleteManifest"></a></p>
+<blockquote>
+<p>Code samples</p>
+</blockquote>
+<pre><code class="language-python">import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.delete('/indexer/api/v1/index_report/{manifest_hash}', headers = headers)
+
+print(r.json())
+
+</code></pre>
+<pre><code class="language-go">package main
+
+import (
+       &quot;bytes&quot;
+       &quot;net/http&quot;
+)
+
+func main() {
+
+    headers := map[string][]string{
+        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+    }
+
+    data := bytes.NewBuffer([]byte{jsonReq})
+    req, err := http.NewRequest(&quot;DELETE&quot;, &quot;/indexer/api/v1/index_report/{manifest_hash}&quot;, data)
+    req.Header = headers
+
+    client := &amp;http.Client{}
+    resp, err := client.Do(req)
+    // ...
+}
+
+</code></pre>
+<pre><code class="language-javascript">
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('/indexer/api/v1/index_report/{manifest_hash}',
+{
+  method: 'DELETE',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+</code></pre>
+<p><code>DELETE /indexer/api/v1/index_report/{manifest_hash}</code></p>
+<p>Given a Manifest's content addressable hash, any data related to it will be removed it it exists.</p>
+<h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hash,-if-exists.-parameters">Parameters</h3>
+<table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
+<tr><td>manifest_hash</td><td>path</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>A digest of a manifest that has been indexed previous to this request.</td></tr>
+</tbody></table>
+<blockquote>
+<p>Example responses</p>
+</blockquote>
+<blockquote>
+<p>400 Response</p>
+</blockquote>
+<pre><code class="language-json">{
+  &quot;code&quot;: &quot;string&quot;,
+  &quot;message&quot;: &quot;string&quot;
+}
+</code></pre>
+<h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hash,-if-exists.-responses">Responses</h3>
+<table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
+<tr><td>204</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.5">No Content</a></td><td>OK</td><td>None</td></tr>
+<tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="#schemaerror">Error</a></td></tr>
+<tr><td>500</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.6.1">Internal Server Error</a></td><td>Internal Server Error</td><td><a href="#schemaerror">Error</a></td></tr>
+</tbody></table>
+<aside class="success">
+This operation does not require authentication
+</aside>
 <h2 id="retrieve-an-indexreport-for-the-given-manifest-hash-if-exists"><a class="header" href="#retrieve-an-indexreport-for-the-given-manifest-hash-if-exists">Retrieve an IndexReport for the given Manifest hash if exists.</a></h2>
 <p><a id="opIdGetIndexReport"></a></p>
 <blockquote>
@@ -618,15 +782,11 @@ fetch('/indexer/api/v1/index_report/{manifest_hash}',
 
 </code></pre>
 <p><code>GET /indexer/api/v1/index_report/{manifest_hash}</code></p>
-<p>Given a Manifest's content addressable hash an IndexReport will
-be retrieved if exists.</p>
+<p>Given a Manifest's content addressable hash an IndexReport will be retrieved if exists.</p>
 <h3 id="retrieve-an-indexreport-for-the-given-manifest-hash-if-exists.-parameters">Parameters</h3>
 <table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
-<tr><td>manifest_hash</td><td>path</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>A digest of a manifest that has been indexed previous to this</td></tr>
+<tr><td>manifest_hash</td><td>path</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>A digest of a manifest that has been indexed previous to this request.</td></tr>
 </tbody></table>
-<h4 id="detailed-descriptions-1"><a class="header" href="#detailed-descriptions-1">Detailed descriptions</a></h4>
-<p><strong>manifest_hash</strong>: A digest of a manifest that has been indexed previous to this
-request.</p>
 <blockquote>
 <p>Example responses</p>
 </blockquote>
@@ -749,10 +909,8 @@ fetch('/indexer/api/v1/index_state',
 
 </code></pre>
 <p><code>GET /indexer/api/v1/index_state</code></p>
-<p>The index state endpoint returns a json structure indicating the
-indexer's internal configuration state.</p>
-<p>A client may be interested in this as a signal that manifests may need
-to be re-indexed.</p>
+<p>The index state endpoint returns a json structure indicating the indexer's internal configuration state.
+A client may be interested in this as a signal that manifests may need to be re-indexed.</p>
 <blockquote>
 <p>Example responses</p>
 </blockquote>
@@ -776,8 +934,7 @@ to be re-indexed.</p>
 This operation does not require authentication
 </aside>
 <h1 id="clairv4-matcher">Matcher</h1>
-<h2 id="retrieve-a-vulnerabilityreport-for-a-given-manifests-content"><a class="header" href="#retrieve-a-vulnerabilityreport-for-a-given-manifests-content">Retrieve a VulnerabilityReport for a given manifest's content</a></h2>
-<p>addressable hash.</p>
+<h2 id="retrieve-a-vulnerabilityreport-for-a-given-manifests-content-addressable-hash"><a class="header" href="#retrieve-a-vulnerabilityreport-for-a-given-manifests-content-addressable-hash">Retrieve a VulnerabilityReport for a given manifest's content addressable hash.</a></h2>
 <p><a id="opIdGetVulnerabilityReport"></a></p>
 <blockquote>
 <p>Code samples</p>
@@ -834,18 +991,11 @@ fetch('/matcher/api/v1/vulnerability_report/{manifest_hash}',
 
 </code></pre>
 <p><code>GET /matcher/api/v1/vulnerability_report/{manifest_hash}</code></p>
-<p>Given a Manifest's content addressable hash a VulnerabilityReport
-will be created. The Manifest <strong>must</strong> have been Indexed first
-via the Index endpoint.</p>
-<h3 id="retrieve-a-vulnerabilityreport-for-a-given-manifest's-content
-addressable-hash.
--parameters">Parameters</h3>
+<p>Given a Manifest's content addressable hash a VulnerabilityReport will be created. The Manifest <strong>must</strong> have been Indexed first via the Index endpoint.</p>
+<h3 id="retrieve-a-vulnerabilityreport-for-a-given-manifest's-content-addressable-hash.-parameters">Parameters</h3>
 <table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
-<tr><td>manifest_hash</td><td>path</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>A digest of a manifest that has been indexed previous to this</td></tr>
+<tr><td>manifest_hash</td><td>path</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>A digest of a manifest that has been indexed previous to this request.</td></tr>
 </tbody></table>
-<h4 id="detailed-descriptions-2"><a class="header" href="#detailed-descriptions-2">Detailed descriptions</a></h4>
-<p><strong>manifest_hash</strong>: A digest of a manifest that has been indexed previous to this
-request.</p>
 <blockquote>
 <p>Example responses</p>
 </blockquote>
@@ -900,8 +1050,8 @@ request.</p>
       &quot;id&quot;: &quot;356835&quot;,
       &quot;updater&quot;: &quot;&quot;,
       &quot;name&quot;: &quot;CVE-2009-5155&quot;,
-      &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28,\nparse_reg_exp in posix/regcomp.c misparses alternatives,\nwhich allows attackers to cause a denial of service (assertion\nfailure and application exit) or trigger an incorrect result\nby attempting a regular-expression match.\&quot;\n&quot;,
-      &quot;links&quot;: &quot;https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155\nhttp://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html\nhttps://sourceware.org/bugzilla/show_bug.cgi?id=11053\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238\nhttps://sourceware.org/bugzilla/show_bug.cgi?id=18986\&quot;\n&quot;,
+      &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
+      &quot;links&quot;: &quot;https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986\&quot;&quot;,
       &quot;severity&quot;: &quot;Low&quot;,
       &quot;normalized_severity&quot;: &quot;Low&quot;,
       &quot;package&quot;: {
@@ -941,9 +1091,7 @@ request.</p>
   }
 }
 </code></pre>
-<h3 id="retrieve-a-vulnerabilityreport-for-a-given-manifest's-content
-addressable-hash.
--responses">Responses</h3>
+<h3 id="retrieve-a-vulnerabilityreport-for-a-given-manifest's-content-addressable-hash.-responses">Responses</h3>
 <table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
 <tr><td>201</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.2">Created</a></td><td>VulnerabilityReport Created</td><td><a href="#schemavulnerabilityreport">VulnerabilityReport</a></td></tr>
 <tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="#schemaerror">Error</a></td></tr>
@@ -993,7 +1141,7 @@ This operation does not require authentication
         &quot;name&quot;: &quot;CVE-2009-5155&quot;,
         &quot;fixed_in_version&quot;: &quot;v0.0.1&quot;,
         &quot;links&quot;: &quot;http://link-to-advisory&quot;,
-        &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28,\nparse_reg_exp in posix/regcomp.c misparses alternatives,\nwhich allows attackers to cause a denial of service (assertion\nfailure and application exit) or trigger an incorrect result\nby attempting a regular-expression match.\&quot;\n&quot;,
+        &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
         &quot;normalized_severity&quot;: &quot;Unknown&quot;,
         &quot;package&quot;: {
           &quot;id&quot;: &quot;10&quot;,
@@ -1039,7 +1187,7 @@ This operation does not require authentication
 <p>PagedNotifications</p>
 <h3 id="properties-1"><a class="header" href="#properties-1">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
-<tr><td>page</td><td>object</td><td>false</td><td>none</td><td>A page object informing the client the next page to retrieve.<br>If page.next becomes &quot;-1&quot; the client should stop paging.</td></tr>
+<tr><td>page</td><td>object</td><td>false</td><td>none</td><td>A page object informing the client the next page to retrieve. If page.next becomes &quot;-1&quot; the client should stop paging.</td></tr>
 <tr><td>notifications</td><td>[<a href="#schemanotification">Notification</a>]</td><td>false</td><td>none</td><td>A list of notifications within this page</td></tr>
 </tbody></table>
 <h2 id="tocS_Callback">Callback</h2>
@@ -1070,7 +1218,7 @@ This operation does not require authentication
   &quot;name&quot;: &quot;CVE-2009-5155&quot;,
   &quot;fixed_in_version&quot;: &quot;v0.0.1&quot;,
   &quot;links&quot;: &quot;http://link-to-advisory&quot;,
-  &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28,\nparse_reg_exp in posix/regcomp.c misparses alternatives,\nwhich allows attackers to cause a denial of service (assertion\nfailure and application exit) or trigger an incorrect result\nby attempting a regular-expression match.\&quot;\n&quot;,
+  &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
   &quot;normalized_severity&quot;: &quot;Unknown&quot;,
   &quot;package&quot;: {
     &quot;id&quot;: &quot;10&quot;,
@@ -1119,7 +1267,7 @@ This operation does not require authentication
 <tr><td>description</td><td>string</td><td>false</td><td>none</td><td>the vulnerability name</td></tr>
 <tr><td>normalized_severity</td><td>string</td><td>false</td><td>none</td><td>A well defined set of severity strings guaranteed to be present.</td></tr>
 <tr><td>package</td><td><a href="#schemapackage">Package</a></td><td>false</td><td>none</td><td>A package discovered by indexing a Manifest</td></tr>
-<tr><td>distribution</td><td><a href="#schemadistribution">Distribution</a></td><td>false</td><td>none</td><td>An indexed distribution discovered in a layer. See<br>https://www.freedesktop.org/software/systemd/man/os-release.html<br>for explanations and example of fields.</td></tr>
+<tr><td>distribution</td><td><a href="#schemadistribution">Distribution</a></td><td>false</td><td>none</td><td>An indexed distribution discovered in a layer. See https://www.freedesktop.org/software/systemd/man/os-release.html for explanations and example of fields.</td></tr>
 <tr><td>repository</td><td><a href="#schemarepository">Repository</a></td><td>false</td><td>none</td><td>A package repository</td></tr>
 </tbody></table>
 <h4 id="enumerated-values"><a class="header" href="#enumerated-values">Enumerated Values</a></h4>
@@ -1145,7 +1293,7 @@ This operation does not require authentication
     &quot;name&quot;: &quot;CVE-2009-5155&quot;,
     &quot;fixed_in_version&quot;: &quot;v0.0.1&quot;,
     &quot;links&quot;: &quot;http://link-to-advisory&quot;,
-    &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28,\nparse_reg_exp in posix/regcomp.c misparses alternatives,\nwhich allows attackers to cause a denial of service (assertion\nfailure and application exit) or trigger an incorrect result\nby attempting a regular-expression match.\&quot;\n&quot;,
+    &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
     &quot;normalized_severity&quot;: &quot;Unknown&quot;,
     &quot;package&quot;: {
       &quot;id&quot;: &quot;10&quot;,
@@ -1211,8 +1359,8 @@ This operation does not require authentication
 <h3 id="properties-5"><a class="header" href="#properties-5">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>package_db</td><td>string</td><td>true</td><td>none</td><td>The filesystem path or unique identifier of a package database.</td></tr>
-<tr><td>introduced_in</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
-<tr><td>distribution_id</td><td>string</td><td>true</td><td>none</td><td>The distribution ID found in an associated IndexReport or<br>VulnerabilityReport.</td></tr>
+<tr><td>introduced_in</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here: https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
+<tr><td>distribution_id</td><td>string</td><td>true</td><td>none</td><td>The distribution ID found in an associated IndexReport or VulnerabilityReport.</td></tr>
 </tbody></table>
 <h2 id="tocS_IndexReport">IndexReport</h2>
 <!-- backwards compatibility -->
@@ -1272,13 +1420,13 @@ This operation does not require authentication
 <p>IndexReport</p>
 <h3 id="properties-6"><a class="header" href="#properties-6">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
-<tr><td>manifest_hash</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
+<tr><td>manifest_hash</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here: https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
 <tr><td>state</td><td>string</td><td>true</td><td>none</td><td>The current state of the index operation</td></tr>
 <tr><td>packages</td><td>object</td><td>true</td><td>none</td><td>A map of Package objects indexed by Package.id</td></tr>
 <tr><td>» <strong>additionalProperties</strong></td><td><a href="#schemapackage">Package</a></td><td>false</td><td>none</td><td>A package discovered by indexing a Manifest</td></tr>
-<tr><td>distributions</td><td>object</td><td>true</td><td>none</td><td>A map of Distribution objects keyed by their Distribution.id<br>discovered in the manifest.</td></tr>
-<tr><td>» <strong>additionalProperties</strong></td><td><a href="#schemadistribution">Distribution</a></td><td>false</td><td>none</td><td>An indexed distribution discovered in a layer. See<br>https://www.freedesktop.org/software/systemd/man/os-release.html<br>for explanations and example of fields.</td></tr>
-<tr><td>environments</td><td>object</td><td>true</td><td>none</td><td>A map of lists containing Environment objects keyed by the<br>associated Package.id.</td></tr>
+<tr><td>distributions</td><td>object</td><td>true</td><td>none</td><td>A map of Distribution objects keyed by their Distribution.id discovered in the manifest.</td></tr>
+<tr><td>» <strong>additionalProperties</strong></td><td><a href="#schemadistribution">Distribution</a></td><td>false</td><td>none</td><td>An indexed distribution discovered in a layer. See https://www.freedesktop.org/software/systemd/man/os-release.html for explanations and example of fields.</td></tr>
+<tr><td>environments</td><td>object</td><td>true</td><td>none</td><td>A map of lists containing Environment objects keyed by the associated Package.id.</td></tr>
 <tr><td>» <strong>additionalProperties</strong></td><td>[<a href="#schemaenvironment">Environment</a>]</td><td>false</td><td>none</td><td>[The environment a particular package was discovered in.]</td></tr>
 <tr><td>success</td><td>boolean</td><td>true</td><td>none</td><td>A bool indicating succcessful index</td></tr>
 <tr><td>err</td><td>string</td><td>true</td><td>none</td><td>An error message on event of unsuccessful index</td></tr>
@@ -1337,8 +1485,8 @@ This operation does not require authentication
       &quot;id&quot;: &quot;356835&quot;,
       &quot;updater&quot;: &quot;&quot;,
       &quot;name&quot;: &quot;CVE-2009-5155&quot;,
-      &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28,\nparse_reg_exp in posix/regcomp.c misparses alternatives,\nwhich allows attackers to cause a denial of service (assertion\nfailure and application exit) or trigger an incorrect result\nby attempting a regular-expression match.\&quot;\n&quot;,
-      &quot;links&quot;: &quot;https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155\nhttp://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html\nhttps://sourceware.org/bugzilla/show_bug.cgi?id=11053\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238\nhttps://sourceware.org/bugzilla/show_bug.cgi?id=18986\&quot;\n&quot;,
+      &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
+      &quot;links&quot;: &quot;https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986\&quot;&quot;,
       &quot;severity&quot;: &quot;Low&quot;,
       &quot;normalized_severity&quot;: &quot;Low&quot;,
       &quot;package&quot;: {
@@ -1382,11 +1530,11 @@ This operation does not require authentication
 <p>VulnerabilityReport</p>
 <h3 id="properties-7"><a class="header" href="#properties-7">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
-<tr><td>manifest_hash</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
+<tr><td>manifest_hash</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here: https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
 <tr><td>packages</td><td>object</td><td>true</td><td>none</td><td>A map of Package objects indexed by Package.id</td></tr>
 <tr><td>» <strong>additionalProperties</strong></td><td><a href="#schemapackage">Package</a></td><td>false</td><td>none</td><td>A package discovered by indexing a Manifest</td></tr>
 <tr><td>distributions</td><td>object</td><td>true</td><td>none</td><td>A map of Distribution objects indexed by Distribution.id.</td></tr>
-<tr><td>» <strong>additionalProperties</strong></td><td><a href="#schemadistribution">Distribution</a></td><td>false</td><td>none</td><td>An indexed distribution discovered in a layer. See<br>https://www.freedesktop.org/software/systemd/man/os-release.html<br>for explanations and example of fields.</td></tr>
+<tr><td>» <strong>additionalProperties</strong></td><td><a href="#schemadistribution">Distribution</a></td><td>false</td><td>none</td><td>An indexed distribution discovered in a layer. See https://www.freedesktop.org/software/systemd/man/os-release.html for explanations and example of fields.</td></tr>
 <tr><td>environments</td><td>object</td><td>true</td><td>none</td><td>A mapping of Environment lists indexed by Package.id</td></tr>
 <tr><td>» <strong>additionalProperties</strong></td><td>[<a href="#schemaenvironment">Environment</a>]</td><td>false</td><td>none</td><td>[The environment a particular package was discovered in.]</td></tr>
 <tr><td>vulnerabilities</td><td>object</td><td>true</td><td>none</td><td>A map of Vulnerabilities indexed by Vulnerability.id</td></tr>
@@ -1404,8 +1552,8 @@ This operation does not require authentication
   &quot;id&quot;: &quot;356835&quot;,
   &quot;updater&quot;: &quot;&quot;,
   &quot;name&quot;: &quot;CVE-2009-5155&quot;,
-  &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28,\nparse_reg_exp in posix/regcomp.c misparses alternatives,\nwhich allows attackers to cause a denial of service (assertion\nfailure and application exit) or trigger an incorrect result\nby attempting a regular-expression match.\&quot;\n&quot;,
-  &quot;links&quot;: &quot;https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155\nhttp://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html\nhttps://sourceware.org/bugzilla/show_bug.cgi?id=11053\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806\nhttps://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238\nhttps://sourceware.org/bugzilla/show_bug.cgi?id=18986\&quot;\n&quot;,
+  &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
+  &quot;links&quot;: &quot;https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986\&quot;&quot;,
   &quot;severity&quot;: &quot;Low&quot;,
   &quot;normalized_severity&quot;: &quot;Low&quot;,
   &quot;package&quot;: {
@@ -1451,7 +1599,7 @@ This operation does not require authentication
 <tr><td>severity</td><td>string</td><td>true</td><td>none</td><td>A severity keyword taken verbatim from the vulnerability source.</td></tr>
 <tr><td>normalized_severity</td><td>string</td><td>true</td><td>none</td><td>A well defined set of severity strings guaranteed to be present.</td></tr>
 <tr><td>package</td><td><a href="#schemapackage">Package</a></td><td>false</td><td>none</td><td>A package discovered by indexing a Manifest</td></tr>
-<tr><td>distribution</td><td><a href="#schemadistribution">Distribution</a></td><td>false</td><td>none</td><td>An indexed distribution discovered in a layer. See<br>https://www.freedesktop.org/software/systemd/man/os-release.html<br>for explanations and example of fields.</td></tr>
+<tr><td>distribution</td><td><a href="#schemadistribution">Distribution</a></td><td>false</td><td>none</td><td>An indexed distribution discovered in a layer. See https://www.freedesktop.org/software/systemd/man/os-release.html for explanations and example of fields.</td></tr>
 <tr><td>repository</td><td><a href="#schemarepository">Repository</a></td><td>false</td><td>none</td><td>A package repository</td></tr>
 <tr><td>issued</td><td>string</td><td>false</td><td>none</td><td>The timestamp in which the vulnerability was issued</td></tr>
 <tr><td>range</td><td>string</td><td>false</td><td>none</td><td>The range of package versions affected by this vulnerability.</td></tr>
@@ -1533,7 +1681,7 @@ This operation does not require authentication
 <tr><td>version</td><td>string</td><td>true</td><td>none</td><td>Version of the Package</td></tr>
 <tr><td>kind</td><td>string</td><td>false</td><td>none</td><td>Kind of package. Source</td></tr>
 <tr><td>source</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
-<tr><td>normalized_version</td><td><a href="#schemaversion">Version</a></td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a &quot;kind&quot; and an<br>array of integers such that two versions of the same kind have the<br>correct ordering when the integers are compared pair-wise.</td></tr>
+<tr><td>normalized_version</td><td><a href="#schemaversion">Version</a></td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a &quot;kind&quot; and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.</td></tr>
 <tr><td>arch</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
 <tr><td>module</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
 <tr><td>cpe</td><td>string</td><td>false</td><td>none</td><td>A CPE identifying the package</td></tr>
@@ -1572,7 +1720,7 @@ This operation does not require authentication
 <tr><td>version</td><td>string</td><td>true</td><td>none</td><td>Version of the Package</td></tr>
 <tr><td>kind</td><td>string</td><td>false</td><td>none</td><td>Kind of package. Source</td></tr>
 <tr><td>source</td><td><a href="#schemasourcepackage">SourcePackage</a></td><td>false</td><td>none</td><td>A source package affiliated with a Package</td></tr>
-<tr><td>normalized_version</td><td><a href="#schemaversion">Version</a></td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a &quot;kind&quot; and an<br>array of integers such that two versions of the same kind have the<br>correct ordering when the integers are compared pair-wise.</td></tr>
+<tr><td>normalized_version</td><td><a href="#schemaversion">Version</a></td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a &quot;kind&quot; and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.</td></tr>
 <tr><td>arch</td><td>string</td><td>false</td><td>none</td><td>The package's target system architecture</td></tr>
 <tr><td>module</td><td>string</td><td>false</td><td>none</td><td>A module further defining a namespace for a package</td></tr>
 <tr><td>cpe</td><td>string</td><td>false</td><td>none</td><td>A CPE identifying the package</td></tr>
@@ -1613,7 +1761,7 @@ This operation does not require authentication
 <p>Version</p>
 <h3 id="properties-13"><a class="header" href="#properties-13">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
-<tr><td>Version</td><td>string</td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a &quot;kind&quot; and an<br>array of integers such that two versions of the same kind have the<br>correct ordering when the integers are compared pair-wise.</td></tr>
+<tr><td>Version</td><td>string</td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a &quot;kind&quot; and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.</td></tr>
 </tbody></table>
 <h2 id="tocS_Manifest">Manifest</h2>
 <!-- backwards compatibility -->
@@ -1626,7 +1774,7 @@ This operation does not require authentication
   &quot;layers&quot;: [
     {
       &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-      &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36\n&quot;,
+      &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36&quot;,
       &quot;headers&quot;: {
         &quot;property1&quot;: [
           &quot;string&quot;
@@ -1643,7 +1791,7 @@ This operation does not require authentication
 <p>Manifest</p>
 <h3 id="properties-14"><a class="header" href="#properties-14">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
-<tr><td>hash</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
+<tr><td>hash</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here: https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
 <tr><td>layers</td><td>[<a href="#schemalayer">Layer</a>]</td><td>true</td><td>none</td><td>[A Layer within a Manifest and where Clair may retrieve it.]</td></tr>
 </tbody></table>
 <h2 id="tocS_Layer">Layer</h2>
@@ -1654,7 +1802,7 @@ This operation does not require authentication
 <a id="tocslayer"></a>
 <pre><code class="language-json">{
   &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36\n&quot;,
+  &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36&quot;,
   &quot;headers&quot;: {
     &quot;property1&quot;: [
       &quot;string&quot;
@@ -1669,10 +1817,26 @@ This operation does not require authentication
 <p>Layer</p>
 <h3 id="properties-15"><a class="header" href="#properties-15">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
-<tr><td>hash</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
-<tr><td>uri</td><td>string</td><td>true</td><td>none</td><td>A URI describing where the layer may be found. Implementations<br>MUST support http(s) schemes and MAY support additional<br>schemes.</td></tr>
-<tr><td>headers</td><td>object</td><td>true</td><td>none</td><td>map of arrays of header values keyed by header<br>value. e.g. map[string][]string</td></tr>
+<tr><td>hash</td><td><a href="#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here: https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
+<tr><td>uri</td><td>string</td><td>true</td><td>none</td><td>A URI describing where the layer may be found. Implementations MUST support http(s) schemes and MAY support additional schemes.</td></tr>
+<tr><td>headers</td><td>object</td><td>true</td><td>none</td><td>map of arrays of header values keyed by header value. e.g. map[string][]string</td></tr>
 <tr><td>» <strong>additionalProperties</strong></td><td>[string]</td><td>false</td><td>none</td><td>none</td></tr>
+</tbody></table>
+<h2 id="tocS_BulkDelete">BulkDelete</h2>
+<!-- backwards compatibility -->
+<a id="schemabulkdelete"></a>
+<a id="schema_BulkDelete"></a>
+<a id="tocSbulkdelete"></a>
+<a id="tocsbulkdelete"></a>
+<pre><code class="language-json">[
+  &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;
+]
+
+</code></pre>
+<p>BulkDelete</p>
+<h3 id="properties-16"><a class="header" href="#properties-16">Properties</a></h3>
+<table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
+<tr><td>BulkDelete</td><td>[<a href="#schemadigest">Digest</a>]</td><td>false</td><td>none</td><td>An array of Digests to be deleted.</td></tr>
 </tbody></table>
 <h2 id="tocS_Error">Error</h2>
 <!-- backwards compatibility -->
@@ -1687,7 +1851,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>Error</p>
-<h3 id="properties-16"><a class="header" href="#properties-16">Properties</a></h3>
+<h3 id="properties-17"><a class="header" href="#properties-17">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>code</td><td>string</td><td>false</td><td>none</td><td>a code for this particular error</td></tr>
 <tr><td>message</td><td>string</td><td>false</td><td>none</td><td>a message with further detail</td></tr>
@@ -1704,7 +1868,7 @@ This operation does not require authentication
 
 </code></pre>
 <p>State</p>
-<h3 id="properties-17"><a class="header" href="#properties-17">Properties</a></h3>
+<h3 id="properties-18"><a class="header" href="#properties-18">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>state</td><td>string</td><td>true</td><td>none</td><td>an opaque identifier</td></tr>
 </tbody></table>
@@ -1718,9 +1882,9 @@ This operation does not require authentication
 
 </code></pre>
 <p>Digest</p>
-<h3 id="properties-18"><a class="header" href="#properties-18">Properties</a></h3>
+<h3 id="properties-19"><a class="header" href="#properties-19">Properties</a></h3>
 <table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
-<tr><td>Digest</td><td>string</td><td>false</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here:<br>https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br><br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
+<tr><td>Digest</td><td>string</td><td>false</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here: https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
 </tbody></table>
 
                     </main>
