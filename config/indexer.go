@@ -1,5 +1,7 @@
 package config
 
+import "runtime"
+
 // Indexer provides Clair Indexer node configuration
 type Indexer struct {
 	// Scanner allows for passing configuration options to layer scanners.
@@ -24,7 +26,10 @@ type Indexer struct {
 	LayerScanConcurrency int `yaml:"layer_scan_concurrency" json:"layer_scan_concurrency"`
 	// Rate limits the number if index report creation requests.
 	//
-	// Any value below 1 is considered unlimited.
+	// Setting this to 0 will attempt to auto-size this value. Setting a
+	// negative value means "unlimited." The auto-sizing is a multiple of the
+	// number of available cores.
+	//
 	// The API will return a 429 status code if concurrency is exceeded.
 	IndexReportRequestConcurrency int `yaml:"index_report_request_concurrency" json:"index_report_request_concurrency"`
 	// A "true" or "false" value
@@ -44,7 +49,18 @@ func (i *Indexer) validate(mode Mode) (ws []Warning, err error) {
 	if i.ScanLockRetry == 0 {
 		i.ScanLockRetry = DefaultScanLockRetry
 	}
-	return i.lint()
+	if i.IndexReportRequestConcurrency == 0 {
+		// GOMAXPROCS should be set to the number of cores available.
+		gmp := runtime.GOMAXPROCS(0)
+		const wildGuess = 4
+		i.IndexReportRequestConcurrency = gmp * wildGuess
+		ws = append(ws, Warning{
+			path: ".index_report_request_concurrency",
+			msg:  `automatically sizing number of concurrent requests`,
+		})
+	}
+	lws, err := i.lint()
+	return append(ws, lws...), err
 }
 
 func (i *Indexer) lint() (ws []Warning, err error) {
@@ -73,14 +89,6 @@ func (i *Indexer) lint() (ws []Warning, err error) {
 		ws = append(ws, Warning{
 			path: ".layer_scan_concurrency",
 			msg:  `large values may exceed resource quotas`,
-		})
-	}
-	if i.IndexReportRequestConcurrency < 1 {
-		// Remove this lint if we come up with a heuristic instead of just
-		// "unlimited".
-		ws = append(ws, Warning{
-			path: ".index_report_request_concurrency",
-			msg:  `unlimited concurrent requests may exceed resource quotas`,
 		})
 	}
 
