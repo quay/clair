@@ -19,13 +19,11 @@
     ]
   },
   "editable": true,
-  "fiscalYearStartMonth": 0,
   "gnetId": null,
   "graphTooltip": 1,
-  "id": 162,
-  "iteration": 1637602132532,
+  "id": 1,
+  "iteration": 1642631554696,
   "links": [],
-  "liveNow": false,
   "panels": [
     {
       "datasource": "$datasource",
@@ -261,6 +259,88 @@
         }
       ],
       "title": "Authentication",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "$datasource",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 9
+      },
+      "id": 45,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "rate(clair_http_concurrencylimited_total[$rate])",
+          "interval": "",
+          "legendFormat": "Endpoint: {{ endpoint }} Method: {{ method }}",
+          "refId": "A"
+        }
+      ],
+      "title": "Ratelimiting",
       "type": "timeseries"
     },
     {
@@ -1379,7 +1459,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum by (code) (rate(clair_http_indexer_api_v1_index_report_request_total[$rate]))",
+          "expr": "sum by (code) (rate(clair_http_indexerv1_request_total{handler=\"/indexer/api/v1/index_report\", method=\"post\"}[$rate]))",
           "instant": false,
           "interval": "1",
           "legendFormat": "Status {{ code }} ",
@@ -1462,7 +1542,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($apiquantile, rate(clair_http_indexer_api_v1_index_report_request_duration_seconds_bucket[$rate]))",
+          "expr": "histogram_quantile($apiquantile, rate(clair_http_indexerv1_request_duration_seconds_bucket{method=\"post\", handler=\"/indexer/api/v1/index_report\"}[$rate]))",
           "instant": false,
           "interval": "1",
           "legendFormat": "",
@@ -1544,7 +1624,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum by (code) (rate(clair_http_indexer_api_v1_index_state_request_total[$rate]))",
+          "expr": "sum by (code) (rate(clair_http_indexerv1_request_total{handler=\"/indexer/api/v1/index_state\", method=\"get\"}[$rate]))",
           "instant": false,
           "interval": "",
           "legendFormat": "Status {{code}}",
@@ -1627,7 +1707,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($apiquantile, rate(clair_http_indexer_api_v1_index_state_request_duration_seconds_bucket[$rate]))",
+          "expr": "histogram_quantile($apiquantile, rate(clair_http_indexerv1_request_duration_seconds_bucket{method=\"get\", handler=\"/indexer/api/v1/index_state\"}[$rate]))",
           "instant": false,
           "interval": "",
           "legendFormat": "",
@@ -1709,7 +1789,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum by (code) (rate(clair_http_indexer_api_v1_index_report_get_request_total[$rate]))",
+          "expr": "sum by (code) (rate(clair_http_indexerv1_request_total{method=\"get\", handler=\"/indexer/api/v1/index_report/:digest\"}[$rate]))",
           "instant": false,
           "interval": "1",
           "legendFormat": "Status {{ code }} ",
@@ -1791,7 +1871,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($apiquantile, rate(clair_http_indexer_api_v1_index_report_get_request_duration_seconds_bucket[$rate]))",
+          "expr": "histogram_quantile($apiquantile, rate(clair_http_indexerv1_request_duration_seconds_bucket{method=\"get\", handler=\"/indexer/api/v1/index_report/:digest\"}[$rate]))",
           "instant": false,
           "interval": "1",
           "legendFormat": "",
@@ -2307,8 +2387,8 @@
       "type": "timeseries"
     }
   ],
-  "refresh": false,
-  "schemaVersion": 31,
+  "refresh": "",
+  "schemaVersion": 30,
   "style": "dark",
   "tags": [],
   "templating": {
