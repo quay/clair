@@ -631,13 +631,13 @@ airgap according to site policy, and then call the relevant <code>clairctl</code
 to import the updates.</p>
 <p>For example:</p>
 <pre><code class="language-sh"># On a workstation, run:
-clairctl export-updaters updates.gz
+clairctl export-updaters updates.json.gz
 </code></pre>
 <pre><code class="language-sh"># Move the resulting file to a place reachable by the cluster:
-scp updates.gz internal-webserver:/var/www/
+scp updates.json.gz internal-webserver:/var/www/
 </code></pre>
 <pre><code class="language-sh"># On a pod inside the cluster, import the file:
-clairctl import-updaters http://web.svc/updates.gz
+clairctl import-updaters http://web.svc/updates.json.gz
 </code></pre>
 <p>Note that a configuration file is needed to run these commands.</p>
 <h4 id="configuration-4"><a class="header" href="#configuration-4">Configuration</a></h4>
