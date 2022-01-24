@@ -88,3 +88,18 @@ func TestAuthUnmarshal(t *testing.T) {
 		}
 	})
 }
+
+func TestAuthMarshal(t *testing.T) {
+	want := `{"key":"ZGVhZGJlZWZkZWFkYmVlZg==","iss":["iss"]}`
+	in := config.AuthPSK{
+		Key:    []byte("deadbeefdeadbeef"),
+		Issuer: []string{"iss"},
+	}
+	gotb, err := json.Marshal(in)
+	if err != nil {
+		t.Error(err)
+	}
+	if got := string(gotb); !cmp.Equal(got, want) {
+		t.Error(cmp.Diff(got, want))
+	}
+}

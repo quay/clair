@@ -10,15 +10,15 @@ import (
 type Base64 []byte
 
 var (
-	_ encoding.TextMarshaler   = (*Base64)(nil)
+	_ encoding.TextMarshaler   = (Base64)(nil)
 	_ encoding.TextUnmarshaler = (*Base64)(nil)
 )
 
 // MarshalText implements encoding.TextMarshaler.
-func (b *Base64) MarshalText() ([]byte, error) {
-	sz := base64.StdEncoding.EncodedLen(len(*b))
+func (b Base64) MarshalText() ([]byte, error) {
+	sz := base64.StdEncoding.EncodedLen(len(b))
 	out := make([]byte, sz)
-	base64.StdEncoding.Encode(out, *b)
+	base64.StdEncoding.Encode(out, b)
 	return out, nil
 }
 
