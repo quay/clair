@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4/pgxpool"
-	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/jackc/pgx/v4/stdlib"
 	"github.com/quay/clair/config"
 	"github.com/quay/claircore/pkg/ctxlock"
 	"github.com/quay/zlog"
@@ -167,25 +167,23 @@ func storeInit(ctx context.Context, opts Opts) (*postgres.Store, *pgxpool.Pool, 
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to parse ConnString: %v", err)
 	}
-	cfg.MaxConns = 30
 	pool, err := pgxpool.ConnectConfig(ctx, cfg)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to create ConnPool: %v", err)
 	}
 
-	db, err := sql.Open("pgx", opts.ConnString)
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to open db: %v", err)
-	}
-	defer db.Close()
-
 	// do migrations if requested
 	if opts.Migrations {
+		db, err := sql.Open("pgx", stdlib.RegisterConnConfig(cfg.ConnConfig))
+		if err != nil {
+			return nil, nil, fmt.Errorf("failed to open db: %v", err)
+		}
+		defer db.Close()
+
 		zlog.Info(ctx).Msg("performing notifier migrations")
 		migrator := migrate.NewPostgresMigrator(db)
 		migrator.Table = migrations.MigrationTable
-		err := migrator.Exec(migrate.Up, migrations.Migrations...)
-		if err != nil {
+		if err := migrator.Exec(migrate.Up, migrations.Migrations...); err != nil {
 			return nil, nil, fmt.Errorf("failed to perform migrations: %w", err)
 		}
 	}
