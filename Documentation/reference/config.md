@@ -62,7 +62,6 @@ indexer:
     airgap: false
 matcher:
     connstring: ""
-    max_conn_pool: 0
     indexer_addr: ""
     migrations: false
     period: ""
@@ -192,13 +191,15 @@ Accepts a format as a url (e.g.,
 or a libpq connection string (e.g.,
 `user=pqgotest dbname=pqgotest sslmode=verify-full`).
 
-
 #### `$.matcher.max_conn_pool`
 A positive integer limiting the database connection pool size.
 
 Clair allows for a custom connection pool size.
 This number will directly set how many active database
 connections are allowed concurrently.
+
+This parameter will be ignored in a future version.
+Users should configure this through the connection string.
 
 #### `$.matcher.indexer_addr`
 A string in `<host>:<port>` format where `<host>` can be an empty string.
