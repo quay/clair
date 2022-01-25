@@ -34,9 +34,14 @@ type Matcher struct {
 	UpdateRetention int `yaml:"update_retention" json:"update_retention"`
 	// A positive integer
 	//
-	// Clair allows for a custom connection pool size.
-	// This number will directly set how many active sql
-	// connections are allowed concurrently.
+	// Clair allows for a custom connection pool size.  This number will
+	// directly set how many active sql connections are allowed concurrently.
+	//
+	// Deprecated: Pool size should be set through the ConnString member.
+	// Currently, Clair only uses the "pgxpool" package to connect to the
+	// database, so see
+	// https://pkg.go.dev/github.com/jackc/pgx/v4/pgxpool#ParseConfig for more
+	// information.
 	MaxConnPool int `yaml:"max_conn_pool" json:"max_conn_pool"`
 	// CacheAge controls how long clients should be hinted to cache responses
 	// for.
@@ -114,6 +119,12 @@ func (m *Matcher) lint() (ws []Warning, err error) {
 		ws = append(ws, Warning{
 			path: ".update_retention",
 			msg:  "update garbage collection is off",
+		})
+	}
+	if m.MaxConnPool != 0 {
+		ws = append(ws, Warning{
+			path: ".max_conn_pool",
+			msg:  "this parameter will be ignored in a future release",
 		})
 	}
 
