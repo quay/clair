@@ -2618,7 +2618,6 @@ indexer:
     airgap: false
 matcher:
     connstring: &quot;&quot;
-    max_conn_pool: 0
     indexer_addr: &quot;&quot;
     migrations: false
     period: &quot;&quot;
@@ -2730,6 +2729,8 @@ or a libpq connection string (e.g.,
 <p>Clair allows for a custom connection pool size.
 This number will directly set how many active database
 connections are allowed concurrently.</p>
+<p>This parameter will be ignored in a future version.
+Users should configure this through the connection string.</p>
 <h4 id="matcherindexer_addr"><a class="header" href="#matcherindexer_addr"><code>$.matcher.indexer_addr</code></a></h4>
 <p>A string in <code>&lt;host&gt;:&lt;port&gt;</code> format where <code>&lt;host&gt;</code> can be an empty string.</p>
 <p>A Matcher contacts an Indexer to create a VulnerabilityReport.
