@@ -55,9 +55,15 @@ vendor: vendor/modules.txt
 vendor/modules.txt: go.mod
 	go mod vendor
 
-.PHONY: container-build
+.PHONY: container-build builder-build
 container-build:
 	$(docker) build -t clair-local:latest .
+
+builder-build:
+ifeq ($(strip $(docker)),podman)
+	$(eval BUILDAH_FORMAT=docker)
+endif
+	$(docker) build -t clair-builder:latest -f builder.Dockerfile .
 
 DOCS_DIR ?= ../clair-doc
 .PHONY: docs-build
@@ -70,7 +76,6 @@ contrib/openshift/grafana/dashboards/dashboard-clair.configmap.yaml: local-dev/g
 	sed "s/GRAFANA_MANIFEST/$$(sed -e 's/[\&/]/\\&/g' -e 's/$$/\\n/' -e 's/^/    /' $< | tr -d '\n')/" \
 	$(word 2,$^) \
 	> $@
-
 
 # runs unit tests
 .PHONY: unit

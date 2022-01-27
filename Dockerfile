@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Copyright 2017 clair authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,9 +19,10 @@ WORKDIR /build/
 ADD . /build/
 ARG CLAIR_VERSION=dev
 RUN go build \
-  -ldflags="-X main.Version=${CLAIR_VERSION}" \
+  -trimpath -ldflags="-X main.Version=${CLAIR_VERSION}" \
   ./cmd/clair
 RUN go build\
+  -trimpath \
   ./cmd/clairctl
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal AS init
@@ -28,7 +30,7 @@ RUN microdnf install --disablerepo=* --enablerepo=ubi-8-baseos --enablerepo=ubi-
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal AS final
 ENTRYPOINT ["/usr/local/bin/catatonit", "--", "/bin/clair"]
-VOLUME /config
+VOLUME /config /plugin
 EXPOSE 6060
 WORKDIR /run
 ENV CLAIR_CONF=/config/config.yaml CLAIR_MODE=combo
