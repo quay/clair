@@ -19,11 +19,13 @@
     ]
   },
   "editable": true,
+  "fiscalYearStartMonth": 0,
   "gnetId": null,
   "graphTooltip": 1,
-  "id": 1,
-  "iteration": 1642631554696,
+  "id": 167,
+  "iteration": 1643412894556,
   "links": [],
+  "liveNow": false,
   "panels": [
     {
       "datasource": "$datasource",
@@ -354,7 +356,7 @@
       },
       "id": 18,
       "panels": [],
-      "title": "Database",
+      "title": "Database Indexer",
       "type": "row"
     },
     {
@@ -410,8 +412,8 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 7,
+        "w": 24,
         "x": 0,
         "y": 18
       },
@@ -479,133 +481,655 @@
       "type": "timeseries"
     },
     {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "linear",
+        "colorScheme": "interpolateOranges",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
       "datasource": "$datasource",
       "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "Seconds",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 30,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 18
+        "w": 4,
+        "x": 0,
+        "y": 25
       },
+      "heatmap": {},
+      "hideZeroBuckets": true,
+      "highlightCards": true,
       "id": 22,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
+      "legend": {
+        "show": true
       },
+      "maxDataPoints": 50,
+      "repeat": null,
+      "reverseYBuckets": false,
       "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($dbquantile, rate(claircore_indexer_setindexreport_duration_seconds_bucket[$rate]))",
+          "expr": "sum(rate(claircore_indexer_setindexreport_duration_seconds_bucket[5m])) by (le)",
           "format": "heatmap",
           "hide": false,
           "interval": "",
-          "legendFormat": "IndexReport",
+          "legendFormat": "{{ le }}",
           "refId": "A"
-        },
+        }
+      ],
+      "title": "Database query duration set index_report (indexer)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "IndexReport": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": null
+              },
+              "LayerScanned": {
+                "aggregations": [],
+                "operation": null
+              },
+              "ManifestScanned": {
+                "aggregations": [],
+                "operation": null
+              },
+              "PersistManifest": {
+                "aggregations": [],
+                "operation": null
+              },
+              "RegisterScanners": {
+                "aggregations": [],
+                "operation": null
+              },
+              "SetIndexReport": {
+                "aggregations": [],
+                "operation": null
+              },
+              "Time": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": null
+              }
+            }
+          }
+        }
+      ],
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
+    },
+    {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "linear",
+        "colorScheme": "interpolateOranges",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
+      "description": "",
+      "gridPos": {
+        "h": 8,
+        "w": 4,
+        "x": 4,
+        "y": 25
+      },
+      "heatmap": {},
+      "hideZeroBuckets": true,
+      "highlightCards": true,
+      "id": 48,
+      "legend": {
+        "show": true
+      },
+      "maxDataPoints": 50,
+      "reverseYBuckets": false,
+      "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($dbquantile, rate(claircore_indexer_layerscanned_duration_seconds_bucket[$rate]))",
+          "expr": "sum(rate(claircore_indexer_layerscanned_duration_seconds_bucket[5m])) by (le)",
           "format": "heatmap",
           "hide": false,
           "interval": "",
-          "legendFormat": "LayerScanned",
+          "legendFormat": "{{ le }}",
           "refId": "B"
-        },
+        }
+      ],
+      "title": "Database query duration layer scanned (indexer)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "IndexReport": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": null
+              },
+              "LayerScanned": {
+                "aggregations": [],
+                "operation": null
+              },
+              "ManifestScanned": {
+                "aggregations": [],
+                "operation": null
+              },
+              "PersistManifest": {
+                "aggregations": [],
+                "operation": null
+              },
+              "RegisterScanners": {
+                "aggregations": [],
+                "operation": null
+              },
+              "SetIndexReport": {
+                "aggregations": [],
+                "operation": null
+              },
+              "Time": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": null
+              }
+            }
+          }
+        }
+      ],
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
+    },
+    {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "linear",
+        "colorScheme": "interpolateOranges",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
+      "description": "",
+      "gridPos": {
+        "h": 8,
+        "w": 4,
+        "x": 8,
+        "y": 25
+      },
+      "heatmap": {},
+      "hideZeroBuckets": true,
+      "highlightCards": true,
+      "id": 51,
+      "legend": {
+        "show": true
+      },
+      "maxDataPoints": 50,
+      "reverseYBuckets": false,
+      "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($dbquantile, rate(claircore_indexer_manifestscanned_duration_seconds_bucket[$rate]))",
+          "expr": "sum(rate(claircore_indexer_persistmanifest_duration_seconds_bucket[$rate])) by (le)",
           "format": "heatmap",
           "hide": false,
           "interval": "",
-          "legendFormat": "ManifestScanned",
-          "refId": "C"
-        },
-        {
-          "exemplar": true,
-          "expr": "histogram_quantile($dbquantile, rate(claircore_indexer_persistmanifest_duration_seconds_bucket[$rate]))",
-          "format": "heatmap",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "PersistManifest",
+          "legendFormat": "{{ le }}",
           "refId": "D"
-        },
+        }
+      ],
+      "title": "Database query duration persist manifest (indexer)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "IndexReport": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": null
+              },
+              "LayerScanned": {
+                "aggregations": [],
+                "operation": null
+              },
+              "ManifestScanned": {
+                "aggregations": [],
+                "operation": null
+              },
+              "PersistManifest": {
+                "aggregations": [],
+                "operation": null
+              },
+              "RegisterScanners": {
+                "aggregations": [],
+                "operation": null
+              },
+              "SetIndexReport": {
+                "aggregations": [],
+                "operation": null
+              },
+              "Time": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": null
+              }
+            }
+          }
+        }
+      ],
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
+    },
+    {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "linear",
+        "colorScheme": "interpolateOranges",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
+      "description": "",
+      "gridPos": {
+        "h": 8,
+        "w": 4,
+        "x": 12,
+        "y": 25
+      },
+      "heatmap": {},
+      "hideZeroBuckets": true,
+      "highlightCards": true,
+      "id": 52,
+      "legend": {
+        "show": true
+      },
+      "maxDataPoints": 50,
+      "reverseYBuckets": false,
+      "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($dbquantile, rate(claircore_indexer_registerscanners_duration_seconds_bucket[$rate]))",
+          "expr": "sum(rate(claircore_indexer_manifestscanned_duration_seconds_bucket[5m])) by (le)",
           "format": "heatmap",
           "hide": false,
           "interval": "",
-          "legendFormat": "RegisterScanners",
+          "legendFormat": "{{ le }}",
+          "refId": "C"
+        }
+      ],
+      "title": "Database query duration manifest scanned (indexer)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "IndexReport": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": null
+              },
+              "LayerScanned": {
+                "aggregations": [],
+                "operation": null
+              },
+              "ManifestScanned": {
+                "aggregations": [],
+                "operation": null
+              },
+              "PersistManifest": {
+                "aggregations": [],
+                "operation": null
+              },
+              "RegisterScanners": {
+                "aggregations": [],
+                "operation": null
+              },
+              "SetIndexReport": {
+                "aggregations": [],
+                "operation": null
+              },
+              "Time": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": null
+              }
+            }
+          }
+        }
+      ],
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
+    },
+    {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "linear",
+        "colorScheme": "interpolateOranges",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
+      "description": "",
+      "gridPos": {
+        "h": 8,
+        "w": 4,
+        "x": 16,
+        "y": 25
+      },
+      "heatmap": {},
+      "hideZeroBuckets": true,
+      "highlightCards": true,
+      "id": 53,
+      "legend": {
+        "show": true
+      },
+      "maxDataPoints": 50,
+      "reverseYBuckets": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(rate(claircore_indexer_registerscanners_duration_seconds_bucket[5m])) by (le)",
+          "format": "heatmap",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{ le }}",
           "refId": "E"
-        },
+        }
+      ],
+      "title": "Database query duration register scanners (indexer)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "IndexReport": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": null
+              },
+              "LayerScanned": {
+                "aggregations": [],
+                "operation": null
+              },
+              "ManifestScanned": {
+                "aggregations": [],
+                "operation": null
+              },
+              "PersistManifest": {
+                "aggregations": [],
+                "operation": null
+              },
+              "RegisterScanners": {
+                "aggregations": [],
+                "operation": null
+              },
+              "SetIndexReport": {
+                "aggregations": [],
+                "operation": null
+              },
+              "Time": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": null
+              }
+            }
+          }
+        }
+      ],
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
+    },
+    {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "linear",
+        "colorScheme": "interpolateOranges",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
+      "description": "",
+      "gridPos": {
+        "h": 8,
+        "w": 4,
+        "x": 20,
+        "y": 25
+      },
+      "heatmap": {},
+      "hideZeroBuckets": true,
+      "highlightCards": true,
+      "id": 54,
+      "legend": {
+        "show": true
+      },
+      "maxDataPoints": 50,
+      "reverseYBuckets": false,
+      "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($dbquantile, rate(claircore_indexer_setindexfinished_duration_seconds_bucket[$rate]))",
+          "expr": "sum(rate(claircore_indexer_setindexfinished_duration_seconds_bucket[5m])) by (le)",
           "format": "heatmap",
           "hide": false,
           "interval": "",
-          "legendFormat": "SetIndexReport",
+          "legendFormat": "{{ le }}",
           "refId": "F"
         }
       ],
-      "title": "Database query duration (indexer) (p$dbquantile)",
-      "type": "timeseries"
+      "title": "Database query duration set index finished (indexer)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "IndexReport": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": null
+              },
+              "LayerScanned": {
+                "aggregations": [],
+                "operation": null
+              },
+              "ManifestScanned": {
+                "aggregations": [],
+                "operation": null
+              },
+              "PersistManifest": {
+                "aggregations": [],
+                "operation": null
+              },
+              "RegisterScanners": {
+                "aggregations": [],
+                "operation": null
+              },
+              "SetIndexReport": {
+                "aggregations": [],
+                "operation": null
+              },
+              "Time": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": null
+              }
+            }
+          }
+        }
+      ],
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 33
+      },
+      "id": 50,
+      "panels": [],
+      "title": "Database matcher",
+      "type": "row"
     },
     {
       "datasource": "$datasource",
@@ -660,10 +1184,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 7,
+        "w": 24,
         "x": 0,
-        "y": 26
+        "y": 34
       },
       "id": 21,
       "options": {
@@ -679,7 +1203,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "rate(claircore_vulnstore_get_total[$rate])",
+          "expr": "rate(claircore_vulnstore_getvulnerabilities_total[$rate])",
           "interval": "",
           "legendFormat": "VulnStoreGet: {{instance }}: {{ query }}",
           "refId": "A"
@@ -721,118 +1245,324 @@
       "type": "timeseries"
     },
     {
-      "datasource": "$datasource",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 30,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
       },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "linear",
+        "colorScheme": "interpolateOranges",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
       "gridPos": {
         "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 26
+        "w": 4,
+        "x": 0,
+        "y": 41
       },
+      "heatmap": {},
+      "hideZeroBuckets": false,
+      "highlightCards": true,
       "id": 33,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
+      "legend": {
+        "show": false
       },
+      "maxDataPoints": 50,
+      "reverseYBuckets": false,
       "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($dbquantile, rate(claircore_vulnstore_get_duration_seconds_bucket[$rate]))",
+          "expr": "sum(rate(claircore_vulnstore_getvulnerabilities_duration_seconds_bucket[$rate])) by (le)",
+          "format": "heatmap",
           "hide": false,
           "interval": "",
-          "legendFormat": "VulnStoreGet: {{instance }}: {{ query }}",
+          "legendFormat": "{{ le }}",
           "refId": "A"
-        },
+        }
+      ],
+      "title": "Database latency get latest refs (matcher)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
+    },
+    {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "linear",
+        "colorScheme": "interpolateOranges",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
+      "gridPos": {
+        "h": 8,
+        "w": 4,
+        "x": 4,
+        "y": 41
+      },
+      "heatmap": {},
+      "hideZeroBuckets": true,
+      "highlightCards": true,
+      "id": 55,
+      "legend": {
+        "show": false
+      },
+      "maxDataPoints": 50,
+      "reverseYBuckets": false,
+      "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($dbquantile, rate(claircore_vulnstore_getlatestrefs_duration_seconds_bucket[$rate]))",
+          "expr": "sum(rate(claircore_vulnstore_getlatestrefs_duration_seconds_bucket[$rate])) by (le)",
+          "format": "heatmap",
           "hide": false,
           "interval": "",
-          "legendFormat": "GetLatestRefs: {{instance }}: {{ query }}",
+          "legendFormat": "{{ le }}",
           "refId": "B"
-        },
+        }
+      ],
+      "title": "Database latency get latest refs (matcher)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
+    },
+    {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "linear",
+        "colorScheme": "interpolateOranges",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
+      "gridPos": {
+        "h": 8,
+        "w": 4,
+        "x": 8,
+        "y": 41
+      },
+      "heatmap": {},
+      "hideZeroBuckets": true,
+      "highlightCards": true,
+      "id": 56,
+      "legend": {
+        "show": false
+      },
+      "maxDataPoints": 50,
+      "reverseYBuckets": false,
+      "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($dbquantile, rate(claircore_vulnstore_getlatestupdateref_duration_seconds_bucket[$rate]))",
+          "expr": "sum(rate(claircore_vulnstore_getlatestupdateref_duration_seconds_bucket[$rate])) by (le)",
+          "format": "heatmap",
           "hide": false,
           "interval": "",
-          "legendFormat": "GetLatestUpdateRef: {{instance }}: {{ query }}",
+          "legendFormat": "{{ le }}",
           "refId": "C"
-        },
+        }
+      ],
+      "title": "Database latency get latest update refs (matcher)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
+    },
+    {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "linear",
+        "colorScheme": "interpolateOranges",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
+      "gridPos": {
+        "h": 8,
+        "w": 4,
+        "x": 12,
+        "y": 41
+      },
+      "heatmap": {},
+      "hideZeroBuckets": true,
+      "highlightCards": true,
+      "id": 57,
+      "legend": {
+        "show": false
+      },
+      "maxDataPoints": 50,
+      "reverseYBuckets": false,
+      "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($dbquantile, rate(claircore_vulnstore_getupdateoperations_duration_seconds_bucket[$rate]))",
+          "expr": "sum(rate(claircore_vulnstore_getupdateoperations_duration_seconds_bucket[$rate])) by (le)",
+          "format": "heatmap",
           "hide": false,
           "interval": "",
-          "legendFormat": "GetUpdateOperations: {{instance }}: {{ query }}",
+          "legendFormat": "{{ le }}",
           "refId": "D"
-        },
+        }
+      ],
+      "title": "Database latency get update operations (matcher)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
+    },
+    {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "linear",
+        "colorScheme": "interpolateOranges",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
+      "gridPos": {
+        "h": 8,
+        "w": 4,
+        "x": 16,
+        "y": 41
+      },
+      "heatmap": {},
+      "hideZeroBuckets": true,
+      "highlightCards": true,
+      "id": 58,
+      "legend": {
+        "show": false
+      },
+      "maxDataPoints": 50,
+      "reverseYBuckets": false,
+      "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($dbquantile, rate(claircore_vulnstore_updatevulnerabilities_duration_seconds_bucket[$rate]))",
+          "expr": "sum(rate(claircore_vulnstore_updatevulnerabilities_duration_seconds_bucket[$rate])) by (le)",
+          "format": "heatmap",
           "hide": false,
           "interval": "",
-          "legendFormat": "UpdateVulnerabilities: {{instance }}: {{ query }}",
+          "legendFormat": "{{ le }}",
           "refId": "E"
         }
       ],
-      "title": "Database query duration (matcher) (p$dbquantile)",
-      "type": "timeseries"
+      "title": "Database latency update vulnerabilities (matcher)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
     },
     {
       "datasource": "$datasource",
@@ -887,10 +1617,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 7,
+        "w": 24,
         "x": 0,
-        "y": 34
+        "y": 49
       },
       "id": 43,
       "options": {
@@ -917,296 +1647,357 @@
       "type": "timeseries"
     },
     {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "linear",
+        "colorScheme": "interpolateOranges",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
       "datasource": "$datasource",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 30,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 34
-      },
-      "id": 44,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
-      },
-      "targets": [
-        {
-          "exemplar": true,
-          "expr": "histogram_quantile($dbquantile, rate(claircore_vulnstore_gc_duration_seconds_bucket[$rate]))",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "UpdateVulnerabilities: {{instance }}: {{ query }}",
-          "refId": "F"
-        }
-      ],
-      "title": "Database query duration GC (matcher) (p$dbquantile)",
-      "type": "timeseries"
-    },
-    {
-      "datasource": "$datasource",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 42
+        "y": 56
       },
-      "id": 36,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
+      "heatmap": {},
+      "hideZeroBuckets": true,
+      "highlightCards": true,
+      "id": 44,
+      "legend": {
+        "show": false
       },
+      "maxDataPoints": 50,
+      "reverseYBuckets": false,
       "targets": [
         {
           "exemplar": true,
-          "expr": "rate(clair_notifier_created_total[$rate])",
-          "interval": "",
-          "legendFormat": "CreatedTotal: {{instance }}: {{ query }}",
-          "refId": "A"
-        },
-        {
-          "exemplar": true,
-          "expr": "rate(clair_notifier_failed_total[$rate])",
+          "expr": "sum(rate(claircore_vulnstore_gc_duration_seconds_bucket{query=\"updateOps\"}[$rate])) by (le)",
+          "format": "heatmap",
           "hide": false,
           "interval": "",
-          "legendFormat": "NotifierFailed: {{instance }}: {{ query }}",
-          "refId": "B"
-        },
-        {
-          "exemplar": true,
-          "expr": "rate(clair_notifier_putreceipt_total[$rate])",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "NotifierPutReceipt: {{instance }}: {{ query }}",
-          "refId": "C"
-        },
-        {
-          "exemplar": true,
-          "expr": "rate(clair_notifier_receiptbyuoid_total[$rate])",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "NotifierReceiptByUOID: {{instance }}: {{ query }}",
-          "refId": "D"
+          "legendFormat": "{{ le }}",
+          "refId": "F"
         }
       ],
-      "title": "Database query count (notifier)",
-      "type": "timeseries"
+      "title": "Database query duration GC - updateOps (matcher)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
     },
     {
-      "datasource": "$datasource",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 30,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
       },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "linear",
+        "colorScheme": "interpolateOranges",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 42
+        "y": 56
       },
-      "id": 38,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
+      "heatmap": {},
+      "hideZeroBuckets": true,
+      "highlightCards": true,
+      "id": 59,
+      "legend": {
+        "show": false
       },
+      "maxDataPoints": 50,
+      "reverseYBuckets": false,
       "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($dbquantile, rate(clair_notifier_created_duration_seconds_bucket[$rate]))",
-          "interval": "",
-          "legendFormat": "CreatedTotal: {{instance }}: {{ query }}",
-          "refId": "A"
-        },
-        {
-          "exemplar": true,
-          "expr": "histogram_quantile($dbquantile, rate(clair_notifier_failed_duration_seconds_bucket[$rate]))",
+          "expr": "sum(rate(claircore_vulnstore_gc_duration_seconds_bucket{query=\"deleteVulns\"}[$rate])) by (le)",
+          "format": "heatmap",
           "hide": false,
           "interval": "",
-          "legendFormat": "NotifierFailed: {{instance }}: {{ query }}",
-          "refId": "B"
-        },
-        {
-          "exemplar": true,
-          "expr": "histogram_quantile($dbquantile, rate(clair_notifier_putreceipt_duration_seconds_bucket[$rate]))",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "NotifierPutReceipt: {{instance }}: {{ query }}",
-          "refId": "C"
-        },
-        {
-          "exemplar": true,
-          "expr": "histogram_quantile($dbquantile, rate(clair_notifier_receiptbyuoid_duration_seconds_bucket[$rate]))",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "NotifierReceiptByUOID: {{instance }}: {{ query }}",
-          "refId": "D"
+          "legendFormat": "{{ le }}",
+          "refId": "F"
         }
       ],
-      "title": "Database query duration (notifier) (p$dbquantile)",
-      "type": "timeseries"
+      "title": "Database query duration GC - deleteVulns (matcher)",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": 0,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
+    },
+    {
+      "collapsed": true,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 64
+      },
+      "id": 61,
+      "panels": [
+        {
+          "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 20
+          },
+          "id": 36,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "rate(clair_notifier_created_total[$rate])",
+              "interval": "",
+              "legendFormat": "CreatedTotal: {{instance }}: {{ query }}",
+              "refId": "A"
+            },
+            {
+              "exemplar": true,
+              "expr": "rate(clair_notifier_failed_total[$rate])",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "NotifierFailed: {{instance }}: {{ query }}",
+              "refId": "B"
+            },
+            {
+              "exemplar": true,
+              "expr": "rate(clair_notifier_putreceipt_total[$rate])",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "NotifierPutReceipt: {{instance }}: {{ query }}",
+              "refId": "C"
+            },
+            {
+              "exemplar": true,
+              "expr": "rate(clair_notifier_receiptbyuoid_total[$rate])",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "NotifierReceiptByUOID: {{instance }}: {{ query }}",
+              "refId": "D"
+            }
+          ],
+          "title": "Database query count (notifier)",
+          "type": "timeseries"
+        },
+        {
+          "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 30,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 20
+          },
+          "id": 38,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "histogram_quantile($dbquantile, rate(clair_notifier_created_duration_seconds_bucket[$rate]))",
+              "interval": "",
+              "legendFormat": "CreatedTotal: {{instance }}: {{ query }}",
+              "refId": "A"
+            },
+            {
+              "exemplar": true,
+              "expr": "histogram_quantile($dbquantile, rate(clair_notifier_failed_duration_seconds_bucket[$rate]))",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "NotifierFailed: {{instance }}: {{ query }}",
+              "refId": "B"
+            },
+            {
+              "exemplar": true,
+              "expr": "histogram_quantile($dbquantile, rate(clair_notifier_putreceipt_duration_seconds_bucket[$rate]))",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "NotifierPutReceipt: {{instance }}: {{ query }}",
+              "refId": "C"
+            },
+            {
+              "exemplar": true,
+              "expr": "histogram_quantile($dbquantile, rate(clair_notifier_receiptbyuoid_duration_seconds_bucket[$rate]))",
+              "hide": false,
+              "interval": "",
+              "legendFormat": "NotifierReceiptByUOID: {{instance }}: {{ query }}",
+              "refId": "D"
+            }
+          ],
+          "title": "Database query duration (notifier) (p$dbquantile)",
+          "type": "timeseries"
+        }
+      ],
+      "title": "Database - Notifier",
+      "type": "row"
     },
     {
       "collapsed": false,
@@ -1215,7 +2006,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 50
+        "y": 65
       },
       "id": 2,
       "panels": [],
@@ -1278,7 +2069,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 51
+        "y": 66
       },
       "id": 4,
       "options": {
@@ -1301,91 +2092,74 @@
           "refId": "A"
         }
       ],
-      "title": "Vulnerability Report Requests / $rate",
+      "title": "Vulnerability Report Requests",
       "type": "timeseries"
     },
     {
-      "datasource": "$datasource",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "Seconds",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 30,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
       },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "linear",
+        "colorScheme": "interpolateOranges",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 51
+        "y": 66
       },
+      "heatmap": {},
+      "hideZeroBuckets": false,
+      "highlightCards": true,
       "id": 15,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
+      "legend": {
+        "show": true
       },
+      "maxDataPoints": 50,
       "repeat": null,
+      "reverseYBuckets": false,
       "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($apiquantile, rate(clair_http_matcher_api_v1_vulnerability_report_request_duration_seconds_bucket[$rate]))",
+          "expr": "sum(rate(clair_http_matcher_api_v1_vulnerability_report_request_duration_seconds_bucket [5m])) by (le)",
+          "format": "heatmap",
           "instant": false,
           "interval": "",
-          "legendFormat": "",
+          "intervalFactor": 1,
+          "legendFormat": "{{ le }}",
           "refId": "A"
         }
       ],
-      "title": "Vulnerability Report Request Latency (p$apiquantile)",
-      "type": "timeseries"
+      "title": "Vulnerability Report Request Latency",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": null,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "middle",
+      "yBucketNumber": null,
+      "yBucketSize": null
     },
     {
       "datasource": "$datasource",
@@ -1443,7 +2217,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 59
+        "y": 74
       },
       "id": 7,
       "options": {
@@ -1466,91 +2240,73 @@
           "refId": "A"
         }
       ],
-      "title": "Create Index Report Requests / $rate",
+      "title": "Create Index Report Requests",
       "type": "timeseries"
     },
     {
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
+      },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "linear",
+        "colorScheme": "interpolateGreys",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
       "datasource": "$datasource",
       "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "Seconds",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 30,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 59
+        "y": 74
       },
+      "heatmap": {},
+      "hideZeroBuckets": false,
+      "highlightCards": true,
       "id": 14,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
+      "legend": {
+        "show": true
       },
+      "maxDataPoints": 50,
+      "reverseYBuckets": false,
       "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($apiquantile, rate(clair_http_indexerv1_request_duration_seconds_bucket{method=\"post\", handler=\"/indexer/api/v1/index_report\"}[$rate]))",
+          "expr": "sum(increase(clair_http_indexerv1_request_duration_seconds_bucket{method=\"post\", handler=\"/indexer/api/v1/index_report\"} [5m])) by (le)",
+          "format": "heatmap",
           "instant": false,
           "interval": "1",
-          "legendFormat": "",
+          "legendFormat": "{{ le }}",
           "refId": "A"
         }
       ],
-      "title": "Create Index Report Request Latency (p$apiquantile)",
-      "type": "timeseries"
+      "title": "Create Index Report Request Latency",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": null,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
     },
     {
       "datasource": "$datasource",
@@ -1608,7 +2364,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 67
+        "y": 82
       },
       "id": 6,
       "options": {
@@ -1631,91 +2387,73 @@
           "refId": "A"
         }
       ],
-      "title": "Indexer State Requests / $rate",
+      "title": "Indexer State Requests",
       "type": "timeseries"
     },
     {
-      "datasource": "$datasource",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "Seconds",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 30,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "stepBefore",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
       },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "linear",
+        "colorScheme": "interpolateGreys",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
+      "description": "",
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 67
+        "y": 82
       },
-      "id": 13,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
+      "heatmap": {},
+      "hideZeroBuckets": false,
+      "highlightCards": true,
+      "id": 47,
+      "legend": {
+        "show": true
       },
+      "maxDataPoints": 50,
+      "reverseYBuckets": false,
       "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($apiquantile, rate(clair_http_indexerv1_request_duration_seconds_bucket{method=\"get\", handler=\"/indexer/api/v1/index_state\"}[$rate]))",
+          "expr": "sum(increase(clair_http_indexerv1_request_duration_seconds_bucket{method=\"get\", handler=\"/indexer/api/v1/index_state\"} [5m])) by (le)",
+          "format": "heatmap",
           "instant": false,
-          "interval": "",
-          "legendFormat": "",
+          "interval": "1",
+          "legendFormat": "{{ le }}",
           "refId": "A"
         }
       ],
-      "title": "Indexer State Request Latency (p$apiquantile)",
-      "type": "timeseries"
+      "title": "Indexer State Request Latency",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": null,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
     },
     {
       "datasource": "$datasource",
@@ -1773,7 +2511,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 75
+        "y": 90
       },
       "id": 5,
       "options": {
@@ -1796,90 +2534,73 @@
           "refId": "A"
         }
       ],
-      "title": "Index Report Requests / $rate",
+      "title": "Index Report Requests",
       "type": "timeseries"
     },
     {
-      "datasource": "$datasource",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "Seconds",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 30,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
+      "cards": {
+        "cardPadding": null,
+        "cardRound": null
       },
+      "color": {
+        "cardColor": "#b4ff00",
+        "colorScale": "linear",
+        "colorScheme": "interpolateGreys",
+        "exponent": 0.5,
+        "mode": "opacity"
+      },
+      "dataFormat": "tsbuckets",
+      "datasource": "$datasource",
+      "description": "",
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 75
+        "y": 90
       },
-      "id": 16,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single"
-        }
+      "heatmap": {},
+      "hideZeroBuckets": false,
+      "highlightCards": true,
+      "id": 46,
+      "legend": {
+        "show": true
       },
+      "maxDataPoints": 50,
+      "reverseYBuckets": false,
       "targets": [
         {
           "exemplar": true,
-          "expr": "histogram_quantile($apiquantile, rate(clair_http_indexerv1_request_duration_seconds_bucket{method=\"get\", handler=\"/indexer/api/v1/index_report/:digest\"}[$rate]))",
+          "expr": "sum(increase(clair_http_indexerv1_request_duration_seconds_bucket{method=\"get\", handler=\"/indexer/api/v1/index_report/:digest\"} [5m])) by (le)",
+          "format": "heatmap",
           "instant": false,
           "interval": "1",
-          "legendFormat": "",
+          "legendFormat": "{{ le }}",
           "refId": "A"
         }
       ],
-      "title": "Index Report Request Latency (p$apiquantile)",
-      "type": "timeseries"
+      "title": "Index Report Request Latency",
+      "tooltip": {
+        "show": true,
+        "showHistogram": false
+      },
+      "type": "heatmap",
+      "xAxis": {
+        "show": true
+      },
+      "xBucketNumber": null,
+      "xBucketSize": null,
+      "yAxis": {
+        "decimals": null,
+        "format": "s",
+        "logBase": 1,
+        "max": null,
+        "min": null,
+        "show": true,
+        "splitFactor": null
+      },
+      "yBucketBound": "auto",
+      "yBucketNumber": null,
+      "yBucketSize": null
     },
     {
       "datasource": "$datasource",
@@ -1937,7 +2658,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 83
+        "y": 98
       },
       "id": 41,
       "options": {
@@ -1960,7 +2681,7 @@
           "refId": "A"
         }
       ],
-      "title": "Get Notifications Requests / $rate",
+      "title": "Get Notifications Requests",
       "type": "timeseries"
     },
     {
@@ -2019,7 +2740,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 83
+        "y": 98
       },
       "id": 40,
       "options": {
@@ -2101,7 +2822,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 91
+        "y": 106
       },
       "id": 39,
       "options": {
@@ -2124,7 +2845,7 @@
           "refId": "A"
         }
       ],
-      "title": "Delete Notification Requests / $rate",
+      "title": "Delete Notification Requests",
       "type": "timeseries"
     },
     {
@@ -2183,7 +2904,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 91
+        "y": 106
       },
       "id": 42,
       "options": {
@@ -2216,7 +2937,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 99
+        "y": 114
       },
       "id": 9,
       "panels": [],
@@ -2279,7 +3000,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 100
+        "y": 115
       },
       "id": 11,
       "options": {
@@ -2361,7 +3082,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 100
+        "y": 115
       },
       "id": 12,
       "options": {
@@ -2387,8 +3108,8 @@
       "type": "timeseries"
     }
   ],
-  "refresh": "",
-  "schemaVersion": 30,
+  "refresh": false,
+  "schemaVersion": 32,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -2518,9 +3239,9 @@
       {
         "allValue": null,
         "current": {
-          "selected": false,
-          "text": "0.20",
-          "value": "0.20"
+          "selected": true,
+          "text": "0.95",
+          "value": "0.95"
         },
         "description": null,
         "error": null,
@@ -2531,7 +3252,7 @@
         "name": "apiquantile",
         "options": [
           {
-            "selected": false,
+            "selected": true,
             "text": "0.95",
             "value": "0.95"
           },
@@ -2546,7 +3267,7 @@
             "value": "0.5"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "0.20",
             "value": "0.20"
           },
@@ -2564,8 +3285,8 @@
       {
         "current": {
           "selected": false,
-          "text": "Prometheus",
-          "value": "Prometheus"
+          "text": "clairp01ue1-prometheus",
+          "value": "clairp01ue1-prometheus"
         },
         "description": null,
         "error": null,
@@ -2585,7 +3306,7 @@
     ]
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {},
