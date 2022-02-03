@@ -52,7 +52,7 @@ func testSafe(t *testing.T) {
 	ctx := zlog.Test(context.Background(), t)
 	sm := &MockStore{
 		ReceiptByUOID_: func(ctx context.Context, id uuid.UUID) (Receipt, error) {
-			return Receipt{}, clairerror.ErrNoReceipt{}
+			return Receipt{}, &clairerror.ErrNoReceipt{}
 		},
 	}
 	mm := &matcher.Mock{
@@ -108,7 +108,7 @@ func testUnsafeMatcherErr(t *testing.T) {
 	ctx := zlog.Test(context.Background(), t)
 	sm := &MockStore{
 		ReceiptByUOID_: func(ctx context.Context, id uuid.UUID) (Receipt, error) {
-			return Receipt{}, clairerror.ErrNoReceipt{}
+			return Receipt{}, &clairerror.ErrNoReceipt{}
 		},
 	}
 	mm := &matcher.Mock{
@@ -138,7 +138,7 @@ func testUnsafeStaleUOID(t *testing.T) {
 	ctx := zlog.Test(context.Background(), t)
 	sm := &MockStore{
 		ReceiptByUOID_: func(ctx context.Context, id uuid.UUID) (Receipt, error) {
-			return Receipt{}, clairerror.ErrNoReceipt{}
+			return Receipt{}, &clairerror.ErrNoReceipt{}
 		},
 	}
 	mm := &matcher.Mock{

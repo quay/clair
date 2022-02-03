@@ -96,8 +96,9 @@ func New(ctx context.Context, opts Opts) (*service, error) {
 	zlog.Info(ctx).
 		Stringer("interval", opts.PollInterval).
 		Msg("initializing poller")
-	poller := notifier.NewPoller(opts.PollInterval, store, opts.Matcher)
-	c := poller.Poll(ctx)
+	poller := notifier.NewPoller(store, opts.Matcher, opts.PollInterval)
+	ch := make(chan notifier.Event, notifier.MaxChanSize)
+	go poller.Poll(ctx, ch)
 
 	// kick off the processors
 	zlog.Info(ctx).
@@ -111,14 +112,13 @@ func New(ctx context.Context, opts Opts) (*service, error) {
 			return nil, err
 		}
 		p := notifier.NewProcessor(
-			i,
+			store,
 			l,
 			opts.Indexer,
 			opts.Matcher,
-			store,
 		)
 		p.NoSummary = opts.DisableSummary
-		p.Process(ctx, c)
+		go p.Process(ctx, ch)
 	}
 
 	// kick off configured deliverer type
@@ -205,7 +205,7 @@ func webhookDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, s
 		if err != nil {
 			return fmt.Errorf("failed to create webhook deliverer: %v", err)
 		}
-		delivery := notifier.NewDelivery(i, wh, opts.DeliveryInterval, store, l)
+		delivery := notifier.NewDelivery(store, l, wh, opts.DeliveryInterval)
 		ds = append(ds, delivery)
 	}
 	for _, d := range ds {
@@ -237,14 +237,14 @@ func amqpDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, stor
 			if err != nil {
 				return fmt.Errorf("failed to create AMQP deliverer: %v", err)
 			}
-			delivery := notifier.NewDelivery(i, q, opts.DeliveryInterval, store, l)
+			delivery := notifier.NewDelivery(store, l, q, opts.DeliveryInterval)
 			ds = append(ds, delivery)
 		} else {
 			q, err := namqp.New(conf)
 			if err != nil {
 				return fmt.Errorf("failed to create AMQP deliverer: %v", err)
 			}
-			delivery := notifier.NewDelivery(i, q, opts.DeliveryInterval, store, l)
+			delivery := notifier.NewDelivery(store, l, q, opts.DeliveryInterval)
 			ds = append(ds, delivery)
 		}
 	}
@@ -278,14 +278,14 @@ func stompDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, sto
 			if err != nil {
 				return fmt.Errorf("failed to create STOMP direct deliverer: %v", err)
 			}
-			delivery := notifier.NewDelivery(i, q, opts.DeliveryInterval, store, l)
+			delivery := notifier.NewDelivery(store, l, q, opts.DeliveryInterval)
 			ds = append(ds, delivery)
 		} else {
 			q, err := stomp.New(conf)
 			if err != nil {
 				return fmt.Errorf("failed to create STOMP deliverer: %v", err)
 			}
-			delivery := notifier.NewDelivery(i, q, opts.DeliveryInterval, store, l)
+			delivery := notifier.NewDelivery(store, l, q, opts.DeliveryInterval)
 			ds = append(ds, delivery)
 		}
 	}

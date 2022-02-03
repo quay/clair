@@ -31,7 +31,7 @@ type Poller struct {
 	interval time.Duration
 }
 
-func NewPoller(interval time.Duration, store Store, differ matcher.Differ) *Poller {
+func NewPoller(store Store, differ matcher.Differ, interval time.Duration) *Poller {
 	return &Poller{
 		interval: interval,
 		store:    store,
@@ -46,29 +46,19 @@ type Event struct {
 	uo      driver.UpdateOperation
 }
 
-// Poll is a non blocking call which begins
-// polling the Matcher for UpdateOperations.
-//
-// Returned channel can be listened to for events.
+// Poll begins polling the Matcher for UpdateOperations and producing Events on
+// the supplied channel. This method takes ownership of the channel and is
+// responsible for closing it.
 //
 // Cancel ctx to stop the poller.
-func (p *Poller) Poll(ctx context.Context) <-chan Event {
-	c := make(chan Event, MaxChanSize)
-	go p.poll(ctx, c)
-	return c
-}
-
-// poll is intended to be ran as a go routine.
-//
-// implements a blocking event loop via a time.Ticker
-func (p *Poller) poll(ctx context.Context, c chan<- Event) {
+func (p *Poller) Poll(ctx context.Context, c chan<- Event) error {
 	ctx = zlog.ContextWithValues(ctx, "component", "notifier/Poller.poll")
 
 	defer close(c)
 	if err := ctx.Err(); err != nil {
 		zlog.Info(ctx).
 			Msg("context canceled before polling began")
-		return
+		return err
 	}
 
 	// loop on interval tick
@@ -79,7 +69,7 @@ func (p *Poller) poll(ctx context.Context, c chan<- Event) {
 		case <-ctx.Done():
 			zlog.Info(ctx).
 				Msg("context canceled. polling ended")
-			return
+			return ctx.Err()
 		case <-t.C:
 			zlog.Debug(ctx).
 				Msg("poll interval tick")
@@ -111,7 +101,7 @@ func (p *Poller) onTick(ctx context.Context, c chan<- Event) {
 		latest := uo[0]
 		ctx = zlog.ContextWithValues(ctx, "UOID", latest.Ref.String())
 		// confirm notifications were never created for this UOID.
-		var errNoReceipt clairerror.ErrNoReceipt
+		var errNoReceipt *clairerror.ErrNoReceipt
 		_, err := p.store.ReceiptByUOID(ctx, latest.Ref)
 		if errors.As(err, &errNoReceipt) {
 			e := Event{

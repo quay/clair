@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"sync"
 
 	"github.com/google/uuid"
@@ -32,8 +31,6 @@ type Processor struct {
 	matcher matcher.Service
 	// a store instance to persist notifications
 	store Store
-	// a integer id used for logging
-	id int
 
 	// NoSummary controls whether per-manifest vulnerability summarization
 	// should happen.
@@ -42,13 +39,12 @@ type Processor struct {
 	NoSummary bool
 }
 
-func NewProcessor(id int, l Locker, indexer indexer.Service, matcher matcher.Service, store Store) *Processor {
+func NewProcessor(store Store, l Locker, indexer indexer.Service, matcher matcher.Service) *Processor {
 	return &Processor{
 		locks:   l,
 		indexer: indexer,
 		matcher: matcher,
 		store:   store,
-		id:      id,
 	}
 }
 
@@ -56,30 +52,15 @@ func NewProcessor(id int, l Locker, indexer indexer.Service, matcher matcher.Ser
 // updates the notifier system with the "latest" seen UOID.
 //
 // Canceling the ctx will end the processing.
-func (p *Processor) Process(ctx context.Context, c <-chan Event) {
-	go p.process(ctx, c)
-}
+func (p *Processor) Process(ctx context.Context, c <-chan Event) error {
+	ctx = zlog.ContextWithValues(ctx, "component", "notifier/Processor.process")
 
-// process is intended to be ran as a go routine.
-//
-// implements the blocking event loop of a processor.
-func (p *Processor) process(ctx context.Context, c <-chan Event) {
-	ctx = zlog.ContextWithValues(ctx,
-		"component", "notifier/Processor.process",
-		"processor_id", strconv.Itoa(p.id),
-	)
-
-	defer func() {
-		if err := p.locks.Close(ctx); err != nil {
-			zlog.Warn(ctx).Err(err).Msg("error closing locker")
-		}
-	}()
 	zlog.Debug(ctx).Msg("processing events")
 	for {
 		select {
 		case <-ctx.Done():
 			zlog.Info(ctx).Msg("context canceled: ending event processing")
-			return
+			return ctx.Err()
 		case e := <-c:
 			ctx := zlog.ContextWithValues(ctx,
 				"updater", e.updater,
@@ -292,7 +273,7 @@ func (p *Processor) safe(ctx context.Context, e Event) (bool, uuid.UUID) {
 	ctx = zlog.ContextWithValues(ctx, "component", "notifier/Processor.safe")
 
 	// confirm we are not making duplicate notifications
-	var errNoReceipt clairerror.ErrNoReceipt
+	var errNoReceipt *clairerror.ErrNoReceipt
 	_, err := p.store.ReceiptByUOID(ctx, e.uo.Ref)
 	switch {
 	case errors.As(err, &errNoReceipt):

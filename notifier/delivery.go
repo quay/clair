@@ -3,7 +3,6 @@ package notifier
 import (
 	"context"
 	"errors"
-	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,51 +16,34 @@ import (
 type Delivery struct {
 	// a Deliverer implementation to invoke.
 	Deliverer Deliverer
-	// the interval at which we will attempt delivery of notifications.
-	interval time.Duration
 	// a store to retrieve notifications and update their receipts
 	store Store
 	// distributed lock used for mutual exclusion
 	locks Locker
-	// a integer id used for logging
-	id int
+	// the interval at which we will attempt delivery of notifications.
+	interval time.Duration
 }
 
-func NewDelivery(id int, d Deliverer, interval time.Duration, store Store, l Locker) *Delivery {
+func NewDelivery(store Store, l Locker, d Deliverer, interval time.Duration) *Delivery {
 	return &Delivery{
 		Deliverer: d,
 		interval:  interval,
 		store:     store,
 		locks:     l,
-		id:        id,
 	}
 }
 
 // Deliver begins delivering notifications.
 //
 // Canceling the ctx will end delivery.
-func (d *Delivery) Deliver(ctx context.Context) {
+func (d *Delivery) Deliver(ctx context.Context) error {
 	ctx = zlog.ContextWithValues(ctx,
 		"deliverer", d.Deliverer.Name(),
 		"component", "notifier/Delivery.Deliver",
-		"id", strconv.Itoa(d.id),
 	)
 	zlog.Info(ctx).
 		Msg("delivering notifications")
-	go d.deliver(ctx)
-}
 
-// deliver is intended to be ran as a go routine.
-//
-// implements a blocking event loop via a time.Ticker
-func (d *Delivery) deliver(ctx context.Context) error {
-	ctx = zlog.ContextWithValues(ctx, "component", "notifier/Delivery.deliver")
-
-	defer func() {
-		if err := d.locks.Close(ctx); err != nil {
-			zlog.Warn(ctx).Err(err).Msg("error closing lock source")
-		}
-	}()
 	ticker := time.NewTicker(d.interval)
 	defer ticker.Stop()
 	for {
@@ -85,7 +67,6 @@ func (d *Delivery) deliver(ctx context.Context) error {
 func (d *Delivery) RunDelivery(ctx context.Context) error {
 	ctx = zlog.ContextWithValues(ctx,
 		"deliverer", d.Deliverer.Name(),
-		"id", strconv.Itoa(d.id),
 		"component", "notifier/Delivery.RunDelivery",
 	)
 
