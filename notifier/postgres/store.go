@@ -41,10 +41,6 @@ func (s *Store) PutNotifications(ctx context.Context, opts notifier.PutOpts) err
 	return putNotifications(ctx, s.pool, opts)
 }
 
-func (s *Store) PutReceipt(ctx context.Context, updater string, r notifier.Receipt) error {
-	return putReceipt(ctx, s.pool, updater, r)
-}
-
 // DeleteNotifications garbage collects all notifications associated
 // with a notification id.
 //
@@ -54,31 +50,6 @@ func (s *Store) PutReceipt(ctx context.Context, updater string, r notifier.Recei
 // be checked.
 func (s *Store) DeleteNotifications(ctx context.Context, id uuid.UUID) error {
 	return deleteNotifications(ctx, s.pool, id)
-}
-
-// Receipt returns the Receipt for a given notification id
-func (s *Store) Receipt(ctx context.Context, id uuid.UUID) (notifier.Receipt, error) {
-	return receipt(ctx, s.pool, id)
-}
-
-// ReceiptByUOID returns the Receipt for a given notification UOID
-func (s *Store) ReceiptByUOID(ctx context.Context, id uuid.UUID) (notifier.Receipt, error) {
-	return receiptByUOID(ctx, s.pool, id)
-}
-
-// Created returns a slice of notification ids in created status
-func (s *Store) Created(ctx context.Context) ([]uuid.UUID, error) {
-	return created(ctx, s.pool)
-}
-
-// Failed returns a slice of notification ids in failed status
-func (s *Store) Failed(ctx context.Context) ([]uuid.UUID, error) {
-	return failed(ctx, s.pool)
-}
-
-// Deleted returns a slice of notification ids in deleted status
-func (s *Store) Deleted(ctx context.Context) ([]uuid.UUID, error) {
-	return deleted(ctx, s.pool)
 }
 
 func errLabel(e error) string {
