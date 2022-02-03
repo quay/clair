@@ -8,18 +8,18 @@ import (
 
 // MockStore implements a mock Store.
 type MockStore struct {
-	Notifications_        func(ctx context.Context, id uuid.UUID, page *Page) ([]Notification, Page, error)
-	PutNotifications_     func(ctx context.Context, opts PutOpts) error
-	PutReceipt_           func(ctx context.Context, updater string, r Receipt) error
-	DeleteNotitfications_ func(ctx context.Context, id uuid.UUID) error
-	Receipt_              func(ctx context.Context, id uuid.UUID) (Receipt, error)
-	ReceiptByUOID_        func(ctx context.Context, id uuid.UUID) (Receipt, error)
-	Created_              func(ctx context.Context) ([]uuid.UUID, error)
-	Failed_               func(ctx context.Context) ([]uuid.UUID, error)
-	Deleted_              func(ctx context.Context) ([]uuid.UUID, error)
-	SetDelivered_         func(ctx context.Context, id uuid.UUID) error
-	SetDeliveredFailed_   func(ctx context.Context, id uuid.UUID) error
-	SetDeleted_           func(ctx context.Context, id uuid.UUID) error
+	Notifications_         func(ctx context.Context, id uuid.UUID, page *Page) ([]Notification, Page, error)
+	PutNotifications_      func(ctx context.Context, opts PutOpts) error
+	PutReceipt_            func(ctx context.Context, updater string, r Receipt) error
+	CollectNotitfications_ func(ctx context.Context) error
+	Receipt_               func(ctx context.Context, id uuid.UUID) (Receipt, error)
+	ReceiptByUOID_         func(ctx context.Context, id uuid.UUID) (Receipt, error)
+	Created_               func(ctx context.Context) ([]uuid.UUID, error)
+	Failed_                func(ctx context.Context) ([]uuid.UUID, error)
+	Deleted_               func(ctx context.Context) ([]uuid.UUID, error)
+	SetDelivered_          func(ctx context.Context, id uuid.UUID) error
+	SetDeliveredFailed_    func(ctx context.Context, id uuid.UUID) error
+	SetDeleted_            func(ctx context.Context, id uuid.UUID) error
 }
 
 // Notifications retrieves the list of notifications associated with a
@@ -50,15 +50,9 @@ func (m *MockStore) PutReceipt(ctx context.Context, updater string, r Receipt) e
 	return m.PutReceipt_(ctx, updater, r)
 }
 
-// DeleteNotifications garbage collects all notifications associated
-// with a notification id.
-//
-// Normally Receipter.SetDeleted will be issues first, however
-// application logic may decide to gc notifications which have not been
-// set deleted after some period of time, thus this condition should not
-// be checked.
-func (m *MockStore) DeleteNotifications(ctx context.Context, id uuid.UUID) error {
-	return m.DeleteNotitfications_(ctx, id)
+// CollectNotifications garbage collects all notifications.
+func (m *MockStore) CollectNotifications(ctx context.Context) error {
+	return m.CollectNotitfications_(ctx)
 }
 
 // Receipt returns the Receipt for a given notification id

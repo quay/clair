@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -117,4 +118,8 @@ func notifications(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID, page *
 	}
 
 	return notifications, outPage, nil
+}
+
+func (*Store) CollectNotifications(ctx context.Context) error {
+	return errors.New("unimplemented")
 }
