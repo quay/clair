@@ -2,6 +2,10 @@ package postgres
 
 import (
 	"context"
+	"fmt"
+	"math/rand"
+	"sort"
+	"strconv"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -15,38 +19,22 @@ import (
 	"github.com/quay/clair/v4/notifier"
 )
 
-const (
-	updater = "updater"
-)
-
-// TestE2E performs an end to end test ensuring creating,
-// retreiving, bookkeeping, and deleting of notifications
-// and asssociated data works correctly
+// TestE2E performs an end to end test ensuring creating, retrieving,
+// bookkeeping, and deleting of notifications and associated data works
+// correctly.
 func TestE2E(t *testing.T) {
 	integration.NeedDB(t)
-	ctx := zlog.Test(nil, t)
-	digest, _ := claircore.ParseDigest("sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a")
-	notificationID := uuid.New()
-	// this function puts a single noification undertest
-	vuln, vsummary := cctest.GenUniqueVulnerabilities(1, updater)[0], notifier.VulnSummary{}
-	vsummary.FromVulnerability(vuln)
-	notifications := []notifier.Notification{
-		{
-			Manifest:      digest,
-			Reason:        "added",
-			Vulnerability: vsummary,
-		},
+	ctx := zlog.Test(context.Background(), t)
+	for _, e := range []*e2e{
+		NewE2E(ctx, t, 1),
+		NewE2E(ctx, t, 10),
+		NewE2E(ctx, t, 100),
+	} {
+		t.Run(strconv.Itoa(len(e.notifications)), func(t *testing.T) {
+			ctx := zlog.Test(ctx, t)
+			e.Run(ctx, t)
+		})
 	}
-	store := TestStore(ctx, t)
-	e := e2e{
-		notificaitonID: notificationID,
-		updater:        updater,
-		updateID:       uuid.New(),
-		notification:   notifications[0],
-		store:          store,
-		ctx:            ctx,
-	}
-	t.Run("notifications e2e", e.Run)
 }
 
 // e2e is a series of test cases for handling notification
@@ -58,240 +46,313 @@ func TestE2E(t *testing.T) {
 // e2e.Run drives the subtest order and will fail on first subtest
 // failure
 type e2e struct {
-	// the notification ID this e2e test will use
-	notificaitonID uuid.UUID
 	// the updater associated with the set of notifications under test
 	updater string
-	// the update operation ID associated with the set of notifications under test
-	updateID uuid.UUID
-	// the notification this test persist and retrieves
-	notification notifier.Notification
-	// whether any of the tests have failed
-	failed bool
 	// a store instance implementing notification persistence methods
 	store *Store
-	// root ctx tests may derive off
-	ctx context.Context
+	// the notifications this test persist and retrieves
+	notifications []notifier.Notification
+	// the notification ID this e2e test will use
+	notificationID uuid.UUID
+	// the update operation ID associated with the set of notifications under test
+	updateID uuid.UUID
 }
 
-// Run drives the series of sub-tests
-// Run will report the first subtest that fails.
-func (e *e2e) Run(t *testing.T) {
+func NewE2E(ctx context.Context, t *testing.T, ct int) *e2e {
+	updater := fmt.Sprintf("%s-%d", t.Name(), ct)
+	id := uuid.New()
+	vs := cctest.GenUniqueVulnerabilities(ct, updater)
+	ns := make([]notifier.Notification, len(vs))
+	for i, v := range vs {
+		n := &ns[i]
+		n.Manifest = cctest.RandomSHA256Digest(t)
+		switch rand.Intn(3) {
+		case 0:
+			n.Reason = notifier.Added
+		case 1:
+			n.Reason = notifier.Changed
+		case 2:
+			n.Reason = notifier.Removed
+		}
+		n.Vulnerability.FromVulnerability(v)
+	}
+	e := e2e{
+		notificationID: id,
+		updater:        updater,
+		updateID:       uuid.New(),
+		notifications:  ns,
+	}
+	return &e
+}
+
+func (e *e2e) Run(ctx context.Context, t *testing.T) {
+	e.store = TestingStore(ctx, t)
 	type subtest struct {
+		do   func(context.Context) func(t *testing.T)
 		name string
-		do   func(t *testing.T)
 	}
-	subtests := [...]subtest{
-		{"PutNotifications", e.PutNotifications},
-		{"Created", e.Created},
-		{"Notifications", e.Notifcations},
-		{"SetDelivered", e.SetDelivered},
-		{"SetDeliveryFailed", e.SetDeliveryFailed},
-		{"SetDeleted", e.SetDeleted},
-		{"PutReceipt", e.PutReceipt},
-	}
-	for i := range subtests {
-		subtest := subtests[i]
-		t.Run(subtest.name, subtest.do)
-		if e.failed {
+	for _, sub := range [...]subtest{
+		{name: "PutNotifications", do: e.PutNotifications},
+		{name: "Created", do: e.Created},
+		{name: "Notifications", do: e.Notifcations},
+		{name: "SetDelivered", do: e.SetDelivered},
+		{name: "SetDeliveryFailed", do: e.SetDeliveryFailed},
+		{name: "SetDeleted", do: e.SetDeleted},
+		{name: "PutReceipt", do: e.PutReceipt},
+		{name: "CollectNotifications", do: e.CollectNotifications},
+	} {
+		t.Run(sub.name, sub.do(ctx))
+		if t.Failed() {
 			t.FailNow()
 		}
 	}
 }
 
-// PutNotifications adds a set of notifications to the database
-// and confims no error occurs
-func (e *e2e) PutNotifications(t *testing.T) {
-	defer func() {
-		e.failed = t.Failed()
-	}()
-	opts := notifier.PutOpts{
-		Updater:        e.updater,
-		NotificationID: e.notificaitonID,
-		Notifications:  []notifier.Notification{e.notification},
-		UpdateID:       e.updateID,
-	}
-	err := e.store.PutNotifications(e.ctx, opts)
-	if err != nil {
-		t.Fatalf("failed to put notifications: %v", err)
-	}
-}
-
-// Created ensures the expected notification id is returned
-// when persistence layer is queried for all created,
-// a specific receipt, or a receipt by UOID
-func (e *e2e) Created(t *testing.T) {
-	defer func() {
-		e.failed = t.Failed()
-	}()
-	ids, err := e.store.Created(e.ctx)
-	if err != nil {
-		t.Fatalf("failed to retrieve created notification ids: %v", err)
-	}
-	if len(ids) != 1 {
-		t.Fatalf("expected a single notification id. got: %v", ids)
-	}
-	if !cmp.Equal(ids[0], e.notificaitonID) {
-		t.Fatalf(cmp.Diff(ids[0], e.notificaitonID))
-	}
-
-	receipt, err := e.store.Receipt(e.ctx, e.notificaitonID)
-	if err != nil {
-		t.Fatalf("failed to retrieve receipt by notification id")
-	}
-	if !cmp.Equal(receipt.NotificationID, e.notificaitonID) {
-		t.Fatal(cmp.Diff(receipt.NotificationID, e.notificaitonID))
-	}
-	if !cmp.Equal(receipt.Status, notifier.Created) {
-		t.Fatal(cmp.Diff(receipt.Status, notifier.Delivered))
-	}
-
-	receipt, err = e.store.ReceiptByUOID(e.ctx, e.updateID)
-	if err != nil {
-		t.Fatalf("failed to retrieve receipt by OUID")
-	}
-	if !cmp.Equal(receipt.NotificationID, e.notificaitonID) {
-		t.Fatal(cmp.Diff(receipt.NotificationID, e.notificaitonID))
-	}
-	if !cmp.Equal(receipt.Status, notifier.Created) {
-		t.Fatal(cmp.Diff(receipt.Status, notifier.Delivered))
+// PutNotifications adds a set of notifications to the database and confirms no
+// error occurs.
+func (e *e2e) PutNotifications(ctx context.Context) func(*testing.T) {
+	return func(t *testing.T) {
+		ctx := zlog.Test(ctx, t)
+		opts := notifier.PutOpts{
+			Updater:        e.updater,
+			NotificationID: e.notificationID,
+			Notifications:  e.notifications,
+			UpdateID:       e.updateID,
+		}
+		if err := e.store.PutNotifications(ctx, opts); err != nil {
+			t.Error(err)
+		}
 	}
 }
 
-// Notifications confirms the correct notifications were returned
-// from the database when providing the notification id
-func (e *e2e) Notifcations(t *testing.T) {
-	defer func() {
-		e.failed = t.Failed()
-	}()
-	notifications, _, err := e.store.Notifications(e.ctx, e.notificaitonID, nil)
-	if err != nil {
-		t.Fatalf("failed to retrieve persisted notification: %v", err)
-	}
-	if len(notifications) != 1 {
-		t.Fatalf("expected a single notifcation to be returned for notification id %v but received %d", e.notificaitonID, len(notifications))
-	}
-	opts := cmpopts.IgnoreUnexported(claircore.Digest{})
-	if !cmp.Equal(notifications[0].Manifest, e.notification.Manifest, opts) {
-		t.Fatal(cmp.Diff(notifications[0].Manifest, e.notification.Manifest))
-	}
-	if !cmp.Equal(notifications[0].Reason, e.notification.Reason) {
-		t.Fatal(cmp.Diff(notifications[0].Reason, e.notification.Reason))
-	}
-	opts = cmpopts.IgnoreFields(claircore.Vulnerability{}, "ID")
-	if !cmp.Equal(notifications[0].Vulnerability, e.notification.Vulnerability, opts) {
-		t.Fatal(cmp.Diff(notifications[0].Vulnerability, e.notification.Vulnerability))
+// Created ensures the expected notification ID is returned when persistence
+// layer is queried for all created, a specific receipt, or a receipt by UOID.
+func (e *e2e) Created(ctx context.Context) func(*testing.T) {
+	return func(t *testing.T) {
+		ctx := zlog.Test(ctx, t)
+		ids, err := e.store.Created(ctx)
+		if err != nil {
+			t.Error(err)
+		}
+		if got, want := len(ids), 1; got != want {
+			t.Errorf("got: %d, want: %d", got, want)
+		}
+		want := e.notificationID
+		if got := ids[0]; !cmp.Equal(got, want) {
+			t.Error(cmp.Diff(got, want))
+		}
+
+		r, err := e.store.Receipt(ctx, want)
+		if err != nil {
+			t.Error(err)
+		}
+		if got := r.NotificationID; !cmp.Equal(got, want) {
+			t.Error(cmp.Diff(got, want))
+		}
+		if got, want := r.Status, notifier.Created; !cmp.Equal(got, want) {
+			t.Error(cmp.Diff(got, want))
+		}
+
+		r, err = e.store.ReceiptByUOID(ctx, e.updateID)
+		if err != nil {
+			t.Error(err)
+		}
+		if got := r.NotificationID; !cmp.Equal(got, want) {
+			t.Error(cmp.Diff(got, want))
+		}
+		if got, want := r.Status, notifier.Created; !cmp.Equal(got, want) {
+			t.Error(cmp.Diff(got, want))
+		}
 	}
 }
 
-// SetDelivered confirms a receipt for a notification id
-// can be set to delivered
-func (e *e2e) SetDelivered(t *testing.T) {
-	defer func() {
-		e.failed = t.Failed()
-	}()
-	err := e.store.SetDelivered(e.ctx, e.notificaitonID)
-	if err != nil {
-		t.Fatalf("failed to set notification receipt to delivered")
-	}
-	receipt, err := e.store.Receipt(e.ctx, e.notificaitonID)
-	if err != nil {
-		t.Fatalf("failed to retrieve receipt after setting it's status to delivered")
-	}
-	if !cmp.Equal(receipt.NotificationID, e.notificaitonID) {
-		t.Fatal(cmp.Diff(receipt.NotificationID, e.notificaitonID))
-	}
-	if !cmp.Equal(receipt.Status, notifier.Delivered) {
-		t.Fatal(cmp.Diff(receipt.Status, notifier.Delivered))
-	}
-}
-
-// SetDeliveryFailed confirms a receipt for a notification id
-// can be set to delivered
-func (e *e2e) SetDeliveryFailed(t *testing.T) {
-	defer func() {
-		e.failed = t.Failed()
-	}()
-	err := e.store.SetDeliveryFailed(e.ctx, e.notificaitonID)
-	if err != nil {
-		t.Fatalf("failed to set notification receipt to delivered")
-	}
-	receipt, err := e.store.Receipt(e.ctx, e.notificaitonID)
-	if err != nil {
-		t.Fatalf("failed to retrieve receipt after setting it's status to delete")
-	}
-	if !cmp.Equal(receipt.NotificationID, e.notificaitonID) {
-		t.Fatal(cmp.Diff(receipt.NotificationID, e.notificaitonID))
-	}
-	if !cmp.Equal(receipt.Status, notifier.DeliveryFailed) {
-		t.Fatal(cmp.Diff(receipt.Status, notifier.DeliveryFailed))
-	}
-	ids, err := e.store.Failed(e.ctx)
-	if err != nil {
-		t.Fatalf("failed to retrieve created notification ids: %v", err)
-	}
-	if len(ids) != 1 {
-		t.Fatalf("expected a single notification id. got: %v", ids)
-	}
-	if !cmp.Equal(ids[0], e.notificaitonID) {
-		t.Fatalf(cmp.Diff(ids[0], e.notificaitonID))
-	}
-
-}
-
-// SetDeliveryFailed confirms a receipt for a notification id
-// can be set to delivered
-func (e *e2e) SetDeleted(t *testing.T) {
-	defer func() {
-		e.failed = t.Failed()
-	}()
-	err := e.store.SetDeleted(e.ctx, e.notificaitonID)
-	if err != nil {
-		t.Fatalf("failed to set notification receipt to delivered")
-	}
-	receipt, err := e.store.Receipt(e.ctx, e.notificaitonID)
-	if err != nil {
-		t.Fatalf("failed to retrieve receipt after setting it's status to delete")
-	}
-	if !cmp.Equal(receipt.NotificationID, e.notificaitonID) {
-		t.Fatal(cmp.Diff(receipt.NotificationID, e.notificaitonID))
-	}
-	if !cmp.Equal(receipt.Status, notifier.Deleted) {
-		t.Fatal(cmp.Diff(receipt.Status, notifier.Deleted))
+// Notifications confirms the correct notifications were returned from the
+// database when providing the notification ID.
+func (e *e2e) Notifcations(ctx context.Context) func(*testing.T) {
+	return func(t *testing.T) {
+		ctx := zlog.Test(ctx, t)
+		want := e.notificationID
+		inner := func(p *notifier.Page) func(*testing.T) {
+			return func(t *testing.T) {
+				ctx := zlog.Test(ctx, t)
+				var ns []notifier.Notification
+				for {
+					rs, np, err := e.store.Notifications(ctx, want, p)
+					if err != nil {
+						t.Error(err)
+					}
+					ns = append(ns, rs...)
+					if np.Next == nil {
+						break
+					}
+					p = &np
+				}
+				if got, want := len(ns), len(e.notifications); got != want {
+					t.Errorf("got: %d, want: %d", got, want)
+				}
+				opts := cmp.Options{
+					cmpopts.IgnoreUnexported(claircore.Digest{}),
+					cmpopts.IgnoreFields(claircore.Vulnerability{}, "ID"),
+					cmp.Transformer("Sort", func(in []notifier.Notification) []notifier.Notification {
+						out := make([]notifier.Notification, len(in))
+						copy(out, in)
+						sort.Slice(out, func(i, j int) bool {
+							return out[i].ID.String() < out[j].ID.String()
+						})
+						return out
+					}),
+				}
+				if got, want := ns, e.notifications; !cmp.Equal(got, want, opts) {
+					t.Error(cmp.Diff(got, want, opts))
+				}
+			}
+		}
+		t.Run("NilPage", inner(nil))
+		t.Run("5Page", inner(&notifier.Page{Size: 5}))
+		t.Run("500Page", inner(&notifier.Page{Size: 500}))
 	}
 }
 
-// PutReceipt will confirm a receipt can be directly placed into the
-// the database.
-func (e *e2e) PutReceipt(t *testing.T) {
-	defer func() {
-		e.failed = t.Failed()
-	}()
-	noteID := uuid.New()
-	UOID := uuid.New()
-	r := notifier.Receipt{
-		NotificationID: noteID,
-		UOID:           UOID,
-		Status:         notifier.Delivered,
+// SetDelivered confirms a receipt for a notification ID can be set to
+// delivered.
+func (e *e2e) SetDelivered(ctx context.Context) func(*testing.T) {
+	return func(t *testing.T) {
+		ctx := zlog.Test(ctx, t)
+		want := e.notificationID
+		err := e.store.SetDelivered(ctx, want)
+		if err != nil {
+			t.Error(err)
+		}
+		receipt, err := e.store.Receipt(ctx, want)
+		if err != nil {
+			t.Error(err)
+		}
+		if got := receipt.NotificationID; !cmp.Equal(got, want) {
+			t.Error(cmp.Diff(got, want))
+		}
+		if got, want := receipt.Status, notifier.Delivered; !cmp.Equal(got, want) {
+			t.Error(cmp.Diff(got, want))
+		}
 	}
-	err := e.store.PutReceipt(e.ctx, "test-updater", r)
-	if err != nil {
-		t.Fatalf("failed to put receipt: %v", err)
-	}
+}
 
-	rPrime, err := e.store.Receipt(e.ctx, noteID)
-	if err != nil {
-		t.Fatal(err)
+// SetDeliveryFailed confirms a receipt for a notification ID can be set to
+// delivered.
+func (e *e2e) SetDeliveryFailed(ctx context.Context) func(*testing.T) {
+	return func(t *testing.T) {
+		ctx := zlog.Test(ctx, t)
+		want := e.notificationID
+		err := e.store.SetDeliveryFailed(ctx, want)
+		if err != nil {
+			t.Error(err)
+		}
+		receipt, err := e.store.Receipt(ctx, e.notificationID)
+		if err != nil {
+			t.Error(err)
+		}
+		if got := receipt.NotificationID; !cmp.Equal(got, want) {
+			t.Error(cmp.Diff(got, want))
+		}
+		if got, want := receipt.Status, notifier.DeliveryFailed; !cmp.Equal(got, want) {
+			t.Error(cmp.Diff(got, want))
+		}
+		ids, err := e.store.Failed(ctx)
+		if err != nil {
+			t.Error(err)
+		}
+		if got, want := len(ids), 1; got != want {
+			t.Errorf("got: %d, want: %d", got, want)
+		}
+		if got := ids[0]; !cmp.Equal(got, want) {
+			t.Errorf(cmp.Diff(got, want))
+		}
 	}
-	if !cmp.Equal(rPrime, r, cmpopts.IgnoreFields(rPrime, "TS")) {
-		t.Fatal(cmp.Diff(rPrime, r))
-	}
+}
 
-	rPrime, err = e.store.ReceiptByUOID(e.ctx, UOID)
-	if err != nil {
-		t.Fatal(err)
+// SetDeleted ...
+func (e *e2e) SetDeleted(ctx context.Context) func(*testing.T) {
+	return func(t *testing.T) {
+		ctx := zlog.Test(ctx, t)
+		want := e.notificationID
+		err := e.store.SetDeleted(ctx, want)
+		if err != nil {
+			t.Error(err)
+		}
+		receipt, err := e.store.Receipt(ctx, want)
+		if err != nil {
+			t.Error(err)
+		}
+		if got := receipt.NotificationID; !cmp.Equal(got, want) {
+			t.Error(cmp.Diff(got, want))
+		}
+		if got, want := receipt.Status, notifier.Deleted; !cmp.Equal(got, want) {
+			t.Error(cmp.Diff(got, want))
+		}
+		ids, err := e.store.Deleted(ctx)
+		if err != nil {
+			t.Error(err)
+		}
+		if got, want := len(ids), 1; got != want {
+			t.Errorf("got: %d, want: %d", got, want)
+		}
+		if got := ids[0]; !cmp.Equal(got, want) {
+			t.Errorf(cmp.Diff(got, want))
+		}
 	}
-	if !cmp.Equal(rPrime, r, cmpopts.IgnoreFields(rPrime, "TS")) {
-		t.Fatal(cmp.Diff(rPrime, r))
+}
+
+// PutReceipt will confirm a receipt can be directly placed into the database.
+func (e *e2e) PutReceipt(ctx context.Context) func(*testing.T) {
+	return func(t *testing.T) {
+		ctx := zlog.Test(ctx, t)
+		want := notifier.Receipt{
+			NotificationID: uuid.New(),
+			UOID:           uuid.New(),
+			Status:         notifier.Delivered,
+		}
+		err := e.store.PutReceipt(ctx, "test-updater", want)
+		if err != nil {
+			t.Fatalf("failed to put receipt: %v", err)
+		}
+
+		got, err := e.store.Receipt(ctx, want.NotificationID)
+		if err != nil {
+			t.Error(err)
+		}
+		if !cmp.Equal(got, want, cmpopts.IgnoreFields(got, "TS")) {
+			t.Error(cmp.Diff(got, want))
+		}
+
+		got, err = e.store.ReceiptByUOID(ctx, want.UOID)
+		if err != nil {
+			t.Error(err)
+		}
+		if !cmp.Equal(got, want, cmpopts.IgnoreFields(got, "TS")) {
+			t.Error(cmp.Diff(got, want))
+		}
+	}
+}
+
+func (e *e2e) CollectNotifications(ctx context.Context) func(*testing.T) {
+	const jump = `UPDATE receipt SET ts = (CURRENT_TIMESTAMP - INTERVAL '21 days') WHERE notification_id = $1;`
+	return func(t *testing.T) {
+		ctx := zlog.Test(ctx, t)
+		pool := e.store.pool
+		// Jump our receipt back in time.
+		if _, err := pool.Exec(ctx, jump, e.notificationID); err != nil {
+			t.Error(err)
+		}
+
+		if err := e.store.CollectNotifications(ctx); err != nil {
+			t.Error(err)
+		}
+
+		var ct int
+		if err := pool.QueryRow(ctx, `SELECT COUNT(id) FROM notification_body;`).Scan(&ct); err != nil {
+			t.Error(err)
+		}
+		if got, want := ct, 0; got != want {
+			t.Errorf("got: %d row remaining, wanted: %d rows remaining", got, want)
+		}
 	}
 }

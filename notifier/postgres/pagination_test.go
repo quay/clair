@@ -12,10 +12,9 @@ import (
 	"github.com/quay/clair/v4/notifier"
 )
 
-// TestNotePagination confirms paginating notifications
-// works correctly
-func TestNotePagination(t *testing.T) {
-	integration.Skip(t)
+// TestPagination confirms paginating notifications works correctly.
+func TestPagination(t *testing.T) {
+	integration.NeedDB(t)
 
 	table := []struct {
 		// name of test
@@ -26,42 +25,42 @@ func TestNotePagination(t *testing.T) {
 		pageSize int
 	}{
 		{
-			name:     "check total zero",
+			name:     "TotalZero",
 			total:    0,
 			pageSize: 1,
 		},
 		{
-			name:     "check page zero",
+			name:     "PageOne",
 			total:    5,
-			pageSize: 0,
+			pageSize: 1,
 		},
 		{
-			name:     "check ones",
+			name:     "Ones",
 			total:    1,
 			pageSize: 1,
 		},
 		{
-			name:     "check odds 1",
+			name:     "OddsGT",
 			total:    3,
 			pageSize: 7,
 		},
 		{
-			name:     "check odds 2",
+			name:     "OddsLT",
 			total:    7,
 			pageSize: 3,
 		},
 		{
-			name:     "check total > page size",
+			name:     "LT",
 			total:    1000,
 			pageSize: 5,
 		},
 		{
-			name:     "check total < page size",
+			name:     "GT",
 			total:    5,
 			pageSize: 1000,
 		},
 		{
-			name:     "check large",
+			name:     "Large",
 			total:    5000,
 			pageSize: 1000,
 		},
@@ -69,10 +68,9 @@ func TestNotePagination(t *testing.T) {
 
 	for _, tt := range table {
 		t.Run(tt.name, func(t *testing.T) {
-			t.Parallel()
 			ctx := context.Background()
 			ctx = zlog.Test(ctx, t)
-			store := TestStore(ctx, t)
+			store := TestingStore(ctx, t)
 
 			noteID := uuid.New()
 			updateID := uuid.New()
@@ -102,12 +100,12 @@ func TestNotePagination(t *testing.T) {
 
 			total := []notifier.Notification{}
 			returned, outPage, err := store.Notifications(ctx, noteID, &inPage)
+			if err != nil {
+				t.Fatalf("failed to retreive initial page: %v", err)
+			}
 			total = append(total, returned...)
 
 			for outPage.Next != nil {
-				if err != nil {
-					t.Fatalf("failed to retreive initial page: %v", err)
-				}
 				if outPage.Size != tt.pageSize {
 					t.Fatalf("got: %v, want: %v", outPage.Size, tt.pageSize)
 				}
@@ -116,6 +114,9 @@ func TestNotePagination(t *testing.T) {
 				}
 				returned, outPage, err = store.Notifications(ctx, noteID, &outPage)
 				total = append(total, returned...)
+				if err != nil {
+					t.Error(err)
+				}
 			}
 
 			if len(total) != tt.total {
