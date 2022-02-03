@@ -92,9 +92,9 @@ func (h *NotifHandler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// optional page_size parameter
-	var pageSize uint64
+	var pageSize int
 	if param := r.URL.Query().Get("page_size"); param != "" {
-		pageSize, err = strconv.ParseUint(param, 10, 64)
+		p, err := strconv.ParseInt(param, 10, 64)
 		if err != nil {
 			resp := &je.Response{
 				Code:    "bad-request",
@@ -103,6 +103,7 @@ func (h *NotifHandler) Get(w http.ResponseWriter, r *http.Request) {
 			je.Error(w, resp, http.StatusBadRequest)
 			return
 		}
+		pageSize = int(p)
 	}
 	if pageSize == 0 {
 		pageSize = DefaultPageSize

@@ -71,8 +71,7 @@ func (d *Delivery) deliver(ctx context.Context) error {
 		case <-ticker.C:
 			zlog.Debug(ctx).
 				Msg("delivery tick")
-			err := d.RunDelivery(ctx)
-			if err != nil {
+			if err := d.RunDelivery(ctx); err != nil {
 				zlog.Error(ctx).
 					Err(err).
 					Msg("encountered error on tick")

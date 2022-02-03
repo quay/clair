@@ -24,12 +24,6 @@ import (
 // Processor(s) create atomic boundaries, no two Processor(s) will be creating
 // notifications for the same UOID at once.
 type Processor struct {
-	// NoSummary controls whether per-manifest vulnerability summarization
-	// should happen.
-	NoSummary bool
-	// NoSummary is a little awkward to use, but reversing the boolean this way
-	// makes the defaults line up better.
-
 	// distributed lock used for mutual exclusion
 	locks Locker
 	// a handle to an indexer service
@@ -40,6 +34,12 @@ type Processor struct {
 	store Store
 	// a integer id used for logging
 	id int
+
+	// NoSummary controls whether per-manifest vulnerability summarization
+	// should happen.
+	//
+	// The zero value makes the default behavior to do the summary.
+	NoSummary bool
 }
 
 func NewProcessor(id int, l Locker, indexer indexer.Service, matcher matcher.Service, store Store) *Processor {
@@ -52,9 +52,8 @@ func NewProcessor(id int, l Locker, indexer indexer.Service, matcher matcher.Ser
 	}
 }
 
-// Process is an async method which receives new UOs as events,
-// creates notifications, persists these notifications,
-// and updates the notifier system with the "latest" seen UOID.
+// Process receives new UOs as events, creates and persists notifications, and
+// updates the notifier system with the "latest" seen UOID.
 //
 // Canceling the ctx will end the processing.
 func (p *Processor) Process(ctx context.Context, c <-chan Event) {
@@ -196,8 +195,8 @@ func min(a, b int) int {
 // It has supporting structures for concurrent use and summaries.
 type notifTab struct {
 	sync.Mutex
-	N      []Notification
 	lookup map[string]int // only used in "summary" mode
+	N      []Notification
 }
 
 // GetAffected issues AffectedManifest calls in chunks and merges the result.

@@ -23,7 +23,7 @@ func TestNotePagination(t *testing.T) {
 		// total number of notifications to request
 		total int
 		// number of notifications per page to test
-		pageSize uint64
+		pageSize int
 	}{
 		{
 			name:     "check total zero",
@@ -40,7 +40,6 @@ func TestNotePagination(t *testing.T) {
 			total:    1,
 			pageSize: 1,
 		},
-
 		{
 			name:     "check odds 1",
 			total:    3,
@@ -97,7 +96,7 @@ func TestNotePagination(t *testing.T) {
 				t.Fatalf("failed to insert notifications: %v", err)
 			}
 
-			var inPage = notifier.Page{
+			inPage := notifier.Page{
 				Size: tt.pageSize,
 			}
 
@@ -112,7 +111,7 @@ func TestNotePagination(t *testing.T) {
 				if outPage.Size != tt.pageSize {
 					t.Fatalf("got: %v, want: %v", outPage.Size, tt.pageSize)
 				}
-				if uint64(len(returned)) > tt.pageSize {
+				if len(returned) > tt.pageSize {
 					t.Fatalf("got: %v, want: %v", len(returned), tt.pageSize)
 				}
 				returned, outPage, err = store.Notifications(ctx, noteID, &outPage)

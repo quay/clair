@@ -62,7 +62,7 @@ type Notificationer interface {
 	// with a notification id.
 	//
 	// Normally Receipter.SetDeleted will be issues first, however
-	// application logic may decide to gc notifications which have not been
+	// application logic may decide to GC notifications which have not been
 	// set deleted after some period of time, thus this condition should not
 	// be checked.
 	DeleteNotifications(ctx context.Context, id uuid.UUID) error

@@ -20,16 +20,15 @@ const (
 // PollerOpt applies a configuration to a Poller
 type PollerOpt func(*Poller) error
 
-// Poller implements new Update Operation discovery via
-// an event channel.
+// Poller implements new Update Operation discovery via an event channel.
 type Poller struct {
-	// the interval to poll a Matcher node.
-	interval time.Duration
 	// a store to retrieve known UOIDs and compare
 	// with the polled UOIDs.
 	store Store
 	// a differ to retrieve latest update operations
 	differ matcher.Differ
+	// the interval to poll a Matcher node.
+	interval time.Duration
 }
 
 func NewPoller(interval time.Duration, store Store, differ matcher.Differ) *Poller {
@@ -40,8 +39,8 @@ func NewPoller(interval time.Duration, store Store, differ matcher.Differ) *Poll
 	}
 }
 
-// Event is delivered on the poller's channel when
-// a new UpdateOperation is discovered.
+// Event is delivered on the poller's channel when a new UpdateOperation is
+// discovered.
 type Event struct {
 	updater string
 	uo      driver.UpdateOperation
@@ -89,8 +88,8 @@ func (p *Poller) poll(ctx context.Context, c chan<- Event) {
 	}
 }
 
-// onTick retrieves the latest update operations for all known
-// updaters and delivers an event if notification creation is necessary.
+// OnTick retrieves the latest update operations for all known updaters and
+// delivers an event if notification creation is necessary.
 func (p *Poller) onTick(ctx context.Context, c chan<- Event) {
 	ctx = zlog.ContextWithValues(ctx, "component", "notifier/Poller.onTick")
 

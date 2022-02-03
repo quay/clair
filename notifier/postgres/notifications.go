@@ -103,7 +103,7 @@ func notifications(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID, page *
 		return nil, notifier.Page{}, clairerror.ErrBadNotification{id, err}
 	}
 
-	morePages := uint64(len(notifications)) == limit
+	morePages := len(notifications) == limit
 	if morePages {
 		// Slice off the last element as it was only an indicator
 		// that another page should be delivered.
