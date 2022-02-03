@@ -43,7 +43,7 @@ func (h *NotifHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	default:
 		resp := &je.Response{
 			Code:    "method-not-allowed",
-			Message: "endpoint only allows POST or DELETE",
+			Message: "endpoint only allows GET or DELETE",
 		}
 		je.Error(w, resp, http.StatusMethodNotAllowed)
 	}
