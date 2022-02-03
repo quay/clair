@@ -12,7 +12,6 @@ import (
 
 	"github.com/quay/clair/v4/internal/codec"
 	"github.com/quay/clair/v4/notifier"
-	"github.com/quay/clair/v4/notifier/service"
 )
 
 const (
@@ -25,10 +24,10 @@ type Response struct {
 }
 
 type NotifHandler struct {
-	serv service.Service
+	serv notifier.Service
 }
 
-func NotificationHandler(serv service.Service) *NotifHandler {
+func NotificationHandler(serv notifier.Service) *NotifHandler {
 	return &NotifHandler{
 		serv: serv,
 	}

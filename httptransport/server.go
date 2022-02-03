@@ -17,7 +17,7 @@ import (
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
 	intromw "github.com/quay/clair/v4/middleware/introspection"
-	notifier "github.com/quay/clair/v4/notifier/service"
+	"github.com/quay/clair/v4/notifier"
 )
 
 const (

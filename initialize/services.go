@@ -24,7 +24,8 @@ import (
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/internal/httputil"
 	"github.com/quay/clair/v4/matcher"
-	notifier "github.com/quay/clair/v4/notifier/service"
+	"github.com/quay/clair/v4/notifier"
+	"github.com/quay/clair/v4/notifier/service"
 )
 
 const (
@@ -288,13 +289,11 @@ func localNotifier(ctx context.Context, cfg *config.Config, i indexer.Service, m
 		return nil, mkErr(err)
 	}
 
-	s, err := notifier.New(ctx, notifier.Opts{
+	s, err := service.New(ctx, nil, nil, service.Opts{
 		DeliveryInterval: cfg.Notifier.DeliveryInterval,
-		ConnString:       cfg.Notifier.ConnString,
 		Indexer:          i,
 		Matcher:          m,
 		Client:           c,
-		Migrations:       cfg.Notifier.Migrations,
 		PollInterval:     cfg.Notifier.PollInterval,
 		DisableSummary:   cfg.Notifier.DisableSummary,
 		Webhook:          cfg.Notifier.Webhook,

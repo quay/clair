@@ -8,7 +8,7 @@ import (
 	"github.com/quay/clair/v4/notifier"
 )
 
-var _ Service = (*Mock)(nil)
+var _ notifier.Service = (*Mock)(nil)
 
 // Mock implements a mock notifier service
 type Mock struct {
