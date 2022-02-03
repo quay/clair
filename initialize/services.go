@@ -9,11 +9,13 @@ import (
 	"net/http/cookiejar"
 	"time"
 
+	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/quay/clair/config"
 	"github.com/quay/claircore/enricher/cvss"
 	"github.com/quay/claircore/libindex"
 	"github.com/quay/claircore/libvuln"
 	"github.com/quay/claircore/libvuln/driver"
+	"github.com/quay/claircore/pkg/ctxlock"
 	"github.com/quay/zlog"
 	"golang.org/x/net/publicsuffix"
 	"gopkg.in/square/go-jose.v2/jwt"
@@ -25,6 +27,7 @@ import (
 	"github.com/quay/clair/v4/internal/httputil"
 	"github.com/quay/clair/v4/matcher"
 	"github.com/quay/clair/v4/notifier"
+	"github.com/quay/clair/v4/notifier/postgres"
 	"github.com/quay/clair/v4/notifier/service"
 )
 
@@ -105,6 +108,9 @@ func Services(ctx context.Context, cfg *config.Config) (*Srv, error) {
 
 	return &srv, nil
 }
+
+// BUG(hank) The various resources (database connections, lock services)
+// constructed in some internal functions are not properly cleaned up.
 
 func localIndexer(ctx context.Context, cfg *config.Config) (indexer.Service, error) {
 	const msg = "failed to initialize indexer: "
@@ -289,7 +295,27 @@ func localNotifier(ctx context.Context, cfg *config.Config, i indexer.Service, m
 		return nil, mkErr(err)
 	}
 
-	s, err := service.New(ctx, nil, nil, service.Opts{
+	ncfg := &cfg.Notifier
+	poolcfg, err := pgxpool.ParseConfig(ncfg.ConnString)
+	if err != nil {
+		return nil, mkErr(err)
+	}
+	if cfg.Notifier.Migrations {
+		if err := postgres.Init(ctx, poolcfg.ConnConfig); err != nil {
+			return nil, mkErr(err)
+		}
+	}
+	pool, err := pgxpool.ConnectConfig(ctx, poolcfg)
+	if err != nil {
+		return nil, mkErr(err)
+	}
+	store := postgres.NewStore(pool)
+	locks, err := ctxlock.New(ctx, pool)
+	if err != nil {
+		return nil, mkErr(err)
+	}
+
+	s, err := service.New(ctx, store, locks, service.Opts{
 		DeliveryInterval: cfg.Notifier.DeliveryInterval,
 		Indexer:          i,
 		Matcher:          m,
@@ -300,8 +326,18 @@ func localNotifier(ctx context.Context, cfg *config.Config, i indexer.Service, m
 		AMQP:             cfg.Notifier.AMQP,
 		STOMP:            cfg.Notifier.STOMP,
 	})
-	if err != nil {
+	switch {
+	case err == nil:
+	case errors.Is(err, service.ErrNoDelivery):
+		zlog.Info(ctx).AnErr("reason", err).Msg("notifier disabled")
+		return nil, nil
+	default:
 		return nil, mkErr(err)
 	}
+	go func() {
+		if err := s.Run(ctx); err != context.Canceled {
+			zlog.Error(ctx).Err(err).Msg("unexpected notifier error")
+		}
+	}()
 	return s, nil
 }
