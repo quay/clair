@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/ldelossa/responserecorder"
+	oci "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/quay/claircore"
 	"github.com/quay/zlog"
@@ -90,8 +92,8 @@ func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
 			apiError(w, http.StatusInternalServerError, "could not retrieve indexer state: %v", err)
 			return
 		}
-		var m claircore.Manifest
-		if err := dec.Decode(&m); err != nil {
+		m, err := decodeManifest(ctx, r, dec)
+		if err != nil {
 			apiError(w, http.StatusBadRequest, "failed to deserialize manifest: %v", err)
 			return
 		}
@@ -109,9 +111,9 @@ func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// TODO Do we need some sort of background context embedded in the HTTP
-		// struct?
-		report, err := h.srv.Index(ctx, &m)
+		// TODO(hank) We should switch on the content-type header and not send
+		// back the report if we've received an OCI manifest.
+		report, err := h.srv.Index(ctx, m)
 		if err != nil {
 			apiError(w, http.StatusInternalServerError, "failed to start scan: %v", err)
 			return
@@ -341,4 +343,85 @@ var indexerv1wrapper = &wrapper{
 		},
 		[]string{"handler"},
 	),
+}
+
+const (
+	// Known manifest types we ingest.
+	typeOCIManifest    = oci.MediaTypeImageManifest
+	typeNativeManifest = `application/vnd.projectquay.clair.mainfest.v1+json`
+)
+
+// DecodeManifest switches on the Request's Content-Type to consume the body.
+//
+// Defaults to expecting a native Claircore Manifest.
+func decodeManifest(ctx context.Context, r *http.Request, dec *codec.Decoder) (*claircore.Manifest, error) {
+	var m claircore.Manifest
+
+	t := r.Header.Get("content-type")
+	if i := strings.IndexByte(t, ';'); i != -1 {
+		t = strings.TrimSpace(t[:i])
+	}
+	switch t {
+	case typeOCIManifest:
+		var om oci.Manifest
+		if err := dec.Decode(&om); err != nil {
+			return nil, err
+		}
+		if err := nativeFromOCI(&m, &om); err != nil {
+			return nil, err
+		}
+	case typeNativeManifest, "application/json", "":
+		if err := dec.Decode(&m); err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("unknown content-type %q", t)
+	}
+	return &m, nil
+}
+
+// These are the layer types we accept inside an OCI Manifest.
+var ociLayerTypes = map[string]struct{}{
+	oci.MediaTypeImageLayer:           {},
+	oci.MediaTypeImageLayerGzip:       {},
+	oci.MediaTypeImageLayer + "+zstd": {}, // The specs package doesn't have zstd, oddly.
+}
+
+// NativeFromOCI populates the Manifest from the OCI Manifest, reporting an
+// error if something is invalid.
+func nativeFromOCI(m *claircore.Manifest, o *oci.Manifest) error {
+	const header = `header:`
+	var err error
+
+	m.Hash, err = claircore.ParseDigest(o.Config.Digest.String())
+	if err != nil {
+		return fmt.Errorf("unable to parse manifest digest %q: %w", o.Config.Digest, err)
+	}
+
+	for _, u := range o.Layers {
+		if len(u.URLs) == 0 {
+			// Manifest is missing URLs.
+			// They're optional in the spec, but we need them for obvious reasons.
+			return fmt.Errorf("missing URLs for layer %q", u.Digest)
+		}
+		if _, ok := ociLayerTypes[u.MediaType]; !ok {
+			return fmt.Errorf("invalid media type for layer %q", u.Digest)
+		}
+		l := claircore.Layer{
+			URI: u.URLs[0],
+		}
+		l.Hash, err = claircore.ParseDigest(u.Digest.String())
+		if err != nil {
+			return fmt.Errorf("unable to parse layer digest %q: %w", u.Digest, err)
+		}
+		for k, v := range u.Annotations {
+			if !strings.HasPrefix(k, header) {
+				continue
+			}
+			l.Headers[strings.TrimPrefix(k, header)] = []string{v}
+		}
+		m.Layers = append(m.Layers, &l)
+	}
+
+	return nil
 }
