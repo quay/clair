@@ -70,12 +70,14 @@ objects:
                   port: ${{HEALTH_PORT}}
               readinessProbe:
                 httpGet:
-                  path: ${{HEALTH_PATH}}
+                  path: ${{READY_PATH}}
                   port: ${{HEALTH_PORT}}
               startupProbe:
                 httpGet:
-                  path: ${{HEALTH_PATH}}
+                  path: ${{READY_PATH}}
                   port: ${{HEALTH_PORT}}
+                  failureThreshold: 400
+                  periodSeconds: 10
               volumeMounts:
                 - name: clair-config
                   mountPath: /etc/clair
@@ -144,12 +146,14 @@ objects:
                   port: ${{HEALTH_PORT}}
               readinessProbe:
                 httpGet:
-                  path: ${{HEALTH_PATH}}
+                  path: ${{READY_PATH}}
                   port: ${{HEALTH_PORT}}
               startupProbe:
                 httpGet:
-                  path: ${{HEALTH_PATH}}
+                  path: ${{READY_PATH}}
                   port: ${{HEALTH_PORT}}
+                  failureThreshold: 400
+                  periodSeconds: 10
               volumeMounts:
                 - name: clair-config
                   mountPath: /etc/clair
@@ -207,12 +211,14 @@ objects:
                   port: ${{HEALTH_PORT}}
               readinessProbe:
                 httpGet:
-                  path: ${{HEALTH_PATH}}
+                  path: ${{READY_PATH}}
                   port: ${{HEALTH_PORT}}
               startupProbe:
                 httpGet:
-                  path: ${{HEALTH_PATH}}
+                  path: ${{READY_PATH}}
                   port: ${{HEALTH_PORT}}
+                  failureThreshold: 400
+                  periodSeconds: 10
               volumeMounts:
                 - name: clair-config
                   mountPath: /etc/clair
@@ -373,6 +379,9 @@ parameters:
   - name: HEALTH_PATH
     value: "/healthz"
     displayName: the http path to clair's health check endpoint
+  - name: READY_PATH
+    value: "/readyz"
+    displayName: the http path to clair's ready endpoint
   - name: HEALTH_PORT
     value: "8089"
     displayName: the port to clair's health check endpoint
