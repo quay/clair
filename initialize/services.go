@@ -15,8 +15,6 @@ import (
 	"github.com/quay/claircore/libvuln"
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/zlog"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/label"
 	"golang.org/x/net/publicsuffix"
 	"gopkg.in/square/go-jose.v2/jwt"
 
@@ -53,9 +51,7 @@ type Srv struct {
 // Services configures the services needed for a given mode according to the
 // provided configuration.
 func Services(ctx context.Context, cfg *config.Config) (*Srv, error) {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "initialize/Services"),
-	)
+	ctx = zlog.ContextWithValues(ctx, "component", "initialize/Services")
 	zlog.Info(ctx).Msg("begin service initialization")
 	defer zlog.Info(ctx).Msg("end service initialization")
 

@@ -9,8 +9,6 @@ import (
 	"github.com/google/uuid"
 	je "github.com/quay/claircore/pkg/jsonerr"
 	"github.com/quay/zlog"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/label"
 
 	"github.com/quay/clair/v4/internal/codec"
 	"github.com/quay/clair/v4/notifier"
@@ -52,9 +50,7 @@ func (h *NotifHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *NotifHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	ctx := baggage.ContextWithValues(r.Context(),
-		label.String("component", "httptransport/NotifHander.Delete"),
-	)
+	ctx := zlog.ContextWithValues(r.Context(), "component", "httptransport/NotifHander.Delete")
 	path := r.URL.Path
 	id := filepath.Base(path)
 	notificationID, err := uuid.Parse(id)
@@ -81,9 +77,7 @@ func (h *NotifHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 // Get will return paginated notifications to the caller.
 func (h *NotifHandler) Get(w http.ResponseWriter, r *http.Request) {
-	ctx := baggage.ContextWithValues(r.Context(),
-		label.String("component", "httptransport/NotifHander.Get"),
-	)
+	ctx := zlog.ContextWithValues(r.Context(), "component", "httptransport/NotifHander.Get")
 	path := r.URL.Path
 	id := filepath.Base(path)
 	notificationID, err := uuid.Parse(id)

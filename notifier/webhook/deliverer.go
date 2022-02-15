@@ -10,8 +10,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/label"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/internal/codec"
@@ -68,9 +66,9 @@ func (d *Deliverer) Name() string {
 //
 // Deliver POSTS a webhook data structure to the configured target.
 func (d *Deliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "notifier/webhook/Deliverer.Deliver"),
-		label.Stringer("notification_id", nID),
+	ctx = zlog.ContextWithValues(ctx,
+		"component", "notifier/webhook/Deliverer.Deliver",
+		"notification_id", nID.String(),
 	)
 
 	callback, err := d.callback.Parse(nID.String())

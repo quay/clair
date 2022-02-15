@@ -6,16 +6,17 @@ import (
 	"net"
 	"net/http"
 	"net/http/pprof"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/exporters/stdout"
-	"go.opentelemetry.io/otel/exporters/trace/jaeger"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 
 	"github.com/quay/clair/v4/health"
 )
@@ -26,7 +27,6 @@ const (
 	DogStatsD                = "dogstatsd"
 	Stdout                   = "stdout"
 	Jaeger                   = "jaeger"
-	DefaultJaegerEndpoint    = "localhost:6831"
 	HealthEndpoint           = "/healthz"
 	ReadyEndpoint            = "/readyz"
 	DefaultIntrospectionAddr = ":8089"
@@ -47,9 +47,7 @@ type Server struct {
 }
 
 func New(ctx context.Context, conf config.Config, health func() bool) (*Server, error) {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "introspection/New"),
-	)
+	ctx = zlog.ContextWithValues(ctx, "component", "introspection/New")
 
 	var addr string
 	if conf.IntrospectionAddr == "" {
@@ -98,25 +96,91 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Server, 
 	}
 
 	// trace exporter
-	traceCfg := sdktrace.Config{
-		DefaultSampler: sampler,
-	}
-	traceOpts := []sdktrace.TracerProviderOption{
-		sdktrace.WithConfig(traceCfg),
-	}
+	var exporter sdktrace.SpanExporter
 	switch conf.Trace.Name {
 	case Stdout:
-		err := i.withStdOut(ctx, traceOpts)
+		exporter, err = stdouttrace.New()
 		if err != nil {
-			return nil, fmt.Errorf("error configuring stdout tracing: %v", err)
+			return nil, fmt.Errorf("error configuring stdout tracing: %w", err)
 		}
 	case Jaeger:
-		err := i.withJaeger(ctx, traceOpts)
+		conf := i.conf.Trace.Jaeger
+		var mode string
+		var endpoint string
+
+		// configure whether jaeger exporter pushes to an agent
+		// or a collector
+		switch {
+		case conf.Agent.Endpoint != "":
+			mode = "agent"
+			endpoint = conf.Agent.Endpoint
+		case conf.Collector.Endpoint != "":
+			mode = "collector"
+			endpoint = conf.Collector.Endpoint
+		default:
+			mode = "agent"
+		}
+
+		var e jaeger.EndpointOption
+		switch mode {
+		case "agent":
+			zlog.Info(ctx).Msg("configuring jaeger exporter to push to agent")
+			var opt []jaeger.AgentEndpointOption
+			if endpoint != "" {
+				host, port, err := net.SplitHostPort(endpoint)
+				if err != nil {
+					return nil, fmt.Errorf("error configuring jaeger tracing: %w", err)
+				}
+				if host != "" {
+					opt = append(opt, jaeger.WithAgentHost(host))
+				}
+				if port != "" {
+					opt = append(opt, jaeger.WithAgentPort(port))
+				}
+			}
+			e = jaeger.WithAgentEndpoint(opt...)
+		case "collector":
+			zlog.Info(ctx).Msg("configuring jaeger exporter to push to collector")
+			var opt []jaeger.CollectorEndpointOption
+			if endpoint != "" {
+				opt = append(opt, jaeger.WithEndpoint(endpoint))
+			}
+			u, p := conf.Collector.Username, conf.Collector.Password
+			if u != nil {
+				opt = append(opt, jaeger.WithUsername(*u))
+			}
+			if p != nil {
+				opt = append(opt, jaeger.WithPassword(*p))
+			}
+			e = jaeger.WithCollectorEndpoint(opt...)
+		}
+
+		// configure the exporter
+		exporter, err = jaeger.New(e)
 		if err != nil {
-			return nil, fmt.Errorf("error configuring jaeger tracing: %v", err)
+			return nil, fmt.Errorf("error configuring jaeger tracing: %w", err)
 		}
 	default:
 		zlog.Info(ctx).Msg("no distributed tracing enabled")
+	}
+	if exporter != nil {
+		tp := sdktrace.NewTracerProvider(
+			sdktrace.WithSampler(sampler),
+			sdktrace.WithBatcher(exporter),
+			sdktrace.WithResource(resource.NewWithAttributes(
+				semconv.SchemaURL,
+				semconv.ServiceNameKey.String(fmt.Sprintf("clairv4/%v", i.conf.Mode)),
+			)),
+		)
+		otel.SetTracerProvider(tp)
+		i.Server.RegisterOnShutdown(func() {
+			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			defer cancel()
+			if err := tp.Shutdown(ctx); err != nil {
+				zlog.Error(ctx).Err(err).Msg("error shutting down trace provider")
+			}
+		})
+		zlog.Info(ctx).Msg("distributed tracing configured")
 	}
 
 	// configure diagnostics
@@ -159,94 +223,9 @@ func (i *Server) withReady(_ context.Context) error {
 	return nil
 }
 
-// withStdOut configures the stdout exporter for distributed tracing
-func (i *Server) withStdOut(_ context.Context, traceOpts []sdktrace.TracerProviderOption) error {
-	exporter, err := stdout.NewExporter()
-	if err != nil {
-		return err
-	}
-	traceOpts = append(traceOpts, sdktrace.WithSyncer(exporter))
-	tp := sdktrace.NewTracerProvider(traceOpts...)
-	otel.SetTracerProvider(tp)
-	return nil
-}
-
-// withJaeger configures the Jaeger exporter for distributed tracing.
-func (i *Server) withJaeger(ctx context.Context, traceOpts []sdktrace.TracerProviderOption) error {
-	conf := i.conf.Trace.Jaeger
-	var mode string
-	var endpoint string
-
-	// configure whether jaeger exporter pushes to an agent
-	// or a collector
-	switch {
-	case conf.Agent.Endpoint != "":
-		mode = "agent"
-		endpoint = conf.Agent.Endpoint
-	case conf.Collector.Endpoint != "":
-		mode = "collector"
-		endpoint = conf.Collector.Endpoint
-	default:
-		mode = "agent"
-		endpoint = DefaultJaegerEndpoint
-	}
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "introspection/Server.withJaeger"),
-		label.String("endpoint", endpoint),
-	)
-
-	var e jaeger.EndpointOption
-	switch mode {
-	case "agent":
-		zlog.Info(ctx).Msg("configuring jaeger exporter to push to agent")
-		e = jaeger.WithAgentEndpoint(endpoint)
-	case "collector":
-		zlog.Info(ctx).Msg("configuring jaeger exporter to push to collector")
-		var opt []jaeger.CollectorEndpointOption
-		u, p := conf.Collector.Username, conf.Collector.Password
-		if u != nil {
-			opt = append(opt, jaeger.WithUsername(*u))
-		}
-		if p != nil {
-			opt = append(opt, jaeger.WithPassword(*p))
-		}
-		e = jaeger.WithCollectorEndpoint(endpoint, opt...)
-	}
-
-	// configure the exporter
-	opts := []jaeger.Option{}
-	if conf.BufferMax != 0 {
-		opts = append(opts, jaeger.WithBufferMaxCount(conf.BufferMax))
-	}
-	p := jaeger.Process{
-		ServiceName: fmt.Sprintf("clairv4/%v", i.conf.Mode),
-	}
-	if len(conf.Tags) != 0 {
-		for k, v := range conf.Tags {
-			p.Tags = append(p.Tags, label.String(k, v))
-		}
-	}
-	opts = append(opts, jaeger.WithProcess(p))
-	exporter, err := jaeger.NewRawExporter(e, opts...)
-	if err != nil {
-		return err
-	}
-	traceOpts = append(traceOpts, sdktrace.WithSyncer(exporter))
-
-	i.RegisterOnShutdown(exporter.Flush)
-
-	tp := sdktrace.NewTracerProvider(traceOpts...)
-	otel.SetTracerProvider(tp)
-	return nil
-}
-
-// withPrometheus configures a prometheus open telemetry
-// pipeline, registers it with the server, and adds the prometheus
-// endpoint to i's servemux.
+// WithPrometheus adds the prometheus endpoint to i's ServeMux.
 func (i *Server) withPrometheus(ctx context.Context) error {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "introspection/Server.withPrometheus"),
-	)
+	ctx = zlog.ContextWithValues(ctx, "component", "introspection/Server.withPrometheus")
 	endpoint := DefaultPromEndpoint
 	if i.conf.Metrics.Prometheus.Endpoint != nil {
 		endpoint = *i.conf.Metrics.Prometheus.Endpoint

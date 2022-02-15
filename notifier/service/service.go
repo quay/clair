@@ -15,8 +15,6 @@ import (
 	"github.com/quay/claircore/pkg/ctxlock"
 	"github.com/quay/zlog"
 	"github.com/remind101/migrate"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/label"
 
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
@@ -78,9 +76,7 @@ type Opts struct {
 // Canceling the ctx will kill any concurrent routines affiliated with
 // the notifier.
 func New(ctx context.Context, opts Opts) (*service, error) {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "notifier/service/New"),
-	)
+	ctx = zlog.ContextWithValues(ctx, "component", "notifier/service/New")
 
 	// initialize store and dist lock pool
 	store, lockPool, err := storeInit(ctx, opts)
@@ -159,9 +155,7 @@ func testModeInit(ctx context.Context, opts *Opts) error {
 }
 
 func storeInit(ctx context.Context, opts Opts) (*postgres.Store, *pgxpool.Pool, error) {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "notifier/service/storeInit"),
-	)
+	ctx = zlog.ContextWithValues(ctx, "component", "notifier/service/storeInit")
 
 	cfg, err := pgxpool.ParseConfig(opts.ConnString)
 	if err != nil {
@@ -194,9 +188,7 @@ func storeInit(ctx context.Context, opts Opts) (*postgres.Store, *pgxpool.Pool, 
 }
 
 func webhookDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, store notifier.Store) error {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "notifier/service/webhookDeliveries"),
-	)
+	ctx = zlog.ContextWithValues(ctx, "component", "notifier/service/webhookDeliveries")
 	zlog.Info(ctx).
 		Int("count", deliveries).
 		Msg("initializing webhook deliverers")
@@ -223,9 +215,7 @@ func webhookDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, s
 }
 
 func amqpDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, store notifier.Store) error {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "notifier/service/amqpDeliveries"),
-	)
+	ctx = zlog.ContextWithValues(ctx, "component", "notifier/service/amqpDeliveries")
 
 	conf := opts.AMQP
 	if len(conf.URIs) == 0 {
@@ -266,9 +256,7 @@ func amqpDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, stor
 }
 
 func stompDeliveries(ctx context.Context, opts Opts, lockPool *pgxpool.Pool, store notifier.Store) error {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "notifier/service/stompDeliveries"),
-	)
+	ctx = zlog.ContextWithValues(ctx, "component", "notifier/service/stompDeliveries")
 
 	conf := opts.STOMP
 	if len(conf.URIs) == 0 {

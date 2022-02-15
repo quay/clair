@@ -3,12 +3,11 @@ package notifier
 import (
 	"context"
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/quay/zlog"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/label"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 )
@@ -42,10 +41,10 @@ func NewDelivery(id int, d Deliverer, interval time.Duration, store Store, l Loc
 //
 // Canceling the ctx will end delivery.
 func (d *Delivery) Deliver(ctx context.Context) {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("deliverer", d.Deliverer.Name()),
-		label.String("component", "notifier/Delivery.Deliver"),
-		label.Int("id", d.id),
+	ctx = zlog.ContextWithValues(ctx,
+		"deliverer", d.Deliverer.Name(),
+		"component", "notifier/Delivery.Deliver",
+		"id", strconv.Itoa(d.id),
 	)
 	zlog.Info(ctx).
 		Msg("delivering notifications")
@@ -56,9 +55,7 @@ func (d *Delivery) Deliver(ctx context.Context) {
 //
 // implements a blocking event loop via a time.Ticker
 func (d *Delivery) deliver(ctx context.Context) error {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "notifier/Delivery.deliver"),
-	)
+	ctx = zlog.ContextWithValues(ctx, "component", "notifier/Delivery.deliver")
 
 	defer func() {
 		if err := d.locks.Close(ctx); err != nil {
@@ -87,10 +84,10 @@ func (d *Delivery) deliver(ctx context.Context) error {
 // RunDelivery determines notifications to deliver and
 // calls the implemented Deliverer to perform the actions.
 func (d *Delivery) RunDelivery(ctx context.Context) error {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("deliverer", d.Deliverer.Name()),
-		label.Int("id", d.id),
-		label.String("component", "notifier/Delivery.RunDelivery"),
+	ctx = zlog.ContextWithValues(ctx,
+		"deliverer", d.Deliverer.Name(),
+		"id", strconv.Itoa(d.id),
+		"component", "notifier/Delivery.RunDelivery",
 	)
 
 	toDeliver := []uuid.UUID{}
@@ -142,9 +139,9 @@ func (d *Delivery) RunDelivery(ctx context.Context) error {
 //
 // do's actions should be performed under a distributed lock.
 func (d *Delivery) do(ctx context.Context, nID uuid.UUID) error {
-	ctx = baggage.ContextWithValues(ctx,
-		label.Stringer("notification_id", nID),
-		label.String("component", "notifier/Delivery.do"),
+	ctx = zlog.ContextWithValues(ctx,
+		"notification_id", nID.String(),
+		"component", "notifier/Delivery.do",
 	)
 
 	// if we have a direct deliverer provide the notifications to it.

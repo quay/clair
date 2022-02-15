@@ -4,14 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"github.com/google/uuid"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/zlog"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/label"
 	"golang.org/x/sync/errgroup"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
@@ -66,9 +65,9 @@ func (p *Processor) Process(ctx context.Context, c <-chan Event) {
 //
 // implements the blocking event loop of a processor.
 func (p *Processor) process(ctx context.Context, c <-chan Event) {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "notifier/Processor.process"),
-		label.Int("processor_id", p.id),
+	ctx = zlog.ContextWithValues(ctx,
+		"component", "notifier/Processor.process",
+		"processor_id", strconv.Itoa(p.id),
 	)
 
 	defer func() {
@@ -83,9 +82,9 @@ func (p *Processor) process(ctx context.Context, c <-chan Event) {
 			zlog.Info(ctx).Msg("context canceled: ending event processing")
 			return
 		case e := <-c:
-			ctx := baggage.ContextWithValues(ctx,
-				label.String("updater", e.updater),
-				label.Stringer("UOID", e.uo.Ref),
+			ctx := zlog.ContextWithValues(ctx,
+				"updater", e.updater,
+				"UOID", e.uo.Ref.String(),
 			)
 			zlog.Debug(ctx).Msg("processing")
 			if err := func() error {
@@ -113,9 +112,7 @@ func (p *Processor) process(ctx context.Context, c <-chan Event) {
 //
 // will be performed under a distributed lock
 func (p *Processor) create(ctx context.Context, e Event, prev uuid.UUID) error {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "notifier/Processor.create"),
-	)
+	ctx = zlog.ContextWithValues(ctx, "component", "notifier/Processor.create")
 	zlog.Debug(ctx).
 		Stringer("prev", prev).
 		Stringer("cur", e.uo.Ref).
@@ -293,9 +290,7 @@ func getAffected(ctx context.Context, ic indexer.Service, nosummary bool, vs []c
 //
 // will be performed under a distributed lock.
 func (p *Processor) safe(ctx context.Context, e Event) (bool, uuid.UUID) {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "notifier/Processor.safe"),
-	)
+	ctx = zlog.ContextWithValues(ctx, "component", "notifier/Processor.safe")
 
 	// confirm we are not making duplicate notifications
 	var errNoReceipt clairerror.ErrNoReceipt

@@ -14,8 +14,6 @@ import (
 	"github.com/quay/claircore"
 	"github.com/quay/zlog"
 	"github.com/urfave/cli/v2"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/label"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/quay/clair/v4/internal/codec"
@@ -165,7 +163,7 @@ func reportAction(c *cli.Context) error {
 
 	for i := 0; i < args.Len(); i++ {
 		ref := args.Get(i)
-		ctx := baggage.ContextWithValues(ctx, label.String("ref", ref))
+		ctx := zlog.ContextWithValues(ctx, "ref", ref)
 		zlog.Debug(ctx).
 			Msg("fetching")
 		eg.Go(func() error {
@@ -176,7 +174,7 @@ func reportAction(c *cli.Context) error {
 					Send()
 				return err
 			}
-			ctx := baggage.ContextWithValues(ctx, label.Stringer("digest", d))
+			ctx := zlog.ContextWithValues(ctx, "digest", d.String())
 			zlog.Debug(ctx).
 				Msg("found manifest")
 

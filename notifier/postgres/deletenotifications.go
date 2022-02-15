@@ -9,8 +9,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/quay/zlog"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/label"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 )
@@ -39,9 +37,9 @@ var (
 // deleteNotifications garbage collects notifications and their associated
 // id and receipt rows
 func deleteNotifications(ctx context.Context, pool *pgxpool.Pool, id uuid.UUID) error {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "notifier/postgres/deleteNotifications"),
-		label.Stringer("notification_id", id),
+	ctx = zlog.ContextWithValues(ctx,
+		"component", "notifier/postgres/deleteNotifications",
+		"notification_id", id.String(),
 	)
 
 	const (

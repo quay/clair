@@ -10,8 +10,6 @@ import (
 	gostomp "github.com/go-stomp/stomp"
 	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/label"
 )
 
 // failOver will return the first successful connection made against the provided
@@ -67,9 +65,7 @@ func (f *failOver) Dial(uri string) (*gostomp.Conn, error) {
 // The caller MUST call conn.Disconnect() to close the underlying TCP connection
 // when finished.
 func (f *failOver) Connection(ctx context.Context) (*gostomp.Conn, error) {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "notifier/stomp/failOver.Connection"),
-	)
+	ctx = zlog.ContextWithValues(ctx, "component", "notifier/stomp/failOver.Connection")
 
 	for _, uri := range f.uris {
 		conn, err := f.Dial(uri)

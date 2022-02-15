@@ -10,8 +10,6 @@ import (
 	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
 	samqp "github.com/streadway/amqp"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/label"
 )
 
 // failOver will return the first successful connection made against the provided
@@ -29,9 +27,8 @@ type failOver struct {
 // Connection returns an AMQP connection to the first broker which successfully
 // handshakes.
 func (f *failOver) Connection(ctx context.Context) (*samqp.Connection, error) {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "notifier/amqp/failOver.Connection"),
-	)
+	ctx = zlog.ContextWithValues(ctx,
+		"component", "notifier/amqp/failOver.Connection")
 
 	f.RLock()
 	if f.conn != nil && !f.conn.IsClosed() {
@@ -43,7 +40,7 @@ func (f *failOver) Connection(ctx context.Context) (*samqp.Connection, error) {
 	f.RUnlock()
 
 	for _, uri := range f.uris {
-		ctx := baggage.ContextWithValues(ctx, label.Stringer("broker", uri))
+		ctx := zlog.ContextWithValues(ctx, "broker", uri.String())
 		// safe to always call DialTLS per docs:
 		// 'DialTLS will use the provided tls.Config when it encounters an amqps:// scheme and will dial a plain connection when it encounters an amqp:// scheme.'
 		conn, err := samqp.DialTLS(uri.String(), f.tls)

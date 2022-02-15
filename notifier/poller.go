@@ -7,8 +7,6 @@ import (
 
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/zlog"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/label"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/matcher"
@@ -65,9 +63,7 @@ func (p *Poller) Poll(ctx context.Context) <-chan Event {
 //
 // implements a blocking event loop via a time.Ticker
 func (p *Poller) poll(ctx context.Context, c chan<- Event) {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "notifier/Poller.poll"),
-	)
+	ctx = zlog.ContextWithValues(ctx, "component", "notifier/Poller.poll")
 
 	defer close(c)
 	if err := ctx.Err(); err != nil {
@@ -96,9 +92,7 @@ func (p *Poller) poll(ctx context.Context, c chan<- Event) {
 // onTick retrieves the latest update operations for all known
 // updaters and delivers an event if notification creation is necessary.
 func (p *Poller) onTick(ctx context.Context, c chan<- Event) {
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "notifier/Poller.onTick"),
-	)
+	ctx = zlog.ContextWithValues(ctx, "component", "notifier/Poller.onTick")
 
 	latest, err := p.differ.LatestUpdateOperations(ctx, driver.VulnerabilityKind)
 	if err != nil {
@@ -109,14 +103,14 @@ func (p *Poller) onTick(ctx context.Context, c chan<- Event) {
 	}
 
 	for updater, uo := range latest {
-		ctx := baggage.ContextWithValues(ctx, label.String("updater", updater))
+		ctx := zlog.ContextWithValues(ctx, "updater", updater)
 		if len(uo) == 0 {
 			zlog.Debug(ctx).
 				Msg("received 0 update operations after polling Matcher")
 			return // Should this be a continue?
 		}
 		latest := uo[0]
-		ctx = baggage.ContextWithValues(ctx, label.Stringer("UOID", latest.Ref))
+		ctx = zlog.ContextWithValues(ctx, "UOID", latest.Ref.String())
 		// confirm notifications were never created for this UOID.
 		var errNoReceipt clairerror.ErrNoReceipt
 		_, err := p.store.ReceiptByUOID(ctx, latest.Ref)

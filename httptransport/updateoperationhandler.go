@@ -10,8 +10,6 @@ import (
 	"github.com/quay/claircore/libvuln/driver"
 	je "github.com/quay/claircore/pkg/jsonerr"
 	"github.com/quay/zlog"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/label"
 
 	"github.com/quay/clair/v4/internal/codec"
 	"github.com/quay/clair/v4/matcher"
@@ -58,9 +56,7 @@ func (h *UOHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Clients may provide an 'If-None-Match' header with the etag value to receive
 // a StatusNotModified when no new UpdateOperations have been created.
 func (h *UOHandler) Get(w http.ResponseWriter, r *http.Request) {
-	ctx := baggage.ContextWithValues(r.Context(),
-		label.String("component", "httptransport/UOHandler.Get"),
-	)
+	ctx := zlog.ContextWithValues(r.Context(), "component", "httptransport/UOHandler.Get")
 
 	kind := driver.VulnerabilityKind
 	switch k := r.URL.Query().Get("kind"); k {
@@ -112,9 +108,7 @@ func (h *UOHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 // Delete removes an UpdateOperation models from the system.
 func (h *UOHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	ctx := baggage.ContextWithValues(r.Context(),
-		label.String("component", "httptransport/UOHandler.Delete"),
-	)
+	ctx := zlog.ContextWithValues(r.Context(), "component", "httptransport/UOHandler.Delete")
 	path := r.URL.Path
 	id := filepath.Base(path)
 	uuid, err := uuid.Parse(id)

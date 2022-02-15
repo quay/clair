@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/quay/zlog"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/label"
 	"gopkg.in/square/go-jose.v2/jwt"
 )
 
@@ -30,9 +28,7 @@ func NewPSK(key []byte, issuer []string) (*PSK, error) {
 
 // Check implements AuthCheck
 func (p *PSK) Check(_ context.Context, r *http.Request) bool {
-	ctx := baggage.ContextWithValues(r.Context(),
-		label.String("component", "middleware/auth/PSK.Check"),
-	)
+	ctx := zlog.ContextWithValues(r.Context(), "component", "middleware/auth/PSK.Check")
 
 	wt, ok := fromHeader(r)
 	if !ok {
@@ -50,7 +46,7 @@ func (p *PSK) Check(_ context.Context, r *http.Request) bool {
 		return false
 	}
 
-	ctx = baggage.ContextWithValues(ctx, label.String("iss", cl.Issuer))
+	ctx = zlog.ContextWithValues(ctx, "iss", cl.Issuer)
 	if err := cl.ValidateWithLeeway(jwt.Expected{
 		Time: time.Now(),
 	}, 15*time.Second); err != nil {

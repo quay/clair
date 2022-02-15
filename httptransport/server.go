@@ -11,8 +11,6 @@ import (
 	"github.com/quay/zlog"
 	othttp "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/label"
 	"golang.org/x/sync/semaphore"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
@@ -72,9 +70,7 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 		notifier: notifier,
 		traceOpt: othttp.WithTracerProvider(otel.GetTracerProvider()),
 	}
-	ctx = baggage.ContextWithValues(ctx,
-		label.String("component", "httptransport/New"),
-	)
+	ctx = zlog.ContextWithValues(ctx, "component", "httptransport/New")
 
 	if err := t.configureDiscovery(ctx); err != nil {
 		zlog.Warn(ctx).Err(err).Msg("configuring openapi discovery failed")

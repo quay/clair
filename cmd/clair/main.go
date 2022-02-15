@@ -15,8 +15,6 @@ import (
 	"github.com/quay/clair/config"
 	_ "github.com/quay/claircore/updater/defaults"
 	"github.com/quay/zlog"
-	"go.opentelemetry.io/otel/baggage"
-	"go.opentelemetry.io/otel/label"
 	"golang.org/x/sync/errgroup"
 	yaml "gopkg.in/yaml.v3"
 
@@ -75,7 +73,7 @@ func main() {
 	if err := initialize.Logging(ctx, &conf); err != nil {
 		golog.Fatalf("failed to set up logging: %v", err)
 	}
-	ctx = baggage.ContextWithValues(ctx, label.String("component", "main"))
+	ctx = zlog.ContextWithValues(ctx, "component", "main")
 	zlog.Info(ctx).
 		Str("version", Version).
 		Msg("starting")
