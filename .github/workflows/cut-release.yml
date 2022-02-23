@@ -11,6 +11,11 @@ jobs:
   config:
     name: Config
     runs-on: 'ubuntu-latest'
+    strategy:
+      matrix:
+        image: ['quay.io/projectquay/golang:1.17']
+    container:
+      image: ${{ matrix.image }}
     outputs:
       version: ${{ steps.setup.outputs.version }}
       tar_prefix: ${{ steps.setup.outputs.tar_prefix }}
@@ -19,10 +24,8 @@ jobs:
       image_repo: ${{ steps.setup.outputs.image_repo }}
       build_image: ${{ steps.setup.outputs.build_image }}
       build_go_version: ${{ steps.setup.outputs.build_go_version }}
-      build_cache_key: ${{ steps.go.outputs.cache_key }}
+      build_cache_key: ${{ steps.setup.outputs.cache_key }}
       chlog_version: ${{ '0.14.0' }}
-    env:
-      BUILD_IMAGE: quay.io/projectquay/golang:1.17
     steps:
       - name: Setup
         id: setup
@@ -34,14 +37,9 @@ jobs:
           printf '::set-output name=tar_prefix::%s\n' "clair-${tag}"
           printf '::set-output name=image_tag::%s\n' "${tag#v}"
           printf '::set-output name=image_repo::%s\n' "${repo}"
-          printf '::set-output name=build_image::%s\n' "${BUILD_IMAGE}"
-          printf '::set-output name=build_go_version::%s\n' "${BUILD_IMAGE##*:}"
-      - name: Check go version
-        id: go
-        uses: docker://${{ steps.setup.outputs.build_image }}
-        with:
-          entrypoint: /bin/sh
-        args: printf '::set-output name=cache_key::%s\n' "$(go version | md5sum - | cut -f 1 -d ' ')"
+          printf '::set-output name=build_image::%s\n' '${{ matrix.image }}'
+          printf '::set-output name=build_go_version::%s\n' "$(go version | cut -f 3 -d ' ' | sed 's/^go//;s/\.[0-9]\+$//')"
+          printf '::set-output name=cache_key::%s\n' "$(go version | md5sum - | cut -f 1 -d ' ')"
 
   release-archive:
     name: Create Release Archive
@@ -54,7 +52,7 @@ jobs:
           fetch-depth: 0
       - uses: ./.github/actions/go-cache
         with:
-          go: ${{ steps.config.outputs.go_version }}
+          go: ${{ needs.config.outputs.build_go_version }}
       - name: Create Release Archive
         run: |
           go mod vendor
@@ -124,7 +122,7 @@ jobs:
           name: release
       - uses: ./.github/actions/go-cache
         with:
-          go: ${{ steps.config.outputs.go_version }}
+          go: ${{ needs.config.outputs.build_go_version }}
       - name: Unpack and Build
         run: |
           tar -xz -f ${{steps.download.outputs.download-path}}/clair-${{ needs.config.outputs.version }}.tar.gz --strip-components=1
