@@ -2,8 +2,14 @@
 ## [Unreleased]
 
 
+<a name="v4.4.0-rc.1"></a>
+## [v4.4.0-rc.1] - 2022-02-23
+### Workflows
+- [f2819bd6](https://github.com/quay/clair/commit/f2819bd63b90d93ac0930a83d5de11bd5adbfe4a): rewrite go version check
+- [a40b1849](https://github.com/quay/clair/commit/a40b1849582a95e3e43f40485f6509eb90d3ca93): remove `env` usage
+
 <a name="v4.4.0-rc.0"></a>
-## [v4.4.0-rc.0] - 2022-02-03
+## [v4.4.0-rc.0] - 2022-02-23
 ### All
 - [128b27b7](https://github.com/quay/clair/commit/128b27b72563d1d42be426d1a7b144250ec8cb0a): update zlog and corresponding otel packages
 - [35c9c9f2](https://github.com/quay/clair/commit/35c9c9f28947af2e3394c2a866ee07f325809e22): move config package to new module
@@ -16,6 +22,7 @@
 - [55dbdd99](https://github.com/quay/clair/commit/55dbdd995748bdef7575165f1010732bd1db19e9): bump peter-evans/create-pull-request from 3.10.1 to 3.11.0
 - [0d2a60b3](https://github.com/quay/clair/commit/0d2a60b3f83aa393f1e4d2547b61561a9c60900c): bump peter-evans/create-pull-request from 3.5.1 to 3.10.1
 ### Chore
+- [5997745c](https://github.com/quay/clair/commit/5997745c9765afadd3369abb604b079c376524fb): v4.4.0-rc.0 changelog bump
 - [bd115483](https://github.com/quay/clair/commit/bd1154839eff429bb774abba186477feadbfa9b6): bump claircore to v1.3.1
 - [c1d66d61](https://github.com/quay/clair/commit/c1d66d614fc41594d4538af77cac01ef886cd1f1): update claircore version
 - [953fa97b](https://github.com/quay/clair/commit/953fa97b70878dfbe2ccf0b1183c902b8618119b): update claircore version
@@ -1861,7 +1868,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.4.0-rc.0...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.4.0-rc.1...HEAD
+[v4.4.0-rc.1]: https://github.com/quay/clair/compare/v4.4.0-rc.0...v4.4.0-rc.1
 [v4.4.0-rc.0]: https://github.com/quay/clair/compare/v4.3.6...v4.4.0-rc.0
 [v4.3.6]: https://github.com/quay/clair/compare/v4.3.5...v4.3.6
 [v4.3.5]: https://github.com/quay/clair/compare/v4.3.4...v4.3.5
