@@ -2,8 +2,15 @@
 ## [Unreleased]
 
 
+<a name="v4.4.0-rc.2"></a>
+## [v4.4.0-rc.2] - 2022-02-23
+### Workflows
+- [8359de62](https://github.com/quay/clair/commit/8359de622b212f3b1d12839913e2cf1c692d9592): fix "chglog" typo
+
 <a name="v4.4.0-rc.1"></a>
 ## [v4.4.0-rc.1] - 2022-02-23
+### Chore
+- [6b029ffc](https://github.com/quay/clair/commit/6b029ffc6290bc6034b6f343d78b978d4513e55e): v4.4.0-rc.1 changelog bump
 ### Workflows
 - [f2819bd6](https://github.com/quay/clair/commit/f2819bd63b90d93ac0930a83d5de11bd5adbfe4a): rewrite go version check
 - [a40b1849](https://github.com/quay/clair/commit/a40b1849582a95e3e43f40485f6509eb90d3ca93): remove `env` usage
@@ -1868,7 +1875,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.4.0-rc.1...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.4.0-rc.2...HEAD
+[v4.4.0-rc.2]: https://github.com/quay/clair/compare/v4.4.0-rc.1...v4.4.0-rc.2
 [v4.4.0-rc.1]: https://github.com/quay/clair/compare/v4.4.0-rc.0...v4.4.0-rc.1
 [v4.4.0-rc.0]: https://github.com/quay/clair/compare/v4.3.6...v4.4.0-rc.0
 [v4.3.6]: https://github.com/quay/clair/compare/v4.3.5...v4.3.6
