@@ -23,18 +23,17 @@ jobs:
       chlog_version: ${{ '0.14.0' }}
     env:
       BUILD_IMAGE: quay.io/projectquay/golang:1.17
-      REPO: ${{ env.GITHUB_REPOSITORY }}
-      REF: ${{ github.ref }}
     steps:
       - name: Setup
         id: setup
         run: |
-          : "${tag:="$(basename "${REF}")"}"
-          test "${REPO%%/*}" = quay && REPO="projectquay/${REPO##*/}" ||:
+          : "${tag:="$(basename "${GITHUB_REF}")"}"
+          : "${repo:=$GITHUB_REPOSITORY}"
+          test "${GITHUB_REPOSITORY_OWNER}" = quay && repo="projectquay/${GITHUB_REPOSITORY##*/}" ||:
           printf '::set-output name=version::%s\n' "$tag"
           printf '::set-output name=tar_prefix::%s\n' "clair-${tag}"
           printf '::set-output name=image_tag::%s\n' "${tag#v}"
-          printf '::set-output name=image_repo::%s\n' "${REPO}"
+          printf '::set-output name=image_repo::%s\n' "${repo}"
           printf '::set-output name=build_image::%s\n' "${BUILD_IMAGE}"
           printf '::set-output name=build_go_version::%s\n' "${BUILD_IMAGE##*:}"
       - name: Check go version
