@@ -32,13 +32,10 @@ data:
         ]
       },
       "editable": true,
-      "fiscalYearStartMonth": 0,
       "gnetId": null,
       "graphTooltip": 1,
-      "id": 167,
-      "iteration": 1643412894556,
+      "iteration": 1645816279286,
       "links": [],
-      "liveNow": false,
       "panels": [
         {
           "datasource": "$datasource",
@@ -130,7 +127,7 @@ data:
               "refId": "A"
             }
           ],
-          "title": "Previously scanned",
+          "title": "Previously scanned manifests / s",
           "type": "timeseries"
         },
         {
@@ -355,7 +352,7 @@ data:
               "refId": "A"
             }
           ],
-          "title": "Ratelimiting",
+          "title": "Ratelimiting / s",
           "type": "timeseries"
         },
         {
@@ -535,7 +532,7 @@ data:
               "refId": "A"
             }
           ],
-          "title": "Database query duration set index_report (indexer)",
+          "title": "Set index_report query duration",
           "tooltip": {
             "show": true,
             "showHistogram": false
@@ -641,7 +638,7 @@ data:
               "refId": "B"
             }
           ],
-          "title": "Database query duration layer scanned (indexer)",
+          "title": "Layer scanned query duration",
           "tooltip": {
             "show": true,
             "showHistogram": false
@@ -747,7 +744,7 @@ data:
               "refId": "D"
             }
           ],
-          "title": "Database query duration persist manifest (indexer)",
+          "title": "Persist manifest query duration",
           "tooltip": {
             "show": true,
             "showHistogram": false
@@ -853,7 +850,7 @@ data:
               "refId": "C"
             }
           ],
-          "title": "Database query duration manifest scanned (indexer)",
+          "title": "Manifest scanned query duration",
           "tooltip": {
             "show": true,
             "showHistogram": false
@@ -959,7 +956,7 @@ data:
               "refId": "E"
             }
           ],
-          "title": "Database query duration register scanners (indexer)",
+          "title": "Register scanners query duration",
           "tooltip": {
             "show": true,
             "showHistogram": false
@@ -1065,7 +1062,7 @@ data:
               "refId": "F"
             }
           ],
-          "title": "Database query duration set index finished (indexer)",
+          "title": "Set index finished query duration",
           "tooltip": {
             "show": true,
             "showHistogram": false
@@ -1278,7 +1275,7 @@ data:
             "y": 41
           },
           "heatmap": {},
-          "hideZeroBuckets": false,
+          "hideZeroBuckets": true,
           "highlightCards": true,
           "id": 33,
           "legend": {
@@ -1297,7 +1294,7 @@ data:
               "refId": "A"
             }
           ],
-          "title": "Database latency get latest refs (matcher)",
+          "title": "Get vulnerabilities latency",
           "tooltip": {
             "show": true,
             "showHistogram": false
@@ -1361,7 +1358,7 @@ data:
               "refId": "B"
             }
           ],
-          "title": "Database latency get latest refs (matcher)",
+          "title": "Get latest refs latency",
           "tooltip": {
             "show": true,
             "showHistogram": false
@@ -1425,7 +1422,7 @@ data:
               "refId": "C"
             }
           ],
-          "title": "Database latency get latest update refs (matcher)",
+          "title": "Get latest update refs latency",
           "tooltip": {
             "show": true,
             "showHistogram": false
@@ -1489,7 +1486,7 @@ data:
               "refId": "D"
             }
           ],
-          "title": "Database latency get update operations (matcher)",
+          "title": "Get update operations latency",
           "tooltip": {
             "show": true,
             "showHistogram": false
@@ -1553,7 +1550,7 @@ data:
               "refId": "E"
             }
           ],
-          "title": "Database latency update vulnerabilities (matcher)",
+          "title": "Update vulnerabilities latency",
           "tooltip": {
             "show": true,
             "showHistogram": false
@@ -1656,7 +1653,7 @@ data:
               "refId": "E"
             }
           ],
-          "title": "Database query count GC (matcher)",
+          "title": "Database query count GC",
           "type": "timeseries"
         },
         {
@@ -1699,7 +1696,7 @@ data:
               "refId": "F"
             }
           ],
-          "title": "Database query duration GC - updateOps (matcher)",
+          "title": "GC - updateOps latency",
           "tooltip": {
             "show": true,
             "showHistogram": false
@@ -1763,7 +1760,7 @@ data:
               "refId": "F"
             }
           ],
-          "title": "Database query duration GC - deleteVulns (matcher)",
+          "title": "GC - deleteVulns latency",
           "tooltip": {
             "show": true,
             "showHistogram": false
@@ -2105,7 +2102,7 @@ data:
               "refId": "A"
             }
           ],
-          "title": "Vulnerability Report Requests",
+          "title": "Vulnerability Report Requests / s",
           "type": "timeseries"
         },
         {
@@ -2129,7 +2126,7 @@ data:
             "y": 66
           },
           "heatmap": {},
-          "hideZeroBuckets": false,
+          "hideZeroBuckets": true,
           "highlightCards": true,
           "id": 15,
           "legend": {
@@ -2253,7 +2250,7 @@ data:
               "refId": "A"
             }
           ],
-          "title": "Create Index Report Requests",
+          "title": "Create Index Report Requests / s",
           "type": "timeseries"
         },
         {
@@ -2278,7 +2275,7 @@ data:
             "y": 74
           },
           "heatmap": {},
-          "hideZeroBuckets": false,
+          "hideZeroBuckets": true,
           "highlightCards": true,
           "id": 14,
           "legend": {
@@ -2400,7 +2397,7 @@ data:
               "refId": "A"
             }
           ],
-          "title": "Indexer State Requests",
+          "title": "Indexer State Requests / s",
           "type": "timeseries"
         },
         {
@@ -2425,7 +2422,7 @@ data:
             "y": 82
           },
           "heatmap": {},
-          "hideZeroBuckets": false,
+          "hideZeroBuckets": true,
           "highlightCards": true,
           "id": 47,
           "legend": {
@@ -2547,7 +2544,7 @@ data:
               "refId": "A"
             }
           ],
-          "title": "Index Report Requests",
+          "title": "Index Report Requests / s",
           "type": "timeseries"
         },
         {
@@ -2572,7 +2569,7 @@ data:
             "y": 90
           },
           "heatmap": {},
-          "hideZeroBuckets": false,
+          "hideZeroBuckets": true,
           "highlightCards": true,
           "id": 46,
           "legend": {
@@ -3122,7 +3119,7 @@ data:
         }
       ],
       "refresh": false,
-      "schemaVersion": 32,
+      "schemaVersion": 30,
       "style": "dark",
       "tags": [],
       "templating": {
@@ -3298,8 +3295,8 @@ data:
           {
             "current": {
               "selected": false,
-              "text": "clairp01ue1-prometheus",
-              "value": "clairp01ue1-prometheus"
+              "text": "Prometheus",
+              "value": "Prometheus"
             },
             "description": null,
             "error": null,
