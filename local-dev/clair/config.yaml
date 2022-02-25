@@ -2,12 +2,6 @@
 log_level: debug-color
 introspection_addr: ":8089"
 http_listen_addr: ":6060"
-updaters:
-  sets:
-    - ubuntu
-    - debian
-    - rhel
-    - alpine
 auth:
   psk:
     key: 'c2VjcmV0'
