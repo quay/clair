@@ -54,7 +54,7 @@ func InstrumentedHandler(endpoint string, traceOpts othttp.Option, next http.Han
 				Subsystem: Subsystem,
 				Name:      endpoint + "_request_duration_seconds",
 				Help:      "Distribution of request durations for the given path",
-			}, []string{},
+			}, []string{"code"},
 		)
 	)
 	prometheus.MustRegister(RequestCount, RequestSize, ResponseSize, RequestDuration)
