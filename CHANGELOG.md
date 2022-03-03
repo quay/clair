@@ -2,8 +2,21 @@
 ## [Unreleased]
 
 
+<a name="v4.4.0-rc.3"></a>
+## [v4.4.0-rc.3] - 2022-03-01
+### Build(Deps)
+- [593b868e](https://github.com/quay/clair/commit/593b868eac69f88481d48085a8b15a3004d0ebe3): bump peter-evans/create-pull-request from 3.12.1 to 3.14.0
+### Chore
+- [fa2c5380](https://github.com/quay/clair/commit/fa2c5380ad1116ed465d1e37d3d0ad816f6b6f58): Update zlog dep
+### Contrib
+- [6d2dfbea](https://github.com/quay/clair/commit/6d2dfbeaddf5d7a569e5b54ae5ad9a808ac683bf): Update grafana dashboards
+### Metrics
+- [cdb67fb6](https://github.com/quay/clair/commit/cdb67fb652b9025e7db791474b4e1d6d8dc000c9): matcher add status code label to matcher latency metric
+
 <a name="v4.4.0-rc.2"></a>
 ## [v4.4.0-rc.2] - 2022-02-23
+### Chore
+- [5454de31](https://github.com/quay/clair/commit/5454de316c55704c508e8e2101ed0090791210b8): v4.4.0-rc.2 changelog bump
 ### Workflows
 - [8359de62](https://github.com/quay/clair/commit/8359de622b212f3b1d12839913e2cf1c692d9592): fix "chglog" typo
 
@@ -1875,7 +1888,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.4.0-rc.2...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.4.0-rc.3...HEAD
+[v4.4.0-rc.3]: https://github.com/quay/clair/compare/v4.4.0-rc.2...v4.4.0-rc.3
 [v4.4.0-rc.2]: https://github.com/quay/clair/compare/v4.4.0-rc.1...v4.4.0-rc.2
 [v4.4.0-rc.1]: https://github.com/quay/clair/compare/v4.4.0-rc.0...v4.4.0-rc.1
 [v4.4.0-rc.0]: https://github.com/quay/clair/compare/v4.3.6...v4.4.0-rc.0
