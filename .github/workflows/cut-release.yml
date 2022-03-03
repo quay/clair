@@ -188,6 +188,7 @@ jobs:
           password: ${{ secrets.QUAY_TOKEN }}
       - name: Extract Release
         run: |
+          mkdir "${RUNNER_TEMP}/build"
           tar -xz -f ${{steps.download.outputs.download-path}}/clair-${{ needs.config.outputs.version }}.tar.gz --strip-components=1 -C "${RUNNER_TEMP}/build"
       - name: Build Container
         uses: docker/build-push-action@v2
