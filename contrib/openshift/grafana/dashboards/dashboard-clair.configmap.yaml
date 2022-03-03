@@ -34,7 +34,7 @@ data:
       "editable": true,
       "gnetId": null,
       "graphTooltip": 1,
-      "iteration": 1645816279286,
+      "iteration": 1646408105440,
       "links": [],
       "panels": [
         {
@@ -2095,7 +2095,7 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum by (code) (rate(clair_http_matcher_api_v1_vulnerability_report_request_total[$rate]))",
+              "expr": "sum by (code) (rate(clair_http_matcherv1_request_total{handler=\"/matcher/api/v1/vulnerability_report/\"}[$rate]))",
               "instant": false,
               "interval": "",
               "legendFormat": "Status {{ code }} ",
@@ -2138,7 +2138,7 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum(rate(clair_http_matcher_api_v1_vulnerability_report_request_duration_seconds_bucket [5m])) by (le)",
+              "expr": "sum(rate(clair_http_matcherv1_request_duration_seconds_bucket{handler=\"/matcher/api/v1/vulnerability_report/\"}[5m])) by (le)",
               "format": "heatmap",
               "instant": false,
               "interval": "",
@@ -3316,7 +3316,7 @@ data:
         ]
       },
       "time": {
-        "from": "now-6h",
+        "from": "now-1h",
         "to": "now"
       },
       "timepicker": {},

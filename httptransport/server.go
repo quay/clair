@@ -190,28 +190,16 @@ func (t *Server) configureIndexerMode(ctx context.Context) error {
 // ConfigureMatcherMode configures HttpTransport for MatcherMode.
 //
 // This mode runs only a Matcher in a single process.
-func (t *Server) configureMatcherMode(_ context.Context) error {
+func (t *Server) configureMatcherMode(ctx context.Context) error {
 	// requires both an indexer and matcher service. indexer service
 	// is assumed to be a remote call over the network
 	if t.indexer == nil || t.matcher == nil {
 		return clairerror.ErrNotInitialized{Msg: "MatcherMode requires both indexer and matcher services"}
 	}
+	prefix := matcherRoot + apiRoot
+	v1 := NewMatcherV1(ctx, prefix, t.matcher, t.indexer, t.conf.Matcher.CacheAge, t.traceOpt)
 
-	reportHandler := &VulnerabilityReportHandler{
-		Indexer: t.indexer,
-		Matcher: t.matcher,
-		Cache:   t.conf.Matcher.CacheAge,
-	}
-
-	t.Handle(VulnerabilityReportPath,
-		intromw.InstrumentedHandler(VulnerabilityReportPath, t.traceOpt, reportHandler))
-
-	t.Handle(UpdateOperationAPIPath,
-		intromw.InstrumentedHandler(UpdateOperationAPIPath, t.traceOpt, UpdateOperationHandler(t.matcher)))
-
-	t.Handle(UpdateDiffAPIPath,
-		intromw.InstrumentedHandler(UpdateDiffAPIPath, t.traceOpt, UpdateDiffHandler(t.matcher)))
-
+	t.Handle(prefix, v1)
 	return nil
 }
 
