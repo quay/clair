@@ -2,11 +2,17 @@
 ## [Unreleased]
 
 
+<a name="v4.4.0-rc.4"></a>
+## [v4.4.0-rc.4] - 2022-03-03
+### Cicd
+- [3ba11c9c](https://github.com/quay/clair/commit/3ba11c9cf57f7a8cb3f17e956dbb379fdb986724): checkout repo where needed
+
 <a name="v4.4.0-rc.3"></a>
-## [v4.4.0-rc.3] - 2022-03-01
+## [v4.4.0-rc.3] - 2022-03-03
 ### Build(Deps)
 - [593b868e](https://github.com/quay/clair/commit/593b868eac69f88481d48085a8b15a3004d0ebe3): bump peter-evans/create-pull-request from 3.12.1 to 3.14.0
 ### Chore
+- [c7ef8501](https://github.com/quay/clair/commit/c7ef8501a5e76ec71d953307f0ec6964144a11e8): v4.4.0-rc.3 changelog bump
 - [fa2c5380](https://github.com/quay/clair/commit/fa2c5380ad1116ed465d1e37d3d0ad816f6b6f58): Update zlog dep
 ### Contrib
 - [6d2dfbea](https://github.com/quay/clair/commit/6d2dfbeaddf5d7a569e5b54ae5ad9a808ac683bf): Update grafana dashboards
@@ -1888,7 +1894,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.4.0-rc.3...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.4.0-rc.4...HEAD
+[v4.4.0-rc.4]: https://github.com/quay/clair/compare/v4.4.0-rc.3...v4.4.0-rc.4
 [v4.4.0-rc.3]: https://github.com/quay/clair/compare/v4.4.0-rc.2...v4.4.0-rc.3
 [v4.4.0-rc.2]: https://github.com/quay/clair/compare/v4.4.0-rc.1...v4.4.0-rc.2
 [v4.4.0-rc.1]: https://github.com/quay/clair/compare/v4.4.0-rc.0...v4.4.0-rc.1
