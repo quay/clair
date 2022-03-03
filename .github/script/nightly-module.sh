@@ -12,4 +12,4 @@ git diff
 test -d vendor && rm -rf vendor
 go mod tidy
 go mod vendor
-printf '::set-output name=clair_version::%s\n' "$(git describe --tags --always --dirty)"
+printf '::set-output name=clair_version::%s\n' "$(git describe --tags --always --dirty --match 'v4.*')"
