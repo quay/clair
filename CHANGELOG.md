@@ -2,8 +2,16 @@
 ## [Unreleased]
 
 
+<a name="v4.4.0-rc.5"></a>
+## [v4.4.0-rc.5] - 2022-03-03
+### Ci
+- [58c761e3](https://github.com/quay/clair/commit/58c761e3662524358720ea15789e5121375f7bc6): update nightly version description
+- [bbdd9252](https://github.com/quay/clair/commit/bbdd925292fd426cdaae8172fafe2f333d7b127b): fix tar prefix
+
 <a name="v4.4.0-rc.4"></a>
 ## [v4.4.0-rc.4] - 2022-03-03
+### Chore
+- [fa6fad70](https://github.com/quay/clair/commit/fa6fad709018f8f27a7c43d8da6cfe69489587a5): v4.4.0-rc.4 changelog bump
 ### Cicd
 - [3ba11c9c](https://github.com/quay/clair/commit/3ba11c9cf57f7a8cb3f17e956dbb379fdb986724): checkout repo where needed
 
@@ -1894,7 +1902,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.4.0-rc.4...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.4.0-rc.5...HEAD
+[v4.4.0-rc.5]: https://github.com/quay/clair/compare/v4.4.0-rc.4...v4.4.0-rc.5
 [v4.4.0-rc.4]: https://github.com/quay/clair/compare/v4.4.0-rc.3...v4.4.0-rc.4
 [v4.4.0-rc.3]: https://github.com/quay/clair/compare/v4.4.0-rc.2...v4.4.0-rc.3
 [v4.4.0-rc.2]: https://github.com/quay/clair/compare/v4.4.0-rc.1...v4.4.0-rc.2
