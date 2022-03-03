@@ -34,7 +34,7 @@ jobs:
           : "${repo:=$GITHUB_REPOSITORY}"
           test "${GITHUB_REPOSITORY_OWNER}" = quay && repo="projectquay/${GITHUB_REPOSITORY##*/}" ||:
           printf '::set-output name=version::%s\n' "$tag"
-          printf '::set-output name=tar_prefix::%s\n' "clair-${tag}"
+          printf '::set-output name=tar_prefix::%s\n' "clair-${tag}/"
           printf '::set-output name=image_tag::%s\n' "${tag#v}"
           printf '::set-output name=image_repo::%s\n' "${repo}"
           printf '::set-output name=build_image::%s\n' '${{ matrix.image }}'
