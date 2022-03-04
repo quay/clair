@@ -330,6 +330,7 @@ var indexerv1wrapper = &wrapper{
 			Subsystem: metricSubsystem,
 			Name:      "indexerv1_request_duration_seconds",
 			Help:      "Distribution of request durations for the given path",
+			Buckets:   prometheus.ExponentialBucketsRange(1, 300, 15),
 		}, []string{"handler", "code", "method"},
 	),
 	InFlight: prometheus.NewGaugeVec(
