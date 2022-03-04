@@ -12,7 +12,7 @@ require (
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/klauspost/compress v1.13.6
 	github.com/ldelossa/responserecorder v1.0.2-0.20210711162258-40bec93a9325
-	github.com/prometheus/client_golang v1.9.0
+	github.com/prometheus/client_golang v1.12.1
 	github.com/quay/clair/config v1.0.0
 	github.com/quay/claircore v1.3.2
 	github.com/quay/zlog v1.1.3
@@ -40,7 +40,7 @@ require (
 	github.com/aquasecurity/go-pep440-version v0.0.0-20210121094942-22b2f8951d46 // indirect
 	github.com/aquasecurity/go-version v0.0.0-20210121072130-637058cfe492 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/cespare/xxhash/v2 v2.1.1 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/docker/cli v20.10.7+incompatible // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
@@ -68,8 +68,8 @@ require (
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
-	github.com/prometheus/common v0.15.0 // indirect
-	github.com/prometheus/procfs v0.6.0 // indirect
+	github.com/prometheus/common v0.32.1 // indirect
+	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/quay/alas v1.0.1 // indirect
 	github.com/quay/goval-parser v0.8.6 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
