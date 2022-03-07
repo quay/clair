@@ -51,7 +51,7 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ steps.setup.outputs.go_version }}
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - uses: ./.github/actions/go-cache
