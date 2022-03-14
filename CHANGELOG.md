@@ -2,10 +2,17 @@
 ## [Unreleased]
 
 
+<a name="v4.4.0-rc.7"></a>
+## [v4.4.0-rc.7] - 2022-03-14
+### Ci
+- [87a2421f](https://github.com/quay/clair/commit/87a2421f458591be50f2303de4cf76add5789925): use runner context object
+
 <a name="v4.4.0-rc.6"></a>
-## [v4.4.0-rc.6] - 2022-03-07
+## [v4.4.0-rc.6] - 2022-03-14
 ### Build(Deps)
 - [323e83ce](https://github.com/quay/clair/commit/323e83cee577e6df4b41db03f6a90d05480c6443): bump actions/checkout from 2 to 3
+### Chore
+- [0ea0e9d5](https://github.com/quay/clair/commit/0ea0e9d547de3d0ed2d7fe4e400b1fcb8cb16476): v4.4.0-rc.6 changelog bump
 ### Ci
 - [d4983fdb](https://github.com/quay/clair/commit/d4983fdb737aa11ce01a952dc4ca6b26af7f4bab): fix extract step
 ### Httptransport
@@ -1913,7 +1920,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.4.0-rc.6...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.4.0-rc.7...HEAD
+[v4.4.0-rc.7]: https://github.com/quay/clair/compare/v4.4.0-rc.6...v4.4.0-rc.7
 [v4.4.0-rc.6]: https://github.com/quay/clair/compare/v4.4.0-rc.5...v4.4.0-rc.6
 [v4.4.0-rc.5]: https://github.com/quay/clair/compare/v4.4.0-rc.4...v4.4.0-rc.5
 [v4.4.0-rc.4]: https://github.com/quay/clair/compare/v4.4.0-rc.3...v4.4.0-rc.4
