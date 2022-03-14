@@ -2,8 +2,19 @@
 ## [Unreleased]
 
 
+<a name="v4.4.0-rc.6"></a>
+## [v4.4.0-rc.6] - 2022-03-07
+### Build(Deps)
+- [323e83ce](https://github.com/quay/clair/commit/323e83cee577e6df4b41db03f6a90d05480c6443): bump actions/checkout from 2 to 3
+### Ci
+- [d4983fdb](https://github.com/quay/clair/commit/d4983fdb737aa11ce01a952dc4ca6b26af7f4bab): fix extract step
+### Httptransport
+- [5caad7fc](https://github.com/quay/clair/commit/5caad7fc921b64a877e5055171c382a28ba2dbba): remove unused AffectedManifest handler
+
 <a name="v4.4.0-rc.5"></a>
 ## [v4.4.0-rc.5] - 2022-03-03
+### Chore
+- [8d2d1593](https://github.com/quay/clair/commit/8d2d159396004f17bfedb755b5f6a32b90ede1c2): v4.4.0-rc.5 changelog bump
 ### Ci
 - [58c761e3](https://github.com/quay/clair/commit/58c761e3662524358720ea15789e5121375f7bc6): update nightly version description
 - [bbdd9252](https://github.com/quay/clair/commit/bbdd925292fd426cdaae8172fafe2f333d7b127b): fix tar prefix
@@ -1902,7 +1913,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.4.0-rc.5...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.4.0-rc.6...HEAD
+[v4.4.0-rc.6]: https://github.com/quay/clair/compare/v4.4.0-rc.5...v4.4.0-rc.6
 [v4.4.0-rc.5]: https://github.com/quay/clair/compare/v4.4.0-rc.4...v4.4.0-rc.5
 [v4.4.0-rc.4]: https://github.com/quay/clair/compare/v4.4.0-rc.3...v4.4.0-rc.4
 [v4.4.0-rc.3]: https://github.com/quay/clair/compare/v4.4.0-rc.2...v4.4.0-rc.3
