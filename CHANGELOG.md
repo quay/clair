@@ -2,8 +2,13 @@
 ## [Unreleased]
 
 
+<a name="v4.4.0"></a>
+## [v4.4.0] - 0001-01-01
+
 <a name="v4.4.0-rc.7"></a>
 ## [v4.4.0-rc.7] - 2022-03-14
+### Chore
+- [94fdf1f8](https://github.com/quay/clair/commit/94fdf1f83102d1ae11f9363f7a41532e2414f18e): v4.4.0-rc.7 changelog bump
 ### Ci
 - [87a2421f](https://github.com/quay/clair/commit/87a2421f458591be50f2303de4cf76add5789925): use runner context object
 
@@ -1920,7 +1925,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.4.0-rc.7...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.4.0...HEAD
+[v4.4.0]: https://github.com/quay/clair/compare/v4.4.0-rc.7...v4.4.0
 [v4.4.0-rc.7]: https://github.com/quay/clair/compare/v4.4.0-rc.6...v4.4.0-rc.7
 [v4.4.0-rc.6]: https://github.com/quay/clair/compare/v4.4.0-rc.5...v4.4.0-rc.6
 [v4.4.0-rc.5]: https://github.com/quay/clair/compare/v4.4.0-rc.4...v4.4.0-rc.5
