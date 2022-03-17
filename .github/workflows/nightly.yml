@@ -30,7 +30,7 @@ jobs:
         # nicer workflow inputs so that the cron trigger works.
         run: |
           br=$(test -n "${{github.event.inputs.branch}}" && echo "${{github.event.inputs.branch}}" || echo main)
-          gv=$(test -n "${{github.event.inputs.go_version}}" && echo "${{github.event.inputs.go_version}}" || echo 1.17.1)
+          gv=$(test -n "${{github.event.inputs.go_version}}" && echo "${{github.event.inputs.go_version}}" || echo 1.18)
           : "${repo:=$GITHUB_REPOSITORY}"
           test "${repo%%/*}" = quay && repo="projectquay/${repo##*/}" ||:
           printf '::set-output name=push::%s\n' "${{ env.QUAY_TOKEN != '' }}"
@@ -42,7 +42,7 @@ jobs:
           printf '::set-output name=repo::%s\n' "${repo}"
           # Environment variables
           printf 'CLAIRCORE_BRANCH=%s\n' "${br}" >> $GITHUB_ENV
-          printf 'GO_VERSION=%s\n' "$(test "${#gv}" -gt 4 && echo "${gv%.*}" || echo "${gv}")" >> $GITHUB_ENV
+          printf 'GO_VERSION=%s\n' "$gv" >> $GITHUB_ENV
           printf '%s/.local/go/bin\n' "$HOME" >> $GITHUB_PATH
       - uses: docker/setup-qemu-action@v1
         with:
@@ -51,6 +51,7 @@ jobs:
       - uses: actions/setup-go@v2
         with:
           go-version: ${{ steps.setup.outputs.go_version }}
+          check-latest: true
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0

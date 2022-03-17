@@ -16,7 +16,16 @@ on:
       - release-4.*
 
 jobs:
-  commit-check:
+  config:
+    runs-on: ubuntu-latest
+    outputs:
+      go_versions: ${{ steps.config.outputs.go_versions }}
+    steps:
+      - id: config
+        run: |
+          echo '::set-output name=go_versions::["1.17", "1.18"]'
+
+  commit-check: 
     name: Commit Check
     runs-on: ubuntu-latest
     steps:
@@ -33,10 +42,11 @@ jobs:
           accessToken: ${{ secrets.GITHUB_TOKEN }}
   tidy:
     name: Tidy
+    needs: ['config']
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ['1.16']
+        go: ${{ fromJSON(needs.config.outputs.go_versions)[0] }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v2
@@ -48,10 +58,11 @@ jobs:
           dir: ./config
   test:
     name: Test
+    needs: ['config']
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ['1.16', '1.17']
+        go: ${{ fromJSON(needs.config.outputs.go_versions) }}
     steps:
       - uses: actions/setup-go@v2
         with:

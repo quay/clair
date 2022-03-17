@@ -12,6 +12,15 @@ on:
       - release-4.*
 
 jobs:
+  config:
+    runs-on: ubuntu-latest
+    outputs:
+      go_versions: ${{ steps.config.outputs.go_versions }}
+    steps:
+      - id: config
+        run: |
+          echo '::set-output name=go_versions::["1.17", "1.18"]'
+
   commit-check:
     name: Commit Check
     runs-on: ubuntu-latest
@@ -43,10 +52,11 @@ jobs:
 
   tidy:
     name: Tidy
+    needs: ['config']
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ['1.16']
+        go: ${{ fromJSON(needs.config.outputs.go_versions)[0] }}
     steps:
       - uses: actions/setup-go@v2
         with:
@@ -67,6 +77,7 @@ jobs:
 
   tests:
     name: Tests
+    needs: ['config']
     runs-on: ubuntu-latest
     container: quay.io/projectquay/golang:${{ matrix.go }}
     env:
@@ -94,7 +105,7 @@ jobs:
 
     strategy:
       matrix:
-        go: ['1.16', '1.17']
+        go: ${{ fromJSON(needs.config.outputs.go_versions) }}
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/go-cache

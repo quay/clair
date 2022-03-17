@@ -13,7 +13,7 @@ jobs:
     runs-on: 'ubuntu-latest'
     strategy:
       matrix:
-        image: ['quay.io/projectquay/golang:1.17']
+        image: ['quay.io/projectquay/golang:1.18']
     container:
       image: ${{ matrix.image }}
     outputs:
