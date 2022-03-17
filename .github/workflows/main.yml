@@ -56,7 +56,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ${{ fromJSON(needs.config.outputs.go_versions)[0] }}
+        go:
+          - ${{ fromJSON(needs.config.outputs.go_versions)[0] }}
     steps:
       - uses: actions/setup-go@v2
         with:

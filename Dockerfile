@@ -12,15 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG GO_VERSION=1.17
+ARG GO_VERSION=1.18
 FROM quay.io/projectquay/golang:${GO_VERSION} AS build
 WORKDIR /build/
 ADD . /build/
 ARG CLAIR_VERSION=dev
 RUN go build \
-  -ldflags="-X main.Version=${CLAIR_VERSION}" \
+  -trimpath -ldflags="-X main.Version=${CLAIR_VERSION}" \
   ./cmd/clair
-RUN go build\
+RUN go build -trimpath \
   ./cmd/clairctl
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal AS init
