@@ -146,9 +146,10 @@ func (t *Server) configureComboMode(ctx context.Context) error {
 		return clairerror.ErrNotInitialized{Msg: "could not configure matcher: " + err.Error()}
 	}
 
-	err = t.configureNotifierMode(ctx)
-	if err != nil {
-		return clairerror.ErrNotInitialized{Msg: "could not configure notifier: " + err.Error()}
+	if t.notifier != nil {
+		if err := t.configureNotifierMode(ctx); err != nil {
+			return clairerror.ErrNotInitialized{Msg: "could not configure notifier: " + err.Error()}
+		}
 	}
 
 	return nil
