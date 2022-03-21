@@ -4,9 +4,8 @@ package config
 type Matchers struct {
 	// Config holds configuration blocks for MatcherFactories and Matchers,
 	// keyed by name.
-	Config map[string]interface{} `yaml:"config" json:"config"`
-	// A slice of strings representing which
-	// matchers will be used.
+	Config map[string]interface{} `yaml:"config,omitempty" json:"config,omitempty"`
+	// A slice of strings representing which matchers will be used.
 	//
 	// If nil all default Matchers will be used
 	//

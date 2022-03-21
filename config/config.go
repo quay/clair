@@ -31,14 +31,14 @@ type Config struct {
 	IntrospectionAddr string `yaml:"introspection_addr" json:"introspection_addr"`
 	// Set the logging level.
 	LogLevel LogLevel `yaml:"log_level" json:"log_level"`
-	Indexer  Indexer  `yaml:"indexer" json:"indexer"`
-	Matcher  Matcher  `yaml:"matcher" json:"matcher"`
-	Matchers Matchers `yaml:"matchers" json:"matchers"`
+	Indexer  Indexer  `yaml:"indexer,omitempty" json:"indexer,omitempty"`
+	Matcher  Matcher  `yaml:"matcher,omitempty" json:"matcher,omitempty"`
+	Matchers Matchers `yaml:"matchers,omitempty" json:"matchers,omitempty"`
 	Updaters Updaters `yaml:"updaters,omitempty" json:"updaters,omitempty"`
-	Notifier Notifier `yaml:"notifier" json:"notifier"`
-	Auth     Auth     `yaml:"auth" json:"auth"`
-	Trace    Trace    `yaml:"trace" json:"trace"`
-	Metrics  Metrics  `yaml:"metrics" json:"metrics"`
+	Notifier Notifier `yaml:"notifier,omitempty" json:"notifier,omitempty"`
+	Auth     Auth     `yaml:"auth,omitempty" json:"auth,omitempty"`
+	Trace    Trace    `yaml:"trace,omitempty" json:"trace,omitempty"`
+	Metrics  Metrics  `yaml:"metrics,omitempty" json:"metrics,omitempty"`
 }
 
 func (c *Config) validate(mode Mode) ([]Warning, error) {

@@ -15,11 +15,11 @@ type Notifier struct {
 	// Only one of the following should be provided in the configuration
 	//
 	// Configures the notifier for webhook delivery
-	Webhook *Webhook `yaml:"webhook" json:"webhook"`
+	Webhook *Webhook `yaml:"webhook,omitempty" json:"webhook,omitempty"`
 	// Configures the notifier for AMQP delivery.
-	AMQP *AMQP `yaml:"amqp" json:"amqp"`
+	AMQP *AMQP `yaml:"amqp,omitempty" json:"amqp,omitempty"`
 	// Configures the notifier for STOMP delivery.
-	STOMP *STOMP `yaml:"stomp" json:"stomp"`
+	STOMP *STOMP `yaml:"stomp,omitempty" json:"stomp,omitempty"`
 	// A Postgres connection string.
 	//
 	// Formats:
@@ -42,14 +42,14 @@ type Notifier struct {
 	// The frequency at which the notifier will query at Matcher for Update Operations.
 	// If a value smaller then 1 second is provided it will be replaced with the
 	// default 5 second poll interval.
-	PollInterval time.Duration `yaml:"poll_interval" json:"poll_interval"`
+	PollInterval time.Duration `yaml:"poll_interval,omitempty" json:"poll_interval,omitempty"`
 	// A time.ParseDuration parsable string
 	//
 	// The frequency at which the notifier attempt delivery of created or previously failed
 	// notifications
 	// If a value smaller then 1 second is provided it will be replaced with the
 	// default 5 second delivery interval.
-	DeliveryInterval time.Duration `yaml:"delivery_interval" json:"delivery_interval"`
+	DeliveryInterval time.Duration `yaml:"delivery_interval,omitempty" json:"delivery_interval,omitempty"`
 	// DisableSummary disables summarizing vulnerabilities per-manifest.
 	//
 	// The default is to summarize any new vulnerabilities to the most severe
@@ -59,11 +59,11 @@ type Notifier struct {
 	//
 	// For a machine-consumption use case, it may be easier to instead have the
 	// notifier push all the data.
-	DisableSummary bool `yaml:"disable_summary" json:"disable_summary"`
+	DisableSummary bool `yaml:"disable_summary,omitempty" json:"disable_summary,omitempty"`
 	// A "true" or "false" value
 	//
 	// Whether Notifier nodes handle migrations to their database.
-	Migrations bool `yaml:"migrations" json:"migrations"`
+	Migrations bool `yaml:"migrations,omitempty" json:"migrations,omitempty"`
 }
 
 func (n *Notifier) validate(mode Mode) ([]Warning, error) {
@@ -145,7 +145,7 @@ func (n *Notifier) lint() (ws []Warning, err error) {
 // Webhook configures the "webhook" notification mechanism.
 type Webhook struct {
 	// any HTTP headers necessary for the request to Target
-	Headers http.Header `yaml:"headers" json:"headers"`
+	Headers http.Header `yaml:"headers,omitempty" json:"headers,omitempty"`
 	// the URL where our webhook will be delivered
 	Target string `yaml:"target" json:"target"`
 	// the callback url where notifications can be received
@@ -154,7 +154,7 @@ type Webhook struct {
 	// whether the webhook deliverer will sign out going.
 	// if true webhooks will be sent with a jwt signed by
 	// the notifier's private key.
-	Signed bool `yaml:"signed" json:"signed"`
+	Signed bool `yaml:"signed,omitempty" json:"signed,omitempty"`
 }
 
 // Validate will return a copy of the Config on success.
@@ -212,9 +212,9 @@ type Exchange struct {
 	// "headers"
 	Type string `yaml:"type" json:"type"`
 	// Whether the exchange survives server restarts
-	Durable bool `yaml:"durability" json:"durability"`
+	Durable bool `yaml:"durability,omitempty" json:"durability,omitempty"`
 	// Whether bound consumers define the lifecycle of the Exchange.
-	AutoDelete bool `yaml:"auto_delete" json:"auto_delete"`
+	AutoDelete bool `yaml:"auto_delete,omitempty" json:"auto_delete,omitempty"`
 }
 
 func (e *Exchange) validate(_ Mode) ([]Warning, error) {
@@ -226,7 +226,7 @@ func (e *Exchange) validate(_ Mode) ([]Warning, error) {
 
 // AMQP configures the AMQP notification mechanism.
 type AMQP struct {
-	TLS *TLS `yaml:"tls" json:"tls"`
+	TLS *TLS `yaml:"tls,omitempty" json:"tls,omitempty"`
 	// The AMQP exchange notifications will be delivered to.
 	// A passive declare is performed and if the exchange does not exist
 	// the declare will fail.
@@ -248,14 +248,14 @@ type AMQP struct {
 	// Ignored if Direct is not true
 	// If 0 or 1 is provided no rollup occurs and each notification is delivered
 	// separately.
-	Rollup int `yaml:"rollup" json:"rollup"`
+	Rollup int `yaml:"rollup,omitempty" json:"rollup,omitempty"`
 	// AMQPConfigures the AMQP delivery to deliver notifications directly to
 	// the configured Exchange.
 	//
 	// If true "Callback" is ignored.
 	// If false a notifier.Callback is delivered to the queue and clients
 	// utilize the pagination API to retrieve.
-	Direct bool `yaml:"direct" json:"direct"`
+	Direct bool `yaml:"direct,omitempty" json:"direct,omitempty"`
 }
 
 // Validate confirms configuration is valid.
@@ -319,9 +319,9 @@ type Login struct {
 // STOMP configures the STOMP notification mechanism.
 type STOMP struct {
 	// optional tls portion of config
-	TLS *TLS `yaml:"tls" json:"tls"`
+	TLS *TLS `yaml:"tls,omitempty" json:"tls,omitempty"`
 	// optional user login portion of config
-	Login *Login `yaml:"user" json:"user"`
+	Login *Login `yaml:"user,omitempty" json:"user,omitempty"`
 	// The callback url where notifications are retrieved.
 	Callback string `yaml:"callback" json:"callback"`
 	// the destination messages will be delivered to
@@ -337,14 +337,14 @@ type STOMP struct {
 	// Ignored if Direct is not true
 	// If 0 or 1 is provided no rollup occurs and each notification is delivered
 	// separately.
-	Rollup int `yaml:"rollup" json:"rollup"`
+	Rollup int `yaml:"rollup,omitempty" json:"rollup,omitempty"`
 	// Configures the STOMP delivery to deliver notifications directly to
 	// the configured Destination.
 	//
 	// If true "Callback" is ignored.
 	// If false a notifier.Callback is delivered to the queue and clients
 	// utilize the pagination API to retrieve.
-	Direct bool `yaml:"direct" json:"direct"`
+	Direct bool `yaml:"direct,omitempty" json:"direct,omitempty"`
 }
 
 func (c *STOMP) validate(mode Mode) ([]Warning, error) {

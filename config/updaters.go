@@ -13,9 +13,8 @@ type Updaters struct {
 	//
 	// These are defined by the updater implementation and can't be documented
 	// here. Improving the documentation for these is an open issue.
-	Config map[string]interface{} `yaml:"config" json:"config"`
-	// A slice of strings representing which
-	// updaters will be used.
+	Config map[string]interface{} `yaml:"config,omitempty" json:"config,omitempty"`
+	// A slice of strings representing which updaters will be used.
 	//
 	// If nil all default UpdaterSets will be used
 	//

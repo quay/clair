@@ -5,7 +5,7 @@ import "runtime"
 // Indexer provides Clair Indexer node configuration
 type Indexer struct {
 	// Scanner allows for passing configuration options to layer scanners.
-	Scanner ScannerConfig `yaml:"scanner" json:"scanner"`
+	Scanner ScannerConfig `yaml:"scanner,omitempty" json:"scanner,omitempty"`
 	// A Postgres connection string.
 	//
 	// formats
@@ -17,13 +17,12 @@ type Indexer struct {
 	//
 	// Concurrent Indexers lock on manifest scans to avoid clobbering.
 	// This value tunes how often a waiting Indexer will poll for the lock.
-	// TODO: Move to async operating mode
-	ScanLockRetry int `yaml:"scanlock_retry" json:"scanlock_retry"`
+	ScanLockRetry int `yaml:"scanlock_retry,omitempty" json:"scanlock_retry,omitempty"`
 	// A positive values representing quantity.
 	//
 	// Indexers will index a Manifest's layers concurrently.
 	// This value tunes the number of layers an Indexer will scan in parallel.
-	LayerScanConcurrency int `yaml:"layer_scan_concurrency" json:"layer_scan_concurrency"`
+	LayerScanConcurrency int `yaml:"layer_scan_concurrency,omitempty" json:"layer_scan_concurrency,omitempty"`
 	// Rate limits the number if index report creation requests.
 	//
 	// Setting this to 0 will attempt to auto-size this value. Setting a
@@ -31,14 +30,14 @@ type Indexer struct {
 	// number of available cores.
 	//
 	// The API will return a 429 status code if concurrency is exceeded.
-	IndexReportRequestConcurrency int `yaml:"index_report_request_concurrency" json:"index_report_request_concurrency"`
+	IndexReportRequestConcurrency int `yaml:"index_report_request_concurrency,omitempty" json:"index_report_request_concurrency,omitempty"`
 	// A "true" or "false" value
 	//
 	// Whether Indexer nodes handle migrations to their database.
-	Migrations bool `yaml:"migrations" json:"migrations"`
+	Migrations bool `yaml:"migrations,omitempty" json:"migrations,omitempty"`
 	// Airgap disables scanners that have signaled they expect to talk to the
 	// Internet.
-	Airgap bool `yaml:"airgap" json:"airgap"`
+	Airgap bool `yaml:"airgap,omitempty" json:"airgap,omitempty"`
 }
 
 func (i *Indexer) validate(mode Mode) (ws []Warning, err error) {
@@ -98,7 +97,7 @@ func (i *Indexer) lint() (ws []Warning, err error) {
 // ScannerConfig is the object consulted for configuring the various types of
 // scanners.
 type ScannerConfig struct {
-	Package map[string]interface{} `yaml:"package" json:"package"`
-	Dist    map[string]interface{} `yaml:"dist" json:"dist"`
-	Repo    map[string]interface{} `yaml:"repo" json:"repo"`
+	Package map[string]interface{} `yaml:"package,omitempty" json:"package,omitempty"`
+	Dist    map[string]interface{} `yaml:"dist,omitempty" json:"dist,omitempty"`
+	Repo    map[string]interface{} `yaml:"repo,omitempty" json:"repo,omitempty"`
 }
