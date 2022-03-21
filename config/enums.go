@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -75,5 +76,20 @@ func (l *LogLevel) UnmarshalText(b []byte) (err error) {
 	return nil
 }
 
-// Assert LogLevel implements TextUnmarshaler.
-var _ encoding.TextUnmarshaler = (*LogLevel)(nil)
+// MarshalText implements encoding.TextMarshaler.
+func (l *LogLevel) MarshalText() ([]byte, error) {
+	if l == nil {
+		return nil, errors.New("invalid LogLevel pointer: <nil>")
+	}
+	i := *l
+	if i < 0 || i >= LogLevel(len(_LogLevel_index)-1) {
+		return nil, fmt.Errorf("invalid LogLevel: %q", l.String())
+	}
+	return []byte(_LogLevel_name[_LogLevel_index[i]:_LogLevel_index[i+1]]), nil
+}
+
+// Assert LogLevel implements TextUnmarshaler and TextMarshaler.
+var (
+	_ encoding.TextUnmarshaler = (*LogLevel)(nil)
+	_ encoding.TextMarshaler   = (*LogLevel)(nil)
+)
