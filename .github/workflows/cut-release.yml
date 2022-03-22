@@ -203,10 +203,10 @@ jobs:
           tags: |
             quay.io/${{ needs.config.outputs.image_repo }}:${{ needs.config.outputs.image_tag }}
       - name: Checkout
-        if: needs.config.outputs.is_prerelease
+        if: needs.config.outputs.is_prerelease == 'true'
         uses: actions/checkout@v3
       - name: Set Expiration
-        if: needs.config.outputs.is_prerelease
+        if: needs.config.outputs.is_prerelease == 'true'
         uses: ./.github/actions/set-image-expiration
         with:
           repo: ${{ needs.config.outputs.image_repo }}
