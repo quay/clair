@@ -61,7 +61,7 @@ jobs:
           gzip clair.tar
           mv clair.tar.gz clair-${{ needs.config.outputs.version }}.tar.gz
       - name: Cache Changelog
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         id: chglog-cache
         if: github.event_name != 'workflow_dispatch'
         with:

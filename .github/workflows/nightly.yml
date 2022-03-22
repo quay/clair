@@ -61,7 +61,7 @@ jobs:
       - id: mod
         run: ./.github/script/nightly-module.sh
       - id: novelty
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: go.sum
           key: novelty-${{ github.sha }}-${{ hashFiles('./go.*') }}
