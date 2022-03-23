@@ -24,5 +24,4 @@
   - [Indexer](./reference/indexer.md)
   - [Matcher](./reference/matcher.md)
   - [Notifier](./reference/notifier.md)
-
-
+  - [Metrics](./reference/metrics.md)
