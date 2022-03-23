@@ -1,7 +1,7 @@
 package httptransport
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 
 	"github.com/quay/clair/config"
@@ -16,20 +16,6 @@ func authHandler(cfg *config.Config, next http.Handler) (http.Handler, error) {
 
 	// Keep this ordered "best" to "worst".
 	switch {
-	case cfg.Auth.Keyserver != nil:
-		cfg := cfg.Auth.Keyserver
-		ks, err := auth.NewQuayKeyserver(cfg.API)
-		if err != nil {
-			return nil, fmt.Errorf("failed to initialize quay keyserver: %v", err)
-		}
-		checks = append(checks, ks)
-		if cfg.Intraservice != nil {
-			psk, err := auth.NewPSK(cfg.Intraservice, []string{IntraserviceIssuer})
-			if err != nil {
-				return nil, fmt.Errorf("failed to initialize quay keyserver: %w", err)
-			}
-			checks = append(checks, psk)
-		}
 	case cfg.Auth.PSK != nil:
 		cfg := cfg.Auth.PSK
 		issuers := make([]string, 0, 1+len(cfg.Issuer))
@@ -41,6 +27,8 @@ func authHandler(cfg *config.Config, next http.Handler) (http.Handler, error) {
 			return nil, err
 		}
 		checks = append(checks, psk)
+	case cfg.Auth.Keyserver != nil:
+		return nil, errors.New("quay keyserver support has been removed")
 	default:
 		return next, nil
 	}

@@ -117,6 +117,9 @@ more information.
 # `$.tls.root_ca`
 # `$.updaters.filter`
 # `$.notifier.webhook.signed`
+# `$.auth.keyserver`
+# `$.auth.keyserver.api`
+# `$.auth.keyserver.intraservice`
 -->
 
 ### `$.http_listen_addr`
@@ -554,7 +557,8 @@ The STOMP passcode to connect with.
 ### `$.auth`
 Defines ClairV4's external and intra-service JWT based authentication.
 
-If multiple auth mechanisms are defined, the Keyserver is preferred.
+If multiple auth mechanisms are defined, Clair will pick one. Currently, there
+are not multiple mechanisms.
 
 ### `$.auth.psk`
 Defines preshared key authentication.
@@ -570,19 +574,6 @@ a list of string value
 
 A list of JWT issuers to verify. An empty list will accept any issuer in a
 JWT claim.
-
-### `$.auth.keyserver`
-Defines Quay keyserver authentication.
-
-#### `$.auth.keyserver.api`
-a string value
-
-The API where Quay Keyserver can be reached.
-
-#### `$.auth.keyserver.intraservice`
-a string value
-
-A key shared between all Clair nodes for intra-service JWT authentication.
 
 ### `$.trace`
 Defines distributed tracing configuration based on OpenTelemetry.

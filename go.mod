@@ -7,7 +7,6 @@ require (
 	github.com/google/go-cmp v0.5.7
 	github.com/google/go-containerregistry v0.6.0
 	github.com/google/uuid v1.2.0
-	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79
 	github.com/jackc/pgconn v1.10.0
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/klauspost/compress v1.13.6

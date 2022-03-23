@@ -138,17 +138,6 @@ func TestAuth(t *testing.T) {
 			Claims: &jwt.Claims{Issuer: `geromy`},
 		},
 		{
-			Name: "FakeKeyserver",
-			Config: config.Config{
-				Auth: config.Auth{
-					Keyserver: &config.AuthKeyserver{
-						API:          "http://localhost",
-						Intraservice: fakeKey,
-					},
-				},
-			},
-		},
-		{
 			Name: "PSKBadKey",
 			Config: config.Config{
 				Auth: config.Auth{
@@ -160,19 +149,6 @@ func TestAuth(t *testing.T) {
 			},
 			ShouldFail: true,
 			ConfigMod:  func(_ *testing.T, cfg *config.Config) { cfg.Auth.PSK.Key = []byte("badbeef") },
-		},
-		{
-			Name: "FakeKeyserverFail",
-			Config: config.Config{
-				Auth: config.Auth{
-					Keyserver: &config.AuthKeyserver{
-						API:          "http://localhost",
-						Intraservice: fakeKey,
-					},
-				},
-			},
-			ShouldFail: true,
-			ConfigMod:  func(_ *testing.T, cfg *config.Config) { cfg.Auth.Keyserver = nil },
 		},
 		{
 			Name: "PSKFail",

@@ -45,16 +45,10 @@ type Auth struct {
 
 // Any reports whether any sort of authentication is configured.
 func (a Auth) Any() bool {
-	return a.PSK != nil ||
-		a.Keyserver != nil
+	return a.PSK != nil
 }
 
 func (a *Auth) lint() ([]Warning, error) {
-	if a.PSK != nil && a.Keyserver != nil {
-		return []Warning{{
-			msg: `both "PSK" and "Keyserver" authentication methods are defined`,
-		}}, nil
-	}
 	return nil, nil
 }
 
@@ -63,15 +57,19 @@ func (a *Auth) lint() ([]Warning, error) {
 //
 // The "Intraservice" key is only needed when the overall config mode is not
 // "combo".
+//
+// Deprecated: This authentication method was never used. It was planned for
+// integration with Quay, but ultimately the Quay team decided to remove the
+// keyserver feature altogether.
 type AuthKeyserver struct {
 	API          string `yaml:"api" json:"api"`
 	Intraservice Base64 `yaml:"intraservice" json:"intraservice"`
 }
 
 func (a *AuthKeyserver) lint() ([]Warning, error) {
-	return []Warning{{
+	return nil, &Warning{
 		inner: fmt.Errorf(`authentication method deprecated: %w`, ErrDeprecated),
-	}}, nil
+	}
 }
 
 // AuthPSK is the configuration for doing pre-shared key based authentication.

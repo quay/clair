@@ -4,7 +4,6 @@ import "fmt"
 
 func ExampleLint() {
 	var c Config
-	c.Auth.Keyserver = &AuthKeyserver{}
 	c.Auth.PSK = &AuthPSK{}
 	ws, err := Lint(&c)
 	fmt.Println("error:", err)
@@ -22,6 +21,4 @@ func ExampleLint() {
 	// warning: connection string is empty and no relevant environment variables found (at $.notifier.connstring)
 	// warning: interval is very fast: may result in increased workload (at $.notifier.poll_interval)
 	// warning: interval is very fast: may result in increased workload (at $.notifier.delivery_interval)
-	// warning: both "PSK" and "Keyserver" authentication methods are defined (at $.auth)
-	// warning: authentication method deprecated: setting will be removed in a future release (at $.auth.keyserver)
 }
