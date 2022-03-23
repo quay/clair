@@ -75,7 +75,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded "><a href="../whatis.html"><strong aria-hidden="true">1.</strong> What is ClairV4</a></li><li class="chapter-item expanded "><a href="../howto.html"><strong aria-hidden="true">2.</strong> How Tos</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../howto/getting_started.html"><strong aria-hidden="true">2.1.</strong> Getting Started With ClairV4</a></li><li class="chapter-item expanded "><a href="../howto/deployment.html"><strong aria-hidden="true">2.2.</strong> Deployment Models</a></li><li class="chapter-item expanded "><a href="../howto/api.html"><strong aria-hidden="true">2.3.</strong> API Definition</a></li><li class="chapter-item expanded "><a href="../howto/testing.html"><strong aria-hidden="true">2.4.</strong> Testing ClairV4</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts.html"><strong aria-hidden="true">3.</strong> Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../concepts/api_internal.html"><strong aria-hidden="true">3.1.</strong> Internal API</a></li><li class="chapter-item expanded "><a href="../concepts/authentication.html"><strong aria-hidden="true">3.2.</strong> Authentication</a></li><li class="chapter-item expanded "><a href="../concepts/notifications.html"><strong aria-hidden="true">3.3.</strong> Notifications</a></li><li class="chapter-item expanded "><a href="../concepts/updatersandairgap.html"><strong aria-hidden="true">3.4.</strong> Updaters and Airgap</a></li></ol></li><li class="chapter-item expanded "><a href="../contribution.html"><strong aria-hidden="true">4.</strong> Contribution</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../contribution/releases.html"><strong aria-hidden="true">4.1.</strong> Releases</a></li><li class="chapter-item expanded "><a href="../contribution/commit_style.html"><strong aria-hidden="true">4.2.</strong> Commit Style</a></li></ol></li><li class="chapter-item expanded "><a href="../reference.html"><strong aria-hidden="true">5.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../reference/api.html"><strong aria-hidden="true">5.1.</strong> Api</a></li><li class="chapter-item expanded "><a href="../reference/clairctl.html"><strong aria-hidden="true">5.2.</strong> Clairctl</a></li><li class="chapter-item expanded "><a href="../reference/config.html" class="active"><strong aria-hidden="true">5.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="../reference/indexer.html"><strong aria-hidden="true">5.4.</strong> Indexer</a></li><li class="chapter-item expanded "><a href="../reference/matcher.html"><strong aria-hidden="true">5.5.</strong> Matcher</a></li><li class="chapter-item expanded "><a href="../reference/notifier.html"><strong aria-hidden="true">5.6.</strong> Notifier</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../whatis.html"><strong aria-hidden="true">1.</strong> What is ClairV4</a></li><li class="chapter-item expanded "><a href="../howto.html"><strong aria-hidden="true">2.</strong> How Tos</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../howto/getting_started.html"><strong aria-hidden="true">2.1.</strong> Getting Started With ClairV4</a></li><li class="chapter-item expanded "><a href="../howto/deployment.html"><strong aria-hidden="true">2.2.</strong> Deployment Models</a></li><li class="chapter-item expanded "><a href="../howto/api.html"><strong aria-hidden="true">2.3.</strong> API Definition</a></li><li class="chapter-item expanded "><a href="../howto/testing.html"><strong aria-hidden="true">2.4.</strong> Testing ClairV4</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts.html"><strong aria-hidden="true">3.</strong> Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../concepts/indexing.html"><strong aria-hidden="true">3.1.</strong> Indexing</a></li><li class="chapter-item expanded "><a href="../concepts/matching.html"><strong aria-hidden="true">3.2.</strong> Matching</a></li><li class="chapter-item expanded "><a href="../concepts/api_internal.html"><strong aria-hidden="true">3.3.</strong> Internal API</a></li><li class="chapter-item expanded "><a href="../concepts/authentication.html"><strong aria-hidden="true">3.4.</strong> Authentication</a></li><li class="chapter-item expanded "><a href="../concepts/notifications.html"><strong aria-hidden="true">3.5.</strong> Notifications</a></li><li class="chapter-item expanded "><a href="../concepts/updatersandairgap.html"><strong aria-hidden="true">3.6.</strong> Updaters and Airgap</a></li><li class="chapter-item expanded "><a href="../concepts/operation.html"><strong aria-hidden="true">3.7.</strong> Operation</a></li></ol></li><li class="chapter-item expanded "><a href="../contribution.html"><strong aria-hidden="true">4.</strong> Contribution</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../contribution/releases.html"><strong aria-hidden="true">4.1.</strong> Releases</a></li><li class="chapter-item expanded "><a href="../contribution/commit_style.html"><strong aria-hidden="true">4.2.</strong> Commit Style</a></li></ol></li><li class="chapter-item expanded "><a href="../reference.html"><strong aria-hidden="true">5.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../reference/api.html"><strong aria-hidden="true">5.1.</strong> Api</a></li><li class="chapter-item expanded "><a href="../reference/clairctl.html"><strong aria-hidden="true">5.2.</strong> Clairctl</a></li><li class="chapter-item expanded "><a href="../reference/config.html" class="active"><strong aria-hidden="true">5.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="../reference/indexer.html"><strong aria-hidden="true">5.4.</strong> Indexer</a></li><li class="chapter-item expanded "><a href="../reference/matcher.html"><strong aria-hidden="true">5.5.</strong> Matcher</a></li><li class="chapter-item expanded "><a href="../reference/notifier.html"><strong aria-hidden="true">5.6.</strong> Notifier</a></li><li class="chapter-item expanded "><a href="../reference/metrics.html"><strong aria-hidden="true">5.7.</strong> Metrics</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -234,6 +234,14 @@ metrics:
 <p>Note: the above just lists every key for completeness. Copy-pasting the above as
 a starting point for configuration will result in some options not having their
 defaults set normally.</p>
+<!---
+The following are purposefully omitted. See comments in the config package for
+more information.
+
+# `$.tls.root_ca`
+# `$.updaters.filter`
+# `$.notifier.webhook.signed`
+-->
 <h3 id="http_listen_addr"><a class="header" href="#http_listen_addr"><code>$.http_listen_addr</code></a></h3>
 <p>A string in <code>&lt;host&gt;:&lt;port&gt;</code> format where <code>&lt;host&gt;</code> can be an empty string.</p>
 <p>This configures where the HTTP API is exposed.
@@ -262,12 +270,22 @@ HTTP/2).</p>
 <p>A key file for the TLS certificate. Encryption is not supported on the key.</p>
 <h3 id="indexer"><a class="header" href="#indexer"><code>$.indexer</code></a></h3>
 <p>Indexer provides Clair Indexer node configuration.</p>
+<h4 id="indexerairgap"><a class="header" href="#indexerairgap"><code>$.indexer.airgap</code></a></h4>
+<p>Boolean.</p>
+<p>Disables scanners that have signaled they expect to talk to the Internet.</p>
 <h4 id="indexerconnstring"><a class="header" href="#indexerconnstring"><code>$.indexer.connstring</code></a></h4>
 <p>A Postgres connection string.</p>
 <p>Accepts a format as a url (e.g.,
 <code>postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full</code>)
 or a libpq connection string (e.g.,
 <code>user=pqgotest dbname=pqgotest sslmode=verify-full</code>).</p>
+<h4 id="indexerindex_report_request_concurrency"><a class="header" href="#indexerindex_report_request_concurrency"><code>$.indexer.index_report_request_concurrency</code></a></h4>
+<p>Integer.</p>
+<p>Rate limits the number of index report creation requests.</p>
+<p>Setting this to 0 will attempt to auto-size this value. Setting a negative value
+means &quot;unlimited.&quot; The auto-sizing is a multiple of the number of available
+cores.</p>
+<p>The API will return a 429 status code if concurrency is exceeded.</p>
 <h4 id="indexerscanlock_retry"><a class="header" href="#indexerscanlock_retry"><code>$.indexer.scanlock_retry</code></a></h4>
 <p>A positive integer representing seconds.</p>
 <p>Concurrent Indexers lock on manifest scans to avoid clobbering.
@@ -281,12 +299,21 @@ This value tunes the number of layers an Indexer will scan in parallel.</p>
 <p>A boolean value.</p>
 <p>Whether Indexer nodes handle migrations to their database.</p>
 <h4 id="indexerscanner"><a class="header" href="#indexerscanner"><code>$.indexer.scanner</code></a></h4>
-<p>A map with the name of a particular scanner and arbitrary yaml as a value.</p>
+<p>Indexer configurations.</p>
 <p>Scanner allows for passing configuration options to layer scanners.
 The scanner will have this configuration passed to it on construction if
 designed to do so.</p>
+<h4 id="indexerscannerdist"><a class="header" href="#indexerscannerdist"><code>$.indexer.scanner.dist</code></a></h4>
+<p>A map with the name of a particular scanner and arbitrary yaml as a value.</p>
+<h4 id="indexerscannerpackage"><a class="header" href="#indexerscannerpackage"><code>$.indexer.scanner.package</code></a></h4>
+<p>A map with the name of a particular scanner and arbitrary yaml as a value.</p>
+<h4 id="indexerscannerrepo"><a class="header" href="#indexerscannerrepo"><code>$.indexer.scanner.repo</code></a></h4>
+<p>A map with the name of a particular scanner and arbitrary yaml as a value.</p>
 <h3 id="matcher"><a class="header" href="#matcher"><code>$.matcher</code></a></h3>
 <p>Matcher provides Clair matcher node configuration.</p>
+<h4 id="matchercache_age"><a class="header" href="#matchercache_age"><code>$.matcher.cache_age</code></a></h4>
+<p>Duration string.</p>
+<p>Controls how long clients should be hinted to cache responses for.</p>
 <h4 id="matcherconnstring"><a class="header" href="#matcherconnstring"><code>$.matcher.connstring</code></a></h4>
 <p>A Postgres connection string.</p>
 <p>Accepts a format as a url (e.g.,
@@ -454,7 +481,7 @@ to 0 will effectively set it to 1.</p>
 <h4 id="notifieramqpexchangeauto_delete"><a class="header" href="#notifieramqpexchangeauto_delete"><code>$.notifier.amqp.exchange.auto_delete</code></a></h4>
 <p>bool value</p>
 <p>Whether the configured queue uses an auto_delete policy.</p>
-<h4 id="notifieramqpexchangerouting_key"><a class="header" href="#notifieramqpexchangerouting_key"><code>$.notifier.amqp.exchange.routing_key</code></a></h4>
+<h4 id="notifieramqprouting_key"><a class="header" href="#notifieramqprouting_key"><code>$.notifier.amqp.routing_key</code></a></h4>
 <p>string value</p>
 <p>The name of the routing key each notification will be sent with.</p>
 <h4 id="notifieramqpcallback"><a class="header" href="#notifieramqpcallback"><code>$.notifier.amqp.callback</code></a></h4>
@@ -512,12 +539,12 @@ Note that clair also respects <code>SSL_CERT_DIR</code>, as documented for the G
 <h4 id="notifierstomptlskey"><a class="header" href="#notifierstomptlskey"><code>$.notifier.stomp.tls.key</code></a></h4>
 <p>string value</p>
 <p>The filesystem path where a tls private key can be read.</p>
-<h4 id="notifierstomptlsuser"><a class="header" href="#notifierstomptlsuser"><code>$.notifier.stomp.tls.user</code></a></h4>
-<p>Configures login information for connecting to a STOMP broker.</p>
-<h4 id="notifierstomptlslogin"><a class="header" href="#notifierstomptlslogin"><code>$.notifier.stomp.tls.login</code></a></h4>
+<h4 id="notifierstompuser"><a class="header" href="#notifierstompuser"><code>$.notifier.stomp.user</code></a></h4>
+<p>Configures login details for the STOMP broker.</p>
+<h4 id="notifierstompuserlogin"><a class="header" href="#notifierstompuserlogin"><code>$.notifier.stomp.user.login</code></a></h4>
 <p>string value</p>
 <p>The STOMP login to connect with.</p>
-<h4 id="notifierstomptlspasscode"><a class="header" href="#notifierstomptlspasscode"><code>$.notifier.stomp.tls.passcode</code></a></h4>
+<h4 id="notifierstompuserpasscode"><a class="header" href="#notifierstompuserpasscode"><code>$.notifier.stomp.user.passcode</code></a></h4>
 <p>string value</p>
 <p>The STOMP passcode to connect with.</p>
 <h3 id="auth"><a class="header" href="#auth"><code>$.auth</code></a></h3>
@@ -563,7 +590,7 @@ JWT claim.</p>
 <p>An address in <code>&lt;host&gt;:&lt;post&gt;</code> syntax where traces can be submitted.</p>
 <h4 id="tracejaegercollectorusername"><a class="header" href="#tracejaegercollectorusername"><code>$.trace.jaeger.collector.username</code></a></h4>
 <p>a string value</p>
-<h4 id="tracejaegercollectorpasswordd"><a class="header" href="#tracejaegercollectorpasswordd"><code>$.trace.jaeger.collector.passwordd</code></a></h4>
+<h4 id="tracejaegercollectorpassword"><a class="header" href="#tracejaegercollectorpassword"><code>$.trace.jaeger.collector.password</code></a></h4>
 <p>a string value</p>
 <h4 id="tracejaegerservice_name"><a class="header" href="#tracejaegerservice_name"><code>$.trace.jaeger.service_name</code></a></h4>
 <p>a string value</p>
