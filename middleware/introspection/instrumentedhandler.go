@@ -66,6 +66,8 @@ func InstrumentedHandler(endpoint string, traceOpts othttp.Option, next http.Han
 	h = promhttp.InstrumentHandlerResponseSize(ResponseSize, h)
 	h = promhttp.InstrumentHandlerTimeToWriteHeader(RequestDuration, h)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := zlog.ContextWithValues(r.Context(), "request_id", r.Header.Get("x-request-id"))
+		r = r.WithContext(ctx)
 		recorder := rr.NewResponseRecorder(w)
 		h.ServeHTTP(recorder, r)
 		zlog.Info(r.Context()).

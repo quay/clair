@@ -55,6 +55,8 @@ var _ http.Handler = (*IndexerV1)(nil)
 // ServeHTTP implements http.Handler.
 func (h *IndexerV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
+	ctx := zlog.ContextWithValues(r.Context(), "request_id", r.Header.Get("x-request-id"))
+	r = r.WithContext(ctx)
 	wr := responserecorder.NewResponseRecorder(w)
 	defer func() {
 		if f, ok := wr.(http.Flusher); ok {
