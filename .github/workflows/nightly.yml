@@ -48,7 +48,7 @@ jobs:
         with:
           platforms: all
       - uses: docker/setup-buildx-action@v1
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
           go-version: ${{ steps.setup.outputs.go_version }}
           check-latest: true

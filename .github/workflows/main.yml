@@ -59,7 +59,7 @@ jobs:
         go:
           - ${{ fromJSON(needs.config.outputs.go_versions)[0] }}
     steps:
-      - uses: actions/setup-go@v2
+      - uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go }}
       - uses: actions/checkout@v3
