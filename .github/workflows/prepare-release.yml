@@ -45,7 +45,7 @@ jobs:
 
           /tmp/git-chglog $filter_tag --next-tag "${{ github.event.inputs.tag }}" -o CHANGELOG.md v4.0.0-alpha.2..
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v4.0.1
+        uses: peter-evans/create-pull-request@v4.0.2
         with:
           title: "${{ github.event.inputs.tag }} Changelog Bump"
           body: "This is an automated changelog commit."
