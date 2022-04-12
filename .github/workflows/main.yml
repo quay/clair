@@ -113,7 +113,7 @@ jobs:
         with:
           go: ${{ matrix.go }}
       - run: go test -tags integration ./...
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: workspace-${{matrix.go}}

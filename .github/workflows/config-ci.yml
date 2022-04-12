@@ -73,7 +73,7 @@ jobs:
         with:
           go: ${{ matrix.go }}
       - run: cd config && go test ./...
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: workspace-${{matrix.go}}

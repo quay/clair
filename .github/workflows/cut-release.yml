@@ -87,7 +87,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: touch changelog
       - name: Upload Release Archive
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: release
           path: |
@@ -130,13 +130,13 @@ jobs:
           tar -xz -f ${{steps.download.outputs.download-path}}/clair-${{ needs.config.outputs.version }}.tar.gz --strip-components=1
           go build -o "clairctl-${{matrix.goos}}-${{matrix.goarch}}" ./cmd/clairctl
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: release
           path: clairctl-${{matrix.goos}}-${{matrix.goarch}}
           if-no-files-found: error
       - name: Create Artifact on Failure
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         if: failure()
         with:
           name: workspace-${{matrix.goos}}-${{matrix.goarch}}
