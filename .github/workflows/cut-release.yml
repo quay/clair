@@ -118,7 +118,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Fetch Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         id: download
         with:
           name: release
@@ -151,7 +151,7 @@ jobs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - name: Fetch Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         id: download
         with:
           name: release
@@ -170,7 +170,7 @@ jobs:
     needs: [config, release-archive, release]
     steps:
       - name: Fetch Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         id: download
         with:
           name: release
