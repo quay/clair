@@ -188,7 +188,7 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 	}
 	var rd io.Reader
 	switch {
-	case res.ContentLength < 32+9:
+	case res.ContentLength > 0 && res.ContentLength < 32+9:
 		// Less than the size of the digest representation, something's up.
 		var buf bytes.Buffer
 		// Ignore error, because what would we do with it here?
