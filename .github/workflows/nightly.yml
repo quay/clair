@@ -71,7 +71,7 @@ jobs:
           registry: quay.io
           username: ${{ secrets.QUAY_USER }}
           password: ${{ secrets.QUAY_TOKEN }}
-      - uses: docker/build-push-action@v2
+      - uses: docker/build-push-action@v3
         with:
           build-args: |
             GO_VERSION=${{ env.GO_VERSION }}

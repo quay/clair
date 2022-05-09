@@ -191,7 +191,7 @@ jobs:
           mkdir "${{ runner.temp }}/build"
           tar -xz -f ${{steps.download.outputs.download-path}}/clair-${{ needs.config.outputs.version }}.tar.gz --strip-components=1 -C "${{ runner.temp }}/build"
       - name: Build Container
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           build-args: |
             CLAIR_VERSION=${{ needs.config.outputs.version }}
