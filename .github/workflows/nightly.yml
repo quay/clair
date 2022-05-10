@@ -65,7 +65,7 @@ jobs:
         with:
           path: go.sum
           key: novelty-${{ github.sha }}-${{ hashFiles('./go.*') }}
-      - uses: docker/login-action@v1
+      - uses: docker/login-action@v2
         if: steps.setup.outputs.push && steps.novelty.outputs.cache-hit != 'true'
         with:
           registry: quay.io
