@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
+	"os"
 	"time"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/quay/clair/config"
+	"github.com/quay/claircore/datastore/postgres"
 	"github.com/quay/claircore/enricher/cvss"
 	"github.com/quay/claircore/libindex"
 	"github.com/quay/claircore/libvuln"
@@ -27,7 +29,7 @@ import (
 	"github.com/quay/clair/v4/internal/httputil"
 	"github.com/quay/clair/v4/matcher"
 	"github.com/quay/clair/v4/notifier"
-	"github.com/quay/clair/v4/notifier/postgres"
+	notifierpg "github.com/quay/clair/v4/notifier/postgres"
 	"github.com/quay/clair/v4/notifier/service"
 )
 
@@ -117,11 +119,25 @@ func localIndexer(ctx context.Context, cfg *config.Config) (indexer.Service, err
 	mkErr := func(err error) *clairerror.ErrNotInitialized {
 		return &clairerror.ErrNotInitialized{msg + err.Error()}
 	}
-	opts := libindex.Opts{
-		ConnString:           cfg.Indexer.ConnString,
+
+	pool, err := postgres.Connect(ctx, cfg.Indexer.ConnString, "libindex")
+	if err != nil {
+		return nil, mkErr(err)
+	}
+	store, err := postgres.InitPostgresIndexerStore(ctx, pool, cfg.Indexer.Migrations)
+	if err != nil {
+		return nil, mkErr(err)
+	}
+	locker, err := ctxlock.New(ctx, pool)
+	if err != nil {
+		return nil, mkErr(err)
+	}
+
+	opts := libindex.Options{
+		Store:                store,
+		Locker:               locker,
 		ScanLockRetry:        time.Duration(cfg.Indexer.ScanLockRetry) * time.Second,
 		LayerScanConcurrency: cfg.Indexer.LayerScanConcurrency,
-		Migrations:           cfg.Indexer.Migrations,
 		Airgap:               cfg.Indexer.Airgap,
 	}
 	if cfg.Indexer.Scanner.Package != nil {
@@ -171,6 +187,8 @@ func localIndexer(ctx context.Context, cfg *config.Config) (indexer.Service, err
 	if err != nil {
 		return nil, mkErr(err)
 	}
+
+	opts.FetchArena = libindex.NewRemoteFetchArena(c, os.TempDir())
 
 	s, err := libindex.New(ctx, &opts, c)
 	if err != nil {
@@ -248,10 +266,22 @@ func localMatcher(ctx context.Context, cfg *config.Config) (matcher.Service, err
 			return json.Unmarshal(b, v)
 		}
 	}
-	s, err := libvuln.New(ctx, &libvuln.Opts{
-		MaxConnPool:     int32(cfg.Matcher.MaxConnPool),
-		ConnString:      cfg.Matcher.ConnString,
-		Migrations:      cfg.Matcher.Migrations,
+	pool, err := postgres.Connect(ctx, cfg.Matcher.ConnString, "libvuln")
+	if err != nil {
+		return nil, mkErr(err)
+	}
+	store, err := postgres.InitPostgresMatcherStore(ctx, pool, cfg.Matcher.Migrations)
+	if err != nil {
+		return nil, mkErr(err)
+	}
+	locker, err := ctxlock.New(ctx, pool)
+	if err != nil {
+		return nil, mkErr(err)
+	}
+
+	s, err := libvuln.New(ctx, &libvuln.Options{
+		Store:           store,
+		Locker:          locker,
 		UpdaterSets:     cfg.Updaters.Sets,
 		UpdateInterval:  cfg.Matcher.Period,
 		UpdaterConfigs:  updaterConfigs,
@@ -301,7 +331,7 @@ func localNotifier(ctx context.Context, cfg *config.Config, i indexer.Service, m
 		return nil, mkErr(err)
 	}
 	if cfg.Notifier.Migrations {
-		if err := postgres.Init(ctx, poolcfg.ConnConfig); err != nil {
+		if err := notifierpg.Init(ctx, poolcfg.ConnConfig); err != nil {
 			return nil, mkErr(err)
 		}
 	}
@@ -309,7 +339,7 @@ func localNotifier(ctx context.Context, cfg *config.Config, i indexer.Service, m
 	if err != nil {
 		return nil, mkErr(err)
 	}
-	store := postgres.NewStore(pool)
+	store := notifierpg.NewStore(pool)
 	locks, err := ctxlock.New(ctx, pool)
 	if err != nil {
 		return nil, mkErr(err)

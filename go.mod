@@ -6,14 +6,14 @@ require (
 	github.com/go-stomp/stomp v2.0.8+incompatible
 	github.com/google/go-cmp v0.5.7
 	github.com/google/go-containerregistry v0.6.1
-	github.com/google/uuid v1.2.0
+	github.com/google/uuid v1.3.0
 	github.com/jackc/pgconn v1.10.1
 	github.com/jackc/pgx/v4 v4.13.0
 	github.com/klauspost/compress v1.13.6
 	github.com/ldelossa/responserecorder v1.0.2-0.20210711162258-40bec93a9325
 	github.com/prometheus/client_golang v1.12.2
-	github.com/quay/clair/config v1.0.0
-	github.com/quay/claircore v1.4.4
+	github.com/quay/clair/config v1.1.3
+	github.com/quay/claircore v1.4.5-0.20220718031238-8f0d7d98bd27
 	github.com/quay/zlog v1.1.3
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
 	github.com/rs/zerolog v1.26.1
@@ -70,6 +70,8 @@ require (
 	github.com/prometheus/common v0.32.1 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/quay/alas v1.0.1 // indirect
+	github.com/quay/claircore/toolkit v1.0.0 // indirect
+	github.com/quay/claircore/updater/driver v1.0.0 // indirect
 	github.com/quay/goval-parser v0.8.6 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
@@ -82,7 +84,5 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.10 // indirect
 	golang.org/x/xerrors v0.0.0-20220517211312-f3a8303e98df // indirect
-	google.golang.org/protobuf v1.26.0 // indirect
+	google.golang.org/protobuf v1.27.1 // indirect
 )
-
-replace github.com/quay/clair/config => ./config
