@@ -17,7 +17,7 @@ The `crda` remote matcher is responsible for fetching vulnerabilities from Red H
 By default, this matcher serves 100 requests per minute.
 The rate-limiting can be lifted by requesting a dedicated API key, which is done via [this form][CRDA-Request-Form].
 
-[CRDA-Request-Form]: https://docs.google.com/forms/d/e/1FAIpQLSfJ1aoOfi0tQ6_o0srEbYL-cSwzo_MyDJQnwcFG9IYVlNXJrA/viewform?usp=sf_link
+[CRDA-Request-Form]: https://developers.redhat.com/content-gateway/link/3872178
 
 ## Summary
 
