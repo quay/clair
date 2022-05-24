@@ -143,32 +143,9 @@ building and deployment, v4 handles authentication itself.</p>
 <p>Authentication is configured by specifying configuration objects underneath the
 <code>auth</code> key of the configuration. Multiple authentication configurations may be
 present, but they will be used preferentially in the order laid out below.</p>
-<h3 id="quay-integration"><a class="header" href="#quay-integration">Quay Integration</a></h3>
-<p>Quay implements a keyserver protocol that allows for publishing and rotating
-keys in an automated fashion. Any process that has successfully enrolled in the
-keyserver that Clair is configured to talk to should be able to sign requests to
-Clair.</p>
-<h4 id="configuration"><a class="header" href="#configuration">Configuration</a></h4>
-<p>The <code>auth</code> stanza of the configuration file requires one parameter, <code>api</code>, which
-is the API endpoint of keyserver protocol.</p>
-<pre><code class="language-yaml">auth:
-  keyserver:
-    api: 'https://quay.example.com/keys/'
-</code></pre>
-<h5 id="intraservice"><a class="header" href="#intraservice">Intraservice</a></h5>
-<p>When Clair instances are configured with keyserver authentication and run in any
-other mode besides &quot;combo&quot;, an additional <code>intraservice</code> key is
-required. This key is used for signing and verifying requests within the
-Clair service cluster.</p>
-<pre><code class="language-yaml">auth:
-  keyserver:
-    api: 'https://quay.example.com/keys/'
-    intraservice: &gt;-
-      MDQ4ODBlNDAtNDc0ZC00MWUxLThhMzAtOTk0MzEwMGQwYTMxCg==
-</code></pre>
 <h3 id="psk"><a class="header" href="#psk">PSK</a></h3>
 <p>Clair implements JWT-based authentication using a pre-shared key.</p>
-<h4 id="configuration-1"><a class="header" href="#configuration-1">Configuration</a></h4>
+<h4 id="configuration"><a class="header" href="#configuration">Configuration</a></h4>
 <p>The <code>auth</code> stanza of the configuration file requires two parameters: <code>iss</code>, which
 is the issuer to validate on all incoming requests; and <code>key</code>, which is a base64
 encoded symmetric key for validating the requests.</p>
@@ -178,7 +155,6 @@ encoded symmetric key for validating the requests.</p>
       MDQ4ODBlNDAtNDc0ZC00MWUxLThhMzAtOTk0MzEwMGQwYTMxCg==
     iss: 'issuer'
 </code></pre>
-<p>Desired updaters should be selected by the normal configuration mechanism.</p>
 
                     </main>
 

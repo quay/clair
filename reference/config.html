@@ -241,6 +241,9 @@ more information.
 # `$.tls.root_ca`
 # `$.updaters.filter`
 # `$.notifier.webhook.signed`
+# `$.auth.keyserver`
+# `$.auth.keyserver.api`
+# `$.auth.keyserver.intraservice`
 -->
 <h3 id="http_listen_addr"><a class="header" href="#http_listen_addr"><code>$.http_listen_addr</code></a></h3>
 <p>A string in <code>&lt;host&gt;:&lt;port&gt;</code> format where <code>&lt;host&gt;</code> can be an empty string.</p>
@@ -549,7 +552,8 @@ Note that clair also respects <code>SSL_CERT_DIR</code>, as documented for the G
 <p>The STOMP passcode to connect with.</p>
 <h3 id="auth"><a class="header" href="#auth"><code>$.auth</code></a></h3>
 <p>Defines ClairV4's external and intra-service JWT based authentication.</p>
-<p>If multiple auth mechanisms are defined, the Keyserver is preferred.</p>
+<p>If multiple auth mechanisms are defined, Clair will pick one. Currently, there
+are not multiple mechanisms.</p>
 <h3 id="authpsk"><a class="header" href="#authpsk"><code>$.auth.psk</code></a></h3>
 <p>Defines preshared key authentication.</p>
 <h4 id="authpskkey"><a class="header" href="#authpskkey"><code>$.auth.psk.key</code></a></h4>
@@ -560,14 +564,6 @@ verifying JWTs.</p>
 <p>a list of string value</p>
 <p>A list of JWT issuers to verify. An empty list will accept any issuer in a
 JWT claim.</p>
-<h3 id="authkeyserver"><a class="header" href="#authkeyserver"><code>$.auth.keyserver</code></a></h3>
-<p>Defines Quay keyserver authentication.</p>
-<h4 id="authkeyserverapi"><a class="header" href="#authkeyserverapi"><code>$.auth.keyserver.api</code></a></h4>
-<p>a string value</p>
-<p>The API where Quay Keyserver can be reached.</p>
-<h4 id="authkeyserverintraservice"><a class="header" href="#authkeyserverintraservice"><code>$.auth.keyserver.intraservice</code></a></h4>
-<p>a string value</p>
-<p>A key shared between all Clair nodes for intra-service JWT authentication.</p>
 <h3 id="trace"><a class="header" href="#trace"><code>$.trace</code></a></h3>
 <p>Defines distributed tracing configuration based on OpenTelemetry.</p>
 <h4 id="tracename"><a class="header" href="#tracename"><code>$.trace.name</code></a></h4>

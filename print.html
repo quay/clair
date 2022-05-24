@@ -474,32 +474,9 @@ building and deployment, v4 handles authentication itself.</p>
 <p>Authentication is configured by specifying configuration objects underneath the
 <code>auth</code> key of the configuration. Multiple authentication configurations may be
 present, but they will be used preferentially in the order laid out below.</p>
-<h3 id="quay-integration"><a class="header" href="#quay-integration">Quay Integration</a></h3>
-<p>Quay implements a keyserver protocol that allows for publishing and rotating
-keys in an automated fashion. Any process that has successfully enrolled in the
-keyserver that Clair is configured to talk to should be able to sign requests to
-Clair.</p>
-<h4 id="configuration-1"><a class="header" href="#configuration-1">Configuration</a></h4>
-<p>The <code>auth</code> stanza of the configuration file requires one parameter, <code>api</code>, which
-is the API endpoint of keyserver protocol.</p>
-<pre><code class="language-yaml">auth:
-  keyserver:
-    api: 'https://quay.example.com/keys/'
-</code></pre>
-<h5 id="intraservice"><a class="header" href="#intraservice">Intraservice</a></h5>
-<p>When Clair instances are configured with keyserver authentication and run in any
-other mode besides &quot;combo&quot;, an additional <code>intraservice</code> key is
-required. This key is used for signing and verifying requests within the
-Clair service cluster.</p>
-<pre><code class="language-yaml">auth:
-  keyserver:
-    api: 'https://quay.example.com/keys/'
-    intraservice: &gt;-
-      MDQ4ODBlNDAtNDc0ZC00MWUxLThhMzAtOTk0MzEwMGQwYTMxCg==
-</code></pre>
 <h3 id="psk"><a class="header" href="#psk">PSK</a></h3>
 <p>Clair implements JWT-based authentication using a pre-shared key.</p>
-<h4 id="configuration-2"><a class="header" href="#configuration-2">Configuration</a></h4>
+<h4 id="configuration-1"><a class="header" href="#configuration-1">Configuration</a></h4>
 <p>The <code>auth</code> stanza of the configuration file requires two parameters: <code>iss</code>, which
 is the issuer to validate on all incoming requests; and <code>key</code>, which is a base64
 encoded symmetric key for validating the requests.</p>
@@ -509,7 +486,6 @@ encoded symmetric key for validating the requests.</p>
       MDQ4ODBlNDAtNDc0ZC00MWUxLThhMzAtOTk0MzEwMGQwYTMxCg==
     iss: 'issuer'
 </code></pre>
-<p>Desired updaters should be selected by the normal configuration mechanism.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="notifications-1"><a class="header" href="#notifications-1">Notifications</a></h1>
 <p>ClairV4 implements a notification system.</p>
 <p>The notifier service will keep track of new security database updates and inform an interested client if new or removed vulnerabilites affect an indexed manifest.</p>
@@ -617,7 +593,7 @@ pared with a matcher to interpret if and how any vulnerability is related to a
 package.</p>
 <p>Operators may wish to update the vulnerability database less frequently or not
 import vulnerabilities from databases that they know will not be used.</p>
-<h3 id="configuration-3"><a class="header" href="#configuration-3">Configuration</a></h3>
+<h3 id="configuration-2"><a class="header" href="#configuration-2">Configuration</a></h3>
 <p>Updaters can be configured by <code>updaters</code> key at the top of the configuration. If
 updaters are being run automatically within the matcher processes, as is the
 default, the period for running updaters is configured under the matcher's
@@ -669,14 +645,14 @@ scp updates.json.gz internal-webserver:/var/www/
 clairctl import-updaters http://web.svc/updates.json.gz
 </code></pre>
 <p>Note that a configuration file is needed to run these commands.</p>
-<h4 id="configuration-4"><a class="header" href="#configuration-4">Configuration</a></h4>
+<h4 id="configuration-3"><a class="header" href="#configuration-3">Configuration</a></h4>
 <p>Matcher processes should have the <code>disable_updaters</code> key set to disable
 automatic updaters running.</p>
 <pre><code class="language-yaml">matcher:
   disable_updaters: true
 </code></pre>
 <h2 id="indexers"><a class="header" href="#indexers">Indexers</a></h2>
-<h3 id="configuration-5"><a class="header" href="#configuration-5">Configuration</a></h3>
+<h3 id="configuration-4"><a class="header" href="#configuration-4">Configuration</a></h3>
 <h4 id="airgap-1"><a class="header" href="#airgap-1">Airgap</a></h4>
 <pre><code class="language-yaml">indexer:
   airgap: true
@@ -2702,6 +2678,9 @@ more information.
 # `$.tls.root_ca`
 # `$.updaters.filter`
 # `$.notifier.webhook.signed`
+# `$.auth.keyserver`
+# `$.auth.keyserver.api`
+# `$.auth.keyserver.intraservice`
 -->
 <h3 id="http_listen_addr"><a class="header" href="#http_listen_addr"><code>$.http_listen_addr</code></a></h3>
 <p>A string in <code>&lt;host&gt;:&lt;port&gt;</code> format where <code>&lt;host&gt;</code> can be an empty string.</p>
@@ -3010,7 +2989,8 @@ Note that clair also respects <code>SSL_CERT_DIR</code>, as documented for the G
 <p>The STOMP passcode to connect with.</p>
 <h3 id="auth"><a class="header" href="#auth"><code>$.auth</code></a></h3>
 <p>Defines ClairV4's external and intra-service JWT based authentication.</p>
-<p>If multiple auth mechanisms are defined, the Keyserver is preferred.</p>
+<p>If multiple auth mechanisms are defined, Clair will pick one. Currently, there
+are not multiple mechanisms.</p>
 <h3 id="authpsk"><a class="header" href="#authpsk"><code>$.auth.psk</code></a></h3>
 <p>Defines preshared key authentication.</p>
 <h4 id="authpskkey"><a class="header" href="#authpskkey"><code>$.auth.psk.key</code></a></h4>
@@ -3021,14 +3001,6 @@ verifying JWTs.</p>
 <p>a list of string value</p>
 <p>A list of JWT issuers to verify. An empty list will accept any issuer in a
 JWT claim.</p>
-<h3 id="authkeyserver"><a class="header" href="#authkeyserver"><code>$.auth.keyserver</code></a></h3>
-<p>Defines Quay keyserver authentication.</p>
-<h4 id="authkeyserverapi"><a class="header" href="#authkeyserverapi"><code>$.auth.keyserver.api</code></a></h4>
-<p>a string value</p>
-<p>The API where Quay Keyserver can be reached.</p>
-<h4 id="authkeyserverintraservice"><a class="header" href="#authkeyserverintraservice"><code>$.auth.keyserver.intraservice</code></a></h4>
-<p>a string value</p>
-<p>A key shared between all Clair nodes for intra-service JWT authentication.</p>
 <h3 id="trace"><a class="header" href="#trace"><code>$.trace</code></a></h3>
 <p>Defines distributed tracing configuration based on OpenTelemetry.</p>
 <h4 id="tracename"><a class="header" href="#tracename"><code>$.trace.name</code></a></h4>
