@@ -59,7 +59,7 @@ func (c *HTTP) Scan(ctx context.Context, ir *claircore.IndexReport) (*claircore.
 
 // DeleteUpdateOperations attempts to delete the referenced update operations.
 func (c *HTTP) DeleteUpdateOperations(ctx context.Context, ref ...uuid.UUID) (int64, error) {
-	u, err := c.addr.Parse(httptransport.UpdateOperationAPIPath)
+	u, err := c.addr.Parse(httptransport.UpdateOperationDeleteAPIPath)
 	if err != nil {
 		return 0, err
 	}
