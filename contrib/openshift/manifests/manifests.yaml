@@ -39,6 +39,7 @@ objects:
             service: indexer
             app: clair
         spec:
+          serviceAccountName: ${SERVICE_ACCOUNT}
           volumes:
             - name: clair-config
               secret:
@@ -111,6 +112,7 @@ objects:
             service: matcher
             app: clair
         spec:
+          serviceAccountName: ${SERVICE_ACCOUNT}
           volumes:
             - name: clair-config
               secret:
@@ -176,6 +178,7 @@ objects:
             service: notifier
             app: clair
         spec:
+          serviceAccountName: ${SERVICE_ACCOUNT}
           volumes:
             - name: clair-config
               secret:
@@ -293,6 +296,16 @@ objects:
       selector:
         service: notifier
         app: clair
+  #
+  # service account
+  #
+  - apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: ${SERVICE_ACCOUNT}
+    imagePullSecrets:
+      - name: quay.io
+
 parameters:
   #
   # indexer params
@@ -378,3 +391,7 @@ parameters:
   - name: STORAGE_CLASS_NAME
     value: "gp2"
     displayName: the storage class to use when creating VPCs
+  - name: SERVICE_ACCOUNT
+    value: "clair"
+    displayName: clair service account
+    description: name of the service account to use for API interaction
