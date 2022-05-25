@@ -58,6 +58,8 @@ github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym
 github.com/DATA-DOG/go-sqlmock v1.3.3 h1:CWUqKXe0s8A2z6qCgkP4Kru7wC11YoAnoupUKFDnH08=
 github.com/DATA-DOG/go-sqlmock v1.3.3/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
 github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible/go.mod h1:r7JcOSlj0wfOMncg0iLm8Leh48TZaKVeNIfJntJ2wa0=
+github.com/Masterminds/semver v1.5.0 h1:H65muMkzWKEuNDnfl9d70GUjFniHKHRbFPGBuZ3QEww=
+github.com/Masterminds/semver v1.5.0/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/Masterminds/semver/v3 v3.1.1 h1:hLg3sBzpNErnxhQtUy/mmLR2I9foDujNK030IGemrRc=
 github.com/Masterminds/semver/v3 v3.1.1/go.mod h1:VPu/7SZ7ePZ3QOrcuXROw5FAcLl4a0cBrbBpGY/8hQs=
 github.com/Microsoft/go-winio v0.4.11/go.mod h1:VhR8bwka0BXejwEJY73c50VrPtXAaKcyvVC4A4RozmA=
@@ -821,8 +823,8 @@ github.com/prometheus/procfs v0.7.3/go.mod h1:cz+aTbrPOrUb4q7XlbU9ygM+/jj0fzG6c1
 github.com/prometheus/tsdb v0.7.1/go.mod h1:qhTCs0VvXwvX/y3TZrWD7rabWM+ijKTux40TwIPHuXU=
 github.com/quay/alas v1.0.1 h1:MuFpGGXyZlDD7+F/hrnMZmzhS8P2bjRzX9DyGmyLA+0=
 github.com/quay/alas v1.0.1/go.mod h1:pseepSrG9pwry1joG7RO/RNRFJaWqiqx9qeoomeYwEk=
-github.com/quay/claircore v1.3.2 h1:h9TVif+P9KYoouyH+JHFejm3/EP6J9HNdRJ7qtEdhYI=
-github.com/quay/claircore v1.3.2/go.mod h1:Y237zhvAdUfoe0LpJx182P1+WZSt0bVd3YvKbMESe8k=
+github.com/quay/claircore v1.4.0 h1:1aYgKGFG2m25bxhq6KP0Fxi9txKrg9owQGMLxDSPx/s=
+github.com/quay/claircore v1.4.0/go.mod h1:CxlF+cUo1f52KiCIFVR65SZn1x5q3ElDKZZ1Ygdud+o=
 github.com/quay/goval-parser v0.8.6 h1:h1Xg3SZR/6I7UVa1LcsQZvQft/q7sJbosmFrjzSmdqE=
 github.com/quay/goval-parser v0.8.6/go.mod h1:Y0NTNfPYOC7yxsYKzJOrscTWUPq1+QbtHw4XpPXWPMc=
 github.com/quay/zlog v1.1.0/go.mod h1:szs9k88lsac48+Wm6QTnpObO67tu0oMr/p5V6qmPEIw=
