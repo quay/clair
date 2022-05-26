@@ -2,9 +2,15 @@
 ## [Unreleased]
 
 
+<a name="v4.4.2"></a>
+## [v4.4.2] - 2022-05-25
+### Go.Mod
+- [67f32bff](https://github.com/quay/clair/commit/67f32bff3f3ef655ff24313ccc7905d6d2a0a719): update claircore version
+ -  [#1571](https://github.com/quay/clair/issues/1571)
 <a name="v4.4.1"></a>
-## [v4.4.1] - 2022-03-21
+## [v4.4.1] - 2022-04-04
 ### Chore
+- [363dca4d](https://github.com/quay/clair/commit/363dca4d771d7e36e2925552cce102e458193c4f): v4.4.1 changelog bump
 - [cc5a916e](https://github.com/quay/clair/commit/cc5a916ef11f5de53af0b87b9ad75d940a615beb): bump claircore to v1.3.2
  -  [#1537](https://github.com/quay/clair/issues/1537)### Httptransport
 - [d314e412](https://github.com/quay/clair/commit/d314e41234292084dc125c3c9489f3958ca772ae): handle no notifier in "combo" mode
@@ -1493,7 +1499,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.4.1...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.4.2...HEAD
+[v4.4.2]: https://github.com/quay/clair/compare/v4.4.1...v4.4.2
 [v4.4.1]: https://github.com/quay/clair/compare/v4.4.0...v4.4.1
 [v4.4.0]: https://github.com/quay/clair/compare/v4.4.0-rc.7...v4.4.0
 [v4.4.0-rc.7]: https://github.com/quay/clair/compare/v4.4.0-rc.6...v4.4.0-rc.7
