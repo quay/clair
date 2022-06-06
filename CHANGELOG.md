@@ -2,8 +2,17 @@
 ## [Unreleased]
 
 
+<a name="v4.4.3"></a>
+## [v4.4.3] - 2022-05-25
+### Go.Mod
+- [51c63e32](https://github.com/quay/clair/commit/51c63e323cc27824cdb59b942b66af110400d5b3): update claircore version
+ -  [#1580](https://github.com/quay/clair/issues/1580)### Webhook
+- [edc65d66](https://github.com/quay/clair/commit/edc65d667261fbc08d54bbc4057151f47ce6d4b7): clone headers on request
+ -  [#1557](https://github.com/quay/clair/issues/1557)
 <a name="v4.4.2"></a>
-## [v4.4.2] - 2022-05-25
+## [v4.4.2] - 2022-05-26
+### Chore
+- [2a4694bf](https://github.com/quay/clair/commit/2a4694bff671a9e41c3c5c5c77eb1a53afebf971): v4.4.2 changelog bump
 ### Go.Mod
 - [67f32bff](https://github.com/quay/clair/commit/67f32bff3f3ef655ff24313ccc7905d6d2a0a719): update claircore version
  -  [#1571](https://github.com/quay/clair/issues/1571)
@@ -1499,7 +1508,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.4.2...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.4.3...HEAD
+[v4.4.3]: https://github.com/quay/clair/compare/v4.4.2...v4.4.3
 [v4.4.2]: https://github.com/quay/clair/compare/v4.4.1...v4.4.2
 [v4.4.1]: https://github.com/quay/clair/compare/v4.4.0...v4.4.1
 [v4.4.0]: https://github.com/quay/clair/compare/v4.4.0-rc.7...v4.4.0
