@@ -52,7 +52,11 @@ objects:
                 requests:
                   cpu: ${{INDEXER_CPU_REQS}}
                   memory: ${{INDEXER_MEM_REQS}}
-              command: [clair]
+              lifecycle:
+                postStart:
+                  exec:
+                    command: ['sh', '-c', 'rm -rf /tmp/sha*']
+              command: ['clair']
               env:
                 - name: CLAIR_CONF
                   value: '/etc/clair/config.yaml'
@@ -83,14 +87,6 @@ objects:
                   mountPath: /etc/clair
                 - name: indexer-layer-storage
                   mountPath: /tmp
-          initContainers:
-            - name: init-wipe-vpc
-              image: ${UBI_IMAGE}:${UBI_IMAGE_TAG}
-              command: ['sh', '-c', "rm -rf /tmp/*"]
-              volumeMounts:
-                - name: indexer-layer-storage
-                  mountPath: /tmp
-
 
   #
   # matcher deployment
@@ -364,12 +360,6 @@ parameters:
   - name: IMAGE_TAG
     value: "latest"
     displayName: the image tag of clair v4 to deploy
-  - name: UBI_IMAGE
-    value: "quay.io/app-sre/ubi8-ubi-minimal"
-    displayName: the image of UBI to deploy
-  - name: UBI_IMAGE_TAG
-    value: "8.5-204"
-    displayName: the image tag of UBI to deploy
   - name: HTTP_TRANSPORT_PORT
     value: "8080"
     displayName: http port where clair's main functionality is provided
