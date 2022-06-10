@@ -55,7 +55,7 @@ objects:
               lifecycle:
                 postStart:
                   exec:
-                    command: ['sh', '-c', 'rm -rf /tmp/sha*']
+                    command: ['sh', '-c', 'rm -rf /tmp/sha* /tmp/fetch.*']
               command: ['clair']
               env:
                 - name: CLAIR_CONF
