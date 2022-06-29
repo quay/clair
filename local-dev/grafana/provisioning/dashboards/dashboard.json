@@ -21,7 +21,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 1,
-  "iteration": 1646408105440,
+  "id": 1,
+  "iteration": 1656528217394,
   "links": [],
   "panels": [
     {
@@ -1115,13 +1116,118 @@
       "yBucketSize": null
     },
     {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 33
+      },
+      "id": 63,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "pgxpool_idle_conns{job=\"indexer\"}",
+          "interval": "",
+          "legendFormat": "idle",
+          "refId": "A"
+        },
+        {
+          "exemplar": true,
+          "expr": "pgxpool_max_conns{job=\"indexer\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "max",
+          "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "pgxpool_total_conns{job=\"indexer\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "total",
+          "refId": "C"
+        },
+        {
+          "exemplar": true,
+          "expr": "pgxpool_acquired_conns{job=\"indexer\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "acquired",
+          "refId": "D"
+        }
+      ],
+      "title": "Connections (Indexer)",
+      "type": "timeseries"
+    },
+    {
       "collapsed": false,
       "datasource": null,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 33
+        "y": 41
       },
       "id": 50,
       "panels": [],
@@ -1184,7 +1290,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 42
       },
       "id": 21,
       "options": {
@@ -1259,7 +1365,7 @@
         "h": 8,
         "w": 4,
         "x": 0,
-        "y": 41
+        "y": 49
       },
       "heatmap": {},
       "hideZeroBuckets": true,
@@ -1323,7 +1429,7 @@
         "h": 8,
         "w": 4,
         "x": 4,
-        "y": 41
+        "y": 49
       },
       "heatmap": {},
       "hideZeroBuckets": true,
@@ -1387,7 +1493,7 @@
         "h": 8,
         "w": 4,
         "x": 8,
-        "y": 41
+        "y": 49
       },
       "heatmap": {},
       "hideZeroBuckets": true,
@@ -1451,7 +1557,7 @@
         "h": 8,
         "w": 4,
         "x": 12,
-        "y": 41
+        "y": 49
       },
       "heatmap": {},
       "hideZeroBuckets": true,
@@ -1515,7 +1621,7 @@
         "h": 8,
         "w": 4,
         "x": 16,
-        "y": 41
+        "y": 49
       },
       "heatmap": {},
       "hideZeroBuckets": true,
@@ -1617,7 +1723,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 49
+        "y": 57
       },
       "id": 43,
       "options": {
@@ -1644,6 +1750,111 @@
       "type": "timeseries"
     },
     {
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 64
+      },
+      "id": 64,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "pgxpool_idle_conns{job=\"matcher\"}",
+          "interval": "",
+          "legendFormat": "idle",
+          "refId": "A"
+        },
+        {
+          "exemplar": true,
+          "expr": "pgxpool_max_conns{job=\"matcher\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "max",
+          "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "pgxpool_total_conns{job=\"matcher\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "total",
+          "refId": "C"
+        },
+        {
+          "exemplar": true,
+          "expr": "pgxpool_acquired_conns{job=\"matcher\"}",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "acquired",
+          "refId": "D"
+        }
+      ],
+      "title": "Connections (Matcher)",
+      "type": "timeseries"
+    },
+    {
       "cards": {
         "cardPadding": null,
         "cardRound": null
@@ -1661,7 +1872,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 56
+        "y": 72
       },
       "heatmap": {},
       "hideZeroBuckets": true,
@@ -1725,7 +1936,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 56
+        "y": 72
       },
       "heatmap": {},
       "hideZeroBuckets": true,
@@ -1778,7 +1989,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 64
+        "y": 80
       },
       "id": 61,
       "panels": [
@@ -2003,7 +2214,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 65
+        "y": 81
       },
       "id": 2,
       "panels": [],
@@ -2066,7 +2277,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 66
+        "y": 82
       },
       "id": 4,
       "options": {
@@ -2110,7 +2321,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 66
+        "y": 82
       },
       "heatmap": {},
       "hideZeroBuckets": true,
@@ -2214,7 +2425,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 74
+        "y": 90
       },
       "id": 7,
       "options": {
@@ -2259,7 +2470,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 74
+        "y": 90
       },
       "heatmap": {},
       "hideZeroBuckets": true,
@@ -2361,7 +2572,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 82
+        "y": 98
       },
       "id": 6,
       "options": {
@@ -2406,7 +2617,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 82
+        "y": 98
       },
       "heatmap": {},
       "hideZeroBuckets": true,
@@ -2508,7 +2719,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 90
+        "y": 106
       },
       "id": 5,
       "options": {
@@ -2553,7 +2764,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 90
+        "y": 106
       },
       "heatmap": {},
       "hideZeroBuckets": true,
@@ -2655,7 +2866,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 98
+        "y": 114
       },
       "id": 41,
       "options": {
@@ -2737,7 +2948,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 98
+        "y": 114
       },
       "id": 40,
       "options": {
@@ -2819,7 +3030,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 106
+        "y": 122
       },
       "id": 39,
       "options": {
@@ -2901,7 +3112,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 106
+        "y": 122
       },
       "id": 42,
       "options": {
@@ -2934,7 +3145,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 114
+        "y": 130
       },
       "id": 9,
       "panels": [],
@@ -2997,7 +3208,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 115
+        "y": 131
       },
       "id": 11,
       "options": {
@@ -3079,7 +3290,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 115
+        "y": 131
       },
       "id": 12,
       "options": {
