@@ -35,7 +35,7 @@ data:
       "gnetId": null,
       "graphTooltip": 1,
       "id": 1,
-      "iteration": 1656528217394,
+      "iteration": 1657053793625,
       "links": [],
       "panels": [
         {
@@ -1129,7 +1129,7 @@ data:
           "yBucketSize": null
         },
         {
-          "datasource": null,
+          "datasource": "${datasource}",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1200,14 +1200,14 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "pgxpool_idle_conns{job=\"indexer\"}",
+              "expr": "sum by (application_name) (pgxpool_idle_conns{application_name=\"libindex\"})",
               "interval": "",
               "legendFormat": "idle",
               "refId": "A"
             },
             {
               "exemplar": true,
-              "expr": "pgxpool_max_conns{job=\"indexer\"}",
+              "expr": "sum by (application_name) (pgxpool_max_conns{application_name=\"libindex\"})",
               "hide": false,
               "interval": "",
               "legendFormat": "max",
@@ -1215,7 +1215,7 @@ data:
             },
             {
               "exemplar": true,
-              "expr": "pgxpool_total_conns{job=\"indexer\"}",
+              "expr": "sum by (application_name) (pgxpool_total_conns{application_name=\"libindex\"})",
               "hide": false,
               "interval": "",
               "legendFormat": "total",
@@ -1223,7 +1223,7 @@ data:
             },
             {
               "exemplar": true,
-              "expr": "pgxpool_acquired_conns{job=\"indexer\"}",
+              "expr": "sum by (application_name) (pgxpool_acquired_conns{application_name=\"libindex\"})",
               "hide": false,
               "interval": "",
               "legendFormat": "acquired",
@@ -1763,7 +1763,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": null,
+          "datasource": "${datasource}",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1834,14 +1834,14 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "pgxpool_idle_conns{job=\"matcher\"}",
+              "expr": "sum by (application_name) (pgxpool_idle_conns{application_name=\"libvuln\"})",
               "interval": "",
               "legendFormat": "idle",
               "refId": "A"
             },
             {
               "exemplar": true,
-              "expr": "pgxpool_max_conns{job=\"matcher\"}",
+              "expr": "sum by (application_name) (pgxpool_max_conns{application_name=\"libvuln\"})",
               "hide": false,
               "interval": "",
               "legendFormat": "max",
@@ -1849,7 +1849,7 @@ data:
             },
             {
               "exemplar": true,
-              "expr": "pgxpool_total_conns{job=\"matcher\"}",
+              "expr": "sum by (application_name) (pgxpool_total_conns{application_name=\"libvuln\"})",
               "hide": false,
               "interval": "",
               "legendFormat": "total",
@@ -1857,7 +1857,7 @@ data:
             },
             {
               "exemplar": true,
-              "expr": "pgxpool_acquired_conns{job=\"matcher\"}",
+              "expr": "sum by (application_name) (pgxpool_acquired_conns{application_name=\"libvuln\"})",
               "hide": false,
               "interval": "",
               "legendFormat": "acquired",
