@@ -2484,7 +2484,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(increase(clair_http_indexerv1_request_duration_seconds_bucket{method=\"post\", handler=\"/indexer/api/v1/index_report\"} [5m])) by (le)",
+          "expr": "sum(increase(clair_http_indexerv1_request_duration_seconds_bucket{method=\"post\", handler=\"/indexer/api/v1/index_report\", code=\"201\"} [5m])) by (le)",
           "format": "heatmap",
           "instant": false,
           "interval": "1",
