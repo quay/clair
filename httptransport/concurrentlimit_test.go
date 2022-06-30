@@ -2,16 +2,20 @@ package httptransport
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"sync"
 	"sync/atomic"
 	"testing"
 
+	"github.com/quay/zlog"
 	"golang.org/x/sync/semaphore"
 )
 
 func TestConcurrentRequests(t *testing.T) {
+	ctx := context.Background()
+	ctx = zlog.Test(ctx, t)
 	sem := semaphore.NewWeighted(1)
 	// Ret controls when the http server returns.
 	// Ready is strobed once the first request is seen.
@@ -29,10 +33,10 @@ func TestConcurrentRequests(t *testing.T) {
 			w.WriteHeader(http.StatusNoContent)
 		}),
 	})
+	srv.Config.BaseContext = func(_ net.Listener) context.Context { return ctx }
 	defer srv.Close()
 	c := srv.Client()
 
-	ctx := context.Background()
 	done := make(chan struct{})
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, srv.URL, nil)
 	if err != nil {
