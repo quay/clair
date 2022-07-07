@@ -2,13 +2,13 @@ package httptransport
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -64,26 +64,32 @@ func TestDiscoveryFailure(t *testing.T) {
 }
 
 func TestEmbedding(t *testing.T) {
-	ctx, done := context.WithCancel(context.Background())
-	defer done()
-
-	var gend, written bytes.Buffer
-	cmd := exec.CommandContext(ctx, "go", "run", "openapigen.go", "-out", "/dev/stdout")
-	cmd.Stdout = &gend
+	d := t.TempDir()
+	var buf bytes.Buffer
+	cmd := exec.Command("go", "run", "openapigen.go", "-in", "../openapi.yaml", "-out", d)
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
+	t.Log(cmd.Args)
 	if err := cmd.Run(); err != nil {
-		t.Fatal(err)
-	}
-	f, err := os.Open("discoveryhandler_gen.go")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer f.Close()
-	if _, err := written.ReadFrom(f); err != nil {
-		t.Fatal(err)
+		t.Error(err)
+		t.Error(buf.String())
 	}
 
-	if got, want := gend.String(), written.String(); !cmp.Equal(got, want) {
-		t.Error(cmp.Diff(got, want, cmpopts.AcyclicTransformer("normalizeWhitespace", func(s string) []string { return strings.Split(s, "\n") })))
-		t.Log("\n\tYou probably edited the openapi.yaml and forgot to run `go generate` here.")
+	for _, n := range []string{
+		"openapi.json", "openapi.etag"} {
+		new, err := os.ReadFile(filepath.Join(d, n))
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+		old, err := os.ReadFile(n)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+		if got, want := string(new), string(old); !cmp.Equal(got, want) {
+			t.Error(cmp.Diff(got, want, cmpopts.AcyclicTransformer("normalizeWhitespace", func(s string) []string { return strings.Split(s, "\n") })))
+			t.Log("\n\tYou probably edited the openapi.yaml and forgot to run `go generate` here.")
+		}
 	}
 }

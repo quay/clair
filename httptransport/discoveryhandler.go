@@ -1,48 +1,42 @@
 package httptransport
 
 import (
+	"bytes"
+	_ "embed" // for json and etag
 	"errors"
 	"io"
 	"net/http"
-	"strings"
-
-	je "github.com/quay/claircore/pkg/jsonerr"
 )
 
 //go:generate go run openapigen.go
+
+var (
+	//go:embed openapi.json
+	openapiJSON []byte
+	//go:embed openapi.etag
+	openapiJSONEtag string
+)
 
 // DiscoveryHandler serves the embedded OpenAPI spec.
 func DiscoveryHandler() http.Handler {
 	allow := []string{`application/json`, `application/vnd.oai.openapi+json`}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
-			resp := &je.Response{
-				Code:    "method-not-allowed",
-				Message: "endpoint only allows GET",
-			}
-			je.Error(w, resp, http.StatusMethodNotAllowed)
+			apiError(w, http.StatusMethodNotAllowed, "endpoint only allows GET")
 			return
 		}
 		switch err := pickContentType(w, r, allow); {
 		case errors.Is(err, nil):
 		case errors.Is(err, ErrMediaType):
-			resp := &je.Response{
-				Code:    "unknown accept type",
-				Message: "endpoint only allows " + strings.Join(allow, " or "),
-			}
-			je.Error(w, resp, http.StatusUnsupportedMediaType)
+			apiError(w, http.StatusUnsupportedMediaType, "unable to negotiate common media type for %v", allow)
 			return
 		default:
-			resp := &je.Response{
-				Code:    "unknown other error",
-				Message: err.Error(),
-			}
-			je.Error(w, resp, http.StatusBadRequest)
+			apiError(w, http.StatusInternalServerError, "unexpected error: %v", err)
 			return
 		}
-		w.Header().Set("etag", _openapiJSONEtag)
+		w.Header().Set("etag", openapiJSONEtag)
 		var err error
 		defer writerError(w, &err)()
-		_, err = io.WriteString(w, _openapiJSON)
+		_, err = io.Copy(w, bytes.NewReader(openapiJSON))
 	})
 }
