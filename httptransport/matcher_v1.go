@@ -11,7 +11,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/ldelossa/responserecorder"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/zlog"
@@ -265,48 +264,4 @@ func init() {
 	matcherv1wrapper.init("matcherv1")
 }
 
-var matcherv1wrapper = &wrapper{
-	RequestCount: prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: metricNamespace,
-			Subsystem: metricSubsystem,
-			Name:      "matcherv1_request_total",
-			Help:      "A total count of http requests for the given path",
-		},
-		[]string{"handler", "code", "method"},
-	),
-	RequestSize: prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: metricNamespace,
-			Subsystem: metricSubsystem,
-			Name:      "matcherv1_request_size_bytes",
-			Help:      "Distribution of request sizes for the given path",
-		},
-		[]string{"handler", "code", "method"},
-	),
-	ResponseSize: prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: metricNamespace,
-			Subsystem: metricSubsystem,
-			Name:      "matcherv1_response_size_bytes",
-			Help:      "Distribution of response sizes for the given path",
-		}, []string{"handler", "code", "method"},
-	),
-	RequestDuration: prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: metricNamespace,
-			Subsystem: metricSubsystem,
-			Name:      "matcherv1_request_duration_seconds",
-			Help:      "Distribution of request durations for the given path",
-		}, []string{"handler", "code", "method"},
-	),
-	InFlight: prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: metricNamespace,
-			Subsystem: metricSubsystem,
-			Name:      "matcherv1_in_flight_requests",
-			Help:      "Gauge of requests in flight",
-		},
-		[]string{"handler"},
-	),
-}
+var matcherv1wrapper wrapper

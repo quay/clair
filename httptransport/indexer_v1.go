@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/ldelossa/responserecorder"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/quay/claircore"
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -297,50 +296,4 @@ func init() {
 	indexerv1wrapper.init("indexerv1")
 }
 
-var indexerv1wrapper = &wrapper{
-	RequestCount: prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: metricNamespace,
-			Subsystem: metricSubsystem,
-			Name:      "indexerv1_request_total",
-			Help:      "A total count of http requests for the given path",
-		},
-		[]string{"handler", "code", "method"},
-	),
-	RequestSize: prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: metricNamespace,
-			Subsystem: metricSubsystem,
-			Name:      "indexerv1_request_size_bytes",
-			Help:      "Distribution of request sizes for the given path",
-		},
-		[]string{"handler", "code", "method"},
-	),
-	ResponseSize: prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: metricNamespace,
-			Subsystem: metricSubsystem,
-			Name:      "indexerv1_response_size_bytes",
-			Help:      "Distribution of response sizes for the given path",
-		}, []string{"handler", "code", "method"},
-	),
-	RequestDuration: prometheus.NewHistogramVec(
-		prometheus.HistogramOpts{
-			Namespace: metricNamespace,
-			Subsystem: metricSubsystem,
-			Name:      "indexerv1_request_duration_seconds",
-			Help:      "Distribution of request durations for the given path",
-			// These are roughly exponential from 0.5 to 300 seconds
-			Buckets: []float64{0.5, 0.7, 1.1, 1.7, 2.7, 4.2, 6.5, 10, 15, 23, 36, 54, 83, 128, 196, 300},
-		}, []string{"handler", "code", "method"},
-	),
-	InFlight: prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Namespace: metricNamespace,
-			Subsystem: metricSubsystem,
-			Name:      "indexerv1_in_flight_requests",
-			Help:      "Gauge of requests in flight",
-		},
-		[]string{"handler"},
-	),
-}
+var indexerv1wrapper wrapper
