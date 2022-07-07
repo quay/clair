@@ -294,7 +294,7 @@ func (h *IndexerV1) affectedManifests(w http.ResponseWriter, r *http.Request) {
 }
 
 func init() {
-	indexerv1wrapper.init()
+	indexerv1wrapper.init("indexerv1")
 }
 
 var indexerv1wrapper = &wrapper{

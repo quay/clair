@@ -208,21 +208,16 @@ func (t *Server) configureMatcherMode(ctx context.Context) error {
 //
 // This mode runs only a Notifier in a single process.
 func (t *Server) configureNotifierMode(ctx context.Context) error {
-	// requires both an indexer and matcher service. indexer service
-	// is assumed to be a remote call over the network
 	if t.notifier == nil {
 		return clairerror.ErrNotInitialized{Msg: "NotifierMode requires a notifier service"}
 	}
+	prefix := notifierRoot + apiRoot
+	v1, err := NewNotificationV1(ctx, prefix, t.notifier, t.traceOpt)
+	if err != nil {
+		return fmt.Errorf("notifier configuration: %w", err)
+	}
 
-	t.Handle(NotificationAPIPath,
-		intromw.InstrumentedHandler(NotificationAPIPath, t.traceOpt, NotificationHandler(t.notifier)))
-
-	t.Handle(KeysAPIPath,
-		intromw.InstrumentedHandler(KeysAPIPath, t.traceOpt, gone))
-
-	t.Handle(KeyByIDAPIPath,
-		intromw.InstrumentedHandler(KeyByIDAPIPath+"_KEY", t.traceOpt, gone))
-
+	t.Handle(prefix, v1)
 	return nil
 }
 

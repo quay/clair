@@ -13,11 +13,6 @@ import (
 	"github.com/quay/claircore"
 )
 
-const (
-	metricNamespace = `clair`
-	metricSubsystem = `http`
-)
-
 // GetDigest removes the last path element and parses it as a digest.
 func getDigest(_ http.ResponseWriter, r *http.Request) (d claircore.Digest, err error) {
 	dStr := path.Base(r.URL.Path)

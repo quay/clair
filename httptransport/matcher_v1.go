@@ -262,7 +262,7 @@ func (h *MatcherV1) updateOperationHandlerDelete(w http.ResponseWriter, r *http.
 }
 
 func init() {
-	matcherv1wrapper.init()
+	matcherv1wrapper.init("matcherv1")
 }
 
 var matcherv1wrapper = &wrapper{
