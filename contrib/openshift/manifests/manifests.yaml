@@ -53,11 +53,10 @@ objects:
                 requests:
                   cpu: ${{INDEXER_CPU_REQS}}
                   memory: ${{INDEXER_MEM_REQS}}
-              lifecycle:
-                postStart:
-                  exec:
-                    command: ['sh', '-c', 'rm -rf /tmp/sha* /tmp/fetch.*']
-              command: ['clair']
+              command:
+                - sh
+                - '-c'
+                - rm -rf /tmp/sha* /tmp/fetch.* && exec clair
               env:
                 - name: CLAIR_CONF
                   value: '/etc/clair/config.yaml'
