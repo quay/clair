@@ -72,6 +72,8 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Server, 
 	if health == nil {
 		zlog.Warn(ctx).Msg("no health check configured; unconditionally reporting OK")
 		i.health = func() bool { return true }
+	} else {
+		i.health = health
 	}
 
 	// configure prometheus
