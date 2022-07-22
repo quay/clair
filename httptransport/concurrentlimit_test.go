@@ -22,7 +22,7 @@ func TestConcurrentRequests(t *testing.T) {
 	ret, ready := make(chan struct{}), make(chan struct{})
 	ct := new(int64)
 	var once sync.Once
-	srv := httptest.NewServer(&limitHandler{
+	srv := httptest.NewUnstartedServer(&limitHandler{
 		Check: func(_ *http.Request) (*semaphore.Weighted, string) {
 			return sem, ""
 		},
@@ -34,6 +34,7 @@ func TestConcurrentRequests(t *testing.T) {
 		}),
 	})
 	srv.Config.BaseContext = func(_ net.Listener) context.Context { return ctx }
+	srv.Start()
 	defer srv.Close()
 	c := srv.Client()
 
