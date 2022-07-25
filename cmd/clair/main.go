@@ -37,7 +37,7 @@ func main() {
 	// parse conf from cli
 	var conf config.Config
 	flag.String("conf", "", "The file system path to Clair's config file.")
-	flag.String("mode", "combo", "The operation mode for this server.")
+	flag.String("mode", "", "The operation mode for this server, will default to combo.")
 	flag.Parse()
 	flag.VisitAll(func(f *flag.Flag) {
 		fv := f.Value.(flag.Getter).Get().(string)
@@ -66,6 +66,9 @@ func main() {
 				golog.Fatalf("failed to decode yaml config: %v", err)
 			}
 		case "mode":
+			if fv == "" {
+				fv = "combo"
+			}
 			m, err := config.ParseMode(fv)
 			if err != nil {
 				golog.Fatalf("bad mode %q: %v", fv, err)
@@ -73,6 +76,7 @@ func main() {
 			conf.Mode = m
 		}
 	})
+
 	fail := false
 	defer func() {
 		if fail {
