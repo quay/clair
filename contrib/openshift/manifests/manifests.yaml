@@ -56,7 +56,7 @@ objects:
               command:
                 - sh
                 - '-c'
-                - rm -rf /tmp/sha* /tmp/fetch.* && exec clair
+                - rm -rf /tmp/sha* /tmp/fetch.* /tmp/rpmscanner.* && exec clair
               env:
                 - name: CLAIR_CONF
                   value: '/etc/clair/config.yaml'
