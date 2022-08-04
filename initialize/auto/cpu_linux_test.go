@@ -11,6 +11,27 @@ import (
 	"github.com/quay/zlog"
 )
 
+var (
+	cgv1 = &fstest.MapFile{
+		Data: []byte(`11:pids:/user.slice/user-1000.slice/session-4.scope
+10:cpuset:/
+9:blkio:/user.slice
+8:hugetlb:/
+7:perf_event:/
+6:devices:/user.slice
+5:net_cls,net_prio:/
+4:cpu,cpuacct:/user.slice
+3:freezer:/
+2:memory:/user.slice/user-1000.slice/session-4.scope
+1:name=systemd:/user.slice/user-1000.slice/session-4.scope
+0::/user.slice/user-1000.slice/session-4.scope
+`),
+	}
+	cgv2 = &fstest.MapFile{
+		Data: []byte("0::/\n"),
+	}
+)
+
 type cgTestcase struct {
 	In   fstest.MapFS
 	Err  error
@@ -35,24 +56,11 @@ func (tc cgTestcase) Run(ctx context.Context, t *testing.T) {
 func TestCPUDetection(t *testing.T) {
 	ctx := zlog.Test(context.Background(), t)
 	t.Run("V1", func(t *testing.T) {
-		const cgmap = `11:pids:/user.slice/user-1000.slice/session-4.scope
-10:cpuset:/
-9:blkio:/user.slice
-8:hugetlb:/
-7:perf_event:/
-6:devices:/user.slice
-5:net_cls,net_prio:/
-4:cpu,cpuacct:/user.slice
-3:freezer:/
-2:memory:/user.slice/user-1000.slice/session-4.scope
-1:name=systemd:/user.slice/user-1000.slice/session-4.scope
-0::/user.slice/user-1000.slice/session-4.scope
-`
 		tt := []cgTestcase{
 			{
 				Name: "NoLimit",
 				In: fstest.MapFS{
-					"proc/self/cgroup": &fstest.MapFile{Data: []byte(cgmap)},
+					"proc/self/cgroup": cgv1,
 					"sys/fs/cgroup/cpu,cpuacct/user.slice/cpu.cfs_quota_us": &fstest.MapFile{
 						Data: []byte("-1\n"),
 					},
@@ -62,7 +70,7 @@ func TestCPUDetection(t *testing.T) {
 			{
 				Name: "Limit1",
 				In: fstest.MapFS{
-					"proc/self/cgroup": &fstest.MapFile{Data: []byte(cgmap)},
+					"proc/self/cgroup": cgv1,
 					"sys/fs/cgroup/cpu,cpuacct/user.slice/cpu.cfs_quota_us": &fstest.MapFile{
 						Data: []byte("100000\n"),
 					},
@@ -75,7 +83,7 @@ func TestCPUDetection(t *testing.T) {
 			{
 				Name: "RootFallback",
 				In: fstest.MapFS{
-					"proc/self/cgroup": &fstest.MapFile{Data: []byte(cgmap)},
+					"proc/self/cgroup": cgv1,
 					"sys/fs/cgroup/cpu,cpuacct/cpu.cfs_quota_us": &fstest.MapFile{
 						Data: []byte("100000\n"),
 					},
@@ -96,9 +104,7 @@ func TestCPUDetection(t *testing.T) {
 			{
 				Name: "NoLimit",
 				In: fstest.MapFS{
-					"proc/self/cgroup": &fstest.MapFile{
-						Data: []byte("0::/\n"),
-					},
+					"proc/self/cgroup": cgv2,
 					"sys/fs/cgroup/cpu.max": &fstest.MapFile{
 						Data: []byte("max 100000\n"),
 					},
@@ -108,9 +114,7 @@ func TestCPUDetection(t *testing.T) {
 			{
 				Name: "Limit4",
 				In: fstest.MapFS{
-					"proc/self/cgroup": &fstest.MapFile{
-						Data: []byte("0::/\n"),
-					},
+					"proc/self/cgroup": cgv2,
 					"sys/fs/cgroup/cpu.max": &fstest.MapFile{
 						Data: []byte("400000 100000\n"),
 					},
