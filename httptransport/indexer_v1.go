@@ -10,6 +10,7 @@ import (
 
 	"github.com/ldelossa/responserecorder"
 	"github.com/quay/claircore"
+	"github.com/quay/claircore/pkg/tarfs"
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
@@ -111,7 +112,12 @@ func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
 		// TODO Do we need some sort of background context embedded in the HTTP
 		// struct?
 		report, err := h.srv.Index(ctx, &m)
-		if err != nil {
+		switch {
+		case errors.Is(err, nil):
+		case errors.Is(err, tarfs.ErrFormat):
+			apiError(w, http.StatusBadRequest, "failed to start scan: %v", err)
+			return
+		default:
 			apiError(w, http.StatusInternalServerError, "failed to start scan: %v", err)
 			return
 		}
