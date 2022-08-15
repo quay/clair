@@ -12,12 +12,56 @@ import (
 	"testing"
 
 	"github.com/quay/claircore"
+	"github.com/quay/claircore/pkg/tarfs"
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/quay/clair/v4/indexer"
 )
+
+func TestIndexReportBadLayer(t *testing.T) {
+	ctx := context.Background()
+	ctx = zlog.Test(ctx, t)
+
+	i := &indexer.Mock{
+		State_: func(ctx context.Context) (string, error) {
+			return `deadbeef`, nil
+		},
+		Index_: func(ctx context.Context, m *claircore.Manifest) (*claircore.IndexReport, error) {
+			return nil, tarfs.ErrFormat
+		},
+	}
+	v1, err := NewIndexerV1(ctx, "", i, otelhttp.WithTracerProvider(trace.NewNoopTracerProvider()))
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv := httptest.NewUnstartedServer(v1)
+	srv.Config.BaseContext = func(_ net.Listener) context.Context { return ctx }
+	srv.Start()
+	defer srv.Close()
+	t.Run("Report", func(t *testing.T) {
+		ctx := zlog.Test(ctx, t)
+		const path = `/index_report`
+		t.Run("POST", func(t *testing.T) {
+			const body = `{"hash":"sha256:0000000000000000000000000000000000000000000000000000000000000000",` +
+				`"layers":[{}]}`
+			req, err := http.NewRequestWithContext(ctx, http.MethodPost, srv.URL+path, strings.NewReader(body))
+			if err != nil {
+				t.Fatal(err)
+			}
+			res, err := srv.Client().Do(req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			got, want := res.StatusCode, http.StatusBadRequest
+			t.Logf("got: %d, want: %d", got, want)
+			if got != want {
+				t.Error()
+			}
+		})
+	})
+}
 
 func TestIndexerV1(t *testing.T) {
 	ctx := context.Background()
