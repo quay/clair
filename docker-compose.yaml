@@ -27,7 +27,6 @@ x-anchors:
     command:
       - go
       - run
-      - -mod=vendor
       - .
       - -conf
       - /etc/clair.yaml
