@@ -213,6 +213,37 @@ jobs:
           tag: ${{ needs.config.outputs.image_tag }}
           token: ${{ secrets.QUAY_API_TOKEN }}
 
+  publish-binaries:
+    name: Publish Binaries
+    runs-on: 'ubuntu-latest'
+    needs: [release-archive, release]
+    strategy:
+      matrix:
+        goarch: ['arm64', 'amd64', '386']
+        goos: ['linux', 'windows', 'darwin']
+        exclude:
+          - goos: darwin
+            goarch: '386'
+          - goos: darwin
+            goarch: arm64
+          - goos: windows
+            goarch: arm64
+    steps:
+      - name: Fetch Archive
+        uses: actions/download-artifact@v3
+        id: download
+        with:
+          name: release
+      - name: Publish clairctl-${{matrix.goos}}-${{matrix.goarch}}
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ${{steps.download.outputs.download-path}}/clairctl-${{matrix.goos}}-${{matrix.goarch}}
+          asset_name: clairctl-${{matrix.goos}}-${{matrix.goarch}}
+          asset_content_type: application/octet-stream
+
   deploy-documentation:
     name: Deploy Documentation
     runs-on: ubuntu-latest
