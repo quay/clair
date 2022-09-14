@@ -24,7 +24,7 @@ RUN go build -trimpath \
   ./cmd/clairctl
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal AS init
-RUN microdnf install --disablerepo=* --enablerepo=ubi-8-baseos --enablerepo=ubi-8-appstream podman-catatonit
+RUN microdnf install --disablerepo=* --enablerepo=ubi-8-baseos-rpms --enablerepo=ubi-8-appstream-rpms podman-catatonit
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal AS final
 ENTRYPOINT ["/usr/local/bin/catatonit", "--", "/bin/clair"]
