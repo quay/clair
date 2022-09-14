@@ -18,7 +18,7 @@ WORKDIR /build/
 ADD . /build/
 ARG CLAIR_VERSION=dev
 RUN go build \
-  -trimpath -ldflags="-X main.Version=${CLAIR_VERSION}" \
+  -trimpath -ldflags="-s -w -X main.Version=${CLAIR_VERSION}" \
   ./cmd/clair
 RUN go build -trimpath \
   ./cmd/clairctl
