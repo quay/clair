@@ -13,7 +13,7 @@ require (
 	github.com/ldelossa/responserecorder v1.0.2-0.20210711162258-40bec93a9325
 	github.com/prometheus/client_golang v1.12.2
 	github.com/quay/clair/config v1.1.3
-	github.com/quay/claircore v1.4.6
+	github.com/quay/claircore v1.4.7
 	github.com/quay/zlog v1.1.3
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
 	github.com/rs/zerolog v1.26.1
@@ -73,7 +73,7 @@ require (
 	github.com/quay/alas v1.0.1 // indirect
 	github.com/quay/claircore/toolkit v1.0.0 // indirect
 	github.com/quay/claircore/updater/driver v1.0.0 // indirect
-	github.com/quay/goval-parser v0.8.6 // indirect
+	github.com/quay/goval-parser v0.8.8 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
