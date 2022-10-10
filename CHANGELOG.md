@@ -2,8 +2,138 @@
 ## [Unreleased]
 
 
+<a name="v4.5.0-rc.0"></a>
+## [v4.5.0-rc.0] - 2022-10-07
+### All
+- [1a1d5662](https://github.com/quay/clair/commit/1a1d566249aa4be93c60e1af773ced0a8d227fb2): remove Quay keyserver support
+### Build(Deps)
+- [224d0698](https://github.com/quay/clair/commit/224d06988b6196ef6617ae807abb652a0580c0dc): bump actions/stale from 5 to 6
+- [180b887c](https://github.com/quay/clair/commit/180b887c8748e3367e962fa78551d526b79de378): bump peter-evans/create-pull-request from 4.1.2 to 4.1.3
+- [0537bbc0](https://github.com/quay/clair/commit/0537bbc06eeb1a050530a62ac263a4a60bd298c4): bump peter-evans/create-pull-request from 4.1.1 to 4.1.2
+- [47a9c1cb](https://github.com/quay/clair/commit/47a9c1cb108872a6d30fe36328b2bf9126f9b13d): bump peter-evans/create-pull-request from 4.0.4 to 4.1.1
+- [3cad3319](https://github.com/quay/clair/commit/3cad331970a3d1a9c8093f62087e63d48859a7b3): bump peter-evans/create-pull-request from 4.0.3 to 4.0.4
+- [c5975257](https://github.com/quay/clair/commit/c597525708138d390041a4d72ed9de9f43ec28c5): bump peter-evans/create-pull-request from 4.0.2 to 4.0.3
+- [57dc2378](https://github.com/quay/clair/commit/57dc23781da8328410be551090a92aec99dbd41e): bump docker/setup-qemu-action from 1 to 2
+- [c4e2031b](https://github.com/quay/clair/commit/c4e2031b36dea93fbe8078bff093c0525d32da6e): bump docker/login-action from 1 to 2
+- [a9823a91](https://github.com/quay/clair/commit/a9823a9107234e7c51f2daf0824ed0e35bd4939b): bump docker/setup-buildx-action from 1 to 2
+- [7c8bafbe](https://github.com/quay/clair/commit/7c8bafbe9b9b021da81055d98f95106649cf6d48): bump docker/build-push-action from 2 to 3
+- [4408b1bb](https://github.com/quay/clair/commit/4408b1bb39d8c443509872dd54dd959bc5a11ac5): bump actions/download-artifact from 2 to 3
+- [4c91a714](https://github.com/quay/clair/commit/4c91a714cd1fa86a20e8d40fcbe8a344e3b94e72): bump actions/setup-go from 2 to 3
+- [64389db0](https://github.com/quay/clair/commit/64389db059ed0a3dbba6d0599272961ab88adb7a): bump actions/upload-artifact from 2 to 3
+- [1db22a62](https://github.com/quay/clair/commit/1db22a62b0569c96772a3b6785ca007454e063fd): bump peter-evans/create-pull-request from 4.0.1 to 4.0.2
+- [c0953e6f](https://github.com/quay/clair/commit/c0953e6f15ef83d2af317ae7a1cd40d37336446e): bump actions/stale from 4 to 5
+- [53e944f9](https://github.com/quay/clair/commit/53e944f9f2321330d1ed8172365892bf461b0eb3): bump peter-evans/create-pull-request from 3.14.0 to 4.0.1
+- [c76efaee](https://github.com/quay/clair/commit/c76efaee8d97a5820d2ba0b3668ad3ccd10fbe02): bump actions/cache from 2 to 3
+### CRDA
+- [4bb2d332](https://github.com/quay/clair/commit/4bb2d33291f652961a4f4d2da8e5e297df4d19ee): replace API key request form URL
+### Chore
+- [4d4c425b](https://github.com/quay/clair/commit/4d4c425b25996a7d0834307fc908090ecbbe805b): Bump claircore to v1.4.4
+### Chore
+- [95073d0b](https://github.com/quay/clair/commit/95073d0bdff80f74a055bb8cbc4ebf01d6c800a0): Bump claircore to v1.4.7
+- [415b2a17](https://github.com/quay/clair/commit/415b2a17bc71064a4db47d622b378c345ca5a4ed): Add back Publish Binaries to upload clairctl versions
+- [c9041efa](https://github.com/quay/clair/commit/c9041efaf9aa0b8082bc06e400d31767285e5c20): bump Claircore to v1.4.6
+- [039d2073](https://github.com/quay/clair/commit/039d2073b21fd8d1ba52d26f14884c56d620df30): bump Claircore to v1.4.5
+- [4e44f7ef](https://github.com/quay/clair/commit/4e44f7efd1ae880b6edf0b7145c271619d10cb03): bump claircore v1.4.2 -> v1.4.3
+- [e2b8e101](https://github.com/quay/clair/commit/e2b8e10152744ff245469be83c75f1a794648584): Bump claircore v1.4.1 -> 1.4.2
+- [3273a969](https://github.com/quay/clair/commit/3273a96981b007d8c4e271aec0371cb7e4f45baf): bump claircore to v1.3.2
+### Ci
+- [45443c8e](https://github.com/quay/clair/commit/45443c8ead5ad369987b33ec8a0b28ec0544d9c3): fix prerelease conditional
+- [eea6fea1](https://github.com/quay/clair/commit/eea6fea1966b4d599e8eb900150c2b90bff47e37): fix config tidy check
+- [4180d787](https://github.com/quay/clair/commit/4180d78769579b28534a45a78a96a7b7bb09eaa1): update workflows and machinery for go1.18
+### Clair
+- [b8882f9d](https://github.com/quay/clair/commit/b8882f9ddb1d3801fdbb47705a68640cfd819aab): better argument error messages
+ -  [#1605](https://github.com/quay/clair/issues/1605)### Clairctl
+- [f0d6a357](https://github.com/quay/clair/commit/f0d6a35763d5589f17c1a40dca5e155188a79b1e): fix error reporting for streaming responses
+### Config
+- [677a3137](https://github.com/quay/clair/commit/677a3137e27c55f802a8d7d6fd6c7a7ce7587f9b): Don't use flag default combo
+- [f0e077e0](https://github.com/quay/clair/commit/f0e077e0cd79d7a71314a4b87e5cb1d14549efa8): add "omitempty" tags everywhere
+- [f1bb53ea](https://github.com/quay/clair/commit/f1bb53ea2b5e03385cf59c941b185baf6df16f8b): implement TextMarshaler for LogLevel
+- [6a99b61a](https://github.com/quay/clair/commit/6a99b61ab5fed89f018ab3c707c52a6aca15add0): add top-level docs
+### Contrib
+- [9612ee67](https://github.com/quay/clair/commit/9612ee675ce9ce5db35c596c82a27057e322099e): remove rpmscanner files on startup
+- [a6609638](https://github.com/quay/clair/commit/a660963897dbf9cf7097acfade26e45fd8276154): First wipe anything that might be left before starting clair indexers
+- [6a6fd901](https://github.com/quay/clair/commit/6a6fd90151d454b7288d0144dc855974969b2c26): fix DB connection charts
+- [6b60eef6](https://github.com/quay/clair/commit/6b60eef6bcf91d9f809ad00928196bfd802db897): Only count index report creation latency for successful requests
+- [17862ae3](https://github.com/quay/clair/commit/17862ae3775cfa8b085856455614d3799bef36f7): Add DB connections to Grafana dashboard
+- [37ca1ab0](https://github.com/quay/clair/commit/37ca1ab04958c4c474c05b24b62d0172747ad9d7): Add dedicated serviceAccount
+- [1d89c032](https://github.com/quay/clair/commit/1d89c032aac54789241a82491c97496be403ec30): Wipe all the temporary files in the process of being fetched
+- [187764a3](https://github.com/quay/clair/commit/187764a3c7859d86906b34023a9f8658d25390ea): Wipe all the contents of /tmp on container start
+- [ae7675af](https://github.com/quay/clair/commit/ae7675af1e68c4e5cf2301480b7a3b99ae6faf89): Use the readyz endpoint in startup probes
+ - Fixes [#1488](https://github.com/quay/clair/issues/1488)### Docker-Compose
+- [dfd68db8](https://github.com/quay/clair/commit/dfd68db8df6ebe61b20888858fadf3b2fab27e5b): remove -mod=vendor flag
+### Dockerfile
+- [e689241b](https://github.com/quay/clair/commit/e689241b16f07e79257a2b3264ff5cb730388d8d): strip binaries to reduce size
+- [2af2a7f6](https://github.com/quay/clair/commit/2af2a7f617cf49ba2cd2588d5583479743f3d8c5): fix build with newer ubi8/ubi-minimal image
+- [f2e209c6](https://github.com/quay/clair/commit/f2e209c62acd6d2a728ac59dbbcc3ce734962310): update for 1.18, add trimpath
+### Docs
+- [369319cd](https://github.com/quay/clair/commit/369319cd1ebabaf86fa5e029a0f23724434faed5): note tested `docker-compose` version
+### Documentation
+- [9258a313](https://github.com/quay/clair/commit/9258a313a95086148e5c0efe293ed7c5a686dbec): add config reference cross-checking
+- [9a74ac8f](https://github.com/quay/clair/commit/9a74ac8f4f1e0606e1830e881b52ae2ab4331d92): add notes on metrics
+- [d09b3192](https://github.com/quay/clair/commit/d09b3192a4a8fec2a54c6d89594f17d3694c9b33): add link checker
+### Go.Mod
+- [d583395e](https://github.com/quay/clair/commit/d583395ec2a03655f44c8eea7e1052e04d6ff889): update claircore version
+- [12b676d4](https://github.com/quay/clair/commit/12b676d4862a97629acf5bc501189da9728d690d): patch update dependencies
+- [e1833161](https://github.com/quay/clair/commit/e1833161315d45484f433fdb3a3692a9a617f3bd): update claircore version
+- [65dcc39c](https://github.com/quay/clair/commit/65dcc39c688ab14cc8330ef05eef77b445d6ecd9): update minimum go version
+### Httptransport
+- [f34148ad](https://github.com/quay/clair/commit/f34148adb89922c4035840cf81018392953f209b): update discovery endpoint
+- [88149118](https://github.com/quay/clair/commit/88149118a5f0ee212a069938a7a3031aa8725fde): use less-verbose instrumentation construction
+- [51119521](https://github.com/quay/clair/commit/5111952106e614c671171f872dcaf7627adf908b): update notification endpoints
+ -  [#1523](https://github.com/quay/clair/issues/1523)- [fa49078d](https://github.com/quay/clair/commit/fa49078db0cabae7fbdab0e725752b8de93bc714): fix test log panic
+- [19fa0aa8](https://github.com/quay/clair/commit/19fa0aa8af90288542b9cf65fea08b91f3c106bb): Refactor Matcher to align with indexer
+- [ce462ea4](https://github.com/quay/clair/commit/ce462ea41a81be2c13f9a4a85847b7f93570db48): handle no notifier in "combo" mode
+### Indexer
+- [8e5d76d3](https://github.com/quay/clair/commit/8e5d76d3926c748caaf34e7d722b58502c5a5813): Return 4XX status code when Index() returns tarfs.ErrBadFormat
+### Introspection
+- [f4db2610](https://github.com/quay/clair/commit/f4db2610af02f6b933cddfeb71f271d58e412a8a): allow custom health function
+### Logging
+- [5c5a1ab4](https://github.com/quay/clair/commit/5c5a1ab496ea07c38a885b260dea14aa952f08b9): log when request is rate-limited
+### Matcher
+- [e5cb6a91](https://github.com/quay/clair/commit/e5cb6a91484254ab647989ab7761ae4d0f85a5f4): Update matcher client to match server definition
+### Metrics
+- [e1664659](https://github.com/quay/clair/commit/e1664659909ddfac0fca48b4995d2b772ebd085b): Spread clair_http_indexerv1_request_duration buckets
+### Prometheus
+- [b6ce5043](https://github.com/quay/clair/commit/b6ce504373675f4b75c5e229098d9fd89669b13f): rework indexer buckets
+### Services
+- [668f443f](https://github.com/quay/clair/commit/668f443f1c0829ce3f5977ff158214fa76951d59): update initialization
+### Webhook
+- [472e70b6](https://github.com/quay/clair/commit/472e70b6c4c6a65f7afd5ef4ecd2c4d722578ba5): clone headers on request
+
+<a name="v4.4.4"></a>
+## [v4.4.4] - 2022-06-09
+### Chore
+- [48a3a4ee](https://github.com/quay/clair/commit/48a3a4eef20ce76e25bb57ed9e8444af60998fd4): v4.4.4 changelog bump
+- [6b1f27ed](https://github.com/quay/clair/commit/6b1f27ed682605fa89641cebf4f0f029c604f0d3): Bump claircore v1.4.1 -> 1.4.2
+
+<a name="v4.4.3"></a>
+## [v4.4.3] - 2022-06-06
+### Chore
+- [3682f31e](https://github.com/quay/clair/commit/3682f31ee399e2b14a1d669c1f3d9ee774feefdd): v4.4.3 changelog bump
+### Go.Mod
+- [51c63e32](https://github.com/quay/clair/commit/51c63e323cc27824cdb59b942b66af110400d5b3): update claircore version
+ -  [#1580](https://github.com/quay/clair/issues/1580)### Webhook
+- [edc65d66](https://github.com/quay/clair/commit/edc65d667261fbc08d54bbc4057151f47ce6d4b7): clone headers on request
+ -  [#1557](https://github.com/quay/clair/issues/1557)
+<a name="v4.4.2"></a>
+## [v4.4.2] - 2022-05-26
+### Chore
+- [2a4694bf](https://github.com/quay/clair/commit/2a4694bff671a9e41c3c5c5c77eb1a53afebf971): v4.4.2 changelog bump
+### Go.Mod
+- [67f32bff](https://github.com/quay/clair/commit/67f32bff3f3ef655ff24313ccc7905d6d2a0a719): update claircore version
+ -  [#1571](https://github.com/quay/clair/issues/1571)
+<a name="v4.4.1"></a>
+## [v4.4.1] - 2022-04-04
+### Chore
+- [363dca4d](https://github.com/quay/clair/commit/363dca4d771d7e36e2925552cce102e458193c4f): v4.4.1 changelog bump
+- [cc5a916e](https://github.com/quay/clair/commit/cc5a916ef11f5de53af0b87b9ad75d940a615beb): bump claircore to v1.3.2
+ -  [#1537](https://github.com/quay/clair/issues/1537)### Httptransport
+- [d314e412](https://github.com/quay/clair/commit/d314e41234292084dc125c3c9489f3958ca772ae): handle no notifier in "combo" mode
+ -  [#1531](https://github.com/quay/clair/issues/1531)
 <a name="v4.4.0"></a>
-## [v4.4.0] - 0001-01-01
+## [v4.4.0] - 2022-03-16
+### Chore
+- [c7075aa4](https://github.com/quay/clair/commit/c7075aa46dfffbbd9b09393d5db42938cda2a615): v4.4.0 changelog bump
 
 <a name="v4.4.0-rc.7"></a>
 ## [v4.4.0-rc.7] - 2022-03-14
@@ -1925,7 +2055,12 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.4.0...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.5.0-rc.0...HEAD
+[v4.5.0-rc.0]: https://github.com/quay/clair/compare/v4.4.4...v4.5.0-rc.0
+[v4.4.4]: https://github.com/quay/clair/compare/v4.4.3...v4.4.4
+[v4.4.3]: https://github.com/quay/clair/compare/v4.4.2...v4.4.3
+[v4.4.2]: https://github.com/quay/clair/compare/v4.4.1...v4.4.2
+[v4.4.1]: https://github.com/quay/clair/compare/v4.4.0...v4.4.1
 [v4.4.0]: https://github.com/quay/clair/compare/v4.4.0-rc.7...v4.4.0
 [v4.4.0-rc.7]: https://github.com/quay/clair/compare/v4.4.0-rc.6...v4.4.0-rc.7
 [v4.4.0-rc.6]: https://github.com/quay/clair/compare/v4.4.0-rc.5...v4.4.0-rc.6
