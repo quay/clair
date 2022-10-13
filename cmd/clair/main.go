@@ -18,15 +18,13 @@ import (
 	"golang.org/x/sync/errgroup"
 	yaml "gopkg.in/yaml.v3"
 
+	"github.com/quay/clair/v4/cmd"
 	"github.com/quay/clair/v4/health"
 	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/initialize"
 	"github.com/quay/clair/v4/initialize/auto"
 	"github.com/quay/clair/v4/introspection"
 )
-
-// Version is a version string, injected at build time for release builds.
-var Version string
 
 const (
 	envConfig = `CLAIR_CONF`
@@ -98,7 +96,7 @@ func main() {
 	}
 	ctx = zlog.ContextWithValues(ctx, "component", "main")
 	zlog.Info(ctx).
-		Str("version", Version).
+		Str("version", cmd.Version).
 		Msg("starting")
 	for _, w := range ws {
 		zlog.Info(ctx).
@@ -181,7 +179,7 @@ func main() {
 		}
 	}()
 
-	zlog.Info(ctx).Str("version", Version).Msg("ready")
+	zlog.Info(ctx).Str("version", cmd.Version).Msg("ready")
 	if err := srvs.Wait(); err != nil {
 		zlog.Error(ctx).Err(err).Msg("fatal error")
 		fail = true

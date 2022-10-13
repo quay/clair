@@ -1,4 +1,5 @@
-package main
+// Package cmd provides some common information to clair's binaries.
+package cmd // import "github.com/quay/clair/v4/cmd"
 
 import (
 	"bytes"
@@ -12,6 +13,11 @@ import (
 // system does this for release builds.
 
 func init() {
+	defer func() {
+		if Version == "" {
+			Version = `???`
+		}
+	}()
 	ctx, done := context.WithTimeout(context.Background(), 5*time.Second)
 	defer done()
 	if Version != "" {
@@ -33,3 +39,6 @@ func init() {
 	}
 	Version = string(bytes.TrimSpace(out))
 }
+
+// Version is a version string, injected at build time for release builds.
+var Version string

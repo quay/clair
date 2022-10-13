@@ -17,11 +17,10 @@ FROM quay.io/projectquay/golang:${GO_VERSION} AS build
 WORKDIR /build/
 ADD . /build/
 ARG CLAIR_VERSION=dev
-RUN go build \
-  -trimpath -ldflags="-s -w -X main.Version=${CLAIR_VERSION}" \
-  ./cmd/clair
-RUN go build -trimpath \
-  ./cmd/clairctl
+RUN for cmd in clair clairctl; do\
+	go build \
+	-trimpath -ldflags="-s -w -X github.com/quay/clair/v4/cmd.Version=${CLAIR_VERSION}" \
+	./cmd/$cmd; done
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal AS init
 RUN microdnf install --disablerepo=* --enablerepo=ubi-8-baseos-rpms --enablerepo=ubi-8-appstream-rpms podman-catatonit

@@ -10,6 +10,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/square/go-jose.v2/jwt"
+
+	"github.com/quay/clair/v4/cmd"
 )
 
 var (
@@ -32,7 +34,7 @@ func main() {
 
 	app := &cli.App{
 		Name:                 "clairctl",
-		Version:              "0.2.0",
+		Version:              cmd.Version,
 		Usage:                "interact with a clair API",
 		Description:          "A command-line tool for clair v4.",
 		EnableBashCompletion: true,
