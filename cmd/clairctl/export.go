@@ -120,7 +120,7 @@ func exportAction(c *cli.Context) error {
 	}
 
 	tr := http.DefaultTransport.(*http.Transport).Clone()
-	cl, _, err := httputil.Client(httputil.RateLimiter(tr), &commonClaim, cfg)
+	cl, _, err := httputil.Client(httputil.RateLimiter(tr), nil, cfg)
 	if err != nil {
 		return err
 	}
