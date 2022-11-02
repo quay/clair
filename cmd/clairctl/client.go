@@ -277,6 +277,40 @@ func (c *Client) VulnerabilityReport(ctx context.Context, id claircore.Digest) (
 	return &report, nil
 }
 
+func (c *Client) DeleteIndexReports(ctx context.Context, ds []claircore.Digest) error {
+	var (
+		req *http.Request
+		res *http.Response
+	)
+	u, err := c.host.Parse(path.Join(c.host.RequestURI(), httptransport.IndexAPIPath))
+	if err != nil {
+		return err
+	}
+	req = c.request(ctx, u, http.MethodDelete)
+
+	req.Body = codec.JSONReader(ds)
+	res, err = c.client.Do(req)
+	if err != nil {
+		zlog.Debug(ctx).
+			Err(err).
+			Stringer("url", req.URL).
+			Msg("request failed")
+		return err
+	}
+	defer res.Body.Close()
+	zlog.Debug(ctx).
+		Str("method", res.Request.Method).
+		Str("path", res.Request.URL.Path).
+		Str("status", res.Status).
+		Send()
+	switch res.StatusCode {
+	case http.StatusOK:
+	default:
+		return fmt.Errorf("unexpected return status: %d", res.StatusCode)
+	}
+	return nil
+}
+
 func (c *Client) request(ctx context.Context, u *url.URL, m string) *http.Request {
 	req := &http.Request{
 		Method:     m,
