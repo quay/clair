@@ -54,6 +54,7 @@ func main() {
 			ReportCmd,
 			ExportCmd,
 			ImportCmd,
+			DeleteCmd,
 		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
