@@ -2,8 +2,23 @@
 ## [Unreleased]
 
 
+<a name="v4.5.0"></a>
+## [v4.5.0] - 2022-11-02
+### Build(Deps)
+- [df77d75a](https://github.com/quay/clair/commit/df77d75a9850ebc2120f3c0a6162d246a7847ce0): bump peter-evans/create-pull-request from 4.1.3 to 4.1.4
+### Chore
+- [070a611a](https://github.com/quay/clair/commit/070a611a2dadcb8cf16c57c40479db4d028c0d03): Bump Claircore to v1.4.11
+- [5ff4805a](https://github.com/quay/clair/commit/5ff4805a3294313e38e540664ba7a7f9732876b4): Bump Claircore to v1.4.10
+- [08ad0697](https://github.com/quay/clair/commit/08ad06979051308d3d7cbc07d751977cf48d6a9e): Bump Claircore to v1.4.9
+- [731c16f7](https://github.com/quay/clair/commit/731c16f70b7938df46b0f3ca6e431377982da4e9): bump Claircore to v1.4.8
+### Clairctl
+- [e431960e](https://github.com/quay/clair/commit/e431960e87fc6a8f2c257b1bda860c242a6c713b): Add delete command
+- [66325b12](https://github.com/quay/clair/commit/66325b12a329a0517e453aa0a2658b9c263335d1): don't use internal client
+### Cmd
+- [9b0f1a96](https://github.com/quay/clair/commit/9b0f1a962585761065b7adb0d18191f911c93ed3): unify version information
+
 <a name="v4.5.0-rc.0"></a>
-## [v4.5.0-rc.0] - 2022-10-07
+## [v4.5.0-rc.0] - 2022-10-10
 ### All
 - [1a1d5662](https://github.com/quay/clair/commit/1a1d566249aa4be93c60e1af773ced0a8d227fb2): remove Quay keyserver support
 ### Build(Deps)
@@ -29,6 +44,7 @@
 ### Chore
 - [4d4c425b](https://github.com/quay/clair/commit/4d4c425b25996a7d0834307fc908090ecbbe805b): Bump claircore to v1.4.4
 ### Chore
+- [aae2d839](https://github.com/quay/clair/commit/aae2d839fbc36996e97ab1d93fca00c70d2278c6): v4.5.0-rc.0 changelog bump
 - [95073d0b](https://github.com/quay/clair/commit/95073d0bdff80f74a055bb8cbc4ebf01d6c800a0): Bump claircore to v1.4.7
 - [415b2a17](https://github.com/quay/clair/commit/415b2a17bc71064a4db47d622b378c345ca5a4ed): Add back Publish Binaries to upload clairctl versions
 - [c9041efa](https://github.com/quay/clair/commit/c9041efaf9aa0b8082bc06e400d31767285e5c20): bump Claircore to v1.4.6
@@ -2055,7 +2071,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.5.0-rc.0...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.5.0...HEAD
+[v4.5.0]: https://github.com/quay/clair/compare/v4.5.0-rc.0...v4.5.0
 [v4.5.0-rc.0]: https://github.com/quay/clair/compare/v4.4.4...v4.5.0-rc.0
 [v4.4.4]: https://github.com/quay/clair/compare/v4.4.3...v4.4.4
 [v4.4.3]: https://github.com/quay/clair/compare/v4.4.2...v4.4.3
