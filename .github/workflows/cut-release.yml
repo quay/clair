@@ -110,7 +110,7 @@ jobs:
           - goos: darwin
             goarch: arm64
           - goos: windows
-            goarch: arm64
+            goarch: '386'
     env:
       GOOS: ${{matrix.goos}}
       GOARCH: ${{matrix.goarch}}
@@ -227,7 +227,7 @@ jobs:
           - goos: darwin
             goarch: arm64
           - goos: windows
-            goarch: arm64
+            goarch: '386'
     steps:
       - name: Fetch Archive
         uses: actions/download-artifact@v3
