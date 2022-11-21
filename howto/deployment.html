@@ -198,7 +198,7 @@ notifier:
 <p>Currently Clair offloads TLS termination to the load balancing infrastructure. This design choice is due to the ubiquity of Kubernetes and OpenShift infrastructure already providing this facility.</p>
 <h2 id="more-on-path-routing"><a class="header" href="#more-on-path-routing">More On Path Routing</a></h2>
 <p>If you are considering a distributed deployment you will need more details on <a href="https://devcentral.f5.com/s/articles/the-three-http-routing-patterns-you-should-know-30764">path based routing</a>. </p>
-<p>Learn how to grab our OpenAPI spec <a href="./api.mw">here</a> and either start up a local dev instance of the swagger editor or load the spec file into the <a href="https://petstore.swagger.io/#/">online editor</a></p>
+<p>Learn how to grab our OpenAPI spec <a href="./api.html">here</a> and either start up a local dev instance of the swagger editor or load the spec file into the <a href="https://petstore.swagger.io/#/">online editor</a></p>
 <p>You will notice particular API paths are grouped by the services which implement them. This is your guide to configure your layer 7 load balancer correctly. </p>
 <p>When the load balancer encounters a particular path prefix it must send those request to the correct set of Clair nodes. </p>
 <p>For example, this is how we configure Traefik in our local development environment:</p>
