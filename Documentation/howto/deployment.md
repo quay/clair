@@ -91,7 +91,7 @@ Currently Clair offloads TLS termination to the load balancing infrastructure. T
 
 If you are considering a distributed deployment you will need more details on [path based routing](https://devcentral.f5.com/s/articles/the-three-http-routing-patterns-you-should-know-30764). 
 
-Learn how to grab our OpenAPI spec [here](./api.mw) and either start up a local dev instance of the swagger editor or load the spec file into the [online editor](https://petstore.swagger.io/#/)
+Learn how to grab our OpenAPI spec [here](./api.md) and either start up a local dev instance of the swagger editor or load the spec file into the [online editor](https://petstore.swagger.io/#/)
 
 You will notice particular API paths are grouped by the services which implement them. This is your guide to configure your layer 7 load balancer correctly. 
 
