@@ -55,9 +55,13 @@ vendor: vendor/modules.txt
 vendor/modules.txt: go.mod
 	go mod vendor
 
+LAST_GIT_TAG ?= $(shell git describe --tags --match 'v*' 2>/dev/null)
+CLAIR_VERSION ?= $(if $(RELEASE_TAG),$(RELEASE_TAG),$(LAST_GIT_TAG))
 .PHONY: container-build
 container-build:
-	$(docker) build -t clair-local:latest .
+	$(docker) build \
+		--build-arg CLAIR_VERSION=${CLAIR_VERSION} \
+		-t clair-local:latest .
 
 DOCS_DIR ?= ../clair-doc
 .PHONY: docs-build
