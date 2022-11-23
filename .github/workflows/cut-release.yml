@@ -128,7 +128,10 @@ jobs:
       - name: Unpack and Build
         run: |
           tar -xz -f ${{steps.download.outputs.download-path}}/clair-${{ needs.config.outputs.version }}.tar.gz --strip-components=1
-          go build -o "clairctl-${{matrix.goos}}-${{matrix.goarch}}" ./cmd/clairctl
+          go build\
+            -trimpath -ldflags="-s -w -X github.com/quay/clair/v4/cmd.Version=${{ needs.config.outputs.version }}"\
+            -o "clairctl-${{matrix.goos}}-${{matrix.goarch}}"\
+            ./cmd/clairctl
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
