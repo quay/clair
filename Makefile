@@ -57,7 +57,11 @@ vendor/modules.txt: go.mod
 
 .PHONY: container-build
 container-build:
+ifneq ($(file < .git/HEAD),)
+	$(docker) build "--build-arg=CLAIR_VERSION=$$(git describe --match 'v4.*')" -t clair-local:latest .
+else
 	$(docker) build -t clair-local:latest .
+endif
 
 DOCS_DIR ?= ../clair-doc
 .PHONY: docs-build

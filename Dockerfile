@@ -16,10 +16,10 @@ ARG GO_VERSION=1.18
 FROM quay.io/projectquay/golang:${GO_VERSION} AS build
 WORKDIR /build/
 ADD . /build/
-ARG CLAIR_VERSION=dev
+ARG CLAIR_VERSION=""
 RUN for cmd in clair clairctl; do\
 	go build \
-	-trimpath -ldflags="-s -w -X github.com/quay/clair/v4/cmd.Version=${CLAIR_VERSION}" \
+	-trimpath -ldflags="-s -w$(test -n "$CLAIR_VERSION" && printf " -X 'github.com/quay/clair/v4/cmd.Version=%s (user)'" "${CLAIR_VERSION}")" \
 	./cmd/$cmd; done
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal AS init

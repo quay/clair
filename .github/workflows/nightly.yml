@@ -71,14 +71,16 @@ jobs:
           registry: quay.io
           username: ${{ secrets.QUAY_USER }}
           password: ${{ secrets.QUAY_TOKEN }}
+      - name: Export
+        # This exports the current state of the main branch, and appends our modified go module files.
+        run: 'git archive -o clair.tar --add-file=go.mod --add-file=go.sum "main"'
       - uses: docker/build-push-action@v3
         with:
           build-args: |
             GO_VERSION=${{ env.GO_VERSION }}
-            CLAIR_VERSION=${{ steps.mod.outputs.clair_version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          context: .
+          context: clair.tar
           platforms: linux/amd64,linux/arm64
           push: ${{ steps.setup.outputs.push && steps.novelty.outputs.cache-hit != 'true' }}
           tags: |
