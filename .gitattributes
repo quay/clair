@@ -1,0 +1,2 @@
+cmd/build.go export-subst
+*.go diff=golang
