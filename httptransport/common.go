@@ -1,14 +1,21 @@
 package httptransport
 
 import (
+	crand "crypto/rand"
+	"encoding/binary"
 	"errors"
 	"fmt"
+	"math/rand"
 	"mime"
 	"net/http"
 	"path"
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
+
+	"github.com/quay/zlog"
+	"go.opentelemetry.io/otel/trace"
 
 	"github.com/quay/claircore"
 )
@@ -105,4 +112,30 @@ func (a *accept) Match(mt string) bool {
 	}
 	t, s := mt[:i], mt[i+1:]
 	return a.Type == t && (a.Subtype == s || a.Subtype == "*")
+}
+
+var idPool = sync.Pool{
+	New: func() interface{} {
+		b := make([]byte, 8)
+		if _, err := crand.Read(b); err != nil {
+			panic(err) // ???
+		}
+		s := binary.LittleEndian.Uint64(b)
+		src := rand.NewSource(int64(s))
+		return rand.New(src)
+	},
+}
+
+func withRequestID(r *http.Request) *http.Request {
+	const key = `request_id`
+	ctx := r.Context()
+	sctx := trace.SpanContextFromContext(ctx)
+	if sctx.HasTraceID() {
+		ctx = zlog.ContextWithValues(ctx, key, sctx.TraceID().String())
+	} else {
+		rng := idPool.Get().(*rand.Rand)
+		ctx = zlog.ContextWithValues(ctx, key, fmt.Sprintf("%016x", rng.Uint64()))
+		idPool.Put(rng)
+	}
+	return r.WithContext(ctx)
 }

@@ -76,7 +76,7 @@ func (h *MatcherV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Dur("duration", time.Since(start)).
 			Msg("handled HTTP request")
 	}()
-	h.inner.ServeHTTP(wr, r)
+	h.inner.ServeHTTP(wr, withRequestID(r))
 }
 
 func (h *MatcherV1) vulnerabilityReport(w http.ResponseWriter, r *http.Request) {
