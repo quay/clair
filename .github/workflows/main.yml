@@ -19,7 +19,7 @@ jobs:
     steps:
       - id: config
         run: |
-          echo '::set-output name=go_versions::["1.17", "1.18"]'
+          echo '::set-output name=go_versions::["1.17", "1.18", "1.19"]'
 
   commit-check:
     name: Commit Check
