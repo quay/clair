@@ -33,13 +33,15 @@ jobs:
           gv=$(test -n "${{github.event.inputs.go_version}}" && echo "${{github.event.inputs.go_version}}" || echo 1.18)
           : "${repo:=$GITHUB_REPOSITORY}"
           test "${repo%%/*}" = quay && repo="projectquay/${repo##*/}" ||:
-          printf '::set-output name=push::%s\n' "${{ env.QUAY_TOKEN != '' }}"
-          printf '::set-output name=api::%s\n' "${{ env.QUAY_API_TOKEN != '' }}"
-          printf '::set-output name=date::%s\n' "$(date -u '+%Y-%m-%d')"
-          printf '::set-output name=tag::%s\n' "$(test -n "${{github.event.inputs.tag}}" && echo "${{github.event.inputs.tag}}" || echo nightly)"
-          printf '::set-output name=claircore_branch::%s\n' "${br}"
-          printf '::set-output name=go_version::%s\n' "${gv}"
-          printf '::set-output name=repo::%s\n' "${repo}"
+          cat <<. >>$GITHUB_OUTPUT
+          push=${{ env.QUAY_TOKEN != '' }}
+          api=${{ env.QUAY_API_TOKEN != '' }}
+          date=$(date -u '+%Y-%m-%d')
+          tag=$(test -n "${{github.event.inputs.tag}}" && echo "${{github.event.inputs.tag}}" || echo nightly)
+          claircore_branch=${br}
+          go_version=${gv}
+          repo=${repo}
+          .
           # Environment variables
           printf 'CLAIRCORE_BRANCH=%s\n' "${br}" >> $GITHUB_ENV
           printf 'GO_VERSION=%s\n' "$gv" >> $GITHUB_ENV

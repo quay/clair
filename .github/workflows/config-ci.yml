@@ -23,7 +23,7 @@ jobs:
     steps:
       - id: config
         run: |
-          echo '::set-output name=go_versions::["1.17", "1.18", "1.19"]'
+          echo 'go_versions=["1.17", "1.18", "1.19"]' >> "$GITHUB_OUTPUT"
 
   commit-check: 
     name: Commit Check
