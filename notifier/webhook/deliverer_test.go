@@ -54,7 +54,7 @@ func TestDeliverer(t *testing.T) {
 		Target:   server.URL,
 	}
 
-	d, err := New(&conf, server.Client())
+	d, err := New(&conf, server.Client(), nil)
 	if err != nil {
 		t.Fatalf("failed to create new webhook deliverer: %v", err)
 	}

@@ -13,6 +13,7 @@ import (
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/internal/codec"
+	"github.com/quay/clair/v4/internal/httputil"
 	"github.com/quay/clair/v4/notifier"
 )
 
@@ -24,12 +25,16 @@ type Deliverer struct {
 	c        *http.Client
 	callback *url.URL
 	target   *url.URL
+	signer   Signer
 	headers  http.Header
-	signed   bool
+}
+
+type Signer interface {
+	Sign(context.Context, *http.Request) error
 }
 
 // New returns a new webhook Deliverer
-func New(conf *config.Webhook, client *http.Client) (*Deliverer, error) {
+func New(conf *config.Webhook, client *http.Client, signer Signer) (*Deliverer, error) {
 	switch {
 	case conf == nil:
 		return nil, errors.New("config not provided")
@@ -52,7 +57,7 @@ func New(conf *config.Webhook, client *http.Client) (*Deliverer, error) {
 		d.headers = make(map[string][]string)
 	}
 	d.headers.Set("content-type", "application/json")
-	d.signed = conf.Signed
+	d.signer = signer
 
 	d.c = client
 	return &d, nil
@@ -81,20 +86,19 @@ func (d *Deliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
 		Callback:       *callback,
 	}
 
-	req := &http.Request{
-		URL:    d.target,
-		Header: d.headers.Clone(),
-		Body:   codec.JSONReader(&wh),
-		Method: http.MethodPost,
+	req, err := httputil.NewRequestWithContext(ctx, http.MethodPost, d.target.String(), codec.JSONReader(&wh))
+	if err != nil {
+		return err
 	}
-
-	// sign a jwt using key manager's private key
-	if d.signed {
-		signedOnce.Do(func() {
-			zlog.Warn(ctx).Msg(`"signed" configuration key no longer does anything`)
-			zlog.Warn(ctx).Msg(`specifying "signed" will be an error in the future`)
-			// Make good on this threat in... 4.4?
-		})
+	for k, vs := range d.headers {
+		for _, v := range vs {
+			req.Header.Add(k, v)
+		}
+	}
+	if d.signer != nil {
+		if err := d.signer.Sign(ctx, req); err != nil {
+			return err
+		}
 	}
 
 	zlog.Info(ctx).

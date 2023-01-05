@@ -1,3 +1,4 @@
+//go:build tools
 // +build tools
 
 package main
@@ -131,7 +132,7 @@ func (h *Recv) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var resp response
 	for next := new(uuid.UUID); next != nil; next = resp.Page.Next {
-		req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, payload.Callback.String(), nil)
+		req, err := httputil.NewRequestWithContext(r.Context(), http.MethodGet, payload.Callback.String(), nil)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("unable to create request: %v", err), http.StatusInternalServerError)
 			log.Println("E", "unable to create request:", err.Error())
@@ -188,7 +189,7 @@ func (h *Recv) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Println(":", whid, n.ID, n.Manifest, n.Reason, n.Vulnerability.Name)
 		}
 	}
-	req, err := http.NewRequestWithContext(r.Context(), http.MethodDelete, payload.Callback.String(), nil)
+	req, err := httputil.NewRequestWithContext(r.Context(), http.MethodDelete, payload.Callback.String(), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
