@@ -1,97 +1,85 @@
 package httputil
 
 import (
+	"context"
+	"fmt"
+	"io"
+	"net"
 	"net/http"
 	"net/http/cookiejar"
-	"time"
+	"os"
+	"path/filepath"
+	"strings"
+	"syscall"
 
-	"github.com/quay/clair/config"
+	"github.com/quay/clair/v4/cmd"
 	"golang.org/x/net/publicsuffix"
-	"gopkg.in/square/go-jose.v2"
-	"gopkg.in/square/go-jose.v2/jwt"
 )
 
-// Client returns an http.Client configured according to the supplied
-// configuration.
+// NewClient constructs an [http.Client] that disallows access to public
+// networks, controlled by the localOnly flag.
 //
-// If nil is passed for a claim, the returned client does no signing.
-//
-// It returns an *http.Client and a boolean indicating whether the client is
-// configured for authentication, or an error that occurred during construction.
-func Client(next http.RoundTripper, cl *jwt.Claims, cfg *config.Config) (c *http.Client, authed bool, err error) {
-	if next == nil {
-		next = http.DefaultTransport.(*http.Transport).Clone()
+// If disallowed, the reported error will be a [*net.AddrError] with the "Err"
+// value of "disallowed by policy".
+func NewClient(ctx context.Context, localOnly bool) (*http.Client, error) {
+	tr := http.DefaultTransport.(*http.Transport).Clone()
+	dialer := &net.Dialer{}
+	// Set a control function if we're restricting subnets.
+	if localOnly {
+		dialer.Control = ctlLocalOnly
 	}
-	authed = false
+	tr.DialContext = dialer.DialContext
+
 	jar, err := cookiejar.New(&cookiejar.Options{
 		PublicSuffixList: publicsuffix.List,
 	})
 	if err != nil {
-		return nil, false, err
+		return nil, err
 	}
-	c = &http.Client{
-		Jar: jar,
-	}
-
-	sk := jose.SigningKey{Algorithm: jose.HS256}
-	// Keep this organized from "best" to "worst". That way, we can add methods
-	// and keep everything working with some careful cluster rolling.
-	switch {
-	case cl == nil: // Skip signing
-	case cfg.Auth.Keyserver != nil:
-		sk.Key = []byte(cfg.Auth.Keyserver.Intraservice)
-	case cfg.Auth.PSK != nil:
-		sk.Key = []byte(cfg.Auth.PSK.Key)
-	default:
-	}
-	rt := &transport{
-		next: next,
-	}
-	// If we have a claim, make a copy into the transport.
-	if cl != nil {
-		rt.base = *cl
-	}
-	c.Transport = rt
-
-	// Both of the JWT-based methods set the signing key.
-	if sk.Key != nil {
-		signer, err := jose.NewSigner(sk, nil)
-		if err != nil {
-			return nil, false, err
-		}
-		rt.Signer = signer
-		authed = true
-	}
-	return c, authed, nil
+	return &http.Client{
+		Transport: tr,
+		Jar:       jar,
+	}, nil
 }
 
-var _ http.RoundTripper = (*transport)(nil)
-
-// Transport does request modification common to all requests.
-type transport struct {
-	jose.Signer
-	next http.RoundTripper
-	base jwt.Claims
+func ctlLocalOnly(network, address string, _ syscall.RawConn) error {
+	// Future-proof for QUIC by allowing UDP here.
+	if !strings.HasPrefix(network, "tcp") && !strings.HasPrefix(network, "udp") {
+		return &net.AddrError{
+			Addr: network + "!" + address,
+			Err:  "disallowed by policy",
+		}
+	}
+	addr := net.ParseIP(address)
+	if addr == nil {
+		return &net.AddrError{
+			Addr: network + "!" + address,
+			Err:  "martian address",
+		}
+	}
+	if !addr.IsPrivate() {
+		return &net.AddrError{
+			Addr: network + "!" + address,
+			Err:  "disallowed by policy",
+		}
+	}
+	return nil
 }
 
-func (cs *transport) RoundTrip(r *http.Request) (*http.Response, error) {
-	const (
-		userAgent = `clair/v4`
-	)
-	r.Header.Set("user-agent", userAgent)
-	if cs.Signer != nil {
-		// TODO(hank) Make this mint longer-lived tokens and re-use them, only
-		// refreshing when needed. Like a resettable sync.Once.
-		now := time.Now()
-		cl := cs.base
-		cl.IssuedAt = jwt.NewNumericDate(now)
-		cl.NotBefore = jwt.NewNumericDate(now.Add(-jwt.DefaultLeeway))
-		cl.Expiry = jwt.NewNumericDate(now.Add(jwt.DefaultLeeway))
-		h, err := jwt.Signed(cs).Claims(&cl).CompactSerialize()
-		if err != nil {
-			return nil, err
-		}
-		r.Header.Add("authorization", "Bearer "+h)
+// NewRequestWithContext is a wrapper around [http.NewRequestWithContext] that
+// sets some defaults in the returned request.
+func NewRequestWithContext(ctx context.Context, method, url string, body io.Reader) (*http.Request, error) {
+	// The one OK use of the normal function.
+	req, err := http.NewRequestWithContext(ctx, method, url, body)
+	if err != nil {
+		return nil, err
 	}
-	return cs.next.RoundTrip(r)
+	p, err := os.Executable()
+	if err != nil {
+		p = `clair?`
+	} else {
+		p = filepath.Base(p)
+	}
+	req.Header.Set("user-agent", fmt.Sprintf("%s/%s", p, cmd.Version))
+	return req, nil
 }

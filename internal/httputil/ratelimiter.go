@@ -21,8 +21,8 @@ func RateLimiter(next http.RoundTripper) http.RoundTripper {
 // Ratelimiter implements the limiting by using a concurrent map and Limiter
 // structs.
 type ratelimiter struct {
-	rt http.RoundTripper
 	lm sync.Map
+	rt http.RoundTripper
 }
 
 const rateCap = 10

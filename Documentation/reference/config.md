@@ -159,9 +159,9 @@ A key file for the TLS certificate. Encryption is not supported on the key.
 Indexer provides Clair Indexer node configuration.
 
 #### `$.indexer.airgap`
-Boolean.
-
-Disables scanners that have signaled they expect to talk to the Internet.
+Disables HTTP access to the Internet for indexers and fetchers.
+Private IPv4 and IPv6 addresses are allowed.
+Database connections are unaffected.
 
 #### `$.indexer.connstring`
 A Postgres connection string.
