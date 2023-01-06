@@ -61,6 +61,7 @@ func (tc *authTestcase) Run(ctx context.Context) func(*testing.T) {
 		srv.Start()
 		defer srv.Close()
 
+		tc.Config.Matcher.IndexerAddr = srv.URL
 		// Modify the config, if present
 		if f := tc.ConfigMod; f != nil {
 			f(t, &tc.Config)
@@ -70,19 +71,23 @@ func (tc *authTestcase) Run(ctx context.Context) func(*testing.T) {
 		if tc.Claims == nil {
 			tc.Claims = &defaultClaims
 		}
-
-		// Create a client that has auth according to the config.
-		c, authed, err := httputil.Client(nil, tc.Claims, &tc.Config)
+		s, err := httputil.NewSigner(ctx, &tc.Config, *tc.Claims)
 		if err != nil {
 			t.Error(err)
 		}
-		t.Logf("authed: %v", authed)
-		if c == nil {
+		req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, srv.URL, nil)
+		if err != nil {
+			t.Error(err)
+		}
+		if err := s.Sign(ctx, req); err != nil {
+			t.Error(err)
+		}
+		if t.Failed() {
 			t.FailNow()
 		}
 
 		// Make the request.
-		res, err := c.Get(srv.URL)
+		res, err := srv.Client().Do(req)
 		if err != nil {
 			t.Fatal(err)
 		}
