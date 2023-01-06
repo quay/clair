@@ -16,6 +16,7 @@ import (
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/internal/codec"
+	"github.com/quay/clair/v4/internal/httputil"
 	"github.com/quay/clair/v4/matcher"
 )
 
@@ -26,7 +27,7 @@ func (c *HTTP) Scan(ctx context.Context, ir *claircore.IndexReport) (*claircore.
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), codec.JSONReader(ir))
+	req, err := httputil.NewRequestWithContext(ctx, http.MethodPost, u.String(), codec.JSONReader(ir))
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +85,7 @@ func (c *HTTP) DeleteUpdateOperations(ctx context.Context, ref ...uuid.UUID) (in
 					errs[i] = err
 					return
 				}
-				req, err := http.NewRequestWithContext(ctx, http.MethodDelete, u.String(), nil)
+				req, err := httputil.NewRequestWithContext(ctx, http.MethodDelete, u.String(), nil)
 				if err != nil {
 					errs[i] = err
 					return
@@ -109,7 +110,7 @@ func (c *HTTP) DeleteUpdateOperations(ctx context.Context, ref ...uuid.UUID) (in
 
 	var b strings.Builder
 	var errd bool
-	var deleted = int64(len(ref))
+	deleted := int64(len(ref))
 	for _, err := range errs {
 		if err != nil {
 			deleted--
@@ -142,7 +143,7 @@ func (c *HTTP) UpdateOperations(ctx context.Context, k driver.UpdateKind, update
 	v := url.Values{}
 	v.Add("kind", string(k))
 	u.RawQuery = v.Encode()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +161,7 @@ func (c *HTTP) LatestUpdateOperations(ctx context.Context, k driver.UpdateKind) 
 	v.Add("kind", string(k))
 	u.RawQuery = v.Encode()
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +217,7 @@ func (c *HTTP) UpdateDiff(ctx context.Context, prev, cur uuid.UUID) (*driver.Upd
 	if err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return nil, err
 	}

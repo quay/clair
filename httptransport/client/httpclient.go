@@ -10,17 +10,16 @@ import (
 	"github.com/quay/claircore/libvuln/driver"
 )
 
-// uoCache caches an UpdateOperation
-// map when the server provides a conditional
-// response
+// UoCache caches an UpdateOperation map when the server provides a conditional
+// response.
 type uoCache struct {
 	sync.RWMutex
-	validator string
 	uo        map[string][]driver.UpdateOperation
+	validator string
 }
 
-// Set persists the update operations map and it's associated
-// validator string used in conditional requests.
+// Set persists the update operations map and its associated validator string
+// used in conditional requests.
 //
 // It is safe for concurrent use.
 func (c *uoCache) Set(m map[string][]driver.UpdateOperation, v string) {
@@ -38,7 +37,7 @@ func (c *uoCache) Copy() map[string][]driver.UpdateOperation {
 	c.RLock()
 	defer c.RUnlock()
 	for u, ops := range c.uo {
-		o := make([]driver.UpdateOperation, len(ops), len(ops))
+		o := make([]driver.UpdateOperation, len(ops))
 		copy(o, ops)
 		m[u] = o
 	}
@@ -53,12 +52,12 @@ func newOUCache() *uoCache {
 
 // HTTP implements access to clair interfaces over HTTP
 type HTTP struct {
+	diffValidator atomic.Value
 	addr          *url.URL
 	c             *http.Client
 	uoCache       *uoCache
 	uoLatestCache *uoCache
-
-	diffValidator atomic.Value
+	signer        Signer
 }
 
 // DefaultAddr is used if the WithAddr Option isn't provided to New.
@@ -118,4 +117,15 @@ func WithClient(c *http.Client) Option {
 		s.c = c
 		return nil
 	}
+}
+
+func WithSigner(v Signer) Option {
+	return func(s *HTTP) error {
+		s.signer = v
+		return nil
+	}
+}
+
+type Signer interface {
+	Sign(context.Context, *http.Request) error
 }
