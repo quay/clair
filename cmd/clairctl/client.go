@@ -18,13 +18,10 @@ import (
 	"github.com/quay/zlog"
 	"github.com/tomnomnom/linkheader"
 
+	"github.com/quay/clair/v4/cmd"
 	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/internal/codec"
 	"github.com/quay/clair/v4/internal/httputil"
-)
-
-const (
-	userAgent = `clairctl/1`
 )
 
 var (
@@ -50,7 +47,7 @@ func rt(ctx context.Context, ref string) (http.RoundTripper, error) {
 		return nil, err
 	}
 	rt := http.DefaultTransport
-	rt = transport.NewUserAgent(rt, userAgent)
+	rt = transport.NewUserAgent(rt, `clairctl/`+cmd.Version)
 	rt = transport.NewRetry(rt)
 	rt, err = transport.NewWithContext(ctx, repo.Registry, auth, rt, []string{repo.Scope(transport.PullScope)})
 	if err != nil {
