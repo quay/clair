@@ -179,11 +179,7 @@ func localIndexer(ctx context.Context, cfg *config.Config) (indexer.Service, err
 			}
 		}
 	}
-	tr := http.DefaultTransport.(*http.Transport).Clone()
-	// Use an empty claim because this shouldn't be talking to something that
-	// needs preconfigured authz. Callers should be providing credentials to the
-	// indexing process in the submitted manifest.
-	c, _, err := httputil.Client(tr, nil, cfg)
+	c, err := httputil.NewClient(ctx, cfg.Indexer.Airgap)
 	if err != nil {
 		return nil, mkErr(err)
 	}
@@ -210,16 +206,19 @@ func remoteIndexer(ctx context.Context, cfg *config.Config, addr string) (indexe
 }
 
 func remoteClient(ctx context.Context, cfg *config.Config, claim jwt.Claims, addr string) (*client.HTTP, error) {
-	tr := http.DefaultTransport.(*http.Transport).Clone()
-	c, auth, err := httputil.Client(tr, &claim, cfg)
-	switch {
-	case err != nil:
+	c, err := httputil.NewClient(ctx, false) // ???
+	if err != nil {
 		return nil, err
-	case !auth && cfg.Auth.Any():
-		return nil, errors.New("client authorization required but not provided")
-	default: // OK
 	}
-	return client.NewHTTP(ctx, client.WithAddr(addr), client.WithClient(c))
+	opts := []client.Option{client.WithAddr(addr), client.WithClient(c)}
+	if cfg.Auth.Any() {
+		s, err := httputil.NewSigner(ctx, cfg, claim)
+		if err != nil {
+			return nil, err
+		}
+		opts = append(opts, client.WithSigner(s))
+	}
+	return client.NewHTTP(ctx, opts...)
 }
 
 func localMatcher(ctx context.Context, cfg *config.Config) (matcher.Service, error) {
@@ -319,8 +318,11 @@ func localNotifier(ctx context.Context, cfg *config.Config, i indexer.Service, m
 		}
 	}
 
-	tr := http.DefaultTransport.(*http.Transport).Clone()
-	c, _, err := httputil.Client(tr, &notifierClaim, cfg)
+	c, err := httputil.NewClient(ctx, false) // No airgap flag.
+	if err != nil {
+		return nil, mkErr(err)
+	}
+	signer, err := httputil.NewSigner(ctx, cfg, notifierClaim)
 	if err != nil {
 		return nil, mkErr(err)
 	}
@@ -350,6 +352,7 @@ func localNotifier(ctx context.Context, cfg *config.Config, i indexer.Service, m
 		Indexer:          i,
 		Matcher:          m,
 		Client:           c,
+		Signer:           signer,
 		PollInterval:     cfg.Notifier.PollInterval,
 		DisableSummary:   cfg.Notifier.DisableSummary,
 		Webhook:          cfg.Notifier.Webhook,

@@ -55,6 +55,7 @@ func (s *Notifier) DeleteNotifications(ctx context.Context, id uuid.UUID) error 
 type Opts struct {
 	Matcher          matcher.Service
 	Indexer          indexer.Service
+	Signer           webhook.Signer
 	Client           *http.Client
 	Webhook          *config.Webhook
 	AMQP             *config.AMQP
@@ -100,7 +101,7 @@ func New(ctx context.Context, store notifier.Store, locks notifier.Locker, opts 
 		zlog.Info(ctx).
 			Int("count", deliveries).
 			Msg("initializing webhook deliverers")
-		del, err = webhook.New(opts.Webhook, opts.Client)
+		del, err = webhook.New(opts.Webhook, opts.Client, opts.Signer)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create webhook deliverer: %v", err)
 		}
