@@ -11,6 +11,8 @@ import (
 
 	"github.com/quay/zlog"
 	"golang.org/x/sync/semaphore"
+
+	"github.com/quay/clair/v4/internal/httputil"
 )
 
 func TestConcurrentRequests(t *testing.T) {
@@ -39,7 +41,7 @@ func TestConcurrentRequests(t *testing.T) {
 	c := srv.Client()
 
 	done := make(chan struct{})
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, srv.URL, nil)
+	req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, srv.URL, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +62,7 @@ func TestConcurrentRequests(t *testing.T) {
 	// Wait for the above goroutine to hit the handler.
 	<-ready
 	for i := 0; i < 10; i++ {
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, srv.URL, nil)
+		req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, srv.URL, nil)
 		if err != nil {
 			t.Errorf("%d: %v", i, err)
 		}

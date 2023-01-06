@@ -14,6 +14,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/quay/clair/v4/indexer"
+	"github.com/quay/clair/v4/internal/httputil"
 	"github.com/quay/clair/v4/matcher"
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/zlog"
@@ -66,12 +67,12 @@ func testUpdateDiffMatcher(t *testing.T) {
 	q := url.Query()
 	q.Set("cur", "892737b2-a616-4113-a7a9-137139c8f91e")
 	url.RawQuery = q.Encode()
-
-	req := &http.Request{
-		URL:    url,
-		Method: http.MethodGet,
-	}
 	t.Log(url)
+
+	req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, url.String(), nil)
+	if err != nil {
+		t.Fatalf("failed to construct request: %v", err)
+	}
 	resp, err := srvOK.Client().Do(req)
 	if err != nil {
 		t.Fatalf("failed to do request: %v", err)
@@ -96,10 +97,11 @@ func testUpdateDiffMatcher(t *testing.T) {
 	q = url.Query()
 	q.Set("cur", "892737b2-a616-4113-a7a9-137139c8f91e")
 	url.RawQuery = q.Encode()
+	t.Log(url)
 
-	req = &http.Request{
-		URL:    url,
-		Method: http.MethodGet,
+	req, err = httputil.NewRequestWithContext(ctx, http.MethodGet, url.String(), nil)
+	if err != nil {
+		t.Fatalf("failed to construct request: %v", err)
 	}
 	resp, err = srvErr.Client().Do(req)
 	if err != nil {
@@ -174,9 +176,9 @@ func testUpdateDiffHandlerParams(t *testing.T) {
 			q.Set("prev", test.cur)
 			u.RawQuery = q.Encode()
 
-			req := &http.Request{
-				URL:    u,
-				Method: http.MethodGet,
+			req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+			if err != nil {
+				t.Fatalf("failed to construct request: %v", err)
 			}
 			resp, err := c.Do(req)
 			if err != nil {
@@ -224,7 +226,7 @@ func testUpdateDiffHandlerMethods(t *testing.T) {
 		http.MethodPut,
 		http.MethodTrace,
 	} {
-		req, err := http.NewRequest(m, u.String(), nil)
+		req, err := httputil.NewRequestWithContext(ctx, m, u.String(), nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -275,7 +277,7 @@ func testUpdateOperationHandlerErrors(t *testing.T) {
 	c := srv.Client()
 
 	// perform get with failing differ
-	req, err := http.NewRequest(http.MethodGet, srv.URL+path.Join("/", "internal", "update_operation"), nil)
+	req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, srv.URL+path.Join("/", "internal", "update_operation"), nil)
 	if err != nil {
 		t.Fatalf("failed to create request: %v", err)
 	}
@@ -289,7 +291,7 @@ func testUpdateOperationHandlerErrors(t *testing.T) {
 
 	// perform delete with failing differ
 	u := srv.URL + path.Join("/", "internal", "update_operation") + "/" + id
-	req, err = http.NewRequest(http.MethodDelete, u, nil)
+	req, err = httputil.NewRequestWithContext(ctx, http.MethodDelete, u, nil)
 	if err != nil {
 		t.Fatalf("failed to create request: %v", err)
 	}
@@ -324,7 +326,7 @@ func testUpdateOperationHandlerMethods(t *testing.T) {
 		http.MethodPut,
 		http.MethodTrace,
 	} {
-		req, err := http.NewRequest(m, srv.URL+path.Join("/", "internal", "update_operation"), nil)
+		req, err := httputil.NewRequestWithContext(ctx, m, srv.URL+path.Join("/", "internal", "update_operation"), nil)
 		if err != nil {
 			t.Fatalf("failed to create request: %v", err)
 		}
@@ -370,7 +372,7 @@ func testUpdateOperationHandlerGet(t *testing.T) {
 	c := srv.Client()
 
 	// get without latest param
-	req, err := http.NewRequest(http.MethodGet, srv.URL+path.Join("/", "internal", "update_operation"), nil)
+	req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, srv.URL+path.Join("/", "internal", "update_operation"), nil)
 	if err != nil {
 		t.Fatalf("failed to create request: %v", err)
 	}
@@ -395,9 +397,10 @@ func testUpdateOperationHandlerGet(t *testing.T) {
 	q := u.Query()
 	q.Add("latest", "true")
 	u.RawQuery = q.Encode()
-	req = &http.Request{
-		URL:    u,
-		Method: http.MethodGet,
+
+	req, err = httputil.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	if err != nil {
+		t.Fatalf("failed to create request: %v", err)
 	}
 	resp, err = c.Do(req)
 	if err != nil {

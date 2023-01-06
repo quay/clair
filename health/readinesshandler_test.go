@@ -1,18 +1,21 @@
 package health_test
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/quay/clair/v4/health"
+	"github.com/quay/clair/v4/internal/httputil"
 )
 
 func TestReadinessHandler(t *testing.T) {
+	ctx := context.Background()
 	server := httptest.NewServer(health.ReadinessHandler())
 	client := server.Client()
 
-	req, err := http.NewRequest("GET", server.URL, nil)
+	req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, server.URL, nil)
 	if err != nil {
 		t.Fatalf("failed to create request: %v", err)
 	}

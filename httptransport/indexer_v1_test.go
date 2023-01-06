@@ -18,6 +18,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/quay/clair/v4/indexer"
+	"github.com/quay/clair/v4/internal/httputil"
 )
 
 func TestIndexReportBadLayer(t *testing.T) {
@@ -46,7 +47,7 @@ func TestIndexReportBadLayer(t *testing.T) {
 		t.Run("POST", func(t *testing.T) {
 			const body = `{"hash":"sha256:0000000000000000000000000000000000000000000000000000000000000000",` +
 				`"layers":[{}]}`
-			req, err := http.NewRequestWithContext(ctx, http.MethodPost, srv.URL+path, strings.NewReader(body))
+			req, err := httputil.NewRequestWithContext(ctx, http.MethodPost, srv.URL+path, strings.NewReader(body))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -107,7 +108,7 @@ func TestIndexerV1(t *testing.T) {
 		ctx := zlog.Test(ctx, t)
 		const path = `/index_state`
 		t.Run("GET", func(t *testing.T) {
-			req, err := http.NewRequestWithContext(ctx, http.MethodGet, srv.URL+path, nil)
+			req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, srv.URL+path, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -128,7 +129,7 @@ func TestIndexerV1(t *testing.T) {
 		t.Run("POST", func(t *testing.T) {
 			const body = `{"hash":"sha256:0000000000000000000000000000000000000000000000000000000000000000",` +
 				`"layers":[{}]}`
-			req, err := http.NewRequestWithContext(ctx, http.MethodPost, srv.URL+path, strings.NewReader(body))
+			req, err := httputil.NewRequestWithContext(ctx, http.MethodPost, srv.URL+path, strings.NewReader(body))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -144,7 +145,7 @@ func TestIndexerV1(t *testing.T) {
 		})
 		t.Run("DELETE", func(t *testing.T) {
 			const body = `["sha256:0000000000000000000000000000000000000000000000000000000000000000"]`
-			req, err := http.NewRequestWithContext(ctx, http.MethodDelete, srv.URL+path, strings.NewReader(body))
+			req, err := httputil.NewRequestWithContext(ctx, http.MethodDelete, srv.URL+path, strings.NewReader(body))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -168,7 +169,7 @@ func TestIndexerV1(t *testing.T) {
 			}
 		})
 		t.Run("GET", func(t *testing.T) {
-			req, err := http.NewRequestWithContext(ctx, http.MethodGet, srv.URL+path, nil)
+			req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, srv.URL+path, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -187,7 +188,7 @@ func TestIndexerV1(t *testing.T) {
 		ctx := zlog.Test(ctx, t)
 		const path = `/index_report/sha256:0000000000000000000000000000000000000000000000000000000000000000`
 		t.Run("DELETE", func(t *testing.T) {
-			req, err := http.NewRequestWithContext(ctx, http.MethodDelete, srv.URL+path, nil)
+			req, err := httputil.NewRequestWithContext(ctx, http.MethodDelete, srv.URL+path, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -202,7 +203,7 @@ func TestIndexerV1(t *testing.T) {
 			}
 		})
 		t.Run("GET", func(t *testing.T) {
-			req, err := http.NewRequestWithContext(ctx, http.MethodGet, srv.URL+path, nil)
+			req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, srv.URL+path, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -222,7 +223,7 @@ func TestIndexerV1(t *testing.T) {
 		const path = `/internal/affected_manifest/`
 		t.Run("POST", func(t *testing.T) {
 			const body = `{"vulnerabilities":[]}`
-			req, err := http.NewRequestWithContext(ctx, http.MethodPost, srv.URL+path, strings.NewReader(body))
+			req, err := httputil.NewRequestWithContext(ctx, http.MethodPost, srv.URL+path, strings.NewReader(body))
 			if err != nil {
 				t.Fatal(err)
 			}

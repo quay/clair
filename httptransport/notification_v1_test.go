@@ -15,6 +15,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/trace"
 
+	"github.com/quay/clair/v4/internal/httputil"
 	"github.com/quay/clair/v4/notifier"
 	"github.com/quay/clair/v4/notifier/service"
 )
@@ -53,9 +54,9 @@ func testNotificationHandlerDelete(ctx context.Context) func(*testing.T) {
 		}
 		rr := httptest.NewRecorder()
 		u, _ := url.Parse("http://clair-notifier/notifier/api/v1/notification/" + noteID.String())
-		req := &http.Request{
-			URL:    u,
-			Method: http.MethodGet,
+		req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+		if err != nil {
+			t.Error(err)
 		}
 
 		h.delete(rr, req)
@@ -104,9 +105,9 @@ func testNotificationHandlerGet(ctx context.Context) func(*testing.T) {
 		}
 		rr := httptest.NewRecorder()
 		u, _ := url.Parse("http://clair-notifier/notifier/api/v1/notification/" + noteID.String())
-		req := &http.Request{
-			URL:    u,
-			Method: http.MethodGet,
+		req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+		if err != nil {
+			t.Error(err)
 		}
 
 		h.get(rr, req)
@@ -171,9 +172,9 @@ func testNotificationHandlerGetParams(ctx context.Context) func(*testing.T) {
 		v.Set("page_size", pageSizeParam)
 		v.Set("page", pageParam)
 		u.RawQuery = v.Encode()
-		req := &http.Request{
-			URL:    u,
-			Method: http.MethodGet,
+		req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+		if err != nil {
+			t.Error(err)
 		}
 
 		h.get(rr, req)
@@ -215,7 +216,7 @@ func testNotificationsHandlerMethods(ctx context.Context) func(*testing.T) {
 			http.MethodPut,
 			http.MethodTrace,
 		} {
-			req, err := http.NewRequest(m, u, nil)
+			req, err := httputil.NewRequestWithContext(ctx, m, u, nil)
 			if err != nil {
 				t.Fatalf("failed to create request: %v", err)
 			}

@@ -123,7 +123,7 @@ func openInput(ctx context.Context, c *http.Client, n string) (io.ReadCloser, er
 	}
 	u, uerr := url.Parse(n)
 	if uerr == nil {
-		req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+		req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 		if err != nil {
 			return nil, err
 		}
