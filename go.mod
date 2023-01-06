@@ -1,6 +1,6 @@
 module github.com/quay/clair/v4
 
-go 1.17
+go 1.18
 
 require (
 	github.com/go-stomp/stomp v2.0.8+incompatible

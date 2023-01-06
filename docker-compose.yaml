@@ -11,7 +11,7 @@ x-anchors:
   grafana: &grafana-image docker.io/grafana/grafana:8.0.3
   quay: &quay-image quay.io/projectquay/quay:latest
   redis: &redis-image docker.io/library/redis:6.2
-  go: &go-image quay.io/projectquay/golang:1.17
+  go: &go-image quay.io/projectquay/golang:1.18
   skopeo: &skopeo-image quay.io/skopeo/stable:latest
   activemq: &activemq-image docker.io/rmohr/activemq:5.15.9-alpine
   clair-service: &clair-service
