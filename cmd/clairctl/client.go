@@ -20,6 +20,7 @@ import (
 
 	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/internal/codec"
+	"github.com/quay/clair/v4/internal/httputil"
 )
 
 const (
@@ -63,15 +64,16 @@ func rt(ctx context.Context, ref string) (http.RoundTripper, error) {
 type Client struct {
 	host   *url.URL
 	client *http.Client
+	signer *httputil.Signer
 
 	mu sync.RWMutex
 	// TODO Back this on disk to minimize resubmissions.
 	validator map[string]string
 }
 
-func NewClient(c *http.Client, root string) (*Client, error) {
+func NewClient(c *http.Client, root string, s *httputil.Signer) (*Client, error) {
 	if c == nil {
-		c = http.DefaultClient
+		return nil, errors.New("programmer error: no http.Client provided")
 	}
 	host, err := url.Parse(root)
 	if err != nil {
@@ -80,6 +82,7 @@ func NewClient(c *http.Client, root string) (*Client, error) {
 	return &Client{
 		host:      host,
 		client:    c,
+		signer:    s,
 		validator: make(map[string]string),
 	}, nil
 }
@@ -117,7 +120,10 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 			Msg("unable to construct index_report url")
 		return err
 	}
-	req = c.request(ctx, fp, http.MethodGet)
+	req, err = c.request(ctx, fp, http.MethodGet)
+	if err != nil {
+		return err
+	}
 	res, err = c.client.Do(req)
 	if err != nil {
 		zlog.Debug(ctx).
@@ -163,7 +169,10 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 		return err
 	}
 
-	req = c.request(ctx, ru, http.MethodPost)
+	req, err = c.request(ctx, ru, http.MethodPost)
+	if err != nil {
+		return err
+	}
 	req.Body = codec.JSONReader(m)
 	res, err = c.client.Do(req)
 	if err != nil {
@@ -241,7 +250,10 @@ func (c *Client) VulnerabilityReport(ctx context.Context, id claircore.Digest) (
 			Msg("unable to construct vulnerability_report url")
 		return nil, err
 	}
-	req = c.request(ctx, u, http.MethodGet)
+	req, err = c.request(ctx, u, http.MethodGet)
+	if err != nil {
+		return nil, err
+	}
 	res, err = c.client.Do(req)
 	if err != nil {
 		zlog.Debug(ctx).
@@ -286,7 +298,10 @@ func (c *Client) DeleteIndexReports(ctx context.Context, ds []claircore.Digest) 
 	if err != nil {
 		return err
 	}
-	req = c.request(ctx, u, http.MethodDelete)
+	req, err = c.request(ctx, u, http.MethodDelete)
+	if err != nil {
+		return err
+	}
 
 	req.Body = codec.JSONReader(ds)
 	res, err = c.client.Do(req)
@@ -311,21 +326,18 @@ func (c *Client) DeleteIndexReports(ctx context.Context, ds []claircore.Digest) 
 	return nil
 }
 
-func (c *Client) request(ctx context.Context, u *url.URL, m string) *http.Request {
-	req := &http.Request{
-		Method:     m,
-		URL:        u,
-		Proto:      "HTTP/1.1",
-		ProtoMajor: 1,
-		ProtoMinor: 1,
-		Header:     make(http.Header),
-		Body:       nil,
-		Host:       u.Host,
+func (c *Client) request(ctx context.Context, u *url.URL, m string) (*http.Request, error) {
+	req, err := httputil.NewRequestWithContext(ctx, m, u.String(), nil)
+	if err != nil {
+		return nil, err
 	}
-	req = req.WithContext(ctx)
-	req.Header.Set("user-agent", userAgent)
 	if v := c.getValidator(ctx, u.EscapedPath()); v != "" {
 		req.Header.Set("if-none-match", v)
 	}
-	return req
+	if c.signer != nil {
+		if err := c.signer.Sign(ctx, req); err != nil {
+			return nil, err
+		}
+	}
+	return req, nil
 }

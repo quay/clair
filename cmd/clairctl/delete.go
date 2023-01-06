@@ -42,21 +42,24 @@ func deleteAction(c *cli.Context) error {
 
 	fi, err := os.Stat(c.Path("config"))
 	useCfg := err == nil && !fi.IsDir()
-
-	var cc *Client
-	if useCfg {
-		cfg, e := loadConfig(c.Path("config"))
-		if e != nil {
-			return e
-		}
-		hc, _, e := httputil.Client(nil, &commonClaim, cfg)
-		if e != nil {
-			return e
-		}
-		cc, err = NewClient(hc, c.String("host"))
-	} else {
-		cc, err = NewClient(nil, c.String("host"))
+	ctx := c.Context
+	hc, err := httputil.NewClient(ctx, false)
+	if err != nil {
+		return err
 	}
+
+	var s *httputil.Signer
+	if useCfg {
+		cfg, err := loadConfig(c.Path("config"))
+		if err != nil {
+			return err
+		}
+		s, err = httputil.NewSigner(ctx, cfg, commonClaim)
+		if err != nil {
+			return err
+		}
+	}
+	cc, err := NewClient(hc, c.String("host"), s)
 	if err != nil {
 		return err
 	}

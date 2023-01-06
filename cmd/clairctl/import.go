@@ -55,7 +55,7 @@ func importAction(c *cli.Context) error {
 		return err
 	}
 
-	cl, _, err := httputil.Client(nil, &commonClaim, cfg)
+	cl, err := httputil.NewClient(ctx, false)
 	if err != nil {
 		return err
 	}

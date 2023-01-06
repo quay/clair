@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"strings"
 
@@ -119,11 +118,11 @@ func exportAction(c *cli.Context) error {
 		}
 	}
 
-	tr := http.DefaultTransport.(*http.Transport).Clone()
-	cl, _, err := httputil.Client(httputil.RateLimiter(tr), nil, cfg)
+	cl, err := httputil.NewClient(ctx, false)
 	if err != nil {
 		return err
 	}
+	cl.Transport = httputil.RateLimiter(cl.Transport)
 
 	store, err := jsonblob.New()
 	if err != nil {
