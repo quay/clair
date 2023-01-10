@@ -129,3 +129,10 @@ func WithSigner(v Signer) Option {
 type Signer interface {
 	Sign(context.Context, *http.Request) error
 }
+
+func (s *HTTP) sign(ctx context.Context, req *http.Request) error {
+	if s.signer == nil {
+		return nil
+	}
+	return s.signer.Sign(ctx, req)
+}

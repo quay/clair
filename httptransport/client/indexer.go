@@ -32,6 +32,9 @@ func (s *HTTP) AffectedManifests(ctx context.Context, v []claircore.Vulnerabilit
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
+	if err := s.sign(ctx, req); err != nil {
+		return nil, fmt.Errorf("failed to create request: %v", err)
+	}
 	req.Header.Set("content-type", `application/json`)
 	resp, err := s.c.Do(req)
 	if err != nil {
@@ -75,6 +78,9 @@ func (s *HTTP) Index(ctx context.Context, manifest *claircore.Manifest) (*clairc
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
+	if err := s.sign(ctx, req); err != nil {
+		return nil, fmt.Errorf("failed to create request: %v", err)
+	}
 	req.Header.Set("content-type", `application/json`)
 	resp, err := s.c.Do(req)
 	if err != nil {
@@ -113,6 +119,9 @@ func (s *HTTP) IndexReport(ctx context.Context, manifest claircore.Digest) (*cla
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to create request: %v", err)
 	}
+	if err := s.sign(ctx, req); err != nil {
+		return nil, false, fmt.Errorf("failed to create request: %v", err)
+	}
 	resp, err := s.c.Do(req)
 	if err != nil {
 		return nil, false, fmt.Errorf("failed to do request: %v", err)
@@ -149,6 +158,9 @@ func (s *HTTP) State(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %v", err)
 	}
+	if err := s.sign(ctx, req); err != nil {
+		return "", fmt.Errorf("failed to create request: %v", err)
+	}
 	resp, err := s.c.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to do request: %v", err)
@@ -172,6 +184,9 @@ func (s *HTTP) DeleteManifests(ctx context.Context, d ...claircore.Digest) ([]cl
 	}
 	req, err := httputil.NewRequestWithContext(ctx, http.MethodDelete, u.String(), codec.JSONReader(d))
 	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %v", err)
+	}
+	if err := s.sign(ctx, req); err != nil {
 		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
 	resp, err := s.c.Do(req)
