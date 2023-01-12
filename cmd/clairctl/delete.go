@@ -58,6 +58,10 @@ func deleteAction(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
+		if err = s.Add(ctx, c.String("host")); err != nil {
+			return err
+		}
+
 	}
 	cc, err := NewClient(hc, c.String("host"), s)
 	if err != nil {
