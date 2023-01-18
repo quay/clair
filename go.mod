@@ -13,7 +13,7 @@ require (
 	github.com/ldelossa/responserecorder v1.0.2-0.20210711162258-40bec93a9325
 	github.com/prometheus/client_golang v1.14.0
 	github.com/quay/clair/config v1.1.3
-	github.com/quay/claircore v1.4.15
+	github.com/quay/claircore v1.4.16
 	github.com/quay/zlog v1.1.4
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
 	github.com/rs/zerolog v1.28.0
