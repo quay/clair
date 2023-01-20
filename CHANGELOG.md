@@ -2,11 +2,66 @@
 ## [Unreleased]
 
 
+<a name="v4.6.0"></a>
+## [v4.6.0] - 2023-01-20
+### All
+- [577a55d4](https://github.com/quay/clair/commit/577a55d44d0ec337178680ec1ad6f0862a0c2482): use httputil to construct requests
+### Auto
+- [1f1010fe](https://github.com/quay/clair/commit/1f1010fe4ff81ed954ce9e680a7228742d41f533): add automatic memory limit discovery
+### Build(Deps)
+- [ef896eb6](https://github.com/quay/clair/commit/ef896eb62d4e5fd286213d8208105de92b28dadc): bump actions/stale from 6 to 7
+- [5a212ffe](https://github.com/quay/clair/commit/5a212ffed49b0f652d5f742400eb040b71dde16f): bump peter-evans/create-pull-request from 4.1.4 to 4.2.3
+- [b883bc2b](https://github.com/quay/clair/commit/b883bc2b9174618abd156e61037517a9f379020f): bump gsactions/commit-message-checker from 1 to 2
+### Chore
+- [33f4fcbd](https://github.com/quay/clair/commit/33f4fcbdd0d80c9aa6878a0bdb6b1bd3332db823): Bump claircore to v1.4.17
+- [54d44908](https://github.com/quay/clair/commit/54d449081e29a456ed533bd2d1f189b7f4bc1b39): Bump Claircore to v1.4.16
+- [430e6087](https://github.com/quay/clair/commit/430e6087b6f245dc2cc95ef36836bedc9e458748): Bump Claircore to v1.4.15
+- [652d8ce6](https://github.com/quay/clair/commit/652d8ce6d5d627ba63e2aaf8f22991e1cc2fc5b4): Bump Claircore to v1.4.14
+- [9f6828cd](https://github.com/quay/clair/commit/9f6828cd36dce5033a68c641585c2f0b93edec87): Update to Go 1.18 for local-dev
+- [1c002bcd](https://github.com/quay/clair/commit/1c002bcda7e604e083de6f576d1a8801dceac44a): added ppc64le support
+- [4b37dcdf](https://github.com/quay/clair/commit/4b37dcdfcd0c89ff0be26ffd3e9dfbb9d15229df): Bump Claircore to v1.4.13
+- [9b273420](https://github.com/quay/clair/commit/9b273420c9aa0bd1975d925e5d38f8d852a58851): Bump claircore to v1.4.12
+### Cicd
+- [1dfb42a0](https://github.com/quay/clair/commit/1dfb42a09a25d7298ee2c343893dcc2c25d3f830): use extracted git archive
+- [aff17a4a](https://github.com/quay/clair/commit/aff17a4a3e2c9288baa69a1b9bee0b2e6318d276): update usage of `set-output`
+- [a8a97f80](https://github.com/quay/clair/commit/a8a97f80632c1c88711b7729a2d3bb726cdf9cbf): update cache action
+- [7de63a9c](https://github.com/quay/clair/commit/7de63a9c01f1f3990b5c8d91ee3bf486418f0ff0): add tests for odd architectures
+- [e923360c](https://github.com/quay/clair/commit/e923360cb2124e20da6646d02e94b5e9541b6653): omit Dockerfile build args
+- [14b8f690](https://github.com/quay/clair/commit/14b8f6906a08529e93fa563c5567311154e58b1b): enable go1.19
+- [5a8128c1](https://github.com/quay/clair/commit/5a8128c1241a9e48a8b84c290405993e12e6d776): inject version into built `clairctl` binaries
+ -  [#1649](https://github.com/quay/clair/issues/1649)### Clairctl
+- [a367a7ae](https://github.com/quay/clair/commit/a367a7ae9b59fee5a5b102f4da89a1f5bc732e0a): use a better user-agent
+- [3b9ff6de](https://github.com/quay/clair/commit/3b9ff6de75b27d6a3ce593212850f294942b8be0): update with new signer
+### Client
+- [ddea858f](https://github.com/quay/clair/commit/ddea858f16e990eca838edbb8fe59560cb63bcdc): Add the passed host to the signer
+- [adbaa567](https://github.com/quay/clair/commit/adbaa567fb9e9d271c406f47c76218d301e1cdc9): use signer
+- [d8ad1ba4](https://github.com/quay/clair/commit/d8ad1ba475fd0a40f592c3b3618a9b1d16295171): update for httputil changes
+### Cmd
+- [8b899803](https://github.com/quay/clair/commit/8b8998034ceded096a761b99ff0a1f5a79f0a7b6): use git-archive for version information
+### Documentation
+- [9d1a7aab](https://github.com/quay/clair/commit/9d1a7aab465664bb70ea3672aed70e8193c6e4d0): fix typo in link
+### Httptransport
+- [25ac033f](https://github.com/quay/clair/commit/25ac033f67e2e1d39edd8ebf85b3bf61f751e433): use new signer scheme in test
+- [a9228d40](https://github.com/quay/clair/commit/a9228d40cb4bfc210148b2f931f7f287515bfa5e): add a `request_id` to logs
+ -  [#1547](https://github.com/quay/clair/issues/1547)### Httputil
+- [e746ff05](https://github.com/quay/clair/commit/e746ff056193606b8a20a240a098ef1309311e2d): rework request signing and request restriction
+### Service
+- [e08f3972](https://github.com/quay/clair/commit/e08f3972393d8d9a23b9fec79e9beee11fc5933a): add signer option
+### Webhook
+- [d99f7005](https://github.com/quay/clair/commit/d99f7005bc48724d1da804a47a4099e7eedce252): add explicit signer argument
+
+<a name="v4.5.1"></a>
+## [v4.5.1] - 2022-11-22
+### Chore
+- [0a0aa1cc](https://github.com/quay/clair/commit/0a0aa1cca3937cec42649bf171d2e1436c9bd792): Bump claircore to v1.4.12
+ -  [#1646](https://github.com/quay/clair/issues/1646)
 <a name="v4.5.0"></a>
-## [v4.5.0] - 2022-11-02
+## [v4.5.0] - 2022-11-04
 ### Build(Deps)
 - [df77d75a](https://github.com/quay/clair/commit/df77d75a9850ebc2120f3c0a6162d246a7847ce0): bump peter-evans/create-pull-request from 4.1.3 to 4.1.4
 ### Chore
+- [e0aec666](https://github.com/quay/clair/commit/e0aec666625ab4b5f1b3ddc35ff0fc75aa578e8c): Remove windows 386 as a binary target for releases
+- [0772b85f](https://github.com/quay/clair/commit/0772b85feaab5928e3f1d5352c6c7c17cef3e782): v4.5.0 changelog bump
 - [070a611a](https://github.com/quay/clair/commit/070a611a2dadcb8cf16c57c40479db4d028c0d03): Bump Claircore to v1.4.11
 - [5ff4805a](https://github.com/quay/clair/commit/5ff4805a3294313e38e540664ba7a7f9732876b4): Bump Claircore to v1.4.10
 - [08ad0697](https://github.com/quay/clair/commit/08ad06979051308d3d7cbc07d751977cf48d6a9e): Bump Claircore to v1.4.9
@@ -2071,7 +2126,9 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.5.0...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.6.0...HEAD
+[v4.6.0]: https://github.com/quay/clair/compare/v4.5.1...v4.6.0
+[v4.5.1]: https://github.com/quay/clair/compare/v4.5.0...v4.5.1
 [v4.5.0]: https://github.com/quay/clair/compare/v4.5.0-rc.0...v4.5.0
 [v4.5.0-rc.0]: https://github.com/quay/clair/compare/v4.4.4...v4.5.0-rc.0
 [v4.4.4]: https://github.com/quay/clair/compare/v4.4.3...v4.4.4
