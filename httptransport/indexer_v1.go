@@ -56,6 +56,7 @@ var _ http.Handler = (*IndexerV1)(nil)
 func (h *IndexerV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	wr := responserecorder.NewResponseRecorder(w)
+	r = withRequestID(r)
 	defer func() {
 		if f, ok := wr.(http.Flusher); ok {
 			f.Flush()
@@ -68,7 +69,7 @@ func (h *IndexerV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Dur("duration", time.Since(start)).
 			Msg("handled HTTP request")
 	}()
-	h.inner.ServeHTTP(wr, withRequestID(r))
+	h.inner.ServeHTTP(wr, r)
 }
 
 func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {

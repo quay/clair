@@ -56,6 +56,7 @@ func NewNotificationV1(_ context.Context, prefix string, srv notifier.Service, t
 func (h *NotificationV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	wr := responserecorder.NewResponseRecorder(w)
+	r = withRequestID(r)
 	defer func() {
 		if f, ok := wr.(http.Flusher); ok {
 			f.Flush()
@@ -68,7 +69,7 @@ func (h *NotificationV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			Dur("duration", time.Since(start)).
 			Msg("handled HTTP request")
 	}()
-	h.inner.ServeHTTP(wr, withRequestID(r))
+	h.inner.ServeHTTP(wr, r)
 }
 
 func (h *NotificationV1) serveHTTP(w http.ResponseWriter, r *http.Request) {
