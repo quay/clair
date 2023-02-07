@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG GO_VERSION=1.18
+ARG GO_VERSION=1.20
 FROM quay.io/projectquay/golang:${GO_VERSION} AS build
 WORKDIR /build/
 ADD . /build/
