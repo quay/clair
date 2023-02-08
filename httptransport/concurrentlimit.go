@@ -38,14 +38,15 @@ func (l *limitHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if sem != nil {
 		if !sem.TryAcquire(1) {
 			concurrentLimitedCounter.WithLabelValues(endpt, r.Method).Add(1)
-			zlog.Info(r.Context()).
+			ctx := r.Context()
+			zlog.Info(ctx).
 				Str("remote_addr", r.RemoteAddr).
 				Str("method", r.Method).
 				Str("request_uri", r.RequestURI).
 				Int("status", http.StatusTooManyRequests).
 				Msg("rate limited HTTP request")
 
-			apiError(w, http.StatusTooManyRequests, "server handling too many requests")
+			apiError(ctx, w, http.StatusTooManyRequests, "server handling too many requests")
 			return
 		}
 		defer sem.Release(1)

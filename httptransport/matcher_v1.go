@@ -85,7 +85,7 @@ func (h *MatcherV1) vulnerabilityReport(w http.ResponseWriter, r *http.Request) 
 		"component", "httptransport/MatcherV1.vulnerabilityReport")
 
 	if r.Method != http.MethodGet {
-		apiError(w, http.StatusMethodNotAllowed, "endpoint only allows GET")
+		apiError(ctx, w, http.StatusMethodNotAllowed, "endpoint only allows GET")
 		return
 	}
 	ctx, done := context.WithCancel(ctx)
@@ -94,18 +94,18 @@ func (h *MatcherV1) vulnerabilityReport(w http.ResponseWriter, r *http.Request) 
 
 	manifestStr := path.Base(r.URL.Path)
 	if manifestStr == "" {
-		apiError(w, http.StatusBadRequest, "malformed path. provide a single manifest hash")
+		apiError(ctx, w, http.StatusBadRequest, "malformed path. provide a single manifest hash")
 		return
 	}
 	manifest, err := claircore.ParseDigest(manifestStr)
 	if err != nil {
-		apiError(w, http.StatusBadRequest, "malformed path: %v", err)
+		apiError(ctx, w, http.StatusBadRequest, "malformed path: %v", err)
 		return
 	}
 
 	initd, err := h.srv.Initialized(ctx)
 	if err != nil {
-		apiError(w, http.StatusInternalServerError, err.Error())
+		apiError(ctx, w, http.StatusInternalServerError, err.Error())
 		return
 	}
 	if !initd {
@@ -116,18 +116,18 @@ func (h *MatcherV1) vulnerabilityReport(w http.ResponseWriter, r *http.Request) 
 	indexReport, ok, err := h.indexerSrv.IndexReport(ctx, manifest)
 	// check err first
 	if err != nil {
-		apiError(w, http.StatusInternalServerError, "experienced a server side error: %v", err)
+		apiError(ctx, w, http.StatusInternalServerError, "experienced a server side error: %v", err)
 		return
 	}
 	// now check bool only after confirming no err
 	if !ok {
-		apiError(w, http.StatusNotFound, "index report for manifest %q not found", manifest.String())
+		apiError(ctx, w, http.StatusNotFound, "index report for manifest %q not found", manifest.String())
 		return
 	}
 
 	vulnReport, err := h.srv.Scan(ctx, indexReport)
 	if err != nil {
-		apiError(w, http.StatusInternalServerError, "failed to start scan: %v", err)
+		apiError(ctx, w, http.StatusInternalServerError, "failed to start scan: %v", err)
 		return
 	}
 
@@ -145,7 +145,7 @@ func (h *MatcherV1) updateDiffHandler(w http.ResponseWriter, r *http.Request) {
 		"component", "httptransport/MatcherV1.updateDiffHandler")
 
 	if r.Method != http.MethodGet {
-		apiError(w, http.StatusMethodNotAllowed, "endpoint only allows GET")
+		apiError(ctx, w, http.StatusMethodNotAllowed, "endpoint only allows GET")
 		return
 	}
 	// prev param is optional.
@@ -154,7 +154,7 @@ func (h *MatcherV1) updateDiffHandler(w http.ResponseWriter, r *http.Request) {
 	if param := r.URL.Query().Get("prev"); param != "" {
 		prev, err = uuid.Parse(param)
 		if err != nil {
-			apiError(w, http.StatusBadRequest, "could not parse \"prev\" query param into uuid")
+			apiError(ctx, w, http.StatusBadRequest, "could not parse \"prev\" query param into uuid")
 			return
 		}
 	}
@@ -163,17 +163,17 @@ func (h *MatcherV1) updateDiffHandler(w http.ResponseWriter, r *http.Request) {
 	var cur uuid.UUID
 	var param string
 	if param = r.URL.Query().Get("cur"); param == "" {
-		apiError(w, http.StatusBadRequest, "\"cur\" query param is required")
+		apiError(ctx, w, http.StatusBadRequest, "\"cur\" query param is required")
 		return
 	}
 	if cur, err = uuid.Parse(param); err != nil {
-		apiError(w, http.StatusBadRequest, "could not parse \"cur\" query param into uuid")
+		apiError(ctx, w, http.StatusBadRequest, "could not parse \"cur\" query param into uuid")
 		return
 	}
 
 	diff, err := h.srv.UpdateDiff(ctx, prev, cur)
 	if err != nil {
-		apiError(w, http.StatusInternalServerError, "could not get update operations: %v", err)
+		apiError(ctx, w, http.StatusInternalServerError, "could not get update operations: %v", err)
 		return
 	}
 
@@ -190,7 +190,7 @@ func (h *MatcherV1) updateOperationHandlerGet(w http.ResponseWriter, r *http.Req
 	switch r.Method {
 	case http.MethodGet:
 	default:
-		apiError(w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
+		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
 		return
 	}
 
@@ -201,7 +201,7 @@ func (h *MatcherV1) updateOperationHandlerGet(w http.ResponseWriter, r *http.Req
 	case "", "vulnerability":
 		// Leave as default
 	default:
-		apiError(w, http.StatusBadRequest, "unknown kind: %q", k)
+		apiError(ctx, w, http.StatusBadRequest, "unknown kind: %q", k)
 		return
 	}
 
@@ -225,7 +225,7 @@ func (h *MatcherV1) updateOperationHandlerGet(w http.ResponseWriter, r *http.Req
 		uos, err = h.srv.UpdateOperations(ctx, kind)
 	}
 	if err != nil {
-		apiError(w, http.StatusInternalServerError, "could not get update operations: %v", err)
+		apiError(ctx, w, http.StatusInternalServerError, "could not get update operations: %v", err)
 		return
 	}
 
@@ -241,7 +241,7 @@ func (h *MatcherV1) updateOperationHandlerDelete(w http.ResponseWriter, r *http.
 	switch r.Method {
 	case http.MethodDelete:
 	default:
-		apiError(w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
+		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
 		return
 	}
 
@@ -250,13 +250,13 @@ func (h *MatcherV1) updateOperationHandlerDelete(w http.ResponseWriter, r *http.
 	uuid, err := uuid.Parse(id)
 	if err != nil {
 		zlog.Warn(ctx).Err(err).Msg("could not deserialize manifest")
-		apiError(w, http.StatusBadRequest, "could not deserialize manifest: %v", err)
+		apiError(ctx, w, http.StatusBadRequest, "could not deserialize manifest: %v", err)
 		return
 	}
 
 	_, err = h.srv.DeleteUpdateOperations(ctx, uuid)
 	if err != nil {
-		apiError(w, http.StatusInternalServerError, "could not get update operations: %v", err)
+		apiError(ctx, w, http.StatusInternalServerError, "could not get update operations: %v", err)
 		return
 	}
 }

@@ -2,14 +2,17 @@ package httptransport
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/quay/zlog"
 )
 
 // ApiError writes an untyped (that is, "application/json") error with the
 // provided HTTP status code and message.
-func apiError(w http.ResponseWriter, code int, f string, v ...interface{}) {
+func apiError(ctx context.Context, w http.ResponseWriter, code int, f string, v ...interface{}) {
 	const errheader = `Clair-Error`
 	h := w.Header()
 	h.Del("link")
@@ -17,6 +20,12 @@ func apiError(w http.ResponseWriter, code int, f string, v ...interface{}) {
 	h.Set("x-content-type-options", "nosniff")
 	h.Set("trailer", errheader)
 	w.WriteHeader(code)
+	if ev := zlog.Debug(ctx); ev.Enabled() {
+		ev.
+			Int("code", code).
+			Str("error", fmt.Sprintf(f, v...)).
+			Msg("http error response")
+	}
 
 	var buf bytes.Buffer
 	buf.WriteString(`{"code":"`)

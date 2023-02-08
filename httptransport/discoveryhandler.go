@@ -21,17 +21,18 @@ var (
 func DiscoveryHandler() http.Handler {
 	allow := []string{`application/json`, `application/vnd.oai.openapi+json`}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 		if r.Method != http.MethodGet {
-			apiError(w, http.StatusMethodNotAllowed, "endpoint only allows GET")
+			apiError(ctx, w, http.StatusMethodNotAllowed, "endpoint only allows GET")
 			return
 		}
 		switch err := pickContentType(w, r, allow); {
 		case errors.Is(err, nil):
 		case errors.Is(err, ErrMediaType):
-			apiError(w, http.StatusUnsupportedMediaType, "unable to negotiate common media type for %v", allow)
+			apiError(ctx, w, http.StatusUnsupportedMediaType, "unable to negotiate common media type for %v", allow)
 			return
 		default:
-			apiError(w, http.StatusInternalServerError, "unexpected error: %v", err)
+			apiError(ctx, w, http.StatusInternalServerError, "unexpected error: %v", err)
 			return
 		}
 		w.Header().Set("etag", openapiJSONEtag)

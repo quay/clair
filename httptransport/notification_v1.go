@@ -79,7 +79,7 @@ func (h *NotificationV1) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		h.delete(w, r)
 	default:
-		apiError(w, http.StatusMethodNotAllowed, "endpoint only allows GET or DELETE")
+		apiError(r.Context(), w, http.StatusMethodNotAllowed, "endpoint only allows GET or DELETE")
 	}
 }
 
@@ -90,14 +90,14 @@ func (h *NotificationV1) delete(w http.ResponseWriter, r *http.Request) {
 	notificationID, err := uuid.Parse(id)
 	if err != nil {
 		zlog.Warn(ctx).Err(err).Msg("could not parse notification id")
-		apiError(w, http.StatusBadRequest, "could not parse notification id: %v", err)
+		apiError(ctx, w, http.StatusBadRequest, "could not parse notification id: %v", err)
 		return
 	}
 
 	err = h.serv.DeleteNotifications(ctx, notificationID)
 	if err != nil {
 		zlog.Warn(ctx).Err(err).Msg("could not delete notification")
-		apiError(w, http.StatusInternalServerError, "could not delete notification: %v", err)
+		apiError(ctx, w, http.StatusInternalServerError, "could not delete notification: %v", err)
 	}
 }
 
@@ -109,7 +109,7 @@ func (h *NotificationV1) get(w http.ResponseWriter, r *http.Request) {
 	notificationID, err := uuid.Parse(id)
 	if err != nil {
 		zlog.Warn(ctx).Err(err).Msg("could not parse notification id")
-		apiError(w, http.StatusBadRequest, "could not parse notification id: %v", err)
+		apiError(ctx, w, http.StatusBadRequest, "could not parse notification id: %v", err)
 		return
 	}
 
@@ -118,7 +118,7 @@ func (h *NotificationV1) get(w http.ResponseWriter, r *http.Request) {
 	if param := r.URL.Query().Get("page_size"); param != "" {
 		p, err := strconv.ParseInt(param, 10, 64)
 		if err != nil {
-			apiError(w, http.StatusBadRequest, "could not parse %q query param into integer", "page_size")
+			apiError(ctx, w, http.StatusBadRequest, "could not parse %q query param into integer", "page_size")
 			return
 		}
 		pageSize = int(p)
@@ -132,7 +132,7 @@ func (h *NotificationV1) get(w http.ResponseWriter, r *http.Request) {
 	if param := r.URL.Query().Get("next"); param != "" {
 		n, err := uuid.Parse(param)
 		if err != nil {
-			apiError(w, http.StatusBadRequest, "could not parse %q query param into integer", "next")
+			apiError(ctx, w, http.StatusBadRequest, "could not parse %q query param into integer", "next")
 			return
 		}
 		if n != uuid.Nil {
@@ -144,10 +144,10 @@ func (h *NotificationV1) get(w http.ResponseWriter, r *http.Request) {
 	switch err := pickContentType(w, r, allow); {
 	case errors.Is(err, nil): // OK
 	case errors.Is(err, ErrMediaType):
-		apiError(w, http.StatusUnsupportedMediaType, "unable to negotiate common media type for %v", allow)
+		apiError(ctx, w, http.StatusUnsupportedMediaType, "unable to negotiate common media type for %v", allow)
 		return
 	default:
-		apiError(w, http.StatusBadRequest, "malformed request: %v", err)
+		apiError(ctx, w, http.StatusBadRequest, "malformed request: %v", err)
 		return
 	}
 
@@ -157,7 +157,7 @@ func (h *NotificationV1) get(w http.ResponseWriter, r *http.Request) {
 	}
 	notifications, outP, err := h.serv.Notifications(ctx, notificationID, inP)
 	if err != nil {
-		apiError(w, http.StatusInternalServerError, "failed to retrieve notifications: %v", err)
+		apiError(ctx, w, http.StatusInternalServerError, "failed to retrieve notifications: %v", err)
 		return
 	}
 

@@ -2,6 +2,7 @@ package httptransport
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -14,13 +15,15 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/quay/zlog"
 )
 
 func TestDiscoveryEndpoint(t *testing.T) {
+	ctx := zlog.Test(context.Background(), t)
 	h := DiscoveryHandler()
 
 	r := httptest.NewRecorder()
-	req := httptest.NewRequest("GET", "/openapi/v1", nil)
+	req := httptest.NewRequest("GET", "/openapi/v1", nil).WithContext(ctx)
 	req.Header.Set("Accept", "application/yaml, application/json; q=0.4, application/vnd.oai.openapi+json; q=1.0")
 	h.ServeHTTP(r, req)
 
@@ -50,10 +53,11 @@ func TestDiscoveryEndpoint(t *testing.T) {
 }
 
 func TestDiscoveryFailure(t *testing.T) {
+	ctx := zlog.Test(context.Background(), t)
 	h := DiscoveryHandler()
 
 	r := httptest.NewRecorder()
-	req := httptest.NewRequest("GET", "/openapi/v1", nil)
+	req := httptest.NewRequest("GET", "/openapi/v1", nil).WithContext(ctx)
 	req.Header.Set("Accept", "application/yaml")
 	h.ServeHTTP(r, req)
 
