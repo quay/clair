@@ -19,7 +19,7 @@ require (
 	github.com/rs/zerolog v1.28.0
 	github.com/streadway/amqp v1.0.0
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
-	github.com/ugorji/go/codec v1.2.7
+	github.com/ugorji/go/codec v1.2.9
 	github.com/urfave/cli/v2 v2.3.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.29.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.29.0
