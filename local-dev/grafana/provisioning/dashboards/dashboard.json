@@ -21,8 +21,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 1,
-  "id": 1,
-  "iteration": 1657053793625,
+  "iteration": 1675963111894,
   "links": [],
   "panels": [
     {
@@ -244,21 +243,29 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "rate(clair_middleware_authenticated_total{authenticated=\"false\"}[$rate])",
+          "expr": "sum (go_info) by (job, version)",
+          "hide": false,
           "interval": "",
-          "legendFormat": "Unauthenticated: {{ job }}",
-          "refId": "A"
+          "legendFormat": "{{job}} - {{version}}",
+          "refId": "B"
         },
         {
           "exemplar": true,
-          "expr": "rate(clair_middleware_authenticated_total{authenticated=\"true\"}[$rate])",
+          "expr": "sum (clair_cmd_version_info) by(job, version)",
           "hide": false,
           "interval": "",
-          "legendFormat": "Authenticated: {{ job }}",
-          "refId": "B"
+          "legendFormat": "{{job}} clair - {{version}}",
+          "refId": "C"
+        },
+        {
+          "exemplar": true,
+          "expr": "sum (clair_cmd_version_info) by(job, claircore_version)",
+          "interval": "",
+          "legendFormat": "{{job}} claircore - {{claircore_version}}",
+          "refId": "A"
         }
       ],
-      "title": "Authentication",
+      "title": "Versions",
       "type": "timeseries"
     },
     {
