@@ -34,7 +34,7 @@ data:
       "editable": true,
       "gnetId": null,
       "graphTooltip": 1,
-      "iteration": 1675963111894,
+      "iteration": 1675970678069,
       "links": [],
       "panels": [
         {
@@ -256,10 +256,10 @@ data:
           "targets": [
             {
               "exemplar": true,
-              "expr": "sum (go_info) by (job, version)",
+              "expr": "sum (clair_cmd_version_info) by (job, goversion)",
               "hide": false,
               "interval": "",
-              "legendFormat": "{{job}} - {{version}}",
+              "legendFormat": "{{job}} - {{goversion}}",
               "refId": "B"
             },
             {
@@ -3541,6 +3541,6 @@ data:
       "timezone": "",
       "title": "Clair V4",
       "uid": "I1JBFlRnz",
-      "version": 1
+      "version": 4
     }
 
