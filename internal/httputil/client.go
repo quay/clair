@@ -50,14 +50,23 @@ func ctlLocalOnly(network, address string, _ syscall.RawConn) error {
 			Err:  "disallowed by policy",
 		}
 	}
-	addr := net.ParseIP(address)
+	host, _, err := net.SplitHostPort(address)
+	if err != nil {
+		return &net.AddrError{
+			Addr: network + "!" + address,
+			Err:  "martian address",
+		}
+	}
+	addr := net.ParseIP(host)
 	if addr == nil {
 		return &net.AddrError{
 			Addr: network + "!" + address,
 			Err:  "martian address",
 		}
 	}
-	if !addr.IsPrivate() {
+	if !addr.IsPrivate() &&
+		!addr.IsLoopback() &&
+		!addr.IsLinkLocalUnicast() {
 		return &net.AddrError{
 			Addr: network + "!" + address,
 			Err:  "disallowed by policy",
