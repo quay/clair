@@ -3,6 +3,7 @@
 set -exv
 REPOSITORY="quay.io/app-sre"
 IMAGE="${REPOSITORY}/clair"
+GIT_HASH=`git rev-parse --short=7 HEAD`
 
 git archive HEAD|
 docker build -t clair-service:latest -
