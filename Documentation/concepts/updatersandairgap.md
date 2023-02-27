@@ -26,18 +26,6 @@ updaters:
     - rhel
 ```
 
-#### Filtering Updaters
-
-To disallow an updater from running without disabling an entire set, the filter
-option can be used. The provided string will be interpreted as a go [regexp]
-used to disallow any updater with a name that does not match. **Note:** This
-means that an empty string matches *any* string, not no strings.
-
-```yaml
-updaters:
-  filter: '^$'
-```
-
 #### Specific Updaters
 
 Configuration for specific updaters can be passed by putting a key underneath
