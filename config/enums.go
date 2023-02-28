@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+//go:generate -command stringer go run golang.org/x/tools/cmd/stringer@v0.8.0
 //go:generate stringer -type Mode,LogLevel -linecomment -output enums_string.go
 
 // A Mode is an operating mode recognized by Clair.
