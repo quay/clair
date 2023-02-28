@@ -33,6 +33,7 @@
 
     </head>
     <body>
+    <div id="body-container">
         <!-- Provide site root to javascript -->
         <script>
             var path_to_root = "";
@@ -611,14 +612,6 @@ the defaults of all upstream updaters will be used.</p>
 <pre><code class="language-yaml">updaters:
   sets:
     - rhel
-</code></pre>
-<h4 id="filtering-updaters"><a class="header" href="#filtering-updaters">Filtering Updaters</a></h4>
-<p>To disallow an updater from running without disabling an entire set, the filter
-option can be used. The provided string will be interpreted as a go [regexp]
-used to disallow any updater with a name that does not match. <strong>Note:</strong> This
-means that an empty string matches <em>any</em> string, not no strings.</p>
-<pre><code class="language-yaml">updaters:
-  filter: '^$'
 </code></pre>
 <h4 id="specific-updaters"><a class="header" href="#specific-updaters">Specific Updaters</a></h4>
 <p>Configuration for specific updaters can be passed by putting a key underneath
@@ -3111,5 +3104,6 @@ example is in <code>contrib/openshift/grafana</code>.</p>
         });
         </script>
 
+    </div>
     </body>
 </html>
