@@ -138,7 +138,6 @@ func localIndexer(ctx context.Context, cfg *config.Config) (indexer.Service, err
 		Locker:               locker,
 		ScanLockRetry:        time.Duration(cfg.Indexer.ScanLockRetry) * time.Second,
 		LayerScanConcurrency: cfg.Indexer.LayerScanConcurrency,
-		Airgap:               cfg.Indexer.Airgap,
 	}
 	if cfg.Indexer.Scanner.Package != nil {
 		opts.ScannerConfig.Package = make(map[string]func(interface{}) error, len(cfg.Indexer.Scanner.Package))
