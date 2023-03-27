@@ -70,7 +70,7 @@ services:
     ports:
       - '6060:6060'
       - '8080:8080'
-      - '8443'
+      - '80:8443'
       - '5432'
     volumes:
       - './local-dev/traefik/:/etc/traefik/:ro'
