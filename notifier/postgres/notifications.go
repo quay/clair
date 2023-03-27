@@ -118,10 +118,11 @@ func (s *Store) Notifications(ctx context.Context, id uuid.UUID, page *notifier.
 			for rows.Next() {
 				ns = append(ns, notifier.Notification{})
 				n := &ns[len(ns)-1]
-				if err := rows.Scan(&n.ID, &n); err != nil {
+				if err := rows.Scan(&n.ID, n); err != nil {
 					return err
 				}
 			}
+
 			if err := rows.Err(); err != nil {
 				return err
 			}
@@ -164,7 +165,7 @@ func (s *Store) Notifications(ctx context.Context, id uuid.UUID, page *notifier.
 		for rows.Next() {
 			ns = append(ns, notifier.Notification{})
 			n := &ns[len(ns)-1]
-			if err := rows.Scan(&n.ID, &n); err != nil {
+			if err := rows.Scan(&n.ID, n); err != nil {
 				return err
 			}
 		}
