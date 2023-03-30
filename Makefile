@@ -11,9 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+export PATH := /usr/local/go/bin:/usr/local/bin:$(PATH)
+export EC2_HOSTNAME := $(shell curl http://169.254.169.254/latest/meta-data/public-hostname)
+UNAME_KERNEL = $(shell uname -s)
+UNAME_MACHINE = $(shell uname -m)
+
 docker ?= docker
 docker-compose ?= docker-compose
-
+            
 # Formats all imports to place local packages below out of tree packages.
 .PHONY: goimports-local
 goimports-local:
@@ -80,3 +85,24 @@ contrib/openshift/grafana/dashboards/dashboard-clair.configmap.yaml: local-dev/g
 .PHONY: unit
 unit:
 	go test -race ./...
+
+.PHONY: install-centos8
+install-centos8:
+	curl -L "https://github.com/docker/compose/releases/download/1.28.6/docker-compose-$(UNAME_KERNEL)-$(UNAME_MACHINE)" -o /usr/local/bin/docker-compose
+	chmod +x /usr/local/bin/docker-compose
+	curl -L https://go.dev/dl/go1.20.2.linux-amd64.tar.gz -o go1.20.2.linux-amd64.tar.gz
+	rm -rf /usr/local/go && tar -C /usr/local -xzf go1.20.2.linux-amd64.tar.gz
+	sed -i "s/{{ec2_instance_hostname}}/${EC2_HOSTNAME}/" local-dev/quay/config.yaml
+	systemctl start docker
+	systemctl enable docker
+
+.PHONY: quay
+quay: local-dev/clair/quay.yaml vendor
+	rm -f /etc/systemd/system/quay.service
+	cp local-dev/quay.service /etc/systemd/system/quay.service
+	systemctl daemon-reload
+	systemctl start quay
+	systemctl enable quay
+	@printf 'postgresql on port:\t%s\n' "$$($(docker-compose) port traefik 5432)"
+	@printf 'quay on port:\t%s\n' "$$($(docker-compose) port traefik 8443)"
+

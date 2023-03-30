@@ -1,0 +1,15 @@
+[Unit]
+Description=Quay + Clair service with docker compose
+PartOf=docker.service
+After=docker.service
+
+[Service]
+Environment=CLAIR_CONFIG=quay.yml
+Type=oneshot
+RemainAfterExit=true
+WorkingDirectory=/clair
+ExecStart=/usr/local/bin/docker-compose --profile quay up -d --remove-orphans
+ExecStop=/usr/local/bin/docker-compose down
+
+[Install]
+WantedBy=multi-user.target
