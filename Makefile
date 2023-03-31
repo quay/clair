@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 export PATH := /usr/local/go/bin:/usr/local/bin:$(PATH)
-export GOPATH := $(shell go env GOPATH)
+export GOPATH := $(shell /usr/local/go/bin/go env GOPATH)
 export EC2_HOSTNAME := $(shell curl http://169.254.169.254/latest/meta-data/public-hostname)
 UNAME_KERNEL = $(shell uname -s)
 UNAME_MACHINE = $(shell uname -m)
