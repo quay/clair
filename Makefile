@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-export PATH := /usr/local/go/bin:/usr/local/bin:$(PATH)
-export GOPATH := $(shell /usr/local/go/bin/go env GOPATH)
+export PATH := /usr/local/bin:$(PATH)
+export GOPATH := $(shell /bin/go env GOPATH)
 export EC2_HOSTNAME := $(shell curl http://169.254.169.254/latest/meta-data/public-hostname)
 UNAME_KERNEL = $(shell uname -s)
 UNAME_MACHINE = $(shell uname -m)
@@ -91,8 +91,6 @@ unit:
 install-centos8:
 	curl -L "https://github.com/docker/compose/releases/download/1.28.6/docker-compose-$(UNAME_KERNEL)-$(UNAME_MACHINE)" -o /usr/local/bin/docker-compose
 	chmod +x /usr/local/bin/docker-compose
-	curl -L https://go.dev/dl/go1.20.2.linux-amd64.tar.gz -o go1.20.2.linux-amd64.tar.gz
-	rm -rf /usr/local/go && tar -C /usr/local -xzf go1.20.2.linux-amd64.tar.gz
 	sed -i "s/{{ec2_instance_hostname}}/${EC2_HOSTNAME}/" local-dev/quay/config.yaml
 	systemctl start docker
 	systemctl enable docker
