@@ -23,8 +23,8 @@ docker-compose ?= docker-compose
 # Formats all imports to place local packages below out of tree packages.
 .PHONY: goimports-local
 goimports-local:
-	go list -f '{{$$d := .Dir}}{{range .GoFiles}}{{printf "%s/%s\n" $$d .}}{{end}}' ./... | xargs sed -i'' '/import (/,/)/{ /^$$/d }'
-	go list -f '{{.Dir}}' ./... | xargs goimports -local "$$(go list -m)" -w
+	/bin/go list -f '{{$$d := .Dir}}{{range .GoFiles}}{{printf "%s/%s\n" $$d .}}{{end}}' ./... | xargs sed -i'' '/import (/,/)/{ /^$$/d }'
+	/bin/go list -f '{{.Dir}}' ./... | xargs goimports -local "$$(/bin/go list -m)" -w
 
 # Use https://github.com/Mermade/widdershins to convert openapi.yaml to
 # markdown. You'll need to have npx to run this.
@@ -59,7 +59,7 @@ local-dev-quay: local-dev/clair/quay.yaml vendor
 vendor: vendor/modules.txt
 
 vendor/modules.txt: go.mod
-	go mod vendor
+	/bin/go mod vendor
 
 .PHONY: container-build
 container-build:
@@ -85,7 +85,7 @@ contrib/openshift/grafana/dashboards/dashboard-clair.configmap.yaml: local-dev/g
 # runs unit tests
 .PHONY: unit
 unit:
-	go test -race ./...
+	/bin/go test -race ./...
 
 .PHONY: install-centos8
 install-centos8:
