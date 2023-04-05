@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 : ${CLAIRCORE_BRANCH:=main}
-: ${GO_VERSION:=1.18}
+: ${GO_VERSION:=1.20}
 test "${#GO_VERSION}" -gt 4 && GO_VERSION=${GO_VERSION%.*}
 
 cd $(git rev-parse --show-toplevel)

@@ -30,7 +30,7 @@ jobs:
         # nicer workflow inputs so that the cron trigger works.
         run: |
           br=$(test -n "${{github.event.inputs.branch}}" && echo "${{github.event.inputs.branch}}" || echo main)
-          gv=$(test -n "${{github.event.inputs.go_version}}" && echo "${{github.event.inputs.go_version}}" || echo 1.18)
+          gv=$(test -n "${{github.event.inputs.go_version}}" && echo "${{github.event.inputs.go_version}}" || echo 1.20)
           : "${repo:=$GITHUB_REPOSITORY}"
           test "${repo%%/*}" = quay && repo="projectquay/${repo##*/}" ||:
           cat <<. >>$GITHUB_OUTPUT
