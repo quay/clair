@@ -22,11 +22,8 @@ RUN for cmd in clair clairctl; do\
 	-trimpath -ldflags="-s -w$(test -n "$CLAIR_VERSION" && printf " -X 'github.com/quay/clair/v4/cmd.Version=%s (user)'" "${CLAIR_VERSION}")" \
 	./cmd/$cmd; done
 
-FROM registry.access.redhat.com/ubi8/ubi-minimal AS init
-RUN microdnf install --disablerepo=* --enablerepo=ubi-8-baseos-rpms --enablerepo=ubi-8-appstream-rpms podman-catatonit
-
 FROM registry.access.redhat.com/ubi8/ubi-minimal AS final
-ENTRYPOINT ["/usr/local/bin/catatonit", "--", "/bin/clair"]
+ENTRYPOINT ["/bin/clair"]
 VOLUME /config
 EXPOSE 6060
 WORKDIR /run
@@ -34,6 +31,5 @@ ENV CLAIR_CONF=/config/config.yaml CLAIR_MODE=combo
 ENV SSL_CERT_DIR="/etc/ssl/certs:/etc/pki/tls/certs:/var/run/certs"
 USER nobody:nobody
 
-COPY --from=init /usr/libexec/catatonit/catatonit /usr/local/bin/catatonit
 COPY --from=build /build/clair /bin/clair
 COPY --from=build /build/clairctl /bin/clairctl
