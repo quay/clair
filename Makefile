@@ -104,8 +104,8 @@ quay-config:
 quay-server: local-dev/clair/quay.yaml vendor
 	systemctl daemon-reload
 	systemctl enable docker
-	systemctl start docker
-	systemctl start quay
+	systemctl restart docker
+	systemctl restart quay
 	systemctl enable quay
 	@printf 'postgresql on port:\t%s\n' "$$($(docker-compose) port traefik 5432)"
 	@printf 'quay on port:\t%s\n' "$$($(docker-compose) port traefik 8443)"
