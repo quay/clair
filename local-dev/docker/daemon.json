@@ -1,0 +1,3 @@
+{
+    "insecure-registries" : ["{{ec2_instance_hostname}}"]
+  }

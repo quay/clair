@@ -93,15 +93,18 @@ quay-config:
 	curl -L "https://github.com/docker/compose/releases/download/1.28.6/docker-compose-$(UNAME_KERNEL)-$(UNAME_MACHINE)" -o /usr/local/bin/docker-compose
 	chmod +x /usr/local/bin/docker-compose
 	sed -i "s/{{ec2_instance_hostname}}/${EC2_HOSTNAME}/" local-dev/quay/config.yaml
+	sed -i "s/{{ec2_instance_hostname}}/${EC2_HOSTNAME}/" local-dev/docker/daemon.json
 	sed -i "s/{{ec2_instance_hostname}}/${EC2_HOSTNAME}/" docker-compose.yaml
-	systemctl start docker
-	systemctl enable docker
+	rm -f /etc/systemd/system/quay.service
+	cp local-dev/quay.service /etc/systemd/system/quay.service
+	rm -f /etc/docker/daemon.json
+	cp local-dev/docker/daemon.json /etc/docker/daemon.json
 
 .PHONY: quay-server
 quay-server: local-dev/clair/quay.yaml vendor
-	rm -f /etc/systemd/system/quay.service
-	cp local-dev/quay.service /etc/systemd/system/quay.service
 	systemctl daemon-reload
+	systemctl enable docker
+	systemctl start docker
 	systemctl start quay
 	systemctl enable quay
 	@printf 'postgresql on port:\t%s\n' "$$($(docker-compose) port traefik 5432)"
@@ -109,7 +112,7 @@ quay-server: local-dev/clair/quay.yaml vendor
 
 .PHONY: quay-nodejs-image
 quay-nodejs-image:
-	docker login --tls-verify=false -u="unicorn-games" -p="fishygame" ${EC2_HOSTNAME}
+	docker login -u="unicorn-games" -p="fishygame" ${EC2_HOSTNAME}
 	docker pull node:14.21.2-alpine3.17
 	docker tag node:14.21.2-alpine3.17 ${EC2_HOSTNAME}/unicorn-games/base-nodejs:14.21.2-alpine3.17
-	docker push --tls-verify=false ${EC2_HOSTNAME}/unicorn-games/base-nodejs:14.21.2-alpine3.17
+	docker push ${EC2_HOSTNAME}/unicorn-games/base-nodejs:14.21.2-alpine3.17
