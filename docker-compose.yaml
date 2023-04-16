@@ -20,7 +20,7 @@ x-anchors:
       clair-database:
         condition: service_healthy
     volumes:
-      - "./local-dev/clair/${CLAIR_CONFIG:-config.yaml}:/etc/clair.yaml:ro"
+      - "./local-dev/clair/config.yaml:/etc/clair.yaml:ro"
       - ".:/src"
     # Can't specify the config via environment because maps are not recursively
     # merged.
@@ -170,6 +170,23 @@ services:
     depends_on:
       - redis
       - clair-database
+  quay-user:
+    container_name: clair-quay-create-user
+    build: puppeteer/
+    environment:
+      QUAY_URL: {{ec2_instance_hostname}}
+      QUAY_USERNAME: unicorn-games
+      QUAY_EMAIL: unicorn-games@gameday.com
+      QUAY_PASSWORD: fishygame
+    depends_on:
+      - clair-traefik
+      - clair-indexer
+      - clair-notifier
+      - clair-matcher
+      - clair-quay
+      - clair-database
+      - quay-redis
+      - quay-skopeo
   redis:
     container_name: quay-redis
     profiles:
