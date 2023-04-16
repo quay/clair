@@ -174,19 +174,25 @@ services:
     container_name: clair-quay-create-user
     build: puppeteer/
     environment:
-      QUAY_URL: {{ec2_instance_hostname}}
+      QUAY_URL: http://{{ec2_instance_hostname}}
       QUAY_USERNAME: unicorn-games
       QUAY_EMAIL: unicorn-games@gameday.com
       QUAY_PASSWORD: fishygame
+      WAIT_FOR_QUAY_SERVER: 180000
     depends_on:
-      - clair-traefik
-      - clair-indexer
-      - clair-notifier
-      - clair-matcher
-      - clair-quay
+      - traefik
+      - indexer
+      - matcher
+      - quay
       - clair-database
-      - quay-redis
-      - quay-skopeo
+      - redis
+      - skopeo
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://{{ec2_instance_hostname}}"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
   redis:
     container_name: quay-redis
     profiles:
