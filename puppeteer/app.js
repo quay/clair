@@ -17,7 +17,7 @@ const clickByText = async (page, text) => {
   };
 
 (async () => {
-	const browser = await puppeteer.launch({headless: false,  args: ['--no-sandbox', '--disable-setuid-sandbox'],});
+	const browser = await puppeteer.launch({headless: true,  args: ['--no-sandbox', '--disable-setuid-sandbox'],});
 	const page = await browser.newPage();
 	await page.goto(process.env.QUAY_URL);
 
@@ -37,4 +37,7 @@ const clickByText = async (page, text) => {
   await page.type('input[id="repoName"]', 'gold-fish', {delay: 100});
 
   await page.keyboard.press('Enter');
+
+  console.log("Current page:", page.url());
+  return browser.close();
 })();
