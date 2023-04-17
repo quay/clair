@@ -24,16 +24,13 @@ func DiscoveryHandler() http.Handler {
 		ctx := r.Context()
 		if r.Method != http.MethodGet {
 			apiError(ctx, w, http.StatusMethodNotAllowed, "endpoint only allows GET")
-			return
 		}
 		switch err := pickContentType(w, r, allow); {
 		case errors.Is(err, nil):
 		case errors.Is(err, ErrMediaType):
 			apiError(ctx, w, http.StatusUnsupportedMediaType, "unable to negotiate common media type for %v", allow)
-			return
 		default:
 			apiError(ctx, w, http.StatusInternalServerError, "unexpected error: %v", err)
-			return
 		}
 		w.Header().Set("etag", openapiJSONEtag)
 		var err error

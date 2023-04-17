@@ -47,7 +47,6 @@ func (l *limitHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				Msg("rate limited HTTP request")
 
 			apiError(ctx, w, http.StatusTooManyRequests, "server handling too many requests")
-			return
 		}
 		defer sem.Release(1)
 	}

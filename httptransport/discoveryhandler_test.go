@@ -57,13 +57,20 @@ func TestDiscoveryFailure(t *testing.T) {
 	h := DiscoveryHandler()
 
 	r := httptest.NewRecorder()
-	req := httptest.NewRequest("GET", "/openapi/v1", nil).WithContext(ctx)
-	req.Header.Set("Accept", "application/yaml")
-	h.ServeHTTP(r, req)
+	// Needed because handlers exit the goroutine.
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		req := httptest.NewRequest("GET", "/openapi/v1", nil).WithContext(ctx)
+		req.Header.Set("Accept", "application/yaml")
+		h.ServeHTTP(r, req)
+	}()
+	<-done
 
 	resp := r.Result()
+	t.Log(resp.Status)
 	if got, want := resp.StatusCode, http.StatusUnsupportedMediaType; got != want {
-		t.Fatalf("got status code: %v want status code: %v", got, want)
+		t.Errorf("got status code: %v want status code: %v", got, want)
 	}
 }
 
