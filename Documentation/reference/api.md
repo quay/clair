@@ -1194,7 +1194,7 @@ PagedNotifications
 ```json
 {
   "notification_id": "269886f3-0146-4f08-9bf7-cb1138d48643",
-  "callback": "http://clair-notifier/notifier/api/v1/notifications/269886f3-0146-4f08-9bf7-cb1138d48643"
+  "callback": "http://clair-notifier/notifier/api/v1/notification/269886f3-0146-4f08-9bf7-cb1138d48643"
 }
 
 ```

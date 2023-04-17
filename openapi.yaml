@@ -460,7 +460,7 @@ components:
           description: "the url where notifications can be retrieved"
           type: string
           example: >-
-            http://clair-notifier/notifier/api/v1/notifications/269886f3-0146-4f08-9bf7-cb1138d48643
+            http://clair-notifier/notifier/api/v1/notification/269886f3-0146-4f08-9bf7-cb1138d48643
 
     VulnSummary:
       title: VulnSummary

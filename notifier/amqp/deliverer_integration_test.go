@@ -27,7 +27,7 @@ func TestDeliverer(t *testing.T) {
 	integration.Skip(t)
 	ctx := zlog.Test(context.Background(), t)
 	const (
-		callback = "http://clair-notifier/notifier/api/v1/notifications"
+		callback = "http://clair-notifier/notifier/api/v1/notification"
 	)
 	var (
 		uri         = os.Getenv("RABBITMQ_CONNECTION_STRING")
