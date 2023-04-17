@@ -9,13 +9,13 @@ The interested client can subscribe to notifications via several mechanisms:
 * AMQP delivery
 * STOMP delivery
 
-Configuring the notifier is done via the yaml configuration. 
+Configuring the notifier is done via the yaml configuration.
 
 See the "Notifier" object in our [config reference](../reference/config.md)
 
 ## A Notification
 
-When the notifier becomes aware of new vulnerabilities affecting a previously indexed manifest, it will use the configured method(s) to issue notifications about the new changes. Any given notification expresses the **most severe** vulnerability discovered because of the change. This avoids creating a flurry of notifications for the same security database update. 
+When the notifier becomes aware of new vulnerabilities affecting a previously indexed manifest, it will use the configured method(s) to issue notifications about the new changes. Any given notification expresses the **most severe** vulnerability discovered because of the change. This avoids creating a flurry of notifications for the same security database update.
 
 Once a client receives a notification, it should issue a new request against the [matcher](../reference/matcher.md) to receive an up-to-date vulnerability report.
 
@@ -53,7 +53,7 @@ type VulnSummary struct {
 When you configure notifier for webhook delivery you provide the service with the following pieces of information:
 * A target URL where the webhook will fire
 * The callback URL where the notifier may be reached including its API path
-    * e.g. "http://clair-notifier/notifier/api/v1/notifications"
+    * e.g. "http://clair-notifier/notifier/api/v1/notification"
 
 When the notifier has determined an updated security database has changed the affected status of an indexed manifest, it will deliver the following JSON body to the configured target:
 ```json
@@ -75,7 +75,7 @@ The callback endpoint specification follows:
 GET /notifier/api/v1/notification/{id}?[page_size=N][next=N]
 {
   page: {
-    size:    int,      // maximum number of notifications in the response 
+    size:    int,      // maximum number of notifications in the response
     next:   string, //  if present, the next id to fetch.
   }
   notifications: [ Notification… ] // array of notifications; max len == page.size
@@ -83,7 +83,7 @@ GET /notifier/api/v1/notification/{id}?[page_size=N][next=N]
 ```
 The GET callback request implements a simple bare-minimum paging mechanism.
 
-The "page_size" url param controls how many notifications are returned in a single page. 
+The "page_size" url param controls how many notifications are returned in a single page.
 If not provided a default of 500 is used.
 
 The "next" url param informs Clair the next set of paged notifications to return. If not provided the 0th page is assumed.
@@ -99,10 +99,10 @@ When the final page is served to the client the returned "page" data structure w
 Therefore the following loop is valid for obtaining all notifications for a notification id in pages of a specified size.
 
 ```
-{ page, notifications } = http.Get("http://clairv4/notifier/api/v1/notifications/{id}?page_size=1000")
+{ page, notifications } = http.Get("http://clairv4/notifier/api/v1/notification/{id}?page_size=1000")
 
 while (page.Next != None) {
-    { page, notifications } = http.Get("http://clairv4/notifier/api/v1/notifications/{id}?next={page.Next},page_size=1000")
+    { page, notifications } = http.Get("http://clairv4/notifier/api/v1/notification/{id}?next={page.Next},page_size=1000")
 }
 ```
 

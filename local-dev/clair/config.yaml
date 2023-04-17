@@ -45,7 +45,7 @@ notifier:
   #     auto_delete: false
   #   uris: ["amqp://guest:guest@clair-rabbitmq:5672/"]
   #   routing_key: "notifications"
-  #   callback: "http://clair-notifier/notifier/api/v1/notifications"
+  #   callback: "http://clair-notifier/notifier/api/v1/notification"
 # tracing and metrics config
 trace:
   name: "jaeger"
