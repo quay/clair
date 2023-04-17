@@ -7,12 +7,15 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"runtime"
 
 	"github.com/quay/zlog"
 )
 
 // ApiError writes an untyped (that is, "application/json") error with the
 // provided HTTP status code and message.
+//
+// ApiError does not return, but instead causes the goroutine to exit.
 func apiError(ctx context.Context, w http.ResponseWriter, code int, f string, v ...interface{}) {
 	const errheader = `Clair-Error`
 	h := w.Header()
@@ -62,4 +65,5 @@ func apiError(ctx context.Context, w http.ResponseWriter, code int, f string, v 
 			Err(err).
 			Msg("unable to flush http response")
 	}
+	runtime.Goexit()
 }

@@ -97,7 +97,6 @@ func (h *MatcherV1) vulnerabilityReport(w http.ResponseWriter, r *http.Request) 
 
 	if r.Method != http.MethodGet {
 		apiError(ctx, w, http.StatusMethodNotAllowed, "endpoint only allows GET")
-		return
 	}
 	ctx, done := context.WithCancel(ctx)
 	defer done()
@@ -106,18 +105,15 @@ func (h *MatcherV1) vulnerabilityReport(w http.ResponseWriter, r *http.Request) 
 	manifestStr := path.Base(r.URL.Path)
 	if manifestStr == "" {
 		apiError(ctx, w, http.StatusBadRequest, "malformed path. provide a single manifest hash")
-		return
 	}
 	manifest, err := claircore.ParseDigest(manifestStr)
 	if err != nil {
 		apiError(ctx, w, http.StatusBadRequest, "malformed path: %v", err)
-		return
 	}
 
 	initd, err := h.srv.Initialized(ctx)
 	if err != nil {
 		apiError(ctx, w, http.StatusInternalServerError, err.Error())
-		return
 	}
 	if !initd {
 		w.WriteHeader(http.StatusAccepted)
@@ -128,18 +124,15 @@ func (h *MatcherV1) vulnerabilityReport(w http.ResponseWriter, r *http.Request) 
 	// check err first
 	if err != nil {
 		apiError(ctx, w, http.StatusInternalServerError, "experienced a server side error: %v", err)
-		return
 	}
 	// now check bool only after confirming no err
 	if !ok {
 		apiError(ctx, w, http.StatusNotFound, "index report for manifest %q not found", manifest.String())
-		return
 	}
 
 	vulnReport, err := h.srv.Scan(ctx, indexReport)
 	if err != nil {
 		apiError(ctx, w, http.StatusInternalServerError, "failed to start scan: %v", err)
-		return
 	}
 
 	w.Header().Set("content-type", "application/json")
@@ -157,7 +150,6 @@ func (h *MatcherV1) updateDiffHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
 		apiError(ctx, w, http.StatusMethodNotAllowed, "endpoint only allows GET")
-		return
 	}
 	// prev param is optional.
 	var prev uuid.UUID
@@ -166,7 +158,6 @@ func (h *MatcherV1) updateDiffHandler(w http.ResponseWriter, r *http.Request) {
 		prev, err = uuid.Parse(param)
 		if err != nil {
 			apiError(ctx, w, http.StatusBadRequest, "could not parse \"prev\" query param into uuid")
-			return
 		}
 	}
 
@@ -175,17 +166,14 @@ func (h *MatcherV1) updateDiffHandler(w http.ResponseWriter, r *http.Request) {
 	var param string
 	if param = r.URL.Query().Get("cur"); param == "" {
 		apiError(ctx, w, http.StatusBadRequest, "\"cur\" query param is required")
-		return
 	}
 	if cur, err = uuid.Parse(param); err != nil {
 		apiError(ctx, w, http.StatusBadRequest, "could not parse \"cur\" query param into uuid")
-		return
 	}
 
 	diff, err := h.srv.UpdateDiff(ctx, prev, cur)
 	if err != nil {
 		apiError(ctx, w, http.StatusInternalServerError, "could not get update operations: %v", err)
-		return
 	}
 
 	defer writerError(w, &err)()
@@ -202,7 +190,6 @@ func (h *MatcherV1) updateOperationHandlerGet(w http.ResponseWriter, r *http.Req
 	case http.MethodGet:
 	default:
 		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
-		return
 	}
 
 	kind := driver.VulnerabilityKind
@@ -213,7 +200,6 @@ func (h *MatcherV1) updateOperationHandlerGet(w http.ResponseWriter, r *http.Req
 		// Leave as default
 	default:
 		apiError(ctx, w, http.StatusBadRequest, "unknown kind: %q", k)
-		return
 	}
 
 	// handle conditional request. this is an optimization
@@ -237,7 +223,6 @@ func (h *MatcherV1) updateOperationHandlerGet(w http.ResponseWriter, r *http.Req
 	}
 	if err != nil {
 		apiError(ctx, w, http.StatusInternalServerError, "could not get update operations: %v", err)
-		return
 	}
 
 	defer writerError(w, &err)()
@@ -253,7 +238,6 @@ func (h *MatcherV1) updateOperationHandlerDelete(w http.ResponseWriter, r *http.
 	case http.MethodDelete:
 	default:
 		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
-		return
 	}
 
 	path := r.URL.Path
@@ -262,13 +246,11 @@ func (h *MatcherV1) updateOperationHandlerDelete(w http.ResponseWriter, r *http.
 	if err != nil {
 		zlog.Warn(ctx).Err(err).Msg("could not deserialize manifest")
 		apiError(ctx, w, http.StatusBadRequest, "could not deserialize manifest: %v", err)
-		return
 	}
 
 	_, err = h.srv.DeleteUpdateOperations(ctx, uuid)
 	if err != nil {
 		apiError(ctx, w, http.StatusInternalServerError, "could not get update operations: %v", err)
-		return
 	}
 }
 

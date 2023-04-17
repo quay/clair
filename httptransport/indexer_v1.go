@@ -89,7 +89,6 @@ func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 	default:
 		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
-		return
 	}
 	defer r.Body.Close()
 	dec := codec.GetDecoder(r.Body)
@@ -99,16 +98,13 @@ func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
 		state, err := h.srv.State(ctx)
 		if err != nil {
 			apiError(ctx, w, http.StatusInternalServerError, "could not retrieve indexer state: %v", err)
-			return
 		}
 		var m claircore.Manifest
 		if err := dec.Decode(&m); err != nil {
 			apiError(ctx, w, http.StatusBadRequest, "failed to deserialize manifest: %v", err)
-			return
 		}
 		if m.Hash.String() == "" || len(m.Layers) == 0 {
 			apiError(ctx, w, http.StatusBadRequest, "bogus manifest")
-			return
 		}
 		next := path.Join(r.URL.Path, m.Hash.String())
 
@@ -127,10 +123,8 @@ func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, nil):
 		case errors.Is(err, tarfs.ErrFormat):
 			apiError(ctx, w, http.StatusBadRequest, "failed to start scan: %v", err)
-			return
 		default:
 			apiError(ctx, w, http.StatusInternalServerError, "failed to start scan: %v", err)
-			return
 		}
 
 		w.Header().Set("etag", validator)
@@ -144,12 +138,10 @@ func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
 		var ds []claircore.Digest
 		if err := dec.Decode(&ds); err != nil {
 			apiError(ctx, w, http.StatusBadRequest, "failed to deserialize bulk delete: %v", err)
-			return
 		}
 		ds, err := h.srv.DeleteManifests(ctx, ds...)
 		if err != nil {
 			apiError(ctx, w, http.StatusInternalServerError, "could not delete manifests: %v", err)
-			return
 		}
 		zlog.Debug(ctx).
 			Int("count", len(ds)).
@@ -174,12 +166,10 @@ func (h *IndexerV1) indexReportOne(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 	default:
 		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
-		return
 	}
 	d, err := getDigest(w, r)
 	if err != nil {
 		apiError(ctx, w, http.StatusBadRequest, "malformed path: %v", err)
-		return
 	}
 	switch r.Method {
 	case http.MethodGet:
@@ -188,16 +178,13 @@ func (h *IndexerV1) indexReportOne(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, nil): // OK
 		case errors.Is(err, ErrMediaType):
 			apiError(ctx, w, http.StatusUnsupportedMediaType, "unable to negotiate common media type for %v", allow)
-			return
 		default:
 			apiError(ctx, w, http.StatusBadRequest, "malformed request: %v", err)
-			return
 		}
 
 		state, err := h.srv.State(ctx)
 		if err != nil {
 			apiError(ctx, w, http.StatusInternalServerError, "could not retrieve indexer state: %v", err)
-			return
 		}
 		validator := `"` + state + `"`
 		if unmodified(r, validator) {
@@ -208,11 +195,9 @@ func (h *IndexerV1) indexReportOne(w http.ResponseWriter, r *http.Request) {
 		report, ok, err := h.srv.IndexReport(ctx, d)
 		if !ok {
 			apiError(ctx, w, http.StatusNotFound, "index report not found")
-			return
 		}
 		if err != nil {
 			apiError(ctx, w, http.StatusInternalServerError, "could not retrieve index report: %v", err)
-			return
 		}
 
 		w.Header().Add("etag", validator)
@@ -223,7 +208,6 @@ func (h *IndexerV1) indexReportOne(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		if _, err := h.srv.DeleteManifests(ctx, d); err != nil {
 			apiError(ctx, w, http.StatusInternalServerError, "unable to delete manifest: %v", err)
-			return
 		}
 		w.WriteHeader(http.StatusNoContent)
 	}
@@ -233,22 +217,18 @@ func (h *IndexerV1) indexState(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	if r.Method != http.MethodGet {
 		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
-		return
 	}
 	allow := []string{"application/vnd.clair.indexstate.v1+json", "application/json"}
 	switch err := pickContentType(w, r, allow); {
 	case errors.Is(err, nil): // OK
 	case errors.Is(err, ErrMediaType):
 		apiError(ctx, w, http.StatusUnsupportedMediaType, "unable to negotiate common media type for %v", allow)
-		return
 	default:
 		apiError(ctx, w, http.StatusBadRequest, "malformed request: %v", err)
-		return
 	}
 	s, err := h.srv.State(ctx)
 	if err != nil {
 		apiError(ctx, w, http.StatusInternalServerError, "could not retrieve indexer state: %v", err)
-		return
 	}
 
 	tag := `"` + s + `"`
@@ -274,17 +254,14 @@ func (h *IndexerV1) affectedManifests(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	if r.Method != http.MethodPost {
 		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
-		return
 	}
 	allow := []string{"application/vnd.clair.affectedmanifests.v1+json", "application/json"}
 	switch err := pickContentType(w, r, allow); {
 	case errors.Is(err, nil): // OK
 	case errors.Is(err, ErrMediaType):
 		apiError(ctx, w, http.StatusUnsupportedMediaType, "unable to negotiate common media type for %v", allow)
-		return
 	default:
 		apiError(ctx, w, http.StatusBadRequest, "malformed request: %v", err)
-		return
 	}
 
 	var vulnerabilities struct {
@@ -294,13 +271,11 @@ func (h *IndexerV1) affectedManifests(w http.ResponseWriter, r *http.Request) {
 	defer codec.PutDecoder(dec)
 	if err := dec.Decode(&vulnerabilities); err != nil {
 		apiError(ctx, w, http.StatusBadRequest, "failed to deserialize vulnerabilities: %v", err)
-		return
 	}
 
 	affected, err := h.srv.AffectedManifests(ctx, vulnerabilities.V)
 	if err != nil {
 		apiError(ctx, w, http.StatusInternalServerError, "could not retrieve affected manifests: %v", err)
-		return
 	}
 
 	defer writerError(w, &err)

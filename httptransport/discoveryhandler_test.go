@@ -56,15 +56,21 @@ func TestDiscoveryFailure(t *testing.T) {
 	ctx := zlog.Test(context.Background(), t)
 	h := DiscoveryHandler()
 
-	r := httptest.NewRecorder()
-	req := httptest.NewRequest("GET", "/openapi/v1", nil).WithContext(ctx)
-	req.Header.Set("Accept", "application/yaml")
-	h.ServeHTTP(r, req)
+	// Needed because handlers exit the goroutine.
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		r := httptest.NewRecorder()
+		req := httptest.NewRequest("GET", "/openapi/v1", nil).WithContext(ctx)
+		req.Header.Set("Accept", "application/yaml")
+		h.ServeHTTP(r, req)
 
-	resp := r.Result()
-	if got, want := resp.StatusCode, http.StatusUnsupportedMediaType; got != want {
-		t.Fatalf("got status code: %v want status code: %v", got, want)
-	}
+		resp := r.Result()
+		if got, want := resp.StatusCode, http.StatusUnsupportedMediaType; got != want {
+			t.Errorf("got status code: %v want status code: %v", got, want)
+		}
+	}()
+	<-done
 }
 
 func TestEmbedding(t *testing.T) {
