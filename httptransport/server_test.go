@@ -10,11 +10,10 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/quay/clair/config"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/zlog"
-	othttp "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel"
 
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
@@ -45,17 +44,12 @@ func TestUpdateEndpoints(t *testing.T) {
 			return nil, nil
 		},
 	}
-	s := &Server{
-		matcher:  m,
-		indexer:  i,
-		ServeMux: http.NewServeMux(),
-		traceOpt: othttp.WithTracerProvider(otel.GetTracerProvider()),
-	}
 	ctx := zlog.Test(context.Background(), t)
-	if err := s.configureMatcherMode(ctx); err != nil {
+	h, err := New(ctx, &config.Config{Mode: config.MatcherMode}, i, m, nil)
+	if err != nil {
 		t.Error(err)
 	}
-	srv := httptest.NewUnstartedServer(s)
+	srv := httptest.NewUnstartedServer(h)
 	srv.Config.BaseContext = func(_ net.Listener) context.Context {
 		return ctx
 	}
