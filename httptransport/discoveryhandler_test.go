@@ -89,17 +89,17 @@ func TestEmbedding(t *testing.T) {
 
 	for _, n := range []string{
 		"openapi.json", "openapi.etag"} {
-		new, err := os.ReadFile(filepath.Join(d, n))
+		nf, err := os.ReadFile(filepath.Join(d, n))
 		if err != nil {
 			t.Error(err)
 			continue
 		}
-		old, err := os.ReadFile(n)
+		of, err := os.ReadFile(n)
 		if err != nil {
 			t.Error(err)
 			continue
 		}
-		if got, want := string(new), string(old); !cmp.Equal(got, want) {
+		if got, want := string(nf), string(of); !cmp.Equal(got, want) {
 			t.Error(cmp.Diff(got, want, cmpopts.AcyclicTransformer("normalizeWhitespace", func(s string) []string { return strings.Split(s, "\n") })))
 			t.Log("\n\tYou probably edited the openapi.yaml and forgot to run `go generate` here.")
 		}

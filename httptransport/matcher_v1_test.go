@@ -255,7 +255,7 @@ func testUpdateOperationHandlerErrors(t *testing.T) {
 	t.Parallel()
 
 	id := uuid.New().String()
-	var ErrExpected error = fmt.Errorf("expected error")
+	ErrExpected := fmt.Errorf("expected error")
 	m := &matcher.Mock{
 		DeleteUpdateOperations_: func(context.Context, ...uuid.UUID) (int64, error) { return 0, ErrExpected },
 		// this will not immediately fail the handler
