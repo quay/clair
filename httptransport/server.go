@@ -1,3 +1,5 @@
+// Package httptransport contains the HTTP logic for implementing the Clair(v4)
+// HTTP API v1.
 package httptransport
 
 import (
@@ -17,6 +19,7 @@ import (
 	"github.com/quay/clair/v4/notifier"
 )
 
+// These are the various endpoints of the v1 API.
 const (
 	apiRoot                      = "/api/v1/"
 	indexerRoot                  = "/indexer"
@@ -37,6 +40,8 @@ const (
 	OpenAPIV1Path                = "/openapi/v1"
 )
 
+// New configures an http.Handler serving the v1 API or a portion of it,
+// according to the passed Config object.
 func New(ctx context.Context, conf *config.Config, indexer indexer.Service, matcher matcher.Service, notifier notifier.Service) (http.Handler, error) {
 	mux := http.NewServeMux()
 	traceOpt := otelhttp.WithTracerProvider(otel.GetTracerProvider())
