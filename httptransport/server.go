@@ -16,7 +16,6 @@ import (
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
-	intromw "github.com/quay/clair/v4/middleware/introspection"
 	"github.com/quay/clair/v4/notifier"
 )
 
@@ -73,11 +72,8 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 	}
 	ctx = zlog.ContextWithValues(ctx, "component", "httptransport/New")
 
-	if err := t.configureDiscovery(ctx); err != nil {
-		zlog.Warn(ctx).Err(err).Msg("configuring openapi discovery failed")
-	} else {
-		zlog.Info(ctx).Str("path", OpenAPIV1Path).Msg("openapi discovery configured")
-	}
+	mux.Handle(OpenAPIV1Path, DiscoveryHandler(ctx, OpenAPIV1Path, t.traceOpt))
+	zlog.Info(ctx).Str("path", OpenAPIV1Path).Msg("openapi discovery configured")
 
 	var e error
 	switch conf.Mode {
@@ -118,14 +114,6 @@ func New(ctx context.Context, conf config.Config, indexer indexer.Service, match
 	}
 
 	return t, nil
-}
-
-// ConfigureDiscovery creates a discovery handler for serving the v1 OpenAPI
-// specification.
-func (t *Server) configureDiscovery(_ context.Context) error {
-	t.Handle(OpenAPIV1Path,
-		intromw.InstrumentedHandler(OpenAPIV1Path, t.traceOpt, DiscoveryHandler()))
-	return nil
 }
 
 // ConfigureComboMode configures the HttpTransport for ComboMode.

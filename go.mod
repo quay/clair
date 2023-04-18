@@ -10,7 +10,6 @@ require (
 	github.com/jackc/pgconn v1.14.0
 	github.com/jackc/pgx/v4 v4.18.0
 	github.com/klauspost/compress v1.16.4
-	github.com/ldelossa/responserecorder v1.0.2-0.20210711162258-40bec93a9325
 	github.com/prometheus/client_golang v1.14.0
 	github.com/quay/clair/config v1.1.3
 	github.com/quay/claircore v1.4.22
