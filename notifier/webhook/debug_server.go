@@ -1,5 +1,4 @@
 //go:build tools
-// +build tools
 
 package main
 
@@ -92,9 +91,8 @@ type Recv struct {
 }
 
 func (h *Recv) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if fl, ok := w.(http.Flusher); ok {
-		defer fl.Flush()
-	}
+	rc := http.NewResponseController(w)
+	defer rc.Flush()
 
 	if h.Debug {
 		b, err := httputil.DumpRequest(r, true)
