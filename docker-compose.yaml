@@ -158,7 +158,7 @@ services:
     command:
       - go
       - run
-      - ./notifier/webhook/debug_server.go
+      - ./notifier/webhook/cmd/webhookd
       - -D
       - -key
       - c2VjcmV0

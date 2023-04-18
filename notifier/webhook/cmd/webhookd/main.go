@@ -1,6 +1,12 @@
-//go:build tools
-// +build tools
-
+// Command webhookd is a server implementation of Clair's "webhook" notification
+// protocol.
+//
+// This command is exempt from compatibility concerns beyond being compatible
+// with the webhook protocol at the same point in the repository.
+//
+// This implementation is currently only suitable for debugging the notification
+// subsystem, but ideas and implementations for extended functionality is
+// welcome.
 package main
 
 import (
@@ -26,6 +32,8 @@ import (
 	"github.com/quay/clair/v4/notifier"
 )
 
+// This program is unlike the other Clair binaries in that it uses the stdlib
+// "log" package in a format that I like rather than "zlog".
 func main() {
 	debug := flag.Bool("D", false, "print debugging output")
 	addr := flag.String("listen", ":http", "address to listen on")
@@ -84,6 +92,7 @@ func main() {
 	<-ctx.Done()
 }
 
+// Recv implements the Clair notifier's "webhook" protocol.
 type Recv struct {
 	Client *http.Client
 	Signer jose.Signer
@@ -91,10 +100,10 @@ type Recv struct {
 	Debug  bool
 }
 
+// ServeHTTP implements [http.Handler].
 func (h *Recv) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if fl, ok := w.(http.Flusher); ok {
-		defer fl.Flush()
-	}
+	rc := http.NewResponseController(w)
+	defer rc.Flush()
 
 	if h.Debug {
 		b, err := httputil.DumpRequest(r, true)
@@ -132,7 +141,7 @@ func (h *Recv) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var resp response
 	for next := new(uuid.UUID); next != nil; next = resp.Page.Next {
-		req, err := httputil.NewRequestWithContext(r.Context(), http.MethodGet, payload.Callback.String(), nil)
+		req, err := http.NewRequestWithContext(r.Context(), http.MethodGet, payload.Callback.String(), nil)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("unable to create request: %v", err), http.StatusInternalServerError)
 			log.Println("E", "unable to create request:", err.Error())
@@ -189,7 +198,7 @@ func (h *Recv) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Println(":", whid, n.ID, n.Manifest, n.Reason, n.Vulnerability.Name)
 		}
 	}
-	req, err := httputil.NewRequestWithContext(r.Context(), http.MethodDelete, payload.Callback.String(), nil)
+	req, err := http.NewRequestWithContext(r.Context(), http.MethodDelete, payload.Callback.String(), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -227,6 +236,7 @@ func (h *Recv) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Println(":", "deleted:", whid)
 }
 
+// Response is a page of notifications.
 type response struct {
 	Page          notifier.Page           `json:"page"`
 	Notifications []notifier.Notification `json:"notifications"`
