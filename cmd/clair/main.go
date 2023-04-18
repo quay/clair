@@ -126,7 +126,10 @@ func main() {
 		if err != nil {
 			return fmt.Errorf("service initialization failed: %w", err)
 		}
-		h, err := httptransport.New(srvctx, conf, srvs.Indexer, srvs.Matcher, srvs.Notifier)
+		srv := http.Server{
+			BaseContext: func(_ net.Listener) context.Context { return srvctx },
+		}
+		srv.Handler, err = httptransport.New(srvctx, &conf, srvs.Indexer, srvs.Matcher, srvs.Notifier)
 		if err != nil {
 			return fmt.Errorf("http transport configuration failed: %w", err)
 		}
@@ -140,11 +143,12 @@ func main() {
 				return fmt.Errorf("tls configuration failed: %w", err)
 			}
 			cfg.NextProtos = []string{"h2"}
+			srv.TLSConfig = cfg
 			l = tls.NewListener(l, cfg)
 		}
-		down.Add(h.Server)
+		down.Add(&srv)
 		health.Ready()
-		if err := h.Serve(l); err != http.ErrServerClosed {
+		if err := srv.Serve(l); err != http.ErrServerClosed {
 			return fmt.Errorf("http transport failed to launch: %w", err)
 		}
 		return nil
