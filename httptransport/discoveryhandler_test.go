@@ -16,14 +16,16 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/quay/zlog"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/trace"
 )
 
 func TestDiscoveryEndpoint(t *testing.T) {
 	ctx := zlog.Test(context.Background(), t)
-	h := DiscoveryHandler()
+	h := DiscoveryHandler(ctx, OpenAPIV1Path, otelhttp.WithTracerProvider(trace.NewNoopTracerProvider()))
 
 	r := httptest.NewRecorder()
-	req := httptest.NewRequest("GET", "/openapi/v1", nil).WithContext(ctx)
+	req := httptest.NewRequest("GET", OpenAPIV1Path, nil).WithContext(ctx)
 	req.Header.Set("Accept", "application/yaml, application/json; q=0.4, application/vnd.oai.openapi+json; q=1.0")
 	h.ServeHTTP(r, req)
 
@@ -54,14 +56,14 @@ func TestDiscoveryEndpoint(t *testing.T) {
 
 func TestDiscoveryFailure(t *testing.T) {
 	ctx := zlog.Test(context.Background(), t)
-	h := DiscoveryHandler()
+	h := DiscoveryHandler(ctx, OpenAPIV1Path, otelhttp.WithTracerProvider(trace.NewNoopTracerProvider()))
 
 	r := httptest.NewRecorder()
 	// Needed because handlers exit the goroutine.
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
-		req := httptest.NewRequest("GET", "/openapi/v1", nil).WithContext(ctx)
+		req := httptest.NewRequest("GET", OpenAPIV1Path, nil).WithContext(ctx)
 		req.Header.Set("Accept", "application/yaml")
 		h.ServeHTTP(r, req)
 	}()
