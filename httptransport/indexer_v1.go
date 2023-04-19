@@ -8,7 +8,6 @@ import (
 	"path"
 	"time"
 
-	"github.com/ldelossa/responserecorder"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/pkg/tarfs"
 	"github.com/quay/zlog"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/internal/codec"
+	"github.com/quay/clair/v4/internal/httputil"
 )
 
 // NewIndexerV1 returns an http.Handler serving the Indexer V1 API rooted at
@@ -55,21 +55,30 @@ var _ http.Handler = (*IndexerV1)(nil)
 // ServeHTTP implements http.Handler.
 func (h *IndexerV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	wr := responserecorder.NewResponseRecorder(w)
 	r = withRequestID(r)
+	ctx := r.Context()
+	var status int
+	var length int64
+	w = httputil.ResponseRecorder(&status, &length, w)
 	defer func() {
-		if f, ok := wr.(http.Flusher); ok {
-			f.Flush()
+		switch err := http.NewResponseController(w).Flush(); {
+		case errors.Is(err, nil):
+		case errors.Is(err, http.ErrNotSupported): // Skip
+		default:
+			zlog.Warn(ctx).
+				Err(err).
+				Msg("unable to flush http response")
 		}
-		zlog.Info(r.Context()).
+		zlog.Info(ctx).
 			Str("remote_addr", r.RemoteAddr).
 			Str("method", r.Method).
 			Str("request_uri", r.RequestURI).
-			Int("status", wr.StatusCode()).
+			Int("status", status).
+			Int64("written", length).
 			Dur("duration", time.Since(start)).
 			Msg("handled HTTP request")
 	}()
-	h.inner.ServeHTTP(wr, r)
+	h.inner.ServeHTTP(w, r)
 }
 
 func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
