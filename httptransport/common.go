@@ -1,14 +1,17 @@
 package httptransport
 
 import (
+	"context"
 	crand "crypto/rand"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/rand"
 	"mime"
 	"net/http"
 	"path"
+	rtrace "runtime/trace"
 	"sort"
 	"strconv"
 	"strings"
@@ -126,16 +129,25 @@ var idPool = sync.Pool{
 	},
 }
 
-func withRequestID(r *http.Request) *http.Request {
+// TraceSetup starts a [runtime/trace.Task], notes the request ID there and
+// adds the request ID to the logging context.
+func traceSetup(r *http.Request, taskType string) (context.Context, *http.Request, func()) {
 	const key = `request_id`
 	ctx := r.Context()
 	sctx := trace.SpanContextFromContext(ctx)
+	var id string
 	if sctx.HasTraceID() {
-		ctx = zlog.ContextWithValues(ctx, key, sctx.TraceID().String())
+		id = sctx.TraceID().String()
 	} else {
+		n, s := make([]byte, 8), make([]byte, 16)
 		rng := idPool.Get().(*rand.Rand)
-		ctx = zlog.ContextWithValues(ctx, key, fmt.Sprintf("%016x", rng.Uint64()))
+		binary.LittleEndian.PutUint64(n, rng.Uint64())
 		idPool.Put(rng)
+		hex.Encode(s, n)
+		id = string(s)
 	}
-	return r.WithContext(ctx)
+	ctx, task := rtrace.NewTask(ctx, taskType)
+	ctx = zlog.ContextWithValues(ctx, key, id)
+	rtrace.Log(ctx, key, id)
+	return ctx, r.WithContext(ctx), task.End
 }

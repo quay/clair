@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/ldelossa/responserecorder"
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/quay/clair/v4/internal/codec"
+	"github.com/quay/clair/v4/internal/httputil"
 	"github.com/quay/clair/v4/notifier"
 )
 
@@ -55,21 +55,31 @@ func NewNotificationV1(_ context.Context, prefix string, srv notifier.Service, t
 // ServeHTTP implements http.Handler.
 func (h *NotificationV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	wr := responserecorder.NewResponseRecorder(w)
-	r = withRequestID(r)
+	var status int
+	var length int64
+	w = httputil.ResponseRecorder(&status, &length, w)
+	ctx, r, end := traceSetup(r, "NotificationV1")
 	defer func() {
-		if f, ok := wr.(http.Flusher); ok {
-			f.Flush()
+		switch err := http.NewResponseController(w).Flush(); {
+		case errors.Is(err, nil):
+		case errors.Is(err, http.ErrNotSupported):
+			// Skip
+		default:
+			zlog.Warn(ctx).
+				Err(err).
+				Msg("unable to flush http response")
 		}
-		zlog.Info(r.Context()).
+		zlog.Info(ctx).
 			Str("remote_addr", r.RemoteAddr).
 			Str("method", r.Method).
 			Str("request_uri", r.RequestURI).
-			Int("status", wr.StatusCode()).
+			Int("status", status).
+			Int64("written", length).
 			Dur("duration", time.Since(start)).
 			Msg("handled HTTP request")
+		end()
 	}()
-	h.inner.ServeHTTP(wr, r)
+	h.inner.ServeHTTP(w, r)
 }
 
 func (h *NotificationV1) serveHTTP(w http.ResponseWriter, r *http.Request) {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -52,7 +53,13 @@ func apiError(ctx context.Context, w http.ResponseWriter, code int, f string, v 
 	if _, err := buf.WriteTo(w); err != nil {
 		h.Set(errheader, err.Error())
 	}
-	if f, ok := w.(http.Flusher); ok {
-		f.Flush()
+	switch err := http.NewResponseController(w).Flush(); {
+	case errors.Is(err, nil):
+	case errors.Is(err, http.ErrNotSupported):
+		// Skip
+	default:
+		zlog.Warn(ctx).
+			Err(err).
+			Msg("unable to flush http response")
 	}
 }

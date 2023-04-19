@@ -2,6 +2,7 @@ package httptransport
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptrace"
 	"path"
@@ -10,7 +11,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/ldelossa/responserecorder"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/zlog"
@@ -19,6 +19,7 @@ import (
 
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/internal/codec"
+	"github.com/quay/clair/v4/internal/httputil"
 	"github.com/quay/clair/v4/matcher"
 )
 
@@ -63,21 +64,31 @@ var _ http.Handler = (*MatcherV1)(nil)
 // ServeHTTP implements http.Handler.
 func (h *MatcherV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	wr := responserecorder.NewResponseRecorder(w)
-	r = withRequestID(r)
+	var status int
+	var length int64
+	w = httputil.ResponseRecorder(&status, &length, w)
+	ctx, r, end := traceSetup(r, "MatcherV1")
 	defer func() {
-		if f, ok := wr.(http.Flusher); ok {
-			f.Flush()
+		switch err := http.NewResponseController(w).Flush(); {
+		case errors.Is(err, nil):
+		case errors.Is(err, http.ErrNotSupported):
+			// Skip
+		default:
+			zlog.Warn(ctx).
+				Err(err).
+				Msg("unable to flush http response")
 		}
-		zlog.Info(r.Context()).
+		zlog.Info(ctx).
 			Str("remote_addr", r.RemoteAddr).
 			Str("method", r.Method).
 			Str("request_uri", r.RequestURI).
-			Int("status", wr.StatusCode()).
+			Int("status", status).
+			Int64("written", length).
 			Dur("duration", time.Since(start)).
 			Msg("handled HTTP request")
+		end()
 	}()
-	h.inner.ServeHTTP(wr, r)
+	h.inner.ServeHTTP(w, r)
 }
 
 func (h *MatcherV1) vulnerabilityReport(w http.ResponseWriter, r *http.Request) {
