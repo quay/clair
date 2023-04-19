@@ -21,6 +21,7 @@ import (
 	"github.com/quay/clair/v4/internal/codec"
 	"github.com/quay/clair/v4/internal/httputil"
 	"github.com/quay/clair/v4/matcher"
+	"github.com/quay/clair/v4/middleware/compress"
 )
 
 // NewMatcherV1 returns an http.Handler serving the Matcher V1 API rooted at
@@ -30,7 +31,7 @@ func NewMatcherV1(_ context.Context, prefix string, srv matcher.Service, indexer
 	m := http.NewServeMux()
 	h := MatcherV1{
 		inner: otelhttp.NewHandler(
-			m,
+			compress.Handler(m),
 			"matcherv1",
 			otelhttp.WithMessageEvents(otelhttp.ReadEvents, otelhttp.WriteEvents),
 			topt,

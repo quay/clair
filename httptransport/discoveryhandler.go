@@ -13,6 +13,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/quay/clair/v4/internal/httputil"
+	"github.com/quay/clair/v4/middleware/compress"
 )
 
 //go:generate go run openapigen.go
@@ -46,7 +47,7 @@ func DiscoveryHandler(_ context.Context, prefix string, topt otelhttp.Option) ht
 		_, err = io.Copy(w, bytes.NewReader(openapiJSON))
 	})
 	inner = otelhttp.NewHandler(
-		discoverywrapper.wrap(prefix, inner),
+		compress.Handler(discoverywrapper.wrap(prefix, inner)),
 		"discovery",
 		otelhttp.WithMessageEvents(otelhttp.ReadEvents, otelhttp.WriteEvents),
 		topt,
