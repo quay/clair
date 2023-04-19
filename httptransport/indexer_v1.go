@@ -16,6 +16,7 @@ import (
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/internal/codec"
 	"github.com/quay/clair/v4/internal/httputil"
+	"github.com/quay/clair/v4/middleware/compress"
 )
 
 // NewIndexerV1 returns an http.Handler serving the Indexer V1 API rooted at
@@ -25,7 +26,7 @@ func NewIndexerV1(_ context.Context, prefix string, srv indexer.Service, topt ot
 	m := http.NewServeMux()
 	h := IndexerV1{
 		inner: otelhttp.NewHandler(
-			m,
+			compress.Handler(m),
 			"indexerv1",
 			otelhttp.WithMessageEvents(otelhttp.ReadEvents, otelhttp.WriteEvents),
 			topt,

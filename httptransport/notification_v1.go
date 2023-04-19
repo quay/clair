@@ -15,6 +15,7 @@ import (
 
 	"github.com/quay/clair/v4/internal/codec"
 	"github.com/quay/clair/v4/internal/httputil"
+	"github.com/quay/clair/v4/middleware/compress"
 	"github.com/quay/clair/v4/notifier"
 )
 
@@ -40,7 +41,7 @@ func NewNotificationV1(_ context.Context, prefix string, srv notifier.Service, t
 	m := http.NewServeMux()
 	h := NotificationV1{
 		inner: otelhttp.NewHandler(
-			m,
+			compress.Handler(m),
 			"notificationv1",
 			otelhttp.WithMessageEvents(otelhttp.ReadEvents, otelhttp.WriteEvents),
 			topt,
