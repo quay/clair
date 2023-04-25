@@ -32,7 +32,7 @@ func (m *MockStore) Notifications(ctx context.Context, id uuid.UUID, page *Page)
 // them with the provided notification id
 //
 // PutNotifications must update the latest update operation for the provided
-// updater in such a way that UpdateOperation returns the the provided update
+// updater in such a way that UpdateOperation returns the provided update
 // operation id when queried with the updater name
 //
 // PutNotifications must create a Receipt with status created status on

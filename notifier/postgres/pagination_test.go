@@ -101,7 +101,7 @@ func TestPagination(t *testing.T) {
 			total := []notifier.Notification{}
 			returned, outPage, err := store.Notifications(ctx, noteID, &inPage)
 			if err != nil {
-				t.Fatalf("failed to retreive initial page: %v", err)
+				t.Fatalf("failed to retrieve initial page: %v", err)
 			}
 			total = append(total, returned...)
 

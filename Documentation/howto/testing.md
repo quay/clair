@@ -7,7 +7,7 @@ This environment can be used to test and develop Clair's Quay integration.
 
 ### Make
 
-Make is used to stand up the the local dev environment.
+Make is used to stand up the local dev environment.
 Make is readily available in just about every package manager you can think of.
 It's very likely your workstation already has make on it.
 
