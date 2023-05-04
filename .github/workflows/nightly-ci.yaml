@@ -1,0 +1,78 @@
+---
+name: Nightly CI
+
+on:
+  schedule:
+    - cron: '30 4 * * *'
+  workflow_dispatch:
+    inputs: {}
+
+jobs:
+  config:
+    runs-on: ubuntu-latest
+    outputs:
+      go_versions: ${{ steps.config.outputs.go_versions }}
+    steps:
+      - id: config
+        run: |
+          echo 'go_versions=["1.20"]' >> "$GITHUB_OUTPUT"
+
+  tests:
+    name: Integration Tests
+    needs: ['config']
+    runs-on: ubuntu-latest
+    container: quay.io/projectquay/golang:${{ matrix.go }}
+    env:
+      POSTGRES_CONNECTION_STRING: "host=clair-db port=5432 user=clair dbname=clair sslmode=disable"
+      RABBITMQ_CONNECTION_STRING: "amqp://guest:guest@clair-rabbitmq:5672/"
+      STOMP_CONNECTION_STRING: "clair-activemq:61613"
+    services:
+      clair-db:
+        image: postgres:11.5
+        env:
+          POSTGRES_USER: "clair"
+          POSTGRES_DB: "clair"
+          POSTGRES_INITDB_ARGS: "--no-sync"
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      clair-rabbitmq:
+        image: rabbitmq:3.8.5
+        env:
+          RABBITMQ_VM_MEMORY_HIGH_WATERMARK: "85%"
+      clair-activemq:
+        image: webcenter/activemq:5.14.3
+
+    strategy:
+      matrix:
+        go: ${{ fromJSON(needs.config.outputs.go_versions) }}
+        # Put non-amd64 platforms that should run tests here:
+        platform: ['linux/arm64', 'linux/ppc64le']
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/go-cache
+        with:
+          go: ${{ matrix.go }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: ${{ matrix.platform }}
+      - run: >-
+          docker run
+          --rm
+          --platform ${{ matrix.platform }}
+          --mount "type=bind,src=$(go env GOMODCACHE),dst=/go/pkg/mod"
+          --mount "type=bind,src=$(pwd),dst=/build"
+          -w /build
+          quay.io/projectquay/golang:${{ matrix.go }}
+          go test
+          -tags integration
+          github.com/quay/claircore/...
+          ./...
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: workspace-${{matrix.go}}-${{matrix.platform}}
+          path: ${{ github.workspace }}
