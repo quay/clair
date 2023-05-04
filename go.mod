@@ -8,7 +8,7 @@ require (
 	github.com/google/go-containerregistry v0.6.1
 	github.com/google/uuid v1.3.0
 	github.com/jackc/pgconn v1.14.0
-	github.com/jackc/pgx/v4 v4.18.0
+	github.com/jackc/pgx/v4 v4.18.1
 	github.com/klauspost/compress v1.16.4
 	github.com/ldelossa/responserecorder v1.0.2-0.20210711162258-40bec93a9325
 	github.com/prometheus/client_golang v1.14.0
