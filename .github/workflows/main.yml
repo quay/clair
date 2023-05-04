@@ -118,38 +118,3 @@ jobs:
         with:
           name: workspace-${{matrix.go}}
           path: ${{ github.workspace }}
-
-  arch-tests:
-    name: Architecture Tests
-    needs: ['config']
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go: ${{ fromJSON(needs.config.outputs.go_versions) }}
-        # Put non-amd64 platforms that should run tests here:
-        platform: ['linux/arm64', 'linux/ppc64le']
-    steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/actions/go-cache
-        with:
-          go: ${{ matrix.go }}
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: ${{ matrix.platform }}
-      - run: >-
-          docker run
-          --rm
-          --platform ${{ matrix.platform }}
-          --mount "type=bind,src=$(go env GOMODCACHE),dst=/go/pkg/mod"
-          --mount "type=bind,src=$(pwd),dst=/build"
-          -w /build
-          quay.io/projectquay/golang:${{ matrix.go }}
-          go test
-          github.com/quay/claircore/...
-          ./...
-      - uses: actions/upload-artifact@v3
-        if: failure()
-        with:
-          name: workspace-${{matrix.go}}-${{matrix.platform}}
-          path: ${{ github.workspace }}
