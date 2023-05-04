@@ -49,7 +49,7 @@ jobs:
       matrix:
         go: ${{ fromJSON(needs.config.outputs.go_versions) }}
         # Put non-amd64 platforms that should run tests here:
-        platform: ['linux/arm64', 'linux/ppc64le']
+        platform: ['linux/arm64', 'linux/ppc64le', 'linux/s390x']
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/go-cache
