@@ -104,7 +104,7 @@ jobs:
     needs: [config, release-archive]
     strategy:
       matrix:
-        goarch: ['arm64', 'amd64', '386', 'ppc64le', 's390x']
+        goarch: ['arm64', 'amd64', '386', 'ppc64le']
         goos: ['linux', 'windows', 'darwin']
         exclude:
           - goos: darwin
@@ -117,10 +117,6 @@ jobs:
             goarch: 'ppc64le'
           - goos: darwin
             goarch: 'ppc64le'
-          - goos: windows
-            goarch: 's390x'
-          - goos: darwin
-            goarch: 's390x'
     env:
       GOOS: ${{matrix.goos}}
       GOARCH: ${{matrix.goarch}}
@@ -209,7 +205,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           context: ${{ runner.temp }}/build
-          platforms: linux/amd64,linux/arm64,linux/ppc64le,linux/s390x
+          platforms: linux/amd64,linux/arm64,linux/ppc64le
           push: true
           tags: |
             quay.io/${{ needs.config.outputs.image_repo }}:${{ needs.config.outputs.image_tag }}
@@ -230,7 +226,7 @@ jobs:
     needs: [release-archive, release]
     strategy:
       matrix:
-        goarch: ['arm64', 'amd64', '386', 'ppc64le', 's390x']
+        goarch: ['arm64', 'amd64', '386', 'ppc64le']
         goos: ['linux', 'windows', 'darwin']
         exclude:
           - goos: darwin
@@ -243,10 +239,6 @@ jobs:
             goarch: ppc64le
           - goos: windows
             goarch: ppc64le
-          - goos: windows
-            goarch: 's390x'
-          - goos: darwin
-            goarch: 's390x'
     steps:
       - name: Fetch Archive
         uses: actions/download-artifact@v3
