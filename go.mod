@@ -3,7 +3,7 @@ module github.com/quay/clair/v4
 go 1.20
 
 require (
-	github.com/go-stomp/stomp v2.0.8+incompatible
+	github.com/go-stomp/stomp v2.1.4+incompatible
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-containerregistry v0.6.1
 	github.com/google/uuid v1.3.0
