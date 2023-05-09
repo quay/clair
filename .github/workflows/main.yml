@@ -80,39 +80,49 @@ jobs:
     name: Integration Tests
     needs: ['config']
     runs-on: ubuntu-latest
-    container: quay.io/projectquay/golang:${{ matrix.go }}
-    env:
-      POSTGRES_CONNECTION_STRING: "host=clair-db port=5432 user=clair dbname=clair sslmode=disable"
-      RABBITMQ_CONNECTION_STRING: "amqp://guest:guest@clair-rabbitmq:5672/"
-      STOMP_CONNECTION_STRING: "clair-activemq:61613"
     services:
-      clair-db:
-        image: postgres:11.5
+      postgres:
+        image: docker.io/library/postgres:11
         env:
-          POSTGRES_USER: "clair"
           POSTGRES_DB: "clair"
           POSTGRES_INITDB_ARGS: "--no-sync"
+          POSTGRES_PASSWORD: password
+          POSTGRES_USER: "clair"
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      clair-rabbitmq:
-        image: rabbitmq:3.8.5
+        ports:
+          - 5432
+      rabbitmq:
+        image: docker.io/library/rabbitmq:3
         env:
-          RABBITMQ_VM_MEMORY_HIGH_WATERMARK: "85%"
-      clair-activemq:
-        image: webcenter/activemq:5.14.3
+          RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: '-rabbit vm_memory_high_watermark 0.85'
+        ports:
+          - 5672
+          - 61613
 
     strategy:
       matrix:
         go: ${{ fromJSON(needs.config.outputs.go_versions) }}
     steps:
+      - name: Configure RabbitMQ
+        run: |
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl await_startup
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmq-plugins enable rabbitmq_stomp
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmq-plugins disable rabbitmq_management_agent rabbitmq_prometheus rabbitmq_web_dispatch
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl add_vhost '::1'
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p '::1' guest '.*' '.*' '.*'
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/go-cache
+      - uses: actions/setup-go@v4
         with:
-          go: ${{ matrix.go }}
+          go-version: ${{ matrix.go }}
       - run: go test -tags integration ./...
+        env:
+          POSTGRES_CONNECTION_STRING: "host=localhost port=${{ job.services.postgres.ports[5432] }} user=clair dbname=clair password=password sslmode=disable"
+          RABBITMQ_CONNECTION_STRING: "amqp://guest:guest@localhost:${{ job.services.rabbitmq.ports[5672] }}/"
+          STOMP_CONNECTION_STRING: "stomp://guest:guest@localhost:${{ job.services.rabbitmq.ports[61613] }}/"
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
