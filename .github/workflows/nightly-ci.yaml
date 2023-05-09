@@ -21,7 +21,6 @@ jobs:
     name: Integration Tests
     needs: ['config']
     runs-on: ubuntu-latest
-    container: quay.io/projectquay/golang:${{ matrix.go }}
     env:
       POSTGRES_CONNECTION_STRING: "host=clair-db port=5432 user=clair dbname=clair sslmode=disable"
       RABBITMQ_CONNECTION_STRING: "amqp://guest:guest@clair-rabbitmq:5672/"
@@ -39,7 +38,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
       clair-rabbitmq:
-        image: rabbitmq:3.8.5
+        image: docker.io/library/rabbitmq:3.8.5
         env:
           RABBITMQ_VM_MEMORY_HIGH_WATERMARK: "85%"
       clair-activemq:
@@ -49,28 +48,42 @@ jobs:
       matrix:
         go: ${{ fromJSON(needs.config.outputs.go_versions) }}
         # Put non-amd64 platforms that should run tests here:
-        platform: ['linux/arm64', 'linux/ppc64le', 'linux/s390x']
+        platform: ['arm64', 'ppc64le', 's390x']
     steps:
       - uses: actions/checkout@v3
-      - uses: ./.github/actions/go-cache
+      - uses: actions/cache@v3
+        id: cache
         with:
-          go: ${{ matrix.go }}
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-${{ matrix.platform }}-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.platform }}-${{ matrix.go }}-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
         with:
-          platforms: ${{ matrix.platform }}
-      - run: >-
+          platforms: linux/${{ matrix.platform }}
+      - name: Make directories on cache miss
+        run: mkdir -p "$(go env GOMODCACHE)" "$(go env GOCACHE)" 
+        if: ${{ ! steps.cache.outputs.cache-hit }}
+      - name: Run integration tests
+        run: >-
           docker run
           --rm
-          --platform ${{ matrix.platform }}
+          --network ${{ job.container.network }}
+          --platform linux/${{ matrix.platform }}
           --mount "type=bind,src=$(go env GOMODCACHE),dst=/go/pkg/mod"
+          --mount "type=bind,src=$(go env GOCACHE),dst=/root/.cache/go-build"
           --mount "type=bind,src=$(pwd),dst=/build"
+          --env POSTGRES_CONNECTION_STRING
+          --env RABBITMQ_CONNECTION_STRING
+          --env STOMP_CONNECTION_STRING
           -w /build
           quay.io/projectquay/golang:${{ matrix.go }}
           go test
           -tags integration
-          github.com/quay/claircore/...
-          ./...
+          $(go list -m github.com/quay/clair{core,}/... | awk '{printf("%s/... ",$1)}')
       - uses: actions/upload-artifact@v3
         if: failure()
         with:
