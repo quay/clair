@@ -7,7 +7,7 @@ import (
 	"io"
 	"net"
 
-	gostomp "github.com/go-stomp/stomp"
+	gostomp "github.com/go-stomp/stomp/v3"
 	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
 )

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/go-stomp/stomp"
+	"github.com/go-stomp/stomp/v3"
 	"github.com/google/uuid"
 	"github.com/quay/clair/config"
 	"github.com/quay/claircore/test/integration"

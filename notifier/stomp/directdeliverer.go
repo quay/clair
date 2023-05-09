@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	gostomp "github.com/go-stomp/stomp"
+	gostomp "github.com/go-stomp/stomp/v3"
 	"github.com/google/uuid"
 	"github.com/quay/clair/config"
 
