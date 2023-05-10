@@ -22,27 +22,24 @@ jobs:
     needs: ['config']
     runs-on: ubuntu-latest
     env:
-      POSTGRES_CONNECTION_STRING: "host=clair-db port=5432 user=clair dbname=clair sslmode=disable"
-      RABBITMQ_CONNECTION_STRING: "amqp://guest:guest@clair-rabbitmq:5672/"
-      STOMP_CONNECTION_STRING: "clair-activemq:61613"
     services:
-      clair-db:
-        image: postgres:11.5
+      # These will be used by a container on the same docker network, so no need to expose ports.
+      postgres:
+        image: docker.io/library/postgres:11
         env:
-          POSTGRES_USER: "clair"
           POSTGRES_DB: "clair"
           POSTGRES_INITDB_ARGS: "--no-sync"
+          POSTGRES_PASSWORD: password
+          POSTGRES_USER: "clair"
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      clair-rabbitmq:
-        image: docker.io/library/rabbitmq:3.8.5
+      rabbitmq:
+        image: docker.io/library/rabbitmq:3
         env:
-          RABBITMQ_VM_MEMORY_HIGH_WATERMARK: "85%"
-      clair-activemq:
-        image: webcenter/activemq:5.14.3
+          RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: '-rabbit vm_memory_high_watermark 0.85'
 
     strategy:
       matrix:
@@ -67,6 +64,13 @@ jobs:
       - name: Make directories on cache miss
         run: mkdir -p "$(go env GOMODCACHE)" "$(go env GOCACHE)" 
         if: ${{ ! steps.cache.outputs.cache-hit }}
+      - name: Configure RabbitMQ
+        run: |
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl await_startup
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmq-plugins enable rabbitmq_stomp
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmq-plugins disable rabbitmq_management_agent rabbitmq_prometheus rabbitmq_web_dispatch
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl add_vhost '::1'
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p '::1' guest '.*' '.*' '.*'
       - name: Run integration tests
         run: >-
           docker run
@@ -76,9 +80,9 @@ jobs:
           --mount "type=bind,src=$(go env GOMODCACHE),dst=/go/pkg/mod"
           --mount "type=bind,src=$(go env GOCACHE),dst=/root/.cache/go-build"
           --mount "type=bind,src=$(pwd),dst=/build"
-          --env POSTGRES_CONNECTION_STRING
-          --env RABBITMQ_CONNECTION_STRING
-          --env STOMP_CONNECTION_STRING
+          --env "POSTGRES_CONNECTION_STRING=host=postgres port=5432 user=clair dbname=clair sslmode=disable"
+          --env "RABBITMQ_CONNECTION_STRING=amqp://guest:guest@clair-rabbitmq:5672/"
+          --env "STOMP_CONNECTION_STRING=stomp://guest:guest@clair-activemq:61613/"
           -w /build
           quay.io/projectquay/golang:${{ matrix.go }}
           go test
