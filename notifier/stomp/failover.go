@@ -4,8 +4,8 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"io"
 	"net"
+	"time"
 
 	gostomp "github.com/go-stomp/stomp/v3"
 	"github.com/quay/clair/config"
@@ -27,25 +27,26 @@ type failOver struct {
 // Note: the STOMP protocol does not support multiplexing operations over a
 // single TCP connection. A TCP connection must be made for each STOMP
 // connection.
-func (f *failOver) Dial(uri string) (*gostomp.Conn, error) {
-	opts := []func(*gostomp.Conn) error{}
-
+func (f *failOver) Dial(ctx context.Context, uri string) (*gostomp.Conn, error) {
+	var opts []func(*gostomp.Conn) error
 	if f.login != nil {
 		opts = append(opts, gostomp.ConnOpt.Login(f.login.Login, f.login.Passcode))
 	}
 
-	var conn io.ReadWriteCloser
-	var err error
-	if f.tls == nil {
-		conn, err = net.Dial("tcp", uri)
-		if err != nil {
-			return nil, fmt.Errorf("failed to connect to broker @ %v: %w", uri, err)
+	var d interface {
+		DialContext(context.Context, string, string) (net.Conn, error)
+	} = &net.Dialer{
+		Timeout: 2 * time.Second,
+	}
+	if f.tls != nil {
+		d = &tls.Dialer{
+			NetDialer: d.(*net.Dialer),
+			Config:    f.tls,
 		}
-	} else {
-		conn, err = tls.Dial("tcp", uri, f.tls)
-		if err != nil {
-			return nil, fmt.Errorf("failed to connect to tls broker @ %v: %w", uri, err)
-		}
+	}
+	conn, err := d.DialContext(ctx, "tcp", uri)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to broker @ %v: %w", uri, err)
 	}
 
 	stompConn, err := gostomp.Connect(conn, opts...)
@@ -68,7 +69,7 @@ func (f *failOver) Connection(ctx context.Context) (*gostomp.Conn, error) {
 	ctx = zlog.ContextWithValues(ctx, "component", "notifier/stomp/failOver.Connection")
 
 	for _, uri := range f.uris {
-		conn, err := f.Dial(uri)
+		conn, err := f.Dial(ctx, uri)
 		if err != nil {
 			zlog.Debug(ctx).
 				Str("broker", uri).
