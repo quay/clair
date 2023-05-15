@@ -1,0 +1,26 @@
+---
+http:
+  routers:
+    rabbitmq:
+      entryPoints: [traefik]
+      rule: 'PathPrefix(`/rabbitmq`)'
+      middlewares:
+      - rewrite-api
+      - rewrite
+      service: rabbitmq
+  services:
+    rabbitmq:
+      loadBalancer:
+        servers:
+        - url: "http://clair-rabbitmq:15672/"
+        healthCheck:
+          path: /
+  middlewares:
+    rewrite-api:
+      replacePathRegex:
+        regex: '^/rabbitmq/api/(.*?)/(.*)'
+        replacement: '/api/%2F/$2'
+    rewrite:
+      replacePathRegex:
+        regex: '^/rabbitmq/(.*)$'
+        replacement: '/$1'

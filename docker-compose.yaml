@@ -13,7 +13,7 @@ x-anchors:
   redis: &redis-image docker.io/library/redis:6.2
   go: &go-image quay.io/projectquay/golang:1.20
   skopeo: &skopeo-image quay.io/skopeo/stable:latest
-  activemq: &activemq-image docker.io/rmohr/activemq:5.15.9-alpine
+  rabbitmq: &rabbitmq-image docker.io/library/rabbitmq:3.11
   clair-service: &clair-service
     image: *go-image
     depends_on:
@@ -147,13 +147,20 @@ services:
       - -D
       - -key
       - c2VjcmV0
-  activemq:
+  rabbitmq:
     # This provides STOMP and AMQP on the usual ports.
-    # The web UI is broken; help wanted.
-    container_name: clair-activemq
+    # The web UI is available on /rabbitmq
+    container_name: clair-rabbitmq
     profiles:
       - notifier
-    image: *activemq-image
+    image: *rabbitmq-image
+    command:
+      - sh
+      - -c
+      - |
+        set -e
+        rabbitmq-plugins enable rabbitmq_stomp rabbitmq_management >/dev/null
+        exec rabbitmq-server
 
   # Quay -- starts a Quay stack for integration testing.
   # Use profile 'quay'
