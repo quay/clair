@@ -10,7 +10,7 @@ const (
 	// during the indexing process. Its name is a historical accident.
 	DefaultScanLockRetry = 1
 	// DefaultMatcherPeriod is the default interval for running updaters.
-	DefaultMatcherPeriod = 30 * time.Minute
+	DefaultMatcherPeriod = 6 * time.Hour
 	// DefaultUpdateRetention is the number of updates per vulnerability
 	// database to retain.
 	DefaultUpdateRetention = 10
