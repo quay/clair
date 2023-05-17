@@ -198,7 +198,7 @@ func (t *Server) configureMatcherMode(ctx context.Context) error {
 		return clairerror.ErrNotInitialized{Msg: "MatcherMode requires both indexer and matcher services"}
 	}
 	prefix := matcherRoot + apiRoot
-	v1 := NewMatcherV1(ctx, prefix, t.matcher, t.indexer, t.conf.Matcher.CacheAge, t.traceOpt)
+	v1 := NewMatcherV1(ctx, prefix, t.matcher, t.indexer, time.Duration(t.conf.Matcher.CacheAge), t.traceOpt)
 
 	t.Handle(prefix, v1)
 	return nil

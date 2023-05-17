@@ -281,7 +281,7 @@ func localMatcher(ctx context.Context, cfg *config.Config) (matcher.Service, err
 		Store:           store,
 		Locker:          locker,
 		UpdaterSets:     cfg.Updaters.Sets,
-		UpdateInterval:  cfg.Matcher.Period,
+		UpdateInterval:  time.Duration(cfg.Matcher.Period),
 		UpdaterConfigs:  updaterConfigs,
 		UpdateRetention: cfg.Matcher.UpdateRetention,
 		MatcherNames:    cfg.Matchers.Names,
@@ -347,12 +347,12 @@ func localNotifier(ctx context.Context, cfg *config.Config, i indexer.Service, m
 	}
 
 	s, err := service.New(ctx, store, locks, service.Opts{
-		DeliveryInterval: cfg.Notifier.DeliveryInterval,
+		DeliveryInterval: time.Duration(cfg.Notifier.DeliveryInterval),
 		Indexer:          i,
 		Matcher:          m,
 		Client:           c,
 		Signer:           signer,
-		PollInterval:     cfg.Notifier.PollInterval,
+		PollInterval:     time.Duration(cfg.Notifier.PollInterval),
 		DisableSummary:   cfg.Notifier.DisableSummary,
 		Webhook:          cfg.Notifier.Webhook,
 		AMQP:             cfg.Notifier.AMQP,
