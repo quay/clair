@@ -73,7 +73,7 @@ Ensure you run the above command outside of any Go directory with a go.mod file.
 
 You can submit a manifest to ClairV4 via the following command.
 ```shell
-$ clairctl --host ${net_address_of_clair} report ${image_tag}
+$ clairctl report --host ${net_address_of_clair} ${image_tag}
 ```
 
 By default, `clairctl` will look for Clair at `localhost:6060`.
