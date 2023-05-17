@@ -1,0 +1,57 @@
+---
+log_level: debug-color
+introspection_addr: ":8089"
+http_listen_addr: ":6060"
+updaters:
+  sets:
+    - ubuntu
+    - debian
+    - rhel
+    - alpine
+auth:
+  psk:
+    key: 'c2VjcmV0'
+    iss:
+      - quay
+      - clairctl
+indexer:
+  connstring: host=clair-database user=clair dbname=indexer sslmode=disable
+  scanlock_retry: 10
+  layer_scan_concurrency: 5
+  migrations: true
+matcher:
+  indexer_addr: http://clair-indexer:6060/
+  connstring: host=clair-database user=clair dbname=matcher sslmode=disable
+  max_conn_pool: 100
+  migrations: true
+matchers: {}
+notifier:
+  indexer_addr: http://clair-indexer:6060/
+  matcher_addr: http://clair-matcher:6060/
+  connstring: host=clair-database user=clair dbname=notifier sslmode=disable
+  migrations: true
+  delivery_interval: 30s
+  poll_interval: 1m
+  webhook:
+    target: "http://webhook-target/"
+    callback: "http://clair-notifier:6060/notifier/api/v1/notification/"
+  # amqp:
+  #   direct: true
+  #   exchange:
+  #     name: ""
+  #     type: "direct"
+  #     durable: true
+  #     auto_delete: false
+  #   uris: ["amqp://guest:guest@clair-rabbitmq:5672/"]
+  #   routing_key: "notifications"
+  #   callback: "http://clair-notifier/notifier/api/v1/notifications"
+# tracing and metrics config
+trace:
+  name: "jaeger"
+#  probability: 1
+  jaeger:
+    agent:
+      endpoint: "clair-jaeger:6831"
+    service_name: "clair"
+metrics:
+  name: "prometheus"

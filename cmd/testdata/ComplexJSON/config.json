@@ -1,0 +1,5 @@
+{
+	"http_listen_addr": ":80",
+	"log_level": "error",
+	"matcher": {}
+}

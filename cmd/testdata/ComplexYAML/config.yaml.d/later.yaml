@@ -1,0 +1,4 @@
+log_level: panic
+updaters:
+  sets:
+    - rhel
