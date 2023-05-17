@@ -16,7 +16,6 @@ import (
 	_ "github.com/quay/claircore/updater/defaults"
 	"github.com/quay/zlog"
 	"golang.org/x/sync/errgroup"
-	yaml "gopkg.in/yaml.v3"
 
 	"github.com/quay/clair/v4/cmd"
 	"github.com/quay/clair/v4/health"
@@ -55,13 +54,8 @@ func main() {
 		}
 		switch f.Name {
 		case "conf":
-			cf, err := os.Open(fv)
-			if err != nil {
-				golog.Fatalf("failed to open config file: %v", err)
-			}
-			defer cf.Close()
-			if err := yaml.NewDecoder(cf).Decode(&conf); err != nil {
-				golog.Fatalf("failed to decode yaml config: %v", err)
+			if err := cmd.LoadConfig(&conf, fv, true); err != nil {
+				golog.Fatalf("failed loading config: %v", err)
 			}
 		case "mode":
 			if fv == "" {
