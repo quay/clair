@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"net/url"
-	"time"
 )
 
 // Matcher is the configuration for the matcher service.
@@ -23,7 +22,7 @@ type Matcher struct {
 	// Period controls how often updaters are run.
 	//
 	// The default is 30 minutes.
-	Period time.Duration `yaml:"period,omitempty" json:"period,omitempty"`
+	Period Duration `yaml:"period,omitempty" json:"period,omitempty"`
 	// UpdateRetention controls the number of updates to retain between
 	// garbage collection periods.
 	//
@@ -48,7 +47,7 @@ type Matcher struct {
 	//
 	// If empty, the duration set in "Period" will be used. This means client
 	// may cache "stale" results for 2(Period) - 1 seconds.
-	CacheAge time.Duration `yaml:"cache_age,omitempty" json:"cache_age,omitempty"`
+	CacheAge Duration `yaml:"cache_age,omitempty" json:"cache_age,omitempty"`
 	// A "true" or "false" value
 	//
 	// Whether Matcher nodes handle migrations to their databases.
@@ -65,7 +64,7 @@ func (m *Matcher) validate(mode Mode) ([]Warning, error) {
 		return nil, nil
 	}
 	if m.Period == 0 {
-		m.Period = DefaultMatcherPeriod
+		m.Period = Duration(DefaultMatcherPeriod)
 	}
 	switch {
 	case m.UpdateRetention < 0:
@@ -103,7 +102,7 @@ func (m *Matcher) lint() (ws []Warning, err error) {
 		ws[i].path = ".connstring"
 	}
 
-	if m.Period < DefaultMatcherPeriod {
+	if m.Period < Duration(DefaultMatcherPeriod) {
 		ws = append(ws, Warning{
 			path: ".period",
 			msg:  "updater period is very aggressive: most sources are updated daily",
