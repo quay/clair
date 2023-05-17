@@ -3,6 +3,7 @@ module github.com/quay/clair/v4
 go 1.20
 
 require (
+	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/go-stomp/stomp/v3 v3.0.5
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-containerregistry v0.6.1
@@ -12,7 +13,7 @@ require (
 	github.com/klauspost/compress v1.16.5
 	github.com/ldelossa/responserecorder v1.0.2-0.20210711162258-40bec93a9325
 	github.com/prometheus/client_golang v1.14.0
-	github.com/quay/clair/config v1.1.3
+	github.com/quay/clair/config v1.2.0
 	github.com/quay/claircore v1.4.22
 	github.com/quay/zlog v1.1.4
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
@@ -97,3 +98,5 @@ require (
 	modernc.org/strutil v1.1.3 // indirect
 	modernc.org/token v1.0.1 // indirect
 )
+
+replace github.com/quay/clair/config => ./config

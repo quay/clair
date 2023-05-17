@@ -1,0 +1,33 @@
+auth:
+    psk:
+        iss:
+            - quay
+            - clairctl
+        key: dmVyeXNlY3JldA0K
+http_listen_addr: :80
+indexer:
+    connstring: host=/var/run/postgresql
+    migrations: true
+    airgap: true
+    scanner:
+    repo:
+      rhel-repository-scanner:
+        repo2cpe_mapping_file: /config/repository-to-cpe.json
+    package:
+      rhel_containerscanner:
+        name2repos_mapping_file: /config/container-name-repos-map.json
+log_level: info
+matcher:
+    connstring: host=/var/run/postgresql
+    migrations: true
+    disable_updaters: true
+metrics:
+    name: prometheus
+notifier:
+    connstring: host=/var/run/postgresql
+    delivery_interval: 1m0s
+    migrations: true
+    poll_interval: 5m0s
+    webhook:
+        callback: http://clair/notifier/api/v1/notifications
+        target: https://quay/secscan/notification
