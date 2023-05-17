@@ -86,7 +86,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           context: ${{ runner.temp }}/build
-          platforms: linux/amd64,linux/arm64,linux/s390x
+          platforms: linux/amd64,linux/arm64,linux/s390x,linux/ppc64le
           push: ${{ steps.setup.outputs.push && steps.novelty.outputs.cache-hit != 'true' }}
           tags: |
             quay.io/${{ steps.setup.outputs.repo }}:${{ steps.setup.outputs.tag }}
