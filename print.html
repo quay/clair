@@ -71,10 +71,12 @@
         <!-- Hide / unhide sidebar before it is displayed -->
         <script>
             var html = document.querySelector('html');
-            var sidebar = 'hidden';
+            var sidebar = null;
             if (document.body.clientWidth >= 1080) {
                 try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
                 sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
             }
             html.classList.remove('sidebar-visible');
             html.classList.add("sidebar-" + sidebar);
@@ -228,11 +230,10 @@ CLAIR_CONF=/path/to/mounted/config.yaml
 <h2 id="submitting-a-manifest"><a class="header" href="#submitting-a-manifest">Submitting A Manifest</a></h2>
 <p>The simplest way to submit a manifest to your running Clair is utilizing <a href="howto/../reference/clairctl.html">clairctl</a>. This is a CLI tool capable of grabbing image manifests from public repositories and and submitting them for analysis. 
 The command will be in the Clair container, but can also be installed locally by running the following command:</p>
-<pre><code>GO111MODULE=on go get github.com/quay/clair/v4/cmd/clairctl@latest
+<pre><code>go install github.com/quay/clair/v4/cmd/clairctl@latest
 </code></pre>
-<p>Ensure you run the above command outside of any Go directory with a go.mod file.</p>
 <p>You can submit a manifest to ClairV4 via the following command.</p>
-<pre><code class="language-shell">$ clairctl --host ${net_address_of_clair} report ${image_tag}
+<pre><code class="language-shell">$ clairctl report --host ${net_address_of_clair} ${image_tag}
 </code></pre>
 <p>By default, <code>clairctl</code> will look for Clair at <code>localhost:6060</code>.</p>
 <p>If everything is configured correctly, you should see some output like the following informing you of vulnerabilities affecting the supplied image.</p>
