@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/quay/clair/config"
 	_ "github.com/quay/claircore/updater/defaults"
 	"github.com/quay/zlog"
 	"github.com/rs/zerolog"
@@ -55,6 +56,7 @@ func main() {
 			ExportCmd,
 			ImportCmd,
 			DeleteCmd,
+			CheckConfigCmd,
 		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
@@ -92,4 +94,12 @@ func main() {
 	}
 
 	app.RunContext(ctx, os.Args)
+}
+
+func loadConfig(n string) (*config.Config, error) {
+	var cfg config.Config
+	if err := cmd.LoadConfig(&cfg, n, false); err != nil {
+		return nil, err
+	}
+	return &cfg, nil
 }
