@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"net"
+	"time"
 )
 
 // Config is the configuration object for the commands in
@@ -74,4 +75,22 @@ func (c *Config) lint() (ws []Warning, err error) {
 		})
 	}
 	return ws, nil
+}
+
+// Duration is a serializeable [time.Duration].
+type Duration time.Duration
+
+// UnmarshalText implements [encoding.TextUnmarshaler].
+func (d *Duration) UnmarshalText(b []byte) error {
+	dur, err := time.ParseDuration(string(b))
+	if err != nil {
+		return err
+	}
+	*d = Duration(dur)
+	return nil
+}
+
+// MarshalText implements [encoding.TextMarshaler].
+func (d *Duration) MarshalText() ([]byte, error) {
+	return []byte(time.Duration(*d).String()), nil
 }
