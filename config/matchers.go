@@ -20,5 +20,5 @@ type Matchers struct {
 	// "suse"
 	// "ubuntu"
 	// "crda" - remotematcher calls hosted api via RPC.
-	Names []string `yaml:"names" json:"names"`
+	Names []string `yaml:"names,omitempty" json:"names,omitempty"`
 }
