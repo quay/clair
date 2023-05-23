@@ -8,6 +8,7 @@ updaters:
     - debian
     - rhel
     - alpine
+    - osv
 auth:
   psk:
     key: 'c2VjcmV0'
