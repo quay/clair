@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/go-stomp/stomp/v3 v3.0.5
 	github.com/google/go-cmp v0.5.9
-	github.com/google/go-containerregistry v0.6.1
+	github.com/google/go-containerregistry v0.15.2
 	github.com/google/uuid v1.3.0
 	github.com/jackc/pgconn v1.14.0
 	github.com/jackc/pgx/v4 v4.18.1
@@ -39,11 +39,12 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
-	github.com/docker/cli v20.10.16+incompatible // indirect
-	github.com/docker/distribution v2.7.1+incompatible // indirect
-	github.com/docker/docker v20.10.16+incompatible // indirect
-	github.com/docker/docker-credential-helpers v0.6.4 // indirect
+	github.com/docker/cli v23.0.5+incompatible // indirect
+	github.com/docker/distribution v2.8.1+incompatible // indirect
+	github.com/docker/docker v23.0.5+incompatible // indirect
+	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/doug-martin/goqu/v8 v8.6.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
@@ -65,8 +66,9 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.16 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
+	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/opencontainers/image-spec v1.0.2 // indirect
+	github.com/opencontainers/image-spec v1.1.0-rc3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.4.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
@@ -78,8 +80,9 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/sirupsen/logrus v1.8.1 // indirect
+	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
+	github.com/vbatts/tar-split v0.11.3 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.opentelemetry.io/otel/metric v1.16.0 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
