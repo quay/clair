@@ -21,7 +21,6 @@ jobs:
     name: Integration Tests
     needs: ['config']
     runs-on: ubuntu-latest
-    env:
     services:
       # These will be used by a container on the same docker network, so no need to expose ports.
       postgres:
@@ -62,7 +61,7 @@ jobs:
         with:
           platforms: linux/${{ matrix.platform }}
       - name: Make directories on cache miss
-        run: mkdir -p "$(go env GOMODCACHE)" "$(go env GOCACHE)" 
+        run: mkdir -p "$(go env GOMODCACHE)" "$(go env GOCACHE)"
         if: ${{ ! steps.cache.outputs.cache-hit }}
       - name: Configure RabbitMQ
         run: |

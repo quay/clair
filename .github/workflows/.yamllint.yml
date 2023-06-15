@@ -1,0 +1,6 @@
+---
+extends: default
+rules:
+  line-length: false
+  truthy:
+    check-keys: false

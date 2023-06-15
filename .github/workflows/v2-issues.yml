@@ -1,3 +1,4 @@
+---
 name: 'Manage v2 Issues'
 on:
   workflow_dispatch:

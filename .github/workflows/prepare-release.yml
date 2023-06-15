@@ -39,7 +39,7 @@ jobs:
           filter_tag="--tag-filter-pattern v4"
           branch=${{ github.event.inputs.branch }}
           echo "discovered branch $branch"
-          if [[ ${branch%-*} == "release" ]]; then 
+          if [[ ${branch%-*} == "release" ]]; then
             filter_tag="--tag-filter-pattern v${branch#release-}"
           fi
 
