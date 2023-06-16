@@ -46,10 +46,56 @@ jobs:
           printf 'CLAIRCORE_BRANCH=%s\n' "${br}" >> $GITHUB_ENV
           printf 'GO_VERSION=%s\n' "$gv" >> $GITHUB_ENV
           printf '%s/.local/go/bin\n' "$HOME" >> $GITHUB_PATH
+      - name: Install IBMCLI
+        run: curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
+      - name: IBM Cloud Login
+        run: ibmcloud login -q --apikey ${{ secrets.IBMCLOUD_API_KEY }} -r eu-gb
+      - name: Install VPC CLI plug-in
+        run: ibmcloud plugin install vpc-infrastructure
+      - name: Creation of ZVSI
+        id: ZVSI
+        run: |
+          #creation of zvsi
+          ibmcloud is instance-create $ZVSI_INSTANCE_NAME $ZVSI_VPC $ZVSI_ZONE_NAME $ZVSI_PROFILE_NAME $ZVSI_SUBNET --image $ZVSI_IMAGE --keys $ZVSI_KEY --resource-group-id $ZVSI_RG_ID
+          #Reserving a floating ip to the ZVSI
+          ibmcloud is floating-ip-reserve $ZVSI_FP_NAME --zone $ZVSI_ZONE_NAME --resource-group-id $ZVSI_RG_ID --in $ZVSI_INSTANCE_NAME
+          #Bouding the Floating ip to the ZVSI
+          ibmcloud is floating-ip-update $ZVSI_FP_NAME --nic primary --in $ZVSI_INSTANCE_NAME
+          sleep 20
+
+          #Saving the Floating IP to login ZVSI
+          ZVSI_HOST=$(ibmcloud is floating-ip $ZVSI_FP_NAME | awk '/Address/{print $2}')
+          echo $ZVSI_HOST
+          echo "IP=${ZVSI_HOST}" >> $GITHUB_OUTPUT
+      - name: Setup SSH config for builders
+        env:
+          BUILDER_S390X_SSH_HOST: ${{ steps.ZVSI.outputs.IP }}
+          BUILDER_S390X_SSH_KEY: ${{ secrets.ZVSI_PR_KEY }}
+        run: |
+          mkdir ~/.ssh
+          chmod 700 ~/.ssh
+          touch ~/.ssh/id_builder_s390x
+          chmod 600 ~/.ssh/id_builder_s390x
+          echo "$BUILDER_S390X_SSH_KEY" > ~/.ssh/id_builder_s390x
+          touch ~/.ssh/config
+          chmod 600 ~/.ssh/config
+          cat >~/.ssh/config <<END
+          Host builder-s390x
+            StrictHostKeyChecking no
+            HostName $BUILDER_S390X_SSH_HOST
+            User root
+            IdentityFile "~/.ssh/id_builder_s390x"
+          END
       - uses: docker/setup-qemu-action@v2
         with:
-          platforms: all
-      - uses: docker/setup-buildx-action@v2
+          platforms: linux/ppc64le
+      - name: setup buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          platforms: linux/amd64, linux/arm64, linux/ppc64le
+          append: |
+            - endpoint: ssh://builder-s390x
+              platforms: linux/s390x
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ steps.setup.outputs.go_version }}
@@ -97,3 +143,12 @@ jobs:
           repo: ${{ steps.setup.outputs.repo }}
           tag: ${{ steps.setup.outputs.tag }}-${{ steps.setup.outputs.date }}
           token: ${{ secrets.QUAY_API_TOKEN }}
+      - name: Post Build-and-publish-s390x
+        if: ${{ steps.ZVSI.conclusion == 'success' && always() }}
+        run: |
+          #Delete the created ZVSI
+          ibmcloud is instance-delete $ZVSI_INSTANCE_NAME --force
+          sleep 20
+
+          #Release the created FP
+          ibmcloud is floating-ip-release $ZVSI_FP_NAME --force
