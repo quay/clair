@@ -20,6 +20,16 @@ jobs:
   build:
     name: Build and Push container
     runs-on: 'ubuntu-latest'
+    env:
+      ZVSI_FP_NAME: quay-floating-clair-nightly
+      ZVSI_INSTANCE_NAME: quay-zvsi-clair-nightly
+      ZVSI_VPC: r018-b72c601c-c1d9-42cf-af66-c0f6da4ab982
+      ZVSI_ZONE_NAME: eu-gb-2
+      ZVSI_PROFILE_NAME: bz2-4x16
+      ZVSI_SUBNET: 0797-88f93aad-3acd-4c8e-be10-8dc6d41bc9b9
+      ZVSI_IMAGE: r018-000c8ed2-fb20-436a-9b3a-8b4f062b50d2
+      ZVSI_KEY: r018-ee997015-b88c-4500-874c-71f2175a8284
+      ZVSI_RG_ID: 2e818eb391df4774977812b50ff0e8c9
     steps:
       - name: Setup
         id: setup
