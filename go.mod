@@ -12,7 +12,7 @@ require (
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/klauspost/compress v1.16.6
 	github.com/ldelossa/responserecorder v1.0.2-0.20210711162258-40bec93a9325
-	github.com/prometheus/client_golang v1.15.1
+	github.com/prometheus/client_golang v1.16.0
 	github.com/quay/clair/config v1.3.0
 	github.com/quay/claircore v1.5.7
 	github.com/quay/zlog v1.1.4
@@ -73,7 +73,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.4.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
-	github.com/prometheus/procfs v0.9.0 // indirect
+	github.com/prometheus/procfs v0.10.1 // indirect
 	github.com/quay/alas v1.0.1 // indirect
 	github.com/quay/claircore/toolkit v1.0.0 // indirect
 	github.com/quay/claircore/updater/driver v1.0.0 // indirect
