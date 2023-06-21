@@ -21,7 +21,7 @@ import (
 	"github.com/quay/clair/v4/notifier"
 )
 
-func setURI(t *testing.T, cfg *config.STOMP, uri string) (dial string, opt []func(*stomp.Conn) error) {
+func setURI(t *testing.T, cfg config.STOMP, uri string) (next config.STOMP, dial string, opt []func(*stomp.Conn) error) {
 	const (
 		defaultStompBrokerURI = "localhost:61613"
 	)
@@ -30,28 +30,30 @@ func setURI(t *testing.T, cfg *config.STOMP, uri string) (dial string, opt []fun
 	case uri == "":
 		t.Logf("using default broker URI: %q", defaultStompBrokerURI)
 		cfg.URIs = append(cfg.URIs, defaultStompBrokerURI)
-		return defaultStompBrokerURI, nil
+		return cfg, defaultStompBrokerURI, nil
 	case strings.Contains(uri, "://"): // probably a URL
 		u, err := url.Parse(uri)
 		if err != nil {
 			t.Logf("weird test URI: %q: %v", uri, err)
 			return setURI(t, cfg, "")
 		}
-		t.Logf("using broker URI: %q", u.Host)
+		t.Logf("using broker address: %q", u.Host)
 		cfg.URIs = append(cfg.URIs, u.Host)
+		t.Logf("using broker vhost: %q", u.Hostname())
+		opt = append(opt, stomp.ConnOpt.Host(u.Hostname()))
 		if u := u.User; u != nil {
 			t.Logf("using login: %q", u.String())
 			cfg.Login = &config.Login{
 				Login: u.Username(),
 			}
 			cfg.Login.Passcode, _ = u.Password()
-			opt = append(opt, stomp.ConnOpt.Login(u.Username(), cfg.Login.Passcode))
+			opt = append(opt, stomp.ConnOpt.Login(cfg.Login.Login, cfg.Login.Passcode))
 		}
-		return u.Host, opt
+		return cfg, u.Host, opt
 	default:
 		t.Logf("using broker URI: %q", uri)
 		cfg.URIs = append(cfg.URIs, uri)
-		return uri, nil
+		return cfg, uri, nil
 	}
 }
 
@@ -125,7 +127,7 @@ func TestDeliverer(t *testing.T) {
 			},
 		}
 	)
-	dial, opt := setURI(t, &conf, os.Getenv("STOMP_CONNECTION_STRING"))
+	conf, dial, opt := setURI(t, conf, os.Getenv("STOMP_CONNECTION_STRING"))
 	opt = append(opt, stomp.ConnOpt.Logger(logAdapter{t}))
 
 	// test parallel usage
@@ -205,7 +207,7 @@ func TestDirectDeliverer(t *testing.T) {
 				Rollup:      tt.rollup,
 				Destination: queue,
 			}
-			dial, opt := setURI(t, &conf, os.Getenv("STOMP_CONNECTION_STRING"))
+			conf, dial, opt := setURI(t, conf, os.Getenv("STOMP_CONNECTION_STRING"))
 
 			noteID := uuid.New()
 			notes := make([]notifier.Notification, 0, tt.notes)

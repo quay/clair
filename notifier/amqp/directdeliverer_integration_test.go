@@ -79,6 +79,7 @@ func TestDirectDeliverer(t *testing.T) {
 	if uri == "" {
 		uri = defaultRabbitMQURI
 	}
+	t.Logf("using uri: %q", uri)
 	conn, err := samqp.Dial(uri)
 	if err != nil {
 		t.Fatalf("failed to connect to broker at %v: %v", uri, err)

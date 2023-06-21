@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"time"
 
 	gostomp "github.com/go-stomp/stomp/v3"
 	"github.com/google/uuid"
@@ -32,6 +33,10 @@ func New(conf *config.STOMP) (*Deliverer, error) {
 }
 
 func (d *Deliverer) load(cfg *config.STOMP) error {
+	d.fo.timeout = 30 * time.Second
+	// TODO(hank) Wire up the "host" and "timeout" config somehow -- probably
+	// just make the config URIs strings actual URIs and parse them out with
+	// query parameters.
 	var err error
 	if cfg.TLS != nil {
 		d.fo.tls, err = cfg.TLS.Config()
@@ -46,8 +51,8 @@ func (d *Deliverer) load(cfg *config.STOMP) error {
 		}
 	}
 
-	d.fo.uris = make([]string, len(cfg.URIs))
-	copy(d.fo.uris, cfg.URIs)
+	d.fo.addrs = make([]string, len(cfg.URIs))
+	copy(d.fo.addrs, cfg.URIs)
 	d.destination = cfg.Destination
 	d.rollup = cfg.Rollup
 	return nil

@@ -47,6 +47,7 @@ func TestDeliverer(t *testing.T) {
 	if uri == "" {
 		uri = defaultRabbitMQURI
 	}
+	t.Logf("using uri: %q", uri)
 
 	conf.URIs = []string{
 		// give a few bogus URIs to confirm failover mechanisms are working

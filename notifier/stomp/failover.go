@@ -17,26 +17,30 @@ import (
 //
 // failOver is safe for concurrent usage.
 type failOver struct {
-	tls   *tls.Config
-	login *config.Login
-	uris  []string
+	tls     *tls.Config
+	login   *config.Login
+	addrs   []string
+	timeout time.Duration
 }
 
-// Dial will dial the provided URI in accordance with the provided Config.
+// Dial will dial the provided address in accordance with the provided Config.
 //
 // Note: the STOMP protocol does not support multiplexing operations over a
 // single TCP connection. A TCP connection must be made for each STOMP
 // connection.
-func (f *failOver) Dial(ctx context.Context, uri string) (*gostomp.Conn, error) {
+func (f *failOver) Dial(ctx context.Context, addr string) (*gostomp.Conn, error) {
 	var opts []func(*gostomp.Conn) error
 	if f.login != nil {
 		opts = append(opts, gostomp.ConnOpt.Login(f.login.Login, f.login.Passcode))
+	}
+	if host, _, err := net.SplitHostPort(addr); err == nil {
+		opts = append(opts, gostomp.ConnOpt.Host(host))
 	}
 
 	var d interface {
 		DialContext(context.Context, string, string) (net.Conn, error)
 	} = &net.Dialer{
-		Timeout: 2 * time.Second,
+		Timeout: f.timeout,
 	}
 	if f.tls != nil {
 		d = &tls.Dialer{
@@ -44,9 +48,9 @@ func (f *failOver) Dial(ctx context.Context, uri string) (*gostomp.Conn, error) 
 			Config:    f.tls,
 		}
 	}
-	conn, err := d.DialContext(ctx, "tcp", uri)
+	conn, err := d.DialContext(ctx, "tcp", addr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to broker @ %v: %w", uri, err)
+		return nil, fmt.Errorf("failed to connect to broker @ %v: %w", addr, err)
 	}
 
 	stompConn, err := gostomp.Connect(conn, opts...)
@@ -54,7 +58,7 @@ func (f *failOver) Dial(ctx context.Context, uri string) (*gostomp.Conn, error) 
 		if conn != nil {
 			conn.Close()
 		}
-		return nil, fmt.Errorf("stomp connect handshake to broker @ %v failed: %w", uri, err)
+		return nil, fmt.Errorf("stomp connect handshake to broker @ %v failed: %w", addr, err)
 	}
 
 	return stompConn, err
@@ -68,13 +72,13 @@ func (f *failOver) Dial(ctx context.Context, uri string) (*gostomp.Conn, error) 
 func (f *failOver) Connection(ctx context.Context) (*gostomp.Conn, error) {
 	ctx = zlog.ContextWithValues(ctx, "component", "notifier/stomp/failOver.Connection")
 
-	for _, uri := range f.uris {
-		conn, err := f.Dial(ctx, uri)
+	for _, addr := range f.addrs {
+		conn, err := f.Dial(ctx, addr)
 		if err != nil {
 			zlog.Debug(ctx).
-				Str("broker", uri).
+				Str("broker", addr).
 				Err(err).
-				Msg("failed to dial broker. attempting next")
+				Msg("failed to dial broker, attempting next")
 			continue
 		}
 		return conn, nil
