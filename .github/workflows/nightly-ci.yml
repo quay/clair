@@ -5,90 +5,51 @@ on:
   schedule:
     - cron: '30 4 * * *'
   workflow_dispatch:
-    inputs: {}
+    inputs:
+      package_expr:
+        required: false
+        type: string
+        description: 'Package expression(s) passed to `go test`'
+      go_versions:
+        required: false
+        type: string
+        description: 'JSON array of go versions to use for tests'
+      platforms:
+        required: false
+        type: string
+        description: 'JSON array of platforms to test'
 
 jobs:
-  config:
+  defaults:
     runs-on: ubuntu-latest
     outputs:
+      package_expr: ${{ steps.config.outputs.package_expr }}
       go_versions: ${{ steps.config.outputs.go_versions }}
-    steps:
-      - id: config
-        run: |
-          echo 'go_versions=["1.20"]' >> "$GITHUB_OUTPUT"
-
-  tests:
-    name: Integration Tests
-    needs: ['config']
-    runs-on: ubuntu-latest
-    services:
-      # These will be used by a container on the same docker network, so no need to expose ports.
-      postgres:
-        image: docker.io/library/postgres:11
-        env:
-          POSTGRES_DB: "clair"
-          POSTGRES_INITDB_ARGS: "--no-sync"
-          POSTGRES_PASSWORD: password
-          POSTGRES_USER: "clair"
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      rabbitmq:
-        image: docker.io/library/rabbitmq:3
-        env:
-          RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: '-rabbit vm_memory_high_watermark 0.85'
-
-    strategy:
-      matrix:
-        go: ${{ fromJSON(needs.config.outputs.go_versions) }}
-        # Put non-amd64 platforms that should run tests here:
-        platform: ['arm64', 'ppc64le', 's390x']
+      platforms: ${{ steps.config.outputs.platforms }}
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache@v3
-        id: cache
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-${{ matrix.platform }}-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.platform }}-${{ matrix.go }}-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: linux/${{ matrix.platform }}
-      - name: Make directories on cache miss
-        run: mkdir -p "$(go env GOMODCACHE)" "$(go env GOCACHE)"
-        if: ${{ ! steps.cache.outputs.cache-hit }}
-      - name: Configure RabbitMQ
+      - id: config
         run: |
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl await_startup
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmq-plugins enable rabbitmq_stomp
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmq-plugins disable rabbitmq_management_agent rabbitmq_prometheus rabbitmq_web_dispatch
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl add_vhost '::1'
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p '::1' guest '.*' '.*' '.*'
-      - name: Run integration tests
-        run: >-
-          docker run
-          --rm
-          --network ${{ job.container.network }}
-          --platform linux/${{ matrix.platform }}
-          --mount "type=bind,src=$(go env GOMODCACHE),dst=/go/pkg/mod"
-          --mount "type=bind,src=$(go env GOCACHE),dst=/root/.cache/go-build"
-          --mount "type=bind,src=$(pwd),dst=/build"
-          --env "POSTGRES_CONNECTION_STRING=host=postgres port=5432 user=clair dbname=clair sslmode=disable"
-          --env "RABBITMQ_CONNECTION_STRING=amqp://guest:guest@clair-rabbitmq:5672/"
-          --env "STOMP_CONNECTION_STRING=stomp://guest:guest@clair-activemq:61613/"
-          -w /build
-          quay.io/projectquay/golang:${{ matrix.go }}
-          go test
-          -tags integration
-          $(go list -m github.com/quay/clair{core,}/... | awk '{printf("%s/... ",$1)}')
-      - uses: actions/upload-artifact@v3
-        if: failure()
-        with:
-          name: workspace-${{matrix.go}}-${{matrix.platform}}
-          path: ${{ github.workspace }}
+          if test -n "${{ inputs.package_expr }}"; then
+            printf 'package_expr=%s\n' '${{ inputs.package_expr }}' >> "$GITHUB_OUTPUT"
+          else
+            printf 'package_expr=%s\n' "$(go list -m github.com/quay/clair{core,}/... | awk '{printf("%s/... ",$1)}')" >> "$GITHUB_OUTPUT"
+          fi
+          if test -n "${{ inputs.go_versions }}"; then
+            printf 'go_versions=%s\n' '${{ inputs.go_versions }}' >> "$GITHUB_OUTPUT"
+          else
+            printf 'go_versions=["1.20"]\n' >> "$GITHUB_OUTPUT"
+          fi
+          if test -n "${{ inputs.platforms }}"; then
+            printf 'platforms=%s\n' '${{ inputs.platforms }}' >> "$GITHUB_OUTPUT"
+          else
+            printf 'platforms=["linux/arm64", "linux/ppc64le", "linux/s390x"]\n' >> "$GITHUB_OUTPUT"
+          fi
+
+  tests:
+    needs: ['defaults']
+    uses: ./.github/workflows/tests.yml
+    with:
+      package_expr: ${{ needs.defaults.outputs.package_expr }}
+      go_versions: ${{ needs.defaults.outputs.go_versions }}
+      platforms: ${{ needs.defaults.outputs.platforms }}

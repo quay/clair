@@ -1,0 +1,127 @@
+---
+name: Tests
+
+on:
+  workflow_call:
+    inputs:
+      package_expr:
+        required: true
+        type: string
+        description: 'Package expression(s) passed to `go test`'
+      go_versions:
+        required: false
+        type: string
+        default: |
+          ["1.20"]
+        description: 'JSON array of go versions to use for tests'
+      platforms:
+        required: false
+        type: string
+        default: |
+          ["linux/amd64"]
+        description: 'JSON array of platforms to test'
+      cd:
+        required: false
+        type: string
+        default: ""
+        description: 'Change to this directory before running tests'
+
+jobs:
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: ${{ fromJSON(inputs.go_versions) }}
+        platform: ${{ fromJSON(inputs.platforms) }}
+      fail-fast: false
+    services:
+      postgres:
+        image: docker.io/library/postgres:11
+        env:
+          POSTGRES_DB: "clair"
+          POSTGRES_INITDB_ARGS: "--no-sync"
+          POSTGRES_PASSWORD: password
+          POSTGRES_USER: "clair"
+        options: >-
+          --health-cmd "pg_isready -U clair"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432
+      rabbitmq:
+        image: docker.io/library/rabbitmq:3
+        env:
+          RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: '-rabbit vm_memory_high_watermark 0.85'
+        ports:
+          - 5672
+          - 61613
+
+    steps:
+      - name: Configure RabbitMQ
+        run: |
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl await_startup
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmq-plugins enable rabbitmq_stomp
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmq-plugins disable rabbitmq_management_agent rabbitmq_prometheus rabbitmq_web_dispatch
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl add_vhost 'rabbitmq'
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p 'rabbitmq' guest '.*' '.*' '.*'
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl add_user clair password
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p '/' clair '.*' '.*' '.*'
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p 'rabbitmq' clair '.*' '.*' '.*'
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          cache: false  # Set up with a finer-grained cache key below.
+          go-version: ${{ matrix.go }}
+      - name: Check host
+        id: host
+        run:
+          printf 'platform=%s\n' "$(go env GOOS GOARCH | paste -s -d /)" >> "$GITHUB_OUTPUT"
+      - name: Cache go artifacts
+        uses: actions/cache@v3
+        id: cache
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-${{ matrix.platform }}-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.platform }}-${{ matrix.go }}-
+      - name: Warm the cache on miss
+        # This is faster to run outside the container, but the module cache
+        # can't easily be shared between runs because GOOS and GOARCH influence
+        # the dependency graph.
+        if: ${{ ! steps.cache.outputs.cache-hit }}
+        run: |
+          go env -w $(echo ${{ matrix.platform}} | awk -F / '{print "GOOS="$1, "GOARCH="$2}')
+          go mod download
+          go build -v std
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        if: ${{ steps.host.outputs.platform != matrix.platform }}
+        with:
+          platforms: ${{ matrix.platform }}
+      - name: Tests
+        run: >-
+          docker run
+          --rm
+          --network ${{ job.container.network }}
+          --platform ${{ matrix.platform }}
+          --mount "type=bind,src=$(go env GOMODCACHE),dst=/go/pkg/mod"
+          --mount "type=bind,src=$(go env GOCACHE),dst=/root/.cache/go-build"
+          --mount "type=bind,src=$(pwd),dst=/build"
+          --env "POSTGRES_CONNECTION_STRING=host=postgres port=5432 user=clair dbname=clair password=password sslmode=disable"
+          --env "RABBITMQ_CONNECTION_STRING=amqp://clair:password@rabbitmq:5672/"
+          --env "STOMP_CONNECTION_STRING=stomp://clair:password@rabbitmq:61613/"
+          -w "/build/${{ inputs.cd }}"
+          "quay.io/projectquay/golang:${{ matrix.go }}"
+          go test
+          -tags integration
+          ${{ inputs.package_expr }}
+      - uses: actions/upload-artifact@v3
+        if: failure()
+        with:
+          name: workspace-${{matrix.go}}
+          path: ${{ github.workspace }}

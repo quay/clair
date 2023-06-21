@@ -112,8 +112,8 @@ jobs:
           docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl await_startup
           docker exec ${{ job.services.rabbitmq.id }} rabbitmq-plugins enable rabbitmq_stomp
           docker exec ${{ job.services.rabbitmq.id }} rabbitmq-plugins disable rabbitmq_management_agent rabbitmq_prometheus rabbitmq_web_dispatch
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl add_vhost '::1'
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p '::1' guest '.*' '.*' '.*'
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl add_vhost 'localhost'
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p 'localhost' guest '.*' '.*' '.*'
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
