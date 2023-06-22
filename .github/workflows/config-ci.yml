@@ -57,24 +57,11 @@ jobs:
         with:
           go: ${{ matrix.go }}
           dir: ./config
-  test:
-    name: Test
+
+  tests:
     needs: ['config']
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go: ${{ fromJSON(needs.config.outputs.go_versions) }}
-    steps:
-      - uses: actions/setup-go@v4
-        with:
-          go-version: ${{ matrix.go }}
-      - uses: actions/checkout@v3
-      - uses: ./.github/actions/go-cache
-        with:
-          go: ${{ matrix.go }}
-      - run: cd config && go test ./...
-      - uses: actions/upload-artifact@v3
-        if: failure()
-        with:
-          name: workspace-${{matrix.go}}
-          path: ${{ github.workspace }}
+    uses: ./.github/workflows/tests.yml
+    with:
+      cd: config
+      package_expr: ./...
+      go_versions: ${{ needs.config.outputs.go_versions }}
