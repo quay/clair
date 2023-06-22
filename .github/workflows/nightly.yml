@@ -21,14 +21,14 @@ jobs:
     name: Build and Push container
     runs-on: 'ubuntu-latest'
     env:
-      ZVSI_FP_NAME: quay-floating-clair-nightly
-      ZVSI_INSTANCE_NAME: quay-zvsi-clair-nightly
-      ZVSI_VPC: r018-b72c601c-c1d9-42cf-af66-c0f6da4ab982
-      ZVSI_ZONE_NAME: eu-gb-2
+      ZVSI_FP_NAME: quay-floating-clair-nightly-${{ github.run_id }}
+      ZVSI_INSTANCE_NAME: quay-zvsi-clair-nightly-${{ github.run_id }}
+      ZVSI_VPC: r022-5a8a5bd4-6bbb-4688-a6b4-ef314c17c9f8
+      ZVSI_ZONE_NAME: jp-tok-1
       ZVSI_PROFILE_NAME: bz2-4x16
-      ZVSI_SUBNET: 0797-88f93aad-3acd-4c8e-be10-8dc6d41bc9b9
-      ZVSI_IMAGE: r018-000c8ed2-fb20-436a-9b3a-8b4f062b50d2
-      ZVSI_KEY: r018-ee997015-b88c-4500-874c-71f2175a8284
+      ZVSI_SUBNET: 02e7-56b5d8b2-d425-4cc2-b242-dd4d2955648d
+      ZVSI_IMAGE: r022-93f35a67-8f06-463d-882f-7300519acdf9
+      ZVSI_KEY: r022-45ce88a7-0f27-4ed1-b9b9-9eb0f7becbc8
       ZVSI_RG_ID: 2e818eb391df4774977812b50ff0e8c9
     steps:
       - name: Setup
@@ -59,7 +59,7 @@ jobs:
       - name: Install IBMCLI
         run: curl -fsSL https://clis.cloud.ibm.com/install/linux | sh
       - name: IBM Cloud Login
-        run: ibmcloud login -q --apikey ${{ secrets.IBMCLOUD_API_KEY }} -r eu-gb
+        run: ibmcloud login -q --apikey ${{ secrets.IBMCLOUD_API_KEY }} -r jp-tok -g $ZVSI_RG_ID
       - name: Install VPC CLI plug-in
         run: ibmcloud plugin install vpc-infrastructure
       - name: Creation of ZVSI
