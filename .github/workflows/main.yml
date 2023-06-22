@@ -77,54 +77,8 @@ jobs:
           publish: false
 
   tests:
-    name: Integration Tests
     needs: ['config']
-    runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: docker.io/library/postgres:11
-        env:
-          POSTGRES_DB: "clair"
-          POSTGRES_INITDB_ARGS: "--no-sync"
-          POSTGRES_PASSWORD: password
-          POSTGRES_USER: "clair"
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432
-      rabbitmq:
-        image: docker.io/library/rabbitmq:3
-        env:
-          RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: '-rabbit vm_memory_high_watermark 0.85'
-        ports:
-          - 5672
-          - 61613
-
-    strategy:
-      matrix:
-        go: ${{ fromJSON(needs.config.outputs.go_versions) }}
-    steps:
-      - name: Configure RabbitMQ
-        run: |
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl await_startup
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmq-plugins enable rabbitmq_stomp
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmq-plugins disable rabbitmq_management_agent rabbitmq_prometheus rabbitmq_web_dispatch
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl add_vhost 'localhost'
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p 'localhost' guest '.*' '.*' '.*'
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v4
-        with:
-          go-version: ${{ matrix.go }}
-      - run: go test -tags integration ./...
-        env:
-          POSTGRES_CONNECTION_STRING: "host=localhost port=${{ job.services.postgres.ports[5432] }} user=clair dbname=clair password=password sslmode=disable"
-          RABBITMQ_CONNECTION_STRING: "amqp://guest:guest@localhost:${{ job.services.rabbitmq.ports[5672] }}/"
-          STOMP_CONNECTION_STRING: "stomp://guest:guest@localhost:${{ job.services.rabbitmq.ports[61613] }}/"
-      - uses: actions/upload-artifact@v3
-        if: failure()
-        with:
-          name: workspace-${{matrix.go}}
-          path: ${{ github.workspace }}
+    uses: ./.github/workflows/tests.yml
+    with:
+      package_expr: ./...
+      go_versions: ${{ needs.config.outputs.go_versions }}
