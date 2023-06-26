@@ -1,4 +1,4 @@
-# Clair
+# Clairo
 
 [![Docker Repository on
 Quay](https://quay.io/repository/projectquay/clair/status "Docker Repository on Quay")](https://quay.io/repository/projectquay/clair)
