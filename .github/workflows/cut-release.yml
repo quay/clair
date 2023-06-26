@@ -125,21 +125,22 @@ jobs:
       GOOS: ${{matrix.goos}}
       GOARCH: ${{matrix.goarch}}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
       - name: Fetch Artifacts
         uses: actions/download-artifact@v3
         id: download
         with:
           name: release
-      - uses: ./.github/actions/go-cache
-        with:
-          go: ${{ needs.config.outputs.build_go_version }}
-      - name: Unpack and Build
+      - name: Unpack
         run: |
           tar -xz -f ${{steps.download.outputs.download-path}}/clair-${{ needs.config.outputs.version }}.tar.gz --strip-components=1
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ needs.config.outputs.build_go_version }}
+      - name: Build
+        # Build with path trimming, ELF debug stripping, and no VCS injection (should be done by the `git archive` process).
+        run: |
           go build\
-            -trimpath -ldflags="-s -w"\
+            -trimpath -ldflags="-s -w" -buildvcs=false\
             -o "clairctl-${{matrix.goos}}-${{matrix.goarch}}"\
             ./cmd/clairctl
       - name: Upload
