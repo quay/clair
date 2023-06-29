@@ -91,14 +91,18 @@ func adminPre470(c *cli.Context) error {
 		return fmt.Errorf("error loading config: %w", err)
 	}
 	dsn := cfg.Indexer.ConnString
-	zlog.Info(ctx).
-		Str("dsn", dsn).
-		Msg("using discovered connnection string")
 
 	pgcfg, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
 		return fmt.Errorf("error parsing dsn: %w", err)
 	}
+	zlog.Info(ctx).
+		Str("host", pgcfg.ConnConfig.Host).
+		Str("database", pgcfg.ConnConfig.Database).
+		Str("user", pgcfg.ConnConfig.User).
+		Uint16("port", pgcfg.ConnConfig.Port).
+		Msg("using discovered connection params")
+
 	zlog.Debug(ctx).
 		Msg("resizing pool to 2 connections")
 	pgcfg.MaxConns = 2
