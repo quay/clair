@@ -134,6 +134,7 @@ func adminPre470(c *cli.Context) error {
 		if _, err := conn.Exec(ctx, query); err != nil {
 			return fmt.Errorf("error (re)indexing database: %w", err)
 		}
+		zlog.Info(ctx).Msg("pre v4.7.0 admin done")
 		return nil
 	})
 }
