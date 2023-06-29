@@ -1,0 +1,72 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  name: clair-db-jobs
+parameters:
+- name: SUBCOMMAND
+  value: "pre"
+  required: true
+- name: VERSION
+  value: ""
+  required: true
+- name: IMAGE
+  value: "quay.io/app-sre/clair"
+  required: true
+- name: IMAGE_TAG
+  value: ""
+  required: true
+- name: JOB_NAME
+  value: ""
+  required: true
+- name: SERVICE_ACCOUNT
+  value: "clair"
+  displayName: clair service account
+  required: true
+- name: SECRET_NAME
+  value: "config"
+  displayName: Name of the config secret
+  required: true
+
+objects:
+- apiVersion: batch/v1
+  kind: Job
+  metadata:
+    name: clair-db-jobs-${JOB_NAME}
+  spec:
+    template:
+      metadata:
+        labels:
+          app: clair-db-jobs-${JOB_NAME}
+      spec:
+        serviceAccountName: ${{SERVICE_ACCOUNT}}
+        volumes:
+          - name: clair-config
+            secret:
+              secretName: ${{SECRET_NAME}}
+        backoffLimit: 1
+        completions: 1
+        parallelism: 1
+        restartPolicy: Never
+        containers:
+        - name: clair-db-jobs-${JOB_NAME}
+          image: ${IMAGE}:${IMAGE_TAG}
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          command: [clairctl]
+          args:
+          - "-D"
+          - "--config"
+          - "/etc/clair/config.yaml"
+          - "admin"
+          - ${SUBCOMMAND}
+          - ${VERSION}
+          volumeMounts:
+          - name: clair-config
+            mountPath: /etc/clair
+
