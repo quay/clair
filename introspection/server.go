@@ -24,7 +24,6 @@ import (
 const (
 	Prom                     = "prometheus"
 	DefaultPromEndpoint      = "/metrics"
-	DogStatsD                = "dogstatsd"
 	Stdout                   = "stdout"
 	Jaeger                   = "jaeger"
 	HealthEndpoint           = "/healthz"

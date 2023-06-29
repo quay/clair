@@ -103,8 +103,6 @@ metrics:
     name: ""
     prometheus:
         endpoint: null
-    dogstatsd:
-        url: ""
 ```
 
 Note: the above just lists every key for completeness. Copy-pasting the above as
