@@ -57,6 +57,7 @@ func main() {
 			ImportCmd,
 			DeleteCmd,
 			CheckConfigCmd,
+			AdminCmd,
 		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
