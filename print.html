@@ -89,11 +89,33 @@
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
 
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
         <div id="page-wrapper" class="page-wrapper">
 
             <div class="page">
                                 <div id="menu-bar-hover-placeholder"></div>
-                <div id="menu-bar" class="menu-bar sticky bordered">
+                <div id="menu-bar" class="menu-bar sticky">
                     <div class="left-buttons">
                         <button id="sidebar-toggle" class="icon-button" type="button" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
                             <i class="fa fa-bars"></i>
@@ -763,14 +785,14 @@ headingLevel: 2</li>
 </ul>
 <hr />
 <!-- Generator: Widdershins v4.0.1 -->
-<h1 id="clairv4">ClairV4 v1.1</h1>
+<h1 id="clairv4"><a class="header" href="#clairv4">ClairV4 v1.1</a></h1>
 <blockquote>
 <p>Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.</p>
 </blockquote>
 <p>ClairV4 is a set of cooperating microservices which scan, index, and match your container's content with known vulnerabilities.</p>
 <p>Email: <a href="mailto:quay-devel@redhat.com">Clair Team</a> Web: <a href="http://github.com/quay/clair">Clair Team</a> 
 License: <a href="http://www.apache.org/licenses/">Apache License 2.0</a></p>
-<h1 id="clairv4-notifier">Notifier</h1>
+<h1 id="clairv4-notifier"><a class="header" href="#clairv4-notifier">Notifier</a></h1>
 <h2 id="deletenotification"><a class="header" href="#deletenotification">DeleteNotification</a></h2>
 <p><a id="opIdDeleteNotification"></a></p>
 <blockquote>
@@ -829,7 +851,7 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 </code></pre>
 <p><code>DELETE /notifier/api/v1/notification/{notification_id}</code></p>
 <p>Issues a delete of the provided notification id and all associated notifications. After this delete clients will no longer be able to retrieve notifications.</p>
-<h3 id="deletenotification-parameters">Parameters</h3>
+<h3 id="deletenotification-parameters"><a class="header" href="#deletenotification-parameters">Parameters</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
 <tr><td>notification_id</td><td>path</td><td>string</td><td>false</td><td>A notification ID returned by a callback</td></tr>
 </tbody></table>
@@ -845,7 +867,7 @@ fetch('/notifier/api/v1/notification/{notification_id}',
   &quot;message&quot;: &quot;string&quot;
 }
 </code></pre>
-<h3 id="deletenotification-responses">Responses</h3>
+<h3 id="deletenotification-responses"><a class="header" href="#deletenotification-responses">Responses</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
 <tr><td>200</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td><td>OK</td><td>None</td></tr>
 <tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="reference/api.html#schemaerror">Error</a></td></tr>
@@ -913,7 +935,7 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 </code></pre>
 <p><code>GET /notifier/api/v1/notification/{notification_id}</code></p>
 <p>By performing a GET with a notification_id as a path parameter, the client will retrieve a paginated response of notification objects.</p>
-<h3 id="retrieve-a-paginated-result-of-notifications-for-the-provided-id.-parameters">Parameters</h3>
+<h3 id="retrieve-a-paginated-result-of-notifications-for-the-provided-id.-parameters"><a class="header" href="#retrieve-a-paginated-result-of-notifications-for-the-provided-id.-parameters">Parameters</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
 <tr><td>notification_id</td><td>path</td><td>string</td><td>false</td><td>A notification ID returned by a callback</td></tr>
 <tr><td>page_size</td><td>query</td><td>int</td><td>false</td><td>The maximum number of notifications to deliver in a single page.</td></tr>
@@ -982,7 +1004,7 @@ fetch('/notifier/api/v1/notification/{notification_id}',
   ]
 }
 </code></pre>
-<h3 id="retrieve-a-paginated-result-of-notifications-for-the-provided-id.-responses">Responses</h3>
+<h3 id="retrieve-a-paginated-result-of-notifications-for-the-provided-id.-responses"><a class="header" href="#retrieve-a-paginated-result-of-notifications-for-the-provided-id.-responses">Responses</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
 <tr><td>200</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td><td>A paginated list of notifications</td><td><a href="reference/api.html#schemapagednotifications">PagedNotifications</a></td></tr>
 <tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="reference/api.html#schemaerror">Error</a></td></tr>
@@ -992,7 +1014,7 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 </div><aside class="success">
 This operation does not require authentication
 </aside>
-<h1 id="clairv4-indexer">Indexer</h1>
+<h1 id="clairv4-indexer"><a class="header" href="#clairv4-indexer">Indexer</a></h1>
 <h2 id="index-the-contents-of-a-manifest"><a class="header" href="#index-the-contents-of-a-manifest">Index the contents of a Manifest</a></h2>
 <p><a id="opIdIndex"></a></p>
 <blockquote>
@@ -1091,7 +1113,7 @@ fetch('/indexer/api/v1/index_report',
   ]
 }
 </code></pre>
-<h3 id="index-the-contents-of-a-manifest-parameters">Parameters</h3>
+<h3 id="index-the-contents-of-a-manifest-parameters"><a class="header" href="#index-the-contents-of-a-manifest-parameters">Parameters</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
 <tr><td>body</td><td>body</td><td><a href="reference/api.html#schemamanifest">Manifest</a></td><td>true</td><td>none</td></tr>
 </tbody></table>
@@ -1150,7 +1172,7 @@ fetch('/indexer/api/v1/index_report',
   &quot;err&quot;: &quot;&quot;
 }
 </code></pre>
-<h3 id="index-the-contents-of-a-manifest-responses">Responses</h3>
+<h3 id="index-the-contents-of-a-manifest-responses"><a class="header" href="#index-the-contents-of-a-manifest-responses">Responses</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
 <tr><td>201</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.2">Created</a></td><td>IndexReport Created</td><td><a href="reference/api.html#schemaindexreport">IndexReport</a></td></tr>
 <tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="reference/api.html#schemaerror">Error</a></td></tr>
@@ -1230,7 +1252,7 @@ fetch('/indexer/api/v1/index_report',
   &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;
 ]
 </code></pre>
-<h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes,-if-they-exist.-parameters">Parameters</h3>
+<h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes,-if-they-exist.-parameters"><a class="header" href="#delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes,-if-they-exist.-parameters">Parameters</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
 <tr><td>body</td><td>body</td><td><a href="reference/api.html#schemabulkdelete">BulkDelete</a></td><td>true</td><td>none</td></tr>
 </tbody></table>
@@ -1245,7 +1267,7 @@ fetch('/indexer/api/v1/index_report',
   &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;
 ]
 </code></pre>
-<h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes,-if-they-exist.-responses">Responses</h3>
+<h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes,-if-they-exist.-responses"><a class="header" href="#delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes,-if-they-exist.-responses">Responses</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
 <tr><td>200</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td><td>OK</td><td><a href="reference/api.html#schemabulkdelete">BulkDelete</a></td></tr>
 <tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="reference/api.html#schemaerror">Error</a></td></tr>
@@ -1312,7 +1334,7 @@ fetch('/indexer/api/v1/index_report/{manifest_hash}',
 </code></pre>
 <p><code>DELETE /indexer/api/v1/index_report/{manifest_hash}</code></p>
 <p>Given a Manifest's content addressable hash, any data related to it will be removed it it exists.</p>
-<h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hash,-if-exists.-parameters">Parameters</h3>
+<h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hash,-if-exists.-parameters"><a class="header" href="#delete-the-indexreport-and-associated-information-for-the-given-manifest-hash,-if-exists.-parameters">Parameters</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
 <tr><td>manifest_hash</td><td>path</td><td><a href="reference/api.html#schemadigest">Digest</a></td><td>true</td><td>A digest of a manifest that has been indexed previous to this request.</td></tr>
 </tbody></table>
@@ -1328,7 +1350,7 @@ fetch('/indexer/api/v1/index_report/{manifest_hash}',
   &quot;message&quot;: &quot;string&quot;
 }
 </code></pre>
-<h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hash,-if-exists.-responses">Responses</h3>
+<h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hash,-if-exists.-responses"><a class="header" href="#delete-the-indexreport-and-associated-information-for-the-given-manifest-hash,-if-exists.-responses">Responses</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
 <tr><td>204</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.5">No Content</a></td><td>OK</td><td>None</td></tr>
 <tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="reference/api.html#schemaerror">Error</a></td></tr>
@@ -1395,7 +1417,7 @@ fetch('/indexer/api/v1/index_report/{manifest_hash}',
 </code></pre>
 <p><code>GET /indexer/api/v1/index_report/{manifest_hash}</code></p>
 <p>Given a Manifest's content addressable hash an IndexReport will be retrieved if exists.</p>
-<h3 id="retrieve-an-indexreport-for-the-given-manifest-hash-if-exists.-parameters">Parameters</h3>
+<h3 id="retrieve-an-indexreport-for-the-given-manifest-hash-if-exists.-parameters"><a class="header" href="#retrieve-an-indexreport-for-the-given-manifest-hash-if-exists.-parameters">Parameters</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
 <tr><td>manifest_hash</td><td>path</td><td><a href="reference/api.html#schemadigest">Digest</a></td><td>true</td><td>A digest of a manifest that has been indexed previous to this request.</td></tr>
 </tbody></table>
@@ -1454,7 +1476,7 @@ fetch('/indexer/api/v1/index_report/{manifest_hash}',
   &quot;err&quot;: &quot;&quot;
 }
 </code></pre>
-<h3 id="retrieve-an-indexreport-for-the-given-manifest-hash-if-exists.-responses">Responses</h3>
+<h3 id="retrieve-an-indexreport-for-the-given-manifest-hash-if-exists.-responses"><a class="header" href="#retrieve-an-indexreport-for-the-given-manifest-hash-if-exists.-responses">Responses</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
 <tr><td>200</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td><td>IndexReport retrieved</td><td><a href="reference/api.html#schemaindexreport">IndexReport</a></td></tr>
 <tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="reference/api.html#schemaerror">Error</a></td></tr>
@@ -1534,7 +1556,7 @@ A client may be interested in this as a signal that manifests may need to be re-
   &quot;state&quot;: &quot;aae368a064d7c5a433d0bf2c4f5554cc&quot;
 }
 </code></pre>
-<h3 id="report-the-indexer's-internal-configuration-and-state.-responses">Responses</h3>
+<h3 id="report-the-indexer's-internal-configuration-and-state.-responses"><a class="header" href="#report-the-indexer's-internal-configuration-and-state.-responses">Responses</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
 <tr><td>200</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.1">OK</a></td><td>Indexer State</td><td><a href="reference/api.html#schemastate">State</a></td></tr>
 <tr><td>304</td><td><a href="https://tools.ietf.org/html/rfc7232#section-4.1">Not Modified</a></td><td>Indexer State Unchanged</td><td>None</td></tr>
@@ -1547,7 +1569,7 @@ A client may be interested in this as a signal that manifests may need to be re-
 </div><aside class="success">
 This operation does not require authentication
 </aside>
-<h1 id="clairv4-matcher">Matcher</h1>
+<h1 id="clairv4-matcher"><a class="header" href="#clairv4-matcher">Matcher</a></h1>
 <h2 id="retrieve-a-vulnerabilityreport-for-a-given-manifests-content-addressable-hash"><a class="header" href="#retrieve-a-vulnerabilityreport-for-a-given-manifests-content-addressable-hash">Retrieve a VulnerabilityReport for a given manifest's content addressable hash.</a></h2>
 <p><a id="opIdGetVulnerabilityReport"></a></p>
 <blockquote>
@@ -1606,7 +1628,7 @@ fetch('/matcher/api/v1/vulnerability_report/{manifest_hash}',
 </code></pre>
 <p><code>GET /matcher/api/v1/vulnerability_report/{manifest_hash}</code></p>
 <p>Given a Manifest's content addressable hash a VulnerabilityReport will be created. The Manifest <strong>must</strong> have been Indexed first via the Index endpoint.</p>
-<h3 id="retrieve-a-vulnerabilityreport-for-a-given-manifest's-content-addressable-hash.-parameters">Parameters</h3>
+<h3 id="retrieve-a-vulnerabilityreport-for-a-given-manifest's-content-addressable-hash.-parameters"><a class="header" href="#retrieve-a-vulnerabilityreport-for-a-given-manifest's-content-addressable-hash.-parameters">Parameters</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead><tbody>
 <tr><td>manifest_hash</td><td>path</td><td><a href="reference/api.html#schemadigest">Digest</a></td><td>true</td><td>A digest of a manifest that has been indexed previous to this request.</td></tr>
 </tbody></table>
@@ -1706,7 +1728,7 @@ fetch('/matcher/api/v1/vulnerability_report/{manifest_hash}',
   }
 }
 </code></pre>
-<h3 id="retrieve-a-vulnerabilityreport-for-a-given-manifest's-content-addressable-hash.-responses">Responses</h3>
+<h3 id="retrieve-a-vulnerabilityreport-for-a-given-manifest's-content-addressable-hash.-responses"><a class="header" href="#retrieve-a-vulnerabilityreport-for-a-given-manifest's-content-addressable-hash.-responses">Responses</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Status</th><th>Meaning</th><th>Description</th><th>Schema</th></tr></thead><tbody>
 <tr><td>201</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.3.2">Created</a></td><td>VulnerabilityReport Created</td><td><a href="reference/api.html#schemavulnerabilityreport">VulnerabilityReport</a></td></tr>
 <tr><td>400</td><td><a href="https://tools.ietf.org/html/rfc7231#section-6.5.1">Bad Request</a></td><td>Bad Request</td><td><a href="reference/api.html#schemaerror">Error</a></td></tr>
@@ -1718,7 +1740,7 @@ fetch('/matcher/api/v1/vulnerability_report/{manifest_hash}',
 This operation does not require authentication
 </aside>
 <h1 id="schemas"><a class="header" href="#schemas">Schemas</a></h1>
-<h2 id="tocS_Page">Page</h2>
+<h2 id="tocS_Page"><a class="header" href="#tocS_Page">Page</a></h2>
 <!-- backwards compatibility -->
 <a id="schemapage"></a>
 <a id="schema_Page"></a>
@@ -1736,7 +1758,7 @@ This operation does not require authentication
 <tr><td>size</td><td>int</td><td>false</td><td>none</td><td>The maximum number of elements in a page</td></tr>
 <tr><td>next</td><td>string</td><td>false</td><td>none</td><td>The next id to submit to the api to continue paging</td></tr>
 </tbody></table>
-</div><h2 id="tocS_PagedNotifications">PagedNotifications</h2>
+</div><h2 id="tocS_PagedNotifications"><a class="header" href="#tocS_PagedNotifications">PagedNotifications</a></h2>
 <!-- backwards compatibility -->
 <a id="schemapagednotifications"></a>
 <a id="schema_PagedNotifications"></a>
@@ -1805,7 +1827,7 @@ This operation does not require authentication
 <tr><td>page</td><td>object</td><td>false</td><td>none</td><td>A page object informing the client the next page to retrieve. If page.next becomes &quot;-1&quot; the client should stop paging.</td></tr>
 <tr><td>notifications</td><td>[<a href="reference/api.html#schemanotification">Notification</a>]</td><td>false</td><td>none</td><td>A list of notifications within this page</td></tr>
 </tbody></table>
-</div><h2 id="tocS_Callback">Callback</h2>
+</div><h2 id="tocS_Callback"><a class="header" href="#tocS_Callback">Callback</a></h2>
 <!-- backwards compatibility -->
 <a id="schemacallback"></a>
 <a id="schema_Callback"></a>
@@ -1823,7 +1845,7 @@ This operation does not require authentication
 <tr><td>notification_id</td><td>string</td><td>false</td><td>none</td><td>the unique identifier for this set of notifications</td></tr>
 <tr><td>callback</td><td>string</td><td>false</td><td>none</td><td>the url where notifications can be retrieved</td></tr>
 </tbody></table>
-</div><h2 id="tocS_VulnSummary">VulnSummary</h2>
+</div><h2 id="tocS_VulnSummary"><a class="header" href="#tocS_VulnSummary">VulnSummary</a></h2>
 <!-- backwards compatibility -->
 <a id="schemavulnsummary"></a>
 <a id="schema_VulnSummary"></a>
@@ -1895,7 +1917,7 @@ This operation does not require authentication
 <tr><td>normalized_severity</td><td>High</td></tr>
 <tr><td>normalized_severity</td><td>Critical</td></tr>
 </tbody></table>
-</div><h2 id="tocS_Notification">Notification</h2>
+</div><h2 id="tocS_Notification"><a class="header" href="#tocS_Notification">Notification</a></h2>
 <!-- backwards compatibility -->
 <a id="schemanotification"></a>
 <a id="schema_Notification"></a>
@@ -1958,7 +1980,7 @@ This operation does not require authentication
 <tr><td>reason</td><td>string</td><td>false</td><td>none</td><td>the reason for the notifcation, [added</td></tr>
 <tr><td>vulnerability</td><td><a href="reference/api.html#schemavulnsummary">VulnSummary</a></td><td>false</td><td>none</td><td>A summary of a vulnerability</td></tr>
 </tbody></table>
-</div><h2 id="tocS_Environment">Environment</h2>
+</div><h2 id="tocS_Environment"><a class="header" href="#tocS_Environment">Environment</a></h2>
 <!-- backwards compatibility -->
 <a id="schemaenvironment"></a>
 <a id="schema_Environment"></a>
@@ -1978,7 +2000,7 @@ This operation does not require authentication
 <tr><td>introduced_in</td><td><a href="reference/api.html#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here: https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
 <tr><td>distribution_id</td><td>string</td><td>true</td><td>none</td><td>The distribution ID found in an associated IndexReport or VulnerabilityReport.</td></tr>
 </tbody></table>
-</div><h2 id="tocS_IndexReport">IndexReport</h2>
+</div><h2 id="tocS_IndexReport"><a class="header" href="#tocS_IndexReport">IndexReport</a></h2>
 <!-- backwards compatibility -->
 <a id="schemaindexreport"></a>
 <a id="schema_IndexReport"></a>
@@ -2047,7 +2069,7 @@ This operation does not require authentication
 <tr><td>success</td><td>boolean</td><td>true</td><td>none</td><td>A bool indicating succcessful index</td></tr>
 <tr><td>err</td><td>string</td><td>true</td><td>none</td><td>An error message on event of unsuccessful index</td></tr>
 </tbody></table>
-</div><h2 id="tocS_VulnerabilityReport">VulnerabilityReport</h2>
+</div><h2 id="tocS_VulnerabilityReport"><a class="header" href="#tocS_VulnerabilityReport">VulnerabilityReport</a></h2>
 <!-- backwards compatibility -->
 <a id="schemavulnerabilityreport"></a>
 <a id="schema_VulnerabilityReport"></a>
@@ -2158,7 +2180,7 @@ This operation does not require authentication
 <tr><td>package_vulnerabilities</td><td>object</td><td>true</td><td>none</td><td>A mapping of Vulnerability.id lists indexed by Package.id.</td></tr>
 <tr><td>» <strong>additionalProperties</strong></td><td>[string]</td><td>false</td><td>none</td><td>none</td></tr>
 </tbody></table>
-</div><h2 id="tocS_Vulnerability">Vulnerability</h2>
+</div><h2 id="tocS_Vulnerability"><a class="header" href="#tocS_Vulnerability">Vulnerability</a></h2>
 <!-- backwards compatibility -->
 <a id="schemavulnerability"></a>
 <a id="schema_Vulnerability"></a>
@@ -2231,7 +2253,7 @@ This operation does not require authentication
 <tr><td>normalized_severity</td><td>High</td></tr>
 <tr><td>normalized_severity</td><td>Critical</td></tr>
 </tbody></table>
-</div><h2 id="tocS_Distribution">Distribution</h2>
+</div><h2 id="tocS_Distribution"><a class="header" href="#tocS_Distribution">Distribution</a></h2>
 <!-- backwards compatibility -->
 <a id="schemadistribution"></a>
 <a id="schema_Distribution"></a>
@@ -2264,7 +2286,7 @@ This operation does not require authentication
 <tr><td>cpe</td><td>string</td><td>true</td><td>none</td><td>none</td></tr>
 <tr><td>pretty_name</td><td>string</td><td>true</td><td>none</td><td>none</td></tr>
 </tbody></table>
-</div><h2 id="tocS_SourcePackage">SourcePackage</h2>
+</div><h2 id="tocS_SourcePackage"><a class="header" href="#tocS_SourcePackage">SourcePackage</a></h2>
 <!-- backwards compatibility -->
 <a id="schemasourcepackage"></a>
 <a id="schema_SourcePackage"></a>
@@ -2303,7 +2325,7 @@ This operation does not require authentication
 <tr><td>module</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
 <tr><td>cpe</td><td>string</td><td>false</td><td>none</td><td>A CPE identifying the package</td></tr>
 </tbody></table>
-</div><h2 id="tocS_Package">Package</h2>
+</div><h2 id="tocS_Package"><a class="header" href="#tocS_Package">Package</a></h2>
 <!-- backwards compatibility -->
 <a id="schemapackage"></a>
 <a id="schema_Package"></a>
@@ -2342,7 +2364,7 @@ This operation does not require authentication
 <tr><td>module</td><td>string</td><td>false</td><td>none</td><td>A module further defining a namespace for a package</td></tr>
 <tr><td>cpe</td><td>string</td><td>false</td><td>none</td><td>A CPE identifying the package</td></tr>
 </tbody></table>
-</div><h2 id="tocS_Repository">Repository</h2>
+</div><h2 id="tocS_Repository"><a class="header" href="#tocS_Repository">Repository</a></h2>
 <!-- backwards compatibility -->
 <a id="schemarepository"></a>
 <a id="schema_Repository"></a>
@@ -2366,7 +2388,7 @@ This operation does not require authentication
 <tr><td>uri</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
 <tr><td>cpe</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
 </tbody></table>
-</div><h2 id="tocS_Version">Version</h2>
+</div><h2 id="tocS_Version"><a class="header" href="#tocS_Version">Version</a></h2>
 <!-- backwards compatibility -->
 <a id="schemaversion"></a>
 <a id="schema_Version"></a>
@@ -2380,7 +2402,7 @@ This operation does not require authentication
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>Version</td><td>string</td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a &quot;kind&quot; and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.</td></tr>
 </tbody></table>
-</div><h2 id="tocS_Manifest">Manifest</h2>
+</div><h2 id="tocS_Manifest"><a class="header" href="#tocS_Manifest">Manifest</a></h2>
 <!-- backwards compatibility -->
 <a id="schemamanifest"></a>
 <a id="schema_Manifest"></a>
@@ -2411,7 +2433,7 @@ This operation does not require authentication
 <tr><td>hash</td><td><a href="reference/api.html#schemadigest">Digest</a></td><td>true</td><td>none</td><td>A digest string with prefixed algorithm. The format is described here: https://github.com/opencontainers/image-spec/blob/master/descriptor.md#digests<br>Digests are used throughout the API to identify Layers and Manifests.</td></tr>
 <tr><td>layers</td><td>[<a href="reference/api.html#schemalayer">Layer</a>]</td><td>true</td><td>none</td><td>[A Layer within a Manifest and where Clair may retrieve it.]</td></tr>
 </tbody></table>
-</div><h2 id="tocS_Layer">Layer</h2>
+</div><h2 id="tocS_Layer"><a class="header" href="#tocS_Layer">Layer</a></h2>
 <!-- backwards compatibility -->
 <a id="schemalayer"></a>
 <a id="schema_Layer"></a>
@@ -2439,7 +2461,7 @@ This operation does not require authentication
 <tr><td>headers</td><td>object</td><td>true</td><td>none</td><td>map of arrays of header values keyed by header value. e.g. map[string][]string</td></tr>
 <tr><td>» <strong>additionalProperties</strong></td><td>[string]</td><td>false</td><td>none</td><td>none</td></tr>
 </tbody></table>
-</div><h2 id="tocS_BulkDelete">BulkDelete</h2>
+</div><h2 id="tocS_BulkDelete"><a class="header" href="#tocS_BulkDelete">BulkDelete</a></h2>
 <!-- backwards compatibility -->
 <a id="schemabulkdelete"></a>
 <a id="schema_BulkDelete"></a>
@@ -2455,7 +2477,7 @@ This operation does not require authentication
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>BulkDelete</td><td>[<a href="reference/api.html#schemadigest">Digest</a>]</td><td>false</td><td>none</td><td>An array of Digests to be deleted.</td></tr>
 </tbody></table>
-</div><h2 id="tocS_Error">Error</h2>
+</div><h2 id="tocS_Error"><a class="header" href="#tocS_Error">Error</a></h2>
 <!-- backwards compatibility -->
 <a id="schemaerror"></a>
 <a id="schema_Error"></a>
@@ -2473,7 +2495,7 @@ This operation does not require authentication
 <tr><td>code</td><td>string</td><td>false</td><td>none</td><td>a code for this particular error</td></tr>
 <tr><td>message</td><td>string</td><td>false</td><td>none</td><td>a message with further detail</td></tr>
 </tbody></table>
-</div><h2 id="tocS_State">State</h2>
+</div><h2 id="tocS_State"><a class="header" href="#tocS_State">State</a></h2>
 <!-- backwards compatibility -->
 <a id="schemastate"></a>
 <a id="schema_State"></a>
@@ -2489,7 +2511,7 @@ This operation does not require authentication
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
 <tr><td>state</td><td>string</td><td>true</td><td>none</td><td>an opaque identifier</td></tr>
 </tbody></table>
-</div><h2 id="tocS_Digest">Digest</h2>
+</div><h2 id="tocS_Digest"><a class="header" href="#tocS_Digest">Digest</a></h2>
 <!-- backwards compatibility -->
 <a id="schemadigest"></a>
 <a id="schema_Digest"></a>
@@ -2676,8 +2698,6 @@ metrics:
     name: &quot;&quot;
     prometheus:
         endpoint: null
-    dogstatsd:
-        url: &quot;&quot;
 </code></pre>
 <p>Note: the above just lists every key for completeness. Copy-pasting the above as
 a starting point for configuration will result in some options not having their
