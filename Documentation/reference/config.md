@@ -2,9 +2,8 @@
 
 ## CLI Flags And Environment Variables
 
-Clair is configured by a structured yaml file. 
-Each Clair node needs to specify what mode it will run in and a path to a
-configuration file via CLI flags or environment variables.
+Clair is configured by a structured yaml or JSON[^1] file and an optional directory of "merge" and "patch" documents[^1].
+Each Clair node needs to specify what mode it will run in and a path to a configuration file via CLI flags or environment variables.
 
 For example:
 ```shell
@@ -28,8 +27,7 @@ $ clair -conf ./path/to/config.yaml -mode matcher
 ```
 
 The above example starts two Clair nodes using the same configuration.
-One will only run the indexing facilities while the other will only run the
-matching facilities.
+One will only run the indexing facilities while the other will only run the matching facilities.
 
 Environment variables respected by the Go standard library can be specified
 if needed. Some notable examples:
@@ -41,10 +39,34 @@ if needed. Some notable examples:
 If running in "combo" mode you **must** supply the `indexer`, `matcher`,
 and `notifier` configuration blocks in the configuration.
 
+## Configuration dropins
+
+Starting in Clair version `4.7.0`, dropin configuration files are supported.
+
+Given a root configurtaion file of `/etc/clair/config.json`, all files matching the globs `/etc/clair/config.json.d/*.json` and `/etc/clair/config.json.d/*.json-patch` would be loaded in lexical order after the root configuration file.
+Similarly, given `/etc/clair/config.yaml`, all files matching the globs `/etc/clair/config.yaml.d/*.yaml` and `/etc/clair/config.yaml.d/*.yaml-patch` would be loaded.
+Only the extensions `yaml` and `json` are supported, and indicate yaml and JSON formatting, respectively.
+
+The dropin files must have the same extension and format as the root file.
+Dropins with the bare suffix are treated as [merge documents](rfc7386).
+Dropins with the `-patch` suffix are treated as [patch documents](rfc6902) and must contain a valid [RFC 6902](rfc6902) structure.
+Yaml documents must be resolvable to the JSON subset.
+
+Take care with the [merge](rfc7386) behavior around lists; a patch operation may be more suitable.
+The `clairctl check-config` command can be used to ensure a merged configuration is what is intended.
+In addition, placing `test` operations in a patch file that's evaluated last (such as `zz-validate.json-patch`) can be used to have Clair refuse to start if some configuration values are not what is intended.
+
+The application defaults are applied *after* the configuration is loaded and as such, not reflected in the `clairctl check-config` command.
+The output of that command is also not currently suitable to be used to "compile" a config to a single file.
+
+[rfc7386]: https://datatracker.ietf.org/doc/html/rfc7386
+[rfc6902]: https://datatracker.ietf.org/doc/html/rfc6902
+
 ## Configuration Reference
 
-Please see the [go module documentation][godoc_config] for additional
-documentation on defaults and use.
+Please see the [go module documentation][godoc_config] for additional documentation on defaults and use.
+Starting in version `4.7.0`, unknown keys are disallowed.
+Configurations that looked valid previously and loaded fine may now cause Clair to refuse to start.
 
 [godoc_config]: https://pkg.go.dev/github.com/quay/clair/config
 
@@ -633,3 +655,7 @@ Configuration for a prometheus metrics exporter.
 a string value
 
 Defines the path where metrics will be served.
+
+* * *
+
+[^1]: Support added in version `4.7.0`.
