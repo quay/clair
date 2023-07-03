@@ -21,7 +21,7 @@ x-anchors:
       clair-database:
         condition: service_healthy
     volumes:
-      - "./local-dev/clair/${CLAIR_CONFIG:-config.yaml}:/etc/clair.yaml:ro"
+      - "./local-dev/clair:/etc/clair:ro"
       - ".:/src"
     # Can't specify the config via environment because maps are not recursively
     # merged.
@@ -30,7 +30,7 @@ x-anchors:
       - run
       - .
       - -conf
-      - /etc/clair.yaml
+      - /etc/clair/${CLAIR_CONFIG:-config.yaml}
     restart: unless-stopped
     working_dir: /src/cmd/clair
 
