@@ -120,7 +120,7 @@ func adminPre470(c *cli.Context) error {
 		const mkindex = `CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_manifest_index_manifest_id ON manifest_index(manifest_id);`
 		const reindex = `REINDEX INDEX CONCURRENTLY idx_manifest_index_manifest_id;`
 		var ok *bool
-		if err := conn.QueryRow(ctx, checkindex).Scan(ok); err != nil {
+		if err := conn.QueryRow(ctx, checkindex).Scan(&ok); err != nil {
 			if !errors.Is(err, pgx.ErrNoRows) {
 				zlog.Info(ctx).
 					AnErr("index_check", err).
