@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -35,7 +35,7 @@ func TestDiscoveryEndpoint(t *testing.T) {
 		t.Errorf("got: %q, want: %q", got, want)
 	}
 
-	buf, err := ioutil.ReadAll(resp.Body)
+	buf, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatalf("failed to ready response body: %v", err)
 	}

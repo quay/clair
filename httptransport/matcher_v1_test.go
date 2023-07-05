@@ -3,7 +3,7 @@ package httptransport
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -80,7 +80,7 @@ func testUpdateDiffMatcher(t *testing.T) {
 	defer resp.Body.Close()
 	got, want := resp.StatusCode, http.StatusOK
 	if got != want {
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			t.Log("could not read body of unexpected response")
 		}
