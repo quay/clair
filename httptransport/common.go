@@ -9,6 +9,7 @@ import (
 	"mime"
 	"net/http"
 	"path"
+	"runtime/pprof"
 	"sort"
 	"strconv"
 	"strings"
@@ -126,16 +127,22 @@ var idPool = sync.Pool{
 	},
 }
 
+// WithRequestID sets up a per-request ID and annotates the logging context and
+// profile labels.
 func withRequestID(r *http.Request) *http.Request {
 	const key = `request_id`
+	const profile = `profile_id`
 	ctx := r.Context()
 	sctx := trace.SpanContextFromContext(ctx)
+	var tid string
 	if sctx.HasTraceID() {
-		ctx = zlog.ContextWithValues(ctx, key, sctx.TraceID().String())
+		tid = sctx.TraceID().String()
 	} else {
 		rng := idPool.Get().(*rand.Rand)
-		ctx = zlog.ContextWithValues(ctx, key, fmt.Sprintf("%016x", rng.Uint64()))
-		idPool.Put(rng)
+		defer idPool.Put(rng)
+		tid = fmt.Sprintf("%016x", rng.Uint64())
 	}
+	ctx = zlog.ContextWithValues(ctx, key, tid)
+	ctx = pprof.WithLabels(ctx, pprof.Labels(profile, tid))
 	return r.WithContext(ctx)
 }
