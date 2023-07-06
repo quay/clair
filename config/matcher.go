@@ -21,7 +21,7 @@ type Matcher struct {
 	IndexerAddr string `yaml:"indexer_addr" json:"indexer_addr"`
 	// Period controls how often updaters are run.
 	//
-	// The default is 30 minutes.
+	// The default is 6 hours.
 	Period Duration `yaml:"period,omitempty" json:"period,omitempty"`
 	// UpdateRetention controls the number of updates to retain between
 	// garbage collection periods.

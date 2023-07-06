@@ -256,7 +256,7 @@ A time.ParseDuration parseable string.
 
 Determines how often updates for new security advisories will take place.
 
-Defaults to 30 minutes.
+Defaults to 6 hours.
 
 #### `$.matcher.disable_updaters`
 A boolean value.
