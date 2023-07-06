@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	deltapprof "github.com/pyroscope-io/godeltaprof/http/pprof"
 	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/otel"
@@ -216,6 +217,9 @@ func (i *Server) withDiagnostics(_ context.Context) error {
 	i.HandleFunc("/debug/pprof/profile", pprof.Profile)
 	i.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	i.HandleFunc("/debug/pprof/trace", pprof.Trace)
+	i.HandleFunc("/debug/pprof/delta_heap", deltapprof.Heap)
+	i.HandleFunc("/debug/pprof/delta_block", deltapprof.Block)
+	i.HandleFunc("/debug/pprof/delta_mutex", deltapprof.Mutex)
 	return nil
 }
 
