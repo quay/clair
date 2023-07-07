@@ -1,3 +1,4 @@
+---
 # config file version
 apiVersion: 1
 
@@ -19,32 +20,15 @@ datasources:
   orgId: 1
   # <string> url
   url: http://clair-prometheus:9090/prom/
-  # <string> database password, if used
-  password:
-  # <string> database user, if used
-  user:
-  # <string> database name, if used
-  database:
-  # <bool> enable/disable basic auth
-  basicAuth: false
-  # <string> basic auth username, if used
-  basicAuthUser:
-  # <string> basic auth password, if used
-  basicAuthPassword:
-  # <bool> enable/disable with credentials headers
-  withCredentials:
   # <bool> mark as default datasource. Max one per org
   isDefault: true
-  # <map> fields that will be converted to json and stored in json_data
-  jsonData:
-     graphiteVersion: "1.1"
-     tlsAuth: false
-     tlsAuthWithCACert: false
-  # <string> json object of data that will be encrypted.
-  secureJsonData:
-    tlsCACert: "..."
-    tlsClientCert: "..."
-    tlsClientKey: "..."
   version: 1
-  # <bool> allow users to edit datasources from the UI.
+  editable: false
+- name: Pyroscope
+  type: pyroscope-datasource
+  access: proxy
+  orgId: 1
+  url: http://clair-pyroscope:4040/
+  jsonData:
+    path: http://clair-pyroscope:4040/
   editable: false

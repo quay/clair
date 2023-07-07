@@ -1,0 +1,19 @@
+---
+analytics-opt-out: 'true'
+base-url: /pyroscope
+disable-pprof-endpoint: 'true'
+scrape-configs:
+- job-name: pyroscope
+  scrape-interval: 10s
+  scrape-timeout: 15s
+  enabled-profiles: [cpu, mem, goroutines, mutex, block]
+  use-delta-profiles: true
+  static-configs:
+  - application: clair-indexer
+    spy-name: gospy
+    targets:
+      - clair-indexer:8089
+  - application: clair-matcher
+    spy-name: gospy
+    targets:
+      - clair-matcher:8089

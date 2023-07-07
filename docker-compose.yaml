@@ -3,17 +3,18 @@ version: "3.7"
 # This is just to hold a bunch of yaml anchors and try to consolidate parts of
 # the config.
 x-anchors:
-  postgres: &postgres-image docker.io/library/postgres:12
-  traefik: &traefik-image docker.io/library/traefik:v2.2
-  pgadmin: &pgadmin-image docker.io/dpage/pgadmin4:5.7
-  jaeger: &jaeger-image docker.io/jaegertracing/all-in-one:1.26
-  prom: &prom-image docker.io/prom/prometheus:v2.30.2
-  grafana: &grafana-image docker.io/grafana/grafana:8.0.3
-  quay: &quay-image quay.io/projectquay/quay:latest
-  redis: &redis-image docker.io/library/redis:6.2
   go: &go-image quay.io/projectquay/golang:1.20
-  skopeo: &skopeo-image quay.io/skopeo/stable:latest
+  grafana: &grafana-image docker.io/grafana/grafana:8.0.3
+  jaeger: &jaeger-image docker.io/jaegertracing/all-in-one:1.26
+  pgadmin: &pgadmin-image docker.io/dpage/pgadmin4:5.7
+  postgres: &postgres-image docker.io/library/postgres:12
+  prom: &prom-image docker.io/prom/prometheus:v2.30.2
+  pyroscope: &pyroscope-image docker.io/pyroscope/pyroscope:0.37.2
+  quay: &quay-image quay.io/projectquay/quay:latest
   rabbitmq: &rabbitmq-image docker.io/library/rabbitmq:3.11
+  redis: &redis-image docker.io/library/redis:6.2
+  skopeo: &skopeo-image quay.io/skopeo/stable:latest
+  traefik: &traefik-image docker.io/library/traefik:v2.2
   clair-service: &clair-service
     image: *go-image
     depends_on:
@@ -110,6 +111,18 @@ services:
       - '--web.external-url=http://localhost:8080/prom/'
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
+  pyroscope:
+    container_name: clair-pyroscope
+    profiles:
+      - debug
+    image: *pyroscope-image
+    volumes:
+      - ./local-dev/pyroscope:/etc/pyroscope/
+    command:
+      - server
+    environment:
+      PYROSCOPE_LOG_LEVEL: info
+      PYROSCOPE_WAIT_AFTER_STOP: 'true'
   grafana:
     container_name: clair-grafana
     profiles:
@@ -119,10 +132,12 @@ services:
     environment:
       GF_SERVER_ROOT_URL: /grafana
       GF_SERVER_SERVE_FROM_SUB_PATH: 'true'
+      GF_INSTALL_PLUGINS: 'pyroscope-datasource,pyroscope-panel'
     volumes:
       - ./local-dev/grafana/provisioning/:/etc/grafana/provisioning/
     depends_on:
       - prometheus
+      - pyroscope
 
   # Notifier services -- use profile 'notifier'
   notifier: &notifier

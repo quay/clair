@@ -1,0 +1,21 @@
+---
+http:
+  routers:
+    pyroscope:
+      entryPoints: [traefik]
+      rule: 'PathPrefix(`/pyroscope`)'
+      service: pyroscope
+      middlewares:
+      - pyroscope-stripprefix
+  middlewares:
+    pyroscope-stripprefix:
+      stripPrefix:
+        prefixes:
+        - /pyroscope
+  services:
+    pyroscope:
+      loadBalancer:
+        servers:
+        - url: "http://clair-pyroscope:4040/"
+        healthCheck:
+          path: /
