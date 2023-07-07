@@ -419,6 +419,15 @@ PostgreSQL will have a random port forwarded from localhost to the database serv
 See <code>local-dev/clair/init.sql</code> for credentials and permissions and <code>podman port</code> for the mapping.</p>
 </li>
 </ul>
+<h3 id="debugging"><a class="header" href="#debugging">Debugging</a></h3>
+<p>With the <code>local-dev-debug</code> make target the operator has access to some more useful tools:
+| Tool       | Description                     | URL                             | Credentials           |
+| ---------- | ------------------------------- | ------------------------------- | --------------------- |
+| pgAdmin    | Postgres administration         | http://localhost:8080/pgadmin   | clair@clair.com:clair |
+| jaeger     | Distributed tracing             | http://localhost:8080/jaeger    | -                     |
+| prometheus | Metrics collection and querying | http://localhost:8080/prom      | -                     |
+| pyroscope  | Continuous profiling            | http://localhost:8080/pyroscope | -                     |
+| grafana    | Metrics dashboards              | http://localhost:8080/grafana   | admin:admin           |</p>
 <h2 id="pushing-to-the-local-quay"><a class="header" href="#pushing-to-the-local-quay">Pushing to the Local Quay</a></h2>
 <p>As mentioned above, Quay is forwarded to a random port on the host.
 You can connect to the server on that port and create a account.
