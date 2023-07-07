@@ -13,6 +13,7 @@ var msgs = []func(context.Context){}
 func init() {
 	CPU()
 	Memory()
+	Profiling()
 }
 
 // PrintLogs uses zlog to report any messages queued up from the runs of
