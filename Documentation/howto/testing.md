@@ -54,6 +54,17 @@ After the local development environment successfully starts, the following infra
   PostgreSQL will have a random port forwarded from localhost to the database server.
   See `local-dev/clair/init.sql` for credentials and permissions and `podman port` for the mapping.
 
+### Debugging
+
+With the `local-dev-debug` make target the operator has access to some more useful tools:
+| Tool       | Description                     | URL                             | Credentials           |
+| ---------- | ------------------------------- | ------------------------------- | --------------------- |
+| pgAdmin    | Postgres administration         | http://localhost:8080/pgadmin   | clair@clair.com:clair |
+| jaeger     | Distributed tracing             | http://localhost:8080/jaeger    | -                     |
+| prometheus | Metrics collection and querying | http://localhost:8080/prom      | -                     |
+| pyroscope  | Continuous profiling            | http://localhost:8080/pyroscope | -                     |
+| grafana    | Metrics dashboards              | http://localhost:8080/grafana   | admin:admin           |
+
 ## Pushing to the Local Quay
 
 As mentioned above, Quay is forwarded to a random port on the host.
