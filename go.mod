@@ -15,7 +15,7 @@ require (
 	github.com/prometheus/client_golang v1.16.0
 	github.com/pyroscope-io/godeltaprof v0.1.1
 	github.com/quay/clair/config v1.3.0
-	github.com/quay/claircore v1.5.8
+	github.com/quay/claircore v1.5.9
 	github.com/quay/zlog v1.1.4
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
 	github.com/rs/zerolog v1.29.1
@@ -88,10 +88,10 @@ require (
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.opentelemetry.io/otel/metric v1.16.0 // indirect
 	golang.org/x/crypto v0.11.0 // indirect
-	golang.org/x/mod v0.11.0 // indirect
+	golang.org/x/mod v0.12.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
-	golang.org/x/tools v0.10.0 // indirect
+	golang.org/x/tools v0.11.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	lukechampine.com/uint128 v1.2.0 // indirect
 	modernc.org/cc/v3 v3.40.0 // indirect
