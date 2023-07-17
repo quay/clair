@@ -420,14 +420,15 @@ See <code>local-dev/clair/init.sql</code> for credentials and permissions and <c
 </li>
 </ul>
 <h3 id="debugging"><a class="header" href="#debugging">Debugging</a></h3>
-<p>With the <code>local-dev-debug</code> make target the operator has access to some more useful tools:
-| Tool       | Description                     | URL                             | Credentials           |
-| ---------- | ------------------------------- | ------------------------------- | --------------------- |
-| pgAdmin    | Postgres administration         | http://localhost:8080/pgadmin   | clair@clair.com:clair |
-| jaeger     | Distributed tracing             | http://localhost:8080/jaeger    | -                     |
-| prometheus | Metrics collection and querying | http://localhost:8080/prom      | -                     |
-| pyroscope  | Continuous profiling            | http://localhost:8080/pyroscope | -                     |
-| grafana    | Metrics dashboards              | http://localhost:8080/grafana   | admin:admin           |</p>
+<p>With the <code>local-dev-debug</code> make target the operator has access to some more useful tools:</p>
+<div class="table-wrapper"><table><thead><tr><th>Tool</th><th>Description</th><th>URL</th><th>Credentials</th></tr></thead><tbody>
+<tr><td>pgAdmin</td><td>Postgres administration</td><td><a href="http://localhost:8080/pgadmin">localhost:8080/pgadmin</a></td><td>clair@clair.com:clair</td></tr>
+<tr><td>jaeger</td><td>Distributed tracing</td><td><a href="http://localhost:8080/jaeger">localhost:8080/jaeger</a></td><td>-</td></tr>
+<tr><td>prometheus</td><td>Metrics collection and querying</td><td><a href="http://localhost:8080/prom">localhost:8080/prom</a></td><td>-</td></tr>
+<tr><td>pyroscope</td><td>Continuous profiling</td><td><a href="http://localhost:8080/pyroscope">localhost:8080/pyroscope</a></td><td>-</td></tr>
+<tr><td>grafana</td><td>Metrics dashboards</td><td><a href="http://localhost:8080/grafana">localhost:8080/grafana</a></td><td>admin:admin</td></tr>
+</tbody></table>
+</div>
 <h2 id="pushing-to-the-local-quay"><a class="header" href="#pushing-to-the-local-quay">Pushing to the Local Quay</a></h2>
 <p>As mentioned above, Quay is forwarded to a random port on the host.
 You can connect to the server on that port and create a account.
