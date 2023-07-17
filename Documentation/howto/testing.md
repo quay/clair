@@ -57,13 +57,14 @@ After the local development environment successfully starts, the following infra
 ### Debugging
 
 With the `local-dev-debug` make target the operator has access to some more useful tools:
-| Tool       | Description                     | URL                             | Credentials           |
-| ---------- | ------------------------------- | ------------------------------- | --------------------- |
-| pgAdmin    | Postgres administration         | http://localhost:8080/pgadmin   | clair@clair.com:clair |
-| jaeger     | Distributed tracing             | http://localhost:8080/jaeger    | -                     |
-| prometheus | Metrics collection and querying | http://localhost:8080/prom      | -                     |
-| pyroscope  | Continuous profiling            | http://localhost:8080/pyroscope | -                     |
-| grafana    | Metrics dashboards              | http://localhost:8080/grafana   | admin:admin           |
+
+| Tool       | Description                     | URL                                                         | Credentials           |
+| ---------- | ------------------------------- | ----------------------------------------------------------- | --------------------- |
+| pgAdmin    | Postgres administration         | [localhost:8080/pgadmin](http://localhost:8080/pgadmin)     | clair@clair.com:clair |
+| jaeger     | Distributed tracing             | [localhost:8080/jaeger](http://localhost:8080/jaeger)       | -                     |
+| prometheus | Metrics collection and querying | [localhost:8080/prom](http://localhost:8080/prom)           | -                     |
+| pyroscope  | Continuous profiling            | [localhost:8080/pyroscope](http://localhost:8080/pyroscope) | -                     |
+| grafana    | Metrics dashboards              | [localhost:8080/grafana](http://localhost:8080/grafana)     | admin:admin           |
 
 ## Pushing to the Local Quay
 
