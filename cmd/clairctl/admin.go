@@ -43,7 +43,17 @@ var AdminCmd = &cli.Command{
 			Description: "Tasks that can be run after a Clair version is deployed",
 			Usage:       "run post-upgrade task",
 			ArgsUsage:   "\b",
-			Before:      otherVersion,
+			Subcommands: []*cli.Command{
+				{
+					Name:    "v4.7.0",
+					Aliases: []string{"4.7.0"},
+					Description: "This task deletes all the pyupio data from the matcher DB's vuln table.\n" +
+						"The new python matcher can't handle pyuoio data and can cause errors.\n\n",
+					Usage:  "delete pyupio vulns in from the matcher DB",
+					Action: adminPost470,
+				},
+			},
+			Before: otherVersion,
 		},
 		{
 			Name:        "oneoff",
@@ -135,6 +145,68 @@ func adminPre470(c *cli.Context) error {
 			return fmt.Errorf("error (re)indexing database: %w", err)
 		}
 		zlog.Info(ctx).Msg("pre v4.7.0 admin done")
+		return nil
+	})
+}
+
+// Delete pyupio vulns from the DB.
+func adminPost470(c *cli.Context) error {
+	ctx := c.Context
+	fi, err := os.Stat(c.Path("config"))
+	switch {
+	case !errors.Is(err, nil):
+		return fmt.Errorf("bad config: %w", err)
+	case fi.IsDir():
+		return fmt.Errorf("bad config: is a directory")
+	}
+	cfg, err := loadConfig(c.Path("config"))
+	if err != nil {
+		return fmt.Errorf("error loading config: %w", err)
+	}
+	dsn := cfg.Matcher.ConnString
+
+	pgcfg, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		return fmt.Errorf("error parsing dsn: %w", err)
+	}
+	zlog.Info(ctx).
+		Str("host", pgcfg.ConnConfig.Host).
+		Str("database", pgcfg.ConnConfig.Database).
+		Str("user", pgcfg.ConnConfig.User).
+		Uint16("port", pgcfg.ConnConfig.Port).
+		Msg("using discovered connection params")
+
+	zlog.Debug(ctx).
+		Msg("resizing pool to 2 connections")
+	pgcfg.MaxConns = 2
+	pool, err := pgxpool.ConnectConfig(ctx, pgcfg)
+	if err != nil {
+		return fmt.Errorf("error creating pool: %w", err)
+	}
+	defer pool.Close()
+	if err := pool.Ping(ctx); err != nil {
+		return fmt.Errorf("error connecting to database: %w", err)
+	}
+
+	return pool.AcquireFunc(ctx, func(conn *pgxpool.Conn) error {
+		const deleteUpdateOperations = `DELETE FROM update_operation WHERE updater = 'pyupio';`
+		const deleteVulns = `
+		DELETE FROM vuln v1 USING
+			vuln v2
+			LEFT JOIN uo_vuln uvl
+				ON v2.id = uvl.vuln
+			WHERE uvl.vuln IS NULL
+			AND v2.updater = 'pyupio'
+		AND v1.id = v2.id;
+		`
+		if _, err := conn.Exec(ctx, deleteUpdateOperations); err != nil {
+			return fmt.Errorf("error deleting update operations: %w", err)
+		}
+		if _, err := conn.Exec(ctx, deleteVulns); err != nil {
+			return fmt.Errorf("error deleting vulns: %w", err)
+		}
+
+		zlog.Info(ctx).Msg("post v4.7.0 admin done")
 		return nil
 	})
 }
