@@ -39,7 +39,7 @@ func init() {
 		"claircore_version": "",
 		"goversion":         runtime.Version(),
 		"modified":          "",
-		"revision":          "",
+		"revision":          revision,
 		"version":           "",
 	}
 	info, infoOK := debug.ReadBuildInfo()
@@ -76,7 +76,9 @@ func init() {
 	switch {
 	case Version != "":
 		// Had our version injected at build: do nothing.
-	case len(describe) > 0 && describe[0] != '$':
+	case len(describe) > 0 && describe[0] != '$' && !strings.HasPrefix(describe, "%(describe:"):
+		// Some git versions apparently don't know about the describe format
+		// verb, so need to check that it's not just "%(describe..."
 		Version = describe
 	case revision[0] == '$':
 		Version = `(random source build)`

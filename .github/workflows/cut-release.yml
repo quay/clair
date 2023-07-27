@@ -57,8 +57,10 @@ jobs:
           go: ${{ needs.config.outputs.build_go_version }}
       - name: Create Release Archive
         run: |
-          go mod vendor
+          # Fix the checkout action overwriting the tag: (see https://github.com/actions/checkout/issues/882)
+          git fetch origin "+${GITHUB_REF}:${GITHUB_REF}"
           git archive --prefix '${{ needs.config.outputs.tar_prefix }}' -o clair.tar "${GITHUB_REF}"
+          go mod vendor
           tar -rf clair.tar --transform 's,^,${{ needs.config.outputs.tar_prefix }},' vendor
           gzip clair.tar
           mv clair.tar.gz clair-${{ needs.config.outputs.version }}.tar.gz
