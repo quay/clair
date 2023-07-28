@@ -52,31 +52,14 @@ local-dev-quay: local-dev/clair/quay.yaml vendor
 .PHONY: vendor
 vendor: vendor/modules.txt
 
-vendor/modules.txt: go.mod
+vendor/modules.txt: go.mod $(shell find . -name vendor -prune -o -name *.go -print)
 	go mod vendor
 
 .PHONY: container-build
 container-build:
-ifneq ($(file < .git/HEAD),)
-	$(docker) build "--build-arg=CLAIR_VERSION=$$(git describe --match 'v4.*')" -t clair-local:latest .
-else
-	$(docker) build -t clair-local:latest .
-endif
-
-DOCS_DIR ?= ../clair-doc
-.PHONY: docs-build
-docs-build:
-	mdbook build
-	rsync --recursive --delete-after --exclude 'v4.*' --exclude .git\
-		./book/ $(DOCS_DIR)/
+	$(docker) build $(if $(findstring podman,$(docker)),--security-opt=label=disable ,)-t clair-local:latest .
 
 contrib/openshift/grafana/dashboards/dashboard-clair.configmap.yaml: local-dev/grafana/provisioning/dashboards/dashboard.json contrib/openshift/grafana/dashboard-clair.configmap.yaml.tpl
 	sed "s/GRAFANA_MANIFEST/$$(sed -e 's/[\&/]/\\&/g' -e 's/$$/\\n/' -e 's/^/    /' $< | tr -d '\n')/" \
 	$(word 2,$^) \
 	> $@
-
-
-# runs unit tests
-.PHONY: unit
-unit:
-	go test -race ./...
