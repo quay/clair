@@ -1,9 +1,13 @@
-.dockerignore
-.travis.yml
-*.md
+# Files
 DCO
+.dockerignore
 LICENSE
+*.md
 NOTICE
-docs
-cloudconfig
-.git
+# Directories
+book
+contrib
+Documenatation
+etc
+local-dev
+# Allow `.git` to get sent for build vcs stamping.
