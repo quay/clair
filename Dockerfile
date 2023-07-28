@@ -14,13 +14,21 @@
 
 ARG GO_VERSION=1.20
 FROM quay.io/projectquay/golang:${GO_VERSION} AS build
-WORKDIR /build/
-ADD . /build/
+WORKDIR /build
+RUN --mount=type=cache,target=/root/.cache/go-build \
+	--mount=type=cache,target=/go/pkg/mod \
+	--mount=type=bind,source=go.mod,target=go.mod \
+	--mount=type=bind,source=go.sum,target=go.sum \
+	go mod download
+COPY . .
 ARG CLAIR_VERSION=""
-RUN for cmd in clair clairctl; do\
+RUN --mount=type=cache,target=/root/.cache/go-build \
+	--mount=type=cache,target=/go/pkg/mod \
 	go build \
-	-trimpath -ldflags="-s -w$(test -n "$CLAIR_VERSION" && printf " -X 'github.com/quay/clair/v4/cmd.Version=%s (user)'" "${CLAIR_VERSION}")" \
-	./cmd/$cmd; done
+	-ldflags="-s -w$(test -n "$CLAIR_VERSION" && printf " -X 'github.com/quay/clair/v4/cmd.Version=%s (user)'" "${CLAIR_VERSION}")" \
+	-o . \
+	-trimpath \
+	./cmd/...
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal AS final
 ENTRYPOINT ["/bin/clair"]
