@@ -11,7 +11,7 @@ Make is used to stand up the the local dev environment.
 Make is readily available in just about every package manager you can think of.
 It's very likely your workstation already has make on it.
 
-### Docker and Docker Compose
+### Podman/Docker and Docker Compose
 
 Currently our local dev tooling is supported by docker and docker-compose.
 Podman should work fine since v3.0.
@@ -19,13 +19,13 @@ Podman should work fine since v3.0.
 Docker version 19.03.11 and docker-compose version 1.28.6 are confirmed working.
 Our assumption is most recent versions will not have an issue running the local dev tooling.
 
-See [Install Docker](https://docs.docker.com/get-docker/)
+See [Get Started with Podman](https://podman.io/get-started).
 
 ### Go Toolchain
 
-Go v1.16 or higher is required.
+Go 1.20 or higher is required.
 
-See [Install Golang](https://golang.org/doc/install)
+See [Install Golang](https://golang.org/doc/install).
 
 ## Starting a cluster
 
@@ -41,16 +41,20 @@ docker-compose up -d
 After the local development environment successfully starts, the following infrastructure is available to you:
 
 - `localhost:8080`
+
   Dashboards and debugging services -- See the traefik configs in `local-dev/traefik` for where the various services are served.
 
 - `localhost:6060`
-  Clair services
+
+  Clair services.
 
 - Quay (if started)
+
   Quay will be started in a single node, local storage configuration.
   A random port will be forwarded from localhost, see `podman port` for the mapping.
 
 - PostgreSQL
+
   PostgreSQL will have a random port forwarded from localhost to the database server.
   See `local-dev/clair/init.sql` for credentials and permissions and `podman port` for the mapping.
 
@@ -76,9 +80,12 @@ You'll also need to create a namespace.
 
 To push to Quay, you'll need to exec into the skopeo container:
 
-```sh
-podman exec -it quay-skopeo /usr/bin/skopeo copy --dst-creds '<user>:<pass>' --dst-tls-verify=false <src> clair-quay:8080/<namespace>/<repo>:<tag>
+```shell
+docker-compose exec -it skopeo /usr/bin/skopeo copy --dest-creds '<user>:<pass>' --dest-tls-verify=false <src> docker://clair-quay:8080/<namespace>/<repo>:<tag>
 ```
+Note that skopeo expects its image arguments in [`containers-transports(5)`] format.
+
+[`containers-transports(5)`]: https://github.com/containers/image/blob/main/docs/containers-transports.5.md
 
 ## Viewing Results
 
@@ -105,11 +112,11 @@ will rip the entire environment down.
 The most common issue encountered when standing up the dev environment is port conflicts.
 Make sure that you do not have any other processes listening on any of the ports outlined above.
 
-The second issue you may face is your Docker resource settings maybe too constrained to support the local dev stack.
+The second issue you may face is your Docker resource settings being too constrained to support the local dev stack.
 This is typically seen on Docker4Mac since a VM is used with a specific set of resources configured.
 See [Docker For Mac Manual](https://docs.docker.com/docker-for-mac/) for instructions on how to change these resources.
 
 If `docker-compose` reports errors like `Unsupported config option for services.activemq: 'profiles'`, the `docker-compose` version is too old and you'll need to upgrade.
 Consult the relevant documentation for your environment for instructions.
 
-Lastly, you can view traefik's ui at `localhost:8080/dashboard/`.
+Lastly, you can view traefik's ui at [`localhost:8080/dashboard/`](http://localhost:8080/dashboard/).

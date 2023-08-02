@@ -74,8 +74,11 @@ You can submit a manifest to ClairV4 via the following command.
 ```shell
 $ clairctl report --host ${net_address_of_clair} ${image_tag}
 ```
-
-By default, `clairctl` will look for Clair at `localhost:6060`.
+You will need to add the `config` flag if you are using a PSK authentication (as in the [local dev environment](./testing.md) setup, for example).
+```shell
+$ clairctl report --config local-dev/clair/config.yaml --host ${net_address_of_clair} ${image_tag}
+```
+By default, `clairctl` will look for Clair at `localhost:6060` or the environment variable `CLAIR_API`, and for a configuration at `config.yaml` or the environment variable `CLAIR_CONF`.
 
 If everything is configured correctly, you should see some output like the following informing you of vulnerabilities affecting the supplied image.
 
@@ -107,6 +110,10 @@ ubuntu:focal found libc6       2.31-0ubuntu9          CVE-2016-10228
 ubuntu:focal found libc6       2.31-0ubuntu9          CVE-2020-6096
 ubuntu:focal found libgcrypt20 1.8.5-5ubuntu1         CVE-2019-12904
 ```
+
+To test locally-built images, you'll need to push them to a registry that is accessible by the Clair service and the `clairctl` command.
+A local registry can be used for this, but the specifics of configuration vary by registry and container runtime.
+Consult the relevant documentation for more information.
 
 ## What's Next
 
