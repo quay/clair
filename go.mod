@@ -13,7 +13,7 @@ require (
 	github.com/klauspost/compress v1.16.7
 	github.com/ldelossa/responserecorder v1.0.2-0.20210711162258-40bec93a9325
 	github.com/prometheus/client_golang v1.16.0
-	github.com/pyroscope-io/godeltaprof v0.1.1
+	github.com/pyroscope-io/godeltaprof v0.1.2
 	github.com/quay/clair/config v1.3.0
 	github.com/quay/claircore v1.5.13
 	github.com/quay/zlog v1.1.5
