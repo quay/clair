@@ -23,7 +23,7 @@ type Indexer struct {
 	// Indexers will index a Manifest's layers concurrently.
 	// This value tunes the number of layers an Indexer will scan in parallel.
 	LayerScanConcurrency int `yaml:"layer_scan_concurrency,omitempty" json:"layer_scan_concurrency,omitempty"`
-	// Rate limits the number if index report creation requests.
+	// Rate limits the number of index report creation requests.
 	//
 	// Setting this to 0 will attempt to auto-size this value. Setting a
 	// negative value means "unlimited." The auto-sizing is a multiple of the
