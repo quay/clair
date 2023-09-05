@@ -214,7 +214,10 @@ The command will be in the Clair container, but can also be installed locally by
 <p>You can submit a manifest to ClairV4 via the following command.</p>
 <pre><code class="language-shell">$ clairctl report --host ${net_address_of_clair} ${image_tag}
 </code></pre>
-<p>By default, <code>clairctl</code> will look for Clair at <code>localhost:6060</code>.</p>
+<p>You will need to add the <code>config</code> flag if you are using a PSK authentication (as in the <a href="./testing.html">local dev environment</a> setup, for example).</p>
+<pre><code class="language-shell">$ clairctl report --config local-dev/clair/config.yaml --host ${net_address_of_clair} ${image_tag}
+</code></pre>
+<p>By default, <code>clairctl</code> will look for Clair at <code>localhost:6060</code> or the environment variable <code>CLAIR_API</code>, and for a configuration at <code>config.yaml</code> or the environment variable <code>CLAIR_CONF</code>.</p>
 <p>If everything is configured correctly, you should see some output like the following informing you of vulnerabilities affecting the supplied image.</p>
 <pre><code class="language-shell">$ clairctl report ubuntu:focal
 ubuntu:focal found bash        5.0-6ubuntu1.1         CVE-2019-18276
@@ -243,6 +246,9 @@ ubuntu:focal found libc6       2.31-0ubuntu9          CVE-2016-10228
 ubuntu:focal found libc6       2.31-0ubuntu9          CVE-2020-6096
 ubuntu:focal found libgcrypt20 1.8.5-5ubuntu1         CVE-2019-12904
 </code></pre>
+<p>To test locally-built images, you'll need to push them to a registry that is accessible by the Clair service and the <code>clairctl</code> command.
+A local registry can be used for this, but the specifics of configuration vary by registry and container runtime.
+Consult the relevant documentation for more information.</p>
 <h2 id="whats-next"><a class="header" href="#whats-next">What's Next</a></h2>
 <p>Now that you see the basic usage of Clair, you can checkout our <a href="./deployment.html">deployment models</a> to learn different ways of deploying.</p>
 <p>You may also be curious about how <code>clairctl</code> did that work. Check out our <a href="./api.html">API definition</a> to understand how an application interacts with Clair.</p>
