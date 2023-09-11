@@ -34,7 +34,7 @@ data:
       "editable": true,
       "gnetId": null,
       "graphTooltip": 1,
-      "iteration": 1675970678069,
+      "iteration": 1694452951165,
       "links": [],
       "panels": [
         {
@@ -1136,7 +1136,7 @@ data:
           "yBucketSize": null
         },
         {
-          "datasource": "${datasource}",
+          "datasource": "$datasource",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -1770,7 +1770,7 @@ data:
           "type": "timeseries"
         },
         {
-          "datasource": "${datasource}",
+          "datasource": "$datasource",
           "fieldConfig": {
             "defaults": {
               "color": {
@@ -2888,6 +2888,301 @@ data:
             "x": 0,
             "y": 114
           },
+          "id": 66,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum by (code) (rate(clair_http_indexerv1_request_total{method=\"delete\", handler=\"/indexer/api/v1/index_report\"}[$rate]))",
+              "hide": false,
+              "instant": false,
+              "interval": "1",
+              "legendFormat": "Status {{ code }} ",
+              "refId": "B"
+            }
+          ],
+          "title": "Index Report Bulk Deletion Requests / s",
+          "type": "timeseries"
+        },
+        {
+          "cards": {
+            "cardPadding": null,
+            "cardRound": null
+          },
+          "color": {
+            "cardColor": "#b4ff00",
+            "colorScale": "linear",
+            "colorScheme": "interpolateGreys",
+            "exponent": 0.5,
+            "mode": "opacity"
+          },
+          "dataFormat": "tsbuckets",
+          "datasource": "$datasource",
+          "description": "",
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 114
+          },
+          "heatmap": {},
+          "hideZeroBuckets": true,
+          "highlightCards": true,
+          "id": 67,
+          "legend": {
+            "show": true
+          },
+          "maxDataPoints": 50,
+          "reverseYBuckets": false,
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum(increase(clair_http_indexerv1_request_duration_seconds_bucket{method=\"delete\", handler=\"/indexer/api/v1/index_report\"} [5m])) by (le)",
+              "format": "heatmap",
+              "instant": false,
+              "interval": "1",
+              "legendFormat": "{{ le }}",
+              "refId": "A"
+            }
+          ],
+          "title": "Index Report Bulk Deletion Request Latency",
+          "tooltip": {
+            "show": true,
+            "showHistogram": false
+          },
+          "type": "heatmap",
+          "xAxis": {
+            "show": true
+          },
+          "xBucketNumber": null,
+          "xBucketSize": null,
+          "yAxis": {
+            "decimals": null,
+            "format": "s",
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true,
+            "splitFactor": null
+          },
+          "yBucketBound": "auto",
+          "yBucketNumber": null,
+          "yBucketSize": null
+        },
+        {
+          "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 122
+          },
+          "id": 68,
+          "options": {
+            "legend": {
+              "calcs": [],
+              "displayMode": "list",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum by (code) (rate(clair_http_indexerv1_request_total{method=\"delete\", handler=\"/indexer/api/v1/index_report/:digest\"}[$rate]))",
+              "instant": false,
+              "interval": "1",
+              "legendFormat": "Status {{ code }} ",
+              "refId": "A"
+            }
+          ],
+          "title": "Index Report Deletion Requests / s",
+          "type": "timeseries"
+        },
+        {
+          "cards": {
+            "cardPadding": null,
+            "cardRound": null
+          },
+          "color": {
+            "cardColor": "#b4ff00",
+            "colorScale": "linear",
+            "colorScheme": "interpolateGreys",
+            "exponent": 0.5,
+            "mode": "opacity"
+          },
+          "dataFormat": "tsbuckets",
+          "datasource": "$datasource",
+          "description": "",
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 122
+          },
+          "heatmap": {},
+          "hideZeroBuckets": true,
+          "highlightCards": true,
+          "id": 69,
+          "legend": {
+            "show": true
+          },
+          "maxDataPoints": 50,
+          "reverseYBuckets": false,
+          "targets": [
+            {
+              "exemplar": true,
+              "expr": "sum(increase(clair_http_indexerv1_request_duration_seconds_bucket{method=\"delete\", handler=\"/indexer/api/v1/index_report/:digest\"} [5m])) by (le)",
+              "format": "heatmap",
+              "instant": false,
+              "interval": "1",
+              "legendFormat": "{{ le }}",
+              "refId": "A"
+            }
+          ],
+          "title": "Index Report Deletion Request Latency",
+          "tooltip": {
+            "show": true,
+            "showHistogram": false
+          },
+          "type": "heatmap",
+          "xAxis": {
+            "show": true
+          },
+          "xBucketNumber": null,
+          "xBucketSize": null,
+          "yAxis": {
+            "decimals": null,
+            "format": "s",
+            "logBase": 1,
+            "max": null,
+            "min": null,
+            "show": true,
+            "splitFactor": null
+          },
+          "yBucketBound": "auto",
+          "yBucketNumber": null,
+          "yBucketSize": null
+        },
+        {
+          "datasource": "$datasource",
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "axisLabel": "",
+                "axisPlacement": "auto",
+                "barAlignment": 0,
+                "drawStyle": "line",
+                "fillOpacity": 0,
+                "gradientMode": "none",
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                },
+                "lineInterpolation": "linear",
+                "lineWidth": 1,
+                "pointSize": 5,
+                "scaleDistribution": {
+                  "type": "linear"
+                },
+                "showPoints": "auto",
+                "spanNulls": false,
+                "stacking": {
+                  "group": "A",
+                  "mode": "none"
+                },
+                "thresholdsStyle": {
+                  "mode": "off"
+                }
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": null
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 130
+          },
           "id": 41,
           "options": {
             "legend": {
@@ -2968,7 +3263,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 114
+            "y": 130
           },
           "id": 40,
           "options": {
@@ -3050,7 +3345,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 122
+            "y": 138
           },
           "id": 39,
           "options": {
@@ -3132,7 +3427,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 122
+            "y": 138
           },
           "id": 42,
           "options": {
@@ -3165,7 +3460,7 @@ data:
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 130
+            "y": 146
           },
           "id": 9,
           "panels": [],
@@ -3228,7 +3523,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 0,
-            "y": 131
+            "y": 147
           },
           "id": 11,
           "options": {
@@ -3310,7 +3605,7 @@ data:
             "h": 8,
             "w": 12,
             "x": 12,
-            "y": 131
+            "y": 147
           },
           "id": 12,
           "options": {
@@ -3512,7 +3807,7 @@ data:
           },
           {
             "current": {
-              "selected": false,
+              "selected": true,
               "text": "Prometheus",
               "value": "Prometheus"
             },
