@@ -27,7 +27,7 @@ jobs:
       go_versions: ${{ steps.config.outputs.go_versions }}
       platforms: ${{ steps.config.outputs.platforms }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - id: config
         run: |
           if test -n "${{ inputs.package_expr }}"; then
