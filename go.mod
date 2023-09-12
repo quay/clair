@@ -18,7 +18,7 @@ require (
 	github.com/quay/claircore v1.5.16
 	github.com/quay/zlog v1.1.5
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
-	github.com/rs/zerolog v1.29.1
+	github.com/rs/zerolog v1.30.0
 	github.com/streadway/amqp v1.1.0
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/ugorji/go/codec v1.2.11
