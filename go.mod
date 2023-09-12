@@ -7,7 +7,7 @@ require (
 	github.com/go-stomp/stomp/v3 v3.0.5
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-containerregistry v0.16.1
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/jackc/pgconn v1.14.1
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/klauspost/compress v1.16.7
