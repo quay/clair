@@ -38,6 +38,8 @@ objects:
           labels:
             service: indexer
             app: clair
+          annotations:
+            ${{CLAIR_INDEXER_ANNOTATIONS_KEY}}: ${{CLAIR_INDEXER_ANNOTATIONS_VALUE}}
         spec:
           serviceAccountName: ${SERVICE_ACCOUNT}
           volumes:
@@ -110,6 +112,8 @@ objects:
           labels:
             service: matcher
             app: clair
+          annotations:
+            ${{CLAIR_MATCHER_ANNOTATIONS_KEY}}: ${{CLAIR_MATCHER_ANNOTATIONS_VALUE}}
         spec:
           serviceAccountName: ${SERVICE_ACCOUNT}
           volumes:
@@ -176,6 +180,8 @@ objects:
           labels:
             service: notifier
             app: clair
+          annotations:
+            ${{CLAIR_NOTIFIER_ANNOTATIONS_KEY}}: ${{CLAIR_NOTIFIER_ANNOTATIONS_VALUE}}
         spec:
           serviceAccountName: ${SERVICE_ACCOUNT}
           volumes:
@@ -394,3 +400,15 @@ parameters:
     value: "clair"
     displayName: clair service account
     description: name of the service account to use for API interaction
+  - name: CLAIR_INDEXER_ANNOTATIONS_KEY
+    value: "pod-restart-annotation"
+  - name: CLAIR_INDEXER_ANNOTATIONS_VALUE
+    value: "update-me-to-restart"
+  - name: CLAIR_MATCHER_ANNOTATIONS_KEY
+    value: "pod-restart-annotation"
+  - name: CLAIR_MATCHER_ANNOTATIONS_VALUE
+    value: "update-me-to-restart"
+  - name: CLAIR_NOTIFIER_ANNOTATIONS_KEY
+    value: "pod-restart-annotation"
+  - name: CLAIR_NOTIFIER_ANNOTATIONS_VALUE
+    value: "update-me-to-restart"
