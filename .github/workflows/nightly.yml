@@ -46,7 +46,7 @@ jobs:
           printf 'CLAIRCORE_BRANCH=%s\n' "${br}" >> $GITHUB_ENV
           printf 'GO_VERSION=%s\n' "$gv" >> $GITHUB_ENV
           printf '%s/.local/go/bin\n' "$HOME" >> $GITHUB_PATH
-      - uses: docker/setup-qemu-action@v2
+      - uses: docker/setup-qemu-action@v3
         with:
           platforms: all
       - uses: docker/setup-buildx-action@v2
