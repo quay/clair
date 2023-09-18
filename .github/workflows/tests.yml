@@ -99,7 +99,7 @@ jobs:
           go mod download
           go build -v std
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
+        uses: docker/setup-qemu-action@v3
         if: ${{ steps.host.outputs.platform != matrix.platform }}
         with:
           platforms: ${{ matrix.platform }}
