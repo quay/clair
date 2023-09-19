@@ -2626,9 +2626,8 @@ DESCRIPTION:
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="config"><a class="header" href="#config">Config</a></h1>
 <h2 id="cli-flags-and-environment-variables"><a class="header" href="#cli-flags-and-environment-variables">CLI Flags And Environment Variables</a></h2>
-<p>Clair is configured by a structured yaml file. 
-Each Clair node needs to specify what mode it will run in and a path to a
-configuration file via CLI flags or environment variables.</p>
+<p>Clair is configured by a structured yaml or JSON<sup class="footnote-reference"><a href="#1">1</a></sup> file and an optional directory of &quot;merge&quot; and &quot;patch&quot; documents<sup class="footnote-reference"><a href="#1">1</a></sup>.
+Each Clair node needs to specify what mode it will run in and a path to a configuration file via CLI flags or environment variables.</p>
 <p>For example:</p>
 <pre><code class="language-shell">$ clair -conf ./path/to/config.yaml -mode indexer
 $ clair -conf ./path/to/config.yaml -mode matcher
@@ -2647,8 +2646,7 @@ $ clair -conf ./path/to/config.yaml -mode matcher
     A file system path to Clair's config file
 </code></pre>
 <p>The above example starts two Clair nodes using the same configuration.
-One will only run the indexing facilities while the other will only run the
-matching facilities.</p>
+One will only run the indexing facilities while the other will only run the matching facilities.</p>
 <p>Environment variables respected by the Go standard library can be specified
 if needed. Some notable examples:</p>
 <ul>
@@ -2658,9 +2656,24 @@ if needed. Some notable examples:</p>
 </ul>
 <p>If running in &quot;combo&quot; mode you <strong>must</strong> supply the <code>indexer</code>, <code>matcher</code>,
 and <code>notifier</code> configuration blocks in the configuration.</p>
+<h2 id="configuration-dropins"><a class="header" href="#configuration-dropins">Configuration dropins</a></h2>
+<p>Starting in Clair version <code>4.7.0</code>, dropin configuration files are supported.</p>
+<p>Given a root configurtaion file of <code>/etc/clair/config.json</code>, all files matching the globs <code>/etc/clair/config.json.d/*.json</code> and <code>/etc/clair/config.json.d/*.json-patch</code> would be loaded in lexical order after the root configuration file.
+Similarly, given <code>/etc/clair/config.yaml</code>, all files matching the globs <code>/etc/clair/config.yaml.d/*.yaml</code> and <code>/etc/clair/config.yaml.d/*.yaml-patch</code> would be loaded.
+Only the extensions <code>yaml</code> and <code>json</code> are supported, and indicate yaml and JSON formatting, respectively.</p>
+<p>The dropin files must have the same extension and format as the root file.
+Dropins with the bare suffix are treated as <a href="reference/rfc7386">merge documents</a>.
+Dropins with the <code>-patch</code> suffix are treated as <a href="reference/rfc6902">patch documents</a> and must contain a valid <a href="reference/rfc6902">RFC 6902</a> structure.
+Yaml documents must be resolvable to the JSON subset.</p>
+<p>Take care with the <a href="reference/rfc7386">merge</a> behavior around lists; a patch operation may be more suitable.
+The <code>clairctl check-config</code> command can be used to ensure a merged configuration is what is intended.
+In addition, placing <code>test</code> operations in a patch file that's evaluated last (such as <code>zz-validate.json-patch</code>) can be used to have Clair refuse to start if some configuration values are not what is intended.</p>
+<p>The application defaults are applied <em>after</em> the configuration is loaded and as such, not reflected in the <code>clairctl check-config</code> command.
+The output of that command is also not currently suitable to be used to &quot;compile&quot; a config to a single file.</p>
 <h2 id="configuration-reference"><a class="header" href="#configuration-reference">Configuration Reference</a></h2>
-<p>Please see the <a href="https://pkg.go.dev/github.com/quay/clair/config">go module documentation</a> for additional
-documentation on defaults and use.</p>
+<p>Please see the <a href="https://pkg.go.dev/github.com/quay/clair/config">go module documentation</a> for additional documentation on defaults and use.
+Starting in version <code>4.7.0</code>, unknown keys are disallowed.
+Configurations that looked valid previously and loaded fine may now cause Clair to refuse to start.</p>
 <pre><code>http_listen_addr: &quot;&quot;
 introspection_addr: &quot;&quot;
 log_level: &quot;&quot;
@@ -3089,6 +3102,10 @@ JWT claim.</p>
 <h4 id="metricsprometheusendpoint"><a class="header" href="#metricsprometheusendpoint"><code>$.metrics.prometheus.endpoint</code></a></h4>
 <p>a string value</p>
 <p>Defines the path where metrics will be served.</p>
+<hr />
+<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
+<p>Support added in version <code>4.7.0</code>.</p>
+</div>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="indexer-1"><a class="header" href="#indexer-1">Indexer</a></h1>
 <p>When Clair is running in Indexer mode, it is responsible for receiving Manifests and generating IndexReports. An IndexReport is an intermediate representation of a manifest's content and is used to discover vulnerabilities.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="matcher-1"><a class="header" href="#matcher-1">Matcher</a></h1>
