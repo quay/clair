@@ -49,7 +49,7 @@ jobs:
       - uses: docker/setup-qemu-action@v3
         with:
           platforms: all
-      - uses: docker/setup-buildx-action@v2
+      - uses: docker/setup-buildx-action@v3
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ steps.setup.outputs.go_version }}
