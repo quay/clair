@@ -10,9 +10,12 @@ import (
 
 // TLS describes some TLS settings.
 //
-// These are currently only used in the Notifier. Using the environment
-// variables "SSL_CERT_DIR" or "SSL_CERT_FILE" or modifying the system's trust
-// store are the ways to modify root CAs for all outgoing TLS connections.
+// Some uses of this type ignore the RootCA member; see the documentation at the
+// use site to determine if that's the case.
+//
+// Using the environment variables "SSL_CERT_DIR" or "SSL_CERT_FILE" or
+// modifying the system's trust store are the ways to modify root CAs for all
+// outgoing TLS connections.
 type TLS struct {
 	// The filesystem path where a root CA can be read.
 	//
@@ -20,9 +23,9 @@ type TLS struct {
 	// environment variables, or adding the relevant certs to the system trust
 	// store.
 	RootCA string `yaml:"root_ca" json:"root_ca"`
-	// The filesystem path where a tls certificate can be read.
+	// The filesystem path where a TLS certificate can be read.
 	Cert string `yaml:"cert" json:"cert"`
-	// The filesystem path where a tls private key can be read.
+	// The filesystem path where a TLS private key can be read.
 	Key string `yaml:"key" json:"key"`
 }
 
