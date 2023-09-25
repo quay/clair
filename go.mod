@@ -3,7 +3,7 @@ module github.com/quay/clair/v4
 go 1.20
 
 require (
-	github.com/evanphx/json-patch/v5 v5.6.0
+	github.com/evanphx/json-patch/v5 v5.7.0
 	github.com/go-stomp/stomp/v3 v3.0.5
 	github.com/google/go-cmp v0.5.9
 	github.com/google/go-containerregistry v0.16.1
