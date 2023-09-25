@@ -62,11 +62,18 @@ The output of that command is also not currently suitable to be used to "compile
 [rfc7386]: https://datatracker.ietf.org/doc/html/rfc7386
 [rfc6902]: https://datatracker.ietf.org/doc/html/rfc6902
 
+## Deprecations and Changes
+
+Starting in version `4.7.0`, unknown keys are disallowed.
+Configurations that looked valid previously and loaded fine may now cause Clair to refuse to start.
+
+In version `4.8.0`, using Jaeger for trace submission was deprecated.
+Configurations that use Jaeger will print a warning.
+In future versions, using the Jaeger format may cause an error.
+
 ## Configuration Reference
 
 Please see the [go module documentation][godoc_config] for additional documentation on defaults and use.
-Starting in version `4.7.0`, unknown keys are disallowed.
-Configurations that looked valid previously and loaded fine may now cause Clair to refuse to start.
 
 [godoc_config]: https://pkg.go.dev/github.com/quay/clair/config
 
@@ -121,6 +128,9 @@ trace:
         service_name: ""
         tags: nil
         buffer_max: 0
+    otlp:
+	  http: {}
+      grpc: {}
 metrics:
     name: ""
     prometheus:
@@ -140,6 +150,14 @@ more information.
 # `$.auth.keyserver`
 # `$.auth.keyserver.api`
 # `$.auth.keyserver.intraservice`
+# `$.trace.otlp.http.client_tls`
+# `$.trace.otlp.http.client_tls.root_ca`
+# `$.trace.otlp.grpc.client_tls`
+# `$.trace.otlp.grpc.client_tls.root_ca`
+# `$.metrics.otlp.http.client_tls`
+# `$.metrics.otlp.http.client_tls.root_ca`
+# `$.metrics.otlp.grpc.client_tls`
+# `$.metrics.otlp.grpc.client_tls.root_ca`
 -->
 
 ### `$.http_listen_addr`
@@ -599,17 +617,21 @@ JWT claim.
 Defines distributed tracing configuration based on OpenTelemetry.
 
 #### `$.trace.name`
-a string value
-
-The name of the application traces will belong to.
+Which submission format to use, one of:
+- jaeger
+- otlp
+- sentry
 
 #### `$.trace.probability`
 a float value
 
 The probability a trace will occur.
 
-#### `$.trace.jaeger`
+### `$.trace.jaeger`
 Defines values for Jaeger tracing.
+
+***NOTE***: Jaeger has deprecated using the `jaeger` protocol and encouraging users to migrate to OTLP,
+which Jaeger can ingest natively.
 
 #### `$.trace.jaeger.agent`
 Defines values for configuring delivery to a Jaeger agent.
@@ -642,6 +664,94 @@ a mapping of a string to a string
 #### `$.trace.jaeger.buffer_max`
 an integer value
 
+### `$.trace.otlp`
+Configuration for OTLP traces.
+
+Only one of the `http` or `grpc` keys should be provided.
+
+#### `$.trace.otlp.http`
+Configuration for OTLP traces submitted by HTTP.
+
+##### `$.trace.otlp.http.url_path`
+Request path to use for submissions.
+Defaults to `/v1/traces`.
+
+##### `$.trace.otlp.http.compression`
+Compression for payloads.
+One of:
+- gzip
+- none
+
+##### `$.trace.otlp.http.endpoint`
+`Host:port` for submission. Defaults to `localhost:4318`.
+
+##### `$.trace.otlp.http.headers`
+Key-value pairs of additional headers for submissions.
+
+##### `$.trace.otlp.http.insecure`
+Use HTTP instead of HTTPS.
+
+##### `$.trace.otlp.http.timeout`
+Maximum of of time for a trace submission.
+
+##### `$.trace.otlp.http.client_tls.cert`
+Client certificate for connection.
+
+##### `$.trace.otlp.http.client_tls.key`
+Key for the certificate specified in `cert`.
+
+#### `$.trace.otlp.grpc`
+Configuration for OTLP traces submitted by gRPC.
+
+##### `$.trace.otlp.grpc.reconnect`
+Sets the minimum time between connection attempts.
+
+##### `$.trace.otlp.grpc.service_config`
+A string containing a JSON-format gRPC service config.
+
+##### `$.trace.otlp.grpc.compression`
+Compression for payloads.
+One of:
+- gzip
+- none
+
+##### `$.trace.otlp.grpc.endpoint`
+`Host:port` for submission. Defaults to `localhost:4317`.
+
+##### `$.trace.otlp.grpc.headers`
+Key-value pairs of additional headers for submissions.
+
+##### `$.trace.otlp.grpc.insecure`
+Do not verify the server certificate.
+
+##### `$.trace.otlp.grpc.timeout`
+Maximum of of time for a trace submission.
+
+##### `$.trace.otlp.grpc.client_tls.cert`
+Client certificate for connection.
+
+##### `$.trace.otlp.grpc.client_tls.key`
+Key for the certificate specified in `cert`.
+
+### `$.trace.sentry`
+Configuration for submitting traces to Sentry.
+
+This is done via OpenTelemetry instrumentation, so may not provide identical
+results compared to other tracing backends or native Sentry instrumentation.
+
+There's no integration for error submission.
+This means that alternative implementations of the Sentry API that do not support submitting traces (such as [GlitchTip]) are not usable.
+
+[GlitchTip]: https://glitchtip.com/
+
+#### `$.trace.sentry.dsn`
+Sentry DSN to use.
+See also [`sentry-go.ClientOptions`](https://pkg.go.dev/github.com/getsentry/sentry-go#ClientOptions).
+
+#### `$.trace.sentry.environment`
+Sentry environment to use.
+See also [`sentry-go.ClientOptions`](https://pkg.go.dev/github.com/getsentry/sentry-go#ClientOptions).
+
 ### `$.metrics`
 Defines distributed tracing configuration based on OpenTelemetry.
 
@@ -655,6 +765,75 @@ Configuration for a prometheus metrics exporter.
 a string value
 
 Defines the path where metrics will be served.
+
+### `$.metrics.otlp`
+Configuration for OTLP metrics.
+
+Only one of the `http` or `grpc` keys should be provided.
+
+#### `$.metrics.otlp.http`
+Configuration for OTLP metrics submitted by HTTP.
+
+##### `$.metrics.otlp.http.url_path`
+Request path to use for submissions.
+Defaults to `/v1/metrics`.
+
+##### `$.metrics.otlp.http.compression`
+Compression for payloads.
+One of:
+- gzip
+- none
+
+##### `$.metrics.otlp.http.endpoint`
+`Host:port` for submission. Defaults to `localhost:4318`.
+
+##### `$.metrics.otlp.http.headers`
+Key-value pairs of additional headers for submissions.
+
+##### `$.metrics.otlp.http.insecure`
+Use HTTP instead of HTTPS.
+
+##### `$.metrics.otlp.http.timeout`
+Maximum of of time for a metrics submission.
+
+##### `$.metrics.otlp.http.client_tls.cert`
+Client certificate for connection.
+
+##### `$.metrics.otlp.http.client_tls.key`
+Key for the certificate specified in `cert`.
+
+#### `$.metrics.otlp.grpc`
+Configuration for OTLP metrics submitted by gRPC.
+
+##### `$.metrics.otlp.grpc.reconnect`
+Sets the minimum time between connection attempts.
+
+##### `$.metrics.otlp.grpc.service_config`
+A string containing a JSON-format gRPC service config.
+
+##### `$.metrics.otlp.grpc.compression`
+Compression for payloads.
+One of:
+- gzip
+- none
+
+##### `$.metrics.otlp.grpc.endpoint`
+`Host:port` for submission. Defaults to `localhost:4318`.
+
+##### `$.metrics.otlp.grpc.headers`
+Key-value pairs of additional headers for submissions.
+
+##### `$.metrics.otlp.grpc.insecure`
+Use HTTP instead of HTTPS.
+
+##### `$.metrics.otlp.grpc.timeout`
+Maximum of of time for a metrics submission.
+
+##### `$.metrics.otlp.grpc.client_tls.cert`
+Client certificate for connection.
+
+##### `$.metrics.otlp.grpc.client_tls.key`
+Key for the certificate specified in `cert`.
 
 * * *
 

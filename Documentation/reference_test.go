@@ -53,6 +53,12 @@ func walk(ws *[]string, path string, t reflect.Type) error {
 	if t.Kind() == reflect.Struct {
 		for i, lim := 0, t.NumField(); i < lim; i++ {
 			f := t.Field(i)
+			if f.Anonymous {
+				if err := walk(ws, path, t.Field(i).Type); err != nil {
+					return err
+				}
+				continue
+			}
 			var n string
 			switch t := f.Tag.Get("json"); t {
 			case "-", "":
