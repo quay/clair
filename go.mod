@@ -15,7 +15,7 @@ require (
 	github.com/prometheus/client_golang v1.17.0
 	github.com/pyroscope-io/godeltaprof v0.1.2
 	github.com/quay/clair/config v1.3.0
-	github.com/quay/claircore v1.5.18
+	github.com/quay/claircore v1.5.19
 	github.com/quay/zlog v1.1.5
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
 	github.com/rs/zerolog v1.31.0
@@ -75,7 +75,7 @@ require (
 	github.com/prometheus/client_model v0.4.1-0.20230718164431-9a2bf3000d16 // indirect
 	github.com/prometheus/common v0.44.0 // indirect
 	github.com/prometheus/procfs v0.11.1 // indirect
-	github.com/quay/claircore/toolkit v1.1.0 // indirect
+	github.com/quay/claircore/toolkit v1.1.1 // indirect
 	github.com/quay/claircore/updater/driver v1.0.0 // indirect
 	github.com/quay/goval-parser v0.8.8 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
