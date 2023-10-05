@@ -35,6 +35,15 @@ var AdminCmd = &cli.Command{
 					Usage:  "create `idx_manifest_index_manifest_id` index in the `indexer` database",
 					Action: adminPre470,
 				},
+				{
+					Name:    "v4.7.3",
+					Aliases: []string{"4.7.3"},
+					Description: "This task does a `CONCURRENT` create of the `idx_manifest_layer_layer_id` index in the `indexer` database.\n" +
+						"This may take a long time if the indexer database has gotten large.\n\n" +
+						"The command will attempt to resume work if it is interrupted.",
+					Usage:  "create `idx_manifest_layer_layer_id` index in the `indexer` database",
+					Action: adminPre473,
+				},
 			},
 			Before: otherVersion,
 		},
@@ -207,6 +216,69 @@ func adminPost470(c *cli.Context) error {
 		}
 
 		zlog.Info(ctx).Msg("post v4.7.0 admin done")
+		return nil
+	})
+}
+
+// Attempt to build the index that the migrations in 4.7.3 check for.
+func adminPre473(c *cli.Context) error {
+	ctx := c.Context
+	fi, err := os.Stat(c.Path("config"))
+	switch {
+	case !errors.Is(err, nil):
+		return fmt.Errorf("bad config: %w", err)
+	case fi.IsDir():
+		return fmt.Errorf("bad config: is a directory")
+	}
+	cfg, err := loadConfig(c.Path("config"))
+	if err != nil {
+		return fmt.Errorf("error loading config: %w", err)
+	}
+	dsn := cfg.Indexer.ConnString
+
+	pgcfg, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		return fmt.Errorf("error parsing dsn: %w", err)
+	}
+	zlog.Info(ctx).
+		Str("host", pgcfg.ConnConfig.Host).
+		Str("database", pgcfg.ConnConfig.Database).
+		Str("user", pgcfg.ConnConfig.User).
+		Uint16("port", pgcfg.ConnConfig.Port).
+		Msg("using discovered connection params")
+
+	zlog.Debug(ctx).
+		Msg("resizing pool to 2 connections")
+	pgcfg.MaxConns = 2
+	pool, err := pgxpool.ConnectConfig(ctx, pgcfg)
+	if err != nil {
+		return fmt.Errorf("error creating pool: %w", err)
+	}
+	defer pool.Close()
+	if err := pool.Ping(ctx); err != nil {
+		return fmt.Errorf("error connecting to database: %w", err)
+	}
+
+	return pool.AcquireFunc(ctx, func(conn *pgxpool.Conn) error {
+		const checkindex = `SELECT pg_index.indisvalid FROM pg_class, pg_index WHERE pg_index.indexrelid = pg_class.oid AND pg_class.relname = 'idx_manifest_layer_layer_id';`
+		const mkindex = `CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_manifest_layer_layer_id ON manifest_layer (layer_id);`
+		const reindex = `REINDEX INDEX CONCURRENTLY idx_manifest_layer_layer_id;`
+		var ok *bool
+		if err := conn.QueryRow(ctx, checkindex).Scan(&ok); err != nil {
+			if !errors.Is(err, pgx.ErrNoRows) {
+				zlog.Info(ctx).
+					AnErr("index_check", err).
+					Msg("error checking index existence")
+			}
+		}
+		var query = mkindex
+		if ok != nil && !*ok { // If it exists but isn't valid:
+			query = reindex
+		}
+		if _, err := conn.Exec(ctx, query); err != nil {
+			return fmt.Errorf("error (re)indexing database: %w", err)
+		}
+		zlog.Info(ctx).Msg("pre v4.7.3 admin done")
 		return nil
 	})
 }
