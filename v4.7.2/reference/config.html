@@ -1,0 +1,710 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Config - Clair Documentation</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="Documentation for Clair.">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "coal" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded "><a href="../whatis.html"><strong aria-hidden="true">1.</strong> What is ClairV4</a></li><li class="chapter-item expanded "><a href="../howto.html"><strong aria-hidden="true">2.</strong> How Tos</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../howto/getting_started.html"><strong aria-hidden="true">2.1.</strong> Getting Started With ClairV4</a></li><li class="chapter-item expanded "><a href="../howto/deployment.html"><strong aria-hidden="true">2.2.</strong> Deployment Models</a></li><li class="chapter-item expanded "><a href="../howto/api.html"><strong aria-hidden="true">2.3.</strong> API Definition</a></li><li class="chapter-item expanded "><a href="../howto/testing.html"><strong aria-hidden="true">2.4.</strong> Testing ClairV4</a></li></ol></li><li class="chapter-item expanded "><a href="../concepts.html"><strong aria-hidden="true">3.</strong> Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../concepts/indexing.html"><strong aria-hidden="true">3.1.</strong> Indexing</a></li><li class="chapter-item expanded "><a href="../concepts/matching.html"><strong aria-hidden="true">3.2.</strong> Matching</a></li><li class="chapter-item expanded "><a href="../concepts/api_internal.html"><strong aria-hidden="true">3.3.</strong> Internal API</a></li><li class="chapter-item expanded "><a href="../concepts/authentication.html"><strong aria-hidden="true">3.4.</strong> Authentication</a></li><li class="chapter-item expanded "><a href="../concepts/notifications.html"><strong aria-hidden="true">3.5.</strong> Notifications</a></li><li class="chapter-item expanded "><a href="../concepts/updatersandairgap.html"><strong aria-hidden="true">3.6.</strong> Updaters and Airgap</a></li><li class="chapter-item expanded "><a href="../concepts/operation.html"><strong aria-hidden="true">3.7.</strong> Operation</a></li></ol></li><li class="chapter-item expanded "><a href="../contribution.html"><strong aria-hidden="true">4.</strong> Contribution</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../contribution/releases.html"><strong aria-hidden="true">4.1.</strong> Releases</a></li><li class="chapter-item expanded "><a href="../contribution/commit_style.html"><strong aria-hidden="true">4.2.</strong> Commit Style</a></li></ol></li><li class="chapter-item expanded "><a href="../reference.html"><strong aria-hidden="true">5.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../reference/api.html"><strong aria-hidden="true">5.1.</strong> Api</a></li><li class="chapter-item expanded "><a href="../reference/clairctl.html"><strong aria-hidden="true">5.2.</strong> Clairctl</a></li><li class="chapter-item expanded "><a href="../reference/config.html" class="active"><strong aria-hidden="true">5.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="../reference/indexer.html"><strong aria-hidden="true">5.4.</strong> Indexer</a></li><li class="chapter-item expanded "><a href="../reference/matcher.html"><strong aria-hidden="true">5.5.</strong> Matcher</a></li><li class="chapter-item expanded "><a href="../reference/notifier.html"><strong aria-hidden="true">5.6.</strong> Notifier</a></li><li class="chapter-item expanded "><a href="../reference/metrics.html"><strong aria-hidden="true">5.7.</strong> Metrics</a></li></ol></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Clair Documentation</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+                        <a href="https://github.com/quay/clair" title="Git repository" aria-label="Git repository">
+                            <i id="git-repository-button" class="fa fa-github"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="config"><a class="header" href="#config">Config</a></h1>
+<h2 id="cli-flags-and-environment-variables"><a class="header" href="#cli-flags-and-environment-variables">CLI Flags And Environment Variables</a></h2>
+<p>Clair is configured by a structured yaml or JSON<sup class="footnote-reference"><a href="#1">1</a></sup> file and an optional directory of &quot;merge&quot; and &quot;patch&quot; documents<sup class="footnote-reference"><a href="#1">1</a></sup>.
+Each Clair node needs to specify what mode it will run in and a path to a configuration file via CLI flags or environment variables.</p>
+<p>For example:</p>
+<pre><code class="language-shell">$ clair -conf ./path/to/config.yaml -mode indexer
+$ clair -conf ./path/to/config.yaml -mode matcher
+</code></pre>
+<pre><code>-mode 
+    (also specified by CLAIR_MODE env variable)
+    One of the following strings
+    Sets which mode the clair instances will run in
+    
+    &quot;indexer&quot;: runs just the indexer node
+    &quot;matcher&quot;: runs just the matcher node
+    &quot;notifier&quot;: runs just the notifier node
+    &quot;combo&quot;: will run all services on the same node.
+-conf
+    (also specified by CLAIR_CONF env variable)
+    A file system path to Clair's config file
+</code></pre>
+<p>The above example starts two Clair nodes using the same configuration.
+One will only run the indexing facilities while the other will only run the matching facilities.</p>
+<p>Environment variables respected by the Go standard library can be specified
+if needed. Some notable examples:</p>
+<ul>
+<li><code>HTTP_PROXY</code></li>
+<li><code>HTTPS_PROXY</code></li>
+<li><code>SSL_CERT_DIR</code></li>
+</ul>
+<p>If running in &quot;combo&quot; mode you <strong>must</strong> supply the <code>indexer</code>, <code>matcher</code>,
+and <code>notifier</code> configuration blocks in the configuration.</p>
+<h2 id="configuration-dropins"><a class="header" href="#configuration-dropins">Configuration dropins</a></h2>
+<p>Starting in Clair version <code>4.7.0</code>, dropin configuration files are supported.</p>
+<p>Given a root configurtaion file of <code>/etc/clair/config.json</code>, all files matching the globs <code>/etc/clair/config.json.d/*.json</code> and <code>/etc/clair/config.json.d/*.json-patch</code> would be loaded in lexical order after the root configuration file.
+Similarly, given <code>/etc/clair/config.yaml</code>, all files matching the globs <code>/etc/clair/config.yaml.d/*.yaml</code> and <code>/etc/clair/config.yaml.d/*.yaml-patch</code> would be loaded.
+Only the extensions <code>yaml</code> and <code>json</code> are supported, and indicate yaml and JSON formatting, respectively.</p>
+<p>The dropin files must have the same extension and format as the root file.
+Dropins with the bare suffix are treated as <a href="rfc7386">merge documents</a>.
+Dropins with the <code>-patch</code> suffix are treated as <a href="rfc6902">patch documents</a> and must contain a valid <a href="rfc6902">RFC 6902</a> structure.
+Yaml documents must be resolvable to the JSON subset.</p>
+<p>Take care with the <a href="rfc7386">merge</a> behavior around lists; a patch operation may be more suitable.
+The <code>clairctl check-config</code> command can be used to ensure a merged configuration is what is intended.
+In addition, placing <code>test</code> operations in a patch file that's evaluated last (such as <code>zz-validate.json-patch</code>) can be used to have Clair refuse to start if some configuration values are not what is intended.</p>
+<p>The application defaults are applied <em>after</em> the configuration is loaded and as such, not reflected in the <code>clairctl check-config</code> command.
+The output of that command is also not currently suitable to be used to &quot;compile&quot; a config to a single file.</p>
+<h2 id="configuration-reference"><a class="header" href="#configuration-reference">Configuration Reference</a></h2>
+<p>Please see the <a href="https://pkg.go.dev/github.com/quay/clair/config">go module documentation</a> for additional documentation on defaults and use.
+Starting in version <code>4.7.0</code>, unknown keys are disallowed.
+Configurations that looked valid previously and loaded fine may now cause Clair to refuse to start.</p>
+<pre><code>http_listen_addr: &quot;&quot;
+introspection_addr: &quot;&quot;
+log_level: &quot;&quot;
+tls: {}
+indexer:
+    connstring: &quot;&quot;
+    scanlock_retry: 0
+    layer_scan_concurrency: 0
+    migrations: false
+    scanner: {}
+    airgap: false
+matcher:
+    connstring: &quot;&quot;
+    indexer_addr: &quot;&quot;
+    migrations: false
+    period: &quot;&quot;
+    disable_updaters: false
+    update_retention: 2
+matchers:
+    names: nil
+    config: nil
+updaters:
+    sets: nil
+    config: nil
+notifier:
+    connstring: &quot;&quot;
+    migrations: false
+    indexer_addr: &quot;&quot;
+    matcher_addr: &quot;&quot;
+    poll_interval: &quot;&quot;
+    delivery_interval: &quot;&quot;
+    disable_summary: false
+    webhook: null
+    amqp: null
+    stomp: null
+auth: 
+  psk: nil
+trace:
+    name: &quot;&quot;
+    probability: null
+    jaeger:
+        agent:
+            endpoint: &quot;&quot;
+        collector:
+            endpoint: &quot;&quot;
+            username: null
+            password: null
+        service_name: &quot;&quot;
+        tags: nil
+        buffer_max: 0
+metrics:
+    name: &quot;&quot;
+    prometheus:
+        endpoint: null
+</code></pre>
+<p>Note: the above just lists every key for completeness. Copy-pasting the above as
+a starting point for configuration will result in some options not having their
+defaults set normally.</p>
+<!---
+The following are purposefully omitted. See comments in the config package for
+more information.
+
+# `$.tls.root_ca`
+# `$.updaters.filter`
+# `$.notifier.webhook.signed`
+# `$.auth.keyserver`
+# `$.auth.keyserver.api`
+# `$.auth.keyserver.intraservice`
+-->
+<h3 id="http_listen_addr"><a class="header" href="#http_listen_addr"><code>$.http_listen_addr</code></a></h3>
+<p>A string in <code>&lt;host&gt;:&lt;port&gt;</code> format where <code>&lt;host&gt;</code> can be an empty string.</p>
+<p>This configures where the HTTP API is exposed.
+See <code>/openapi/v1</code> for the API spec.</p>
+<h3 id="introspection_addr"><a class="header" href="#introspection_addr"><code>$.introspection_addr</code></a></h3>
+<p>A string in <code>&lt;host&gt;:&lt;port&gt;</code> format where <code>&lt;host&gt;</code> can be an empty string.</p>
+<p>This configures where Clair's metrics and health endpoints are exposed.</p>
+<h3 id="log_level"><a class="header" href="#log_level"><code>$.log_level</code></a></h3>
+<p>Set the logging level.</p>
+<p>One of the following strings:</p>
+<ul>
+<li>debug-color</li>
+<li>debug</li>
+<li>info</li>
+<li>warn</li>
+<li>error</li>
+<li>fatal</li>
+<li>panic</li>
+</ul>
+<h3 id="tls"><a class="header" href="#tls"><code>$.tls</code></a></h3>
+<p>TLS is a map containing the config for serving the HTTP API over TLS (and
+HTTP/2).</p>
+<h4 id="tlscert"><a class="header" href="#tlscert"><code>$.tls.cert</code></a></h4>
+<p>The TLS certificate to be used. Must be a full-chain certificate, as in nginx.</p>
+<h4 id="tlskey"><a class="header" href="#tlskey"><code>$.tls.key</code></a></h4>
+<p>A key file for the TLS certificate. Encryption is not supported on the key.</p>
+<h3 id="indexer"><a class="header" href="#indexer"><code>$.indexer</code></a></h3>
+<p>Indexer provides Clair Indexer node configuration.</p>
+<h4 id="indexerairgap"><a class="header" href="#indexerairgap"><code>$.indexer.airgap</code></a></h4>
+<p>Disables HTTP access to the Internet for indexers and fetchers.
+Private IPv4 and IPv6 addresses are allowed.
+Database connections are unaffected.</p>
+<h4 id="indexerconnstring"><a class="header" href="#indexerconnstring"><code>$.indexer.connstring</code></a></h4>
+<p>A Postgres connection string.</p>
+<p>Accepts a format as a url (e.g.,
+<code>postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full</code>)
+or a libpq connection string (e.g.,
+<code>user=pqgotest dbname=pqgotest sslmode=verify-full</code>).</p>
+<h4 id="indexerindex_report_request_concurrency"><a class="header" href="#indexerindex_report_request_concurrency"><code>$.indexer.index_report_request_concurrency</code></a></h4>
+<p>Integer.</p>
+<p>Rate limits the number of index report creation requests.</p>
+<p>Setting this to 0 will attempt to auto-size this value. Setting a negative value
+means &quot;unlimited.&quot; The auto-sizing is a multiple of the number of available
+cores.</p>
+<p>The API will return a 429 status code if concurrency is exceeded.</p>
+<h4 id="indexerscanlock_retry"><a class="header" href="#indexerscanlock_retry"><code>$.indexer.scanlock_retry</code></a></h4>
+<p>A positive integer representing seconds.</p>
+<p>Concurrent Indexers lock on manifest scans to avoid clobbering.
+This value tunes how often a waiting Indexer will poll for the lock.</p>
+<!--TODO: Move to async operating mode -->
+<h4 id="indexerlayer_scan_concurrency"><a class="header" href="#indexerlayer_scan_concurrency"><code>$.indexer.layer_scan_concurrency</code></a></h4>
+<p>Positive integer limiting the number of concurrent layer scans.</p>
+<p>Indexers will index a Manifest's layers concurrently.
+This value tunes the number of layers an Indexer will scan in parallel.</p>
+<h4 id="indexermigrations"><a class="header" href="#indexermigrations"><code>$.indexer.migrations</code></a></h4>
+<p>A boolean value.</p>
+<p>Whether Indexer nodes handle migrations to their database.</p>
+<h4 id="indexerscanner"><a class="header" href="#indexerscanner"><code>$.indexer.scanner</code></a></h4>
+<p>Indexer configurations.</p>
+<p>Scanner allows for passing configuration options to layer scanners.
+The scanner will have this configuration passed to it on construction if
+designed to do so.</p>
+<h4 id="indexerscannerdist"><a class="header" href="#indexerscannerdist"><code>$.indexer.scanner.dist</code></a></h4>
+<p>A map with the name of a particular scanner and arbitrary yaml as a value.</p>
+<h4 id="indexerscannerpackage"><a class="header" href="#indexerscannerpackage"><code>$.indexer.scanner.package</code></a></h4>
+<p>A map with the name of a particular scanner and arbitrary yaml as a value.</p>
+<h4 id="indexerscannerrepo"><a class="header" href="#indexerscannerrepo"><code>$.indexer.scanner.repo</code></a></h4>
+<p>A map with the name of a particular scanner and arbitrary yaml as a value.</p>
+<h3 id="matcher"><a class="header" href="#matcher"><code>$.matcher</code></a></h3>
+<p>Matcher provides Clair matcher node configuration.</p>
+<h4 id="matchercache_age"><a class="header" href="#matchercache_age"><code>$.matcher.cache_age</code></a></h4>
+<p>Duration string.</p>
+<p>Controls how long clients should be hinted to cache responses for.</p>
+<h4 id="matcherconnstring"><a class="header" href="#matcherconnstring"><code>$.matcher.connstring</code></a></h4>
+<p>A Postgres connection string.</p>
+<p>Accepts a format as a url (e.g.,
+<code>postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full</code>)
+or a libpq connection string (e.g.,
+<code>user=pqgotest dbname=pqgotest sslmode=verify-full</code>).</p>
+<h4 id="matchermax_conn_pool"><a class="header" href="#matchermax_conn_pool"><code>$.matcher.max_conn_pool</code></a></h4>
+<p>A positive integer limiting the database connection pool size.</p>
+<p>Clair allows for a custom connection pool size.
+This number will directly set how many active database
+connections are allowed concurrently.</p>
+<p>This parameter will be ignored in a future version.
+Users should configure this through the connection string.</p>
+<h4 id="matcherindexer_addr"><a class="header" href="#matcherindexer_addr"><code>$.matcher.indexer_addr</code></a></h4>
+<p>A string in <code>&lt;host&gt;:&lt;port&gt;</code> format where <code>&lt;host&gt;</code> can be an empty string.</p>
+<p>A Matcher contacts an Indexer to create a VulnerabilityReport.
+The location of this Indexer is required.</p>
+<h4 id="matchermigrations"><a class="header" href="#matchermigrations"><code>$.matcher.migrations</code></a></h4>
+<p>A boolean value.</p>
+<p>Whether Matcher nodes handle migrations to their databases.</p>
+<h4 id="matcherperiod"><a class="header" href="#matcherperiod"><code>$.matcher.period</code></a></h4>
+<p>A time.ParseDuration parseable string.</p>
+<p>Determines how often updates for new security advisories will take place.</p>
+<p>Defaults to 6 hours.</p>
+<h4 id="matcherdisable_updaters"><a class="header" href="#matcherdisable_updaters"><code>$.matcher.disable_updaters</code></a></h4>
+<p>A boolean value.</p>
+<p>Whether to run background updates or not.</p>
+<h4 id="matcherupdate_retention"><a class="header" href="#matcherupdate_retention"><code>$.matcher.update_retention</code></a></h4>
+<p>An integer value limiting the number of update operations kept in the database.</p>
+<p>Sets the number of update operations to retain between garbage collection
+cycles. This should be set to a safe MAX value based on database size
+constraints.</p>
+<p>Defaults to 10.</p>
+<p>If a value less than 0 is provided, GC is disabled. 2 is the minimum value to
+ensure updates can be compared for notifications. </p>
+<h3 id="matchers"><a class="header" href="#matchers"><code>$.matchers</code></a></h3>
+<p>Matchers provides configuration for the in-tree Matchers and RemoteMatchers.</p>
+<h4 id="matchersnames"><a class="header" href="#matchersnames"><code>$.matchers.names</code></a></h4>
+<p>A list of string values informing the matcher factory about enabled matchers.</p>
+<p>If the value is nil the default list of Matchers will run:</p>
+<ul>
+<li>alpine</li>
+<li>aws</li>
+<li>debian</li>
+<li>oracle</li>
+<li>photon</li>
+<li>python</li>
+<li>rhel</li>
+<li>suse</li>
+<li>ubuntu</li>
+<li>crda</li>
+</ul>
+<p>If an empty list is provided zero matchers will run.</p>
+<h4 id="matchersconfig"><a class="header" href="#matchersconfig"><code>$.matchers.config</code></a></h4>
+<p>Provides configuration to specific matcher.</p>
+<p>A map keyed by the name of the matcher containing a sub-object which
+will be provided to the matchers factory constructor.</p>
+<p>A hypothetical example:</p>
+<pre><code>config:
+  python:
+    ignore_vulns:
+      - CVE-XYZ
+      - CVE-ABC
+</code></pre>
+<h3 id="updaters"><a class="header" href="#updaters"><code>$.updaters</code></a></h3>
+<p>Updaters provides configuration for the Matcher's update manager.</p>
+<h4 id="updaterssets"><a class="header" href="#updaterssets"><code>$.updaters.sets</code></a></h4>
+<p>A list of string values informing the update manager which Updaters to run.</p>
+<p>If the value is nil (or <code>null</code> in yaml) the default set of Updaters will run:</p>
+<ul>
+<li>alpine</li>
+<li>aws</li>
+<li>debian</li>
+<li>oracle</li>
+<li>photon</li>
+<li>pyupio</li>
+<li>rhel</li>
+<li>suse</li>
+<li>ubuntu</li>
+</ul>
+<p>If an empty list is provided zero updaters will run.</p>
+<h4 id="updatersconfig"><a class="header" href="#updatersconfig"><code>$.updaters.config</code></a></h4>
+<p>Provides configuration to specific updater sets.</p>
+<p>A map keyed by the name of the updater set name containing a sub-object
+which will be provided to the updater set's constructor.</p>
+<p>A hypothetical example:</p>
+<pre><code>config:
+  ubuntu:
+    security_tracker_url: http://security.url
+    ignore_distributions: 
+      - cosmic
+</code></pre>
+<h3 id="notifier"><a class="header" href="#notifier"><code>$.notifier</code></a></h3>
+<p>Notifier provides Clair notifier node configuration.</p>
+<h4 id="notifierconnstring"><a class="header" href="#notifierconnstring"><code>$.notifier.connstring</code></a></h4>
+<p>A Postgres connection string.</p>
+<p>Accepts a format as a url (e.g.,
+<code>postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full</code>)
+or a libpq connection string (e.g.,
+<code>user=pqgotest dbname=pqgotest sslmode=verify-full</code>).</p>
+<h4 id="notifiermigrations"><a class="header" href="#notifiermigrations"><code>$.notifier.migrations</code></a></h4>
+<p>A boolean value.</p>
+<p>Whether Notifier nodes handle migrations to their database.</p>
+<h4 id="notifierindexer_addr"><a class="header" href="#notifierindexer_addr"><code>$.notifier.indexer_addr</code></a></h4>
+<p>A string in <code>&lt;host&gt;:&lt;port&gt;</code> format where <code>&lt;host&gt;</code> can be an empty string.</p>
+<p>A Notifier contacts an Indexer to create obtain manifests affected by
+vulnerabilities. The location of this Indexer is required.</p>
+<h4 id="notifiermatcher_addr"><a class="header" href="#notifiermatcher_addr"><code>$.notifier.matcher_addr</code></a></h4>
+<p>A string in <code>&lt;host&gt;:&lt;port&gt;</code> format where <code>&lt;host&gt;</code> can be an empty string.</p>
+<p>A Notifier contacts a Matcher to list update operations and acquire diffs.
+The location of this Indexer is required.</p>
+<h4 id="notifierpoll_interval"><a class="header" href="#notifierpoll_interval"><code>$.notifier.poll_interval</code></a></h4>
+<p>A time.ParseDuration parsable string.</p>
+<p>The frequency at which the notifier will query at Matcher for Update Operations.</p>
+<h4 id="notifierdelivery_interval"><a class="header" href="#notifierdelivery_interval"><code>$.notifier.delivery_interval</code></a></h4>
+<p>A time.ParseDuration parsable string.</p>
+<p>The frequency at which the notifier attempt delivery of created or previously
+failed notifications.</p>
+<h4 id="notifierdisable_summary"><a class="header" href="#notifierdisable_summary"><code>$.notifier.disable_summary</code></a></h4>
+<p>A boolean.</p>
+<p>Controls whether notifications should be summarized to one per manifest or not.</p>
+<h4 id="notifierwebhook"><a class="header" href="#notifierwebhook"><code>$.notifier.webhook</code></a></h4>
+<p>Configures the notifier for webhook delivery.</p>
+<h4 id="notifierwebhooktarget"><a class="header" href="#notifierwebhooktarget"><code>$.notifier.webhook.target</code></a></h4>
+<p>URL where the webhook will be delivered.</p>
+<h4 id="notifierwebhookcallback"><a class="header" href="#notifierwebhookcallback"><code>$.notifier.webhook.callback</code></a></h4>
+<p>The callback url where notifications can be retrieved.
+The notification ID will be appended to this url.</p>
+<p>This will typically be where the clair notifier is hosted.</p>
+<h4 id="notifierwebhookheaders"><a class="header" href="#notifierwebhookheaders"><code>$.notifier.webhook.headers</code></a></h4>
+<p>A map associating a header name to a list of values.</p>
+<h4 id="notifieramqp"><a class="header" href="#notifieramqp"><code>$.notifier.amqp</code></a></h4>
+<p>Configures the notifier for AMQP delivery.</p>
+<p>Note: Clair does not declare any AMQP components on its own.  All attempts
+to use an exchange or queue are passive only and will fail The broker
+administrators should setup exchanges and queues ahead of time.</p>
+<h4 id="notifieramqpdirect"><a class="header" href="#notifieramqpdirect"><code>$.notifier.amqp.direct</code></a></h4>
+<p>A boolean value.</p>
+<p>If true the Notifier will deliver individual notifications (not a callback)
+to the configured AMQP broker.</p>
+<h4 id="notifieramqprollup"><a class="header" href="#notifieramqprollup"><code>$.notifier.amqp.rollup</code></a></h4>
+<p>Integer 0 or greater.</p>
+<p>If <code>direct</code> is true this value will inform notifier how many notifications
+to send in a single direct delivery.  For example, if <code>direct</code> is set to
+<code>true</code> and <code>rollup</code> is set to <code>5</code>, the notifier will deliver no more then
+5 notifications in a single json payload to the broker. Setting the value
+to 0 will effectively set it to 1.</p>
+<h4 id="notifieramqpexchange"><a class="header" href="#notifieramqpexchange"><code>$.notifier.amqp.exchange</code></a></h4>
+<p>The AMQP Exchange to connect to.</p>
+<h4 id="notifieramqpexchangename"><a class="header" href="#notifieramqpexchangename"><code>$.notifier.amqp.exchange.name</code></a></h4>
+<p>string value</p>
+<p>The name of the exchange to connect to.</p>
+<h4 id="notifieramqpexchangetype"><a class="header" href="#notifieramqpexchangetype"><code>$.notifier.amqp.exchange.type</code></a></h4>
+<p>string value</p>
+<p>The type of the exchange. Typically:</p>
+<ul>
+<li>direct</li>
+<li>fanout</li>
+<li>topic</li>
+<li>headers</li>
+</ul>
+<h4 id="notifieramqpexchangedurability"><a class="header" href="#notifieramqpexchangedurability"><code>$.notifier.amqp.exchange.durability</code></a></h4>
+<p>bool value</p>
+<p>Whether the configured queue is durable or not.</p>
+<h4 id="notifieramqpexchangeauto_delete"><a class="header" href="#notifieramqpexchangeauto_delete"><code>$.notifier.amqp.exchange.auto_delete</code></a></h4>
+<p>bool value</p>
+<p>Whether the configured queue uses an auto_delete policy.</p>
+<h4 id="notifieramqprouting_key"><a class="header" href="#notifieramqprouting_key"><code>$.notifier.amqp.routing_key</code></a></h4>
+<p>string value</p>
+<p>The name of the routing key each notification will be sent with.</p>
+<h4 id="notifieramqpcallback"><a class="header" href="#notifieramqpcallback"><code>$.notifier.amqp.callback</code></a></h4>
+<p>a URL string</p>
+<p>If <code>direct</code> is <code>false</code>, this URL is provided in the notification callback sent
+to the broker. This URL should point to Clair's notification API endpoint.</p>
+<h4 id="notifieramqpuris"><a class="header" href="#notifieramqpuris"><code>$.notifier.amqp.uris</code></a></h4>
+<p>list of URL strings</p>
+<p>A list of one or more AMQP brokers to connect to, in priority order.</p>
+<h4 id="notifieramqptls"><a class="header" href="#notifieramqptls"><code>$.notifier.amqp.tls</code></a></h4>
+<p>Configures TLS connection to AMQP broker.</p>
+<h4 id="notifieramqptlsroot_ca"><a class="header" href="#notifieramqptlsroot_ca"><code>$.notifier.amqp.tls.root_ca</code></a></h4>
+<p>string value</p>
+<p>The filesystem path where a root CA can be read.</p>
+<h4 id="notifieramqptlscert"><a class="header" href="#notifieramqptlscert"><code>$.notifier.amqp.tls.cert</code></a></h4>
+<p>string value</p>
+<p>The filesystem path where a tls certificate can be read. Note that clair
+also respects <code>SSL_CERT_DIR</code>, as documented for the Go <code>crypto/x509</code> package.</p>
+<h4 id="notifieramqptlskey"><a class="header" href="#notifieramqptlskey"><code>$.notifier.amqp.tls.key</code></a></h4>
+<p>string value</p>
+<p>The filesystem path where a TLS private key can be read.</p>
+<h4 id="notifierstomp"><a class="header" href="#notifierstomp"><code>$.notifier.stomp</code></a></h4>
+<p>Configures the notifier for STOMP delivery.</p>
+<h4 id="notifierstompdirect"><a class="header" href="#notifierstompdirect"><code>$.notifier.stomp.direct</code></a></h4>
+<p>A boolean value.</p>
+<p>If <code>true</code>, the Notifier will deliver individual notifications (not a
+callback) to the configured STOMP broker.</p>
+<h4 id="notifierstomprollup"><a class="header" href="#notifierstomprollup"><code>$.notifier.stomp.rollup</code></a></h4>
+<p>Integer 0 or greater.</p>
+<p>If <code>direct</code> is <code>true</code>, this value will limit the number of notifications
+sent in a single direct delivery.  For example, if <code>direct</code> is set to
+<code>true</code> and <code>rollup</code> is set to <code>5</code>, the notifier will deliver no more
+then 5 notifications in a single json payload to the broker. Setting the value
+to 0 will effectively set it to 1.</p>
+<h4 id="notifierstompcallback"><a class="header" href="#notifierstompcallback"><code>$.notifier.stomp.callback</code></a></h4>
+<p>a URL string</p>
+<p>If <code>direct</code> is <code>false</code>, this URL is provided in the notification callback sent
+to the broker. This URL should point to Clair's notification API endpoint.</p>
+<h4 id="notifierstompdestination"><a class="header" href="#notifierstompdestination"><code>$.notifier.stomp.destination</code></a></h4>
+<p>a string value</p>
+<p>The STOMP destination to deliver notifications to. </p>
+<h4 id="notifierstompuris"><a class="header" href="#notifierstompuris"><code>$.notifier.stomp.uris</code></a></h4>
+<p>list of URL strings</p>
+<p>A list of one or more STOMP brokers to connect to in priority order.</p>
+<h4 id="notifierstomptls"><a class="header" href="#notifierstomptls"><code>$.notifier.stomp.tls</code></a></h4>
+<p>Configures TLS connection to STOMP broker.</p>
+<h4 id="notifierstomptlsroot_ca"><a class="header" href="#notifierstomptlsroot_ca"><code>$.notifier.stomp.tls.root_ca</code></a></h4>
+<p>string value</p>
+<p>The filesystem path where a root CA can be read.
+Note that clair also respects <code>SSL_CERT_DIR</code>, as documented for the Go
+<code>crypto/x509</code> package.</p>
+<h4 id="notifierstomptlscert"><a class="header" href="#notifierstomptlscert"><code>$.notifier.stomp.tls.cert</code></a></h4>
+<p>string value</p>
+<p>The filesystem path where a tls certificate can be read.</p>
+<h4 id="notifierstomptlskey"><a class="header" href="#notifierstomptlskey"><code>$.notifier.stomp.tls.key</code></a></h4>
+<p>string value</p>
+<p>The filesystem path where a tls private key can be read.</p>
+<h4 id="notifierstompuser"><a class="header" href="#notifierstompuser"><code>$.notifier.stomp.user</code></a></h4>
+<p>Configures login details for the STOMP broker.</p>
+<h4 id="notifierstompuserlogin"><a class="header" href="#notifierstompuserlogin"><code>$.notifier.stomp.user.login</code></a></h4>
+<p>string value</p>
+<p>The STOMP login to connect with.</p>
+<h4 id="notifierstompuserpasscode"><a class="header" href="#notifierstompuserpasscode"><code>$.notifier.stomp.user.passcode</code></a></h4>
+<p>string value</p>
+<p>The STOMP passcode to connect with.</p>
+<h3 id="auth"><a class="header" href="#auth"><code>$.auth</code></a></h3>
+<p>Defines ClairV4's external and intra-service JWT based authentication.</p>
+<p>If multiple auth mechanisms are defined, Clair will pick one. Currently, there
+are not multiple mechanisms.</p>
+<h3 id="authpsk"><a class="header" href="#authpsk"><code>$.auth.psk</code></a></h3>
+<p>Defines preshared key authentication.</p>
+<h4 id="authpskkey"><a class="header" href="#authpskkey"><code>$.auth.psk.key</code></a></h4>
+<p>a string value</p>
+<p>A shared base64 encoded key distributed between all parties signing and
+verifying JWTs.</p>
+<h4 id="authpskiss"><a class="header" href="#authpskiss"><code>$.auth.psk.iss</code></a></h4>
+<p>a list of string value</p>
+<p>A list of JWT issuers to verify. An empty list will accept any issuer in a
+JWT claim.</p>
+<h3 id="trace"><a class="header" href="#trace"><code>$.trace</code></a></h3>
+<p>Defines distributed tracing configuration based on OpenTelemetry.</p>
+<h4 id="tracename"><a class="header" href="#tracename"><code>$.trace.name</code></a></h4>
+<p>a string value</p>
+<p>The name of the application traces will belong to.</p>
+<h4 id="traceprobability"><a class="header" href="#traceprobability"><code>$.trace.probability</code></a></h4>
+<p>a float value</p>
+<p>The probability a trace will occur.</p>
+<h4 id="tracejaeger"><a class="header" href="#tracejaeger"><code>$.trace.jaeger</code></a></h4>
+<p>Defines values for Jaeger tracing.</p>
+<h4 id="tracejaegeragent"><a class="header" href="#tracejaegeragent"><code>$.trace.jaeger.agent</code></a></h4>
+<p>Defines values for configuring delivery to a Jaeger agent.</p>
+<h4 id="tracejaegeragentendpoint"><a class="header" href="#tracejaegeragentendpoint"><code>$.trace.jaeger.agent.endpoint</code></a></h4>
+<p>a string value</p>
+<p>An address in <code>&lt;host&gt;:&lt;post&gt;</code> syntax where traces can be submitted.</p>
+<h4 id="tracejaegercollector"><a class="header" href="#tracejaegercollector"><code>$.trace.jaeger.collector</code></a></h4>
+<p>Defines values for configuring delivery to a Jaeger collector.</p>
+<h4 id="tracejaegercollectorendpoint"><a class="header" href="#tracejaegercollectorendpoint"><code>$.trace.jaeger.collector.endpoint</code></a></h4>
+<p>a string value</p>
+<p>An address in <code>&lt;host&gt;:&lt;post&gt;</code> syntax where traces can be submitted.</p>
+<h4 id="tracejaegercollectorusername"><a class="header" href="#tracejaegercollectorusername"><code>$.trace.jaeger.collector.username</code></a></h4>
+<p>a string value</p>
+<h4 id="tracejaegercollectorpassword"><a class="header" href="#tracejaegercollectorpassword"><code>$.trace.jaeger.collector.password</code></a></h4>
+<p>a string value</p>
+<h4 id="tracejaegerservice_name"><a class="header" href="#tracejaegerservice_name"><code>$.trace.jaeger.service_name</code></a></h4>
+<p>a string value</p>
+<h4 id="tracejaegertags"><a class="header" href="#tracejaegertags"><code>$.trace.jaeger.tags</code></a></h4>
+<p>a mapping of a string to a string</p>
+<h4 id="tracejaegerbuffer_max"><a class="header" href="#tracejaegerbuffer_max"><code>$.trace.jaeger.buffer_max</code></a></h4>
+<p>an integer value</p>
+<h3 id="metrics"><a class="header" href="#metrics"><code>$.metrics</code></a></h3>
+<p>Defines distributed tracing configuration based on OpenTelemetry.</p>
+<h4 id="metricsname"><a class="header" href="#metricsname"><code>$.metrics.name</code></a></h4>
+<p>a string value</p>
+<h3 id="metricsprometheus"><a class="header" href="#metricsprometheus"><code>$.metrics.prometheus</code></a></h3>
+<p>Configuration for a prometheus metrics exporter.</p>
+<h4 id="metricsprometheusendpoint"><a class="header" href="#metricsprometheusendpoint"><code>$.metrics.prometheus.endpoint</code></a></h4>
+<p>a string value</p>
+<p>Defines the path where metrics will be served.</p>
+<hr />
+<div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
+<p>Support added in version <code>4.7.0</code>.</p>
+</div>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../reference/clairctl.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../reference/indexer.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../reference/clairctl.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../reference/indexer.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
