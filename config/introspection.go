@@ -10,12 +10,14 @@ type Trace struct {
 	Probability *float64  `yaml:"probability,omitempty" json:"probability,omitempty"`
 	Jaeger      Jaeger    `yaml:"jaeger,omitempty" json:"jaeger,omitempty"`
 	OTLP        TraceOTLP `yaml:"otlp,omitempty" json:"otlp,omitempty"`
+	Sentry      Sentry    `yaml:"sentry,omitempty" json:"sentry,omitempty"`
 }
 
 func (t *Trace) lint() ([]Warning, error) {
 	switch t.Name {
 	case "":
 	case "otlp":
+	case "sentry":
 	case "jaeger":
 		return []Warning{{
 			path: ".name",
@@ -48,6 +50,17 @@ type Jaeger struct {
 	} `yaml:"collector,omitempty" json:"collector,omitempty"`
 	ServiceName string `yaml:"service_name,omitempty" json:"service_name,omitempty"`
 	BufferMax   int    `yaml:"buffer_max,omitempty" json:"buffer_max,omitempty"`
+}
+
+// Sentry is the [Sentry] specific tracing configuration.
+//
+// [Sentry]: https://sentry.io
+type Sentry struct {
+	// DSN to be passed to [github.com/getsentry/sentry-go.ClientOptions.Dsn].
+	DSN string `yaml:"dsn" json:"dsn"`
+	// Environment to be passed to
+	// [github.com/getsentry/sentry-go.ClientOptions.Environment].
+	Environment string `yaml:"environment,omitempty" json:"environment,omitempty"`
 }
 
 // Metrics specifies how to configure Clair's metrics exporting.
