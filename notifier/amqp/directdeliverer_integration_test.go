@@ -13,7 +13,7 @@ import (
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/test/integration"
 	"github.com/quay/zlog"
-	samqp "github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/quay/clair/v4/notifier"
@@ -80,7 +80,7 @@ func TestDirectDeliverer(t *testing.T) {
 		uri = defaultRabbitMQURI
 	}
 	t.Logf("using uri: %q", uri)
-	conn, err := samqp.Dial(uri)
+	conn, err := amqp.Dial(uri)
 	if err != nil {
 		t.Fatalf("failed to connect to broker at %v: %v", uri, err)
 	}
@@ -173,7 +173,7 @@ func TestDirectDeliverer(t *testing.T) {
 			}
 
 			// create consumer
-			consumerConn, err := samqp.Dial(uri)
+			consumerConn, err := amqp.Dial(uri)
 			if err != nil {
 				t.Fatalf("failed to create consumer connection: %v", err)
 			}

@@ -9,7 +9,7 @@ import (
 
 	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
-	samqp "github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 // failOver will return the first successful connection made against the provided
@@ -18,7 +18,7 @@ import (
 // failOver is safe for concurrent usage.
 type failOver struct {
 	sync.RWMutex
-	conn     *samqp.Connection
+	conn     *amqp.Connection
 	tls      *tls.Config
 	exchange *config.Exchange
 	uris     []*url.URL
@@ -26,7 +26,7 @@ type failOver struct {
 
 // Connection returns an AMQP connection to the first broker which successfully
 // handshakes.
-func (f *failOver) Connection(ctx context.Context) (*samqp.Connection, error) {
+func (f *failOver) Connection(ctx context.Context) (*amqp.Connection, error) {
 	ctx = zlog.ContextWithValues(ctx,
 		"component", "notifier/amqp/failOver.Connection")
 
@@ -43,7 +43,7 @@ func (f *failOver) Connection(ctx context.Context) (*samqp.Connection, error) {
 		ctx := zlog.ContextWithValues(ctx, "broker", uri.String())
 		// safe to always call DialTLS per docs:
 		// 'DialTLS will use the provided tls.Config when it encounters an amqps:// scheme and will dial a plain connection when it encounters an amqp:// scheme.'
-		conn, err := samqp.DialTLS(uri.String(), f.tls)
+		conn, err := amqp.DialTLS(uri.String(), f.tls)
 		if err != nil {
 			if conn != nil {
 				conn.Close()

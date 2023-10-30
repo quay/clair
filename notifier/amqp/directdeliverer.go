@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/quay/clair/config"
-	samqp "github.com/streadway/amqp"
+	amqp "github.com/rabbitmq/amqp091-go"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/notifier"
@@ -95,7 +95,7 @@ func (d *DirectDeliverer) Deliver(ctx context.Context, _ uuid.UUID) error {
 			ch.TxRollback()
 			return &clairerror.ErrDeliveryFailed{err}
 		}
-		msg := samqp.Publishing{
+		msg := amqp.Publishing{
 			ContentType: "application/json",
 			AppId:       "clairV4-notifier",
 			Body:        buf.Bytes(),
