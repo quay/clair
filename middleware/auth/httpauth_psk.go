@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-jose/go-jose/v3/jwt"
 	"github.com/quay/zlog"
-	"gopkg.in/square/go-jose.v2/jwt"
 )
 
 // PSK implements the AuthCheck interface.

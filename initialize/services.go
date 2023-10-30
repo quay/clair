@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-jose/go-jose/v3/jwt"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/quay/clair/config"
 	"github.com/quay/claircore/datastore/postgres"
@@ -20,7 +21,6 @@ import (
 	"github.com/quay/claircore/pkg/ctxlock"
 	"github.com/quay/zlog"
 	"golang.org/x/net/publicsuffix"
-	"gopkg.in/square/go-jose.v2/jwt"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/httptransport"

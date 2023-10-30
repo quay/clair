@@ -6,10 +6,10 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/go-jose/go-jose/v3"
+	"github.com/go-jose/go-jose/v3/jwt"
 	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
-	"gopkg.in/square/go-jose.v2"
-	"gopkg.in/square/go-jose.v2/jwt"
 )
 
 // NewSigner constructs a signer according to the provided Config and claim.

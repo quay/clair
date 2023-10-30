@@ -12,9 +12,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/go-jose/go-jose/v3/jwt"
 	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
-	"gopkg.in/square/go-jose.v2/jwt"
 
 	"github.com/quay/clair/v4/internal/httputil"
 )

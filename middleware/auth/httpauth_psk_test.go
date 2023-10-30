@@ -14,9 +14,10 @@ import (
 	"testing/quick"
 	"time"
 
+	"github.com/go-jose/go-jose/v3"
+	"github.com/go-jose/go-jose/v3/jwt"
+
 	"github.com/quay/clair/v4/internal/httputil"
-	"gopkg.in/square/go-jose.v2"
-	"gopkg.in/square/go-jose.v2/jwt"
 )
 
 type pskTestcase struct {

@@ -5,12 +5,12 @@ import (
 	"os"
 	"time"
 
+	"github.com/go-jose/go-jose/v3/jwt"
 	"github.com/quay/clair/config"
 	_ "github.com/quay/claircore/updater/defaults"
 	"github.com/quay/zlog"
 	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v2"
-	"gopkg.in/square/go-jose.v2/jwt"
 
 	"github.com/quay/clair/v4/cmd"
 )
