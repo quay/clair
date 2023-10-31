@@ -3,7 +3,7 @@ auth:
         iss:
             - quay
             - clairctl
-        key: dmVyeXNlY3JldA0K
+        key: dmVyeXNlY3JldA0K  #gitleaks:allow
 http_listen_addr: :80
 indexer:
     connstring: host=/var/run/postgresql
