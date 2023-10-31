@@ -24,7 +24,6 @@ matcher:
   indexer_addr: "localhost:8080"
   connstring: host=localhost port=5432 user=clair dbname=clair sslmode=disable
   max_conn_pool: 100
-  run: ""
   migrations: true
   updater_sets:
   - "alpine"
@@ -48,11 +47,7 @@ matchers:
   - "suse"
   - "ubuntu"
   - "crda"
-  config:
-    crda:
-      url: https://gw.api.openshift.io/api/v2/
-      source: clair-sample-instance
-      key: 207c527cfc2a6b8dcf4fa43ad7a976da
+  config: {}
 notifier:
   indexer_addr: http://clair-indexer:8080/
   matcher_addr: http://clair-matcher:8080/
@@ -91,8 +86,6 @@ notifier:
      root_ca: "optional/path/to/rootca"
      cert: "madatory/path/to/cert"
      key: "madatory/path/to/key"
-
-
 
 trace:
   name: "jaeger"
