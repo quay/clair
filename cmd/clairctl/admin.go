@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"regexp"
 
+	"github.com/Masterminds/semver"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/quay/claircore"
 	"github.com/quay/zlog"
 	"github.com/urfave/cli/v2"
 )
@@ -69,6 +72,15 @@ var AdminCmd = &cli.Command{
 			Description: "Tasks that may be useful on occasion",
 			Usage:       "run one-off task",
 			ArgsUsage:   "\b",
+			Subcommands: []*cli.Command{
+				{
+					Name: "update-golang-packages",
+					Description: "This task will update the golang packages in the `package` table with the `norm_versions` and `norm_kind`.\n" +
+						"Relevant package names are gleaned from the vulnerabilities in the matchers `vuln` table.\n\n",
+					Usage:  "update golang packages in the indexer DB",
+					Action: updateGoPackages,
+				},
+			},
 		},
 	},
 }
@@ -281,4 +293,149 @@ func adminPre473(c *cli.Context) error {
 		zlog.Info(ctx).Msg("pre v4.7.3 admin done")
 		return nil
 	})
+}
+
+func updateGoPackages(c *cli.Context) error {
+	const (
+		getPackageNames = "SELECT DISTINCT package_name FROM vuln WHERE updater = 'osv/go'"
+		getPackages     = "SELECT id, version FROM package WHERE name = $1 and norm_version IS NULL"
+		updatePackages  = "UPDATE package SET norm_version=$1::int[], norm_kind=$2 WHERE id = $3 and norm_version IS NULL"
+	)
+
+	ctx := c.Context
+	fi, err := os.Stat(c.Path("config"))
+	switch {
+	case !errors.Is(err, nil):
+		return fmt.Errorf("bad config: %w", err)
+	case fi.IsDir():
+		return fmt.Errorf("bad config: is a directory")
+	}
+	cfg, err := loadConfig(c.Path("config"))
+	if err != nil {
+		return fmt.Errorf("error loading config: %w", err)
+	}
+	matcherPool, err := createConnPool(ctx, cfg.Matcher.ConnString, 2)
+	if err != nil {
+		return fmt.Errorf("error creating indexer pool: %w", err)
+	}
+	defer matcherPool.Close()
+	packageNames := []string{}
+	err = matcherPool.AcquireFunc(ctx, func(conn *pgxpool.Conn) error {
+		rows, err := conn.Query(ctx, getPackageNames)
+		if err != nil {
+			return fmt.Errorf("error getting package_name list: %w", err)
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var p string
+			err := rows.Scan(&p)
+			if err != nil {
+				return err
+			}
+			packageNames = append(packageNames, p)
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("could not get package names from matcher DB %w", err)
+	}
+	indexerPool, err := createConnPool(ctx, cfg.Indexer.ConnString, 2)
+	if err != nil {
+		return fmt.Errorf("error creating indexer pool: %w", err)
+	}
+	defer indexerPool.Close()
+
+	for _, p := range packageNames {
+		err := indexerPool.AcquireFunc(ctx, func(conn *pgxpool.Conn) error {
+			rows, err := conn.Query(ctx, getPackages, p)
+			if err != nil {
+				return fmt.Errorf("could not get packages for %s: %w", p, err)
+			}
+			defer rows.Close()
+			for rows.Next() {
+				var (
+					id      int64
+					version string
+				)
+				err := rows.Scan(&id, &version)
+				if err != nil {
+					return err
+				}
+				ctx = zlog.ContextWithValues(ctx, "package_name", p, "version", version)
+				zlog.Debug(ctx).
+					Msg("working on version")
+
+				var nv claircore.Version
+				ver, err := semver.NewVersion(version)
+				switch {
+				case errors.Is(err, nil):
+					nv = fromSemver(ver)
+				default:
+					zlog.Warn(ctx).
+						Err(err).
+						Msg("error parsing semver")
+					continue
+				}
+				var (
+					vKind *string
+					vNorm []int32
+				)
+				if nv.Kind != "" {
+					vKind = &nv.Kind
+					vNorm = nv.V[:]
+				}
+
+				tag, err := indexerPool.Exec(ctx, updatePackages, vNorm, vKind, id)
+				if err != nil {
+					return fmt.Errorf("error updating packages: %w", err)
+				}
+				zlog.Info(ctx).
+					Int64("package_id", id).
+					Int64("rows affected", tag.RowsAffected()).
+					Msg("successfully updated package row")
+			}
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("error acquiring pool conn: %w", err)
+		}
+	}
+	return nil
+}
+
+func createConnPool(ctx context.Context, dsn string, maxConns int32) (*pgxpool.Pool, error) {
+	pgcfg, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing dsn: %w", err)
+	}
+	zlog.Info(ctx).
+		Str("host", pgcfg.ConnConfig.Host).
+		Str("database", pgcfg.ConnConfig.Database).
+		Str("user", pgcfg.ConnConfig.User).
+		Uint16("port", pgcfg.ConnConfig.Port).
+		Msg("using discovered connection params")
+
+	zlog.Debug(ctx).
+		Int32("pool size", maxConns).
+		Msg("resizing pool")
+	pgcfg.MaxConns = int32(maxConns)
+	pool, err := pgxpool.ConnectConfig(ctx, pgcfg)
+	if err != nil {
+		return nil, fmt.Errorf("error creating pool: %w", err)
+	}
+	if err := pool.Ping(ctx); err != nil {
+		return nil, fmt.Errorf("error connecting to database: %w", err)
+	}
+	return pool, nil
+}
+
+// FromSemVer is copied from the gobin package. It converts
+// a semver.Version to a claircore.Version.
+func fromSemver(v *semver.Version) (out claircore.Version) {
+	out.Kind = `semver`
+	// Leave a leading epoch, for good measure.
+	out.V[1] = int32(v.Major())
+	out.V[2] = int32(v.Minor())
+	out.V[3] = int32(v.Patch())
+	return out
 }
