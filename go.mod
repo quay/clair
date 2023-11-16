@@ -3,6 +3,7 @@ module github.com/quay/clair/v4
 go 1.20
 
 require (
+	github.com/Masterminds/semver v1.5.0
 	github.com/evanphx/json-patch/v5 v5.7.0
 	github.com/go-jose/go-jose/v3 v3.0.1
 	github.com/go-stomp/stomp/v3 v3.0.5
@@ -37,7 +38,6 @@ require (
 )
 
 require (
-	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
