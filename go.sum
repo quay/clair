@@ -198,8 +198,8 @@ github.com/quay/claircore/updater/driver v1.0.0 h1:w7dAUjO3GBK6RjNyTZ2Kwz0l/Wuic
 github.com/quay/claircore/updater/driver v1.0.0/go.mod h1:My5aY1wBpgxcWaHQZ0VoPmmj/EzuH7fq4ntzJbos4OI=
 github.com/quay/goval-parser v0.8.8 h1:Uf+f9iF2GIR5GPUY2pGoa9il2+4cdES44ZlM0mWm4cA=
 github.com/quay/goval-parser v0.8.8/go.mod h1:Y0NTNfPYOC7yxsYKzJOrscTWUPq1+QbtHw4XpPXWPMc=
-github.com/quay/zlog v1.1.5 h1:A+gF+FjN0A/qkl4E991ot2YJwjmNmsTlwUs/yRoEI7g=
-github.com/quay/zlog v1.1.5/go.mod h1:wg9IIQicn8f4ofUbCTC51FmqpxTpsGOQU+hIeIAe8Aw=
+github.com/quay/zlog v1.1.7 h1:F5v/qVaMLbBdAo2Xzx4hBri+X4oReRkBwKe50UkxPfA=
+github.com/quay/zlog v1.1.7/go.mod h1:wg9IIQicn8f4ofUbCTC51FmqpxTpsGOQU+hIeIAe8Aw=
 github.com/rabbitmq/amqp091-go v1.9.0 h1:qrQtyzB4H8BQgEuJwhmVQqVHB9O4+MNDJCCAcpc3Aoo=
 github.com/rabbitmq/amqp091-go v1.9.0/go.mod h1:+jPrT9iY2eLjRaMSRHUhc3z14E/l85kv/f+6luSD3pc=
 github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319 h1:ukjThsA2ou7AmovpwtMVkNQSuoN/v5U16+JomTz3c7o=
