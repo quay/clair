@@ -21,10 +21,12 @@ type Updaters struct {
 	// The following sets are supported by default:
 	// "alpine"
 	// "aws"
+	// "clair.cvss"
 	// "debian"
 	// "oracle"
+	// "osv"
 	// "photon"
-	// "pyupio"
+	// "rhcc"
 	// "rhel"
 	// "suse"
 	// "ubuntu"
