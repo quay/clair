@@ -67,6 +67,9 @@ func pickContentType(w http.ResponseWriter, r *http.Request, allow []string) err
 				a.Q, _ = strconv.ParseFloat(qs, 64)
 			}
 			typ := strings.Split(mt, "/")
+			if len(typ) != 2 {
+				return fmt.Errorf("malformed Accept value %s", mt)
+			}
 			a.Type = typ[0]
 			a.Subtype = typ[1]
 			acceptable = append(acceptable, a)
