@@ -199,7 +199,7 @@ func reportAction(c *cli.Context) error {
 			zlog.Debug(ctx).
 				Int("attempt", ct).
 				Msg("requesting index_report")
-			err = cc.IndexReport(ctx, d, m)
+			_, err = cc.IndexReport(ctx, d, m)
 			switch {
 			case err == nil:
 			case errors.Is(err, errNeedManifest):

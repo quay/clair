@@ -16,6 +16,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/quay/claircore"
 	"github.com/quay/zlog"
+	spdxtools "github.com/spdx/tools-golang/spdx/v2/v2_3"
 	"github.com/tomnomnom/linkheader"
 
 	"github.com/quay/clair/v4/cmd"
@@ -105,7 +106,28 @@ var (
 	errNovelManifest = errors.New("manifest unknown to the system")
 )
 
-func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *claircore.Manifest) error {
+func (c *Client) SPDXReport(ctx context.Context, id claircore.Digest, m *claircore.Manifest) (*spdxtools.Document, error) {
+	var report = spdxtools.Document{}
+	err := c.GetIndexReport(ctx, id, m, &report, "application/spdx+json")
+	if err != nil {
+		return nil, err
+	}
+	return &report, nil
+}
+
+func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *claircore.Manifest) (*claircore.IndexReport, error) {
+	var report = claircore.IndexReport{}
+	err := c.GetIndexReport(ctx, id, m, &report, "application/json")
+	if err != nil {
+		return nil, err
+	}
+	if !report.Success && report.Err != "" {
+		return nil, errors.New("indexer error: " + report.Err)
+	}
+	return &report, nil
+}
+
+func (c *Client) GetIndexReport(ctx context.Context, id claircore.Digest, m *claircore.Manifest, dest interface{}, mediaType string) error {
 	var (
 		req *http.Request
 		res *http.Response
@@ -121,56 +143,7 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 	if err != nil {
 		return err
 	}
-	res, err = c.client.Do(req)
-	if err != nil {
-		zlog.Debug(ctx).
-			Err(err).
-			Stringer("url", req.URL).
-			Msg("request failed")
-		return err
-	}
-	defer res.Body.Close()
-	ev := zlog.Debug(ctx).
-		Str("method", res.Request.Method).
-		Str("path", res.Request.URL.Path).
-		Str("status", res.Status)
-	if ev.Enabled() && res.ContentLength > 0 && res.ContentLength <= 256 {
-		var buf bytes.Buffer
-		buf.ReadFrom(io.LimitReader(res.Body, 256))
-		ev.Stringer("body", &buf)
-	}
-	ev.Send()
-	switch res.StatusCode {
-	case http.StatusNotFound, http.StatusOK:
-	case http.StatusNotModified:
-		return nil
-	default:
-		return fmt.Errorf("unexpected return status: %d", res.StatusCode)
-	}
-
-	if m == nil {
-		ev := zlog.Debug(ctx).
-			Stringer("manifest", id)
-		if res.StatusCode == http.StatusNotFound {
-			ev.Msg("don't have needed manifest")
-			return errNovelManifest
-		}
-		ev.Msg("manifest may be out-of-date")
-		return errNeedManifest
-	}
-	ru, err := c.host.Parse(path.Join(c.host.RequestURI(), httptransport.IndexAPIPath))
-	if err != nil {
-		zlog.Debug(ctx).
-			Err(err).
-			Msg("unable to construct index_report url")
-		return err
-	}
-
-	req, err = c.request(ctx, ru, http.MethodPost)
-	if err != nil {
-		return err
-	}
-	req.Body = codec.JSONReader(m)
+	req.Header.Add("Accept", mediaType)
 	res, err = c.client.Do(req)
 	if err != nil {
 		zlog.Debug(ctx).
@@ -183,44 +156,87 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 	zlog.Debug(ctx).
 		Str("method", res.Request.Method).
 		Str("path", res.Request.URL.Path).
-		Str("status", res.Status).
-		Send()
+		Str("status", res.Status)
+
+	var rd io.Reader
 	switch res.StatusCode {
-	case http.StatusOK:
-	case http.StatusCreated:
-		//
+	case http.StatusOK, http.StatusNotModified:
+		rd = res.Body
+	case http.StatusNotFound:
+		if m == nil {
+			ev := zlog.Debug(ctx).
+				Stringer("manifest", id)
+			if res.StatusCode == http.StatusNotFound {
+				ev.Msg("don't have needed manifest")
+				return errNovelManifest
+			}
+			ev.Msg("manifest may be out-of-date")
+			return errNeedManifest
+		}
+		ru, err := c.host.Parse(path.Join(c.host.RequestURI(), httptransport.IndexAPIPath))
+		if err != nil {
+			zlog.Debug(ctx).
+				Err(err).
+				Msg("unable to construct index_report url")
+			return err
+		}
+
+		req, err = c.request(ctx, ru, http.MethodPost)
+		if err != nil {
+			return err
+		}
+		req.Header.Add("Accept", mediaType)
+		req.Body = codec.JSONReader(m)
+		res, err = c.client.Do(req)
+		if err != nil {
+			zlog.Debug(ctx).
+				Err(err).
+				Stringer("url", req.URL).
+				Msg("request failed")
+			return err
+		}
+		defer res.Body.Close()
+		zlog.Debug(ctx).
+			Str("method", res.Request.Method).
+			Str("path", res.Request.URL.Path).
+			Str("status", res.Status).
+			Send()
+		switch res.StatusCode {
+		case http.StatusOK:
+		case http.StatusCreated:
+			//
+		default:
+			return fmt.Errorf("unexpected return status: %d", res.StatusCode)
+		}
+		switch {
+		case res.ContentLength > 0 && res.ContentLength < 32+9:
+			// Less than the size of the digest representation, something's up.
+			var buf bytes.Buffer
+			// Ignore error, because what would we do with it here?
+			ct, _ := buf.ReadFrom(res.Body)
+			zlog.Info(ctx).
+				Int64("size", ct).
+				Stringer("response", &buf).
+				Msg("body seems short")
+			return fmt.Errorf("body seems short: %d bytes", ct)
+		case res.ContentLength < 0: // Streaming
+			fallthrough
+		default:
+			rd = res.Body
+		}
 	default:
 		return fmt.Errorf("unexpected return status: %d", res.StatusCode)
 	}
-	var rd io.Reader
-	switch {
-	case res.ContentLength > 0 && res.ContentLength < 32+9:
-		// Less than the size of the digest representation, something's up.
-		var buf bytes.Buffer
-		// Ignore error, because what would we do with it here?
-		ct, _ := buf.ReadFrom(res.Body)
-		zlog.Info(ctx).
-			Int64("size", ct).
-			Stringer("response", &buf).
-			Msg("body seems short")
-		rd = &buf
-	case res.ContentLength < 0: // Streaming
-		fallthrough
-	default:
-		rd = res.Body
-	}
-	var report claircore.IndexReport
+
 	dec := codec.GetDecoder(rd)
 	defer codec.PutDecoder(dec)
-	if err := dec.Decode(&report); err != nil {
+	if err := dec.Decode(&dest); err != nil {
 		zlog.Debug(ctx).
 			Err(err).
 			Msg("unable to decode json payload")
 		return err
 	}
-	if !report.Success && report.Err != "" {
-		return errors.New("indexer error: " + report.Err)
-	}
+
 	if v := res.Header.Get("etag"); v != "" {
 		ls := linkheader.ParseMultiple(res.Header[http.CanonicalHeaderKey("link")]).
 			FilterByRel("https://projectquay.io/clair/v1/index_report")
@@ -232,6 +248,7 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 			c.setValidator(ctx, u.Path, v)
 		}
 	}
+
 	return nil
 }
 

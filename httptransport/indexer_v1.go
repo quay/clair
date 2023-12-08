@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/quay/claircore"
+	"github.com/quay/claircore/pkg/sbom/spdx"
 	"github.com/quay/claircore/pkg/tarfs"
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -95,6 +96,17 @@ func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
 	defer codec.PutDecoder(dec)
 	switch r.Method {
 	case http.MethodPost:
+		allow := []string{"application/vnd.clair.indexreport.v1+json", "application/json", "application/spdx+json"}
+		switch err := pickContentType(w, r, allow); {
+		case errors.Is(err, nil): // OK
+		case errors.Is(err, ErrMediaType):
+			apiError(ctx, w, http.StatusUnsupportedMediaType, "unable to negotiate common media type for %v", allow)
+			return
+		default:
+			apiError(ctx, w, http.StatusBadRequest, "malformed request: %v", err)
+			return
+		}
+
 		state, err := h.srv.State(ctx)
 		if err != nil {
 			apiError(ctx, w, http.StatusInternalServerError, "could not retrieve indexer state: %v", err)
@@ -131,9 +143,21 @@ func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("location", next)
 		defer writerError(w, &err)()
 		w.WriteHeader(http.StatusCreated)
+		var resp interface{}
+		switch w.Header().Get("content-type") {
+		case "", "application/vnd.clair.indexreport.v1+json", "application/json":
+			resp = report
+		case "application/spdx+json":
+			resp, err = spdx.ParseIndexReport(report)
+			if err != nil {
+				apiError(ctx, w, http.StatusInternalServerError, "could not convert index report to spdx: %v", err)
+				return
+			}
+		}
+
 		enc := codec.GetEncoder(w)
 		defer codec.PutEncoder(enc)
-		err = enc.Encode(report)
+		err = enc.Encode(resp)
 	case http.MethodDelete:
 		var ds []claircore.Digest
 		if err := dec.Decode(&ds); err != nil {
@@ -173,7 +197,7 @@ func (h *IndexerV1) indexReportOne(w http.ResponseWriter, r *http.Request) {
 	}
 	switch r.Method {
 	case http.MethodGet:
-		allow := []string{"application/vnd.clair.indexreport.v1+json", "application/json"}
+		allow := []string{"application/vnd.clair.indexreport.v1+json", "application/json", "application/spdx+json"}
 		switch err := pickContentType(w, r, allow); {
 		case errors.Is(err, nil): // OK
 		case errors.Is(err, ErrMediaType):
@@ -199,12 +223,25 @@ func (h *IndexerV1) indexReportOne(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			apiError(ctx, w, http.StatusInternalServerError, "could not retrieve index report: %v", err)
 		}
-
 		w.Header().Add("etag", validator)
 		defer writerError(w, &err)()
+
+		// Check response's headers to see what kind of encoding we've been
+		// asked to return.
+		var resp interface{}
+		switch w.Header().Get("content-type") {
+		case "", "application/vnd.clair.indexreport.v1+json", "application/json":
+			resp = report
+		case "application/spdx+json":
+			resp, err = spdx.ParseIndexReport(report)
+			if err != nil {
+				apiError(ctx, w, http.StatusInternalServerError, "could not convert index report to spdx: %v", err)
+				return
+			}
+		}
 		enc := codec.GetEncoder(w)
 		defer codec.PutEncoder(enc)
-		err = enc.Encode(report)
+		err = enc.Encode(resp)
 	case http.MethodDelete:
 		if _, err := h.srv.DeleteManifests(ctx, d); err != nil {
 			apiError(ctx, w, http.StatusInternalServerError, "unable to delete manifest: %v", err)
