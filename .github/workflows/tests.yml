@@ -71,7 +71,7 @@ jobs:
           docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p 'rabbitmq' clair '.*' '.*' '.*'
       - name: Checkout
         uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           cache: false  # Set up with a finer-grained cache key below.
           go-version: ${{ matrix.go }}
