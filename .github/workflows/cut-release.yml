@@ -135,7 +135,7 @@ jobs:
       - name: Unpack
         run: |
           tar -xz -f ${{steps.download.outputs.download-path}}/clair-${{ needs.config.outputs.version }}.tar.gz --strip-components=1
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: ${{ needs.config.outputs.build_go_version }}
       - name: Build
