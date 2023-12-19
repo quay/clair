@@ -120,7 +120,7 @@ jobs:
           go test
           -tags integration
           ${{ inputs.package_expr }}
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: workspace-${{matrix.go}}
