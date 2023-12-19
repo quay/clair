@@ -3822,7 +3822,7 @@ data:
             "query": "prometheus",
             "queryValue": "",
             "refresh": 1,
-            "regex": "/(^clair|^app-sre-stage-01|^Prometheus$)(?!.*cluster)/",
+            "regex": "/(^clair|^app-sre-stage-01|^Prometheus$|^appsre)(?!.*cluster)/",
             "skipUrlSync": false,
             "type": "datasource"
           }
