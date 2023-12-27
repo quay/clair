@@ -10,11 +10,11 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/go-containerregistry v0.17.0
 	github.com/google/uuid v1.5.0
+	github.com/grafana/pyroscope-go/godeltaprof v0.1.6
 	github.com/jackc/pgconn v1.14.1
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/klauspost/compress v1.17.4
 	github.com/prometheus/client_golang v1.18.0
-	github.com/pyroscope-io/godeltaprof v0.1.2
 	github.com/quay/clair/config v1.3.0
 	github.com/quay/claircore v1.5.20
 	github.com/quay/zlog v1.1.7
