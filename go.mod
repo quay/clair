@@ -13,7 +13,7 @@ require (
 	github.com/jackc/pgconn v1.14.1
 	github.com/jackc/pgx/v4 v4.18.1
 	github.com/klauspost/compress v1.17.4
-	github.com/prometheus/client_golang v1.17.0
+	github.com/prometheus/client_golang v1.18.0
 	github.com/pyroscope-io/godeltaprof v0.1.2
 	github.com/quay/clair/config v1.3.0
 	github.com/quay/claircore v1.5.20
@@ -52,7 +52,6 @@ require (
 	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/golang/mock v1.6.0 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -66,14 +65,14 @@ require (
 	github.com/knqyf263/go-rpm-version v0.0.0-20170716094938-74609b86c936 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
+	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/client_model v0.4.1-0.20230718164431-9a2bf3000d16 // indirect
-	github.com/prometheus/common v0.44.0 // indirect
-	github.com/prometheus/procfs v0.11.1 // indirect
+	github.com/prometheus/client_model v0.5.0 // indirect
+	github.com/prometheus/common v0.45.0 // indirect
+	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/quay/claircore/toolkit v1.1.1 // indirect
 	github.com/quay/claircore/updater/driver v1.0.0 // indirect
 	github.com/quay/goval-parser v0.8.8 // indirect
