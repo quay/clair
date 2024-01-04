@@ -58,6 +58,7 @@ func (t *TLS) Config() (*tls.Config, error) {
 		return nil, fmt.Errorf("failed to read x509 cert and key pair: %w", err)
 	}
 	cfg.Certificates = append(cfg.Certificates, cert)
+	cfg.MinVersion = tls.VersionTLS12
 
 	return &cfg, nil
 }
