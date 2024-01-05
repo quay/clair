@@ -91,7 +91,9 @@
             <div class="sidebar-scrollbox">
                 <ol class="chapter"><li class="chapter-item expanded "><a href="whatis.html"><strong aria-hidden="true">1.</strong> What is ClairV4</a></li><li class="chapter-item expanded "><a href="howto.html"><strong aria-hidden="true">2.</strong> How Tos</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="howto/getting_started.html"><strong aria-hidden="true">2.1.</strong> Getting Started With ClairV4</a></li><li class="chapter-item expanded "><a href="howto/deployment.html"><strong aria-hidden="true">2.2.</strong> Deployment Models</a></li><li class="chapter-item expanded "><a href="howto/api.html"><strong aria-hidden="true">2.3.</strong> API Definition</a></li><li class="chapter-item expanded "><a href="howto/testing.html"><strong aria-hidden="true">2.4.</strong> Testing ClairV4</a></li></ol></li><li class="chapter-item expanded "><a href="concepts.html"><strong aria-hidden="true">3.</strong> Concepts</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="concepts/indexing.html"><strong aria-hidden="true">3.1.</strong> Indexing</a></li><li class="chapter-item expanded "><a href="concepts/matching.html"><strong aria-hidden="true">3.2.</strong> Matching</a></li><li class="chapter-item expanded "><a href="concepts/api_internal.html"><strong aria-hidden="true">3.3.</strong> Internal API</a></li><li class="chapter-item expanded "><a href="concepts/authentication.html"><strong aria-hidden="true">3.4.</strong> Authentication</a></li><li class="chapter-item expanded "><a href="concepts/notifications.html"><strong aria-hidden="true">3.5.</strong> Notifications</a></li><li class="chapter-item expanded "><a href="concepts/updatersandairgap.html"><strong aria-hidden="true">3.6.</strong> Updaters and Airgap</a></li><li class="chapter-item expanded "><a href="concepts/operation.html"><strong aria-hidden="true">3.7.</strong> Operation</a></li></ol></li><li class="chapter-item expanded "><a href="contribution.html"><strong aria-hidden="true">4.</strong> Contribution</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="contribution/releases.html"><strong aria-hidden="true">4.1.</strong> Releases</a></li><li class="chapter-item expanded "><a href="contribution/commit_style.html"><strong aria-hidden="true">4.2.</strong> Commit Style</a></li></ol></li><li class="chapter-item expanded "><a href="reference.html"><strong aria-hidden="true">5.</strong> Reference</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="reference/api.html"><strong aria-hidden="true">5.1.</strong> Api</a></li><li class="chapter-item expanded "><a href="reference/clairctl.html"><strong aria-hidden="true">5.2.</strong> Clairctl</a></li><li class="chapter-item expanded "><a href="reference/config.html"><strong aria-hidden="true">5.3.</strong> Config</a></li><li class="chapter-item expanded "><a href="reference/indexer.html"><strong aria-hidden="true">5.4.</strong> Indexer</a></li><li class="chapter-item expanded "><a href="reference/matcher.html"><strong aria-hidden="true">5.5.</strong> Matcher</a></li><li class="chapter-item expanded "><a href="reference/notifier.html"><strong aria-hidden="true">5.6.</strong> Notifier</a></li><li class="chapter-item expanded "><a href="reference/metrics.html"><strong aria-hidden="true">5.7.</strong> Metrics</a></li></ol></li></ol>
             </div>
-            <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
         </nav>
 
         <!-- Track and set sidebar scroll position -->
@@ -2675,10 +2677,14 @@ The <code>clairctl check-config</code> command can be used to ensure a merged co
 In addition, placing <code>test</code> operations in a patch file that's evaluated last (such as <code>zz-validate.json-patch</code>) can be used to have Clair refuse to start if some configuration values are not what is intended.</p>
 <p>The application defaults are applied <em>after</em> the configuration is loaded and as such, not reflected in the <code>clairctl check-config</code> command.
 The output of that command is also not currently suitable to be used to &quot;compile&quot; a config to a single file.</p>
-<h2 id="configuration-reference"><a class="header" href="#configuration-reference">Configuration Reference</a></h2>
-<p>Please see the <a href="https://pkg.go.dev/github.com/quay/clair/config">go module documentation</a> for additional documentation on defaults and use.
-Starting in version <code>4.7.0</code>, unknown keys are disallowed.
+<h2 id="deprecations-and-changes"><a class="header" href="#deprecations-and-changes">Deprecations and Changes</a></h2>
+<p>Starting in version <code>4.7.0</code>, unknown keys are disallowed.
 Configurations that looked valid previously and loaded fine may now cause Clair to refuse to start.</p>
+<p>In version <code>4.8.0</code>, using Jaeger for trace submission was deprecated.
+Configurations that use Jaeger will print a warning.
+In future versions, using the Jaeger format may cause an error.</p>
+<h2 id="configuration-reference"><a class="header" href="#configuration-reference">Configuration Reference</a></h2>
+<p>Please see the <a href="https://pkg.go.dev/github.com/quay/clair/config">go module documentation</a> for additional documentation on defaults and use.</p>
 <pre><code>http_listen_addr: &quot;&quot;
 introspection_addr: &quot;&quot;
 log_level: &quot;&quot;
@@ -2729,6 +2735,9 @@ trace:
         service_name: &quot;&quot;
         tags: nil
         buffer_max: 0
+    otlp:
+	  http: {}
+      grpc: {}
 metrics:
     name: &quot;&quot;
     prometheus:
@@ -2747,6 +2756,14 @@ more information.
 # `$.auth.keyserver`
 # `$.auth.keyserver.api`
 # `$.auth.keyserver.intraservice`
+# `$.trace.otlp.http.client_tls`
+# `$.trace.otlp.http.client_tls.root_ca`
+# `$.trace.otlp.grpc.client_tls`
+# `$.trace.otlp.grpc.client_tls.root_ca`
+# `$.metrics.otlp.http.client_tls`
+# `$.metrics.otlp.http.client_tls.root_ca`
+# `$.metrics.otlp.grpc.client_tls`
+# `$.metrics.otlp.grpc.client_tls.root_ca`
 -->
 <h3 id="http_listen_addr"><a class="header" href="#http_listen_addr"><code>$.http_listen_addr</code></a></h3>
 <p>A string in <code>&lt;host&gt;:&lt;port&gt;</code> format where <code>&lt;host&gt;</code> can be an empty string.</p>
@@ -3071,13 +3088,19 @@ JWT claim.</p>
 <h3 id="trace"><a class="header" href="#trace"><code>$.trace</code></a></h3>
 <p>Defines distributed tracing configuration based on OpenTelemetry.</p>
 <h4 id="tracename"><a class="header" href="#tracename"><code>$.trace.name</code></a></h4>
-<p>a string value</p>
-<p>The name of the application traces will belong to.</p>
+<p>Which submission format to use, one of:</p>
+<ul>
+<li>jaeger</li>
+<li>otlp</li>
+<li>sentry</li>
+</ul>
 <h4 id="traceprobability"><a class="header" href="#traceprobability"><code>$.trace.probability</code></a></h4>
 <p>a float value</p>
 <p>The probability a trace will occur.</p>
-<h4 id="tracejaeger"><a class="header" href="#tracejaeger"><code>$.trace.jaeger</code></a></h4>
+<h3 id="tracejaeger"><a class="header" href="#tracejaeger"><code>$.trace.jaeger</code></a></h3>
 <p>Defines values for Jaeger tracing.</p>
+<p><em><strong>NOTE</strong></em>: Jaeger has deprecated using the <code>jaeger</code> protocol and encouraging users to migrate to OTLP,
+which Jaeger can ingest natively.</p>
 <h4 id="tracejaegeragent"><a class="header" href="#tracejaegeragent"><code>$.trace.jaeger.agent</code></a></h4>
 <p>Defines values for configuring delivery to a Jaeger agent.</p>
 <h4 id="tracejaegeragentendpoint"><a class="header" href="#tracejaegeragentendpoint"><code>$.trace.jaeger.agent.endpoint</code></a></h4>
@@ -3098,6 +3121,70 @@ JWT claim.</p>
 <p>a mapping of a string to a string</p>
 <h4 id="tracejaegerbuffer_max"><a class="header" href="#tracejaegerbuffer_max"><code>$.trace.jaeger.buffer_max</code></a></h4>
 <p>an integer value</p>
+<h3 id="traceotlp"><a class="header" href="#traceotlp"><code>$.trace.otlp</code></a></h3>
+<p>Configuration for OTLP traces.</p>
+<p>Only one of the <code>http</code> or <code>grpc</code> keys should be provided.</p>
+<h4 id="traceotlphttp"><a class="header" href="#traceotlphttp"><code>$.trace.otlp.http</code></a></h4>
+<p>Configuration for OTLP traces submitted by HTTP.</p>
+<h5 id="traceotlphttpurl_path"><a class="header" href="#traceotlphttpurl_path"><code>$.trace.otlp.http.url_path</code></a></h5>
+<p>Request path to use for submissions.
+Defaults to <code>/v1/traces</code>.</p>
+<h5 id="traceotlphttpcompression"><a class="header" href="#traceotlphttpcompression"><code>$.trace.otlp.http.compression</code></a></h5>
+<p>Compression for payloads.
+One of:</p>
+<ul>
+<li>gzip</li>
+<li>none</li>
+</ul>
+<h5 id="traceotlphttpendpoint"><a class="header" href="#traceotlphttpendpoint"><code>$.trace.otlp.http.endpoint</code></a></h5>
+<p><code>Host:port</code> for submission. Defaults to <code>localhost:4318</code>.</p>
+<h5 id="traceotlphttpheaders"><a class="header" href="#traceotlphttpheaders"><code>$.trace.otlp.http.headers</code></a></h5>
+<p>Key-value pairs of additional headers for submissions.</p>
+<h5 id="traceotlphttpinsecure"><a class="header" href="#traceotlphttpinsecure"><code>$.trace.otlp.http.insecure</code></a></h5>
+<p>Use HTTP instead of HTTPS.</p>
+<h5 id="traceotlphttptimeout"><a class="header" href="#traceotlphttptimeout"><code>$.trace.otlp.http.timeout</code></a></h5>
+<p>Maximum of of time for a trace submission.</p>
+<h5 id="traceotlphttpclient_tlscert"><a class="header" href="#traceotlphttpclient_tlscert"><code>$.trace.otlp.http.client_tls.cert</code></a></h5>
+<p>Client certificate for connection.</p>
+<h5 id="traceotlphttpclient_tlskey"><a class="header" href="#traceotlphttpclient_tlskey"><code>$.trace.otlp.http.client_tls.key</code></a></h5>
+<p>Key for the certificate specified in <code>cert</code>.</p>
+<h4 id="traceotlpgrpc"><a class="header" href="#traceotlpgrpc"><code>$.trace.otlp.grpc</code></a></h4>
+<p>Configuration for OTLP traces submitted by gRPC.</p>
+<h5 id="traceotlpgrpcreconnect"><a class="header" href="#traceotlpgrpcreconnect"><code>$.trace.otlp.grpc.reconnect</code></a></h5>
+<p>Sets the minimum time between connection attempts.</p>
+<h5 id="traceotlpgrpcservice_config"><a class="header" href="#traceotlpgrpcservice_config"><code>$.trace.otlp.grpc.service_config</code></a></h5>
+<p>A string containing a JSON-format gRPC service config.</p>
+<h5 id="traceotlpgrpccompression"><a class="header" href="#traceotlpgrpccompression"><code>$.trace.otlp.grpc.compression</code></a></h5>
+<p>Compression for payloads.
+One of:</p>
+<ul>
+<li>gzip</li>
+<li>none</li>
+</ul>
+<h5 id="traceotlpgrpcendpoint"><a class="header" href="#traceotlpgrpcendpoint"><code>$.trace.otlp.grpc.endpoint</code></a></h5>
+<p><code>Host:port</code> for submission. Defaults to <code>localhost:4317</code>.</p>
+<h5 id="traceotlpgrpcheaders"><a class="header" href="#traceotlpgrpcheaders"><code>$.trace.otlp.grpc.headers</code></a></h5>
+<p>Key-value pairs of additional headers for submissions.</p>
+<h5 id="traceotlpgrpcinsecure"><a class="header" href="#traceotlpgrpcinsecure"><code>$.trace.otlp.grpc.insecure</code></a></h5>
+<p>Do not verify the server certificate.</p>
+<h5 id="traceotlpgrpctimeout"><a class="header" href="#traceotlpgrpctimeout"><code>$.trace.otlp.grpc.timeout</code></a></h5>
+<p>Maximum of of time for a trace submission.</p>
+<h5 id="traceotlpgrpcclient_tlscert"><a class="header" href="#traceotlpgrpcclient_tlscert"><code>$.trace.otlp.grpc.client_tls.cert</code></a></h5>
+<p>Client certificate for connection.</p>
+<h5 id="traceotlpgrpcclient_tlskey"><a class="header" href="#traceotlpgrpcclient_tlskey"><code>$.trace.otlp.grpc.client_tls.key</code></a></h5>
+<p>Key for the certificate specified in <code>cert</code>.</p>
+<h3 id="tracesentry"><a class="header" href="#tracesentry"><code>$.trace.sentry</code></a></h3>
+<p>Configuration for submitting traces to Sentry.</p>
+<p>This is done via OpenTelemetry instrumentation, so may not provide identical
+results compared to other tracing backends or native Sentry instrumentation.</p>
+<p>There's no integration for error submission.
+This means that alternative implementations of the Sentry API that do not support submitting traces (such as <a href="https://glitchtip.com/">GlitchTip</a>) are not usable.</p>
+<h4 id="tracesentrydsn"><a class="header" href="#tracesentrydsn"><code>$.trace.sentry.dsn</code></a></h4>
+<p>Sentry DSN to use.
+See also <a href="https://pkg.go.dev/github.com/getsentry/sentry-go#ClientOptions"><code>sentry-go.ClientOptions</code></a>.</p>
+<h4 id="tracesentryenvironment"><a class="header" href="#tracesentryenvironment"><code>$.trace.sentry.environment</code></a></h4>
+<p>Sentry environment to use.
+See also <a href="https://pkg.go.dev/github.com/getsentry/sentry-go#ClientOptions"><code>sentry-go.ClientOptions</code></a>.</p>
 <h3 id="metrics"><a class="header" href="#metrics"><code>$.metrics</code></a></h3>
 <p>Defines distributed tracing configuration based on OpenTelemetry.</p>
 <h4 id="metricsname"><a class="header" href="#metricsname"><code>$.metrics.name</code></a></h4>
@@ -3107,6 +3194,58 @@ JWT claim.</p>
 <h4 id="metricsprometheusendpoint"><a class="header" href="#metricsprometheusendpoint"><code>$.metrics.prometheus.endpoint</code></a></h4>
 <p>a string value</p>
 <p>Defines the path where metrics will be served.</p>
+<h3 id="metricsotlp"><a class="header" href="#metricsotlp"><code>$.metrics.otlp</code></a></h3>
+<p>Configuration for OTLP metrics.</p>
+<p>Only one of the <code>http</code> or <code>grpc</code> keys should be provided.</p>
+<h4 id="metricsotlphttp"><a class="header" href="#metricsotlphttp"><code>$.metrics.otlp.http</code></a></h4>
+<p>Configuration for OTLP metrics submitted by HTTP.</p>
+<h5 id="metricsotlphttpurl_path"><a class="header" href="#metricsotlphttpurl_path"><code>$.metrics.otlp.http.url_path</code></a></h5>
+<p>Request path to use for submissions.
+Defaults to <code>/v1/metrics</code>.</p>
+<h5 id="metricsotlphttpcompression"><a class="header" href="#metricsotlphttpcompression"><code>$.metrics.otlp.http.compression</code></a></h5>
+<p>Compression for payloads.
+One of:</p>
+<ul>
+<li>gzip</li>
+<li>none</li>
+</ul>
+<h5 id="metricsotlphttpendpoint"><a class="header" href="#metricsotlphttpendpoint"><code>$.metrics.otlp.http.endpoint</code></a></h5>
+<p><code>Host:port</code> for submission. Defaults to <code>localhost:4318</code>.</p>
+<h5 id="metricsotlphttpheaders"><a class="header" href="#metricsotlphttpheaders"><code>$.metrics.otlp.http.headers</code></a></h5>
+<p>Key-value pairs of additional headers for submissions.</p>
+<h5 id="metricsotlphttpinsecure"><a class="header" href="#metricsotlphttpinsecure"><code>$.metrics.otlp.http.insecure</code></a></h5>
+<p>Use HTTP instead of HTTPS.</p>
+<h5 id="metricsotlphttptimeout"><a class="header" href="#metricsotlphttptimeout"><code>$.metrics.otlp.http.timeout</code></a></h5>
+<p>Maximum of of time for a metrics submission.</p>
+<h5 id="metricsotlphttpclient_tlscert"><a class="header" href="#metricsotlphttpclient_tlscert"><code>$.metrics.otlp.http.client_tls.cert</code></a></h5>
+<p>Client certificate for connection.</p>
+<h5 id="metricsotlphttpclient_tlskey"><a class="header" href="#metricsotlphttpclient_tlskey"><code>$.metrics.otlp.http.client_tls.key</code></a></h5>
+<p>Key for the certificate specified in <code>cert</code>.</p>
+<h4 id="metricsotlpgrpc"><a class="header" href="#metricsotlpgrpc"><code>$.metrics.otlp.grpc</code></a></h4>
+<p>Configuration for OTLP metrics submitted by gRPC.</p>
+<h5 id="metricsotlpgrpcreconnect"><a class="header" href="#metricsotlpgrpcreconnect"><code>$.metrics.otlp.grpc.reconnect</code></a></h5>
+<p>Sets the minimum time between connection attempts.</p>
+<h5 id="metricsotlpgrpcservice_config"><a class="header" href="#metricsotlpgrpcservice_config"><code>$.metrics.otlp.grpc.service_config</code></a></h5>
+<p>A string containing a JSON-format gRPC service config.</p>
+<h5 id="metricsotlpgrpccompression"><a class="header" href="#metricsotlpgrpccompression"><code>$.metrics.otlp.grpc.compression</code></a></h5>
+<p>Compression for payloads.
+One of:</p>
+<ul>
+<li>gzip</li>
+<li>none</li>
+</ul>
+<h5 id="metricsotlpgrpcendpoint"><a class="header" href="#metricsotlpgrpcendpoint"><code>$.metrics.otlp.grpc.endpoint</code></a></h5>
+<p><code>Host:port</code> for submission. Defaults to <code>localhost:4318</code>.</p>
+<h5 id="metricsotlpgrpcheaders"><a class="header" href="#metricsotlpgrpcheaders"><code>$.metrics.otlp.grpc.headers</code></a></h5>
+<p>Key-value pairs of additional headers for submissions.</p>
+<h5 id="metricsotlpgrpcinsecure"><a class="header" href="#metricsotlpgrpcinsecure"><code>$.metrics.otlp.grpc.insecure</code></a></h5>
+<p>Use HTTP instead of HTTPS.</p>
+<h5 id="metricsotlpgrpctimeout"><a class="header" href="#metricsotlpgrpctimeout"><code>$.metrics.otlp.grpc.timeout</code></a></h5>
+<p>Maximum of of time for a metrics submission.</p>
+<h5 id="metricsotlpgrpcclient_tlscert"><a class="header" href="#metricsotlpgrpcclient_tlscert"><code>$.metrics.otlp.grpc.client_tls.cert</code></a></h5>
+<p>Client certificate for connection.</p>
+<h5 id="metricsotlpgrpcclient_tlskey"><a class="header" href="#metricsotlpgrpcclient_tlskey"><code>$.metrics.otlp.grpc.client_tls.key</code></a></h5>
+<p>Key for the certificate specified in <code>cert</code>.</p>
 <hr />
 <div class="footnote-definition" id="1"><sup class="footnote-definition-label">1</sup>
 <p>Support added in version <code>4.7.0</code>.</p>
