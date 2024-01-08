@@ -17,7 +17,7 @@ require (
 	github.com/prometheus/client_golang v1.18.0
 	github.com/quay/clair/config v1.4.0
 	github.com/quay/claircore v1.5.20
-	github.com/quay/zlog v1.1.7
+	github.com/quay/zlog v1.1.8
 	github.com/rabbitmq/amqp091-go v1.9.0
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
 	github.com/rs/zerolog v1.31.0
