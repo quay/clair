@@ -101,7 +101,6 @@ func New(ctx context.Context, conf *config.Config, indexer indexer.Service, matc
 	if conf.Mode == config.ComboMode && notifier == nil {
 		zlog.Debug(ctx).Msg("skipping unconfigured notifier")
 	}
-	var ret http.Handler = mux
 	// Add endpoint authentication if configured to add auth. Must happen after
 	// mux was configured for given mode.
 	if conf.Auth.Any() {
@@ -112,9 +111,13 @@ func New(ctx context.Context, conf *config.Config, indexer indexer.Service, matc
 				Msg("received error configuring auth middleware")
 			return nil, err
 		}
-		ret = h
+		final := http.NewServeMux()
+		final.Handle("/robots.txt", robotsHandler)
+		final.Handle("/", h)
+		return final, nil
 	}
-	return ret, nil
+	mux.Handle("/robots.txt", robotsHandler)
+	return mux, nil
 }
 
 // IntraserviceIssuer is the issuer that will be used if Clair is configured to
