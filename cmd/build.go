@@ -5,6 +5,7 @@ import (
 	"runtime"
 	"runtime/debug"
 	"strings"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -35,6 +36,14 @@ var versionInfo = promauto.NewGaugeVec(
 )
 
 func init() {
+	if revision[0] != '$' {
+		_, d, _ := strings.Cut(revision, "(")
+		t, err := time.Parse(time.RFC3339, strings.TrimSuffix(d, ")"))
+		if err == nil {
+			CommitDate = t
+		}
+	}
+
 	meta := prometheus.Labels{
 		"claircore_version": "",
 		"goversion":         runtime.Version(),
@@ -99,3 +108,8 @@ func init() {
 
 // Version is a version string, injected at release time for release builds.
 var Version string
+
+// CommitDate is the best guess of the source commit date.
+//
+// May be zero when the resulting code is not produced by a git export.
+var CommitDate time.Time
