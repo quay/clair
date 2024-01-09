@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/quay/clair/config"
@@ -154,32 +155,36 @@ func main() {
 		return nil
 	})
 
-	// Signal handler goroutine.
 	go func() {
-		ctx, stop := signal.NotifyContext(ctx, os.Interrupt)
-		defer func() {
-			// Note that we're using a background context here, so that we get a
-			// full timeout if the signal handler has fired.
-			tctx, done := context.WithTimeout(context.Background(), 10*time.Second)
-			err := down.Shutdown(tctx)
-			if err != nil {
-				zlog.Error(ctx).Err(err).Msg("error shutting down server")
-			}
-			done()
-			stop()
-			zlog.Info(ctx).Msg("unregistered signal handler")
-		}()
-		zlog.Info(ctx).Msg("registered signal handler")
-		select {
-		case <-ctx.Done():
-			zlog.Info(ctx).Stringer("signal", os.Interrupt).Msg("gracefully shutting down")
-		case <-srvctx.Done():
+		zlog.Info(ctx).Str("version", cmd.Version).Msg("ready")
+		if err := srvs.Wait(); err != nil {
+			zlog.Error(ctx).Err(err).Msg("fatal error")
+			fail = true
 		}
 	}()
 
-	zlog.Info(ctx).Str("version", cmd.Version).Msg("ready")
-	if err := srvs.Wait(); err != nil {
-		zlog.Error(ctx).Err(err).Msg("fatal error")
-		fail = true
+	// setup signal handling
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+	zlog.Info(ctx).Msg("registered signal handler")
+
+	select {
+	case s := <-signalChan:
+		zlog.Info(ctx).Msgf("Received signal '%s', gracefully shutting down", s)
+		gracefulShutdown(ctx, down)
+	case <-srvctx.Done():
 	}
+}
+
+func gracefulShutdown(ctx context.Context, down *Shutdown) {
+	// Note that we're using a background context here, so that we get a
+	// full timeout if the signal handler has fired.
+	tctx, done := context.WithTimeout(context.Background(), 10*time.Second)
+	err := down.Shutdown(tctx)
+	if err != nil {
+		zlog.Error(ctx).Err(err).Msg("error shutting down servers")
+	} else {
+		zlog.Info(ctx).Msg("successfully shut down servers")
+	}
+	done()
 }
