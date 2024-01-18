@@ -133,7 +133,7 @@ func serveAPI(ctx context.Context, cfg *config.Config) func() error {
 		}
 		srv := http.Server{
 			BaseContext: func(_ net.Listener) context.Context {
-				return ctx
+				return context.WithoutCancel(ctx)
 			},
 		}
 		srv.Handler, err = httptransport.New(ctx, cfg, srvs.Indexer, srvs.Matcher, srvs.Notifier)
