@@ -176,7 +176,8 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 		)
 		otel.SetTracerProvider(tp)
 		i.Server.RegisterOnShutdown(func() {
-			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			zlog.Info(ctx).Msg("shutting down trace provider")
+			ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 			defer cancel()
 			if err := tp.Shutdown(ctx); err != nil {
 				zlog.Error(ctx).Err(err).Msg("error shutting down trace provider")
