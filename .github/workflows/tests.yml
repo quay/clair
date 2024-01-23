@@ -80,7 +80,7 @@ jobs:
         run:
           printf 'platform=%s\n' "$(go env GOOS GOARCH | paste -s -d /)" >> "$GITHUB_OUTPUT"
       - name: Cache go artifacts
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cache
         with:
           path: |
