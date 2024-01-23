@@ -100,7 +100,7 @@ func main() {
 	auto.PrintLogs(ctx)
 
 	// Signal handler, for orderly shutdown.
-	sig, stop := signal.NotifyContext(ctx, os.Interrupt)
+	sig, stop := signal.NotifyContext(ctx, append(platformShutdown, os.Interrupt)...)
 	defer stop()
 	zlog.Info(ctx).Msg("registered signal handler")
 	go func() {
