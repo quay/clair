@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/ldelossa/responserecorder"
 	"github.com/quay/claircore"
+	indexerController "github.com/quay/claircore/indexer/controller"
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/zlog"
 	oteltrace "go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
@@ -119,8 +120,8 @@ func (h *MatcherV1) vulnerabilityReport(w http.ResponseWriter, r *http.Request) 
 		apiError(ctx, w, http.StatusInternalServerError, "experienced a server side error: %v", err)
 		return
 	}
-	// now check bool only after confirming no err
-	if !ok {
+	// now check present and finished only after confirming no err
+	if !ok || indexReport.State != indexerController.IndexFinished.String() {
 		apiError(ctx, w, http.StatusNotFound, "index report for manifest %q not found", manifest.String())
 		return
 	}
