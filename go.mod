@@ -13,7 +13,7 @@ require (
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.7
 	github.com/jackc/pgconn v1.14.1
 	github.com/jackc/pgx/v4 v4.18.1
-	github.com/klauspost/compress v1.17.4
+	github.com/klauspost/compress v1.17.5
 	github.com/prometheus/client_golang v1.18.0
 	github.com/quay/clair/config v1.4.0
 	github.com/quay/claircore v1.5.20
