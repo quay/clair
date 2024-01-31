@@ -19,4 +19,8 @@ providers:
 metrics:
   prometheus:
     addServicesLabels: true
+tracing:
+  openTelemetry:
+    address: clair-jaeger:4318
+    insecure: true
 accessLog: {}

@@ -3,17 +3,17 @@
 # the config.
 x-anchors:
   go: &go-image quay.io/projectquay/golang:1.22
-  grafana: &grafana-image docker.io/grafana/grafana:8.0.3
-  jaeger: &jaeger-image docker.io/jaegertracing/all-in-one:1.26
+  grafana: &grafana-image docker.io/grafana/grafana:10.3.1
+  jaeger: &jaeger-image docker.io/jaegertracing/all-in-one:1
   pgadmin: &pgadmin-image docker.io/dpage/pgadmin4:5.7
-  postgres: &postgres-image docker.io/library/postgres:12
-  prom: &prom-image docker.io/prom/prometheus:v2.30.2
-  pyroscope: &pyroscope-image docker.io/pyroscope/pyroscope:0.37.2
+  postgres: &postgres-image docker.io/library/postgres:15
+  prom: &prom-image docker.io/prom/prometheus:latest
+  pyroscope: &pyroscope-image docker.io/grafana/pyroscope:latest
   quay: &quay-image quay.io/projectquay/quay:latest
-  rabbitmq: &rabbitmq-image docker.io/library/rabbitmq:3.11
-  redis: &redis-image docker.io/library/redis:6.2
+  rabbitmq: &rabbitmq-image docker.io/library/rabbitmq:3
+  redis: &redis-image docker.io/library/redis:6
   skopeo: &skopeo-image quay.io/skopeo/stable:latest
-  traefik: &traefik-image docker.io/library/traefik:v2.2
+  traefik: &traefik-image docker.io/library/traefik:v3.0
   clair-service: &clair-service
     image: *go-image
     depends_on:
@@ -97,6 +97,7 @@ services:
     image: *jaeger-image
     environment:
       QUERY_BASE_PATH: '/jaeger'
+      COLLECTOR_OTLP_ENABLED: 'true'
   prometheus:
     container_name: clair-prometheus
     profiles:
