@@ -32,3 +32,9 @@ datasources:
   jsonData:
     path: http://clair-pyroscope:4040/
   editable: false
+- name: Jaeger
+  type: jaeger
+  access: proxy
+  orgId: 1
+  url: http://clair-jaeger:16686/jaeger/
+  editable: false
