@@ -48,8 +48,12 @@ notifier:
   #   callback: "http://clair-notifier/notifier/api/v1/notification"
 # tracing and metrics config
 trace:
-  name: "jaeger"
+  name: "otlp"
 #  probability: 1
+  otlp:
+    http:
+      endpoint: "clair-jaeger:6831"
+      insecure: true
   jaeger:
     agent:
       endpoint: "clair-jaeger:6831"
