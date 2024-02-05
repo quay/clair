@@ -20,7 +20,7 @@ require (
 	github.com/quay/zlog v1.1.8
 	github.com/rabbitmq/amqp091-go v1.9.0
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
-	github.com/rs/zerolog v1.31.0
+	github.com/rs/zerolog v1.32.0
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/ugorji/go/codec v1.2.12
 	github.com/urfave/cli/v2 v2.27.1
