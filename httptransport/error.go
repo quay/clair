@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"runtime"
 
 	"github.com/quay/zlog"
 )
@@ -42,7 +41,7 @@ func apiError(ctx context.Context, w http.ResponseWriter, code int, f string, v 
 	if disconnect {
 		// Exit immediately if there's no client to read the response, anyway.
 		w.WriteHeader(statusClientClosedRequest)
-		runtime.Goexit()
+		panic(http.ErrAbortHandler)
 	}
 
 	h := w.Header()
@@ -86,5 +85,5 @@ func apiError(ctx context.Context, w http.ResponseWriter, code int, f string, v 
 			Err(err).
 			Msg("unable to flush http response")
 	}
-	runtime.Goexit()
+	panic(http.ErrAbortHandler)
 }

@@ -1,10 +1,12 @@
 package httptransport
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/quay/zlog"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -98,9 +100,30 @@ func (m *wrapper) wrap(tag string, h http.Handler) http.Handler {
 				promhttp.InstrumentHandlerResponseSize(m.ResponseSize.MustCurryWith(prometheus.Labels{"handler": tag}),
 					promhttp.InstrumentHandlerDuration(m.RequestDuration.MustCurryWith(prometheus.Labels{"handler": tag}),
 						promhttp.InstrumentHandlerInFlight(m.InFlight.WithLabelValues(tag),
-							h))))))
+							catchAbort(h)))))))
 }
 
 func (m *wrapper) wrapFunc(tag string, h http.HandlerFunc) http.Handler {
 	return m.wrap(tag, h)
+}
+
+// Make sure the prom instrumentation works.
+// This can get reworked when the metrics are reworked to be otel native.
+func catchAbort(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			rec := recover()
+			if rec == nil {
+				return
+			}
+			if err, ok := rec.(error); ok && errors.Is(err, http.ErrAbortHandler) {
+				return
+			}
+			w.WriteHeader(http.StatusInternalServerError)
+			zlog.Warn(r.Context()).
+				Interface("panic", rec).
+				Msg("handler panicked; please file a bug")
+		}()
+		h.ServeHTTP(w, r)
+	})
 }
