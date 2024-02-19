@@ -21,7 +21,12 @@ type wrapper struct {
 	InFlight        *prometheus.GaugeVec
 }
 
-func (m *wrapper) init(name string) {
+// InitRegisterer registers with the provided [prometheus.Registerer].
+//
+// The [*wrapper.init] method is short for
+//
+//	(*wrapper).initRegisterer(name, prometheus.DefaultRegisterer)
+func (m *wrapper) initRegisterer(name string, reg prometheus.Registerer) {
 	if m.RequestCount == nil {
 		m.RequestCount = prometheus.NewCounterVec(
 			prometheus.CounterOpts{
@@ -77,7 +82,11 @@ func (m *wrapper) init(name string) {
 			[]string{"handler"},
 		)
 	}
-	prometheus.MustRegister(m.RequestCount, m.RequestSize, m.ResponseSize, m.RequestDuration, m.InFlight)
+	reg.MustRegister(m.RequestCount, m.RequestSize, m.ResponseSize, m.RequestDuration, m.InFlight)
+}
+
+func (m *wrapper) init(name string) {
+	m.initRegisterer(name, prometheus.DefaultRegisterer)
 }
 
 func (m *wrapper) wrap(tag string, h http.Handler) http.Handler {
