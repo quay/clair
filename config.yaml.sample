@@ -30,23 +30,26 @@ matcher:
   - "aws"
   - "debian"
   - "oracle"
+  - "osv"
   - "photon"
-  - "pyupio"
+  - "rhcc"
   - "rhel"
   - "suse"
   - "ubuntu"
 matchers:
   names:
-  - "alpine"
-  - "aws"
-  - "debian"
+  - "alpine-matcher"
+  - "aws-matcher"
+  - "debian-matcher"
+  - "gobin"
+  - "java-maven"
   - "oracle"
   - "photon"
   - "python"
   - "rhel"
+  - "rhel-container-matcher"
   - "suse"
   - "ubuntu"
-  - "crda"
   config: {}
 notifier:
   indexer_addr: http://clair-indexer:8080/
