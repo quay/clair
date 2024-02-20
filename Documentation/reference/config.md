@@ -322,16 +322,18 @@ Matchers provides configuration for the in-tree Matchers and RemoteMatchers.
 A list of string values informing the matcher factory about enabled matchers.
 
 If the value is nil the default list of Matchers will run:
-* alpine
-* aws
-* debian
+* alpine-matcher
+* aws-matcher
+* debian-matcher
+* gobin
+* java-maven
 * oracle
 * photon
 * python
 * rhel
+* rhel-container-matcher
 * suse
-* ubuntu
-* crda
+* ubuntu-matcher
 
 If an empty list is provided zero matchers will run.
 
@@ -360,8 +362,9 @@ If the value is nil (or `null` in yaml) the default set of Updaters will run:
 * aws
 * debian
 * oracle
+* osv
 * photon
-* pyupio
+* rhcc
 * rhel
 * suse
 * ubuntu
