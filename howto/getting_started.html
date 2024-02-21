@@ -189,17 +189,17 @@ and version tags are built from the corresponding release.</p>
 <p>The easiest way to get Clair up and running for test purposes is to use our <a href="./testing.html">local dev environment</a></p>
 <p>If you're the hands on type who wants to get into the details however, continue reading.</p>
 <h2 id="modes"><a class="header" href="#modes">Modes</a></h2>
-<p>Clair can run in several modes. <a href="../reference/indexer.html">Indexer</a>, <a href="../reference/matcher.html">matcher</a>, <a href="../reference/notifier.html">notifier</a> or combo mode. In combo mode, everything runs in a single OS process. </p>
-<p>If you are just starting with Clair you will most likely want to start with combo mode and venture out to a distributed deployment once acquainted. </p>
+<p>Clair can run in several modes. <a href="../reference/indexer.html">Indexer</a>, <a href="../reference/matcher.html">matcher</a>, <a href="../reference/notifier.html">notifier</a> or combo mode. In combo mode, everything runs in a single OS process.</p>
+<p>If you are just starting with Clair you will most likely want to start with combo mode and venture out to a distributed deployment once acquainted.</p>
 <p>This how-to will demonstrate combo mode and introduce some further reading on a distributed deployment.</p>
 <h2 id="postgres"><a class="header" href="#postgres">Postgres</a></h2>
 <p>Clair uses PostgreSQL for its data persistence. Migrations are supported so you should only need to point Clair to a fresh database and have it do the setup for you.</p>
 <p>We will assume you have setup a postgres database and it's reachable with the following connection string:
-<code>host=clair-db port=5432 user=clair dbname=clair sslmode=disable</code>. Adjust for your environment accordingly. </p>
+<code>host=clair-db port=5432 user=clair dbname=clair sslmode=disable</code>. Adjust for your environment accordingly.</p>
 <h2 id="starting-clair-in-combo-mode"><a class="header" href="#starting-clair-in-combo-mode">Starting Clair In Combo Mode</a></h2>
-<p>At this point, you should either have built Clair from source or have pulled the container. In either case, we will assume that the <code>clair-db</code> hostname will resolve to your postgres database. </p>
+<p>At this point, you should either have built Clair from source or have pulled the container. In either case, we will assume that the <code>clair-db</code> hostname will resolve to your postgres database.</p>
 <p><em>You may need to configure <a href="https://docs.docker.com/network/">docker</a> or <a href="https://podman.io/getting-started/network.html">podman</a> networking if you are utilizing containers. This is out of scope for this how-to.</em></p>
-<p>A basic config for combo mode can be found <a href="https://github.com/quay/clair/blob/main/config.yaml.sample">here</a>. Make sure to edit this config with your database settings and set &quot;migrations&quot; to <code>true</code> for all mode stanzas. In this basic combo mode, all &quot;connstring&quot; fields should point to the same database and any *_addr fields are simply ignored. For more details see the <a href="../reference/config.html">config reference</a> and <a href="./deployment.html">deployment models</a></p>
+<p>A basic config for combo mode can be found <a href="https://github.com/quay/clair/blob/main/config.yaml.sample">here</a>. Make sure to edit this config with your database settings and set "migrations" to <code>true</code> for all mode stanzas. In this basic combo mode, all "connstring" fields should point to the same database and any *_addr fields are simply ignored. For more details see the <a href="../reference/config.html">config reference</a> and <a href="./deployment.html">deployment models</a></p>
 <p>Clair has 3 requirements to start:</p>
 <ul>
 <li>The <code>mode</code> flag or <code>CLAIR_MODE</code> environment variable specifying what mode this instance will run in.</li>
@@ -211,10 +211,10 @@ and version tags are built from the corresponding release.</p>
 CLAIR_CONF=/path/to/mounted/config.yaml
 </code></pre>
 <p>If you are running a Clair binary directly, its likely easiest to use the command line.</p>
-<pre><code>clair -conf &quot;path/to/config.yaml&quot; -mode &quot;combo&quot;
+<pre><code>clair -conf "path/to/config.yaml" -mode "combo"
 </code></pre>
 <h2 id="submitting-a-manifest"><a class="header" href="#submitting-a-manifest">Submitting A Manifest</a></h2>
-<p>The simplest way to submit a manifest to your running Clair is utilizing <a href="../reference/clairctl.html">clairctl</a>. This is a CLI tool capable of grabbing image manifests from public repositories and and submitting them for analysis. 
+<p>The simplest way to submit a manifest to your running Clair is utilizing <a href="../reference/clairctl.html">clairctl</a>. This is a CLI tool capable of grabbing image manifests from public repositories and and submitting them for analysis.
 The command will be in the Clair container, but can also be installed locally by running the following command:</p>
 <pre><code>go install github.com/quay/clair/v4/cmd/clairctl@latest
 </code></pre>

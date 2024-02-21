@@ -186,7 +186,7 @@
 <li>STOMP delivery</li>
 </ul>
 <p>Configuring the notifier is done via the yaml configuration.</p>
-<p>See the &quot;Notifier&quot; object in our <a href="../reference/config.html">config reference</a></p>
+<p>See the "Notifier" object in our <a href="../reference/config.html">config reference</a></p>
 <h2 id="a-notification"><a class="header" href="#a-notification">A Notification</a></h2>
 <p>When the notifier becomes aware of new vulnerabilities affecting a previously indexed manifest, it will use the configured method(s) to issue notifications about the new changes. Any given notification expresses the <strong>most severe</strong> vulnerability discovered because of the change. This avoids creating a flurry of notifications for the same security database update.</p>
 <p>Once a client receives a notification, it should issue a new request against the <a href="../reference/matcher.html">matcher</a> to receive an up-to-date vulnerability report.</p>
@@ -194,42 +194,42 @@
 <pre><code class="language-go">// Reason indicates the catalyst for a notification
 type Reason string
 const (
-	Added   Reason = &quot;added&quot;
-	Removed Reason = &quot;removed&quot;
-	Changed Reason = &quot;changed&quot;
+	Added   Reason = "added"
+	Removed Reason = "removed"
+	Changed Reason = "changed"
 )
 type Notification struct {
-	ID            uuid.UUID        `json:&quot;id&quot;`
-	Manifest      claircore.Digest `json:&quot;manifest&quot;`
-	Reason        Reason           `json:&quot;reason&quot;`
-	Vulnerability VulnSummary      `json:&quot;vulnerability&quot;`
+	ID            uuid.UUID        `json:"id"`
+	Manifest      claircore.Digest `json:"manifest"`
+	Reason        Reason           `json:"reason"`
+	Vulnerability VulnSummary      `json:"vulnerability"`
 }
 type VulnSummary struct {
-	Name           string                  `json:&quot;name&quot;`
-	Description    string                  `json:&quot;description&quot;`
-	Package        *claircore.Package      `json:&quot;package,omitempty&quot;`
-	Distribution   *claircore.Distribution `json:&quot;distribution,omitempty&quot;`
-	Repo           *claircore.Repository   `json:&quot;repo,omitempty&quot;`
-	Severity       string                  `json:&quot;severity&quot;`
-	FixedInVersion string                  `json:&quot;fixed_in_version&quot;`
-	Links          string                  `json:&quot;links&quot;`
+	Name           string                  `json:"name"`
+	Description    string                  `json:"description"`
+	Package        *claircore.Package      `json:"package,omitempty"`
+	Distribution   *claircore.Distribution `json:"distribution,omitempty"`
+	Repo           *claircore.Repository   `json:"repo,omitempty"`
+	Severity       string                  `json:"severity"`
+	FixedInVersion string                  `json:"fixed_in_version"`
+	Links          string                  `json:"links"`
 }
 </code></pre>
 <h2 id="webhook-delivery"><a class="header" href="#webhook-delivery">Webhook Delivery</a></h2>
-<p><em>See the &quot;Notifier.Webhook&quot; object in the <a href="../reference/config.html">config reference</a> for complete configuration details.</em></p>
+<p><em>See the "Notifier.Webhook" object in the <a href="../reference/config.html">config reference</a> for complete configuration details.</em></p>
 <p>When you configure notifier for webhook delivery you provide the service with the following pieces of information:</p>
 <ul>
 <li>A target URL where the webhook will fire</li>
 <li>The callback URL where the notifier may be reached including its API path
 <ul>
-<li>e.g. &quot;http://clair-notifier/notifier/api/v1/notification&quot;</li>
+<li>e.g. "http://clair-notifier/notifier/api/v1/notification"</li>
 </ul>
 </li>
 </ul>
 <p>When the notifier has determined an updated security database has changed the affected status of an indexed manifest, it will deliver the following JSON body to the configured target:</p>
 <pre><code class="language-json">{
-  &quot;notification_id&quot;: {uuid_string},
-  &quot;callback&quot;: {url_to_notifications}
+  "notification_id": {uuid_string},
+  "callback": {url_to_notifications}
 }
 </code></pre>
 <p>On receipt, the server can immediately browse to the URL provided in the callback field.</p>
@@ -246,18 +246,18 @@ type VulnSummary struct {
 }
 </code></pre>
 <p>The GET callback request implements a simple bare-minimum paging mechanism.</p>
-<p>The &quot;page_size&quot; url param controls how many notifications are returned in a single page.
+<p>The "page_size" url param controls how many notifications are returned in a single page.
 If not provided a default of 500 is used.</p>
-<p>The &quot;next&quot; url param informs Clair the next set of paged notifications to return. If not provided the 0th page is assumed.</p>
-<p>A page object accompanying the notification list specifies &quot;next&quot; and &quot;size&quot; fields.</p>
-<p>The &quot;next&quot; field returned in the page must be provided as the subsequent request's &quot;next&quot; url parameter to retrieve the next set of notifications.</p>
-<p>The &quot;size&quot; field will simply echo back the request page_size parameter.</p>
-<p>When the final page is served to the client the returned &quot;page&quot; data structure will not contain a &quot;next&quot; member.</p>
+<p>The "next" url param informs Clair the next set of paged notifications to return. If not provided the 0th page is assumed.</p>
+<p>A page object accompanying the notification list specifies "next" and "size" fields.</p>
+<p>The "next" field returned in the page must be provided as the subsequent request's "next" url parameter to retrieve the next set of notifications.</p>
+<p>The "size" field will simply echo back the request page_size parameter.</p>
+<p>When the final page is served to the client the returned "page" data structure will not contain a "next" member.</p>
 <p>Therefore the following loop is valid for obtaining all notifications for a notification id in pages of a specified size.</p>
-<pre><code>{ page, notifications } = http.Get(&quot;http://clairv4/notifier/api/v1/notification/{id}?page_size=1000&quot;)
+<pre><code>{ page, notifications } = http.Get("http://clairv4/notifier/api/v1/notification/{id}?page_size=1000")
 
 while (page.Next != None) {
-    { page, notifications } = http.Get(&quot;http://clairv4/notifier/api/v1/notification/{id}?next={page.Next},page_size=1000&quot;)
+    { page, notifications } = http.Get("http://clairv4/notifier/api/v1/notification/{id}?next={page.Next},page_size=1000")
 }
 </code></pre>
 <p><em>Note: If the client specifies a custom page_size it must specify this page_size on every request for accurate responses.</em></p>
@@ -265,7 +265,7 @@ while (page.Next != None) {
 <p>While not mandatory, the client may issue a delete of the notification via a DELETE method. See <a href="../howto/api.html">api</a> to view the delete api.</p>
 <p>Deleting a notification ID will clean up resources in the notifier quicker. Otherwise the notifier will wait a predetermined length of time before clearing delivered notifications from its database.</p>
 <h2 id="amqp-delivery"><a class="header" href="#amqp-delivery">AMQP Delivery</a></h2>
-<p><em>See the &quot;Notifier.AMQP&quot; object in our <a href="../reference/config.html">config reference</a> for complete configuration details.</em></p>
+<p><em>See the "Notifier.AMQP" object in our <a href="../reference/config.html">config reference</a> for complete configuration details.</em></p>
 <p>The notifier also supports delivering to an AMQP broker. With AMQP delivery you can control whether a callback is delivered to the broker or whether notifications are directly delivered to the queue.</p>
 <p>This allows the developer of the AMQP consumer to determine the logic of notification processing.</p>
 <p>Note that AMQP delivery only supports AMQP 0.x protocol (e.g. RabbitMQ). If you need to publish notifications on AMQP 1.x message queue (e.g. ActiveMQ), you can use STOMP delivery.</p>
@@ -273,8 +273,8 @@ while (page.Next != None) {
 <p>If the notifier's configuration specifies <code>direct: true</code> for AMQP, notifications will be delivered directly to the configured exchange.</p>
 <p>When <code>direct</code> is set, the <code>rollup</code> property may be set to instruct the notifier to send a max number of notifications in a single AMQP message. This allows a balance between size of the message and number of messages delivered to the queue.</p>
 <h2 id="testing-and-development"><a class="header" href="#testing-and-development">Testing and Development</a></h2>
-<p>The notifier has a testing mode enabled when it sees the &quot;NOTIFIER_TEST_MODE&quot; environment variable set. It can be set to any value as we only check to see if it exists.</p>
-<p>When this environment variable is set, the notifier will begin sending fake notifications to the configured delivery mechanism every &quot;poll_interval&quot; interval. This provides an easy way to implement and test new or existing deliverers.</p>
+<p>The notifier has a testing mode enabled when it sees the "NOTIFIER_TEST_MODE" environment variable set. It can be set to any value as we only check to see if it exists.</p>
+<p>When this environment variable is set, the notifier will begin sending fake notifications to the configured delivery mechanism every "poll_interval" interval. This provides an easy way to implement and test new or existing deliverers.</p>
 <p>The notifier will run in this mode until the environment variable is cleared and the service is restarted.</p>
 
                     </main>

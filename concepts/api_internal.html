@@ -181,13 +181,13 @@
 communication between Clair microservices. If Clair is operating in combo mode,
 these endpoints may not exist. Any sort of API ingress should disallow clients
 to talk to these endpoints.</p>
-<p>We do not formally expose these APIs in our OpenAPI spec. 
+<p>We do not formally expose these APIs in our OpenAPI spec.
 Further information and usage is an effort left to the reader.</p>
 <h2 id="updates-diffs"><a class="header" href="#updates-diffs">Updates Diffs</a></h2>
-<p>The <code>update_diff/</code> endpoint exposes the api for diffing two update operations. 
+<p>The <code>update_diff/</code> endpoint exposes the api for diffing two update operations.
 This is used by the notifier to determine the added and removed vulnerabilities on security databsae update.</p>
 <h2 id="update-operation"><a class="header" href="#update-operation">Update Operation</a></h2>
-<p>The <code>update_operation</code> endpoint exposes the api for viewing updaters' activity. 
+<p>The <code>update_operation</code> endpoint exposes the api for viewing updaters' activity.
 This is used by the notifier to determine if new updates have occurred and triggers an update diff to see what has changed.</p>
 <h2 id="affectedmanifest"><a class="header" href="#affectedmanifest">AffectedManifest</a></h2>
 <p>The <code>affected_manifest</code> endpoint exposes the api for retreiving affected manifests given a list of Vulnerabilities.

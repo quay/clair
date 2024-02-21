@@ -184,9 +184,9 @@ language_tabs:</p>
 <li>go: Golang</li>
 <li>javascript: Javascript
 language_clients:</li>
-<li>python: &quot;&quot;</li>
-<li>go: &quot;&quot;</li>
-<li>javascript: &quot;&quot;
+<li>python: ""</li>
+<li>go: ""</li>
+<li>javascript: ""
 toc_footers: []
 includes: []
 search: false
@@ -200,7 +200,7 @@ headingLevel: 2</li>
 <p>Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.</p>
 </blockquote>
 <p>ClairV4 is a set of cooperating microservices which scan, index, and match your container's content with known vulnerabilities.</p>
-<p>Email: <a href="mailto:quay-devel@redhat.com">Clair Team</a> Web: <a href="http://github.com/quay/clair">Clair Team</a> 
+<p>Email: <a href="mailto:quay-devel@redhat.com">Clair Team</a> Web: <a href="http://github.com/quay/clair">Clair Team</a>
 License: <a href="http://www.apache.org/licenses/">Apache License 2.0</a></p>
 <h1 id="clairv4-notifier"><a class="header" href="#clairv4-notifier">Notifier</a></h1>
 <h2 id="deletenotification"><a class="header" href="#deletenotification">DeleteNotification</a></h2>
@@ -221,18 +221,18 @@ print(r.json())
 <pre><code class="language-go">package main
 
 import (
-       &quot;bytes&quot;
-       &quot;net/http&quot;
+       "bytes"
+       "net/http"
 )
 
 func main() {
 
     headers := map[string][]string{
-        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+        "Accept": []string{"application/json"},
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;DELETE&quot;, &quot;/notifier/api/v1/notification/{notification_id}&quot;, data)
+    req, err := http.NewRequest("DELETE", "/notifier/api/v1/notification/{notification_id}", data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -273,8 +273,8 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 <p>400 Response</p>
 </blockquote>
 <pre><code class="language-json">{
-  &quot;code&quot;: &quot;string&quot;,
-  &quot;message&quot;: &quot;string&quot;
+  "code": "string",
+  "message": "string"
 }
 </code></pre>
 <h3 id="deletenotification-responses"><a class="header" href="#deletenotification-responses">Responses</a></h3>
@@ -305,18 +305,18 @@ print(r.json())
 <pre><code class="language-go">package main
 
 import (
-       &quot;bytes&quot;
-       &quot;net/http&quot;
+       "bytes"
+       "net/http"
 )
 
 func main() {
 
     headers := map[string][]string{
-        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+        "Accept": []string{"application/json"},
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;GET&quot;, &quot;/notifier/api/v1/notification/{notification_id}&quot;, data)
+    req, err := http.NewRequest("GET", "/notifier/api/v1/notification/{notification_id}", data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -359,55 +359,55 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 <p>200 Response</p>
 </blockquote>
 <pre><code class="language-json">{
-  &quot;page&quot;: {
-    &quot;size&quot;: 100,
-    &quot;next&quot;: &quot;1b4d0db2-e757-4150-bbbb-543658144205&quot;
+  "page": {
+    "size": 100,
+    "next": "1b4d0db2-e757-4150-bbbb-543658144205"
   },
-  &quot;notifications&quot;: [
+  "notifications": [
     {
-      &quot;id&quot;: &quot;5e4b387e-88d3-4364-86fd-063447a6fad2&quot;,
-      &quot;manifest&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
-      &quot;reason&quot;: &quot;added&quot;,
-      &quot;vulnerability&quot;: {
-        &quot;name&quot;: &quot;CVE-2009-5155&quot;,
-        &quot;fixed_in_version&quot;: &quot;v0.0.1&quot;,
-        &quot;links&quot;: &quot;http://link-to-advisory&quot;,
-        &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
-        &quot;normalized_severity&quot;: &quot;Unknown&quot;,
-        &quot;package&quot;: {
-          &quot;id&quot;: &quot;10&quot;,
-          &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-          &quot;version&quot;: &quot;1.6.11&quot;,
-          &quot;kind&quot;: &quot;binary&quot;,
-          &quot;normalized_version&quot;: &quot;&quot;,
-          &quot;arch&quot;: &quot;x86&quot;,
-          &quot;module&quot;: &quot;&quot;,
-          &quot;cpe&quot;: &quot;&quot;,
-          &quot;source&quot;: {
-            &quot;id&quot;: &quot;9&quot;,
-            &quot;name&quot;: &quot;apt&quot;,
-            &quot;version&quot;: &quot;1.6.11&quot;,
-            &quot;kind&quot;: &quot;source&quot;,
-            &quot;source&quot;: null
+      "id": "5e4b387e-88d3-4364-86fd-063447a6fad2",
+      "manifest": "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a",
+      "reason": "added",
+      "vulnerability": {
+        "name": "CVE-2009-5155",
+        "fixed_in_version": "v0.0.1",
+        "links": "http://link-to-advisory",
+        "description": "In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\"",
+        "normalized_severity": "Unknown",
+        "package": {
+          "id": "10",
+          "name": "libapt-pkg5.0",
+          "version": "1.6.11",
+          "kind": "binary",
+          "normalized_version": "",
+          "arch": "x86",
+          "module": "",
+          "cpe": "",
+          "source": {
+            "id": "9",
+            "name": "apt",
+            "version": "1.6.11",
+            "kind": "source",
+            "source": null
           }
         },
-        &quot;distribution&quot;: {
-          &quot;id&quot;: &quot;1&quot;,
-          &quot;did&quot;: &quot;ubuntu&quot;,
-          &quot;name&quot;: &quot;Ubuntu&quot;,
-          &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-          &quot;version_code_name&quot;: &quot;bionic&quot;,
-          &quot;version_id&quot;: &quot;18.04&quot;,
-          &quot;arch&quot;: &quot;&quot;,
-          &quot;cpe&quot;: &quot;&quot;,
-          &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+        "distribution": {
+          "id": "1",
+          "did": "ubuntu",
+          "name": "Ubuntu",
+          "version": "18.04.3 LTS (Bionic Beaver)",
+          "version_code_name": "bionic",
+          "version_id": "18.04",
+          "arch": "",
+          "cpe": "",
+          "pretty_name": "Ubuntu 18.04.3 LTS"
         },
-        &quot;repository&quot;: {
-          &quot;id&quot;: &quot;string&quot;,
-          &quot;name&quot;: &quot;string&quot;,
-          &quot;key&quot;: &quot;string&quot;,
-          &quot;uri&quot;: &quot;string&quot;,
-          &quot;cpe&quot;: &quot;string&quot;
+        "repository": {
+          "id": "string",
+          "name": "string",
+          "key": "string",
+          "uri": "string",
+          "cpe": "string"
         }
       }
     }
@@ -444,19 +444,19 @@ print(r.json())
 <pre><code class="language-go">package main
 
 import (
-       &quot;bytes&quot;
-       &quot;net/http&quot;
+       "bytes"
+       "net/http"
 )
 
 func main() {
 
     headers := map[string][]string{
-        &quot;Content-Type&quot;: []string{&quot;application/json&quot;},
-        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+        "Content-Type": []string{"application/json"},
+        "Accept": []string{"application/json"},
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;POST&quot;, &quot;/indexer/api/v1/index_report&quot;, data)
+    req, err := http.NewRequest("POST", "/indexer/api/v1/index_report", data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -466,17 +466,17 @@ func main() {
 
 </code></pre>
 <pre><code class="language-javascript">const inputBody = '{
-  &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;layers&quot;: [
+  "hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "layers": [
     {
-      &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-      &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36&quot;,
-      &quot;headers&quot;: {
-        &quot;property1&quot;: [
-          &quot;string&quot;
+      "hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+      "uri": "https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36",
+      "headers": {
+        "property1": [
+          "string"
         ],
-        &quot;property2&quot;: [
-          &quot;string&quot;
+        "property2": [
+          "string"
         ]
       }
     }
@@ -506,17 +506,17 @@ fetch('/indexer/api/v1/index_report',
 <p>Body parameter</p>
 </blockquote>
 <pre><code class="language-json">{
-  &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;layers&quot;: [
+  "hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "layers": [
     {
-      &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-      &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36&quot;,
-      &quot;headers&quot;: {
-        &quot;property1&quot;: [
-          &quot;string&quot;
+      "hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+      "uri": "https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36",
+      "headers": {
+        "property1": [
+          "string"
         ],
-        &quot;property2&quot;: [
-          &quot;string&quot;
+        "property2": [
+          "string"
         ]
       }
     }
@@ -535,51 +535,51 @@ fetch('/indexer/api/v1/index_report',
 <p>201 Response</p>
 </blockquote>
 <pre><code class="language-json">{
-  &quot;manifest_hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;state&quot;: &quot;IndexFinished&quot;,
-  &quot;packages&quot;: {
-    &quot;10&quot;: {
-      &quot;id&quot;: &quot;10&quot;,
-      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-      &quot;version&quot;: &quot;1.6.11&quot;,
-      &quot;kind&quot;: &quot;binary&quot;,
-      &quot;normalized_version&quot;: &quot;&quot;,
-      &quot;arch&quot;: &quot;x86&quot;,
-      &quot;module&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;source&quot;: {
-        &quot;id&quot;: &quot;9&quot;,
-        &quot;name&quot;: &quot;apt&quot;,
-        &quot;version&quot;: &quot;1.6.11&quot;,
-        &quot;kind&quot;: &quot;source&quot;,
-        &quot;source&quot;: null
+  "manifest_hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "state": "IndexFinished",
+  "packages": {
+    "10": {
+      "id": "10",
+      "name": "libapt-pkg5.0",
+      "version": "1.6.11",
+      "kind": "binary",
+      "normalized_version": "",
+      "arch": "x86",
+      "module": "",
+      "cpe": "",
+      "source": {
+        "id": "9",
+        "name": "apt",
+        "version": "1.6.11",
+        "kind": "source",
+        "source": null
       }
     }
   },
-  &quot;distributions&quot;: {
-    &quot;1&quot;: {
-      &quot;id&quot;: &quot;1&quot;,
-      &quot;did&quot;: &quot;ubuntu&quot;,
-      &quot;name&quot;: &quot;Ubuntu&quot;,
-      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-      &quot;version_code_name&quot;: &quot;bionic&quot;,
-      &quot;version_id&quot;: &quot;18.04&quot;,
-      &quot;arch&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+  "distributions": {
+    "1": {
+      "id": "1",
+      "did": "ubuntu",
+      "name": "Ubuntu",
+      "version": "18.04.3 LTS (Bionic Beaver)",
+      "version_code_name": "bionic",
+      "version_id": "18.04",
+      "arch": "",
+      "cpe": "",
+      "pretty_name": "Ubuntu 18.04.3 LTS"
     }
   },
-  &quot;environments&quot;: {
-    &quot;10&quot;: [
+  "environments": {
+    "10": [
       {
-        &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
-        &quot;introduced_in&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
-        &quot;distribution_id&quot;: &quot;1&quot;
+        "package_db": "var/lib/dpkg/status",
+        "introduced_in": "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a",
+        "distribution_id": "1"
       }
     ]
   },
-  &quot;success&quot;: true,
-  &quot;err&quot;: &quot;&quot;
+  "success": true,
+  "err": ""
 }
 </code></pre>
 <h3 id="index-the-contents-of-a-manifest-responses"><a class="header" href="#index-the-contents-of-a-manifest-responses">Responses</a></h3>
@@ -611,19 +611,19 @@ print(r.json())
 <pre><code class="language-go">package main
 
 import (
-       &quot;bytes&quot;
-       &quot;net/http&quot;
+       "bytes"
+       "net/http"
 )
 
 func main() {
 
     headers := map[string][]string{
-        &quot;Content-Type&quot;: []string{&quot;application/json&quot;},
-        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+        "Content-Type": []string{"application/json"},
+        "Accept": []string{"application/json"},
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;DELETE&quot;, &quot;/indexer/api/v1/index_report&quot;, data)
+    req, err := http.NewRequest("DELETE", "/indexer/api/v1/index_report", data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -633,7 +633,7 @@ func main() {
 
 </code></pre>
 <pre><code class="language-javascript">const inputBody = '[
-  &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;
+  "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3"
 ]';
 const headers = {
   'Content-Type':'application/json',
@@ -659,7 +659,7 @@ fetch('/indexer/api/v1/index_report',
 <p>Body parameter</p>
 </blockquote>
 <pre><code class="language-json">[
-  &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;
+  "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3"
 ]
 </code></pre>
 <h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes,-if-they-exist.-parameters"><a class="header" href="#delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes,-if-they-exist.-parameters">Parameters</a></h3>
@@ -674,7 +674,7 @@ fetch('/indexer/api/v1/index_report',
 <p>200 Response</p>
 </blockquote>
 <pre><code class="language-json">[
-  &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;
+  "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3"
 ]
 </code></pre>
 <h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes,-if-they-exist.-responses"><a class="header" href="#delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes,-if-they-exist.-responses">Responses</a></h3>
@@ -704,18 +704,18 @@ print(r.json())
 <pre><code class="language-go">package main
 
 import (
-       &quot;bytes&quot;
-       &quot;net/http&quot;
+       "bytes"
+       "net/http"
 )
 
 func main() {
 
     headers := map[string][]string{
-        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+        "Accept": []string{"application/json"},
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;DELETE&quot;, &quot;/indexer/api/v1/index_report/{manifest_hash}&quot;, data)
+    req, err := http.NewRequest("DELETE", "/indexer/api/v1/index_report/{manifest_hash}", data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -756,8 +756,8 @@ fetch('/indexer/api/v1/index_report/{manifest_hash}',
 <p>400 Response</p>
 </blockquote>
 <pre><code class="language-json">{
-  &quot;code&quot;: &quot;string&quot;,
-  &quot;message&quot;: &quot;string&quot;
+  "code": "string",
+  "message": "string"
 }
 </code></pre>
 <h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hash,-if-exists.-responses"><a class="header" href="#delete-the-indexreport-and-associated-information-for-the-given-manifest-hash,-if-exists.-responses">Responses</a></h3>
@@ -787,18 +787,18 @@ print(r.json())
 <pre><code class="language-go">package main
 
 import (
-       &quot;bytes&quot;
-       &quot;net/http&quot;
+       "bytes"
+       "net/http"
 )
 
 func main() {
 
     headers := map[string][]string{
-        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+        "Accept": []string{"application/json"},
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;GET&quot;, &quot;/indexer/api/v1/index_report/{manifest_hash}&quot;, data)
+    req, err := http.NewRequest("GET", "/indexer/api/v1/index_report/{manifest_hash}", data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -839,51 +839,51 @@ fetch('/indexer/api/v1/index_report/{manifest_hash}',
 <p>200 Response</p>
 </blockquote>
 <pre><code class="language-json">{
-  &quot;manifest_hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;state&quot;: &quot;IndexFinished&quot;,
-  &quot;packages&quot;: {
-    &quot;10&quot;: {
-      &quot;id&quot;: &quot;10&quot;,
-      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-      &quot;version&quot;: &quot;1.6.11&quot;,
-      &quot;kind&quot;: &quot;binary&quot;,
-      &quot;normalized_version&quot;: &quot;&quot;,
-      &quot;arch&quot;: &quot;x86&quot;,
-      &quot;module&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;source&quot;: {
-        &quot;id&quot;: &quot;9&quot;,
-        &quot;name&quot;: &quot;apt&quot;,
-        &quot;version&quot;: &quot;1.6.11&quot;,
-        &quot;kind&quot;: &quot;source&quot;,
-        &quot;source&quot;: null
+  "manifest_hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "state": "IndexFinished",
+  "packages": {
+    "10": {
+      "id": "10",
+      "name": "libapt-pkg5.0",
+      "version": "1.6.11",
+      "kind": "binary",
+      "normalized_version": "",
+      "arch": "x86",
+      "module": "",
+      "cpe": "",
+      "source": {
+        "id": "9",
+        "name": "apt",
+        "version": "1.6.11",
+        "kind": "source",
+        "source": null
       }
     }
   },
-  &quot;distributions&quot;: {
-    &quot;1&quot;: {
-      &quot;id&quot;: &quot;1&quot;,
-      &quot;did&quot;: &quot;ubuntu&quot;,
-      &quot;name&quot;: &quot;Ubuntu&quot;,
-      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-      &quot;version_code_name&quot;: &quot;bionic&quot;,
-      &quot;version_id&quot;: &quot;18.04&quot;,
-      &quot;arch&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+  "distributions": {
+    "1": {
+      "id": "1",
+      "did": "ubuntu",
+      "name": "Ubuntu",
+      "version": "18.04.3 LTS (Bionic Beaver)",
+      "version_code_name": "bionic",
+      "version_id": "18.04",
+      "arch": "",
+      "cpe": "",
+      "pretty_name": "Ubuntu 18.04.3 LTS"
     }
   },
-  &quot;environments&quot;: {
-    &quot;10&quot;: [
+  "environments": {
+    "10": [
       {
-        &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
-        &quot;introduced_in&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
-        &quot;distribution_id&quot;: &quot;1&quot;
+        "package_db": "var/lib/dpkg/status",
+        "introduced_in": "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a",
+        "distribution_id": "1"
       }
     ]
   },
-  &quot;success&quot;: true,
-  &quot;err&quot;: &quot;&quot;
+  "success": true,
+  "err": ""
 }
 </code></pre>
 <h3 id="retrieve-an-indexreport-for-the-given-manifest-hash-if-exists.-responses"><a class="header" href="#retrieve-an-indexreport-for-the-given-manifest-hash-if-exists.-responses">Responses</a></h3>
@@ -915,18 +915,18 @@ print(r.json())
 <pre><code class="language-go">package main
 
 import (
-       &quot;bytes&quot;
-       &quot;net/http&quot;
+       "bytes"
+       "net/http"
 )
 
 func main() {
 
     headers := map[string][]string{
-        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+        "Accept": []string{"application/json"},
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;GET&quot;, &quot;/indexer/api/v1/index_state&quot;, data)
+    req, err := http.NewRequest("GET", "/indexer/api/v1/index_state", data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -963,7 +963,7 @@ A client may be interested in this as a signal that manifests may need to be re-
 <p>200 Response</p>
 </blockquote>
 <pre><code class="language-json">{
-  &quot;state&quot;: &quot;aae368a064d7c5a433d0bf2c4f5554cc&quot;
+  "state": "aae368a064d7c5a433d0bf2c4f5554cc"
 }
 </code></pre>
 <h3 id="report-the-indexer's-internal-configuration-and-state.-responses"><a class="header" href="#report-the-indexer's-internal-configuration-and-state.-responses">Responses</a></h3>
@@ -998,18 +998,18 @@ print(r.json())
 <pre><code class="language-go">package main
 
 import (
-       &quot;bytes&quot;
-       &quot;net/http&quot;
+       "bytes"
+       "net/http"
 )
 
 func main() {
 
     headers := map[string][]string{
-        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+        "Accept": []string{"application/json"},
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;GET&quot;, &quot;/matcher/api/v1/vulnerability_report/{manifest_hash}&quot;, data)
+    req, err := http.NewRequest("GET", "/matcher/api/v1/vulnerability_report/{manifest_hash}", data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -1050,90 +1050,90 @@ fetch('/matcher/api/v1/vulnerability_report/{manifest_hash}',
 <p>201 Response</p>
 </blockquote>
 <pre><code class="language-json">{
-  &quot;manifest_hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;packages&quot;: {
-    &quot;10&quot;: {
-      &quot;id&quot;: &quot;10&quot;,
-      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-      &quot;version&quot;: &quot;1.6.11&quot;,
-      &quot;kind&quot;: &quot;binary&quot;,
-      &quot;normalized_version&quot;: &quot;&quot;,
-      &quot;arch&quot;: &quot;x86&quot;,
-      &quot;module&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;source&quot;: {
-        &quot;id&quot;: &quot;9&quot;,
-        &quot;name&quot;: &quot;apt&quot;,
-        &quot;version&quot;: &quot;1.6.11&quot;,
-        &quot;kind&quot;: &quot;source&quot;,
-        &quot;source&quot;: null
+  "manifest_hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "packages": {
+    "10": {
+      "id": "10",
+      "name": "libapt-pkg5.0",
+      "version": "1.6.11",
+      "kind": "binary",
+      "normalized_version": "",
+      "arch": "x86",
+      "module": "",
+      "cpe": "",
+      "source": {
+        "id": "9",
+        "name": "apt",
+        "version": "1.6.11",
+        "kind": "source",
+        "source": null
       }
     }
   },
-  &quot;distributions&quot;: {
-    &quot;1&quot;: {
-      &quot;id&quot;: &quot;1&quot;,
-      &quot;did&quot;: &quot;ubuntu&quot;,
-      &quot;name&quot;: &quot;Ubuntu&quot;,
-      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-      &quot;version_code_name&quot;: &quot;bionic&quot;,
-      &quot;version_id&quot;: &quot;18.04&quot;,
-      &quot;arch&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+  "distributions": {
+    "1": {
+      "id": "1",
+      "did": "ubuntu",
+      "name": "Ubuntu",
+      "version": "18.04.3 LTS (Bionic Beaver)",
+      "version_code_name": "bionic",
+      "version_id": "18.04",
+      "arch": "",
+      "cpe": "",
+      "pretty_name": "Ubuntu 18.04.3 LTS"
     }
   },
-  &quot;environments&quot;: {
-    &quot;10&quot;: [
+  "environments": {
+    "10": [
       {
-        &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
-        &quot;introduced_in&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
-        &quot;distribution_id&quot;: &quot;1&quot;
+        "package_db": "var/lib/dpkg/status",
+        "introduced_in": "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a",
+        "distribution_id": "1"
       }
     ]
   },
-  &quot;vulnerabilities&quot;: {
-    &quot;356835&quot;: {
-      &quot;id&quot;: &quot;356835&quot;,
-      &quot;updater&quot;: &quot;&quot;,
-      &quot;name&quot;: &quot;CVE-2009-5155&quot;,
-      &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
-      &quot;links&quot;: &quot;https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986\&quot;&quot;,
-      &quot;severity&quot;: &quot;Low&quot;,
-      &quot;normalized_severity&quot;: &quot;Low&quot;,
-      &quot;package&quot;: {
-        &quot;id&quot;: &quot;0&quot;,
-        &quot;name&quot;: &quot;glibc&quot;,
-        &quot;version&quot;: &quot;&quot;,
-        &quot;kind&quot;: &quot;&quot;,
-        &quot;source&quot;: null,
-        &quot;package_db&quot;: &quot;&quot;,
-        &quot;repository_hint&quot;: &quot;&quot;
+  "vulnerabilities": {
+    "356835": {
+      "id": "356835",
+      "updater": "",
+      "name": "CVE-2009-5155",
+      "description": "In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\"",
+      "links": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986\"",
+      "severity": "Low",
+      "normalized_severity": "Low",
+      "package": {
+        "id": "0",
+        "name": "glibc",
+        "version": "",
+        "kind": "",
+        "source": null,
+        "package_db": "",
+        "repository_hint": ""
       },
-      &quot;dist&quot;: {
-        &quot;id&quot;: &quot;0&quot;,
-        &quot;did&quot;: &quot;ubuntu&quot;,
-        &quot;name&quot;: &quot;Ubuntu&quot;,
-        &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-        &quot;version_code_name&quot;: &quot;bionic&quot;,
-        &quot;version_id&quot;: &quot;18.04&quot;,
-        &quot;arch&quot;: &quot;&quot;,
-        &quot;cpe&quot;: &quot;&quot;,
-        &quot;pretty_name&quot;: &quot;&quot;
+      "dist": {
+        "id": "0",
+        "did": "ubuntu",
+        "name": "Ubuntu",
+        "version": "18.04.3 LTS (Bionic Beaver)",
+        "version_code_name": "bionic",
+        "version_id": "18.04",
+        "arch": "",
+        "cpe": "",
+        "pretty_name": ""
       },
-      &quot;repo&quot;: {
-        &quot;id&quot;: &quot;0&quot;,
-        &quot;name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;,
-        &quot;key&quot;: &quot;&quot;,
-        &quot;uri&quot;: &quot;&quot;
+      "repo": {
+        "id": "0",
+        "name": "Ubuntu 18.04.3 LTS",
+        "key": "",
+        "uri": ""
       },
-      &quot;issued&quot;: &quot;2019-10-12T07:20:50.52Z&quot;,
-      &quot;fixed_in_version&quot;: &quot;2.28-0ubuntu1&quot;
+      "issued": "2019-10-12T07:20:50.52Z",
+      "fixed_in_version": "2.28-0ubuntu1"
     }
   },
-  &quot;package_vulnerabilities&quot;: {
-    &quot;10&quot;: [
-      &quot;356835&quot;
+  "package_vulnerabilities": {
+    "10": [
+      "356835"
     ]
   }
 }
@@ -1157,8 +1157,8 @@ This operation does not require authentication
 <a id="tocSpage"></a>
 <a id="tocspage"></a>
 <pre><code class="language-json">{
-  &quot;size&quot;: 1,
-  &quot;next&quot;: &quot;1b4d0db2-e757-4150-bbbb-543658144205&quot;
+  "size": 1,
+  "next": "1b4d0db2-e757-4150-bbbb-543658144205"
 }
 
 </code></pre>
@@ -1175,55 +1175,55 @@ This operation does not require authentication
 <a id="tocSpagednotifications"></a>
 <a id="tocspagednotifications"></a>
 <pre><code class="language-json">{
-  &quot;page&quot;: {
-    &quot;size&quot;: 100,
-    &quot;next&quot;: &quot;1b4d0db2-e757-4150-bbbb-543658144205&quot;
+  "page": {
+    "size": 100,
+    "next": "1b4d0db2-e757-4150-bbbb-543658144205"
   },
-  &quot;notifications&quot;: [
+  "notifications": [
     {
-      &quot;id&quot;: &quot;5e4b387e-88d3-4364-86fd-063447a6fad2&quot;,
-      &quot;manifest&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
-      &quot;reason&quot;: &quot;added&quot;,
-      &quot;vulnerability&quot;: {
-        &quot;name&quot;: &quot;CVE-2009-5155&quot;,
-        &quot;fixed_in_version&quot;: &quot;v0.0.1&quot;,
-        &quot;links&quot;: &quot;http://link-to-advisory&quot;,
-        &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
-        &quot;normalized_severity&quot;: &quot;Unknown&quot;,
-        &quot;package&quot;: {
-          &quot;id&quot;: &quot;10&quot;,
-          &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-          &quot;version&quot;: &quot;1.6.11&quot;,
-          &quot;kind&quot;: &quot;binary&quot;,
-          &quot;normalized_version&quot;: &quot;&quot;,
-          &quot;arch&quot;: &quot;x86&quot;,
-          &quot;module&quot;: &quot;&quot;,
-          &quot;cpe&quot;: &quot;&quot;,
-          &quot;source&quot;: {
-            &quot;id&quot;: &quot;9&quot;,
-            &quot;name&quot;: &quot;apt&quot;,
-            &quot;version&quot;: &quot;1.6.11&quot;,
-            &quot;kind&quot;: &quot;source&quot;,
-            &quot;source&quot;: null
+      "id": "5e4b387e-88d3-4364-86fd-063447a6fad2",
+      "manifest": "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a",
+      "reason": "added",
+      "vulnerability": {
+        "name": "CVE-2009-5155",
+        "fixed_in_version": "v0.0.1",
+        "links": "http://link-to-advisory",
+        "description": "In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\"",
+        "normalized_severity": "Unknown",
+        "package": {
+          "id": "10",
+          "name": "libapt-pkg5.0",
+          "version": "1.6.11",
+          "kind": "binary",
+          "normalized_version": "",
+          "arch": "x86",
+          "module": "",
+          "cpe": "",
+          "source": {
+            "id": "9",
+            "name": "apt",
+            "version": "1.6.11",
+            "kind": "source",
+            "source": null
           }
         },
-        &quot;distribution&quot;: {
-          &quot;id&quot;: &quot;1&quot;,
-          &quot;did&quot;: &quot;ubuntu&quot;,
-          &quot;name&quot;: &quot;Ubuntu&quot;,
-          &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-          &quot;version_code_name&quot;: &quot;bionic&quot;,
-          &quot;version_id&quot;: &quot;18.04&quot;,
-          &quot;arch&quot;: &quot;&quot;,
-          &quot;cpe&quot;: &quot;&quot;,
-          &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+        "distribution": {
+          "id": "1",
+          "did": "ubuntu",
+          "name": "Ubuntu",
+          "version": "18.04.3 LTS (Bionic Beaver)",
+          "version_code_name": "bionic",
+          "version_id": "18.04",
+          "arch": "",
+          "cpe": "",
+          "pretty_name": "Ubuntu 18.04.3 LTS"
         },
-        &quot;repository&quot;: {
-          &quot;id&quot;: &quot;string&quot;,
-          &quot;name&quot;: &quot;string&quot;,
-          &quot;key&quot;: &quot;string&quot;,
-          &quot;uri&quot;: &quot;string&quot;,
-          &quot;cpe&quot;: &quot;string&quot;
+        "repository": {
+          "id": "string",
+          "name": "string",
+          "key": "string",
+          "uri": "string",
+          "cpe": "string"
         }
       }
     }
@@ -1234,7 +1234,7 @@ This operation does not require authentication
 <p>PagedNotifications</p>
 <h3 id="properties-1"><a class="header" href="#properties-1">Properties</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
-<tr><td>page</td><td>object</td><td>false</td><td>none</td><td>A page object informing the client the next page to retrieve. If page.next becomes &quot;-1&quot; the client should stop paging.</td></tr>
+<tr><td>page</td><td>object</td><td>false</td><td>none</td><td>A page object informing the client the next page to retrieve. If page.next becomes "-1" the client should stop paging.</td></tr>
 <tr><td>notifications</td><td>[<a href="#schemanotification">Notification</a>]</td><td>false</td><td>none</td><td>A list of notifications within this page</td></tr>
 </tbody></table>
 </div><h2 id="tocS_Callback"><a class="header" href="#tocS_Callback">Callback</a></h2>
@@ -1244,8 +1244,8 @@ This operation does not require authentication
 <a id="tocScallback"></a>
 <a id="tocscallback"></a>
 <pre><code class="language-json">{
-  &quot;notification_id&quot;: &quot;269886f3-0146-4f08-9bf7-cb1138d48643&quot;,
-  &quot;callback&quot;: &quot;http://clair-notifier/notifier/api/v1/notification/269886f3-0146-4f08-9bf7-cb1138d48643&quot;
+  "notification_id": "269886f3-0146-4f08-9bf7-cb1138d48643",
+  "callback": "http://clair-notifier/notifier/api/v1/notification/269886f3-0146-4f08-9bf7-cb1138d48643"
 }
 
 </code></pre>
@@ -1262,45 +1262,45 @@ This operation does not require authentication
 <a id="tocSvulnsummary"></a>
 <a id="tocsvulnsummary"></a>
 <pre><code class="language-json">{
-  &quot;name&quot;: &quot;CVE-2009-5155&quot;,
-  &quot;fixed_in_version&quot;: &quot;v0.0.1&quot;,
-  &quot;links&quot;: &quot;http://link-to-advisory&quot;,
-  &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
-  &quot;normalized_severity&quot;: &quot;Unknown&quot;,
-  &quot;package&quot;: {
-    &quot;id&quot;: &quot;10&quot;,
-    &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-    &quot;version&quot;: &quot;1.6.11&quot;,
-    &quot;kind&quot;: &quot;binary&quot;,
-    &quot;normalized_version&quot;: &quot;&quot;,
-    &quot;arch&quot;: &quot;x86&quot;,
-    &quot;module&quot;: &quot;&quot;,
-    &quot;cpe&quot;: &quot;&quot;,
-    &quot;source&quot;: {
-      &quot;id&quot;: &quot;9&quot;,
-      &quot;name&quot;: &quot;apt&quot;,
-      &quot;version&quot;: &quot;1.6.11&quot;,
-      &quot;kind&quot;: &quot;source&quot;,
-      &quot;source&quot;: null
+  "name": "CVE-2009-5155",
+  "fixed_in_version": "v0.0.1",
+  "links": "http://link-to-advisory",
+  "description": "In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\"",
+  "normalized_severity": "Unknown",
+  "package": {
+    "id": "10",
+    "name": "libapt-pkg5.0",
+    "version": "1.6.11",
+    "kind": "binary",
+    "normalized_version": "",
+    "arch": "x86",
+    "module": "",
+    "cpe": "",
+    "source": {
+      "id": "9",
+      "name": "apt",
+      "version": "1.6.11",
+      "kind": "source",
+      "source": null
     }
   },
-  &quot;distribution&quot;: {
-    &quot;id&quot;: &quot;1&quot;,
-    &quot;did&quot;: &quot;ubuntu&quot;,
-    &quot;name&quot;: &quot;Ubuntu&quot;,
-    &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-    &quot;version_code_name&quot;: &quot;bionic&quot;,
-    &quot;version_id&quot;: &quot;18.04&quot;,
-    &quot;arch&quot;: &quot;&quot;,
-    &quot;cpe&quot;: &quot;&quot;,
-    &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+  "distribution": {
+    "id": "1",
+    "did": "ubuntu",
+    "name": "Ubuntu",
+    "version": "18.04.3 LTS (Bionic Beaver)",
+    "version_code_name": "bionic",
+    "version_id": "18.04",
+    "arch": "",
+    "cpe": "",
+    "pretty_name": "Ubuntu 18.04.3 LTS"
   },
-  &quot;repository&quot;: {
-    &quot;id&quot;: &quot;string&quot;,
-    &quot;name&quot;: &quot;string&quot;,
-    &quot;key&quot;: &quot;string&quot;,
-    &quot;uri&quot;: &quot;string&quot;,
-    &quot;cpe&quot;: &quot;string&quot;
+  "repository": {
+    "id": "string",
+    "name": "string",
+    "key": "string",
+    "uri": "string",
+    "cpe": "string"
   }
 }
 
@@ -1334,49 +1334,49 @@ This operation does not require authentication
 <a id="tocSnotification"></a>
 <a id="tocsnotification"></a>
 <pre><code class="language-json">{
-  &quot;id&quot;: &quot;5e4b387e-88d3-4364-86fd-063447a6fad2&quot;,
-  &quot;manifest&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
-  &quot;reason&quot;: &quot;added&quot;,
-  &quot;vulnerability&quot;: {
-    &quot;name&quot;: &quot;CVE-2009-5155&quot;,
-    &quot;fixed_in_version&quot;: &quot;v0.0.1&quot;,
-    &quot;links&quot;: &quot;http://link-to-advisory&quot;,
-    &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
-    &quot;normalized_severity&quot;: &quot;Unknown&quot;,
-    &quot;package&quot;: {
-      &quot;id&quot;: &quot;10&quot;,
-      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-      &quot;version&quot;: &quot;1.6.11&quot;,
-      &quot;kind&quot;: &quot;binary&quot;,
-      &quot;normalized_version&quot;: &quot;&quot;,
-      &quot;arch&quot;: &quot;x86&quot;,
-      &quot;module&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;source&quot;: {
-        &quot;id&quot;: &quot;9&quot;,
-        &quot;name&quot;: &quot;apt&quot;,
-        &quot;version&quot;: &quot;1.6.11&quot;,
-        &quot;kind&quot;: &quot;source&quot;,
-        &quot;source&quot;: null
+  "id": "5e4b387e-88d3-4364-86fd-063447a6fad2",
+  "manifest": "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a",
+  "reason": "added",
+  "vulnerability": {
+    "name": "CVE-2009-5155",
+    "fixed_in_version": "v0.0.1",
+    "links": "http://link-to-advisory",
+    "description": "In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\"",
+    "normalized_severity": "Unknown",
+    "package": {
+      "id": "10",
+      "name": "libapt-pkg5.0",
+      "version": "1.6.11",
+      "kind": "binary",
+      "normalized_version": "",
+      "arch": "x86",
+      "module": "",
+      "cpe": "",
+      "source": {
+        "id": "9",
+        "name": "apt",
+        "version": "1.6.11",
+        "kind": "source",
+        "source": null
       }
     },
-    &quot;distribution&quot;: {
-      &quot;id&quot;: &quot;1&quot;,
-      &quot;did&quot;: &quot;ubuntu&quot;,
-      &quot;name&quot;: &quot;Ubuntu&quot;,
-      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-      &quot;version_code_name&quot;: &quot;bionic&quot;,
-      &quot;version_id&quot;: &quot;18.04&quot;,
-      &quot;arch&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+    "distribution": {
+      "id": "1",
+      "did": "ubuntu",
+      "name": "Ubuntu",
+      "version": "18.04.3 LTS (Bionic Beaver)",
+      "version_code_name": "bionic",
+      "version_id": "18.04",
+      "arch": "",
+      "cpe": "",
+      "pretty_name": "Ubuntu 18.04.3 LTS"
     },
-    &quot;repository&quot;: {
-      &quot;id&quot;: &quot;string&quot;,
-      &quot;name&quot;: &quot;string&quot;,
-      &quot;key&quot;: &quot;string&quot;,
-      &quot;uri&quot;: &quot;string&quot;,
-      &quot;cpe&quot;: &quot;string&quot;
+    "repository": {
+      "id": "string",
+      "name": "string",
+      "key": "string",
+      "uri": "string",
+      "cpe": "string"
     }
   }
 }
@@ -1397,9 +1397,9 @@ This operation does not require authentication
 <a id="tocSenvironment"></a>
 <a id="tocsenvironment"></a>
 <pre><code class="language-json">{
-  &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
-  &quot;introduced_in&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;distribution_id&quot;: &quot;1&quot;
+  "package_db": "var/lib/dpkg/status",
+  "introduced_in": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "distribution_id": "1"
 }
 
 </code></pre>
@@ -1417,51 +1417,51 @@ This operation does not require authentication
 <a id="tocSindexreport"></a>
 <a id="tocsindexreport"></a>
 <pre><code class="language-json">{
-  &quot;manifest_hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;state&quot;: &quot;IndexFinished&quot;,
-  &quot;packages&quot;: {
-    &quot;10&quot;: {
-      &quot;id&quot;: &quot;10&quot;,
-      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-      &quot;version&quot;: &quot;1.6.11&quot;,
-      &quot;kind&quot;: &quot;binary&quot;,
-      &quot;normalized_version&quot;: &quot;&quot;,
-      &quot;arch&quot;: &quot;x86&quot;,
-      &quot;module&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;source&quot;: {
-        &quot;id&quot;: &quot;9&quot;,
-        &quot;name&quot;: &quot;apt&quot;,
-        &quot;version&quot;: &quot;1.6.11&quot;,
-        &quot;kind&quot;: &quot;source&quot;,
-        &quot;source&quot;: null
+  "manifest_hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "state": "IndexFinished",
+  "packages": {
+    "10": {
+      "id": "10",
+      "name": "libapt-pkg5.0",
+      "version": "1.6.11",
+      "kind": "binary",
+      "normalized_version": "",
+      "arch": "x86",
+      "module": "",
+      "cpe": "",
+      "source": {
+        "id": "9",
+        "name": "apt",
+        "version": "1.6.11",
+        "kind": "source",
+        "source": null
       }
     }
   },
-  &quot;distributions&quot;: {
-    &quot;1&quot;: {
-      &quot;id&quot;: &quot;1&quot;,
-      &quot;did&quot;: &quot;ubuntu&quot;,
-      &quot;name&quot;: &quot;Ubuntu&quot;,
-      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-      &quot;version_code_name&quot;: &quot;bionic&quot;,
-      &quot;version_id&quot;: &quot;18.04&quot;,
-      &quot;arch&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+  "distributions": {
+    "1": {
+      "id": "1",
+      "did": "ubuntu",
+      "name": "Ubuntu",
+      "version": "18.04.3 LTS (Bionic Beaver)",
+      "version_code_name": "bionic",
+      "version_id": "18.04",
+      "arch": "",
+      "cpe": "",
+      "pretty_name": "Ubuntu 18.04.3 LTS"
     }
   },
-  &quot;environments&quot;: {
-    &quot;10&quot;: [
+  "environments": {
+    "10": [
       {
-        &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
-        &quot;introduced_in&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
-        &quot;distribution_id&quot;: &quot;1&quot;
+        "package_db": "var/lib/dpkg/status",
+        "introduced_in": "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a",
+        "distribution_id": "1"
       }
     ]
   },
-  &quot;success&quot;: true,
-  &quot;err&quot;: &quot;&quot;
+  "success": true,
+  "err": ""
 }
 
 </code></pre>
@@ -1486,90 +1486,90 @@ This operation does not require authentication
 <a id="tocSvulnerabilityreport"></a>
 <a id="tocsvulnerabilityreport"></a>
 <pre><code class="language-json">{
-  &quot;manifest_hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;packages&quot;: {
-    &quot;10&quot;: {
-      &quot;id&quot;: &quot;10&quot;,
-      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-      &quot;version&quot;: &quot;1.6.11&quot;,
-      &quot;kind&quot;: &quot;binary&quot;,
-      &quot;normalized_version&quot;: &quot;&quot;,
-      &quot;arch&quot;: &quot;x86&quot;,
-      &quot;module&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;source&quot;: {
-        &quot;id&quot;: &quot;9&quot;,
-        &quot;name&quot;: &quot;apt&quot;,
-        &quot;version&quot;: &quot;1.6.11&quot;,
-        &quot;kind&quot;: &quot;source&quot;,
-        &quot;source&quot;: null
+  "manifest_hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "packages": {
+    "10": {
+      "id": "10",
+      "name": "libapt-pkg5.0",
+      "version": "1.6.11",
+      "kind": "binary",
+      "normalized_version": "",
+      "arch": "x86",
+      "module": "",
+      "cpe": "",
+      "source": {
+        "id": "9",
+        "name": "apt",
+        "version": "1.6.11",
+        "kind": "source",
+        "source": null
       }
     }
   },
-  &quot;distributions&quot;: {
-    &quot;1&quot;: {
-      &quot;id&quot;: &quot;1&quot;,
-      &quot;did&quot;: &quot;ubuntu&quot;,
-      &quot;name&quot;: &quot;Ubuntu&quot;,
-      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-      &quot;version_code_name&quot;: &quot;bionic&quot;,
-      &quot;version_id&quot;: &quot;18.04&quot;,
-      &quot;arch&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+  "distributions": {
+    "1": {
+      "id": "1",
+      "did": "ubuntu",
+      "name": "Ubuntu",
+      "version": "18.04.3 LTS (Bionic Beaver)",
+      "version_code_name": "bionic",
+      "version_id": "18.04",
+      "arch": "",
+      "cpe": "",
+      "pretty_name": "Ubuntu 18.04.3 LTS"
     }
   },
-  &quot;environments&quot;: {
-    &quot;10&quot;: [
+  "environments": {
+    "10": [
       {
-        &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
-        &quot;introduced_in&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
-        &quot;distribution_id&quot;: &quot;1&quot;
+        "package_db": "var/lib/dpkg/status",
+        "introduced_in": "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a",
+        "distribution_id": "1"
       }
     ]
   },
-  &quot;vulnerabilities&quot;: {
-    &quot;356835&quot;: {
-      &quot;id&quot;: &quot;356835&quot;,
-      &quot;updater&quot;: &quot;&quot;,
-      &quot;name&quot;: &quot;CVE-2009-5155&quot;,
-      &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
-      &quot;links&quot;: &quot;https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986\&quot;&quot;,
-      &quot;severity&quot;: &quot;Low&quot;,
-      &quot;normalized_severity&quot;: &quot;Low&quot;,
-      &quot;package&quot;: {
-        &quot;id&quot;: &quot;0&quot;,
-        &quot;name&quot;: &quot;glibc&quot;,
-        &quot;version&quot;: &quot;&quot;,
-        &quot;kind&quot;: &quot;&quot;,
-        &quot;source&quot;: null,
-        &quot;package_db&quot;: &quot;&quot;,
-        &quot;repository_hint&quot;: &quot;&quot;
+  "vulnerabilities": {
+    "356835": {
+      "id": "356835",
+      "updater": "",
+      "name": "CVE-2009-5155",
+      "description": "In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\"",
+      "links": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986\"",
+      "severity": "Low",
+      "normalized_severity": "Low",
+      "package": {
+        "id": "0",
+        "name": "glibc",
+        "version": "",
+        "kind": "",
+        "source": null,
+        "package_db": "",
+        "repository_hint": ""
       },
-      &quot;dist&quot;: {
-        &quot;id&quot;: &quot;0&quot;,
-        &quot;did&quot;: &quot;ubuntu&quot;,
-        &quot;name&quot;: &quot;Ubuntu&quot;,
-        &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-        &quot;version_code_name&quot;: &quot;bionic&quot;,
-        &quot;version_id&quot;: &quot;18.04&quot;,
-        &quot;arch&quot;: &quot;&quot;,
-        &quot;cpe&quot;: &quot;&quot;,
-        &quot;pretty_name&quot;: &quot;&quot;
+      "dist": {
+        "id": "0",
+        "did": "ubuntu",
+        "name": "Ubuntu",
+        "version": "18.04.3 LTS (Bionic Beaver)",
+        "version_code_name": "bionic",
+        "version_id": "18.04",
+        "arch": "",
+        "cpe": "",
+        "pretty_name": ""
       },
-      &quot;repo&quot;: {
-        &quot;id&quot;: &quot;0&quot;,
-        &quot;name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;,
-        &quot;key&quot;: &quot;&quot;,
-        &quot;uri&quot;: &quot;&quot;
+      "repo": {
+        "id": "0",
+        "name": "Ubuntu 18.04.3 LTS",
+        "key": "",
+        "uri": ""
       },
-      &quot;issued&quot;: &quot;2019-10-12T07:20:50.52Z&quot;,
-      &quot;fixed_in_version&quot;: &quot;2.28-0ubuntu1&quot;
+      "issued": "2019-10-12T07:20:50.52Z",
+      "fixed_in_version": "2.28-0ubuntu1"
     }
   },
-  &quot;package_vulnerabilities&quot;: {
-    &quot;10&quot;: [
-      &quot;356835&quot;
+  "package_vulnerabilities": {
+    "10": [
+      "356835"
     ]
   }
 }
@@ -1597,42 +1597,42 @@ This operation does not require authentication
 <a id="tocSvulnerability"></a>
 <a id="tocsvulnerability"></a>
 <pre><code class="language-json">{
-  &quot;id&quot;: &quot;356835&quot;,
-  &quot;updater&quot;: &quot;&quot;,
-  &quot;name&quot;: &quot;CVE-2009-5155&quot;,
-  &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
-  &quot;links&quot;: &quot;https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986\&quot;&quot;,
-  &quot;severity&quot;: &quot;Low&quot;,
-  &quot;normalized_severity&quot;: &quot;Low&quot;,
-  &quot;package&quot;: {
-    &quot;id&quot;: &quot;0&quot;,
-    &quot;name&quot;: &quot;glibc&quot;,
-    &quot;version&quot;: &quot;&quot;,
-    &quot;kind&quot;: &quot;&quot;,
-    &quot;source&quot;: null,
-    &quot;package_db&quot;: &quot;&quot;,
-    &quot;repository_hint&quot;: &quot;&quot;
+  "id": "356835",
+  "updater": "",
+  "name": "CVE-2009-5155",
+  "description": "In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\"",
+  "links": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986\"",
+  "severity": "Low",
+  "normalized_severity": "Low",
+  "package": {
+    "id": "0",
+    "name": "glibc",
+    "version": "",
+    "kind": "",
+    "source": null,
+    "package_db": "",
+    "repository_hint": ""
   },
-  &quot;dist&quot;: {
-    &quot;id&quot;: &quot;0&quot;,
-    &quot;did&quot;: &quot;ubuntu&quot;,
-    &quot;name&quot;: &quot;Ubuntu&quot;,
-    &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-    &quot;version_code_name&quot;: &quot;bionic&quot;,
-    &quot;version_id&quot;: &quot;18.04&quot;,
-    &quot;arch&quot;: &quot;&quot;,
-    &quot;cpe&quot;: &quot;&quot;,
-    &quot;pretty_name&quot;: &quot;&quot;
+  "dist": {
+    "id": "0",
+    "did": "ubuntu",
+    "name": "Ubuntu",
+    "version": "18.04.3 LTS (Bionic Beaver)",
+    "version_code_name": "bionic",
+    "version_id": "18.04",
+    "arch": "",
+    "cpe": "",
+    "pretty_name": ""
   },
-  &quot;repo&quot;: {
-    &quot;id&quot;: &quot;0&quot;,
-    &quot;name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;,
-    &quot;key&quot;: &quot;&quot;,
-    &quot;uri&quot;: &quot;&quot;
+  "repo": {
+    "id": "0",
+    "name": "Ubuntu 18.04.3 LTS",
+    "key": "",
+    "uri": ""
   },
-  &quot;issued&quot;: &quot;2019-10-12T07:20:50.52Z&quot;,
-  &quot;fixed_in_version&quot;: &quot;2.28-0ubuntu1&quot;,
-  &quot;x-widdershins-oldRef&quot;: &quot;#/components/examples/Vulnerability/value&quot;
+  "issued": "2019-10-12T07:20:50.52Z",
+  "fixed_in_version": "2.28-0ubuntu1",
+  "x-widdershins-oldRef": "#/components/examples/Vulnerability/value"
 }
 
 </code></pre>
@@ -1670,16 +1670,16 @@ This operation does not require authentication
 <a id="tocSdistribution"></a>
 <a id="tocsdistribution"></a>
 <pre><code class="language-json">{
-  &quot;id&quot;: &quot;1&quot;,
-  &quot;did&quot;: &quot;ubuntu&quot;,
-  &quot;name&quot;: &quot;Ubuntu&quot;,
-  &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-  &quot;version_code_name&quot;: &quot;bionic&quot;,
-  &quot;version_id&quot;: &quot;18.04&quot;,
-  &quot;arch&quot;: &quot;&quot;,
-  &quot;cpe&quot;: &quot;&quot;,
-  &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;,
-  &quot;x-widdershins-oldRef&quot;: &quot;#/components/examples/Distribution/value&quot;
+  "id": "1",
+  "did": "ubuntu",
+  "name": "Ubuntu",
+  "version": "18.04.3 LTS (Bionic Beaver)",
+  "version_code_name": "bionic",
+  "version_id": "18.04",
+  "arch": "",
+  "cpe": "",
+  "pretty_name": "Ubuntu 18.04.3 LTS",
+  "x-widdershins-oldRef": "#/components/examples/Distribution/value"
 }
 
 </code></pre>
@@ -1703,22 +1703,22 @@ This operation does not require authentication
 <a id="tocSsourcepackage"></a>
 <a id="tocssourcepackage"></a>
 <pre><code class="language-json">{
-  &quot;id&quot;: &quot;10&quot;,
-  &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-  &quot;version&quot;: &quot;1.6.11&quot;,
-  &quot;kind&quot;: &quot;binary&quot;,
-  &quot;normalized_version&quot;: &quot;&quot;,
-  &quot;arch&quot;: &quot;x86&quot;,
-  &quot;module&quot;: &quot;&quot;,
-  &quot;cpe&quot;: &quot;&quot;,
-  &quot;source&quot;: {
-    &quot;id&quot;: &quot;9&quot;,
-    &quot;name&quot;: &quot;apt&quot;,
-    &quot;version&quot;: &quot;1.6.11&quot;,
-    &quot;kind&quot;: &quot;source&quot;,
-    &quot;source&quot;: null
+  "id": "10",
+  "name": "libapt-pkg5.0",
+  "version": "1.6.11",
+  "kind": "binary",
+  "normalized_version": "",
+  "arch": "x86",
+  "module": "",
+  "cpe": "",
+  "source": {
+    "id": "9",
+    "name": "apt",
+    "version": "1.6.11",
+    "kind": "source",
+    "source": null
   },
-  &quot;x-widdershins-oldRef&quot;: &quot;#/components/examples/Package/value&quot;
+  "x-widdershins-oldRef": "#/components/examples/Package/value"
 }
 
 </code></pre>
@@ -1730,7 +1730,7 @@ This operation does not require authentication
 <tr><td>version</td><td>string</td><td>true</td><td>none</td><td>Version of the Package</td></tr>
 <tr><td>kind</td><td>string</td><td>false</td><td>none</td><td>Kind of package. Source</td></tr>
 <tr><td>source</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
-<tr><td>normalized_version</td><td><a href="#schemaversion">Version</a></td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a &quot;kind&quot; and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.</td></tr>
+<tr><td>normalized_version</td><td><a href="#schemaversion">Version</a></td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a "kind" and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.</td></tr>
 <tr><td>arch</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
 <tr><td>module</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
 <tr><td>cpe</td><td>string</td><td>false</td><td>none</td><td>A CPE identifying the package</td></tr>
@@ -1742,22 +1742,22 @@ This operation does not require authentication
 <a id="tocSpackage"></a>
 <a id="tocspackage"></a>
 <pre><code class="language-json">{
-  &quot;id&quot;: &quot;10&quot;,
-  &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-  &quot;version&quot;: &quot;1.6.11&quot;,
-  &quot;kind&quot;: &quot;binary&quot;,
-  &quot;normalized_version&quot;: &quot;&quot;,
-  &quot;arch&quot;: &quot;x86&quot;,
-  &quot;module&quot;: &quot;&quot;,
-  &quot;cpe&quot;: &quot;&quot;,
-  &quot;source&quot;: {
-    &quot;id&quot;: &quot;9&quot;,
-    &quot;name&quot;: &quot;apt&quot;,
-    &quot;version&quot;: &quot;1.6.11&quot;,
-    &quot;kind&quot;: &quot;source&quot;,
-    &quot;source&quot;: null
+  "id": "10",
+  "name": "libapt-pkg5.0",
+  "version": "1.6.11",
+  "kind": "binary",
+  "normalized_version": "",
+  "arch": "x86",
+  "module": "",
+  "cpe": "",
+  "source": {
+    "id": "9",
+    "name": "apt",
+    "version": "1.6.11",
+    "kind": "source",
+    "source": null
   },
-  &quot;x-widdershins-oldRef&quot;: &quot;#/components/examples/Package/value&quot;
+  "x-widdershins-oldRef": "#/components/examples/Package/value"
 }
 
 </code></pre>
@@ -1769,7 +1769,7 @@ This operation does not require authentication
 <tr><td>version</td><td>string</td><td>true</td><td>none</td><td>Version of the Package</td></tr>
 <tr><td>kind</td><td>string</td><td>false</td><td>none</td><td>Kind of package. Source</td></tr>
 <tr><td>source</td><td><a href="#schemasourcepackage">SourcePackage</a></td><td>false</td><td>none</td><td>A source package affiliated with a Package</td></tr>
-<tr><td>normalized_version</td><td><a href="#schemaversion">Version</a></td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a &quot;kind&quot; and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.</td></tr>
+<tr><td>normalized_version</td><td><a href="#schemaversion">Version</a></td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a "kind" and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.</td></tr>
 <tr><td>arch</td><td>string</td><td>false</td><td>none</td><td>The package's target system architecture</td></tr>
 <tr><td>module</td><td>string</td><td>false</td><td>none</td><td>A module further defining a namespace for a package</td></tr>
 <tr><td>cpe</td><td>string</td><td>false</td><td>none</td><td>A CPE identifying the package</td></tr>
@@ -1781,11 +1781,11 @@ This operation does not require authentication
 <a id="tocSrepository"></a>
 <a id="tocsrepository"></a>
 <pre><code class="language-json">{
-  &quot;id&quot;: &quot;string&quot;,
-  &quot;name&quot;: &quot;string&quot;,
-  &quot;key&quot;: &quot;string&quot;,
-  &quot;uri&quot;: &quot;string&quot;,
-  &quot;cpe&quot;: &quot;string&quot;
+  "id": "string",
+  "name": "string",
+  "key": "string",
+  "uri": "string",
+  "cpe": "string"
 }
 
 </code></pre>
@@ -1804,13 +1804,13 @@ This operation does not require authentication
 <a id="schema_Version"></a>
 <a id="tocSversion"></a>
 <a id="tocsversion"></a>
-<pre><code class="language-json">&quot;pep440:0.0.0.0.0.0.0.0.0&quot;
+<pre><code class="language-json">"pep440:0.0.0.0.0.0.0.0.0"
 
 </code></pre>
 <p>Version</p>
 <h3 id="properties-13"><a class="header" href="#properties-13">Properties</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
-<tr><td>Version</td><td>string</td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a &quot;kind&quot; and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.</td></tr>
+<tr><td>Version</td><td>string</td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a "kind" and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.</td></tr>
 </tbody></table>
 </div><h2 id="tocS_Manifest"><a class="header" href="#tocS_Manifest">Manifest</a></h2>
 <!-- backwards compatibility -->
@@ -1819,17 +1819,17 @@ This operation does not require authentication
 <a id="tocSmanifest"></a>
 <a id="tocsmanifest"></a>
 <pre><code class="language-json">{
-  &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;layers&quot;: [
+  "hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "layers": [
     {
-      &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-      &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36&quot;,
-      &quot;headers&quot;: {
-        &quot;property1&quot;: [
-          &quot;string&quot;
+      "hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+      "uri": "https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36",
+      "headers": {
+        "property1": [
+          "string"
         ],
-        &quot;property2&quot;: [
-          &quot;string&quot;
+        "property2": [
+          "string"
         ]
       }
     }
@@ -1850,14 +1850,14 @@ This operation does not require authentication
 <a id="tocSlayer"></a>
 <a id="tocslayer"></a>
 <pre><code class="language-json">{
-  &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36&quot;,
-  &quot;headers&quot;: {
-    &quot;property1&quot;: [
-      &quot;string&quot;
+  "hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "uri": "https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36",
+  "headers": {
+    "property1": [
+      "string"
     ],
-    &quot;property2&quot;: [
-      &quot;string&quot;
+    "property2": [
+      "string"
     ]
   }
 }
@@ -1878,7 +1878,7 @@ This operation does not require authentication
 <a id="tocSbulkdelete"></a>
 <a id="tocsbulkdelete"></a>
 <pre><code class="language-json">[
-  &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;
+  "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3"
 ]
 
 </code></pre>
@@ -1894,8 +1894,8 @@ This operation does not require authentication
 <a id="tocSerror"></a>
 <a id="tocserror"></a>
 <pre><code class="language-json">{
-  &quot;code&quot;: &quot;string&quot;,
-  &quot;message&quot;: &quot;string&quot;
+  "code": "string",
+  "message": "string"
 }
 
 </code></pre>
@@ -1912,7 +1912,7 @@ This operation does not require authentication
 <a id="tocSstate"></a>
 <a id="tocsstate"></a>
 <pre><code class="language-json">{
-  &quot;state&quot;: &quot;aae368a064d7c5a433d0bf2c4f5554cc&quot;
+  "state": "aae368a064d7c5a433d0bf2c4f5554cc"
 }
 
 </code></pre>
@@ -1927,7 +1927,7 @@ This operation does not require authentication
 <a id="schema_Digest"></a>
 <a id="tocSdigest"></a>
 <a id="tocsdigest"></a>
-<pre><code class="language-json">&quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;
+<pre><code class="language-json">"sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3"
 
 </code></pre>
 <p>Digest</p>

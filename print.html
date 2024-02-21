@@ -193,21 +193,21 @@
 </ul>
 <p>The above list defines Clair's current support matrix.</p>
 <h2 id="architecture"><a class="header" href="#architecture">Architecture</a></h2>
-<p>Clair v4 utilizes the <a href="https://quay.github.io/claircore/">ClairCore</a> library as its engine for examining contents and reporting vulnerabilities. At a high level you can consider Clair a service wrapper to the functionality provided in the ClairCore library. </p>
+<p>Clair v4 utilizes the <a href="https://quay.github.io/claircore/">ClairCore</a> library as its engine for examining contents and reporting vulnerabilities. At a high level you can consider Clair a service wrapper to the functionality provided in the ClairCore library.</p>
 <p><img src="./clairv4_arch.png" alt="diagram of clairV4 highlevel architecture" /></p>
 <p>The above diagram expresses the separation of concerns between Clair and the ClairCore library. Most development involving new distributions, vulnerability sources, and layer indexing will occur in ClairCore.</p>
 <h2 id="how-clair-works"><a class="header" href="#how-clair-works">How Clair Works</a></h2>
 <p>Clair's analysis is broken into three distinct parts.</p>
 <h3 id="indexing"><a class="header" href="#indexing">Indexing</a></h3>
-<p>Indexing starts with submitting a Manifest to Clair. On receipt, Clair will fetch layers, scan their contents, and return an intermediate representation called an IndexReport. </p>
+<p>Indexing starts with submitting a Manifest to Clair. On receipt, Clair will fetch layers, scan their contents, and return an intermediate representation called an IndexReport.</p>
 <p>Manifests are Clair's representation of a container image. Clair leverages the fact that OCI Manifests and Layers are content-addressed to reduce duplicated work.</p>
-<p>Once a Manifest is indexed, the IndexReport is persisted for later retrieval. </p>
+<p>Once a Manifest is indexed, the IndexReport is persisted for later retrieval.</p>
 <h3 id="matching"><a class="header" href="#matching">Matching</a></h3>
-<p>Matching is taking an IndexReport and correlating vulnerabilities affecting the manifest the report represents. </p>
+<p>Matching is taking an IndexReport and correlating vulnerabilities affecting the manifest the report represents.</p>
 <p>Clair is continually ingesting new security data and a request to the matcher will always provide you with the most up to date vulnerability analysis of an IndexReport.</p>
 <p><em>How we implement indexing and matching in detail is covered in <a href="https://quay.github.io/claircore/">ClairCore's</a> documentation.</em></p>
 <h3 id="notifications"><a class="header" href="#notifications">Notifications</a></h3>
-<p>Clair implements a notification service. </p>
+<p>Clair implements a notification service.</p>
 <p>When new vulnerabilities are discovered, the notifier service will determine if these vulnerabilities affect any indexed Manifests. The notifier will then take action according to its configuration.</p>
 <h3 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h3>
 <p>At this point you'll probably want to check out <a href="./howto/getting_started.html">Getting Started With Clair</a>.</p>
@@ -232,17 +232,17 @@ and version tags are built from the corresponding release.</p>
 <p>The easiest way to get Clair up and running for test purposes is to use our <a href="howto/./testing.html">local dev environment</a></p>
 <p>If you're the hands on type who wants to get into the details however, continue reading.</p>
 <h2 id="modes"><a class="header" href="#modes">Modes</a></h2>
-<p>Clair can run in several modes. <a href="howto/../reference/indexer.html">Indexer</a>, <a href="howto/../reference/matcher.html">matcher</a>, <a href="howto/../reference/notifier.html">notifier</a> or combo mode. In combo mode, everything runs in a single OS process. </p>
-<p>If you are just starting with Clair you will most likely want to start with combo mode and venture out to a distributed deployment once acquainted. </p>
+<p>Clair can run in several modes. <a href="howto/../reference/indexer.html">Indexer</a>, <a href="howto/../reference/matcher.html">matcher</a>, <a href="howto/../reference/notifier.html">notifier</a> or combo mode. In combo mode, everything runs in a single OS process.</p>
+<p>If you are just starting with Clair you will most likely want to start with combo mode and venture out to a distributed deployment once acquainted.</p>
 <p>This how-to will demonstrate combo mode and introduce some further reading on a distributed deployment.</p>
 <h2 id="postgres"><a class="header" href="#postgres">Postgres</a></h2>
 <p>Clair uses PostgreSQL for its data persistence. Migrations are supported so you should only need to point Clair to a fresh database and have it do the setup for you.</p>
 <p>We will assume you have setup a postgres database and it's reachable with the following connection string:
-<code>host=clair-db port=5432 user=clair dbname=clair sslmode=disable</code>. Adjust for your environment accordingly. </p>
+<code>host=clair-db port=5432 user=clair dbname=clair sslmode=disable</code>. Adjust for your environment accordingly.</p>
 <h2 id="starting-clair-in-combo-mode"><a class="header" href="#starting-clair-in-combo-mode">Starting Clair In Combo Mode</a></h2>
-<p>At this point, you should either have built Clair from source or have pulled the container. In either case, we will assume that the <code>clair-db</code> hostname will resolve to your postgres database. </p>
+<p>At this point, you should either have built Clair from source or have pulled the container. In either case, we will assume that the <code>clair-db</code> hostname will resolve to your postgres database.</p>
 <p><em>You may need to configure <a href="https://docs.docker.com/network/">docker</a> or <a href="https://podman.io/getting-started/network.html">podman</a> networking if you are utilizing containers. This is out of scope for this how-to.</em></p>
-<p>A basic config for combo mode can be found <a href="https://github.com/quay/clair/blob/main/config.yaml.sample">here</a>. Make sure to edit this config with your database settings and set &quot;migrations&quot; to <code>true</code> for all mode stanzas. In this basic combo mode, all &quot;connstring&quot; fields should point to the same database and any *_addr fields are simply ignored. For more details see the <a href="howto/../reference/config.html">config reference</a> and <a href="howto/./deployment.html">deployment models</a></p>
+<p>A basic config for combo mode can be found <a href="https://github.com/quay/clair/blob/main/config.yaml.sample">here</a>. Make sure to edit this config with your database settings and set "migrations" to <code>true</code> for all mode stanzas. In this basic combo mode, all "connstring" fields should point to the same database and any *_addr fields are simply ignored. For more details see the <a href="howto/../reference/config.html">config reference</a> and <a href="howto/./deployment.html">deployment models</a></p>
 <p>Clair has 3 requirements to start:</p>
 <ul>
 <li>The <code>mode</code> flag or <code>CLAIR_MODE</code> environment variable specifying what mode this instance will run in.</li>
@@ -254,10 +254,10 @@ and version tags are built from the corresponding release.</p>
 CLAIR_CONF=/path/to/mounted/config.yaml
 </code></pre>
 <p>If you are running a Clair binary directly, its likely easiest to use the command line.</p>
-<pre><code>clair -conf &quot;path/to/config.yaml&quot; -mode &quot;combo&quot;
+<pre><code>clair -conf "path/to/config.yaml" -mode "combo"
 </code></pre>
 <h2 id="submitting-a-manifest"><a class="header" href="#submitting-a-manifest">Submitting A Manifest</a></h2>
-<p>The simplest way to submit a manifest to your running Clair is utilizing <a href="howto/../reference/clairctl.html">clairctl</a>. This is a CLI tool capable of grabbing image manifests from public repositories and and submitting them for analysis. 
+<p>The simplest way to submit a manifest to your running Clair is utilizing <a href="howto/../reference/clairctl.html">clairctl</a>. This is a CLI tool capable of grabbing image manifests from public repositories and and submitting them for analysis.
 The command will be in the Clair container, but can also be installed locally by running the following command:</p>
 <pre><code>go install github.com/quay/clair/v4/cmd/clairctl@latest
 </code></pre>
@@ -308,72 +308,72 @@ Consult the relevant documentation for more information.</p>
 <p>Before jumping directly into the models its important to note that Clair is designed to use a single configuration file across all node types. This design decision makes it very easy to deploy on systems like Kubernetes and OpenShift.</p>
 <p>See <a href="howto/../reference/config.html">Config Reference</a></p>
 <h2 id="combined-deployment"><a class="header" href="#combined-deployment">Combined Deployment</a></h2>
-<p>In a combined deployment, all the Clair processes run in a single OS process. This is by far the easiest deployment model to configure as it involves the least moving parts. </p>
+<p>In a combined deployment, all the Clair processes run in a single OS process. This is by far the easiest deployment model to configure as it involves the least moving parts.</p>
 <p>A load balancer is still recommended if you plan on performing TLS termination. Typically this will be a OpenShift route or a Kubernetes ingress.</p>
 <p><img src="howto/./clairv4_combo_single_db.png" alt="combo mode single db deployment diagran" /></p>
 <p>In the above diagram, Clair is running in combo mode and talking to a single database. To configure this model you will provide all node types the same database and start Clair in <strong>combo</strong> mode.</p>
 <pre><code>...
 indexer:
-    connstring: &quot;host=clairdb user=pqgotest dbname=pqgotest sslmode=verify-full&quot;
+    connstring: "host=clairdb user=pqgotest dbname=pqgotest sslmode=verify-full"
 matcher:
-    connstring: &quot;host=clairdb user=pqgotest dbname=pqgotest sslmode=verify-full&quot;
+    connstring: "host=clairdb user=pqgotest dbname=pqgotest sslmode=verify-full"
     ...
 notifier:
-    connstring: &quot;host=clairdb user=pqgotest dbname=pqgotest sslmode=verify-full&quot;
+    connstring: "host=clairdb user=pqgotest dbname=pqgotest sslmode=verify-full"
     ...
 </code></pre>
 <p>In this mode, any configuration informing Clair how to talk to other nodes is ignored, it is not needed as all intra-process communication is done directly.</p>
 <p>For added flexibility, it's also supported to split the databases while in combo mode.</p>
 <p><img src="howto/./clairv4_combo_multi_db.png" alt="combo mode multiple db deployment diagran" /></p>
 <p>In the above diagram, Clair is running in combo mode but database load is split between multiple databases. Since Clair is conceptually a set of micro-services, its processes do not share database tables even when combined into the same OS process.</p>
-<p>To configure this model, you would provide each process its own &quot;connstring&quot; in the configuration. </p>
+<p>To configure this model, you would provide each process its own "connstring" in the configuration.</p>
 <pre><code>...
 indexer:
-    connstring: &quot;host=indexer-clairdb user=pqgotest dbname=pqgotest sslmode=verify-full&quot;
+    connstring: "host=indexer-clairdb user=pqgotest dbname=pqgotest sslmode=verify-full"
 matcher:
-    connstring: &quot;host=matcher-clairdb user=pqgotest dbname=pqgotest sslmode=verify-full&quot;
+    connstring: "host=matcher-clairdb user=pqgotest dbname=pqgotest sslmode=verify-full"
     ...
 notifier:
-    connstring: &quot;host=notifier-clairdb user=pqgotest dbname=pqgotest sslmode=verify-full&quot;
+    connstring: "host=notifier-clairdb user=pqgotest dbname=pqgotest sslmode=verify-full"
     ...
 </code></pre>
 <h2 id="distributed-deployment"><a class="header" href="#distributed-deployment">Distributed Deployment</a></h2>
 <p>If your application needs to asymmetrically scale or you expect high load you may want to consider a distributed deployment.</p>
 <p>In a distributed deployment, each Clair process runs in its own OS process. Typically this will be a Kubernetes or OpenShift Pod.</p>
-<p>A load balancer <strong>must</strong> be setup in this deployment model. The load balancer will route traffic between Clair nodes along with routing API requests via <a href="https://devcentral.f5.com/s/articles/the-three-http-routing-patterns-you-should-know-30764">path based routing</a> to the correct services. In a Kubernetes or OpenShift deployment this is usually handled with the Service and Routes abstractions. If deploying on bare metal, a load balancer will need to be configured appropriately. </p>
+<p>A load balancer <strong>must</strong> be setup in this deployment model. The load balancer will route traffic between Clair nodes along with routing API requests via <a href="https://devcentral.f5.com/s/articles/the-three-http-routing-patterns-you-should-know-30764">path based routing</a> to the correct services. In a Kubernetes or OpenShift deployment this is usually handled with the Service and Routes abstractions. If deploying on bare metal, a load balancer will need to be configured appropriately.</p>
 <p><img src="howto/./clairv4_distributed_multi_db.png" alt="distributed mode multiple db deployment diagran" /></p>
 <p>In the above diagram, a load balancer is configured to route traffic coming from the client to the correct service. This routing is path based routing and requires a layer 7 load balancer. Traefik, Nginx, and HAProxy are all capable of this. As mentioned above, this functionality is native to OpenShift and Kubernetes.</p>
-<p>In this configuration, you'd supply each process with database connection strings and addresses for their dependent services. Each OS process will need to have its &quot;mode&quot; CLI flag or environment variable set to the appropriate value. 
+<p>In this configuration, you'd supply each process with database connection strings and addresses for their dependent services. Each OS process will need to have its "mode" CLI flag or environment variable set to the appropriate value.
 See <a href="howto/../reference/config.html">Config Reference</a></p>
 <pre><code>...
 indexer:
-    connstring: &quot;host=indexer-clairdb user=pqgotest dbname=pqgotest sslmode=verify-full&quot;
+    connstring: "host=indexer-clairdb user=pqgotest dbname=pqgotest sslmode=verify-full"
 matcher:
-    connstring: &quot;host=matcher-clairdb user=pqgotest dbname=pqgotest sslmode=verify-full&quot;
-    indexer_addr: &quot;indexer-service&quot;
+    connstring: "host=matcher-clairdb user=pqgotest dbname=pqgotest sslmode=verify-full"
+    indexer_addr: "indexer-service"
     ...
 notifier:
-    connstring: &quot;host=notifier-clairdb user=pqgotest dbname=pqgotest sslmode=verify-full&quot;
-    indexer_addr: &quot;indexer-service&quot;
-    matcher_addr: &quot;matcher-service&quot;
+    connstring: "host=notifier-clairdb user=pqgotest dbname=pqgotest sslmode=verify-full"
+    indexer_addr: "indexer-service"
+    matcher_addr: "matcher-service"
     ...
 </code></pre>
 <p>Keep in mind a config file per process is not need. Processes only use the values necessary for their configured mode.</p>
 <h2 id="tls-termination"><a class="header" href="#tls-termination">TLS Termination</a></h2>
 <p>Currently Clair offloads TLS termination to the load balancing infrastructure. This design choice is due to the ubiquity of Kubernetes and OpenShift infrastructure already providing this facility.</p>
 <h2 id="more-on-path-routing"><a class="header" href="#more-on-path-routing">More On Path Routing</a></h2>
-<p>If you are considering a distributed deployment you will need more details on <a href="https://devcentral.f5.com/s/articles/the-three-http-routing-patterns-you-should-know-30764">path based routing</a>. </p>
+<p>If you are considering a distributed deployment you will need more details on <a href="https://devcentral.f5.com/s/articles/the-three-http-routing-patterns-you-should-know-30764">path based routing</a>.</p>
 <p>Learn how to grab our OpenAPI spec <a href="howto/./api.html">here</a> and either start up a local dev instance of the swagger editor or load the spec file into the <a href="https://petstore.swagger.io/#/">online editor</a></p>
-<p>You will notice particular API paths are grouped by the services which implement them. This is your guide to configure your layer 7 load balancer correctly. </p>
-<p>When the load balancer encounters a particular path prefix it must send those request to the correct set of Clair nodes. </p>
+<p>You will notice particular API paths are grouped by the services which implement them. This is your guide to configure your layer 7 load balancer correctly.</p>
+<p>When the load balancer encounters a particular path prefix it must send those request to the correct set of Clair nodes.</p>
 <p>For example, this is how we configure Traefik in our local development environment:</p>
-<pre><code>- &quot;traefik.enable=true&quot;
-- &quot;traefik.http.routers.notifier.entrypoints=clair&quot;
-- &quot;traefik.http.routers.notifier.rule=PathPrefix(`/notifier`)&quot;
-- &quot;traefik.http.routers.notifier.service=notifier&quot;
-- &quot;traefik.http.services.notifier.loadbalancer.server.port=6000&quot;
+<pre><code>- "traefik.enable=true"
+- "traefik.http.routers.notifier.entrypoints=clair"
+- "traefik.http.routers.notifier.rule=PathPrefix(`/notifier`)"
+- "traefik.http.routers.notifier.service=notifier"
+- "traefik.http.services.notifier.loadbalancer.server.port=6000"
 </code></pre>
-<p>This configuration is saying &quot;take any paths prefixes of /notifier/ and send them to the notifier services on port 6000&quot;</p>
+<p>This configuration is saying "take any paths prefixes of /notifier/ and send them to the notifier services on port 6000"</p>
 <p>Every load balancer will have their own way to perform path routing. Check the documentation for your infrastructure of choice.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="api-definition"><a class="header" href="#api-definition">API Definition</a></h1>
 <p>Clair provides its API definition via an OpenAPI specification. You can view our OpenAPI spec <a href="https://raw.githubusercontent.com/quay/clair/main/openapi.yaml">here</a></p>
@@ -481,20 +481,20 @@ Consult the relevant documentation for your environment for instructions.</p>
 <li><a href="./concepts/updatersandairgap.html">Updaters and Airgap</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="indexing-1"><a class="header" href="#indexing-1">Indexing</a></h1>
-<p>The <a href="concepts/../reference/indexer.html">Indexer</a> service is responsble for &quot;indexing a manifest&quot;.</p>
+<p>The <a href="concepts/../reference/indexer.html">Indexer</a> service is responsble for "indexing a manifest".</p>
 <p>Indexing involves taking a manifest representing a container image and computing its constituent parts. The indexer is trying to discover what packages exist in the image, what distribution the image is derived from, and what package repositories are used within the image. Once this information is computed it is persisted in an IndexReport.</p>
 <p>The IndexReport is an intermediate data structure describing the contents of a container image. This report can be fed to a <a href="concepts/../reference/matcher.html">Matcher</a> node for vulnerability analysis.</p>
 <h2 id="content-addressability"><a class="header" href="#content-addressability">Content Addressability</a></h2>
-<p>ClairV4 treats all manifests and layers as <a href="https://en.wikipedia.org/wiki/Content-addressable_storage">content addressable</a>. In the context of ClairV4 this means once we index a specific manifest we will not index it again unless it's required, and likewise with individual layers. This allows a large reduction in work. </p>
-<p>For example, consider how many images in a registry may use &quot;ubuntu:artful&quot; as a base layer. It could be a large majority of images if the developers prefer basing their images off ubuntu. Treating the layers and manifests as content addressable means we will only fetch and scan the base layer once.</p>
-<p>There are of course conditions where ClairV4 should re-index a manifest. </p>
-<p>When an internal component such as a package scanner is updated, Clair will know to perform the scan with the new package scanner. Clair has enough information to determine that a component has changed and the IndexReport may be different this time around. </p>
+<p>ClairV4 treats all manifests and layers as <a href="https://en.wikipedia.org/wiki/Content-addressable_storage">content addressable</a>. In the context of ClairV4 this means once we index a specific manifest we will not index it again unless it's required, and likewise with individual layers. This allows a large reduction in work.</p>
+<p>For example, consider how many images in a registry may use "ubuntu:artful" as a base layer. It could be a large majority of images if the developers prefer basing their images off ubuntu. Treating the layers and manifests as content addressable means we will only fetch and scan the base layer once.</p>
+<p>There are of course conditions where ClairV4 should re-index a manifest.</p>
+<p>When an internal component such as a package scanner is updated, Clair will know to perform the scan with the new package scanner. Clair has enough information to determine that a component has changed and the IndexReport may be different this time around.</p>
 <p>A client can track ClairV4's <code>index_state</code> endpoint to understand when an internal component has changed and subsequently issue re-indexes. See our <a href="concepts/../howto/api.html">api</a> guide to learn how to view our api specification.</p>
 <h2 id="summary"><a class="header" href="#summary">Summary</a></h2>
 <p>In summary, you should understand that Indexing is the process Clair uses to understand the contents of layers.</p>
 <p>For a more indepth look at indexing check out the <a href="https://quay.github.io/claircore/">ClairCore Documentation</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="matching-1"><a class="header" href="#matching-1">Matching</a></h1>
-<p>A <a href="concepts/../reference/matcher.html">Matcher</a> node is responsible for matching vulnerabilities to a provided IndexReport. </p>
+<p>A <a href="concepts/../reference/matcher.html">Matcher</a> node is responsible for matching vulnerabilities to a provided IndexReport.</p>
 <p>Matchers by default are also responsible for keeping the database of vulnerabilities up to date. Matchers will typically run a set of Updaters which periodically probe their data sources for new contents, storing new vulnerabilities in the database when discovered.</p>
 <p>The matcher API is designed to be called often and will always provide the most up-to-date VulnerabilityReport when queried. This VulnerabilityReport summaries both a manifest's contents and any vulnerabilities affecting the contents.</p>
 <p>See our <a href="concepts/../howto/api.html">api</a> guide to learn how to view our api specification and work with the Matcher api.</p>
@@ -512,13 +512,13 @@ The rate-limiting can be lifted by requesting a dedicated API key, which is done
 communication between Clair microservices. If Clair is operating in combo mode,
 these endpoints may not exist. Any sort of API ingress should disallow clients
 to talk to these endpoints.</p>
-<p>We do not formally expose these APIs in our OpenAPI spec. 
+<p>We do not formally expose these APIs in our OpenAPI spec.
 Further information and usage is an effort left to the reader.</p>
 <h2 id="updates-diffs"><a class="header" href="#updates-diffs">Updates Diffs</a></h2>
-<p>The <code>update_diff/</code> endpoint exposes the api for diffing two update operations. 
+<p>The <code>update_diff/</code> endpoint exposes the api for diffing two update operations.
 This is used by the notifier to determine the added and removed vulnerabilities on security databsae update.</p>
 <h2 id="update-operation"><a class="header" href="#update-operation">Update Operation</a></h2>
-<p>The <code>update_operation</code> endpoint exposes the api for viewing updaters' activity. 
+<p>The <code>update_operation</code> endpoint exposes the api for viewing updaters' activity.
 This is used by the notifier to determine if new updates have occurred and triggers an update diff to see what has changed.</p>
 <h2 id="affectedmanifest"><a class="header" href="#affectedmanifest">AffectedManifest</a></h2>
 <p>The <code>affected_manifest</code> endpoint exposes the api for retreiving affected manifests given a list of Vulnerabilities.
@@ -551,7 +551,7 @@ encoded symmetric key for validating the requests.</p>
 <li>STOMP delivery</li>
 </ul>
 <p>Configuring the notifier is done via the yaml configuration.</p>
-<p>See the &quot;Notifier&quot; object in our <a href="concepts/../reference/config.html">config reference</a></p>
+<p>See the "Notifier" object in our <a href="concepts/../reference/config.html">config reference</a></p>
 <h2 id="a-notification"><a class="header" href="#a-notification">A Notification</a></h2>
 <p>When the notifier becomes aware of new vulnerabilities affecting a previously indexed manifest, it will use the configured method(s) to issue notifications about the new changes. Any given notification expresses the <strong>most severe</strong> vulnerability discovered because of the change. This avoids creating a flurry of notifications for the same security database update.</p>
 <p>Once a client receives a notification, it should issue a new request against the <a href="concepts/../reference/matcher.html">matcher</a> to receive an up-to-date vulnerability report.</p>
@@ -559,42 +559,42 @@ encoded symmetric key for validating the requests.</p>
 <pre><code class="language-go">// Reason indicates the catalyst for a notification
 type Reason string
 const (
-	Added   Reason = &quot;added&quot;
-	Removed Reason = &quot;removed&quot;
-	Changed Reason = &quot;changed&quot;
+	Added   Reason = "added"
+	Removed Reason = "removed"
+	Changed Reason = "changed"
 )
 type Notification struct {
-	ID            uuid.UUID        `json:&quot;id&quot;`
-	Manifest      claircore.Digest `json:&quot;manifest&quot;`
-	Reason        Reason           `json:&quot;reason&quot;`
-	Vulnerability VulnSummary      `json:&quot;vulnerability&quot;`
+	ID            uuid.UUID        `json:"id"`
+	Manifest      claircore.Digest `json:"manifest"`
+	Reason        Reason           `json:"reason"`
+	Vulnerability VulnSummary      `json:"vulnerability"`
 }
 type VulnSummary struct {
-	Name           string                  `json:&quot;name&quot;`
-	Description    string                  `json:&quot;description&quot;`
-	Package        *claircore.Package      `json:&quot;package,omitempty&quot;`
-	Distribution   *claircore.Distribution `json:&quot;distribution,omitempty&quot;`
-	Repo           *claircore.Repository   `json:&quot;repo,omitempty&quot;`
-	Severity       string                  `json:&quot;severity&quot;`
-	FixedInVersion string                  `json:&quot;fixed_in_version&quot;`
-	Links          string                  `json:&quot;links&quot;`
+	Name           string                  `json:"name"`
+	Description    string                  `json:"description"`
+	Package        *claircore.Package      `json:"package,omitempty"`
+	Distribution   *claircore.Distribution `json:"distribution,omitempty"`
+	Repo           *claircore.Repository   `json:"repo,omitempty"`
+	Severity       string                  `json:"severity"`
+	FixedInVersion string                  `json:"fixed_in_version"`
+	Links          string                  `json:"links"`
 }
 </code></pre>
 <h2 id="webhook-delivery"><a class="header" href="#webhook-delivery">Webhook Delivery</a></h2>
-<p><em>See the &quot;Notifier.Webhook&quot; object in the <a href="concepts/../reference/config.html">config reference</a> for complete configuration details.</em></p>
+<p><em>See the "Notifier.Webhook" object in the <a href="concepts/../reference/config.html">config reference</a> for complete configuration details.</em></p>
 <p>When you configure notifier for webhook delivery you provide the service with the following pieces of information:</p>
 <ul>
 <li>A target URL where the webhook will fire</li>
 <li>The callback URL where the notifier may be reached including its API path
 <ul>
-<li>e.g. &quot;http://clair-notifier/notifier/api/v1/notification&quot;</li>
+<li>e.g. "http://clair-notifier/notifier/api/v1/notification"</li>
 </ul>
 </li>
 </ul>
 <p>When the notifier has determined an updated security database has changed the affected status of an indexed manifest, it will deliver the following JSON body to the configured target:</p>
 <pre><code class="language-json">{
-  &quot;notification_id&quot;: {uuid_string},
-  &quot;callback&quot;: {url_to_notifications}
+  "notification_id": {uuid_string},
+  "callback": {url_to_notifications}
 }
 </code></pre>
 <p>On receipt, the server can immediately browse to the URL provided in the callback field.</p>
@@ -611,18 +611,18 @@ type VulnSummary struct {
 }
 </code></pre>
 <p>The GET callback request implements a simple bare-minimum paging mechanism.</p>
-<p>The &quot;page_size&quot; url param controls how many notifications are returned in a single page.
+<p>The "page_size" url param controls how many notifications are returned in a single page.
 If not provided a default of 500 is used.</p>
-<p>The &quot;next&quot; url param informs Clair the next set of paged notifications to return. If not provided the 0th page is assumed.</p>
-<p>A page object accompanying the notification list specifies &quot;next&quot; and &quot;size&quot; fields.</p>
-<p>The &quot;next&quot; field returned in the page must be provided as the subsequent request's &quot;next&quot; url parameter to retrieve the next set of notifications.</p>
-<p>The &quot;size&quot; field will simply echo back the request page_size parameter.</p>
-<p>When the final page is served to the client the returned &quot;page&quot; data structure will not contain a &quot;next&quot; member.</p>
+<p>The "next" url param informs Clair the next set of paged notifications to return. If not provided the 0th page is assumed.</p>
+<p>A page object accompanying the notification list specifies "next" and "size" fields.</p>
+<p>The "next" field returned in the page must be provided as the subsequent request's "next" url parameter to retrieve the next set of notifications.</p>
+<p>The "size" field will simply echo back the request page_size parameter.</p>
+<p>When the final page is served to the client the returned "page" data structure will not contain a "next" member.</p>
 <p>Therefore the following loop is valid for obtaining all notifications for a notification id in pages of a specified size.</p>
-<pre><code>{ page, notifications } = http.Get(&quot;http://clairv4/notifier/api/v1/notification/{id}?page_size=1000&quot;)
+<pre><code>{ page, notifications } = http.Get("http://clairv4/notifier/api/v1/notification/{id}?page_size=1000")
 
 while (page.Next != None) {
-    { page, notifications } = http.Get(&quot;http://clairv4/notifier/api/v1/notification/{id}?next={page.Next},page_size=1000&quot;)
+    { page, notifications } = http.Get("http://clairv4/notifier/api/v1/notification/{id}?next={page.Next},page_size=1000")
 }
 </code></pre>
 <p><em>Note: If the client specifies a custom page_size it must specify this page_size on every request for accurate responses.</em></p>
@@ -630,7 +630,7 @@ while (page.Next != None) {
 <p>While not mandatory, the client may issue a delete of the notification via a DELETE method. See <a href="concepts/../howto/api.html">api</a> to view the delete api.</p>
 <p>Deleting a notification ID will clean up resources in the notifier quicker. Otherwise the notifier will wait a predetermined length of time before clearing delivered notifications from its database.</p>
 <h2 id="amqp-delivery"><a class="header" href="#amqp-delivery">AMQP Delivery</a></h2>
-<p><em>See the &quot;Notifier.AMQP&quot; object in our <a href="concepts/../reference/config.html">config reference</a> for complete configuration details.</em></p>
+<p><em>See the "Notifier.AMQP" object in our <a href="concepts/../reference/config.html">config reference</a> for complete configuration details.</em></p>
 <p>The notifier also supports delivering to an AMQP broker. With AMQP delivery you can control whether a callback is delivered to the broker or whether notifications are directly delivered to the queue.</p>
 <p>This allows the developer of the AMQP consumer to determine the logic of notification processing.</p>
 <p>Note that AMQP delivery only supports AMQP 0.x protocol (e.g. RabbitMQ). If you need to publish notifications on AMQP 1.x message queue (e.g. ActiveMQ), you can use STOMP delivery.</p>
@@ -638,11 +638,11 @@ while (page.Next != None) {
 <p>If the notifier's configuration specifies <code>direct: true</code> for AMQP, notifications will be delivered directly to the configured exchange.</p>
 <p>When <code>direct</code> is set, the <code>rollup</code> property may be set to instruct the notifier to send a max number of notifications in a single AMQP message. This allows a balance between size of the message and number of messages delivered to the queue.</p>
 <h2 id="testing-and-development"><a class="header" href="#testing-and-development">Testing and Development</a></h2>
-<p>The notifier has a testing mode enabled when it sees the &quot;NOTIFIER_TEST_MODE&quot; environment variable set. It can be set to any value as we only check to see if it exists.</p>
-<p>When this environment variable is set, the notifier will begin sending fake notifications to the configured delivery mechanism every &quot;poll_interval&quot; interval. This provides an easy way to implement and test new or existing deliverers.</p>
+<p>The notifier has a testing mode enabled when it sees the "NOTIFIER_TEST_MODE" environment variable set. It can be set to any value as we only check to see if it exists.</p>
+<p>When this environment variable is set, the notifier will begin sending fake notifications to the configured delivery mechanism every "poll_interval" interval. This provides an easy way to implement and test new or existing deliverers.</p>
 <p>The notifier will run in this mode until the environment variable is cleared and the service is restarted.</p>
 <div style="break-before: page; page-break-before: always;"></div><h2 id="updaters"><a class="header" href="#updaters">Updaters</a></h2>
-<p>Clair utilizes go packages we call &quot;updaters&quot; that encapsulate the logic of
+<p>Clair utilizes go packages we call "updaters" that encapsulate the logic of
 fetching and parsing different vulnerability databases. Updaters are usually
 pared with a matcher to interpret if and how any vulnerability is related to a
 package.</p>
@@ -666,7 +666,7 @@ the <code>config</code> member of the <code>updaters</code> object. The name of 
 constructed dynamically; users should examine logs to double-check names.
 The specific object that an updater expects should be covered in the updater's
 documentation.</p>
-<p>For example, to have the &quot;rhel&quot; updater fetch a manifest from a different
+<p>For example, to have the "rhel" updater fetch a manifest from a different
 location:</p>
 <pre><code class="language-yaml">updaters:
   config:
@@ -737,7 +737,7 @@ creating a release branch. This can be done like so:</p>
 <pre><code class="language-sh">git tag -as v4.x.0 HEAD
 git push upstream HEAD:release-4.x tag v4.x.0
 </code></pre>
-<p>Then, a &quot;release&quot; needs to be created in the Github UI using the created tag.</p>
+<p>Then, a "release" needs to be created in the Github UI using the created tag.</p>
 <h3 id="patch"><a class="header" href="#patch">Patch</a></h3>
 <p>A patch release is just like a minor release with the caveat that minor version
 tags should <em>only</em> appear on release branches and a new branch does not need to
@@ -746,7 +746,7 @@ be created.</p>
 git tag -as v4.x.1 HEAD
 git push upstream tag v4.x.1
 </code></pre>
-<p>Then, a &quot;release&quot; needs to be created in the Github UI using the created tag.</p>
+<p>Then, a "release" needs to be created in the Github UI using the created tag.</p>
 <h3 id="creating-artifacts"><a class="header" href="#creating-artifacts">Creating Artifacts</a></h3>
 <p>Clair's artifact release process is automated and driven off the releases in
 Github.</p>
@@ -770,8 +770,8 @@ Signed-Off By: &lt;email&gt;
 </code></pre>
 <p>The header of the commit is regexp checked before commit and your commit will be kicked back if it does not conform.</p>
 <h2 id="scope"><a class="header" href="#scope">Scope</a></h2>
-<p>This is the section of code this commit influences. </p>
-<p>You will often see scopes such as &quot;notifier&quot;, &quot;auth&quot;, &quot;chore&quot;, &quot;cicd&quot;.</p>
+<p>This is the section of code this commit influences.</p>
+<p>You will often see scopes such as "notifier", "auth", "chore", "cicd".</p>
 <p>We use this field to group commits by scope in our automated changelog generation.</p>
 <p>It would be wise to take a look at our changelog before contributing to get an idea of the common scopes we use.</p>
 <h2 id="subject"><a class="header" href="#subject">Subject</a></h2>
@@ -779,7 +779,7 @@ Signed-Off By: &lt;email&gt;
 <h2 id="body"><a class="header" href="#body">Body</a></h2>
 <p>Body should be full of detail.</p>
 <p>Explain what this commit is doing and why it is necessary.</p>
-<p>You may include references to issues and pull requests as well. Our automated changelog process will discover references prefixed with &quot;Fixes&quot;, &quot;Closed&quot; and &quot;Pull Request&quot;</p>
+<p>You may include references to issues and pull requests as well. Our automated changelog process will discover references prefixed with "Fixes", "Closed" and "Pull Request"</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="reference"><a class="header" href="#reference">Reference</a></h1>
 <p>The following sections provide reference information useful when exploring the documentation or working with Clair directly.</p>
 <ul>
@@ -798,9 +798,9 @@ language_tabs:</p>
 <li>go: Golang</li>
 <li>javascript: Javascript
 language_clients:</li>
-<li>python: &quot;&quot;</li>
-<li>go: &quot;&quot;</li>
-<li>javascript: &quot;&quot;
+<li>python: ""</li>
+<li>go: ""</li>
+<li>javascript: ""
 toc_footers: []
 includes: []
 search: false
@@ -814,7 +814,7 @@ headingLevel: 2</li>
 <p>Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.</p>
 </blockquote>
 <p>ClairV4 is a set of cooperating microservices which scan, index, and match your container's content with known vulnerabilities.</p>
-<p>Email: <a href="mailto:quay-devel@redhat.com">Clair Team</a> Web: <a href="http://github.com/quay/clair">Clair Team</a> 
+<p>Email: <a href="mailto:quay-devel@redhat.com">Clair Team</a> Web: <a href="http://github.com/quay/clair">Clair Team</a>
 License: <a href="http://www.apache.org/licenses/">Apache License 2.0</a></p>
 <h1 id="clairv4-notifier"><a class="header" href="#clairv4-notifier">Notifier</a></h1>
 <h2 id="deletenotification"><a class="header" href="#deletenotification">DeleteNotification</a></h2>
@@ -835,18 +835,18 @@ print(r.json())
 <pre><code class="language-go">package main
 
 import (
-       &quot;bytes&quot;
-       &quot;net/http&quot;
+       "bytes"
+       "net/http"
 )
 
 func main() {
 
     headers := map[string][]string{
-        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+        "Accept": []string{"application/json"},
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;DELETE&quot;, &quot;/notifier/api/v1/notification/{notification_id}&quot;, data)
+    req, err := http.NewRequest("DELETE", "/notifier/api/v1/notification/{notification_id}", data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -887,8 +887,8 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 <p>400 Response</p>
 </blockquote>
 <pre><code class="language-json">{
-  &quot;code&quot;: &quot;string&quot;,
-  &quot;message&quot;: &quot;string&quot;
+  "code": "string",
+  "message": "string"
 }
 </code></pre>
 <h3 id="deletenotification-responses"><a class="header" href="#deletenotification-responses">Responses</a></h3>
@@ -919,18 +919,18 @@ print(r.json())
 <pre><code class="language-go">package main
 
 import (
-       &quot;bytes&quot;
-       &quot;net/http&quot;
+       "bytes"
+       "net/http"
 )
 
 func main() {
 
     headers := map[string][]string{
-        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+        "Accept": []string{"application/json"},
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;GET&quot;, &quot;/notifier/api/v1/notification/{notification_id}&quot;, data)
+    req, err := http.NewRequest("GET", "/notifier/api/v1/notification/{notification_id}", data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -973,55 +973,55 @@ fetch('/notifier/api/v1/notification/{notification_id}',
 <p>200 Response</p>
 </blockquote>
 <pre><code class="language-json">{
-  &quot;page&quot;: {
-    &quot;size&quot;: 100,
-    &quot;next&quot;: &quot;1b4d0db2-e757-4150-bbbb-543658144205&quot;
+  "page": {
+    "size": 100,
+    "next": "1b4d0db2-e757-4150-bbbb-543658144205"
   },
-  &quot;notifications&quot;: [
+  "notifications": [
     {
-      &quot;id&quot;: &quot;5e4b387e-88d3-4364-86fd-063447a6fad2&quot;,
-      &quot;manifest&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
-      &quot;reason&quot;: &quot;added&quot;,
-      &quot;vulnerability&quot;: {
-        &quot;name&quot;: &quot;CVE-2009-5155&quot;,
-        &quot;fixed_in_version&quot;: &quot;v0.0.1&quot;,
-        &quot;links&quot;: &quot;http://link-to-advisory&quot;,
-        &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
-        &quot;normalized_severity&quot;: &quot;Unknown&quot;,
-        &quot;package&quot;: {
-          &quot;id&quot;: &quot;10&quot;,
-          &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-          &quot;version&quot;: &quot;1.6.11&quot;,
-          &quot;kind&quot;: &quot;binary&quot;,
-          &quot;normalized_version&quot;: &quot;&quot;,
-          &quot;arch&quot;: &quot;x86&quot;,
-          &quot;module&quot;: &quot;&quot;,
-          &quot;cpe&quot;: &quot;&quot;,
-          &quot;source&quot;: {
-            &quot;id&quot;: &quot;9&quot;,
-            &quot;name&quot;: &quot;apt&quot;,
-            &quot;version&quot;: &quot;1.6.11&quot;,
-            &quot;kind&quot;: &quot;source&quot;,
-            &quot;source&quot;: null
+      "id": "5e4b387e-88d3-4364-86fd-063447a6fad2",
+      "manifest": "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a",
+      "reason": "added",
+      "vulnerability": {
+        "name": "CVE-2009-5155",
+        "fixed_in_version": "v0.0.1",
+        "links": "http://link-to-advisory",
+        "description": "In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\"",
+        "normalized_severity": "Unknown",
+        "package": {
+          "id": "10",
+          "name": "libapt-pkg5.0",
+          "version": "1.6.11",
+          "kind": "binary",
+          "normalized_version": "",
+          "arch": "x86",
+          "module": "",
+          "cpe": "",
+          "source": {
+            "id": "9",
+            "name": "apt",
+            "version": "1.6.11",
+            "kind": "source",
+            "source": null
           }
         },
-        &quot;distribution&quot;: {
-          &quot;id&quot;: &quot;1&quot;,
-          &quot;did&quot;: &quot;ubuntu&quot;,
-          &quot;name&quot;: &quot;Ubuntu&quot;,
-          &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-          &quot;version_code_name&quot;: &quot;bionic&quot;,
-          &quot;version_id&quot;: &quot;18.04&quot;,
-          &quot;arch&quot;: &quot;&quot;,
-          &quot;cpe&quot;: &quot;&quot;,
-          &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+        "distribution": {
+          "id": "1",
+          "did": "ubuntu",
+          "name": "Ubuntu",
+          "version": "18.04.3 LTS (Bionic Beaver)",
+          "version_code_name": "bionic",
+          "version_id": "18.04",
+          "arch": "",
+          "cpe": "",
+          "pretty_name": "Ubuntu 18.04.3 LTS"
         },
-        &quot;repository&quot;: {
-          &quot;id&quot;: &quot;string&quot;,
-          &quot;name&quot;: &quot;string&quot;,
-          &quot;key&quot;: &quot;string&quot;,
-          &quot;uri&quot;: &quot;string&quot;,
-          &quot;cpe&quot;: &quot;string&quot;
+        "repository": {
+          "id": "string",
+          "name": "string",
+          "key": "string",
+          "uri": "string",
+          "cpe": "string"
         }
       }
     }
@@ -1058,19 +1058,19 @@ print(r.json())
 <pre><code class="language-go">package main
 
 import (
-       &quot;bytes&quot;
-       &quot;net/http&quot;
+       "bytes"
+       "net/http"
 )
 
 func main() {
 
     headers := map[string][]string{
-        &quot;Content-Type&quot;: []string{&quot;application/json&quot;},
-        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+        "Content-Type": []string{"application/json"},
+        "Accept": []string{"application/json"},
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;POST&quot;, &quot;/indexer/api/v1/index_report&quot;, data)
+    req, err := http.NewRequest("POST", "/indexer/api/v1/index_report", data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -1080,17 +1080,17 @@ func main() {
 
 </code></pre>
 <pre><code class="language-javascript">const inputBody = '{
-  &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;layers&quot;: [
+  "hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "layers": [
     {
-      &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-      &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36&quot;,
-      &quot;headers&quot;: {
-        &quot;property1&quot;: [
-          &quot;string&quot;
+      "hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+      "uri": "https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36",
+      "headers": {
+        "property1": [
+          "string"
         ],
-        &quot;property2&quot;: [
-          &quot;string&quot;
+        "property2": [
+          "string"
         ]
       }
     }
@@ -1120,17 +1120,17 @@ fetch('/indexer/api/v1/index_report',
 <p>Body parameter</p>
 </blockquote>
 <pre><code class="language-json">{
-  &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;layers&quot;: [
+  "hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "layers": [
     {
-      &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-      &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36&quot;,
-      &quot;headers&quot;: {
-        &quot;property1&quot;: [
-          &quot;string&quot;
+      "hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+      "uri": "https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36",
+      "headers": {
+        "property1": [
+          "string"
         ],
-        &quot;property2&quot;: [
-          &quot;string&quot;
+        "property2": [
+          "string"
         ]
       }
     }
@@ -1149,51 +1149,51 @@ fetch('/indexer/api/v1/index_report',
 <p>201 Response</p>
 </blockquote>
 <pre><code class="language-json">{
-  &quot;manifest_hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;state&quot;: &quot;IndexFinished&quot;,
-  &quot;packages&quot;: {
-    &quot;10&quot;: {
-      &quot;id&quot;: &quot;10&quot;,
-      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-      &quot;version&quot;: &quot;1.6.11&quot;,
-      &quot;kind&quot;: &quot;binary&quot;,
-      &quot;normalized_version&quot;: &quot;&quot;,
-      &quot;arch&quot;: &quot;x86&quot;,
-      &quot;module&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;source&quot;: {
-        &quot;id&quot;: &quot;9&quot;,
-        &quot;name&quot;: &quot;apt&quot;,
-        &quot;version&quot;: &quot;1.6.11&quot;,
-        &quot;kind&quot;: &quot;source&quot;,
-        &quot;source&quot;: null
+  "manifest_hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "state": "IndexFinished",
+  "packages": {
+    "10": {
+      "id": "10",
+      "name": "libapt-pkg5.0",
+      "version": "1.6.11",
+      "kind": "binary",
+      "normalized_version": "",
+      "arch": "x86",
+      "module": "",
+      "cpe": "",
+      "source": {
+        "id": "9",
+        "name": "apt",
+        "version": "1.6.11",
+        "kind": "source",
+        "source": null
       }
     }
   },
-  &quot;distributions&quot;: {
-    &quot;1&quot;: {
-      &quot;id&quot;: &quot;1&quot;,
-      &quot;did&quot;: &quot;ubuntu&quot;,
-      &quot;name&quot;: &quot;Ubuntu&quot;,
-      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-      &quot;version_code_name&quot;: &quot;bionic&quot;,
-      &quot;version_id&quot;: &quot;18.04&quot;,
-      &quot;arch&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+  "distributions": {
+    "1": {
+      "id": "1",
+      "did": "ubuntu",
+      "name": "Ubuntu",
+      "version": "18.04.3 LTS (Bionic Beaver)",
+      "version_code_name": "bionic",
+      "version_id": "18.04",
+      "arch": "",
+      "cpe": "",
+      "pretty_name": "Ubuntu 18.04.3 LTS"
     }
   },
-  &quot;environments&quot;: {
-    &quot;10&quot;: [
+  "environments": {
+    "10": [
       {
-        &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
-        &quot;introduced_in&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
-        &quot;distribution_id&quot;: &quot;1&quot;
+        "package_db": "var/lib/dpkg/status",
+        "introduced_in": "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a",
+        "distribution_id": "1"
       }
     ]
   },
-  &quot;success&quot;: true,
-  &quot;err&quot;: &quot;&quot;
+  "success": true,
+  "err": ""
 }
 </code></pre>
 <h3 id="index-the-contents-of-a-manifest-responses"><a class="header" href="#index-the-contents-of-a-manifest-responses">Responses</a></h3>
@@ -1225,19 +1225,19 @@ print(r.json())
 <pre><code class="language-go">package main
 
 import (
-       &quot;bytes&quot;
-       &quot;net/http&quot;
+       "bytes"
+       "net/http"
 )
 
 func main() {
 
     headers := map[string][]string{
-        &quot;Content-Type&quot;: []string{&quot;application/json&quot;},
-        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+        "Content-Type": []string{"application/json"},
+        "Accept": []string{"application/json"},
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;DELETE&quot;, &quot;/indexer/api/v1/index_report&quot;, data)
+    req, err := http.NewRequest("DELETE", "/indexer/api/v1/index_report", data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -1247,7 +1247,7 @@ func main() {
 
 </code></pre>
 <pre><code class="language-javascript">const inputBody = '[
-  &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;
+  "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3"
 ]';
 const headers = {
   'Content-Type':'application/json',
@@ -1273,7 +1273,7 @@ fetch('/indexer/api/v1/index_report',
 <p>Body parameter</p>
 </blockquote>
 <pre><code class="language-json">[
-  &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;
+  "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3"
 ]
 </code></pre>
 <h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes,-if-they-exist.-parameters"><a class="header" href="#delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes,-if-they-exist.-parameters">Parameters</a></h3>
@@ -1288,7 +1288,7 @@ fetch('/indexer/api/v1/index_report',
 <p>200 Response</p>
 </blockquote>
 <pre><code class="language-json">[
-  &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;
+  "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3"
 ]
 </code></pre>
 <h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes,-if-they-exist.-responses"><a class="header" href="#delete-the-indexreport-and-associated-information-for-the-given-manifest-hashes,-if-they-exist.-responses">Responses</a></h3>
@@ -1318,18 +1318,18 @@ print(r.json())
 <pre><code class="language-go">package main
 
 import (
-       &quot;bytes&quot;
-       &quot;net/http&quot;
+       "bytes"
+       "net/http"
 )
 
 func main() {
 
     headers := map[string][]string{
-        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+        "Accept": []string{"application/json"},
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;DELETE&quot;, &quot;/indexer/api/v1/index_report/{manifest_hash}&quot;, data)
+    req, err := http.NewRequest("DELETE", "/indexer/api/v1/index_report/{manifest_hash}", data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -1370,8 +1370,8 @@ fetch('/indexer/api/v1/index_report/{manifest_hash}',
 <p>400 Response</p>
 </blockquote>
 <pre><code class="language-json">{
-  &quot;code&quot;: &quot;string&quot;,
-  &quot;message&quot;: &quot;string&quot;
+  "code": "string",
+  "message": "string"
 }
 </code></pre>
 <h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hash,-if-exists.-responses"><a class="header" href="#delete-the-indexreport-and-associated-information-for-the-given-manifest-hash,-if-exists.-responses">Responses</a></h3>
@@ -1401,18 +1401,18 @@ print(r.json())
 <pre><code class="language-go">package main
 
 import (
-       &quot;bytes&quot;
-       &quot;net/http&quot;
+       "bytes"
+       "net/http"
 )
 
 func main() {
 
     headers := map[string][]string{
-        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+        "Accept": []string{"application/json"},
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;GET&quot;, &quot;/indexer/api/v1/index_report/{manifest_hash}&quot;, data)
+    req, err := http.NewRequest("GET", "/indexer/api/v1/index_report/{manifest_hash}", data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -1453,51 +1453,51 @@ fetch('/indexer/api/v1/index_report/{manifest_hash}',
 <p>200 Response</p>
 </blockquote>
 <pre><code class="language-json">{
-  &quot;manifest_hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;state&quot;: &quot;IndexFinished&quot;,
-  &quot;packages&quot;: {
-    &quot;10&quot;: {
-      &quot;id&quot;: &quot;10&quot;,
-      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-      &quot;version&quot;: &quot;1.6.11&quot;,
-      &quot;kind&quot;: &quot;binary&quot;,
-      &quot;normalized_version&quot;: &quot;&quot;,
-      &quot;arch&quot;: &quot;x86&quot;,
-      &quot;module&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;source&quot;: {
-        &quot;id&quot;: &quot;9&quot;,
-        &quot;name&quot;: &quot;apt&quot;,
-        &quot;version&quot;: &quot;1.6.11&quot;,
-        &quot;kind&quot;: &quot;source&quot;,
-        &quot;source&quot;: null
+  "manifest_hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "state": "IndexFinished",
+  "packages": {
+    "10": {
+      "id": "10",
+      "name": "libapt-pkg5.0",
+      "version": "1.6.11",
+      "kind": "binary",
+      "normalized_version": "",
+      "arch": "x86",
+      "module": "",
+      "cpe": "",
+      "source": {
+        "id": "9",
+        "name": "apt",
+        "version": "1.6.11",
+        "kind": "source",
+        "source": null
       }
     }
   },
-  &quot;distributions&quot;: {
-    &quot;1&quot;: {
-      &quot;id&quot;: &quot;1&quot;,
-      &quot;did&quot;: &quot;ubuntu&quot;,
-      &quot;name&quot;: &quot;Ubuntu&quot;,
-      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-      &quot;version_code_name&quot;: &quot;bionic&quot;,
-      &quot;version_id&quot;: &quot;18.04&quot;,
-      &quot;arch&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+  "distributions": {
+    "1": {
+      "id": "1",
+      "did": "ubuntu",
+      "name": "Ubuntu",
+      "version": "18.04.3 LTS (Bionic Beaver)",
+      "version_code_name": "bionic",
+      "version_id": "18.04",
+      "arch": "",
+      "cpe": "",
+      "pretty_name": "Ubuntu 18.04.3 LTS"
     }
   },
-  &quot;environments&quot;: {
-    &quot;10&quot;: [
+  "environments": {
+    "10": [
       {
-        &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
-        &quot;introduced_in&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
-        &quot;distribution_id&quot;: &quot;1&quot;
+        "package_db": "var/lib/dpkg/status",
+        "introduced_in": "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a",
+        "distribution_id": "1"
       }
     ]
   },
-  &quot;success&quot;: true,
-  &quot;err&quot;: &quot;&quot;
+  "success": true,
+  "err": ""
 }
 </code></pre>
 <h3 id="retrieve-an-indexreport-for-the-given-manifest-hash-if-exists.-responses"><a class="header" href="#retrieve-an-indexreport-for-the-given-manifest-hash-if-exists.-responses">Responses</a></h3>
@@ -1529,18 +1529,18 @@ print(r.json())
 <pre><code class="language-go">package main
 
 import (
-       &quot;bytes&quot;
-       &quot;net/http&quot;
+       "bytes"
+       "net/http"
 )
 
 func main() {
 
     headers := map[string][]string{
-        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+        "Accept": []string{"application/json"},
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;GET&quot;, &quot;/indexer/api/v1/index_state&quot;, data)
+    req, err := http.NewRequest("GET", "/indexer/api/v1/index_state", data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -1577,7 +1577,7 @@ A client may be interested in this as a signal that manifests may need to be re-
 <p>200 Response</p>
 </blockquote>
 <pre><code class="language-json">{
-  &quot;state&quot;: &quot;aae368a064d7c5a433d0bf2c4f5554cc&quot;
+  "state": "aae368a064d7c5a433d0bf2c4f5554cc"
 }
 </code></pre>
 <h3 id="report-the-indexer's-internal-configuration-and-state.-responses"><a class="header" href="#report-the-indexer's-internal-configuration-and-state.-responses">Responses</a></h3>
@@ -1612,18 +1612,18 @@ print(r.json())
 <pre><code class="language-go">package main
 
 import (
-       &quot;bytes&quot;
-       &quot;net/http&quot;
+       "bytes"
+       "net/http"
 )
 
 func main() {
 
     headers := map[string][]string{
-        &quot;Accept&quot;: []string{&quot;application/json&quot;},
+        "Accept": []string{"application/json"},
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest(&quot;GET&quot;, &quot;/matcher/api/v1/vulnerability_report/{manifest_hash}&quot;, data)
+    req, err := http.NewRequest("GET", "/matcher/api/v1/vulnerability_report/{manifest_hash}", data)
     req.Header = headers
 
     client := &amp;http.Client{}
@@ -1664,90 +1664,90 @@ fetch('/matcher/api/v1/vulnerability_report/{manifest_hash}',
 <p>201 Response</p>
 </blockquote>
 <pre><code class="language-json">{
-  &quot;manifest_hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;packages&quot;: {
-    &quot;10&quot;: {
-      &quot;id&quot;: &quot;10&quot;,
-      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-      &quot;version&quot;: &quot;1.6.11&quot;,
-      &quot;kind&quot;: &quot;binary&quot;,
-      &quot;normalized_version&quot;: &quot;&quot;,
-      &quot;arch&quot;: &quot;x86&quot;,
-      &quot;module&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;source&quot;: {
-        &quot;id&quot;: &quot;9&quot;,
-        &quot;name&quot;: &quot;apt&quot;,
-        &quot;version&quot;: &quot;1.6.11&quot;,
-        &quot;kind&quot;: &quot;source&quot;,
-        &quot;source&quot;: null
+  "manifest_hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "packages": {
+    "10": {
+      "id": "10",
+      "name": "libapt-pkg5.0",
+      "version": "1.6.11",
+      "kind": "binary",
+      "normalized_version": "",
+      "arch": "x86",
+      "module": "",
+      "cpe": "",
+      "source": {
+        "id": "9",
+        "name": "apt",
+        "version": "1.6.11",
+        "kind": "source",
+        "source": null
       }
     }
   },
-  &quot;distributions&quot;: {
-    &quot;1&quot;: {
-      &quot;id&quot;: &quot;1&quot;,
-      &quot;did&quot;: &quot;ubuntu&quot;,
-      &quot;name&quot;: &quot;Ubuntu&quot;,
-      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-      &quot;version_code_name&quot;: &quot;bionic&quot;,
-      &quot;version_id&quot;: &quot;18.04&quot;,
-      &quot;arch&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+  "distributions": {
+    "1": {
+      "id": "1",
+      "did": "ubuntu",
+      "name": "Ubuntu",
+      "version": "18.04.3 LTS (Bionic Beaver)",
+      "version_code_name": "bionic",
+      "version_id": "18.04",
+      "arch": "",
+      "cpe": "",
+      "pretty_name": "Ubuntu 18.04.3 LTS"
     }
   },
-  &quot;environments&quot;: {
-    &quot;10&quot;: [
+  "environments": {
+    "10": [
       {
-        &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
-        &quot;introduced_in&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
-        &quot;distribution_id&quot;: &quot;1&quot;
+        "package_db": "var/lib/dpkg/status",
+        "introduced_in": "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a",
+        "distribution_id": "1"
       }
     ]
   },
-  &quot;vulnerabilities&quot;: {
-    &quot;356835&quot;: {
-      &quot;id&quot;: &quot;356835&quot;,
-      &quot;updater&quot;: &quot;&quot;,
-      &quot;name&quot;: &quot;CVE-2009-5155&quot;,
-      &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
-      &quot;links&quot;: &quot;https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986\&quot;&quot;,
-      &quot;severity&quot;: &quot;Low&quot;,
-      &quot;normalized_severity&quot;: &quot;Low&quot;,
-      &quot;package&quot;: {
-        &quot;id&quot;: &quot;0&quot;,
-        &quot;name&quot;: &quot;glibc&quot;,
-        &quot;version&quot;: &quot;&quot;,
-        &quot;kind&quot;: &quot;&quot;,
-        &quot;source&quot;: null,
-        &quot;package_db&quot;: &quot;&quot;,
-        &quot;repository_hint&quot;: &quot;&quot;
+  "vulnerabilities": {
+    "356835": {
+      "id": "356835",
+      "updater": "",
+      "name": "CVE-2009-5155",
+      "description": "In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\"",
+      "links": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986\"",
+      "severity": "Low",
+      "normalized_severity": "Low",
+      "package": {
+        "id": "0",
+        "name": "glibc",
+        "version": "",
+        "kind": "",
+        "source": null,
+        "package_db": "",
+        "repository_hint": ""
       },
-      &quot;dist&quot;: {
-        &quot;id&quot;: &quot;0&quot;,
-        &quot;did&quot;: &quot;ubuntu&quot;,
-        &quot;name&quot;: &quot;Ubuntu&quot;,
-        &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-        &quot;version_code_name&quot;: &quot;bionic&quot;,
-        &quot;version_id&quot;: &quot;18.04&quot;,
-        &quot;arch&quot;: &quot;&quot;,
-        &quot;cpe&quot;: &quot;&quot;,
-        &quot;pretty_name&quot;: &quot;&quot;
+      "dist": {
+        "id": "0",
+        "did": "ubuntu",
+        "name": "Ubuntu",
+        "version": "18.04.3 LTS (Bionic Beaver)",
+        "version_code_name": "bionic",
+        "version_id": "18.04",
+        "arch": "",
+        "cpe": "",
+        "pretty_name": ""
       },
-      &quot;repo&quot;: {
-        &quot;id&quot;: &quot;0&quot;,
-        &quot;name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;,
-        &quot;key&quot;: &quot;&quot;,
-        &quot;uri&quot;: &quot;&quot;
+      "repo": {
+        "id": "0",
+        "name": "Ubuntu 18.04.3 LTS",
+        "key": "",
+        "uri": ""
       },
-      &quot;issued&quot;: &quot;2019-10-12T07:20:50.52Z&quot;,
-      &quot;fixed_in_version&quot;: &quot;2.28-0ubuntu1&quot;
+      "issued": "2019-10-12T07:20:50.52Z",
+      "fixed_in_version": "2.28-0ubuntu1"
     }
   },
-  &quot;package_vulnerabilities&quot;: {
-    &quot;10&quot;: [
-      &quot;356835&quot;
+  "package_vulnerabilities": {
+    "10": [
+      "356835"
     ]
   }
 }
@@ -1771,8 +1771,8 @@ This operation does not require authentication
 <a id="tocSpage"></a>
 <a id="tocspage"></a>
 <pre><code class="language-json">{
-  &quot;size&quot;: 1,
-  &quot;next&quot;: &quot;1b4d0db2-e757-4150-bbbb-543658144205&quot;
+  "size": 1,
+  "next": "1b4d0db2-e757-4150-bbbb-543658144205"
 }
 
 </code></pre>
@@ -1789,55 +1789,55 @@ This operation does not require authentication
 <a id="tocSpagednotifications"></a>
 <a id="tocspagednotifications"></a>
 <pre><code class="language-json">{
-  &quot;page&quot;: {
-    &quot;size&quot;: 100,
-    &quot;next&quot;: &quot;1b4d0db2-e757-4150-bbbb-543658144205&quot;
+  "page": {
+    "size": 100,
+    "next": "1b4d0db2-e757-4150-bbbb-543658144205"
   },
-  &quot;notifications&quot;: [
+  "notifications": [
     {
-      &quot;id&quot;: &quot;5e4b387e-88d3-4364-86fd-063447a6fad2&quot;,
-      &quot;manifest&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
-      &quot;reason&quot;: &quot;added&quot;,
-      &quot;vulnerability&quot;: {
-        &quot;name&quot;: &quot;CVE-2009-5155&quot;,
-        &quot;fixed_in_version&quot;: &quot;v0.0.1&quot;,
-        &quot;links&quot;: &quot;http://link-to-advisory&quot;,
-        &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
-        &quot;normalized_severity&quot;: &quot;Unknown&quot;,
-        &quot;package&quot;: {
-          &quot;id&quot;: &quot;10&quot;,
-          &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-          &quot;version&quot;: &quot;1.6.11&quot;,
-          &quot;kind&quot;: &quot;binary&quot;,
-          &quot;normalized_version&quot;: &quot;&quot;,
-          &quot;arch&quot;: &quot;x86&quot;,
-          &quot;module&quot;: &quot;&quot;,
-          &quot;cpe&quot;: &quot;&quot;,
-          &quot;source&quot;: {
-            &quot;id&quot;: &quot;9&quot;,
-            &quot;name&quot;: &quot;apt&quot;,
-            &quot;version&quot;: &quot;1.6.11&quot;,
-            &quot;kind&quot;: &quot;source&quot;,
-            &quot;source&quot;: null
+      "id": "5e4b387e-88d3-4364-86fd-063447a6fad2",
+      "manifest": "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a",
+      "reason": "added",
+      "vulnerability": {
+        "name": "CVE-2009-5155",
+        "fixed_in_version": "v0.0.1",
+        "links": "http://link-to-advisory",
+        "description": "In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\"",
+        "normalized_severity": "Unknown",
+        "package": {
+          "id": "10",
+          "name": "libapt-pkg5.0",
+          "version": "1.6.11",
+          "kind": "binary",
+          "normalized_version": "",
+          "arch": "x86",
+          "module": "",
+          "cpe": "",
+          "source": {
+            "id": "9",
+            "name": "apt",
+            "version": "1.6.11",
+            "kind": "source",
+            "source": null
           }
         },
-        &quot;distribution&quot;: {
-          &quot;id&quot;: &quot;1&quot;,
-          &quot;did&quot;: &quot;ubuntu&quot;,
-          &quot;name&quot;: &quot;Ubuntu&quot;,
-          &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-          &quot;version_code_name&quot;: &quot;bionic&quot;,
-          &quot;version_id&quot;: &quot;18.04&quot;,
-          &quot;arch&quot;: &quot;&quot;,
-          &quot;cpe&quot;: &quot;&quot;,
-          &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+        "distribution": {
+          "id": "1",
+          "did": "ubuntu",
+          "name": "Ubuntu",
+          "version": "18.04.3 LTS (Bionic Beaver)",
+          "version_code_name": "bionic",
+          "version_id": "18.04",
+          "arch": "",
+          "cpe": "",
+          "pretty_name": "Ubuntu 18.04.3 LTS"
         },
-        &quot;repository&quot;: {
-          &quot;id&quot;: &quot;string&quot;,
-          &quot;name&quot;: &quot;string&quot;,
-          &quot;key&quot;: &quot;string&quot;,
-          &quot;uri&quot;: &quot;string&quot;,
-          &quot;cpe&quot;: &quot;string&quot;
+        "repository": {
+          "id": "string",
+          "name": "string",
+          "key": "string",
+          "uri": "string",
+          "cpe": "string"
         }
       }
     }
@@ -1848,7 +1848,7 @@ This operation does not require authentication
 <p>PagedNotifications</p>
 <h3 id="properties-1"><a class="header" href="#properties-1">Properties</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
-<tr><td>page</td><td>object</td><td>false</td><td>none</td><td>A page object informing the client the next page to retrieve. If page.next becomes &quot;-1&quot; the client should stop paging.</td></tr>
+<tr><td>page</td><td>object</td><td>false</td><td>none</td><td>A page object informing the client the next page to retrieve. If page.next becomes "-1" the client should stop paging.</td></tr>
 <tr><td>notifications</td><td>[<a href="reference/api.html#schemanotification">Notification</a>]</td><td>false</td><td>none</td><td>A list of notifications within this page</td></tr>
 </tbody></table>
 </div><h2 id="tocS_Callback"><a class="header" href="#tocS_Callback">Callback</a></h2>
@@ -1858,8 +1858,8 @@ This operation does not require authentication
 <a id="tocScallback"></a>
 <a id="tocscallback"></a>
 <pre><code class="language-json">{
-  &quot;notification_id&quot;: &quot;269886f3-0146-4f08-9bf7-cb1138d48643&quot;,
-  &quot;callback&quot;: &quot;http://clair-notifier/notifier/api/v1/notification/269886f3-0146-4f08-9bf7-cb1138d48643&quot;
+  "notification_id": "269886f3-0146-4f08-9bf7-cb1138d48643",
+  "callback": "http://clair-notifier/notifier/api/v1/notification/269886f3-0146-4f08-9bf7-cb1138d48643"
 }
 
 </code></pre>
@@ -1876,45 +1876,45 @@ This operation does not require authentication
 <a id="tocSvulnsummary"></a>
 <a id="tocsvulnsummary"></a>
 <pre><code class="language-json">{
-  &quot;name&quot;: &quot;CVE-2009-5155&quot;,
-  &quot;fixed_in_version&quot;: &quot;v0.0.1&quot;,
-  &quot;links&quot;: &quot;http://link-to-advisory&quot;,
-  &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
-  &quot;normalized_severity&quot;: &quot;Unknown&quot;,
-  &quot;package&quot;: {
-    &quot;id&quot;: &quot;10&quot;,
-    &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-    &quot;version&quot;: &quot;1.6.11&quot;,
-    &quot;kind&quot;: &quot;binary&quot;,
-    &quot;normalized_version&quot;: &quot;&quot;,
-    &quot;arch&quot;: &quot;x86&quot;,
-    &quot;module&quot;: &quot;&quot;,
-    &quot;cpe&quot;: &quot;&quot;,
-    &quot;source&quot;: {
-      &quot;id&quot;: &quot;9&quot;,
-      &quot;name&quot;: &quot;apt&quot;,
-      &quot;version&quot;: &quot;1.6.11&quot;,
-      &quot;kind&quot;: &quot;source&quot;,
-      &quot;source&quot;: null
+  "name": "CVE-2009-5155",
+  "fixed_in_version": "v0.0.1",
+  "links": "http://link-to-advisory",
+  "description": "In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\"",
+  "normalized_severity": "Unknown",
+  "package": {
+    "id": "10",
+    "name": "libapt-pkg5.0",
+    "version": "1.6.11",
+    "kind": "binary",
+    "normalized_version": "",
+    "arch": "x86",
+    "module": "",
+    "cpe": "",
+    "source": {
+      "id": "9",
+      "name": "apt",
+      "version": "1.6.11",
+      "kind": "source",
+      "source": null
     }
   },
-  &quot;distribution&quot;: {
-    &quot;id&quot;: &quot;1&quot;,
-    &quot;did&quot;: &quot;ubuntu&quot;,
-    &quot;name&quot;: &quot;Ubuntu&quot;,
-    &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-    &quot;version_code_name&quot;: &quot;bionic&quot;,
-    &quot;version_id&quot;: &quot;18.04&quot;,
-    &quot;arch&quot;: &quot;&quot;,
-    &quot;cpe&quot;: &quot;&quot;,
-    &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+  "distribution": {
+    "id": "1",
+    "did": "ubuntu",
+    "name": "Ubuntu",
+    "version": "18.04.3 LTS (Bionic Beaver)",
+    "version_code_name": "bionic",
+    "version_id": "18.04",
+    "arch": "",
+    "cpe": "",
+    "pretty_name": "Ubuntu 18.04.3 LTS"
   },
-  &quot;repository&quot;: {
-    &quot;id&quot;: &quot;string&quot;,
-    &quot;name&quot;: &quot;string&quot;,
-    &quot;key&quot;: &quot;string&quot;,
-    &quot;uri&quot;: &quot;string&quot;,
-    &quot;cpe&quot;: &quot;string&quot;
+  "repository": {
+    "id": "string",
+    "name": "string",
+    "key": "string",
+    "uri": "string",
+    "cpe": "string"
   }
 }
 
@@ -1948,49 +1948,49 @@ This operation does not require authentication
 <a id="tocSnotification"></a>
 <a id="tocsnotification"></a>
 <pre><code class="language-json">{
-  &quot;id&quot;: &quot;5e4b387e-88d3-4364-86fd-063447a6fad2&quot;,
-  &quot;manifest&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
-  &quot;reason&quot;: &quot;added&quot;,
-  &quot;vulnerability&quot;: {
-    &quot;name&quot;: &quot;CVE-2009-5155&quot;,
-    &quot;fixed_in_version&quot;: &quot;v0.0.1&quot;,
-    &quot;links&quot;: &quot;http://link-to-advisory&quot;,
-    &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
-    &quot;normalized_severity&quot;: &quot;Unknown&quot;,
-    &quot;package&quot;: {
-      &quot;id&quot;: &quot;10&quot;,
-      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-      &quot;version&quot;: &quot;1.6.11&quot;,
-      &quot;kind&quot;: &quot;binary&quot;,
-      &quot;normalized_version&quot;: &quot;&quot;,
-      &quot;arch&quot;: &quot;x86&quot;,
-      &quot;module&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;source&quot;: {
-        &quot;id&quot;: &quot;9&quot;,
-        &quot;name&quot;: &quot;apt&quot;,
-        &quot;version&quot;: &quot;1.6.11&quot;,
-        &quot;kind&quot;: &quot;source&quot;,
-        &quot;source&quot;: null
+  "id": "5e4b387e-88d3-4364-86fd-063447a6fad2",
+  "manifest": "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a",
+  "reason": "added",
+  "vulnerability": {
+    "name": "CVE-2009-5155",
+    "fixed_in_version": "v0.0.1",
+    "links": "http://link-to-advisory",
+    "description": "In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\"",
+    "normalized_severity": "Unknown",
+    "package": {
+      "id": "10",
+      "name": "libapt-pkg5.0",
+      "version": "1.6.11",
+      "kind": "binary",
+      "normalized_version": "",
+      "arch": "x86",
+      "module": "",
+      "cpe": "",
+      "source": {
+        "id": "9",
+        "name": "apt",
+        "version": "1.6.11",
+        "kind": "source",
+        "source": null
       }
     },
-    &quot;distribution&quot;: {
-      &quot;id&quot;: &quot;1&quot;,
-      &quot;did&quot;: &quot;ubuntu&quot;,
-      &quot;name&quot;: &quot;Ubuntu&quot;,
-      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-      &quot;version_code_name&quot;: &quot;bionic&quot;,
-      &quot;version_id&quot;: &quot;18.04&quot;,
-      &quot;arch&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+    "distribution": {
+      "id": "1",
+      "did": "ubuntu",
+      "name": "Ubuntu",
+      "version": "18.04.3 LTS (Bionic Beaver)",
+      "version_code_name": "bionic",
+      "version_id": "18.04",
+      "arch": "",
+      "cpe": "",
+      "pretty_name": "Ubuntu 18.04.3 LTS"
     },
-    &quot;repository&quot;: {
-      &quot;id&quot;: &quot;string&quot;,
-      &quot;name&quot;: &quot;string&quot;,
-      &quot;key&quot;: &quot;string&quot;,
-      &quot;uri&quot;: &quot;string&quot;,
-      &quot;cpe&quot;: &quot;string&quot;
+    "repository": {
+      "id": "string",
+      "name": "string",
+      "key": "string",
+      "uri": "string",
+      "cpe": "string"
     }
   }
 }
@@ -2011,9 +2011,9 @@ This operation does not require authentication
 <a id="tocSenvironment"></a>
 <a id="tocsenvironment"></a>
 <pre><code class="language-json">{
-  &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
-  &quot;introduced_in&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;distribution_id&quot;: &quot;1&quot;
+  "package_db": "var/lib/dpkg/status",
+  "introduced_in": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "distribution_id": "1"
 }
 
 </code></pre>
@@ -2031,51 +2031,51 @@ This operation does not require authentication
 <a id="tocSindexreport"></a>
 <a id="tocsindexreport"></a>
 <pre><code class="language-json">{
-  &quot;manifest_hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;state&quot;: &quot;IndexFinished&quot;,
-  &quot;packages&quot;: {
-    &quot;10&quot;: {
-      &quot;id&quot;: &quot;10&quot;,
-      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-      &quot;version&quot;: &quot;1.6.11&quot;,
-      &quot;kind&quot;: &quot;binary&quot;,
-      &quot;normalized_version&quot;: &quot;&quot;,
-      &quot;arch&quot;: &quot;x86&quot;,
-      &quot;module&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;source&quot;: {
-        &quot;id&quot;: &quot;9&quot;,
-        &quot;name&quot;: &quot;apt&quot;,
-        &quot;version&quot;: &quot;1.6.11&quot;,
-        &quot;kind&quot;: &quot;source&quot;,
-        &quot;source&quot;: null
+  "manifest_hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "state": "IndexFinished",
+  "packages": {
+    "10": {
+      "id": "10",
+      "name": "libapt-pkg5.0",
+      "version": "1.6.11",
+      "kind": "binary",
+      "normalized_version": "",
+      "arch": "x86",
+      "module": "",
+      "cpe": "",
+      "source": {
+        "id": "9",
+        "name": "apt",
+        "version": "1.6.11",
+        "kind": "source",
+        "source": null
       }
     }
   },
-  &quot;distributions&quot;: {
-    &quot;1&quot;: {
-      &quot;id&quot;: &quot;1&quot;,
-      &quot;did&quot;: &quot;ubuntu&quot;,
-      &quot;name&quot;: &quot;Ubuntu&quot;,
-      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-      &quot;version_code_name&quot;: &quot;bionic&quot;,
-      &quot;version_id&quot;: &quot;18.04&quot;,
-      &quot;arch&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+  "distributions": {
+    "1": {
+      "id": "1",
+      "did": "ubuntu",
+      "name": "Ubuntu",
+      "version": "18.04.3 LTS (Bionic Beaver)",
+      "version_code_name": "bionic",
+      "version_id": "18.04",
+      "arch": "",
+      "cpe": "",
+      "pretty_name": "Ubuntu 18.04.3 LTS"
     }
   },
-  &quot;environments&quot;: {
-    &quot;10&quot;: [
+  "environments": {
+    "10": [
       {
-        &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
-        &quot;introduced_in&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
-        &quot;distribution_id&quot;: &quot;1&quot;
+        "package_db": "var/lib/dpkg/status",
+        "introduced_in": "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a",
+        "distribution_id": "1"
       }
     ]
   },
-  &quot;success&quot;: true,
-  &quot;err&quot;: &quot;&quot;
+  "success": true,
+  "err": ""
 }
 
 </code></pre>
@@ -2100,90 +2100,90 @@ This operation does not require authentication
 <a id="tocSvulnerabilityreport"></a>
 <a id="tocsvulnerabilityreport"></a>
 <pre><code class="language-json">{
-  &quot;manifest_hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;packages&quot;: {
-    &quot;10&quot;: {
-      &quot;id&quot;: &quot;10&quot;,
-      &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-      &quot;version&quot;: &quot;1.6.11&quot;,
-      &quot;kind&quot;: &quot;binary&quot;,
-      &quot;normalized_version&quot;: &quot;&quot;,
-      &quot;arch&quot;: &quot;x86&quot;,
-      &quot;module&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;source&quot;: {
-        &quot;id&quot;: &quot;9&quot;,
-        &quot;name&quot;: &quot;apt&quot;,
-        &quot;version&quot;: &quot;1.6.11&quot;,
-        &quot;kind&quot;: &quot;source&quot;,
-        &quot;source&quot;: null
+  "manifest_hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "packages": {
+    "10": {
+      "id": "10",
+      "name": "libapt-pkg5.0",
+      "version": "1.6.11",
+      "kind": "binary",
+      "normalized_version": "",
+      "arch": "x86",
+      "module": "",
+      "cpe": "",
+      "source": {
+        "id": "9",
+        "name": "apt",
+        "version": "1.6.11",
+        "kind": "source",
+        "source": null
       }
     }
   },
-  &quot;distributions&quot;: {
-    &quot;1&quot;: {
-      &quot;id&quot;: &quot;1&quot;,
-      &quot;did&quot;: &quot;ubuntu&quot;,
-      &quot;name&quot;: &quot;Ubuntu&quot;,
-      &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-      &quot;version_code_name&quot;: &quot;bionic&quot;,
-      &quot;version_id&quot;: &quot;18.04&quot;,
-      &quot;arch&quot;: &quot;&quot;,
-      &quot;cpe&quot;: &quot;&quot;,
-      &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;
+  "distributions": {
+    "1": {
+      "id": "1",
+      "did": "ubuntu",
+      "name": "Ubuntu",
+      "version": "18.04.3 LTS (Bionic Beaver)",
+      "version_code_name": "bionic",
+      "version_id": "18.04",
+      "arch": "",
+      "cpe": "",
+      "pretty_name": "Ubuntu 18.04.3 LTS"
     }
   },
-  &quot;environments&quot;: {
-    &quot;10&quot;: [
+  "environments": {
+    "10": [
       {
-        &quot;package_db&quot;: &quot;var/lib/dpkg/status&quot;,
-        &quot;introduced_in&quot;: &quot;sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a&quot;,
-        &quot;distribution_id&quot;: &quot;1&quot;
+        "package_db": "var/lib/dpkg/status",
+        "introduced_in": "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a",
+        "distribution_id": "1"
       }
     ]
   },
-  &quot;vulnerabilities&quot;: {
-    &quot;356835&quot;: {
-      &quot;id&quot;: &quot;356835&quot;,
-      &quot;updater&quot;: &quot;&quot;,
-      &quot;name&quot;: &quot;CVE-2009-5155&quot;,
-      &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
-      &quot;links&quot;: &quot;https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986\&quot;&quot;,
-      &quot;severity&quot;: &quot;Low&quot;,
-      &quot;normalized_severity&quot;: &quot;Low&quot;,
-      &quot;package&quot;: {
-        &quot;id&quot;: &quot;0&quot;,
-        &quot;name&quot;: &quot;glibc&quot;,
-        &quot;version&quot;: &quot;&quot;,
-        &quot;kind&quot;: &quot;&quot;,
-        &quot;source&quot;: null,
-        &quot;package_db&quot;: &quot;&quot;,
-        &quot;repository_hint&quot;: &quot;&quot;
+  "vulnerabilities": {
+    "356835": {
+      "id": "356835",
+      "updater": "",
+      "name": "CVE-2009-5155",
+      "description": "In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\"",
+      "links": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986\"",
+      "severity": "Low",
+      "normalized_severity": "Low",
+      "package": {
+        "id": "0",
+        "name": "glibc",
+        "version": "",
+        "kind": "",
+        "source": null,
+        "package_db": "",
+        "repository_hint": ""
       },
-      &quot;dist&quot;: {
-        &quot;id&quot;: &quot;0&quot;,
-        &quot;did&quot;: &quot;ubuntu&quot;,
-        &quot;name&quot;: &quot;Ubuntu&quot;,
-        &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-        &quot;version_code_name&quot;: &quot;bionic&quot;,
-        &quot;version_id&quot;: &quot;18.04&quot;,
-        &quot;arch&quot;: &quot;&quot;,
-        &quot;cpe&quot;: &quot;&quot;,
-        &quot;pretty_name&quot;: &quot;&quot;
+      "dist": {
+        "id": "0",
+        "did": "ubuntu",
+        "name": "Ubuntu",
+        "version": "18.04.3 LTS (Bionic Beaver)",
+        "version_code_name": "bionic",
+        "version_id": "18.04",
+        "arch": "",
+        "cpe": "",
+        "pretty_name": ""
       },
-      &quot;repo&quot;: {
-        &quot;id&quot;: &quot;0&quot;,
-        &quot;name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;,
-        &quot;key&quot;: &quot;&quot;,
-        &quot;uri&quot;: &quot;&quot;
+      "repo": {
+        "id": "0",
+        "name": "Ubuntu 18.04.3 LTS",
+        "key": "",
+        "uri": ""
       },
-      &quot;issued&quot;: &quot;2019-10-12T07:20:50.52Z&quot;,
-      &quot;fixed_in_version&quot;: &quot;2.28-0ubuntu1&quot;
+      "issued": "2019-10-12T07:20:50.52Z",
+      "fixed_in_version": "2.28-0ubuntu1"
     }
   },
-  &quot;package_vulnerabilities&quot;: {
-    &quot;10&quot;: [
-      &quot;356835&quot;
+  "package_vulnerabilities": {
+    "10": [
+      "356835"
     ]
   }
 }
@@ -2211,42 +2211,42 @@ This operation does not require authentication
 <a id="tocSvulnerability"></a>
 <a id="tocsvulnerability"></a>
 <pre><code class="language-json">{
-  &quot;id&quot;: &quot;356835&quot;,
-  &quot;updater&quot;: &quot;&quot;,
-  &quot;name&quot;: &quot;CVE-2009-5155&quot;,
-  &quot;description&quot;: &quot;In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\&quot;&quot;,
-  &quot;links&quot;: &quot;https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986\&quot;&quot;,
-  &quot;severity&quot;: &quot;Low&quot;,
-  &quot;normalized_severity&quot;: &quot;Low&quot;,
-  &quot;package&quot;: {
-    &quot;id&quot;: &quot;0&quot;,
-    &quot;name&quot;: &quot;glibc&quot;,
-    &quot;version&quot;: &quot;&quot;,
-    &quot;kind&quot;: &quot;&quot;,
-    &quot;source&quot;: null,
-    &quot;package_db&quot;: &quot;&quot;,
-    &quot;repository_hint&quot;: &quot;&quot;
+  "id": "356835",
+  "updater": "",
+  "name": "CVE-2009-5155",
+  "description": "In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.\"",
+  "links": "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986\"",
+  "severity": "Low",
+  "normalized_severity": "Low",
+  "package": {
+    "id": "0",
+    "name": "glibc",
+    "version": "",
+    "kind": "",
+    "source": null,
+    "package_db": "",
+    "repository_hint": ""
   },
-  &quot;dist&quot;: {
-    &quot;id&quot;: &quot;0&quot;,
-    &quot;did&quot;: &quot;ubuntu&quot;,
-    &quot;name&quot;: &quot;Ubuntu&quot;,
-    &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-    &quot;version_code_name&quot;: &quot;bionic&quot;,
-    &quot;version_id&quot;: &quot;18.04&quot;,
-    &quot;arch&quot;: &quot;&quot;,
-    &quot;cpe&quot;: &quot;&quot;,
-    &quot;pretty_name&quot;: &quot;&quot;
+  "dist": {
+    "id": "0",
+    "did": "ubuntu",
+    "name": "Ubuntu",
+    "version": "18.04.3 LTS (Bionic Beaver)",
+    "version_code_name": "bionic",
+    "version_id": "18.04",
+    "arch": "",
+    "cpe": "",
+    "pretty_name": ""
   },
-  &quot;repo&quot;: {
-    &quot;id&quot;: &quot;0&quot;,
-    &quot;name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;,
-    &quot;key&quot;: &quot;&quot;,
-    &quot;uri&quot;: &quot;&quot;
+  "repo": {
+    "id": "0",
+    "name": "Ubuntu 18.04.3 LTS",
+    "key": "",
+    "uri": ""
   },
-  &quot;issued&quot;: &quot;2019-10-12T07:20:50.52Z&quot;,
-  &quot;fixed_in_version&quot;: &quot;2.28-0ubuntu1&quot;,
-  &quot;x-widdershins-oldRef&quot;: &quot;#/components/examples/Vulnerability/value&quot;
+  "issued": "2019-10-12T07:20:50.52Z",
+  "fixed_in_version": "2.28-0ubuntu1",
+  "x-widdershins-oldRef": "#/components/examples/Vulnerability/value"
 }
 
 </code></pre>
@@ -2284,16 +2284,16 @@ This operation does not require authentication
 <a id="tocSdistribution"></a>
 <a id="tocsdistribution"></a>
 <pre><code class="language-json">{
-  &quot;id&quot;: &quot;1&quot;,
-  &quot;did&quot;: &quot;ubuntu&quot;,
-  &quot;name&quot;: &quot;Ubuntu&quot;,
-  &quot;version&quot;: &quot;18.04.3 LTS (Bionic Beaver)&quot;,
-  &quot;version_code_name&quot;: &quot;bionic&quot;,
-  &quot;version_id&quot;: &quot;18.04&quot;,
-  &quot;arch&quot;: &quot;&quot;,
-  &quot;cpe&quot;: &quot;&quot;,
-  &quot;pretty_name&quot;: &quot;Ubuntu 18.04.3 LTS&quot;,
-  &quot;x-widdershins-oldRef&quot;: &quot;#/components/examples/Distribution/value&quot;
+  "id": "1",
+  "did": "ubuntu",
+  "name": "Ubuntu",
+  "version": "18.04.3 LTS (Bionic Beaver)",
+  "version_code_name": "bionic",
+  "version_id": "18.04",
+  "arch": "",
+  "cpe": "",
+  "pretty_name": "Ubuntu 18.04.3 LTS",
+  "x-widdershins-oldRef": "#/components/examples/Distribution/value"
 }
 
 </code></pre>
@@ -2317,22 +2317,22 @@ This operation does not require authentication
 <a id="tocSsourcepackage"></a>
 <a id="tocssourcepackage"></a>
 <pre><code class="language-json">{
-  &quot;id&quot;: &quot;10&quot;,
-  &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-  &quot;version&quot;: &quot;1.6.11&quot;,
-  &quot;kind&quot;: &quot;binary&quot;,
-  &quot;normalized_version&quot;: &quot;&quot;,
-  &quot;arch&quot;: &quot;x86&quot;,
-  &quot;module&quot;: &quot;&quot;,
-  &quot;cpe&quot;: &quot;&quot;,
-  &quot;source&quot;: {
-    &quot;id&quot;: &quot;9&quot;,
-    &quot;name&quot;: &quot;apt&quot;,
-    &quot;version&quot;: &quot;1.6.11&quot;,
-    &quot;kind&quot;: &quot;source&quot;,
-    &quot;source&quot;: null
+  "id": "10",
+  "name": "libapt-pkg5.0",
+  "version": "1.6.11",
+  "kind": "binary",
+  "normalized_version": "",
+  "arch": "x86",
+  "module": "",
+  "cpe": "",
+  "source": {
+    "id": "9",
+    "name": "apt",
+    "version": "1.6.11",
+    "kind": "source",
+    "source": null
   },
-  &quot;x-widdershins-oldRef&quot;: &quot;#/components/examples/Package/value&quot;
+  "x-widdershins-oldRef": "#/components/examples/Package/value"
 }
 
 </code></pre>
@@ -2344,7 +2344,7 @@ This operation does not require authentication
 <tr><td>version</td><td>string</td><td>true</td><td>none</td><td>Version of the Package</td></tr>
 <tr><td>kind</td><td>string</td><td>false</td><td>none</td><td>Kind of package. Source</td></tr>
 <tr><td>source</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
-<tr><td>normalized_version</td><td><a href="reference/api.html#schemaversion">Version</a></td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a &quot;kind&quot; and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.</td></tr>
+<tr><td>normalized_version</td><td><a href="reference/api.html#schemaversion">Version</a></td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a "kind" and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.</td></tr>
 <tr><td>arch</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
 <tr><td>module</td><td>string</td><td>false</td><td>none</td><td>none</td></tr>
 <tr><td>cpe</td><td>string</td><td>false</td><td>none</td><td>A CPE identifying the package</td></tr>
@@ -2356,22 +2356,22 @@ This operation does not require authentication
 <a id="tocSpackage"></a>
 <a id="tocspackage"></a>
 <pre><code class="language-json">{
-  &quot;id&quot;: &quot;10&quot;,
-  &quot;name&quot;: &quot;libapt-pkg5.0&quot;,
-  &quot;version&quot;: &quot;1.6.11&quot;,
-  &quot;kind&quot;: &quot;binary&quot;,
-  &quot;normalized_version&quot;: &quot;&quot;,
-  &quot;arch&quot;: &quot;x86&quot;,
-  &quot;module&quot;: &quot;&quot;,
-  &quot;cpe&quot;: &quot;&quot;,
-  &quot;source&quot;: {
-    &quot;id&quot;: &quot;9&quot;,
-    &quot;name&quot;: &quot;apt&quot;,
-    &quot;version&quot;: &quot;1.6.11&quot;,
-    &quot;kind&quot;: &quot;source&quot;,
-    &quot;source&quot;: null
+  "id": "10",
+  "name": "libapt-pkg5.0",
+  "version": "1.6.11",
+  "kind": "binary",
+  "normalized_version": "",
+  "arch": "x86",
+  "module": "",
+  "cpe": "",
+  "source": {
+    "id": "9",
+    "name": "apt",
+    "version": "1.6.11",
+    "kind": "source",
+    "source": null
   },
-  &quot;x-widdershins-oldRef&quot;: &quot;#/components/examples/Package/value&quot;
+  "x-widdershins-oldRef": "#/components/examples/Package/value"
 }
 
 </code></pre>
@@ -2383,7 +2383,7 @@ This operation does not require authentication
 <tr><td>version</td><td>string</td><td>true</td><td>none</td><td>Version of the Package</td></tr>
 <tr><td>kind</td><td>string</td><td>false</td><td>none</td><td>Kind of package. Source</td></tr>
 <tr><td>source</td><td><a href="reference/api.html#schemasourcepackage">SourcePackage</a></td><td>false</td><td>none</td><td>A source package affiliated with a Package</td></tr>
-<tr><td>normalized_version</td><td><a href="reference/api.html#schemaversion">Version</a></td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a &quot;kind&quot; and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.</td></tr>
+<tr><td>normalized_version</td><td><a href="reference/api.html#schemaversion">Version</a></td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a "kind" and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.</td></tr>
 <tr><td>arch</td><td>string</td><td>false</td><td>none</td><td>The package's target system architecture</td></tr>
 <tr><td>module</td><td>string</td><td>false</td><td>none</td><td>A module further defining a namespace for a package</td></tr>
 <tr><td>cpe</td><td>string</td><td>false</td><td>none</td><td>A CPE identifying the package</td></tr>
@@ -2395,11 +2395,11 @@ This operation does not require authentication
 <a id="tocSrepository"></a>
 <a id="tocsrepository"></a>
 <pre><code class="language-json">{
-  &quot;id&quot;: &quot;string&quot;,
-  &quot;name&quot;: &quot;string&quot;,
-  &quot;key&quot;: &quot;string&quot;,
-  &quot;uri&quot;: &quot;string&quot;,
-  &quot;cpe&quot;: &quot;string&quot;
+  "id": "string",
+  "name": "string",
+  "key": "string",
+  "uri": "string",
+  "cpe": "string"
 }
 
 </code></pre>
@@ -2418,13 +2418,13 @@ This operation does not require authentication
 <a id="schema_Version"></a>
 <a id="tocSversion"></a>
 <a id="tocsversion"></a>
-<pre><code class="language-json">&quot;pep440:0.0.0.0.0.0.0.0.0&quot;
+<pre><code class="language-json">"pep440:0.0.0.0.0.0.0.0.0"
 
 </code></pre>
 <p>Version</p>
 <h3 id="properties-13"><a class="header" href="#properties-13">Properties</a></h3>
 <div class="table-wrapper"><table><thead><tr><th>Name</th><th>Type</th><th>Required</th><th>Restrictions</th><th>Description</th></tr></thead><tbody>
-<tr><td>Version</td><td>string</td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a &quot;kind&quot; and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.</td></tr>
+<tr><td>Version</td><td>string</td><td>false</td><td>none</td><td>Version is a normalized claircore version, composed of a "kind" and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.</td></tr>
 </tbody></table>
 </div><h2 id="tocS_Manifest"><a class="header" href="#tocS_Manifest">Manifest</a></h2>
 <!-- backwards compatibility -->
@@ -2433,17 +2433,17 @@ This operation does not require authentication
 <a id="tocSmanifest"></a>
 <a id="tocsmanifest"></a>
 <pre><code class="language-json">{
-  &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;layers&quot;: [
+  "hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "layers": [
     {
-      &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-      &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36&quot;,
-      &quot;headers&quot;: {
-        &quot;property1&quot;: [
-          &quot;string&quot;
+      "hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+      "uri": "https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36",
+      "headers": {
+        "property1": [
+          "string"
         ],
-        &quot;property2&quot;: [
-          &quot;string&quot;
+        "property2": [
+          "string"
         ]
       }
     }
@@ -2464,14 +2464,14 @@ This operation does not require authentication
 <a id="tocSlayer"></a>
 <a id="tocslayer"></a>
 <pre><code class="language-json">{
-  &quot;hash&quot;: &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;,
-  &quot;uri&quot;: &quot;https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36&quot;,
-  &quot;headers&quot;: {
-    &quot;property1&quot;: [
-      &quot;string&quot;
+  "hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "uri": "https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36",
+  "headers": {
+    "property1": [
+      "string"
     ],
-    &quot;property2&quot;: [
-      &quot;string&quot;
+    "property2": [
+      "string"
     ]
   }
 }
@@ -2492,7 +2492,7 @@ This operation does not require authentication
 <a id="tocSbulkdelete"></a>
 <a id="tocsbulkdelete"></a>
 <pre><code class="language-json">[
-  &quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;
+  "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3"
 ]
 
 </code></pre>
@@ -2508,8 +2508,8 @@ This operation does not require authentication
 <a id="tocSerror"></a>
 <a id="tocserror"></a>
 <pre><code class="language-json">{
-  &quot;code&quot;: &quot;string&quot;,
-  &quot;message&quot;: &quot;string&quot;
+  "code": "string",
+  "message": "string"
 }
 
 </code></pre>
@@ -2526,7 +2526,7 @@ This operation does not require authentication
 <a id="tocSstate"></a>
 <a id="tocsstate"></a>
 <pre><code class="language-json">{
-  &quot;state&quot;: &quot;aae368a064d7c5a433d0bf2c4f5554cc&quot;
+  "state": "aae368a064d7c5a433d0bf2c4f5554cc"
 }
 
 </code></pre>
@@ -2541,7 +2541,7 @@ This operation does not require authentication
 <a id="schema_Digest"></a>
 <a id="tocSdigest"></a>
 <a id="tocsdigest"></a>
-<pre><code class="language-json">&quot;sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3&quot;
+<pre><code class="language-json">"sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3"
 
 </code></pre>
 <p>Digest</p>
@@ -2577,8 +2577,8 @@ COMMANDS:
 
 GLOBAL OPTIONS:
    -D                           print debugging logs (default: false)
-   --config value, -c value     clair configuration file (default: &quot;config.yaml&quot;) [$CLAIR_CONF]
-   --issuer value, --iss value  jwt &quot;issuer&quot; to use when making authenticated requests (default: &quot;clairctl&quot;)
+   --config value, -c value     clair configuration file (default: "config.yaml") [$CLAIR_CONF]
+   --issuer value, --iss value  jwt "issuer" to use when making authenticated requests (default: "clairctl")
    --help, -h                   show help (default: false)
    --version, -v                print the version (default: false)
 </code></pre>
@@ -2601,7 +2601,7 @@ DESCRIPTION:
    Request and print a Clair vulnerability report for the named container(s).
 
 OPTIONS:
-   --host value           URL for the clairv4 v1 API. (default: &quot;http://localhost:6060/&quot;) [$CLAIR_API]
+   --host value           URL for the clairv4 v1 API. (default: "http://localhost:6060/") [$CLAIR_API]
    --out value, -o value  output format: text, json, xml (default: text)
 </code></pre>
 <pre><code>NAME:
@@ -2633,7 +2633,7 @@ DESCRIPTION:
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="config"><a class="header" href="#config">Config</a></h1>
 <h2 id="cli-flags-and-environment-variables"><a class="header" href="#cli-flags-and-environment-variables">CLI Flags And Environment Variables</a></h2>
-<p>Clair is configured by a structured yaml or JSON<sup class="footnote-reference"><a href="#1">1</a></sup> file and an optional directory of &quot;merge&quot; and &quot;patch&quot; documents<sup class="footnote-reference"><a href="#1">1</a></sup>.
+<p>Clair is configured by a structured yaml or JSON<sup class="footnote-reference"><a href="#1">1</a></sup> file and an optional directory of "merge" and "patch" documents<sup class="footnote-reference"><a href="#1">1</a></sup>.
 Each Clair node needs to specify what mode it will run in and a path to a configuration file via CLI flags or environment variables.</p>
 <p>For example:</p>
 <pre><code class="language-shell">$ clair -conf ./path/to/config.yaml -mode indexer
@@ -2644,10 +2644,10 @@ $ clair -conf ./path/to/config.yaml -mode matcher
     One of the following strings
     Sets which mode the clair instances will run in
     
-    &quot;indexer&quot;: runs just the indexer node
-    &quot;matcher&quot;: runs just the matcher node
-    &quot;notifier&quot;: runs just the notifier node
-    &quot;combo&quot;: will run all services on the same node.
+    "indexer": runs just the indexer node
+    "matcher": runs just the matcher node
+    "notifier": runs just the notifier node
+    "combo": will run all services on the same node.
 -conf
     (also specified by CLAIR_CONF env variable)
     A file system path to Clair's config file
@@ -2661,7 +2661,7 @@ if needed. Some notable examples:</p>
 <li><code>HTTPS_PROXY</code></li>
 <li><code>SSL_CERT_DIR</code></li>
 </ul>
-<p>If running in &quot;combo&quot; mode you <strong>must</strong> supply the <code>indexer</code>, <code>matcher</code>,
+<p>If running in "combo" mode you <strong>must</strong> supply the <code>indexer</code>, <code>matcher</code>,
 and <code>notifier</code> configuration blocks in the configuration.</p>
 <h2 id="configuration-dropins"><a class="header" href="#configuration-dropins">Configuration dropins</a></h2>
 <p>Starting in Clair version <code>4.7.0</code>, dropin configuration files are supported.</p>
@@ -2676,7 +2676,7 @@ Yaml documents must be resolvable to the JSON subset.</p>
 The <code>clairctl check-config</code> command can be used to ensure a merged configuration is what is intended.
 In addition, placing <code>test</code> operations in a patch file that's evaluated last (such as <code>zz-validate.json-patch</code>) can be used to have Clair refuse to start if some configuration values are not what is intended.</p>
 <p>The application defaults are applied <em>after</em> the configuration is loaded and as such, not reflected in the <code>clairctl check-config</code> command.
-The output of that command is also not currently suitable to be used to &quot;compile&quot; a config to a single file.</p>
+The output of that command is also not currently suitable to be used to "compile" a config to a single file.</p>
 <h2 id="deprecations-and-changes"><a class="header" href="#deprecations-and-changes">Deprecations and Changes</a></h2>
 <p>Starting in version <code>4.7.0</code>, unknown keys are disallowed.
 Configurations that looked valid previously and loaded fine may now cause Clair to refuse to start.</p>
@@ -2685,22 +2685,22 @@ Configurations that use Jaeger will print a warning.
 In future versions, using the Jaeger format may cause an error.</p>
 <h2 id="configuration-reference"><a class="header" href="#configuration-reference">Configuration Reference</a></h2>
 <p>Please see the <a href="https://pkg.go.dev/github.com/quay/clair/config">go module documentation</a> for additional documentation on defaults and use.</p>
-<pre><code>http_listen_addr: &quot;&quot;
-introspection_addr: &quot;&quot;
-log_level: &quot;&quot;
+<pre><code>http_listen_addr: ""
+introspection_addr: ""
+log_level: ""
 tls: {}
 indexer:
-    connstring: &quot;&quot;
+    connstring: ""
     scanlock_retry: 0
     layer_scan_concurrency: 0
     migrations: false
     scanner: {}
     airgap: false
 matcher:
-    connstring: &quot;&quot;
-    indexer_addr: &quot;&quot;
+    connstring: ""
+    indexer_addr: ""
     migrations: false
-    period: &quot;&quot;
+    period: ""
     disable_updaters: false
     update_retention: 2
 matchers:
@@ -2710,12 +2710,12 @@ updaters:
     sets: nil
     config: nil
 notifier:
-    connstring: &quot;&quot;
+    connstring: ""
     migrations: false
-    indexer_addr: &quot;&quot;
-    matcher_addr: &quot;&quot;
-    poll_interval: &quot;&quot;
-    delivery_interval: &quot;&quot;
+    indexer_addr: ""
+    matcher_addr: ""
+    poll_interval: ""
+    delivery_interval: ""
     disable_summary: false
     webhook: null
     amqp: null
@@ -2723,23 +2723,23 @@ notifier:
 auth: 
   psk: nil
 trace:
-    name: &quot;&quot;
+    name: ""
     probability: null
     jaeger:
         agent:
-            endpoint: &quot;&quot;
+            endpoint: ""
         collector:
-            endpoint: &quot;&quot;
+            endpoint: ""
             username: null
             password: null
-        service_name: &quot;&quot;
+        service_name: ""
         tags: nil
         buffer_max: 0
     otlp:
 	  http: {}
       grpc: {}
 metrics:
-    name: &quot;&quot;
+    name: ""
     prometheus:
         endpoint: null
 </code></pre>
@@ -2807,7 +2807,7 @@ or a libpq connection string (e.g.,
 <p>Integer.</p>
 <p>Rate limits the number of index report creation requests.</p>
 <p>Setting this to 0 will attempt to auto-size this value. Setting a negative value
-means &quot;unlimited.&quot; The auto-sizing is a multiple of the number of available
+means "unlimited." The auto-sizing is a multiple of the number of available
 cores.</p>
 <p>The API will return a 429 status code if concurrency is exceeded.</p>
 <h4 id="indexerscanlock_retry"><a class="header" href="#indexerscanlock_retry"><code>$.indexer.scanlock_retry</code></a></h4>
@@ -2872,23 +2872,25 @@ cycles. This should be set to a safe MAX value based on database size
 constraints.</p>
 <p>Defaults to 10.</p>
 <p>If a value less than 0 is provided, GC is disabled. 2 is the minimum value to
-ensure updates can be compared for notifications. </p>
+ensure updates can be compared for notifications.</p>
 <h3 id="matchers"><a class="header" href="#matchers"><code>$.matchers</code></a></h3>
 <p>Matchers provides configuration for the in-tree Matchers and RemoteMatchers.</p>
 <h4 id="matchersnames"><a class="header" href="#matchersnames"><code>$.matchers.names</code></a></h4>
 <p>A list of string values informing the matcher factory about enabled matchers.</p>
 <p>If the value is nil the default list of Matchers will run:</p>
 <ul>
-<li>alpine</li>
-<li>aws</li>
-<li>debian</li>
+<li>alpine-matcher</li>
+<li>aws-matcher</li>
+<li>debian-matcher</li>
+<li>gobin</li>
+<li>java-maven</li>
 <li>oracle</li>
 <li>photon</li>
 <li>python</li>
 <li>rhel</li>
+<li>rhel-container-matcher</li>
 <li>suse</li>
-<li>ubuntu</li>
-<li>crda</li>
+<li>ubuntu-matcher</li>
 </ul>
 <p>If an empty list is provided zero matchers will run.</p>
 <h4 id="matchersconfig"><a class="header" href="#matchersconfig"><code>$.matchers.config</code></a></h4>
@@ -2912,8 +2914,9 @@ will be provided to the matchers factory constructor.</p>
 <li>aws</li>
 <li>debian</li>
 <li>oracle</li>
+<li>osv</li>
 <li>photon</li>
-<li>pyupio</li>
+<li>rhcc</li>
 <li>rhel</li>
 <li>suse</li>
 <li>ubuntu</li>
@@ -3046,7 +3049,7 @@ to 0 will effectively set it to 1.</p>
 to the broker. This URL should point to Clair's notification API endpoint.</p>
 <h4 id="notifierstompdestination"><a class="header" href="#notifierstompdestination"><code>$.notifier.stomp.destination</code></a></h4>
 <p>a string value</p>
-<p>The STOMP destination to deliver notifications to. </p>
+<p>The STOMP destination to deliver notifications to.</p>
 <h4 id="notifierstompuris"><a class="header" href="#notifierstompuris"><code>$.notifier.stomp.uris</code></a></h4>
 <p>list of URL strings</p>
 <p>A list of one or more STOMP brokers to connect to in priority order.</p>

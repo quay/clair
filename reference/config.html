@@ -178,7 +178,7 @@
                     <main>
                         <h1 id="config"><a class="header" href="#config">Config</a></h1>
 <h2 id="cli-flags-and-environment-variables"><a class="header" href="#cli-flags-and-environment-variables">CLI Flags And Environment Variables</a></h2>
-<p>Clair is configured by a structured yaml or JSON<sup class="footnote-reference"><a href="#1">1</a></sup> file and an optional directory of &quot;merge&quot; and &quot;patch&quot; documents<sup class="footnote-reference"><a href="#1">1</a></sup>.
+<p>Clair is configured by a structured yaml or JSON<sup class="footnote-reference"><a href="#1">1</a></sup> file and an optional directory of "merge" and "patch" documents<sup class="footnote-reference"><a href="#1">1</a></sup>.
 Each Clair node needs to specify what mode it will run in and a path to a configuration file via CLI flags or environment variables.</p>
 <p>For example:</p>
 <pre><code class="language-shell">$ clair -conf ./path/to/config.yaml -mode indexer
@@ -189,10 +189,10 @@ $ clair -conf ./path/to/config.yaml -mode matcher
     One of the following strings
     Sets which mode the clair instances will run in
     
-    &quot;indexer&quot;: runs just the indexer node
-    &quot;matcher&quot;: runs just the matcher node
-    &quot;notifier&quot;: runs just the notifier node
-    &quot;combo&quot;: will run all services on the same node.
+    "indexer": runs just the indexer node
+    "matcher": runs just the matcher node
+    "notifier": runs just the notifier node
+    "combo": will run all services on the same node.
 -conf
     (also specified by CLAIR_CONF env variable)
     A file system path to Clair's config file
@@ -206,7 +206,7 @@ if needed. Some notable examples:</p>
 <li><code>HTTPS_PROXY</code></li>
 <li><code>SSL_CERT_DIR</code></li>
 </ul>
-<p>If running in &quot;combo&quot; mode you <strong>must</strong> supply the <code>indexer</code>, <code>matcher</code>,
+<p>If running in "combo" mode you <strong>must</strong> supply the <code>indexer</code>, <code>matcher</code>,
 and <code>notifier</code> configuration blocks in the configuration.</p>
 <h2 id="configuration-dropins"><a class="header" href="#configuration-dropins">Configuration dropins</a></h2>
 <p>Starting in Clair version <code>4.7.0</code>, dropin configuration files are supported.</p>
@@ -221,7 +221,7 @@ Yaml documents must be resolvable to the JSON subset.</p>
 The <code>clairctl check-config</code> command can be used to ensure a merged configuration is what is intended.
 In addition, placing <code>test</code> operations in a patch file that's evaluated last (such as <code>zz-validate.json-patch</code>) can be used to have Clair refuse to start if some configuration values are not what is intended.</p>
 <p>The application defaults are applied <em>after</em> the configuration is loaded and as such, not reflected in the <code>clairctl check-config</code> command.
-The output of that command is also not currently suitable to be used to &quot;compile&quot; a config to a single file.</p>
+The output of that command is also not currently suitable to be used to "compile" a config to a single file.</p>
 <h2 id="deprecations-and-changes"><a class="header" href="#deprecations-and-changes">Deprecations and Changes</a></h2>
 <p>Starting in version <code>4.7.0</code>, unknown keys are disallowed.
 Configurations that looked valid previously and loaded fine may now cause Clair to refuse to start.</p>
@@ -230,22 +230,22 @@ Configurations that use Jaeger will print a warning.
 In future versions, using the Jaeger format may cause an error.</p>
 <h2 id="configuration-reference"><a class="header" href="#configuration-reference">Configuration Reference</a></h2>
 <p>Please see the <a href="https://pkg.go.dev/github.com/quay/clair/config">go module documentation</a> for additional documentation on defaults and use.</p>
-<pre><code>http_listen_addr: &quot;&quot;
-introspection_addr: &quot;&quot;
-log_level: &quot;&quot;
+<pre><code>http_listen_addr: ""
+introspection_addr: ""
+log_level: ""
 tls: {}
 indexer:
-    connstring: &quot;&quot;
+    connstring: ""
     scanlock_retry: 0
     layer_scan_concurrency: 0
     migrations: false
     scanner: {}
     airgap: false
 matcher:
-    connstring: &quot;&quot;
-    indexer_addr: &quot;&quot;
+    connstring: ""
+    indexer_addr: ""
     migrations: false
-    period: &quot;&quot;
+    period: ""
     disable_updaters: false
     update_retention: 2
 matchers:
@@ -255,12 +255,12 @@ updaters:
     sets: nil
     config: nil
 notifier:
-    connstring: &quot;&quot;
+    connstring: ""
     migrations: false
-    indexer_addr: &quot;&quot;
-    matcher_addr: &quot;&quot;
-    poll_interval: &quot;&quot;
-    delivery_interval: &quot;&quot;
+    indexer_addr: ""
+    matcher_addr: ""
+    poll_interval: ""
+    delivery_interval: ""
     disable_summary: false
     webhook: null
     amqp: null
@@ -268,23 +268,23 @@ notifier:
 auth: 
   psk: nil
 trace:
-    name: &quot;&quot;
+    name: ""
     probability: null
     jaeger:
         agent:
-            endpoint: &quot;&quot;
+            endpoint: ""
         collector:
-            endpoint: &quot;&quot;
+            endpoint: ""
             username: null
             password: null
-        service_name: &quot;&quot;
+        service_name: ""
         tags: nil
         buffer_max: 0
     otlp:
 	  http: {}
       grpc: {}
 metrics:
-    name: &quot;&quot;
+    name: ""
     prometheus:
         endpoint: null
 </code></pre>
@@ -352,7 +352,7 @@ or a libpq connection string (e.g.,
 <p>Integer.</p>
 <p>Rate limits the number of index report creation requests.</p>
 <p>Setting this to 0 will attempt to auto-size this value. Setting a negative value
-means &quot;unlimited.&quot; The auto-sizing is a multiple of the number of available
+means "unlimited." The auto-sizing is a multiple of the number of available
 cores.</p>
 <p>The API will return a 429 status code if concurrency is exceeded.</p>
 <h4 id="indexerscanlock_retry"><a class="header" href="#indexerscanlock_retry"><code>$.indexer.scanlock_retry</code></a></h4>
@@ -417,23 +417,25 @@ cycles. This should be set to a safe MAX value based on database size
 constraints.</p>
 <p>Defaults to 10.</p>
 <p>If a value less than 0 is provided, GC is disabled. 2 is the minimum value to
-ensure updates can be compared for notifications. </p>
+ensure updates can be compared for notifications.</p>
 <h3 id="matchers"><a class="header" href="#matchers"><code>$.matchers</code></a></h3>
 <p>Matchers provides configuration for the in-tree Matchers and RemoteMatchers.</p>
 <h4 id="matchersnames"><a class="header" href="#matchersnames"><code>$.matchers.names</code></a></h4>
 <p>A list of string values informing the matcher factory about enabled matchers.</p>
 <p>If the value is nil the default list of Matchers will run:</p>
 <ul>
-<li>alpine</li>
-<li>aws</li>
-<li>debian</li>
+<li>alpine-matcher</li>
+<li>aws-matcher</li>
+<li>debian-matcher</li>
+<li>gobin</li>
+<li>java-maven</li>
 <li>oracle</li>
 <li>photon</li>
 <li>python</li>
 <li>rhel</li>
+<li>rhel-container-matcher</li>
 <li>suse</li>
-<li>ubuntu</li>
-<li>crda</li>
+<li>ubuntu-matcher</li>
 </ul>
 <p>If an empty list is provided zero matchers will run.</p>
 <h4 id="matchersconfig"><a class="header" href="#matchersconfig"><code>$.matchers.config</code></a></h4>
@@ -457,8 +459,9 @@ will be provided to the matchers factory constructor.</p>
 <li>aws</li>
 <li>debian</li>
 <li>oracle</li>
+<li>osv</li>
 <li>photon</li>
-<li>pyupio</li>
+<li>rhcc</li>
 <li>rhel</li>
 <li>suse</li>
 <li>ubuntu</li>
@@ -591,7 +594,7 @@ to 0 will effectively set it to 1.</p>
 to the broker. This URL should point to Clair's notification API endpoint.</p>
 <h4 id="notifierstompdestination"><a class="header" href="#notifierstompdestination"><code>$.notifier.stomp.destination</code></a></h4>
 <p>a string value</p>
-<p>The STOMP destination to deliver notifications to. </p>
+<p>The STOMP destination to deliver notifications to.</p>
 <h4 id="notifierstompuris"><a class="header" href="#notifierstompuris"><code>$.notifier.stomp.uris</code></a></h4>
 <p>list of URL strings</p>
 <p>A list of one or more STOMP brokers to connect to in priority order.</p>
