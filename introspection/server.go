@@ -8,8 +8,8 @@ import (
 	"net/http/pprof"
 	"time"
 
+	deltapprof "github.com/grafana/pyroscope-go/godeltaprof/http/pprof"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	deltapprof "github.com/pyroscope-io/godeltaprof/http/pprof"
 	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/otel"
