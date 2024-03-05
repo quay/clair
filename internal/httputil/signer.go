@@ -76,8 +76,10 @@ func (s *Signer) Add(ctx context.Context, uri string) error {
 	if err != nil {
 		return err
 	}
-	a := u.Host
-	s.use[a] = struct{}{}
+	if s.use != nil {
+		a := u.Host
+		s.use[a] = struct{}{}
+	}
 	return nil
 }
 
