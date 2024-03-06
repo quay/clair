@@ -269,8 +269,8 @@ go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.23.1 h1:IqmsDcJnxQSs6W+
 go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.23.1/go.mod h1:VMZ84RYOd4Lrp0+09mckDvqBj2PXWDwOFaxb1P5uO8g=
 go.opentelemetry.io/otel/metric v1.24.0 h1:6EhoGWWK28x1fbpA4tYTOWBkPefTDQnb8WSGXlc88kI=
 go.opentelemetry.io/otel/metric v1.24.0/go.mod h1:VYhLe1rFfxuTXLgj4CBiyz+9WYBA8pNGJgDcSFRKBco=
-go.opentelemetry.io/otel/sdk v1.23.1 h1:O7JmZw0h76if63LQdsBMKQDWNb5oEcOThG9IrxscV+E=
-go.opentelemetry.io/otel/sdk v1.23.1/go.mod h1:LzdEVR5am1uKOOwfBWFef2DCi1nu3SA8XQxx2IerWFk=
+go.opentelemetry.io/otel/sdk v1.24.0 h1:YMPPDNymmQN3ZgczicBY3B6sf9n62Dlj9pWD3ucgoDw=
+go.opentelemetry.io/otel/sdk v1.24.0/go.mod h1:KVrIYw6tEubO9E96HQpcmpTKDVn9gdv35HoYiQWGDFg=
 go.opentelemetry.io/otel/trace v1.24.0 h1:CsKnnL4dUAr/0llH9FKuc698G04IrpWV0MQA/Y1YELI=
 go.opentelemetry.io/otel/trace v1.24.0/go.mod h1:HPc3Xr/cOApsBI154IU0OI0HJexz+aw5uPdbs3UCjNU=
 go.uber.org/atomic v1.3.2/go.mod h1:gD2HeocX3+yG+ygLZcrzQJaqmWj9AIm7n08wl/qW/PE=
