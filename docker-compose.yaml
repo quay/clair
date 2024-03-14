@@ -33,6 +33,8 @@ x-anchors:
       - /etc/clair/${CLAIR_CONFIG:-config.yaml}
     restart: unless-stopped
     working_dir: /src/cmd/clair
+    tmpfs:
+      - /tmp:exec,mode=1777
 
 services:
   indexer:
@@ -145,6 +147,7 @@ services:
     container_name: clair-notifier
     profiles:
       - notifier
+      - quay
     environment:
       CLAIR_MODE: "notifier"
       NOTIFIER_TEST_MODE: "true"
@@ -197,13 +200,6 @@ services:
     profiles:
       - quay
     image: *redis-image
-  quay-notifier:
-    <<: *notifier
-    container_name: clair-notifier-quay
-    profiles:
-      - quay
-    environment:
-      CLAIR_MODE: "notifier"
   skopeo:
     container_name: quay-skopeo
     profiles:
