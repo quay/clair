@@ -76,10 +76,11 @@ func (s *Signer) Add(ctx context.Context, uri string) error {
 	if err != nil {
 		return err
 	}
-	if s.use != nil {
-		a := u.Host
-		s.use[a] = struct{}{}
+	if s.use == nil {
+		return errors.New("authority map not initialized, perhaps missing auth section in config")
 	}
+	a := u.Host
+	s.use[a] = struct{}{}
 	return nil
 }
 
