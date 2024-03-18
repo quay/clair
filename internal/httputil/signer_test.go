@@ -19,7 +19,7 @@ func TestNewSigner(t *testing.T) {
 		t.Error("signed request authority map should be non-initialized")
 	}
 	err = signer.Add(ctx, "http://test-url")
-	if err != nil {
-		t.Error("Adding host to non-initialized signed request authority map should not fail")
+	if err == nil {
+		t.Error("Adding host to non-initialized signed request authority map should fail")
 	}
 }
