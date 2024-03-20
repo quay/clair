@@ -22,7 +22,7 @@ runs:
           exec mdbook build --dest-dir "./book/${d}"
         fi
     - if: ${{ inputs.publish == 'true' }}
-      uses: peaceiris/actions-gh-pages@v3.8.0
+      uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ inputs.token }}
         publish_dir: ./book
