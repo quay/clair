@@ -12,63 +12,55 @@ on:
       - release-4.*
 
 jobs:
-  config:
-    runs-on: ubuntu-latest
-    outputs:
-      go_versions: ${{ steps.config.outputs.go_versions }}
-    steps:
-      - id: config
-        run: |
-          echo 'go_versions=["1.20"]' >> "$GITHUB_OUTPUT"
-
-  commit-check:
-    name: Commit Check
+  lints:
+    name: Lints
     runs-on: ubuntu-latest
     steps:
-      - name: commit check
+      - name: Commit Check
         uses: gsactions/commit-message-checker@v2
         with:
           pattern: |
-            ^(.*):\s*(.*)\n.*$
+            ^[^:!]+: .+\n\n.*$
           error: 'Commit must begin with <scope>: <subject>'
           flags: 'gm'
           excludeTitle: true
           excludeDescription: true
           checkAllCommitMessages: true
           accessToken: ${{ secrets.GITHUB_TOKEN }}
-
-  api-reference-check:
-    name: API Reference Check
-    runs-on: ubuntu-latest
-    steps:
       - name: Checkout
+        id: checkout
+        if: ${{ !cancelled() }}
         uses: actions/checkout@v4
-      - name: gen api reference
+      - name: Check Filenames
+        if: ${{ !cancelled() && steps.checkout.conclusion == 'success' }}
+        run: | # Check for all the characters Windows hates.
+          git ls-files -- ':/:*[<>:"|?*]*' | while read -r file; do
+            printf '::error file=%s,title=Bad Filename::Disallowed character in file name\n' "$file"
+          done
+          exit $(git ls-files -- ':/:*[<>:"|?*]*' | wc -l)
+      - name: Check API Reference
+        if: ${{ !cancelled() && steps.checkout.conclusion == 'success' }}
         run: |
           npx widdershins --search false --language_tabs 'python:Python' 'go:Golang' 'javascript:Javascript' --summary ./openapi.yaml -o ./Documentation/reference/api.md
-      - name: diff
-        run: |
           git diff --exit-code
-
-  tidy:
-    name: Tidy
-    needs: ['config']
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go:
-          - ${{ fromJSON(needs.config.outputs.go_versions)[0] }}
-    steps:
-      - uses: actions/setup-go@v5
+      - name: Setup Go
+        id: 'setupgo'
+        if: ${{ !cancelled() && steps.checkout.conclusion == 'success' }}
+        uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go }}
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/go-tidy
-        with:
-          go: ${{ matrix.go }}
+          cache: false
+          go-version-file: ./go.mod
+      - name: Go Tidy
+        if: ${{ !cancelled() && steps.checkout.conclusion == 'success' && steps.setupgo.conclusion == 'success' }}
+        run: |
+          # go mod tidy
+          trap 'echo "::error file=go.mod,title=Tidy Check::Commit would leave go.mod untidy"' ERR
+          go mod tidy
+          git diff --exit-code
 
   documentation:
     name: Documentation
+    needs: ['lints']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -77,8 +69,9 @@ jobs:
           publish: false
 
   tests:
-    needs: ['config']
+    name: Tests
+    needs: ['lints']
     uses: ./.github/workflows/tests.yml
     with:
       package_expr: ./...
-      go_versions: ${{ needs.config.outputs.go_versions }}
+      qemu: false
