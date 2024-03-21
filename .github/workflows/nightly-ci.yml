@@ -10,46 +10,31 @@ on:
         required: false
         type: string
         description: 'Package expression(s) passed to `go test`'
-      go_versions:
-        required: false
-        type: string
-        description: 'JSON array of go versions to use for tests'
-      platforms:
-        required: false
-        type: string
-        description: 'JSON array of platforms to test'
 
 jobs:
   defaults:
+    name: Check Input
     runs-on: ubuntu-latest
     outputs:
       package_expr: ${{ steps.config.outputs.package_expr }}
-      go_versions: ${{ steps.config.outputs.go_versions }}
-      platforms: ${{ steps.config.outputs.platforms }}
     steps:
-      - uses: actions/checkout@v4
-      - id: config
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+      - name: Make package expressions
+        id: config
+        if: ${{ !cancelled() && steps.checkout.conclusion == 'success' }}
         run: |
           if test -n "${{ inputs.package_expr }}"; then
             printf 'package_expr=%s\n' '${{ inputs.package_expr }}' >> "$GITHUB_OUTPUT"
           else
             printf 'package_expr=%s\n' "$(go list -m github.com/quay/clair{core,}/... | awk '{printf("%s/... ",$1)}')" >> "$GITHUB_OUTPUT"
           fi
-          if test -n "${{ inputs.go_versions }}"; then
-            printf 'go_versions=%s\n' '${{ inputs.go_versions }}' >> "$GITHUB_OUTPUT"
-          else
-            printf 'go_versions=["1.20"]\n' >> "$GITHUB_OUTPUT"
-          fi
-          if test -n "${{ inputs.platforms }}"; then
-            printf 'platforms=%s\n' '${{ inputs.platforms }}' >> "$GITHUB_OUTPUT"
-          else
-            printf 'platforms=["linux/arm64", "linux/ppc64le", "linux/s390x"]\n' >> "$GITHUB_OUTPUT"
-          fi
 
   tests:
+    name: Tests
     needs: ['defaults']
     uses: ./.github/workflows/tests.yml
     with:
       package_expr: ${{ needs.defaults.outputs.package_expr }}
-      go_versions: ${{ needs.defaults.outputs.go_versions }}
-      platforms: ${{ needs.defaults.outputs.platforms }}
+      qemu: true
