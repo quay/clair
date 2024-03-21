@@ -16,52 +16,50 @@ on:
       - release-4.*
 
 jobs:
-  config:
-    runs-on: ubuntu-latest
-    outputs:
-      go_versions: ${{ steps.config.outputs.go_versions }}
-    steps:
-      - id: config
-        run: |
-          echo 'go_versions=["1.20", "1.19"]' >> "$GITHUB_OUTPUT"
-
   commit-check:
     name: Commit Check
     runs-on: ubuntu-latest
     steps:
-      - name: commit check
+      - name: Commit Check
         uses: gsactions/commit-message-checker@v2
         with:
           pattern: |
-            ^(.*):\s*(.*)\n.*$
+            ^[^:!]+: .+\n\n.*$
           error: 'Commit must begin with <scope>: <subject>'
           flags: 'gm'
           excludeTitle: true
           excludeDescription: true
           checkAllCommitMessages: true
           accessToken: ${{ secrets.GITHUB_TOKEN }}
+
   tidy:
     name: Tidy
-    needs: ['config']
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        go:
-          - ${{ fromJSON(needs.config.outputs.go_versions)[0] }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - name: Checkout
+        id: checkout
+        if: ${{ !cancelled() }}
+        uses: actions/checkout@v4
+      - name: Setup Go
+        id: setupgo
+        if: ${{ !cancelled() && steps.checkout.conclusion == 'success' }}
+        uses: actions/setup-go@v5
         with:
-          go-version: ${{ matrix.go }}
-      - uses: ./.github/actions/go-tidy
-        with:
-          go: ${{ matrix.go }}
-          dir: ./config
+          cache: false
+          go-version-file: ./config/go.mod
+      - name: Go Tidy
+        if: ${{ !cancelled() && steps.checkout.conclusion == 'success' && steps.setupgo.conclusion == 'success' }}
+        working-directory: ./config
+        run: |
+          trap 'echo "::error file=go.mod,title=Tidy Check::Commit would leave go.mod untidy"' ERR
+          go mod tidy
+          git diff --exit-code
 
   tests:
-    needs: ['config']
+    name: Tests
+    if: ${{ !cancelled() }}
     uses: ./.github/workflows/tests.yml
     with:
       cd: config
       package_expr: ./...
-      go_versions: ${{ needs.config.outputs.go_versions }}
+      qemu: false

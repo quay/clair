@@ -8,18 +8,11 @@ on:
         required: true
         type: string
         description: 'Package expression(s) passed to `go test`'
-      go_versions:
+      qemu:
         required: false
-        type: string
-        default: |
-          ["1.20"]
-        description: 'JSON array of go versions to use for tests'
-      platforms:
-        required: false
-        type: string
-        default: |
-          ["linux/amd64"]
-        description: 'JSON array of platforms to test'
+        type: boolean
+        default: false
+        description: 'Run tests for additional architectures under qemu'
       cd:
         required: false
         type: string
@@ -27,17 +20,96 @@ on:
         description: 'Change to this directory before running tests'
 
 jobs:
-  tests:
-    name: Tests
+  setup:
+    name: Setup
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ${{ fromJSON(inputs.go_versions) }}
-        platform: ${{ fromJSON(inputs.platforms) }}
+        go: ['oldstable', 'stable']
+    outputs:
+      go-cache: ${{ steps.check.outputs.cache-hit == 'true' || steps.setup-go.outputs.cache-hit == 'true' || steps.warm.conclusion == 'success' }}
+      runner-arch: ${{ steps.arch.outputs.result }}
+    steps:
+      - name: Map Arch
+        id: arch
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          script: |
+            switch (process.env.RUNNER_ARCH) {
+            case "X64":
+              return "amd64";
+            case "ARM64":
+              return "arm64";
+            default:
+              core.setFailed(`unknown/unsupported architecture: ${process.env.RUNNER_ARCH}`);
+            }
+            return ""
+      - name: Checkout
+        if: ${{ inputs.cd == '' }}
+        id: checkout
+        uses: actions/checkout@v4
+      - name: Check Go Version
+        if: ${{ inputs.cd == '' && steps.checkout.conclusion == 'success' }}
+        id: checkversion
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache: false
+      - name: Get ImageOS
+        # There's no way around this, because "ImageOS" is only available to
+        # processes, but the setup-go action uses it in its key.
+        if: ${{ inputs.cd == '' && steps.checkout.conclusion == 'success' }}
+        id: imageos
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          script: |
+            return process.env.ImageOS
+      - name: Check Cache
+        if: ${{ inputs.cd == '' && steps.checkout.conclusion == 'success' }}
+        id: check
+        uses: actions/cache/restore@v4
+        with:
+          key: >-
+            setup-go-${{ runner.os }}-${{ steps.imageos.outputs.result }}-go-${{ steps.checkversion.outputs.go-version }}-${{ hashFiles('go.sum') }}
+          lookup-only: true
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+      - name: Setup Go
+        if: ${{ inputs.cd == '' && steps.check.outputs.cache-hit != 'true' }}
+        id: setup-go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Warm Cache on Miss
+        id: warm
+        if: ${{ inputs.cd == '' && steps.check.outputs.cache-hit != 'true' && steps.setup-go.outputs.cache-hit != 'true' }}
+        run: |
+          # Warm module+build cache
+          for GOARCH in amd64 arm64 ppc64le s390x; do
+            export GOARCH
+            for mod in '' github.com/quay/clair/config github.com/quay/claircore github.com/quay/claircore/toolkit; do
+              echo Downloading modules for "${mod-main}/$GOARCH"
+              go mod download $mod
+            done
+            echo Building '"std"' for "$GOARCH"
+            go build std
+          done
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    needs: ['setup']
+    strategy:
+      matrix:
+        go: ['oldstable', 'stable']
+        platform: ${{ inputs.qemu && fromJSON('["amd64","arm64","ppc64le","s390x"]') || fromJSON('["amd64"]')}}
       fail-fast: false
     services:
       postgres:
-        image: docker.io/library/postgres:11
+        image: docker.io/library/postgres:15
         env:
           POSTGRES_DB: "clair"
           POSTGRES_INITDB_ARGS: "--no-sync"
@@ -60,63 +132,79 @@ jobs:
 
     steps:
       - name: Configure RabbitMQ
+        env:
+          brokername: ${{ matrix.platform == needs.setup.outputs.runner-arch && 'localhost' || 'rabbitmq' }}
         run: |
           docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl await_startup
           docker exec ${{ job.services.rabbitmq.id }} rabbitmq-plugins enable rabbitmq_stomp
           docker exec ${{ job.services.rabbitmq.id }} rabbitmq-plugins disable rabbitmq_management_agent rabbitmq_prometheus rabbitmq_web_dispatch
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl add_vhost 'rabbitmq'
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p 'rabbitmq' guest '.*' '.*' '.*'
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl add_vhost "${brokername}"
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p "${brokername}" guest '.*' '.*' '.*'
           docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl add_user clair password
           docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p '/' clair '.*' '.*' '.*'
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p 'rabbitmq' clair '.*' '.*' '.*'
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p "${brokername}" clair '.*' '.*' '.*'
+
       - name: Checkout
         uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - name: Setup Go
+        id: setup-go
+        uses: actions/setup-go@v5
         with:
-          cache: false  # Set up with a finer-grained cache key below.
           go-version: ${{ matrix.go }}
-      - name: Check host
-        id: host
-        run:
-          printf 'platform=%s\n' "$(go env GOOS GOARCH | paste -s -d /)" >> "$GITHUB_OUTPUT"
-      - name: Cache go artifacts
-        uses: actions/cache@v4
-        id: cache
+          cache: ${{ needs.setup.outputs.go-cache }}
+      - name: Assets Cache
+        id: assets
+        uses: actions/cache/restore@v4
         with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-${{ matrix.platform }}-${{ matrix.go }}-${{ hashFiles('**/go.sum') }}
+          key: integration-assets-${{ hashFiles('go.sum') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.platform }}-${{ matrix.go }}-
-      - name: Warm the cache on miss
-        # This is faster to run outside the container, but the module cache
-        # can't easily be shared between runs because GOOS and GOARCH influence
-        # the dependency graph.
-        if: ${{ ! steps.cache.outputs.cache-hit }}
+            integration-assets-
+          path: |
+            ~/.cache/clair-testing
+
+      - name: Tests
+        if: ${{ matrix.platform == needs.setup.outputs.runner-arch }}
+        env:
+          POSTGRES_CONNECTION_STRING: "host=localhost port=${{ job.services.postgres.ports[5432] }} user=clair dbname=clair password=password sslmode=disable"
+          RABBITMQ_CONNECTION_STRING: "amqp://clair:password@localhost:${{ job.services.rabbitmq.ports[5672] }}/"
+          STOMP_CONNECTION_STRING: "stomp://clair:password@localhost:${{ job.services.rabbitmq.ports[61613] }}/"
+        working-directory: ./${{ inputs.cd }}
         run: |
-          go env -w $(echo ${{ matrix.platform}} | awk -F / '{print "GOOS="$1, "GOARCH="$2}')
-          go mod download
-          go build -v std
+          # Go Tests
+          for expr in ${{ inputs.package_expr }}; do
+            printf '::group::go test %s\n' "$expr"
+            go test -tags integration "$expr"
+            printf '::endgroup::\n'
+          done
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-        if: ${{ steps.host.outputs.platform != matrix.platform }}
+        if: ${{ matrix.platform != needs.setup.outputs.runner-arch }}
         with:
-          platforms: ${{ matrix.platform }}
-      - name: Tests
-        run: >-
-          docker run
-          --rm
-          --network ${{ job.container.network }}
-          --platform ${{ matrix.platform }}
-          --mount "type=bind,src=$(go env GOMODCACHE),dst=/go/pkg/mod"
-          --mount "type=bind,src=$(go env GOCACHE),dst=/root/.cache/go-build"
-          --mount "type=bind,src=$(pwd),dst=/build"
-          --env "POSTGRES_CONNECTION_STRING=host=postgres port=5432 user=clair dbname=clair password=password sslmode=disable"
-          --env "RABBITMQ_CONNECTION_STRING=amqp://clair:password@rabbitmq:5672/"
-          --env "STOMP_CONNECTION_STRING=stomp://clair:password@rabbitmq:61613/"
-          -w "/build/${{ inputs.cd }}"
-          "quay.io/projectquay/golang:${{ matrix.go }}"
-          go test
-          -tags integration
-          ${{ inputs.package_expr }}
+          platforms: linux/${{ matrix.platform }}
+      - name: Qemu Tests
+        if: ${{ matrix.platform != needs.setup.outputs.runner-arch }}
+        env:
+          gover: ${{ steps.setup-go.outputs.go-version }}
+        run: |
+          # Go Tests
+            mkdir -p ~/.cache/clair-testing
+            docker run \
+              --rm \
+              --network ${{ job.container.network }} \
+              --platform linux/${{ matrix.platform }} \
+              --mount "type=bind,src=$(go env GOMODCACHE),dst=/go/pkg/mod" \
+              --mount "type=bind,src=$(go env GOCACHE),dst=/root/.cache/go-build" \
+              --mount "type=bind,src=${HOME}/.cache/clair-testing,dst=/root/.cache/clair-testing" \
+              --mount "type=bind,src=$(pwd),dst=/build" \
+              --env "POSTGRES_CONNECTION_STRING=host=postgres port=5432 user=clair dbname=clair password=password sslmode=disable" \
+              --env "RABBITMQ_CONNECTION_STRING=amqp://clair:password@rabbitmq:5672/" \
+              --env "STOMP_CONNECTION_STRING=stomp://clair:password@rabbitmq:61613/" \
+              -w "/build/${{ inputs.cd }}" \
+              "quay.io/projectquay/golang:${gover%.*}" \
+              sh -c 'for expr in ${{ inputs.package_expr }}; do
+                printf '\''::group::go test %s\n'\'' "$expr"
+                go test -tags integration "$expr"
+                printf '\''::endgroup::\n'\''
+              done;'
+          done
