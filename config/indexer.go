@@ -12,7 +12,11 @@ type Indexer struct {
 	// url: "postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"
 	// or
 	// string: "user=pqgotest dbname=pqgotest sslmode=verify-full"
-	ConnString string `yaml:"connstring" json:"connstring"`
+	//
+	// Deprecated: Use the ".database" member instead.
+	ConnString string `yaml:"connstring,omitempty" json:"connstring,omitempty"`
+	// Database is the database configuration.
+	Database *Database `yaml:"database,omitempty" json:"database,omitempty"`
 	// A positive value representing seconds.
 	//
 	// Concurrent Indexers lock on manifest scans to avoid clobbering.
@@ -34,7 +38,9 @@ type Indexer struct {
 	// A "true" or "false" value
 	//
 	// Whether Indexer nodes handle migrations to their database.
-	Migrations bool `yaml:"migrations,omitempty" json:"migrations,omitempty"`
+	//
+	// Deprecated: Use the ".database.migrations" member instead.
+	Migrations *bool `yaml:"migrations,omitempty" json:"migrations,omitempty"`
 	// Airgap disables HTTP access to the Internet. This affects both indexers and
 	// the layer fetcher. Database connections are unaffected.
 	//
@@ -66,18 +72,15 @@ func (i *Indexer) validate(mode Mode) (ws []Warning, err error) {
 			msg:  `automatically sizing number of concurrent requests`,
 		})
 	}
+
 	lws, err := i.lint()
+	setConnString(&ws, i)
 	return append(ws, lws...), err
 }
 
 func (i *Indexer) lint() (ws []Warning, err error) {
-	ws, err = checkDSN(i.ConnString)
-	if err != nil {
-		return ws, err
-	}
-	for i := range ws {
-		ws[i].path = ".connstring"
-	}
+	checkConnString(&ws, i)
+
 	if i.ScanLockRetry > 10 { // Guess at what a "large" value is here.
 		ws = append(ws, Warning{
 			path: ".scanlock_retry",

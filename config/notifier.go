@@ -26,7 +26,11 @@ type Notifier struct {
 	// url: "postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"
 	// or
 	// string: "user=pqgotest dbname=pqgotest sslmode=verify-full"
+	//
+	// Deprecated: Use the ".database" member instead.
 	ConnString string `yaml:"connstring" json:"connstring"`
+	// Database is the database configuration.
+	Database *Database `yaml:"database,omitempty" json:"database,omitempty"`
 	// A string in <host>:<port> format where <host> can be an empty string.
 	//
 	// A Notifier contacts an Indexer to create obtain manifests affected by vulnerabilities.
@@ -63,10 +67,12 @@ type Notifier struct {
 	// A "true" or "false" value
 	//
 	// Whether Notifier nodes handle migrations to their database.
-	Migrations bool `yaml:"migrations,omitempty" json:"migrations,omitempty"`
+	//
+	// Deprecated: Use the ".database.migrations" member instead.
+	Migrations *bool `yaml:"migrations,omitempty" json:"migrations,omitempty"`
 }
 
-func (n *Notifier) validate(mode Mode) ([]Warning, error) {
+func (n *Notifier) validate(mode Mode) (ws []Warning, err error) {
 	if mode != ComboMode && mode != NotifierMode {
 		return nil, nil
 	}
@@ -88,17 +94,15 @@ func (n *Notifier) validate(mode Mode) ([]Warning, error) {
 	default:
 		panic("programmer error")
 	}
-	return n.lint()
+
+	lws, err := n.lint()
+	setConnString(&ws, n)
+	return append(ws, lws...), err
 }
 
 func (n *Notifier) lint() (ws []Warning, err error) {
-	ws, err = checkDSN(n.ConnString)
-	if err != nil {
-		return ws, err
-	}
-	for i := range ws {
-		ws[i].path = ".connstring"
-	}
+	checkConnString(&ws, n)
+
 	got := 0
 	if n.AMQP != nil {
 		got++

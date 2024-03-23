@@ -13,7 +13,11 @@ type Matcher struct {
 	// url: "postgres://pqgotest:password@localhost/pqgotest?sslmode=verify-full"
 	// or
 	// string: "user=pqgotest dbname=pqgotest sslmode=verify-full"
+	//
+	// Deprecated: Use the ".database" member instead.
 	ConnString string `yaml:"connstring" json:"connstring"`
+	// Database is the database configuration.
+	Database *Database `yaml:"database,omitempty" json:"database,omitempty"`
 	// A string in <host>:<port> format where <host> can be an empty string.
 	//
 	// A Matcher contacts an Indexer to create a VulnerabilityReport.
@@ -36,7 +40,7 @@ type Matcher struct {
 	// Clair allows for a custom connection pool size.  This number will
 	// directly set how many active sql connections are allowed concurrently.
 	//
-	// Deprecated: Pool size should be set through the ConnString member.
+	// Deprecated: Pool size should be set through the database configuration.
 	// Currently, Clair only uses the "pgxpool" package to connect to the
 	// database, so see
 	// https://pkg.go.dev/github.com/jackc/pgx/v4/pgxpool#ParseConfig for more
@@ -51,7 +55,9 @@ type Matcher struct {
 	// A "true" or "false" value
 	//
 	// Whether Matcher nodes handle migrations to their databases.
-	Migrations bool `yaml:"migrations,omitempty" json:"migrations,omitempty"`
+	//
+	// Deprecated: Use the ".database.migrations" member instead.
+	Migrations *bool `yaml:"migrations,omitempty" json:"migrations,omitempty"`
 	// DisableUpdaters disables the updater's running of matchers.
 	//
 	// This should be toggled on if vulnerabilities are being provided by
@@ -59,7 +65,7 @@ type Matcher struct {
 	DisableUpdaters bool `yaml:"disable_updaters,omitempty" json:"disable_updaters,omitempty"`
 }
 
-func (m *Matcher) validate(mode Mode) ([]Warning, error) {
+func (m *Matcher) validate(mode Mode) (ws []Warning, err error) {
 	if mode != ComboMode && mode != MatcherMode {
 		return nil, nil
 	}
@@ -90,17 +96,14 @@ func (m *Matcher) validate(mode Mode) ([]Warning, error) {
 	default:
 		panic("programmer error")
 	}
-	return m.lint()
+
+	lws, err := m.lint()
+	setConnString(&ws, m)
+	return append(ws, lws...), err
 }
 
 func (m *Matcher) lint() (ws []Warning, err error) {
-	ws, err = checkDSN(m.ConnString)
-	if err != nil {
-		return ws, err
-	}
-	for i := range ws {
-		ws[i].path = ".connstring"
-	}
+	checkConnString(&ws, m)
 
 	if m.Period < Duration(DefaultMatcherPeriod) {
 		ws = append(ws, Warning{
