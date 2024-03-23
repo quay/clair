@@ -199,6 +199,7 @@ services:
     image: *redis-image
   quay-notifier:
     <<: *notifier
+    container_name: clair-notifier-quay
     profiles:
       - quay
     environment:
