@@ -632,7 +632,7 @@ fetch('/indexer/api/v1/index_report/{manifest_hash}',
 
 `DELETE /indexer/api/v1/index_report/{manifest_hash}`
 
-Given a Manifest's content addressable hash, any data related to it will be removed it it exists.
+Given a Manifest's content addressable hash, any data related to it will be removed if it exists.
 
 <h3 id="delete-the-indexreport-and-associated-information-for-the-given-manifest-hash,-if-exists.-parameters">Parameters</h3>
 

@@ -149,7 +149,7 @@ paths:
         Manifest hash, if exists.
       description: >-
         Given a Manifest's content addressable hash, any data related to it
-        will be removed it it exists.
+        will be removed if it exists.
       parameters:
         - name: manifest_hash
           in: path
