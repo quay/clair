@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
-	"os"
 	"time"
 
 	"github.com/go-jose/go-jose/v3/jwt"
@@ -183,7 +182,7 @@ func localIndexer(ctx context.Context, cfg *config.Config) (indexer.Service, err
 		return nil, mkErr(err)
 	}
 
-	opts.FetchArena = libindex.NewRemoteFetchArena(c, os.TempDir())
+	opts.FetchArena = libindex.NewRemoteFetchArena(c, "")
 
 	s, err := libindex.New(ctx, &opts, c)
 	if err != nil {
