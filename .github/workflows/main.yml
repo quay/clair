@@ -43,6 +43,17 @@ jobs:
         run: |
           npx widdershins --search false --language_tabs 'python:Python' 'go:Golang' 'javascript:Javascript' --summary ./openapi.yaml -o ./Documentation/reference/api.md
           git diff --exit-code
+      - name: Check Container Versions
+        if: ${{ !cancelled() && steps.checkout.conclusion == 'success' }}
+        run: |
+          # awk ...
+          version=$(sed -n '/^go /{s/go \(1\.[0-9]\+\)\.[0-9]\+/\1/;p;q}' go.mod)
+          {
+            find . -name Dockerfile |
+              xargs awk -v "want=$version" '/^ARG GO_VERSION/{split($2,ver,/=/);if(ver[2]!=want) printf "%s\t%d\n", FILENAME, FNR}'
+            awk -v "want=$version" '/&go-image/{split($3,ref,/:/);if(ref[2]!=want) printf "%s\t%d\n", FILENAME, FNR}' docker-compose.yaml
+          } |
+            awk -v "want=$version" '{printf "::error file=%s,line=%d,title=Go Version Skew::Go version does not match `go.mod`: want %s\n", $1, $2, want}'
       - name: Setup Go
         id: 'setupgo'
         if: ${{ !cancelled() && steps.checkout.conclusion == 'success' }}
