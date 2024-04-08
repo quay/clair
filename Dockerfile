@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-ARG GO_VERSION=1.20
+ARG GO_VERSION=1.21
 FROM quay.io/projectquay/golang:${GO_VERSION} AS build
 WORKDIR /build
 RUN --mount=type=cache,target=/root/.cache/go-build \
