@@ -56,7 +56,7 @@ objects:
               command:
                 - sh
                 - '-c'
-                - rm -rf /tmp/sha* /tmp/fetch.* /tmp/rpmscanner.* && exec clair
+                - rm -rf /var/tmp/sha* /var/tmp/fetch.* /var/tmp/rpmscanner.* && exec clair
               env:
                 - name: CLAIR_CONF
                   value: '/etc/clair/config.yaml'
@@ -86,7 +86,7 @@ objects:
                 - name: clair-config
                   mountPath: /etc/clair
                 - name: indexer-layer-storage
-                  mountPath: /tmp
+                  mountPath: /var/tmp
 
   #
   # matcher deployment
