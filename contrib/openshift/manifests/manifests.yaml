@@ -53,10 +53,7 @@ objects:
                 requests:
                   cpu: ${{INDEXER_CPU_REQS}}
                   memory: ${{INDEXER_MEM_REQS}}
-              command:
-                - sh
-                - '-c'
-                - rm -rf /var/tmp/sha* /var/tmp/fetch.* /var/tmp/rpmscanner.* && exec clair
+              command: [clair]
               env:
                 - name: CLAIR_CONF
                   value: '/etc/clair/config.yaml'
