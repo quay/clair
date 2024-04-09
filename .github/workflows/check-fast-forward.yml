@@ -1,0 +1,22 @@
+---
+name: Check Fast Forward
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+jobs:
+  check-fast-forward:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      # We appear to need write permission for both pull-requests and
+      # issues in order to post a comment to a pull request.
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Checking if fast forwarding is possible
+        uses: sequoia-pgp/fast-forward@v1
+        with:
+          merge: false
+          comment: on-error

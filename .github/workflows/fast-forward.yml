@@ -1,0 +1,38 @@
+---
+name: Fast Forward
+on:
+  issue_comment:
+    types: [created, edited]
+  pull_request_review:
+    types: [submitted]
+jobs:
+  #debug:
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #    - run: |
+  #        jq . "${GITHUB_EVENT_PATH}"
+  fast-forward:
+    # Only run if the comment or approval contains the /fast-forward command,
+    # or if it was a dependabot PR.
+    if: >-
+      ${{
+      ( github.event.issue.pull_request && contains(github.event.comment.body, '/fast-forward')) ||
+      (
+        github.event.review && github.event.review.state == 'approved' && (
+          github.event.pull_request.user.url == 'https://api.github.com/users/dependabot%5Bbot%5D' ||
+          contains(github.event.review.body, '/fast-forward')
+        ))
+      }}
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Fast forwarding
+        uses: sequoia-pgp/fast-forward@v1
+        with:
+          merge: true
+          comment: on-error
