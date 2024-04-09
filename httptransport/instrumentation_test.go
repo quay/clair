@@ -45,19 +45,26 @@ clair_http_test_request_total{code="500",handler="err",method="get"} 1
 
 	srv := httptest.NewUnstartedServer(m)
 	srv.Config.BaseContext = func(_ net.Listener) context.Context { return ctx }
-	srv.Start()
-	defer srv.Close()
 
-	c := srv.Client()
-	for _, p := range []string{"ok", "err", "err?panic=1"} {
-		u := srv.URL + "/" + p
-		t.Logf("making request: %q", u)
-		res, err := c.Get(u)
-		if err != nil {
-			t.Error(err)
+	// Create a scope for doing the actual requests.
+	//
+	// Doing this and having the server teardown run synchronously should be
+	// enough time to ensure the metrics are actually collected.
+	func() {
+		srv.Start()
+		defer srv.Close()
+
+		c := srv.Client()
+		for _, p := range []string{"ok", "err", "err?panic=1"} {
+			u := srv.URL + "/" + p
+			t.Logf("making request: %q", u)
+			res, err := c.Get(u)
+			if err != nil {
+				t.Error(err)
+			}
+			t.Logf("got status: %q", res.Status)
 		}
-		t.Logf("got status: %q", res.Status)
-	}
+	}()
 
 	if err := testutil.GatherAndCompare(reg, want, "clair_http_test_request_total"); err != nil {
 		t.Error(err)
