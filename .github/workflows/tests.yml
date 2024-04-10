@@ -189,7 +189,7 @@ jobs:
           GOARCH: ${{ matrix.platform }}
         run: |
           # Go Tests
-          mkdir -p ~/.cache/clair-testing
+          mkdir -p ~/.cache/clair-testing "${RUNNER_TEMP}/vartmp"
 
           # Hopefully everything we use has their build tags correct.
           echo ::group::cross-compiling for "$GOARCH"
@@ -228,6 +228,8 @@ jobs:
             --mount "type=bind,src=${HOME}/.cache/clair-testing,dst=/root/.cache/clair-testing" \
             --mount "type=bind,src=$(pwd),dst=/build" \
             --mount "type=bind,src=${RUNNER_TEMP}/tests.sh,dst=/root/tests.sh" \
+            --mount "type=bind,src=${RUNNER_TEMP}/vartmp,dst=/var/tmp" \
+            --tmpfs /tmp:rw,exec,nosuid,nodev \
             --env-file "${RUNNER_TEMP}/env.list" \
             --workdir "/build/${{ inputs.cd }}" \
             "quay.io/projectquay/golang:${gover%.*}" \
