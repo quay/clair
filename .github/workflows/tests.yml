@@ -186,25 +186,49 @@ jobs:
         if: ${{ matrix.platform != needs.setup.outputs.runner-arch }}
         env:
           gover: ${{ steps.setup-go.outputs.go-version }}
+          GOARCH: ${{ matrix.platform }}
         run: |
           # Go Tests
-            mkdir -p ~/.cache/clair-testing
-            docker run \
-              --rm \
-              --network ${{ job.container.network }} \
-              --platform linux/${{ matrix.platform }} \
-              --mount "type=bind,src=$(go env GOMODCACHE),dst=/go/pkg/mod" \
-              --mount "type=bind,src=$(go env GOCACHE),dst=/root/.cache/go-build" \
-              --mount "type=bind,src=${HOME}/.cache/clair-testing,dst=/root/.cache/clair-testing" \
-              --mount "type=bind,src=$(pwd),dst=/build" \
-              --env "POSTGRES_CONNECTION_STRING=host=postgres port=5432 user=clair dbname=clair password=password sslmode=disable" \
-              --env "RABBITMQ_CONNECTION_STRING=amqp://clair:password@rabbitmq:5672/" \
-              --env "STOMP_CONNECTION_STRING=stomp://clair:password@rabbitmq:61613/" \
-              -w "/build/${{ inputs.cd }}" \
-              "quay.io/projectquay/golang:${gover%.*}" \
-              sh -c 'for expr in ${{ inputs.package_expr }}; do
-                printf '\''::group::go test %s\n'\'' "$expr"
-                go test -tags integration "$expr"
-                printf '\''::endgroup::\n'\''
-              done;'
+          mkdir -p ~/.cache/clair-testing
+
+          # Hopefully everything we use has their build tags correct.
+          echo ::group::cross-compiling for "$GOARCH"
+          CGO_ENABLED=0 go build ${{ inputs.package_expr }}
+          echo ::endgroup::
+
+          if [ -n "${RUNNER_DEBUG}" ]; then
+            cat <<'.' > "${RUNNER_TEMP}/tests.sh"
+          echo ::group::Inner Container Environment
+          env
+          echo ::endgroup::
+          set -x
+          .
+          fi
+          cat <<'.' >> "${RUNNER_TEMP}/tests.sh"
+          for expr in ${{ inputs.package_expr }}; do
+            printf '::group::go test %s\n' "$expr"
+            go test -tags integration "$expr"
+            printf '::endgroup::\n'
           done
+          .
+
+          cat <<'.' > "${RUNNER_TEMP}/env.list"
+          CI
+          POSTGRES_CONNECTION_STRING=host=postgres port=5432 user=clair dbname=clair password=password sslmode=disable
+          RABBITMQ_CONNECTION_STRING=amqp://clair:password@rabbitmq:5672/
+          STOMP_CONNECTION_STRING=stomp://clair:password@rabbitmq:61613/
+          .
+
+          docker run \
+            --rm \
+            --network '${{ job.container.network }}' \
+            --platform 'linux/${{ matrix.platform }}' \
+            --mount "type=bind,src=$(go env GOMODCACHE),dst=/go/pkg/mod" \
+            --mount "type=bind,src=$(go env GOCACHE),dst=/root/.cache/go-build" \
+            --mount "type=bind,src=${HOME}/.cache/clair-testing,dst=/root/.cache/clair-testing" \
+            --mount "type=bind,src=$(pwd),dst=/build" \
+            --mount "type=bind,src=${RUNNER_TEMP}/tests.sh,dst=/root/tests.sh" \
+            --env-file "${RUNNER_TEMP}/env.list" \
+            --workdir "/build/${{ inputs.cd }}" \
+            "quay.io/projectquay/golang:${gover%.*}" \
+            sh -e /root/tests.sh
