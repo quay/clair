@@ -141,12 +141,22 @@ func Inspect(ctx context.Context, r string) (*claircore.Manifest, error) {
 		if err != nil {
 			return nil, err
 		}
+		// The request is needed to follow any redirection chain that the server sends to a client,
+		// but the actual body is not needed when generating a manifest.
+		// The Range HTTP header allows us to send the request and get a response mostly for free.
 		req.Header.Add("Range", "bytes=0-0")
 		res, err := c.Do(req)
 		if err != nil {
 			return nil, err
 		}
 		res.Body.Close()
+		if res.StatusCode != http.StatusPartialContent {
+			zlog.Warn(ctx).
+				Int("statuscode", res.StatusCode).
+				Int("len", int(res.ContentLength)).
+				Str("url", u.String()).
+				Msg("server might not support requests with Range HTTP header")
+		}
 
 		res.Request.Header.Del("User-Agent")
 		res.Request.Header.Del("Range")
