@@ -7,11 +7,15 @@ set -exuo pipefail
 : "${REPOSITORY:=${REGISTRY}/app-sre}"
 : "${IMAGE:=${REPOSITORY}/clair}"
 GIT_HASH="$(git rev-parse --short=7 HEAD)"
+CONTAINER_ENGINE=$(command -v podman 2>/dev/null || command -v docker 2>/dev/null)
 
 git archive HEAD |
-	podman build -t clair-service:latest -
+	${CONTAINER_ENGINE} build -t clair-service:latest -
 
-podman login -u="${QUAY_USER}" -p="${QUAY_TOKEN}" "${REGISTRY}"
+${CONTAINER_ENGINE} login -u="${QUAY_USER}" -p="${QUAY_TOKEN}" "${REGISTRY}"
 
-podman push clair-service:latest docker://${IMAGE}:latest
-podman push clair-service:latest docker://${IMAGE}:${GIT_HASH}
+${CONTAINER_ENGINE} tag clair-service:latest ${IMAGE}:latest
+${CONTAINER_ENGINE} push ${IMAGE}:latest
+
+${CONTAINER_ENGINE} tag clair-service:latest ${IMAGE}:${GIT_HASH}
+${CONTAINER_ENGINE} push ${IMAGE}:${GIT_HASH}
