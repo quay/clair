@@ -7,9 +7,6 @@ on:
       branch:
         description: 'Claircore branch to reference'
         required: false
-      go_version:
-        description: 'Go version to be used throughout'
-        required: false
       tag:
         description: 'Tag to push resulting image to'
         required: false
@@ -30,7 +27,6 @@ jobs:
         # nicer workflow inputs so that the cron trigger works.
         run: |
           br=$(test -n "${{github.event.inputs.branch}}" && echo "${{github.event.inputs.branch}}" || echo main)
-          gv=$(test -n "${{github.event.inputs.go_version}}" && echo "${{github.event.inputs.go_version}}" || echo 1.20)
           : "${repo:=$GITHUB_REPOSITORY}"
           test "${repo%%/*}" = quay && repo="projectquay/${repo##*/}" ||:
           cat <<. >>$GITHUB_OUTPUT
@@ -39,27 +35,25 @@ jobs:
           date=$(date -u '+%Y-%m-%d')
           tag=$(test -n "${{github.event.inputs.tag}}" && echo "${{github.event.inputs.tag}}" || echo nightly)
           claircore_branch=${br}
-          go_version=${gv}
           repo=${repo}
           .
           # Environment variables
           printf 'CLAIRCORE_BRANCH=%s\n' "${br}" >> $GITHUB_ENV
-          printf 'GO_VERSION=%s\n' "$gv" >> $GITHUB_ENV
-          printf '%s/.local/go/bin\n' "$HOME" >> $GITHUB_PATH
       - uses: docker/setup-qemu-action@v3
         with:
           platforms: all
       - uses: docker/setup-buildx-action@v3
-      - uses: actions/setup-go@v5
-        with:
-          go-version: ${{ steps.setup.outputs.go_version }}
-          check-latest: true
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - id: setup-go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          check-latest: true
       - uses: ./.github/actions/go-cache
         with:
-          go: ${{ steps.setup.outputs.go_version }}
+          go: ${{ steps.setup.setup-go.go_version }}
       - id: mod
         run: ./.github/script/nightly-module.sh
       - id: novelty
@@ -74,15 +68,15 @@ jobs:
           username: ${{ secrets.QUAY_USER }}
           password: ${{ secrets.QUAY_TOKEN }}
       - name: Export
+        if: steps.novelty.outputs.cache-hit != 'true'
         # This exports the current state of the main branch, and appends our modified go module files.
         run: |
           mkdir "${{ runner.temp }}/build"
           git archive --add-file=go.mod --add-file=go.sum origin/main |
             tar -x -C "${{ runner.temp }}/build"
       - uses: docker/build-push-action@v5
+        if: steps.novelty.outputs.cache-hit != 'true'
         with:
-          build-args: |
-            GO_VERSION=${{ env.GO_VERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           context: ${{ runner.temp }}/build
