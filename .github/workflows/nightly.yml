@@ -51,9 +51,11 @@ jobs:
         with:
           go-version-file: go.mod
           check-latest: true
-      - uses: ./.github/actions/go-cache
-        with:
-          go: ${{ steps.setup.setup-go.go_version }}
+      - name: Warm cache
+        if: steps.setup-go.outputs.cache-hit != 'true'
+        run: |
+          # go mod download
+          find . -name go.mod -type f -execdir go mod download \;
       - id: mod
         run: ./.github/script/nightly-module.sh
       - id: novelty
