@@ -93,7 +93,7 @@ jobs:
       - name: Upload Release Archive
         uses: actions/upload-artifact@v4
         with:
-          name: release
+          name: clair-release
           path: |
             clair-${{ needs.config.outputs.version }}.tar.gz
             changelog
@@ -131,7 +131,7 @@ jobs:
         uses: actions/download-artifact@v4
         id: download
         with:
-          name: release
+          name: clair-release
       - name: Unpack
         run: |
           tar -xz -f ${{steps.download.outputs.download-path}}/clair-${{ needs.config.outputs.version }}.tar.gz --strip-components=1
@@ -148,15 +148,9 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: release
+          name: clairctl-${{matrix.goos}}-${{matrix.goarch}}
           path: clairctl-${{matrix.goos}}-${{matrix.goarch}}
           if-no-files-found: error
-      - name: Create Artifact on Failure
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: workspace-${{matrix.goos}}-${{matrix.goarch}}
-          path: ${{ github.workspace }}
 
   release:
     name: Release
@@ -170,7 +164,7 @@ jobs:
         uses: actions/download-artifact@v4
         id: download
         with:
-          name: release
+          name: clair-release
       - name: Create Release
         uses: ncipollo/release-action@v1
         id: create_release
@@ -189,7 +183,7 @@ jobs:
         uses: actions/download-artifact@v4
         id: download
         with:
-          name: release
+          name: clair-release
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
         with:
@@ -251,11 +245,11 @@ jobs:
           - goos: darwin
             goarch: 's390x'
     steps:
-      - name: Fetch Archive
+      - name: Fetch Artifacts
         uses: actions/download-artifact@v4
         id: download
         with:
-          name: release
+          pattern: clairctl-*
       - name: Publish clairctl-${{matrix.goos}}-${{matrix.goarch}}
         uses: actions/upload-release-asset@v1
         env:
