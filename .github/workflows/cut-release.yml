@@ -250,6 +250,7 @@ jobs:
         id: download
         with:
           pattern: clairctl-*
+          merge-multiple: true
       - name: Publish clairctl-${{matrix.goos}}-${{matrix.goarch}}
         uses: actions/upload-release-asset@v1
         env:
