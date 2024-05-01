@@ -2,12 +2,53 @@
 ## [Unreleased]
 
 
+<a name="4.7.4"></a>
+## [4.7.4] - 2024-05-01
+### Chore
+- [96dc6074](https://github.com/quay/clair/commit/96dc60748b492df1cb4af3761c9c44c10266ed09): Add merge step when creating release binaries
+
+<a name="v4.7.4"></a>
+## [v4.7.4] - 2024-04-30
+### Build(Deps)
+- [3ebd889c](https://github.com/quay/clair/commit/3ebd889cb37603e071ba0d8fb8ba631702b13414): bump peter-evans/create-pull-request from 6.0.0 to 6.0.1
+- [b7566a0f](https://github.com/quay/clair/commit/b7566a0feedc5de0227a5bfd6e2921014ec68704): bump peter-evans/create-pull-request from 5.0.2 to 6.0.0
+- [4db2f09b](https://github.com/quay/clair/commit/4db2f09be2330e4dc9061dc2e9d44d8979b8c34d): bump actions/cache from 3 to 4
+- [6cef8311](https://github.com/quay/clair/commit/6cef8311255b024dd3a1fc0a70f7edf38969906c): bump actions/upload-artifact from 3 to 4
+- [5ed80215](https://github.com/quay/clair/commit/5ed80215fa17adb7e72ba3d9267368474afd411e): bump actions/download-artifact from 3 to 4
+- [c9e1f56b](https://github.com/quay/clair/commit/c9e1f56b224f25aacd5df861563006520e63297b): bump actions/setup-go from 4 to 5
+- [3ab3de55](https://github.com/quay/clair/commit/3ab3de558380fff38b8503de914c1b9c0611c4c8): bump actions/stale from 8 to 9
+- [591188f0](https://github.com/quay/clair/commit/591188f0a877b81878209be4b9185d4cb7c404f3): bump docker/setup-buildx-action from 2 to 3
+- [7ef6ef6b](https://github.com/quay/clair/commit/7ef6ef6b7587386b80cef9fbe7269b0083c8f039): bump docker/login-action from 2 to 3
+- [5597e7cc](https://github.com/quay/clair/commit/5597e7ccb94c113cc8344e8289be886049b23f63): bump docker/build-push-action from 4 to 5
+- [14d7f2b4](https://github.com/quay/clair/commit/14d7f2b4927fa9e4debc9005fb6dc620a6a47833): bump docker/setup-qemu-action from 2 to 3
+- [1204db98](https://github.com/quay/clair/commit/1204db98853cdfdce7790f3d3276d4617e4e3000): bump actions/checkout from 3 to 4
+### Chore
+- [a1c7eb7c](https://github.com/quay/clair/commit/a1c7eb7c8cce687e12fcc056be1acacbdc608a31): update go version for release
+- [6eeb9393](https://github.com/quay/clair/commit/6eeb9393b539cf49a10c42e247b833ce7e040607): update claircore to v1.5.27
+- [809dd5ab](https://github.com/quay/clair/commit/809dd5ab474994eb9a32599f4257437fde995064): update go version
+### Cicd
+- [e6378d03](https://github.com/quay/clair/commit/e6378d0333085a072cf73bfa32228af24b710b05): add container version skew check
+- [2ba3ecc0](https://github.com/quay/clair/commit/2ba3ecc0a66679dcd82f7015695db5b2a3f0c02a): update testing workflow
+- [ae135c49](https://github.com/quay/clair/commit/ae135c4956358d6c18109438b6e59170100787ea): don't upload workspace on failure
+- [7222dc88](https://github.com/quay/clair/commit/7222dc88d4fe919cc2b88e2fe7587061a881b794): change version specifiers to be major-version only
+### Clairctl
+- [2a2ba37f](https://github.com/quay/clair/commit/2a2ba37f6404e377d702e50f78bccd172b08b03f): warn when range requests are not honored
+### Dockerfile
+- [5547b96a](https://github.com/quay/clair/commit/5547b96aeff795da43fbc6e2dc8ec7b5dda7691d): remove sh loop
+### Docs
+- [3753415b](https://github.com/quay/clair/commit/3753415b4e2b6bc9b63a940b8b2101d82ab523ef): add mention of disk space path and usage
+### Httptransport
+- [c6df986f](https://github.com/quay/clair/commit/c6df986fddfe5121b6fd9dbfff0ccca35c55cb71): GET vuln report returns 404 when indexing in-progress
+### Initialize
+- [9828576a](https://github.com/quay/clair/commit/9828576af20c966e0dbe99bbac68d3e80b07baa1): use defaults for NewRemoteFetcher
+
 <a name="v4.7.3"></a>
-## [v4.7.3] - 2024-01-04
+## [v4.7.3] - 2024-02-26
 ### Admin
 - [9517c7be](https://github.com/quay/clair/commit/9517c7bed060d575869a2cbaaa5a255d3714a0eb): add a check for compatible migration version
  -  [#1915](https://github.com/quay/clair/issues/1915)- [5d689efb](https://github.com/quay/clair/commit/5d689efb908aaa01290140a0f8b4e022588226dd): add command to update go packages with norm_version
  -  [#1915](https://github.com/quay/clair/issues/1915)### Chore
+- [e5a896c9](https://github.com/quay/clair/commit/e5a896c9b939e7e59d92be4f17805f0ed70ea89e): v4.7.3 changelog bump
 - [d17ee97b](https://github.com/quay/clair/commit/d17ee97bdccdc46ba25c8c7de151bb84f84236ef): update claircore to v1.5.25
  -  [#1990](https://github.com/quay/clair/issues/1990) -  [#1957](https://github.com/quay/clair/issues/1957) -  [#1942](https://github.com/quay/clair/issues/1942)### Config
 - [6ba32131](https://github.com/quay/clair/commit/6ba32131be6a79c4d5d070e666e81bfedcc09798): update minimum TLS version for server
@@ -1726,7 +1767,9 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.7.3...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/4.7.4...HEAD
+[4.7.4]: https://github.com/quay/clair/compare/v4.7.4...4.7.4
+[v4.7.4]: https://github.com/quay/clair/compare/v4.7.3...v4.7.4
 [v4.7.3]: https://github.com/quay/clair/compare/v4.7.2...v4.7.3
 [v4.7.2]: https://github.com/quay/clair/compare/v4.7.1...v4.7.2
 [v4.7.1]: https://github.com/quay/clair/compare/v4.7.0...v4.7.1
