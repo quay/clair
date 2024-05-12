@@ -20,7 +20,7 @@ import (
 	"github.com/quay/clair/v4/notifier/service"
 )
 
-// TestUpdateOperationHandler is a parallel harness for testing a UpdateOperation handler.
+// TestNotificationsHandler is a parallel harness for testing a UpdateOperation handler.
 func TestNotificationsHandler(t *testing.T) {
 	ctx := zlog.Test(context.Background(), t)
 	t.Run("Methods", testNotificationsHandlerMethods(ctx))

@@ -36,7 +36,7 @@ var (
 	}
 )
 
-// TestProcessSafe is a harness for running concurrent tests which ensure notification
+// TestProcessorSafe is a harness for running concurrent tests which ensure notification
 // creation happens safely.
 func TestProcessorSafe(t *testing.T) {
 	t.Run("UnsafeDuplications", testUnsafeDuplications)
@@ -132,7 +132,7 @@ func testUnsafeMatcherErr(t *testing.T) {
 	}
 }
 
-// testSafeStaleUOID confirms the guard against creating stale notifications
+// testUnsafeStaleUOID confirms the guard against creating stale notifications
 // works correctly.
 func testUnsafeStaleUOID(t *testing.T) {
 	ctx := zlog.Test(context.Background(), t)
