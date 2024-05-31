@@ -163,7 +163,7 @@ func testUnsafeStaleUOID(t *testing.T) {
 	}
 }
 
-// testSafeDuplications confirms the guard against creating
+// testUnsafeDuplications confirms the guard against creating
 // duplicate notifications works correctly.
 func testUnsafeDuplications(t *testing.T) {
 	ctx := zlog.Test(context.Background(), t)

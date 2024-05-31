@@ -94,7 +94,7 @@ func (e *e2e) Run(ctx context.Context, t *testing.T) {
 	for _, sub := range [...]subtest{
 		{name: "PutNotifications", do: e.PutNotifications},
 		{name: "Created", do: e.Created},
-		{name: "Notifications", do: e.Notifcations},
+		{name: "Notifications", do: e.Notifications},
 		{name: "SetDelivered", do: e.SetDelivered},
 		{name: "SetDeliveryFailed", do: e.SetDeliveryFailed},
 		{name: "SetDeleted", do: e.SetDeleted},
@@ -168,7 +168,7 @@ func (e *e2e) Created(ctx context.Context) func(*testing.T) {
 
 // Notifications confirms the correct notifications were returned from the
 // database when providing the notification ID.
-func (e *e2e) Notifcations(ctx context.Context) func(*testing.T) {
+func (e *e2e) Notifications(ctx context.Context) func(*testing.T) {
 	return func(t *testing.T) {
 		ctx := zlog.Test(ctx, t)
 		want := e.notificationID
