@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+ARG GOTOOLCHAIN=local
 ARG GO_VERSION=1.21
 FROM quay.io/projectquay/golang:${GO_VERSION} AS build
 WORKDIR /build
