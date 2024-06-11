@@ -36,7 +36,7 @@ const (
 // exposing Clair metrics and traces
 type Server struct {
 	// configuration provided when starting Clair
-	conf config.Config
+	conf *config.Config
 	// Server embeds a http.Server and http.ServeMux.
 	// The http.Server will be configured with the ServeMux on successful
 	// initialization.
@@ -46,7 +46,7 @@ type Server struct {
 	health func() bool
 }
 
-func New(ctx context.Context, conf config.Config, health func() bool) (*Server, error) {
+func New(ctx context.Context, conf *config.Config, health func() bool) (*Server, error) {
 	ctx = zlog.ContextWithValues(ctx, "component", "introspection/New")
 
 	var addr string
@@ -176,7 +176,8 @@ func New(ctx context.Context, conf config.Config, health func() bool) (*Server, 
 		)
 		otel.SetTracerProvider(tp)
 		i.Server.RegisterOnShutdown(func() {
-			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+			zlog.Info(ctx).Msg("shutting down trace provider")
+			ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 			defer cancel()
 			if err := tp.Shutdown(ctx); err != nil {
 				zlog.Error(ctx).Err(err).Msg("error shutting down trace provider")
