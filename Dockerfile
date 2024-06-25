@@ -18,8 +18,8 @@ FROM quay.io/projectquay/golang:${GO_VERSION} AS build
 WORKDIR /build
 RUN --mount=type=cache,target=/root/.cache/go-build \
 	--mount=type=cache,target=/go/pkg/mod \
-	--mount=type=bind,source=go.mod,target=go.mod \
-	--mount=type=bind,source=go.sum,target=go.sum \
+	--mount=type=bind,source=go.mod,target=go.mod,z \
+	--mount=type=bind,source=go.sum,target=go.sum,z \
 	go mod download
 COPY . .
 ARG CLAIR_VERSION=""
