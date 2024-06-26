@@ -17,7 +17,7 @@ import (
 
 var (
 	logout = zerolog.New(&zerolog.ConsoleWriter{
-		Out:        os.Stderr,
+		Out:        os.Stdout,
 		TimeFormat: time.RFC3339,
 	}).Level(zerolog.InfoLevel).
 		With().
