@@ -52,7 +52,7 @@ func TestClientDisconnect(t *testing.T) {
 	}
 
 	<-handlerDone
-	if got, want := status, statusClientClosedRequest; got != want {
+	if got, want := status, 499; got != want {
 		t.Errorf("bad status code recorded: got: %d, want: %d", got, want)
 	}
 }
