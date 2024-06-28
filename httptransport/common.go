@@ -15,10 +15,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/quay/claircore"
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/otel/trace"
-
-	"github.com/quay/claircore"
 )
 
 // GetDigest removes the last path element and parses it as a digest.
