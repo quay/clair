@@ -1,4 +1,6 @@
-# Copyright 2017 clair authors
+# syntax=docker.io/docker/dockerfile:1.7
+
+# Copyright 2024 clair authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,31 +16,62 @@
 
 ARG GOTOOLCHAIN=local
 ARG GO_VERSION=1.21
-FROM quay.io/projectquay/golang:${GO_VERSION} AS build
+FROM --platform=$BUILDPLATFORM quay.io/projectquay/golang:${GO_VERSION} AS build
 WORKDIR /build
 RUN --mount=type=cache,target=/root/.cache/go-build \
 	--mount=type=cache,target=/go/pkg/mod \
 	--mount=type=bind,source=go.mod,target=go.mod \
 	--mount=type=bind,source=go.sum,target=go.sum \
 	go mod download
-COPY . .
+
+ARG TARGETOS
+ARG TARGETARCH
+ARG TARGETVARIANT
 ARG CLAIR_VERSION=""
-RUN --mount=type=cache,target=/root/.cache/go-build \
+# This script needs to use `go build` instead of `go install` to cross-compile.
+RUN --mount=type=bind,target=. \
+	--mount=type=cache,target=/root/.cache/go-build \
 	--mount=type=cache,target=/go/pkg/mod \
-	go build \
-	-ldflags="-s -w$(test -n "$CLAIR_VERSION" && printf " -X 'github.com/quay/clair/v4/cmd.Version=%s (user)'" "${CLAIR_VERSION}")" \
-	-o . \
-	-trimpath \
+	--network=none \
+	<<.
+set -e
+export GOOS="$TARGETOS" GOARCH="$TARGETARCH" GOBIN=/out/bin
+if [ -n "$TARGETVARIANT" ]; then
+	case "$TARGETARCH" in
+	amd64)  export GOAMD64="$TARGETVARIANT" ;;
+	ppc64*) export GOPPC64="$TARGETVARIANT" ;;
+	esac
+fi
+if [ -n "${CLAIR_VERSION}" ]; then
+	vstr="${CLAIR_VERSION} (user)"
+	cat <<msg >&2
+Setting reported version to "${vstr}".
+
+This hook into the go build process is not needed if building using a prepared
+source archive and will go away in the future.
+
+Please open an issue if this would prevent a desired use-case.
+msg
+	varg=" -X 'github.com/quay/clair/v4/cmd.Version=${vstr}'"
+fi
+install -d "${GOBIN}"
+go build \
+	-ldflags="-s -w$varg" -trimpath \
+	-o "${GOBIN}" \
 	./cmd/...
+.
+
+FROM scratch AS ctl
+COPY --from=build /out/bin/clairctl* /
 
 FROM registry.access.redhat.com/ubi8/ubi-minimal AS final
-ENTRYPOINT ["/bin/clair"]
+ENTRYPOINT ["/usr/bin/clair"]
 VOLUME /config
 EXPOSE 6060
-WORKDIR /run
-ENV CLAIR_CONF=/config/config.yaml CLAIR_MODE=combo
-ENV SSL_CERT_DIR="/etc/ssl/certs:/etc/pki/tls/certs:/var/run/certs"
+ENV CLAIR_CONF=/config/config.yaml\
+	CLAIR_MODE=combo\
+	SSL_CERT_DIR="/etc/ssl/certs:/etc/pki/tls/certs:/var/run/certs"
 USER nobody:nobody
-
-COPY --from=build /build/clair /bin/clair
-COPY --from=build /build/clairctl /bin/clairctl
+# The WORKDIR command creates an empty layer, there's nothing we can do.
+WORKDIR /run
+COPY --from=build /out/bin/* /usr/bin/
