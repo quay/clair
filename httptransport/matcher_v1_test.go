@@ -13,13 +13,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/quay/clair/v4/indexer"
-	"github.com/quay/clair/v4/internal/httputil"
-	"github.com/quay/clair/v4/matcher"
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/trace"
+
+	"github.com/quay/clair/v4/indexer"
+	"github.com/quay/clair/v4/internal/httputil"
+	"github.com/quay/clair/v4/matcher"
 )
 
 // TestUpdateDiffHandler is a parallel harness for testing a UpdateDiff handler.
