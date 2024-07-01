@@ -59,11 +59,7 @@ jobs:
         run: |
           # Fix the checkout action overwriting the tag: (see https://github.com/actions/checkout/issues/882)
           git fetch origin "+${GITHUB_REF}:${GITHUB_REF}"
-          git archive --prefix '${{ needs.config.outputs.tar_prefix }}' -o clair.tar "${GITHUB_REF}"
-          go mod vendor
-          tar -rf clair.tar --transform 's,^,${{ needs.config.outputs.tar_prefix }},' vendor
-          gzip clair.tar
-          mv clair.tar.gz clair-${{ needs.config.outputs.version }}.tar.gz
+          make VERSION=${{ needs.config.outputs.version }} dist
       - name: Cache Changelog
         uses: actions/cache@v4
         id: chglog-cache
@@ -102,54 +98,29 @@ jobs:
   release-binaries:
     name: Create Release Binaries
     runs-on: 'ubuntu-latest'
-    container: ${{ needs.config.outputs.build_image }}
     needs: [config, release-archive]
-    strategy:
-      matrix:
-        goarch: ['arm64', 'amd64', '386', 'ppc64le', 's390x']
-        goos: ['linux', 'windows', 'darwin']
-        exclude:
-          - goos: darwin
-            goarch: '386'
-          - goos: darwin
-            goarch: arm64
-          - goos: windows
-            goarch: '386'
-          - goos: windows
-            goarch: 'ppc64le'
-          - goos: darwin
-            goarch: 'ppc64le'
-          - goos: windows
-            goarch: 's390x'
-          - goos: darwin
-            goarch: 's390x'
-    env:
-      GOOS: ${{matrix.goos}}
-      GOARCH: ${{matrix.goarch}}
     steps:
       - name: Fetch Artifacts
         uses: actions/download-artifact@v4
         id: download
         with:
           name: clair-release
-      - name: Unpack
-        run: |
-          tar -xz -f ${{steps.download.outputs.download-path}}/clair-${{ needs.config.outputs.version }}.tar.gz --strip-components=1
-      - uses: actions/setup-go@v5
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
         with:
-          go-version: ${{ needs.config.outputs.build_go_version }}
-      - name: Build
-        # Build with path trimming, ELF debug stripping, and no VCS injection (should be done by the `git archive` process).
+          platforms: all
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build Container
+        working-directory: ${{steps.download.outputs.download-path}}
         run: |
-          go build\
-            -trimpath -ldflags="-s -w" -buildvcs=false\
-            -o "clairctl-${{matrix.goos}}-${{matrix.goarch}}"\
-            ./cmd/clairctl
+          tar -xzf clair-${{ needs.config.outputs.version }}.tar.gz 'etc/*.mk' Makefile
+          make dist-clairctl
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: clairctl-${{matrix.goos}}-${{matrix.goarch}}
-          path: clairctl-${{matrix.goos}}-${{matrix.goarch}}
+          name: clairctl-release
+          path: clairctl-${{ needs.config.outputs.version }}
           if-no-files-found: error
 
   release:
@@ -196,20 +167,16 @@ jobs:
           registry: quay.io
           username: ${{ secrets.QUAY_USER }}
           password: ${{ secrets.QUAY_TOKEN }}
-      - name: Extract Release
-        run: |
-          mkdir "${{ runner.temp }}/build"
-          tar -xz -f ${{steps.download.outputs.download-path}}/clair-${{ needs.config.outputs.version }}.tar.gz --strip-components=1 -C "${{ runner.temp }}/build"
       - name: Build Container
-        uses: docker/build-push-action@v6
-        with:
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          context: ${{ runner.temp }}/build
-          platforms: linux/amd64,linux/arm64,linux/ppc64le,linux/s390x
-          push: true
-          tags: |
-            quay.io/${{ needs.config.outputs.image_repo }}:${{ needs.config.outputs.image_tag }}
+        working-directory: ${{steps.download.outputs.download-path}}
+        env:
+          IMAGE_NAME: quay.io/${{ needs.config.outputs.image_repo }}:${{ needs.config.outputs.image_tag }}
+        run: |
+          tar -xzf clair-${{ needs.config.outputs.version }}.tar.gz 'etc/*.mk' Makefile
+          make dist-container
+          skopeo copy --all --preserve-digests \
+            oci-archive:clair-v*.oci:${{ needs.config.outputs.image_tag }} \
+            "docker://${IMAGE_NAME}"
       - name: Checkout
         if: needs.config.outputs.is_prerelease == 'true'
         uses: actions/checkout@v4
@@ -225,41 +192,39 @@ jobs:
     name: Publish Binaries
     runs-on: 'ubuntu-latest'
     needs: [release-archive, release]
-    strategy:
-      matrix:
-        goarch: ['arm64', 'amd64', '386', 'ppc64le', 's390x']
-        goos: ['linux', 'windows', 'darwin']
-        exclude:
-          - goos: darwin
-            goarch: '386'
-          - goos: darwin
-            goarch: arm64
-          - goos: windows
-            goarch: '386'
-          - goos: darwin
-            goarch: ppc64le
-          - goos: windows
-            goarch: ppc64le
-          - goos: windows
-            goarch: 's390x'
-          - goos: darwin
-            goarch: 's390x'
     steps:
       - name: Fetch Artifacts
         uses: actions/download-artifact@v4
         id: download
         with:
-          pattern: clairctl-*
-          merge-multiple: true
-      - name: Publish clairctl-${{matrix.goos}}-${{matrix.goarch}}
-        uses: actions/upload-release-asset@v1
+          name: clairctl-release
+      - name: Publish clairctl binaries
+        uses: actions/github-script@v7
+        # GitHub doesn't have a first-party action for this, anymore.
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_ID: 0
+          ROOT: ${{steps.download.outputs.download-path}}
         with:
-          upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ${{steps.download.outputs.download-path}}/clairctl-${{matrix.goos}}-${{matrix.goarch}}
-          asset_name: clairctl-${{matrix.goos}}-${{matrix.goarch}}
-          asset_content_type: application/octet-stream
+          script: |
+            const { readFile } = require('node:fs/promises');
+            const path = require('node:path');
+            const { ROOT, RELEASE_ID } = process.env;
+            
+            const pat = await glob.create(`${ROOT}/**/clairctl*`);
+            for await (const p of pat.globGenerator()) {
+              core.info(`found: ${p}`);
+              const dir = path.dirname(p);
+              const base = path.basename(p);
+              const ext = path.extname(base);
+              const (os, arch) = path.basename(dir).split("_");
+              github.rest.repos.uploadReleaseAsset({
+                owner: context.owner,
+                repo: context.repo,
+                release_id: RELEASE_ID,
+                name: `clairctl-${os}-${arch}${ext}`,
+                data: await readFile(p),
+              }); 
+            }
 
   deploy-documentation:
     name: Deploy Documentation
