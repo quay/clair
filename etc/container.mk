@@ -46,3 +46,22 @@ clair-%.oci: clair-%.tar.gz
 	tar -xzf $< -C $$src --strip-components=1
 	$(buildctl)
 rm_pat += clair-*.oci
+
+# The "dist-clairctl" target builds a container containing all the platforms
+# where upstream supports clairctl.
+.PHONY: dist-clairctl
+dist-clairctl: clairctl-$(VERSION)
+
+clairctl-%: clair-%.tar.gz
+	src=$$(mktemp -d)
+	trap 'rm -rf $$src' EXIT
+	tar -xzf $< -C $$src --strip-components=1
+	$(patsubst type=%,$(strip $(call splice,type=local dest=$@)),\
+	$(patsubst platform=%,\
+	platform=$(call splice,$(strip\
+		$(foreach a,amd64 arm64 ppc64le s390x,linux/$a)\
+		$(foreach a,amd64 arm64,darwin/$a)\
+		$(foreach a,amd64 arm64,windows/$a)\
+	)),\
+	$(buildctl))) --opt target=ctl
+rm_pat += clairctl-*
