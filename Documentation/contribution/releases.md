@@ -47,3 +47,7 @@ release, and the container is pushed to the
 repository.
 
 This is all powered by a Github Action in `.github/workflows/cut-release.yml`.
+
+A complete source archive can be created with `make dist`.
+A corresponding container can be created with `make dist-container`.
+See `etc/config.mk` for documentation on variables that control these targets.
