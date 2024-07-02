@@ -4,10 +4,15 @@ DCO
 LICENSE
 *.md
 NOTICE
+*.oci
+*.tar*
+/clairctl-*
+!testdata/**
 # Directories
-book
-contrib
-Documenatation
-etc
-local-dev
+/book
+/contrib
+/Documenatation
+/etc
+/local-dev
+/.github
 # Allow `.git` to get sent for build vcs stamping.

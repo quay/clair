@@ -12,8 +12,9 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/quay/clair/v4/cmd"
 	"golang.org/x/net/publicsuffix"
+
+	"github.com/quay/clair/v4/cmd"
 )
 
 // NewClient constructs an [http.Client] that disallows access to public
