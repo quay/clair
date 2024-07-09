@@ -8,7 +8,7 @@ require (
 	github.com/go-jose/go-jose/v3 v3.0.3
 	github.com/go-stomp/stomp/v3 v3.1.0
 	github.com/google/go-cmp v0.6.0
-	github.com/google/go-containerregistry v0.19.2
+	github.com/google/go-containerregistry v0.20.0
 	github.com/google/uuid v1.6.0
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.7
 	github.com/jackc/pgconn v1.14.3
