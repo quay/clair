@@ -1,5 +1,3 @@
-//go:build go1.19
-
 package auto
 
 import (
@@ -38,15 +36,10 @@ func Memory() {
 		})
 		return
 	case lim == doNothing:
-		msgs = append(msgs, func(ctx context.Context) {
-			zlog.Info(ctx).
-				Msg("no memory limit configured")
-		})
+		infoLog("no memory limit configured")
 		return
 	case lim == setMax:
-		msgs = append(msgs, func(ctx context.Context) {
-			zlog.Info(ctx).Msg("memory limit unset")
-		})
+		infoLog("memory limit unset")
 		return
 	}
 	// Following the GC guide and taking a haircut: https://tip.golang.org/doc/gc-guide#Suggested_uses
@@ -67,7 +60,12 @@ const (
 
 func memLookup(r fs.FS) (int64, error) {
 	b, err := fs.ReadFile(r, "proc/self/cgroup")
-	if err != nil {
+	switch {
+	case err == nil:
+	case errors.Is(err, fs.ErrNotExist):
+		debugLog("cgroups seemingly not enabled")
+		return doNothing, nil
+	default:
 		return 0, err
 	}
 	s := bufio.NewScanner(bytes.NewReader(b))
@@ -76,14 +74,13 @@ func memLookup(r fs.FS) (int64, error) {
 		sl := bytes.SplitN(s.Bytes(), []byte(":"), 3)
 		hid, ctls, pb := sl[0], sl[1], sl[2]
 		if bytes.Equal(hid, []byte("0")) && len(ctls) == 0 { // If cgroupsv2:
-			msgs = append(msgs, func(ctx context.Context) {
-				zlog.Debug(ctx).Msg("found cgroups v2")
-			})
+			debugLog("found cgroups v2")
 			n := path.Join("sys/fs/cgroup", string(pb), "memory.max")
 			b, err := fs.ReadFile(r, n)
 			switch {
 			case errors.Is(err, nil):
 			case errors.Is(err, fs.ErrNotExist):
+				debugLog(`no "memory.max" file`)
 				return doNothing, nil
 			default:
 				return 0, err
@@ -105,9 +102,7 @@ func memLookup(r fs.FS) (int64, error) {
 		if !isMem { // This line is not the memory group.
 			continue
 		}
-		msgs = append(msgs, func(ctx context.Context) {
-			zlog.Debug(ctx).Msg("found cgroups v1 and memory controller")
-		})
+		debugLog("found cgroups v1 and memory controller")
 		prefix := path.Join("sys/fs/cgroup", string(ctls), string(pb))
 		// Check for the existence of the named cgroup. If it doesn't exist,
 		// look at the root of the controller. The named group not existing
@@ -115,14 +110,17 @@ func memLookup(r fs.FS) (int64, error) {
 		// tricks done. If, for some reason this is actually the root cgroup,
 		// it'll be unlimited and fall back to the default.
 		if _, err := fs.Stat(r, prefix); errors.Is(err, fs.ErrNotExist) {
-			msgs = append(msgs, func(ctx context.Context) {
-				zlog.Debug(ctx).Msg("falling back to root hierarchy")
-			})
+			debugLog("falling back to root hierarchy")
 			prefix = path.Join("sys/fs/cgroup", string(ctls))
 		}
 
 		b, err = fs.ReadFile(r, path.Join(prefix, "memory.limit_in_bytes"))
-		if err != nil {
+		switch {
+		case errors.Is(err, nil):
+		case errors.Is(err, fs.ErrNotExist):
+			debugLog(`no "memory.limit_in_bytes" file`)
+			return doNothing, nil
+		default:
 			return 0, err
 		}
 		v := string(bytes.TrimSpace(b))

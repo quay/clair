@@ -6,6 +6,8 @@ package auto
 
 import (
 	"context"
+
+	"github.com/quay/zlog"
 )
 
 var msgs = []func(context.Context){}
@@ -23,4 +25,18 @@ func PrintLogs(ctx context.Context) {
 		f(ctx)
 	}
 	msgs = msgs[:0]
+}
+
+// DebugLog is a helper to log static strings.
+func debugLog(m string) {
+	msgs = append(msgs, func(ctx context.Context) {
+		zlog.Debug(ctx).Msg(m)
+	})
+}
+
+// InfoLog is a helper to log static strings.
+func infoLog(m string) {
+	msgs = append(msgs, func(ctx context.Context) {
+		zlog.Info(ctx).Msg(m)
+	})
 }
