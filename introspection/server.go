@@ -67,12 +67,10 @@ type Server struct {
 	// initialization.
 	*http.Server
 	*http.ServeMux
-	// a health check function
-	health func() bool
 }
 
 // New constructs a [*Server], which has an embedded [*http.Server].
-func New(ctx context.Context, conf *config.Config, health func() bool) (*Server, error) {
+func New(ctx context.Context, conf *config.Config, _ func() bool) (*Server, error) {
 	var err error
 	ctx = zlog.ContextWithValues(ctx, "component", "introspection/New")
 
@@ -95,13 +93,8 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 		ServeMux: http.NewServeMux(),
 	}
 
-	// check for health
-	if health == nil {
-		zlog.Warn(ctx).Msg("no health check configured; unconditionally reporting OK")
-		i.health = func() bool { return true }
-	} else {
-		i.health = health
-	}
+	// Health check setup:
+	healthReader, healthHandler := health.NewMetricsHook()
 
 	// Configure metrics
 	var mr metric.Reader
@@ -164,23 +157,28 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 	if err != nil {
 		return nil, fmt.Errorf("error configuring metrics: %w", err)
 	}
-	if mr != nil {
-		mp := metric.NewMeterProvider(
-			metric.WithReader(mr),
-			metric.WithResource(resource.NewWithAttributes(
-				semconv.SchemaURL,
-				semconv.ServiceNameKey.String(fmt.Sprintf("clairv4/%v", i.conf.Mode)),
-			)),
-		)
-		otel.SetMeterProvider(mp)
-		i.Server.RegisterOnShutdown(func() {
-			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-			defer cancel()
-			if err := mp.Shutdown(ctx); err != nil {
-				zlog.Error(ctx).Err(err).Msg("error shutting down metric provider")
-			}
-		})
+
+	// The metrics setup is slightly different in that it's always enabled
+	// because it powers the health check machinery.
+	mOpt := []metric.Option{
+		metric.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceNameKey.String(fmt.Sprintf("clairv4/%v", i.conf.Mode)),
+		)),
+		metric.WithReader(healthReader),
 	}
+	if mr != nil {
+		mOpt = append(mOpt, metric.WithReader(mr))
+	}
+	mp := metric.NewMeterProvider(mOpt...)
+	otel.SetMeterProvider(mp)
+	i.Server.RegisterOnShutdown(func() {
+		ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		defer cancel()
+		if err := mp.Shutdown(ctx); err != nil {
+			zlog.Error(ctx).Err(err).Msg("error shutting down metric provider")
+		}
+	})
 
 	// configure tracing
 	// sampler
@@ -313,6 +311,9 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 		zlog.Info(ctx).Msg("distributed tracing configured")
 	}
 
+	// Health check HTTP handler:
+	i.ServeMux.Handle(HealthEndpoint, http.StripPrefix(HealthEndpoint, healthHandler))
+
 	// configure diagnostics
 	err = i.withDiagnostics(ctx)
 	if err != nil {
@@ -330,16 +331,6 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 
 // WithDiagnostics enables healthz and pprof endpoints.
 func (i *Server) withDiagnostics(_ context.Context) error {
-	health := i.health
-	i.HandleFunc(HealthEndpoint, func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("X-Content-Type-Options", "nosniff")
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		if !health() {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		fmt.Fprint(w, `ok`)
-	})
 	i.HandleFunc("/debug/pprof/", pprof.Index)
 	i.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
 	i.HandleFunc("/debug/pprof/profile", pprof.Profile)
