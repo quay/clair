@@ -70,7 +70,7 @@ type Server struct {
 }
 
 // New constructs a [*Server], which has an embedded [*http.Server].
-func New(ctx context.Context, conf *config.Config, _ func() bool) (*Server, error) {
+func New(ctx context.Context, conf *config.Config) (*Server, error) {
 	var err error
 	ctx = zlog.ContextWithValues(ctx, "component", "introspection/New")
 

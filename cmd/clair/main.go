@@ -175,7 +175,7 @@ func serveAPI(ctx context.Context, cfg *config.Config) func() error {
 func serveIntrospection(ctx context.Context, cfg *config.Config) func() error {
 	return func() error {
 		zlog.Info(ctx).Msg("launching introspection server")
-		srv, err := introspection.New(ctx, cfg, nil)
+		srv, err := introspection.New(ctx, cfg)
 		if err != nil {
 			zlog.Warn(ctx).
 				Err(err).
