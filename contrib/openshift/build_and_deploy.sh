@@ -68,9 +68,11 @@ cleanup() {
 		rm "${cidfile}" || echo Unable to remove cidfile: "${cidfile}" >&2
 	fi
 }
-if ! skopeo login --get-login "${REGISTRY}" >/dev/null; then
-	[[ -n "${QUAY_USER-}" && -n "${QUAY_TOKEN-}" ]] &&
-		skopeo login -u="${QUAY_USER}" -p="${QUAY_TOKEN}" "${REGISTRY}"
+
+# Unconditionally log in if we have credentials because AppSRE CI can't be
+# bothered to clear them between Jenkins jobs.
+if [[ -n "${QUAY_USER-}" && -n "${QUAY_TOKEN-}" ]]; then
+	skopeo login -u="${QUAY_USER}" -p="${QUAY_TOKEN}" "${REGISTRY}"
 fi
 ${CONTAINER_ENGINE} run \
 	--cidfile "${cidfile}" \
