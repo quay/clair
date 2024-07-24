@@ -1,8 +1,5 @@
 ---
 http:
-  entrypoint:
-    clair:
-      address: ':6060'
   routers:
     indexer:
       entryPoints: [clair]
