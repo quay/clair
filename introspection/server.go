@@ -16,10 +16,18 @@ import (
 	"github.com/quay/zlog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
+	"go.opentelemetry.io/otel/exporters/prometheus"
+	"go.opentelemetry.io/otel/exporters/stdout/stdoutmetric"
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
+	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 
 	"github.com/quay/clair/v4/health"
 )
@@ -27,6 +35,7 @@ import (
 // Valid backends for both metrics and traces.
 const (
 	Stdout = "stdout"
+	OTLP   = "otlp"
 )
 
 // Valid backends for metrics.
@@ -58,12 +67,11 @@ type Server struct {
 	// initialization.
 	*http.Server
 	*http.ServeMux
-	// a health check function
-	health func() bool
 }
 
 // New constructs a [*Server], which has an embedded [*http.Server].
-func New(ctx context.Context, conf *config.Config, health func() bool) (*Server, error) {
+func New(ctx context.Context, conf *config.Config, _ func() bool) (*Server, error) {
+	var err error
 	ctx = zlog.ContextWithValues(ctx, "component", "introspection/New")
 
 	var addr string
@@ -85,19 +93,92 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 		ServeMux: http.NewServeMux(),
 	}
 
-	// check for health
-	if health == nil {
-		zlog.Warn(ctx).Msg("no health check configured; unconditionally reporting OK")
-		i.health = func() bool { return true }
-	} else {
-		i.health = health
+	// Health check setup:
+	healthReader, healthHandler := health.NewMetricsHook()
+
+	// Configure metrics
+	var mr metric.Reader
+	switch conf.Metrics.Name {
+	case Stdout:
+		var ex metric.Exporter
+		ex, err = stdoutmetric.New()
+		if err != nil {
+			break
+		}
+		mr = metric.NewPeriodicReader(ex)
+	case Prom, "":
+		endpoint := DefaultPromEndpoint
+		if p := conf.Metrics.Prometheus.Endpoint; p != nil {
+			endpoint = *p
+		}
+		zlog.Info(ctx).
+			Str("endpoint", endpoint).
+			Str("server", i.Addr).
+			Msg("configuring prometheus")
+
+		i.Handle(endpoint, promhttp.Handler())
+
+		mr, err = prometheus.New()
+	case OTLP:
+		conf := i.conf.Trace.OTLP
+		if conf.GRPC == nil && conf.HTTP == nil {
+			return nil, fmt.Errorf(`must define either "grpc" or "http" transport for otlp traces`)
+		}
+
+		var ex metric.Exporter
+		switch {
+		case conf.GRPC != nil:
+			var opts []otlpmetricgrpc.Option
+			opts, err = omgHooks.Options(conf.GRPC)
+			if err != nil {
+				break
+			}
+			ex, err = otlpmetricgrpc.New(ctx, opts...)
+		case conf.HTTP != nil:
+			var opts []otlpmetrichttp.Option
+			opts, err = omhHooks.Options(conf.HTTP)
+			if err != nil {
+				break
+			}
+			ex, err = otlpmetrichttp.New(ctx, opts...)
+		default:
+			panic("programmer error: exhaustive switch")
+		}
+		if err != nil {
+			break
+		}
+
+		// Print a warning as long as direct prometheus metrics exist in "our" packages.
+		zlog.Warn(ctx).Msg("OTLP metrics should be considered beta; metrics may be missing")
+		mr = metric.NewPeriodicReader(ex)
+	default:
+		zlog.Info(ctx).Msg("no metrics enabled")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("error configuring metrics: %w", err)
 	}
 
-	// configure prometheus
-	err := i.withPrometheus(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("error configuring prometheus handler: %v", err)
+	// The metrics setup is slightly different in that it's always enabled
+	// because it powers the health check machinery.
+	mOpt := []metric.Option{
+		metric.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceNameKey.String(fmt.Sprintf("clairv4/%v", i.conf.Mode)),
+		)),
+		metric.WithReader(healthReader),
 	}
+	if mr != nil {
+		mOpt = append(mOpt, metric.WithReader(mr))
+	}
+	mp := metric.NewMeterProvider(mOpt...)
+	otel.SetMeterProvider(mp)
+	i.Server.RegisterOnShutdown(func() {
+		ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		defer cancel()
+		if err := mp.Shutdown(ctx); err != nil {
+			zlog.Error(ctx).Err(err).Msg("error shutting down metric provider")
+		}
+	})
 
 	// configure tracing
 	// sampler
@@ -111,7 +192,7 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 			sdktrace.TraceIDRatioBased(p),
 		)
 	default:
-		sampler = sdktrace.NeverSample()
+		sampler = sdktrace.ParentBased(sdktrace.NeverSample())
 	}
 
 	// trace exporter
@@ -119,9 +200,6 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 	switch conf.Trace.Name {
 	case Stdout:
 		exporter, err = stdouttrace.New()
-		if err != nil {
-			return nil, fmt.Errorf("error configuring stdout tracing: %w", err)
-		}
 	case Jaeger:
 		conf := i.conf.Trace.Jaeger
 		var mode string
@@ -176,11 +254,41 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 
 		// configure the exporter
 		exporter, err = jaeger.New(e)
-		if err != nil {
-			return nil, fmt.Errorf("error configuring jaeger tracing: %w", err)
+	case OTLP:
+		conf := i.conf.Trace.OTLP
+		if conf.GRPC == nil && conf.HTTP == nil {
+			return nil, fmt.Errorf(`must define either "grpc" or "http" transport for otlp traces`)
 		}
+
+		var c otlptrace.Client
+		switch {
+		case conf.GRPC != nil:
+			var opts []otlptracegrpc.Option
+			opts, err = otgHooks.Options(conf.GRPC)
+			if err != nil {
+				break
+			}
+			c = otlptracegrpc.NewClient(opts...)
+		case conf.HTTP != nil:
+			var opts []otlptracehttp.Option
+			opts, err = othHooks.Options(conf.HTTP)
+			if err != nil {
+				break
+			}
+			c = otlptracehttp.NewClient(opts...)
+		default:
+			panic("programmer error: exhaustive switch")
+		}
+		if err != nil {
+			break
+		}
+
+		exporter, err = otlptrace.New(ctx, c)
 	default:
 		zlog.Info(ctx).Msg("no distributed tracing enabled")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("error configuring tracing: %w", err)
 	}
 	if exporter != nil {
 		tp := sdktrace.NewTracerProvider(
@@ -203,6 +311,9 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 		zlog.Info(ctx).Msg("distributed tracing configured")
 	}
 
+	// Health check HTTP handler:
+	i.ServeMux.Handle(HealthEndpoint, http.StripPrefix(HealthEndpoint, healthHandler))
+
 	// configure diagnostics
 	err = i.withDiagnostics(ctx)
 	if err != nil {
@@ -220,16 +331,6 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 
 // WithDiagnostics enables healthz and pprof endpoints.
 func (i *Server) withDiagnostics(_ context.Context) error {
-	health := i.health
-	i.HandleFunc(HealthEndpoint, func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("X-Content-Type-Options", "nosniff")
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		if !health() {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		fmt.Fprint(w, `ok`)
-	})
 	i.HandleFunc("/debug/pprof/", pprof.Index)
 	i.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
 	i.HandleFunc("/debug/pprof/profile", pprof.Profile)
@@ -243,21 +344,5 @@ func (i *Server) withDiagnostics(_ context.Context) error {
 
 func (i *Server) withReady(_ context.Context) error {
 	i.ServeMux.Handle(ReadyEndpoint, health.ReadinessHandler())
-	return nil
-}
-
-// WithPrometheus adds the prometheus endpoint to i's ServeMux.
-func (i *Server) withPrometheus(ctx context.Context) error {
-	ctx = zlog.ContextWithValues(ctx, "component", "introspection/Server.withPrometheus")
-	endpoint := DefaultPromEndpoint
-	if i.conf.Metrics.Prometheus.Endpoint != nil {
-		endpoint = *i.conf.Metrics.Prometheus.Endpoint
-	}
-	zlog.Info(ctx).
-		Str("endpoint", endpoint).
-		Str("server", i.Addr).
-		Msg("configuring prometheus")
-
-	i.Handle(endpoint, promhttp.Handler())
 	return nil
 }
