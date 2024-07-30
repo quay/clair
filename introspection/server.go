@@ -1,3 +1,5 @@
+// Package introspection holds the implementation details for the
+// "introspection" HTTP server that Clair hosts.
 package introspection
 
 import (
@@ -22,18 +24,32 @@ import (
 	"github.com/quay/clair/v4/health"
 )
 
+// Valid backends for both metrics and traces.
 const (
-	Prom                     = "prometheus"
-	DefaultPromEndpoint      = "/metrics"
-	Stdout                   = "stdout"
-	Jaeger                   = "jaeger"
-	HealthEndpoint           = "/healthz"
-	ReadyEndpoint            = "/readyz"
-	DefaultIntrospectionAddr = ":8089"
+	Stdout = "stdout"
 )
 
-// Server provides an http server
-// exposing Clair metrics and traces
+// Valid backends for metrics.
+const (
+	Prom = "prometheus"
+)
+
+// Valid backends for traces.
+const (
+	Jaeger = "jaeger"
+)
+
+// Endpoints on the introspection HTTP server.
+const (
+	DefaultPromEndpoint = "/metrics"
+	HealthEndpoint      = "/healthz"
+	ReadyEndpoint       = "/readyz"
+)
+
+// DefaultIntrospectionAddr is the default address if not provided in the configuration.
+const DefaultIntrospectionAddr = ":8089"
+
+// Server provides an HTTP server exposing Clair metrics and debugging information.
 type Server struct {
 	// configuration provided when starting Clair
 	conf *config.Config
@@ -46,6 +62,7 @@ type Server struct {
 	health func() bool
 }
 
+// New constructs a [*Server], which has an embedded [*http.Server].
 func New(ctx context.Context, conf *config.Config, health func() bool) (*Server, error) {
 	ctx = zlog.ContextWithValues(ctx, "component", "introspection/New")
 
