@@ -8,7 +8,7 @@ require (
 	github.com/go-jose/go-jose/v3 v3.0.3
 	github.com/go-stomp/stomp/v3 v3.1.2
 	github.com/google/go-cmp v0.6.0
-	github.com/google/go-containerregistry v0.20.1
+	github.com/google/go-containerregistry v0.20.2
 	github.com/google/uuid v1.6.0
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.7
 	github.com/jackc/pgconn v1.14.3
@@ -43,9 +43,8 @@ require (
 	github.com/containerd/stargz-snapshotter/estargz v0.14.3 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/docker/cli v24.0.0+incompatible // indirect
+	github.com/docker/cli v27.1.1+incompatible // indirect
 	github.com/docker/distribution v2.8.2+incompatible // indirect
-	github.com/docker/docker v24.0.0+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.7.0 // indirect
 	github.com/doug-martin/goqu/v8 v8.6.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
