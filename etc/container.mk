@@ -43,7 +43,7 @@ clair-nightly.oci: $(shell git ls-files -- ':*.go' ':go.mod' ':go.sum') Makefile
 	$(MAKE) nightly-deps
 	src=$$(mktemp -d)
 	trap 'rm -rf $$src' EXIT
-	git archive --add-file=go.mod --add-file=go.sum HEAD |
+	$(git_archive) --add-file=go.mod --add-file=go.sum HEAD |
 		tar -x -C "$$src"
 	$(buildctl)
 

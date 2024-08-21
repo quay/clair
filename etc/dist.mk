@@ -7,7 +7,7 @@ dist: clair-$(VERSION).tar.gz
 clair-%.tar.gz: vendor/modules.txt
 	tarball=$(subst .gz,,$@)
 	prefix=$(subst .tar.gz,/,$@)
-	git archive --format tar\
+	$(git_archive) --format tar\
 		--prefix "$$prefix"\
 		--output "$$tarball"\
 		$*

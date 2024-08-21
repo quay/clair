@@ -24,6 +24,10 @@ endif
 # The package used (via `go run`) to format go files.
 goimports ?= golang.org/x/tools/cmd/goimports@latest
 
+# This is the command invoked when `git archive` is needed.
+# The config option forces consistent line endings.
+git_archive = git -c core.autocrlf=false archive
+
 # These are arguments added to `go test` invocations.
 testargs =
 
