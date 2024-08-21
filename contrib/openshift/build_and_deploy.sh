@@ -18,12 +18,13 @@ done
 : "${NAMESPACE:=app-sre}"
 : "${REPOSITORY:=clair}"
 : "${IMAGE:=$(splice / "$REGISTRY" "$NAMESPACE" "$REPOSITORY")}"
-: "${BUILDKIT_IMAGE:=$(splice / "$REGISTRY" "$NAMESPACE" buildkit:latest)}"
+: "${BUILDKIT_VERSION:=0.15.2}"
+: "${BUILDKIT_IMAGE:=$(splice / "$REGISTRY" "$NAMESPACE" "buildkit:latest")}"
 : "${CONTAINER_ENGINE:=$(command -v podman 2>/dev/null || command -v docker 2>/dev/null)}"
 : "${cidfile:=buildkit.cid}"
 GIT_HASH="$(git rev-parse --short=7 HEAD)"
 tags=("${IMAGE}:latest" "${IMAGE}:${GIT_HASH}")
-trap 'rm -rf clair-v*.{tar*,oci}' ERR
+trap 'rm -rf clair-v*.{tar*,oci} ' ERR
 
 patch_source() {
 	in=$1
@@ -43,11 +44,21 @@ patch_source() {
 	in=${in%.gz}
 
 	filename=$(tar tf "$in" '*/Dockerfile')
+	# remove the syntax line -- should be OK as long as we're not using features
+	# beyond the buildkit-shipped version.
 	tar -xOf "$in" "$filename" |
-		sed "s,docker.io/[[:alpha:]]\+,$(splice / "$REGISTRY" "$NAMESPACE")," >"${tmp}/Dockerfile"
+		sed '/# syntax/d' >"${tmp}/Dockerfile"
 	tar -rf "$in" --transform "s,.*,${filename}," "${tmp}/Dockerfile"
 	gzip -n -q -f "$in"
 	)
+}
+
+registry_login(){
+	[[ -v login_done ]] && return
+	f="$(mktemp -d)/auth.json"
+	export REGISTRY_AUTH_FILE="$f" DOCKER_CONFIG="${f%/*}"
+	${CONTAINER_ENGINE} login -u="${QUAY_USER}" -p="${QUAY_TOKEN}" "${REGISTRY}"
+	declare -g login_done
 }
 
 if [[ -d bin ]]; then
@@ -55,10 +66,9 @@ if [[ -d bin ]]; then
 fi
 if ! command -v buildctl >/dev/null 2>&1; then
 	echo Fetching buildctl:
-	: "${BUILDCTL_VERSION:=0.15.0}"
 	mkdir -p bin
 	PATH=$(realpath bin):${PATH}
-	curl -sSfL "https://github.com/moby/buildkit/releases/download/v${BUILDCTL_VERSION}/buildkit-v${BUILDCTL_VERSION}.linux-amd64.tar.gz" |
+	curl -sSfL "https://github.com/moby/buildkit/releases/download/v${BUILDKIT_VERSION}/buildkit-v${BUILDKIT_VERSION}.linux-amd64.tar.gz" |
 		tar -xzC bin --strip-components=1 bin/buildctl
 	command -V buildctl
 	buildctl --version
@@ -66,25 +76,29 @@ fi
 
 echo Starting buildkitd container:
 cleanup() {
-	echo Stopping buildkitd container:
-	${CONTAINER_ENGINE} stop --cidfile "${cidfile}" || echo Failed to stop buildkit container >&2
+	todo=( ${login_done:+${REGISTRY_AUTH_FILE}} )
 	if [[ -f "${cidfile}" ]]; then
-		rm "${cidfile}" || echo Unable to remove cidfile: "${cidfile}" >&2
+		echo Stopping buildkitd container:
+		[[ -o x ]] && ${CONTAINER_ENGINE} logs "$(cat "${cidfile}")"
+		${CONTAINER_ENGINE} stop --cidfile "${cidfile}" || echo Failed to stop buildkit container >&2
+		todo+=( "${cidfile}" )
 	fi
+	[[ "${#todo[@]}" -ne 0 ]] && rm -rf "${todo[@]}"
 }
 
+trap 'cleanup' EXIT
 # Unconditionally log in if we have credentials because AppSRE CI can't be
 # bothered to clear them between Jenkins jobs.
 if [[ -n "${QUAY_USER-}" && -n "${QUAY_TOKEN-}" ]]; then
-	skopeo login -u="${QUAY_USER}" -p="${QUAY_TOKEN}" "${REGISTRY}"
+	registry_login
 fi
+[[ -x o ]] && skopeo list-tags "docker://${BUILDKIT_IMAGE%:*}"
 ${CONTAINER_ENGINE} run \
 	--cidfile "${cidfile}" \
 	--detach \
 	--privileged \
 	--rm \
 	"${BUILDKIT_IMAGE}"
-trap 'cleanup' EXIT
 BUILDKIT_HOST="$(basename "${CONTAINER_ENGINE}")-container://$(cat "$cidfile")"
 export BUILDKIT_HOST
 
@@ -93,7 +107,8 @@ make dist
 
 echo Applying self-inflicted wound:
 if [[ $(find . -maxdepth 1 -type f -name 'clair-v*.tar*' | wc -l) -ne 1 ]]; then
-	echo found multiple dist tarballs, exiting: "$(ls clair-v*.tar*)" >&2
+	echo found multiple dist tarballs, exiting: >&2
+	ls clair-v*.tar* >&2
 	exit 99
 fi
 patch_source clair-v*.tar.gz
@@ -106,11 +121,10 @@ touch -m -t 197001010000 clair-v*.{tar.gz,oci}
 
 [[ -n "${dryrun-}" ]] && exit 0
 
-if ! skopeo login --get-login "${REGISTRY}" >/dev/null; then
-	: "${QUAY_USER:?Missing QUAY_USER variable.}"
-	: "${QUAY_TOKEN:?Missing QUAY_TOKEN variable.}"
-	skopeo login -u="${QUAY_USER}" -p="${QUAY_TOKEN}" "${REGISTRY}"
-fi
+: "${QUAY_USER:?Missing QUAY_USER variable.}"
+: "${QUAY_TOKEN:?Missing QUAY_TOKEN variable.}"
+registry_login
+
 ar=$(echo clair-v4.*.oci)
 for t in "${tags[@]}"; do
 	echo Copy to "${t@Q}:"
