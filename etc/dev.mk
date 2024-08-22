@@ -15,7 +15,7 @@ __moddownload:
 # It's touched on every run of `go mod vendor`, so should be a good proxy for
 # the whole tree.
 vendor/modules.txt: go.mod $(shell $(findpat) *.go -print) | __moddownload
-	go mod vendor
+	$(go) mod vendor
 rm_pat += vendor
 
 # Nightly-deps modifies the current `go.mod`
