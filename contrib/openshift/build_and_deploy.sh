@@ -74,7 +74,6 @@ if ! command -v buildctl >/dev/null 2>&1; then
 	buildctl --version
 fi
 
-echo Starting buildkitd container:
 cleanup() {
 	todo=( ${login_done:+${REGISTRY_AUTH_FILE}} )
 	if [[ -f "${cidfile}" ]]; then
@@ -92,15 +91,18 @@ trap 'cleanup' EXIT
 if [[ -n "${QUAY_USER-}" && -n "${QUAY_TOKEN-}" ]]; then
 	registry_login
 fi
-[[ -x o ]] && skopeo list-tags "docker://${BUILDKIT_IMAGE%:*}"
-${CONTAINER_ENGINE} run \
-	--cidfile "${cidfile}" \
-	--detach \
-	--privileged \
-	--rm \
-	"${BUILDKIT_IMAGE}"
-BUILDKIT_HOST="$(basename "${CONTAINER_ENGINE}")-container://$(cat "$cidfile")"
-export BUILDKIT_HOST
+if [[ ! -v BUILDKIT_HOST ]]; then
+	echo Starting buildkitd container:
+	[[ -x o ]] && skopeo list-tags "docker://${BUILDKIT_IMAGE%:*}"
+	${CONTAINER_ENGINE} run \
+		--cidfile "${cidfile}" \
+		--detach \
+		--privileged \
+		--rm \
+		"${BUILDKIT_IMAGE}"
+	BUILDKIT_HOST="$(basename "${CONTAINER_ENGINE}")-container://$(cat "$cidfile")"
+	export BUILDKIT_HOST
+fi
 
 echo Exporting source:
 make dist
