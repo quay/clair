@@ -31,6 +31,10 @@ patch_source() {
 		echo already patched >&2
 		return
 	fi
+	if [[ "${BUILDKIT_IMAGE%%/*}" = docker.io ]]; then
+		echo guessing no patching needed, based on BUILDKIT_IMAGE "(${BUILDKIT_IMAGE})" >&2
+		return
+	fi
 
 	( # Subshell to set a cleanup trap.
 	tmp=$(mktemp -d)
