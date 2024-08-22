@@ -1,25 +1,25 @@
-# The following builds a command in the "buildctl" variable that expects a
+# The following builds a command in the "buildctl_cmd" variable that expects a
 # context in the shell variable "src" and for the make variable "@" (the
 # target) to be present. NB these purposefully are not immediately expanded.
 output_args = type=oci \"name=$(IMAGE_NAME)\" oci-mediatypes=true compression=estargz rewrite-timestamp=true dest=$@
-buildctl = buildctl build --frontend dockerfile.v0
-buildctl += --opt platform=$(call splice,$(foreach a,$(CONTAINER_PLATFORMS),linux/$a))
+buildctl_cmd = $(buildctl) build --frontend dockerfile.v0
+buildctl_cmd += --opt platform=$(call splice,$(foreach a,$(CONTAINER_PLATFORMS),linux/$a))
 # DEBUG toggles on the "plain" buildkit output.
 ifdef DEBUG
-buildctl += --progress plain
+buildctl_cmd += --progress plain
 endif
-buildctl += --opt build-arg:BUILDKIT_MULTI_PLATFORM=1
-buildctl += $(strip $(foreach v,$(buildkit_passthru),$(if $($v),--opt build-arg:$v=$($v),)))
-buildctl += --local context=$$src
-buildctl += --local dockerfile=$$src
-buildctl += --output $(call splice,$(output_args))
+buildctl_cmd += --opt build-arg:BUILDKIT_MULTI_PLATFORM=1
+buildctl_cmd += $(strip $(foreach v,$(buildkit_passthru),$(if $($v),--opt build-arg:$v=$($v),)))
+buildctl_cmd += --local context=$$src
+buildctl_cmd += --local dockerfile=$$src
+buildctl_cmd += --output $(call splice,$(output_args))
 ifdef GITHUB_ACTIONS
-buildctl += --export-cache type=gha,mode=max
-buildctl += --import-cache type=gha
+buildctl_cmd += --export-cache type=gha,mode=max
+buildctl_cmd += --import-cache type=gha
 endif
 ifndef BUILDKIT_HOST
 # Add a (hopefully) helpful warning that's printed on buildctl use.
-buildctl += $(warning 'BUILDKIT_HOST' is not defined)
+buildctl_cmd += $(warning 'BUILDKIT_HOST' is not defined)
 endif
 
 # The "container" target builds a container using the current state of the tree.
@@ -30,7 +30,7 @@ rm_pat += *.oci
 # Clair.oci builds a container using the current state of the tree.
 clair.oci: $(shell git ls-files -- ':*.go' ':go.mod' ':go.sum') Makefile Dockerfile
 	src=.
-	$(buildctl)
+	$(buildctl_cmd)
 
 # Container-build creates a container using the current state of the tree and
 # loads it into the container engine.
@@ -45,7 +45,7 @@ clair-nightly.oci: $(shell git ls-files -- ':*.go' ':go.mod' ':go.sum') Makefile
 	trap 'rm -rf $$src' EXIT
 	$(git_archive) --add-file=go.mod --add-file=go.sum HEAD |
 		tar -x -C "$$src"
-	$(buildctl)
+	$(buildctl_cmd)
 
 # The "dist-container" target builds a container using a created dist archive.
 .PHONY: dist-container
@@ -57,7 +57,7 @@ clair-%.oci: clair-%.tar.gz
 	src=$$(mktemp -d)
 	trap 'rm -rf $$src' EXIT
 	tar -xzf $< -C $$src --strip-components=1
-	$(buildctl)
+	$(buildctl_cmd)
 
 # The "dist-clairctl" target builds a container containing all the platforms
 # where upstream supports clairctl.
@@ -77,5 +77,5 @@ clairctl-%: clair-%.tar.gz
 		$(foreach a,amd64 arm64,darwin/$a)\
 		$(foreach a,amd64 arm64,windows/$a)\
 	)),\
-	$(buildctl))) --opt target=ctl
+	$(buildctl_cmd))) --opt target=ctl
 rm_pat += clairctl-*
