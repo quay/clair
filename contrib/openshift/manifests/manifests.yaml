@@ -77,8 +77,8 @@ objects:
                 httpGet:
                   path: ${{READY_PATH}}
                   port: ${{HEALTH_PORT}}
-                  failureThreshold: 400
-                  periodSeconds: 10
+                failureThreshold: 400
+                periodSeconds: 10
               volumeMounts:
                 - name: clair-config
                   mountPath: /etc/clair
@@ -146,8 +146,8 @@ objects:
                 httpGet:
                   path: ${{READY_PATH}}
                   port: ${{HEALTH_PORT}}
-                  failureThreshold: 400
-                  periodSeconds: 10
+                failureThreshold: 400
+                periodSeconds: 10
               volumeMounts:
                 - name: clair-config
                   mountPath: /etc/clair
@@ -212,8 +212,8 @@ objects:
                 httpGet:
                   path: ${{READY_PATH}}
                   port: ${{HEALTH_PORT}}
-                  failureThreshold: 400
-                  periodSeconds: 10
+                failureThreshold: 400
+                periodSeconds: 10
               volumeMounts:
                 - name: clair-config
                   mountPath: /etc/clair
