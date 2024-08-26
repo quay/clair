@@ -10,7 +10,7 @@ require (
 	github.com/google/go-cmp v0.6.0
 	github.com/google/go-containerregistry v0.20.2
 	github.com/google/uuid v1.6.0
-	github.com/grafana/pyroscope-go/godeltaprof v0.1.7
+	github.com/grafana/pyroscope-go/godeltaprof v0.1.8
 	github.com/jackc/pgconn v1.14.3
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/klauspost/compress v1.17.9
