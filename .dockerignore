@@ -11,6 +11,7 @@ NOTICE
 # Directories
 /book
 /contrib
+!/contrib/cmd
 /Documenatation
 /etc
 /local-dev
