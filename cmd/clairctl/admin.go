@@ -47,6 +47,13 @@ var AdminCmd = &cli.Command{
 					Usage:  "create `idx_manifest_layer_layer_id` index in the `indexer` database",
 					Action: adminPre473,
 				},
+				{
+					Name:        "v4.8.0",
+					Aliases:     []string{"4.8.0"},
+					Description: "This task sets the matcher migration version to 13 to avert the migration deleting RHEL OVAL vulnerabilities.",
+					Usage:       "set matcher migration version to 13",
+					Action:      adminPre480,
+				},
 			},
 			Before: otherVersion,
 		},
@@ -63,6 +70,14 @@ var AdminCmd = &cli.Command{
 						"The new python matcher can't handle pyuoio data and can cause errors.\n\n",
 					Usage:  "delete pyupio vulns in from the matcher DB",
 					Action: adminPost470,
+				},
+				{
+					Name:    "v4.8.0",
+					Aliases: []string{"4.8.0"},
+					Description: "This task deletes RHEL OVALv2 vulnerabilities from the database.\n" +
+						"This could take a while so this command allows an operator to delete the vulnerabilities outside of migrations.\n",
+					Usage:  "delete RHEL OVALv2 vulnerabilities",
+					Action: adminPost480,
 				},
 			},
 			Before: otherVersion,
@@ -475,4 +490,132 @@ func fromSemver(v *semver.Version) (out claircore.Version) {
 	out.V[2] = int32(v.Minor())
 	out.V[3] = int32(v.Patch())
 	return out
+}
+
+// Set matcher migration version to 13.
+func adminPre480(c *cli.Context) error {
+	ctx := c.Context
+	fi, err := os.Stat(c.Path("config"))
+	switch {
+	case !errors.Is(err, nil):
+		return fmt.Errorf("bad config: %w", err)
+	case fi.IsDir():
+		return fmt.Errorf("bad config: is a directory")
+	}
+	cfg, err := loadConfig(c.Path("config"))
+	if err != nil {
+		return fmt.Errorf("error loading config: %w", err)
+	}
+	dsn := cfg.Matcher.ConnString
+
+	pgcfg, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		return fmt.Errorf("error parsing dsn: %w", err)
+	}
+	zlog.Info(ctx).
+		Str("host", pgcfg.ConnConfig.Host).
+		Str("database", pgcfg.ConnConfig.Database).
+		Str("user", pgcfg.ConnConfig.User).
+		Uint16("port", pgcfg.ConnConfig.Port).
+		Msg("using discovered connection params")
+
+	zlog.Debug(ctx).
+		Msg("resizing pool to 1 connections")
+	pgcfg.MaxConns = 1
+	pool, err := pgxpool.ConnectConfig(ctx, pgcfg)
+	if err != nil {
+		return fmt.Errorf("error creating pool: %w", err)
+	}
+	defer pool.Close()
+	if err := pool.Ping(ctx); err != nil {
+		return fmt.Errorf("error connecting to database: %w", err)
+	}
+
+	return pool.AcquireFunc(ctx, func(conn *pgxpool.Conn) error {
+		const (
+			setMatcherMigration = `INSERT INTO libvuln_migrations ("version") VALUES (13) ON CONFLICT DO NOTHING;`
+		)
+		if _, err := conn.Exec(ctx, setMatcherMigration); err != nil {
+			return fmt.Errorf("error setting matcher migration: %w", err)
+		}
+		zlog.Debug(ctx).Msg("Set migration version done")
+		zlog.Info(ctx).Msg("pre v4.8.0 admin done")
+		return nil
+	})
+}
+
+// Attempt to remove RHEL OVALv2 vulnerabilities before v4.8.0 (where vulnerabilities come from VEX).
+func adminPost480(c *cli.Context) error {
+	ctx := c.Context
+	fi, err := os.Stat(c.Path("config"))
+	switch {
+	case !errors.Is(err, nil):
+		return fmt.Errorf("bad config: %w", err)
+	case fi.IsDir():
+		return fmt.Errorf("bad config: is a directory")
+	}
+	cfg, err := loadConfig(c.Path("config"))
+	if err != nil {
+		return fmt.Errorf("error loading config: %w", err)
+	}
+	dsn := cfg.Matcher.ConnString
+
+	pgcfg, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		return fmt.Errorf("error parsing dsn: %w", err)
+	}
+	zlog.Info(ctx).
+		Str("host", pgcfg.ConnConfig.Host).
+		Str("database", pgcfg.ConnConfig.Database).
+		Str("user", pgcfg.ConnConfig.User).
+		Uint16("port", pgcfg.ConnConfig.Port).
+		Msg("using discovered connection params")
+
+	zlog.Debug(ctx).
+		Msg("resizing pool to 2 connections")
+	pgcfg.MaxConns = 2
+	pool, err := pgxpool.ConnectConfig(ctx, pgcfg)
+	if err != nil {
+		return fmt.Errorf("error creating pool: %w", err)
+	}
+	defer pool.Close()
+	if err := pool.Ping(ctx); err != nil {
+		return fmt.Errorf("error connecting to database: %w", err)
+	}
+
+	return pool.AcquireFunc(ctx, func(conn *pgxpool.Conn) error {
+		const (
+			selectUpdateOperations = `SELECT DISTINCT(updater) FROM update_operation WHERE updater ~ 'RHEL[5-9]-*'; `
+			deleteOVALUO           = `DELETE FROM update_operation WHERE updater = ANY($1::TEXT[]);`
+			deleteOVALVulns        = `DELETE FROM vuln where updater = ANY($1::TEXT[]);`
+		)
+		updaters := []string{}
+		rows, err := conn.Query(ctx, selectUpdateOperations)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+
+		var updater string
+		for rows.Next() {
+			if err := rows.Scan(&updater); err != nil {
+				return err
+			}
+			updaters = append(updaters, updater)
+		}
+		if err := rows.Err(); err != nil {
+			return err
+		}
+		zlog.Debug(ctx).Strs("updaters", updaters).Msg("Got updaters")
+		if _, err := conn.Exec(ctx, deleteOVALUO, updaters); err != nil {
+			return fmt.Errorf("error deleting OVAL update_operations: %w", err)
+		}
+		zlog.Debug(ctx).Msg("Delete update_operations done")
+		if _, err := conn.Exec(ctx, deleteOVALVulns, updaters); err != nil {
+			return fmt.Errorf("error deleting OVAL vulns: %w", err)
+		}
+		zlog.Debug(ctx).Msg("Delete vulns done")
+		zlog.Info(ctx).Msg("post v4.8.0 admin done")
+		return nil
+	})
 }
