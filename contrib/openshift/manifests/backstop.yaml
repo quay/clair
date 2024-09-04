@@ -1,0 +1,119 @@
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: clair-gc-quaybackstop
+  labels:
+    app: clair
+labels:
+  app: clair
+objects:
+- apiVersion: batch/v1
+  kind: CronJob
+  metadata:
+    name: quaybackstop
+  spec:
+    schedule: '23 1 * * 1'
+    timeZone: Etc/UTC
+    concurrencyPolicy: Forbid
+    successfulJobsHistoryLimit: 1
+    jobTemplate:
+      spec:
+        template:
+          spec:
+            serviceAccountName: ${{SERVICE_ACCOUNT}}
+            volumes:
+              - name: clair-config
+                secret:
+                  secretName: ${{CLAIR_CONFIG_SECRET}}
+              - name: quay-config
+                secret:
+                  secretName: ${{QUAY_CONFIG_SECRET}}
+              - name: database-cert
+                emptyDir:
+                  sizeLimit: 50Mi
+            restartPolicy: OnFailure
+            initContainers:
+            - name: fetch-certs
+              image: registry.access.redhat.com/ubi9/ubi:latest
+              command:
+              - /usr/bin/sh
+              args:
+              - -c
+              - |
+                set -ex
+                cd /run/certs
+                curl -sSfLO https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
+              volumeMounts:
+              - name: database-cert
+                mountPath: /run/certs
+            containers:
+            - name: quaybackstop
+              resources:
+                limits:
+                  cpu: 4
+                requests:
+                  cpu: 2
+              image: ${IMAGE_NAME}:${IMAGE_TAG}
+              imagePullPolicy: Always
+              env:
+              - name: SSL_CERT_DIR
+                value: /run/certs
+              args:
+              - -D=${DEBUG}
+              - -clairconfig=/run/clair/config.yaml
+              - -quayconfig=/run/quay/config.yaml
+              - -indexer-addr=${INDEXER_ADDRESS}
+              - -page-size=${PAGE_SIZE}
+              - -page-count=${PAGE_COUNT}
+              - -cursor=${CURSOR_FILE}
+              volumeMounts:
+              - name: clair-config
+                mountPath: /run/clair
+              - name: quay-config
+                mountPath: /run/quay
+              - name: database-cert
+                mountPath: /run/certs
+parameters:
+- name: IMAGE_NAME
+  value: quay.io/app-sre/clair
+  displayName: Image
+  description: Image name for the quaybackstop job.
+- name: IMAGE_TAG
+  value: quaybackstop-latest
+  displayName: Image Tag
+  description: Tag name for the quaybackstop job.
+- name: CLAIR_CONFIG_SECRET
+  value: config
+  displayName: Clair Config
+  description: Clair config secret name.
+- name: QUAY_CONFIG_SECRET
+  value: quay-config
+  displayName: Quay Config
+  description: Quay config secret name.
+- name: SERVICE_ACCOUNT
+  value: clair
+  displayName: Service Account
+  description: Service account name to use for API interaction.
+- name: INDEXER_ADDRESS
+  value: http://clair-indexer/
+  displayName: Indexer Address
+  description: Indexer service to make API requests to.
+- name: PAGE_SIZE
+  value: 100
+  displayName: Page Size
+  description: Pull pages of this size from the Quay database.
+- name: PAGE_COUNT
+  value: -1
+  displayName: Page Count
+  description: Only process this number of pages before stopping (-1 for "all").
+- name: CURSOR_FILE
+  value: ''
+  displayName: Cursor
+  description: File to store the cursor to. Allows for incremental work.
+- name: DEBUG
+  value: 0
+  displayName: Debug Output
+  description: Enable debugging output. (Must be numeric or one of t, f, T, F, true, false, TRUE, FALSE, True, False)
+message: |
+  Made cronjob "quaybackstop", it might have worked.
