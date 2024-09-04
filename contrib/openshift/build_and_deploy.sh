@@ -3,12 +3,13 @@ set -euo pipefail
 
 splice() { local IFS="$1"; shift; echo "$*"; }
 
-while getopts nx name; do
+while getopts nxz name; do
 	case "$name" in
 	x) set -x ;;
 	n) dryrun=1 ;;
+	z) declare -g login_done ;;
 	?)
-		printf "Usage: %s: [-nx]\n" "$0"
+		printf "Usage: %s: [-nxz]\n" "$0"
 		exit 2
 		;;
 	esac
@@ -28,7 +29,8 @@ trap 'rm -rf clair-v*.{tar*,oci} ' ERR
 
 patch_source() {
 	in=$1
-	if [[ $(tar tf "$in" '*/Dockerfile' | wc -l) -ne 1 ]]; then
+	want=$(git ls-files ':**Dockerfile' | wc -l)
+	if [[ $(tar tf "$in" '*/Dockerfile' | wc -l) -gt $want ]]; then
 		echo already patched >&2
 		return
 	fi
@@ -43,12 +45,13 @@ patch_source() {
 	gunzip "$in"
 	in=${in%.gz}
 
-	filename=$(tar tf "$in" '*/Dockerfile')
 	# remove the syntax line -- should be OK as long as we're not using features
 	# beyond the buildkit-shipped version.
-	tar -xOf "$in" "$filename" |
-		sed '/# syntax/d' >"${tmp}/Dockerfile"
-	tar -rf "$in" --transform "s,.*,${filename}," "${tmp}/Dockerfile"
+	for file in $(tar tf "$in" '*/Dockerfile'); do
+		tar -xOf "$in" "$file" |
+			sed '/# syntax/d' >"${tmp}/Dockerfile"
+		tar -rf "$in" --transform "s,.*,${file}," "${tmp}/Dockerfile"
+	done
 	gzip -n -q -f "$in"
 	)
 }
