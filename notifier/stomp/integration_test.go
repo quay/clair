@@ -82,7 +82,16 @@ func consumer(ctx context.Context, t *testing.T, dial string, opt []func(*stomp.
 		if err != nil {
 			return fmt.Errorf("failed to subscribe to %q: %w", queue, err)
 		}
-		defer sub.Unsubscribe()
+		defer func() {
+			defer func() {
+				if r := recover(); r != nil {
+					t.Logf("*stomp.Conn.Unsubscribe panicked (see https://github.com/go-stomp/stomp/pull/139):\n%v", r)
+				}
+			}()
+			if err := sub.Unsubscribe(); err != nil {
+				t.Errorf("unsubscribing: %v", err)
+			}
+		}()
 		t.Log("consumer: subscribe OK")
 
 		// read messages
