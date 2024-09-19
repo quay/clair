@@ -26,6 +26,7 @@ done
 GIT_HASH="$(git rev-parse --short=7 HEAD)"
 tags=("${IMAGE}:latest" "${IMAGE}:${GIT_HASH}")
 trap 'rm -rf clair-v*.{tar*,oci} ' ERR
+export GOTOOLCHAIN=auto # have any local invocations of go use the correct version magically
 
 patch_source() {
 	in=$1

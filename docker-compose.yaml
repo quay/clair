@@ -3,7 +3,7 @@ version: "3.7"
 # This is just to hold a bunch of yaml anchors and try to consolidate parts of
 # the config.
 x-anchors:
-  go: &go-image quay.io/projectquay/golang:1.21
+  go: &go-image quay.io/projectquay/golang:1.22
   grafana: &grafana-image docker.io/grafana/grafana:8.0.3
   jaeger: &jaeger-image docker.io/jaegertracing/all-in-one:1.26
   pgadmin: &pgadmin-image docker.io/dpage/pgadmin4:5.7
