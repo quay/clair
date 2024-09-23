@@ -6,7 +6,7 @@ updaters:
   sets:
     - ubuntu
     - debian
-    - rhel
+    - rhel-vex
     - alpine
     - osv
 auth:

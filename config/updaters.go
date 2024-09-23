@@ -27,7 +27,7 @@ type Updaters struct {
 	// "osv"
 	// "photon"
 	// "rhcc"
-	// "rhel"
+	// "rhel-vex"
 	// "suse"
 	// "ubuntu"
 	Sets []string `yaml:"sets,omitempty" json:"sets,omitempty"`
