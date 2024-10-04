@@ -58,6 +58,7 @@ func main() {
 			DeleteCmd,
 			CheckConfigCmd,
 			AdminCmd,
+			DisconnectedCmd,
 		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
