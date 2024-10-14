@@ -33,7 +33,7 @@ RUN --mount=type=bind,target=. \
 	--mount=type=cache,target=/root/.cache/go-build \
 	--mount=type=cache,target=/go/pkg/mod \
 	--network=none \
-	<<.
+	bash <<.
 set -e
 export GOOS="$TARGETOS" GOARCH="$TARGETARCH" GOBIN=/out/bin
 if [ -n "$TARGETVARIANT" ]; then
@@ -45,19 +45,19 @@ fi
 if [ -n "${CLAIR_VERSION}" ]; then
 	vstr="${CLAIR_VERSION} (user)"
 	cat <<msg >&2
-Setting reported version to "${vstr}".
+Setting reported version to "\${vstr}".
 
 This hook into the go build process is not needed if building using a prepared
 source archive and will go away in the future.
 
 Please open an issue if this would prevent a desired use-case.
 msg
-	varg=" -X 'github.com/quay/clair/v4/cmd.Version=${vstr}'"
+	varg=" -X 'github.com/quay/clair/v4/cmd.Version=\${vstr}'"
 fi
-install -d "${GOBIN}"
+install -d "\${GOBIN}"
 go build \
-	-ldflags="-s -w$varg" -trimpath \
-	-o "${GOBIN}" \
+	-ldflags="-s -w\$varg" -trimpath \
+	-o "\${GOBIN}" \
 	./cmd/...
 .
 
