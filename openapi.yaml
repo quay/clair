@@ -781,41 +781,6 @@ components:
         - cpe
         - pretty_name
 
-    SourcePackage:
-      title: SourcePackage
-      type: object
-      description: "A source package affiliated with a Package"
-      example:
-        $ref: '#/components/examples/Package/value'
-      properties:
-        id:
-          description: "A unique ID representing this package"
-          type: string
-        name:
-          description: "Name of the Package"
-          type: string
-        version:
-          description: "Version of the Package"
-          type: string
-        kind:
-          description: "Kind of package. Source | Binary"
-          type: string
-        source:
-          type: string
-        normalized_version:
-          $ref: '#/components/schemas/Version'
-        arch:
-          type: string
-        module:
-          type: string
-        cpe:
-          description: "A CPE identifying the package"
-          type: string
-      required:
-        - id
-        - name
-        - version
-
     Package:
       title: Package
       type: object
@@ -836,7 +801,7 @@ components:
           description: "Kind of package. Source | Binary"
           type: string
         source:
-          $ref: '#/components/schemas/SourcePackage'
+          $ref: '#/components/schemas/Package'
         normalized_version:
           $ref: '#/components/schemas/Version'
         arch:

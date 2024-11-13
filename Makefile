@@ -32,7 +32,7 @@ all:
 # Use https://github.com/Mermade/widdershins to convert openapi.yaml to
 # markdown. You'll need to have npx to run this.
 Documentation/reference/api.md: openapi.yaml
-	npx --yes widdershins\
+	npx widdershins\
 		--search false \
 		--language_tabs 'python:Python' 'go:Golang' 'javascript:Javascript' \
 		--summary $< \

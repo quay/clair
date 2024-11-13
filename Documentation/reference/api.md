@@ -1693,51 +1693,6 @@ Distribution
 |cpe|string|true|none|none|
 |pretty_name|string|true|none|none|
 
-<h2 id="tocS_SourcePackage">SourcePackage</h2>
-<!-- backwards compatibility -->
-<a id="schemasourcepackage"></a>
-<a id="schema_SourcePackage"></a>
-<a id="tocSsourcepackage"></a>
-<a id="tocssourcepackage"></a>
-
-```json
-{
-  "id": "10",
-  "name": "libapt-pkg5.0",
-  "version": "1.6.11",
-  "kind": "binary",
-  "normalized_version": "",
-  "arch": "x86",
-  "module": "",
-  "cpe": "",
-  "source": {
-    "id": "9",
-    "name": "apt",
-    "version": "1.6.11",
-    "kind": "source",
-    "source": null
-  },
-  "x-widdershins-oldRef": "#/components/examples/Package/value"
-}
-
-```
-
-SourcePackage
-
-### Properties
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|id|string|true|none|A unique ID representing this package|
-|name|string|true|none|Name of the Package|
-|version|string|true|none|Version of the Package|
-|kind|string|false|none|Kind of package. Source | Binary|
-|source|string|false|none|none|
-|normalized_version|[Version](#schemaversion)|false|none|Version is a normalized claircore version, composed of a "kind" and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.|
-|arch|string|false|none|none|
-|module|string|false|none|none|
-|cpe|string|false|none|A CPE identifying the package|
-
 <h2 id="tocS_Package">Package</h2>
 <!-- backwards compatibility -->
 <a id="schemapackage"></a>
@@ -1777,7 +1732,7 @@ Package
 |name|string|true|none|Name of the Package|
 |version|string|true|none|Version of the Package|
 |kind|string|false|none|Kind of package. Source | Binary|
-|source|[SourcePackage](#schemasourcepackage)|false|none|A source package affiliated with a Package|
+|source|[Package](#schemapackage)|false|none|A package discovered by indexing a Manifest|
 |normalized_version|[Version](#schemaversion)|false|none|Version is a normalized claircore version, composed of a "kind" and an array of integers such that two versions of the same kind have the correct ordering when the integers are compared pair-wise.|
 |arch|string|false|none|The package's target system architecture|
 |module|string|false|none|A module further defining a namespace for a package|
