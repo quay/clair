@@ -76,6 +76,10 @@ jobs:
           mkdir "${{ runner.temp }}/build"
           git archive --add-file=go.mod --add-file=go.sum origin/main |
             tar -x -C "${{ runner.temp }}/build"
+          (
+            cd "${{ runner.temp }}/build"
+            go mod vendor
+          )
       - uses: docker/build-push-action@v6
         if: steps.novelty.outputs.cache-hit != 'true'
         with:
