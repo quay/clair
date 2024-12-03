@@ -12,7 +12,7 @@ on:
         required: false
         type: boolean
         default: false
-        description: 'Run tests for additional architectures under qemu'
+        description: 'Run tests for additional architectures under qemu-static'
       cd:
         required: false
         type: string
@@ -132,17 +132,15 @@ jobs:
 
     steps:
       - name: Configure RabbitMQ
-        env:
-          brokername: ${{ matrix.platform == needs.setup.outputs.runner-arch && 'localhost' || 'rabbitmq' }}
         run: |
           docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl await_startup
           docker exec ${{ job.services.rabbitmq.id }} rabbitmq-plugins enable rabbitmq_stomp
           docker exec ${{ job.services.rabbitmq.id }} rabbitmq-plugins disable rabbitmq_management_agent rabbitmq_prometheus rabbitmq_web_dispatch
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl add_vhost "${brokername}"
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p "${brokername}" guest '.*' '.*' '.*'
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl add_vhost localhost
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p localhost guest '.*' '.*' '.*'
           docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl add_user clair password
           docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p '/' clair '.*' '.*' '.*'
-          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p "${brokername}" clair '.*' '.*' '.*'
+          docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p localhost clair '.*' '.*' '.*'
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -161,13 +159,29 @@ jobs:
             integration-assets-
           path: |
             ~/.cache/clair-testing
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        if: ${{ matrix.platform != needs.setup.outputs.runner-arch }}
+        with:
+          platforms: linux/${{ matrix.platform }}
 
       - name: Tests
-        if: ${{ matrix.platform == needs.setup.outputs.runner-arch }}
+        # NB If Clair gains any C dependencies, this will need additional setup:
+        #  - `-extldflags=-static`
+        #  - CGO_ENABLED=1
+        #  - relevant architecture's libc, linker, etc.
         env:
-          POSTGRES_CONNECTION_STRING: "host=localhost port=${{ job.services.postgres.ports[5432] }} user=clair dbname=clair password=password sslmode=disable"
+          POSTGRES_CONNECTION_STRING: >-
+            host=localhost
+            port=${{ job.services.postgres.ports[5432] }}
+            user=clair
+            dbname=clair
+            password=password
+            sslmode=disable
           RABBITMQ_CONNECTION_STRING: "amqp://clair:password@localhost:${{ job.services.rabbitmq.ports[5672] }}/"
           STOMP_CONNECTION_STRING: "stomp://clair:password@localhost:${{ job.services.rabbitmq.ports[61613] }}/"
+          GOARCH: ${{ matrix.platform }}
+          CGO_ENABLED: '0'
         working-directory: ./${{ inputs.cd }}
         run: |
           # Go Tests
@@ -176,61 +190,3 @@ jobs:
             go test -tags integration "$expr"
             printf '::endgroup::\n'
           done
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        if: ${{ matrix.platform != needs.setup.outputs.runner-arch }}
-        with:
-          platforms: linux/${{ matrix.platform }}
-      - name: Qemu Tests
-        if: ${{ matrix.platform != needs.setup.outputs.runner-arch }}
-        env:
-          gover: ${{ steps.setup-go.outputs.go-version }}
-          GOARCH: ${{ matrix.platform }}
-        run: |
-          # Go Tests
-          mkdir -p ~/.cache/clair-testing "${RUNNER_TEMP}/vartmp"
-
-          # Hopefully everything we use has their build tags correct.
-          echo ::group::cross-compiling for "$GOARCH"
-          CGO_ENABLED=0 go build ${{ inputs.package_expr }}
-          echo ::endgroup::
-
-          if [ -n "${RUNNER_DEBUG}" ]; then
-            cat <<'.' > "${RUNNER_TEMP}/tests.sh"
-          echo ::group::Inner Container Environment
-          env
-          echo ::endgroup::
-          set -x
-          .
-          fi
-          cat <<'.' >> "${RUNNER_TEMP}/tests.sh"
-          for expr in ${{ inputs.package_expr }}; do
-            printf '::group::go test %s\n' "$expr"
-            go test -tags integration "$expr"
-            printf '::endgroup::\n'
-          done
-          .
-
-          cat <<'.' > "${RUNNER_TEMP}/env.list"
-          CI
-          POSTGRES_CONNECTION_STRING=host=postgres port=5432 user=clair dbname=clair password=password sslmode=disable
-          RABBITMQ_CONNECTION_STRING=amqp://clair:password@rabbitmq:5672/
-          STOMP_CONNECTION_STRING=stomp://clair:password@rabbitmq:61613/
-          .
-
-          docker run \
-            --rm \
-            --network '${{ job.container.network }}' \
-            --platform 'linux/${{ matrix.platform }}' \
-            --mount "type=bind,src=$(go env GOMODCACHE),dst=/go/pkg/mod" \
-            --mount "type=bind,src=$(go env GOCACHE),dst=/root/.cache/go-build" \
-            --mount "type=bind,src=${HOME}/.cache/clair-testing,dst=/root/.cache/clair-testing" \
-            --mount "type=bind,src=$(pwd),dst=/build" \
-            --mount "type=bind,src=${RUNNER_TEMP}/tests.sh,dst=/root/tests.sh" \
-            --mount "type=bind,src=${RUNNER_TEMP}/vartmp,dst=/var/tmp" \
-            --tmpfs /tmp:rw,exec,nosuid,nodev \
-            --env-file "${RUNNER_TEMP}/env.list" \
-            --workdir "/build/${{ inputs.cd }}" \
-            "quay.io/projectquay/golang:${gover%.*}" \
-            sh -e /root/tests.sh
