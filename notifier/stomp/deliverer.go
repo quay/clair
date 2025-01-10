@@ -16,7 +16,7 @@ import (
 )
 
 // Deliverer is a STOMP deliverer which publishes a notifier.Callback to the
-// the broker.
+// broker.
 type Deliverer struct {
 	callback    *url.URL
 	destination string

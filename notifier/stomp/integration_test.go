@@ -88,7 +88,12 @@ func consumer(ctx context.Context, t *testing.T, dial string, opt []func(*stomp.
 					t.Logf("*stomp.Conn.Unsubscribe panicked (see https://github.com/go-stomp/stomp/pull/139):\n%v", r)
 				}
 			}()
-			if err := sub.Unsubscribe(); err != nil {
+			err := sub.Unsubscribe()
+			switch {
+			case err == nil:
+			case errors.Is(err, stomp.ErrUnsubscribeReceiptTimeout):
+				t.Logf("unsubscribing: %v (ignoring: can happen on slow hosts, doesn't affect correctness)", err)
+			default:
 				t.Errorf("unsubscribing: %v", err)
 			}
 		}()
