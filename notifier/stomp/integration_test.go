@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -89,12 +90,13 @@ func consumer(ctx context.Context, t *testing.T, dial string, opt []func(*stomp.
 				}
 			}()
 			err := sub.Unsubscribe()
-			switch {
-			case err == nil:
-			case errors.Is(err, stomp.ErrUnsubscribeReceiptTimeout):
-				t.Logf("unsubscribing: %v (ignoring: can happen on slow hosts, doesn't affect correctness)", err)
-			default:
-				t.Errorf("unsubscribing: %v", err)
+			if err != nil {
+				t.Logf("unsubscribing: %v", err)
+				if runtime.GOARCH == "amd64" {
+					t.Fail()
+				} else {
+					t.Logf("ignoring previous error because of arch %q", runtime.GOARCH)
+				}
 			}
 		}()
 		t.Log("consumer: subscribe OK")
