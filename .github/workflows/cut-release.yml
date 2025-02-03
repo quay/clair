@@ -111,8 +111,6 @@ jobs:
         exclude:
           - goos: darwin
             goarch: '386'
-          - goos: darwin
-            goarch: arm64
           - goos: windows
             goarch: '386'
           - goos: windows
@@ -232,8 +230,6 @@ jobs:
         exclude:
           - goos: darwin
             goarch: '386'
-          - goos: darwin
-            goarch: arm64
           - goos: windows
             goarch: '386'
           - goos: darwin
