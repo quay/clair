@@ -20,7 +20,7 @@ metrics:
   prometheus:
     addServicesLabels: true
 tracing:
-  openTelemetry:
-    address: clair-jaeger:4318
-    insecure: true
+  otlp:
+    http:
+      endpoint: http://clair-jaeger:4318/v1/traces
 accessLog: {}

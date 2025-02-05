@@ -52,11 +52,7 @@ trace:
 #  probability: 1
   otlp:
     http:
-      endpoint: "clair-jaeger:6831"
+      endpoint: "clair-jaeger:4318"
       insecure: true
-  jaeger:
-    agent:
-      endpoint: "clair-jaeger:6831"
-    service_name: "clair"
 metrics:
   name: "prometheus"
