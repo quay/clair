@@ -1,6 +1,6 @@
 module github.com/quay/clair/v4
 
-go 1.22.7
+go 1.23.0
 
 require (
 	github.com/Masterminds/semver v1.5.0
