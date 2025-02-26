@@ -14,7 +14,7 @@ require (
 	github.com/jackc/pgconn v1.14.3
 	github.com/jackc/pgx/v4 v4.18.3
 	github.com/klauspost/compress v1.18.0
-	github.com/prometheus/client_golang v1.20.5
+	github.com/prometheus/client_golang v1.21.0
 	github.com/quay/clair/config v1.4.1
 	github.com/quay/claircore v1.5.35
 	github.com/quay/zlog v1.1.8
@@ -83,7 +83,7 @@ require (
 	github.com/package-url/packageurl-go v0.1.3 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.61.0 // indirect
+	github.com/prometheus/common v0.62.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/quay/claircore/toolkit v1.2.4 // indirect
 	github.com/quay/claircore/updater/driver v1.0.0 // indirect
