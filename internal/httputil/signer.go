@@ -69,6 +69,9 @@ func NewSigner(ctx context.Context, cfg *config.Config, cl jwt.Claims) (*Signer,
 
 // Add marks the authority in "uri" as one that expects signed requests.
 func (s *Signer) Add(ctx context.Context, uri string) error {
+	if s.use == nil {
+		s.use = map[string]struct{}{}
+	}
 	if uri == "" {
 		return nil
 	}
