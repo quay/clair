@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"runtime/debug"
 	"time"
 
 	"github.com/go-jose/go-jose/v3/jwt"
@@ -29,7 +31,15 @@ var (
 
 func main() {
 	var exit int
-	defer func() { os.Exit(exit) }()
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Something unexpected happened: %s\n", r)
+			fmt.Printf("(Hopefully) helpful debugging information shown below:\n")
+			fmt.Printf(string(debug.Stack()))
+			os.Exit(1)
+		}
+		os.Exit(exit)
+	}()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
