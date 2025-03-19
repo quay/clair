@@ -182,6 +182,7 @@ jobs:
           STOMP_CONNECTION_STRING: "stomp://clair:password@localhost:${{ job.services.rabbitmq.ports[61613] }}/"
           GOARCH: ${{ matrix.platform }}
           CGO_ENABLED: '0'
+          GOFLAGS: '-mod=mod'
         working-directory: ./${{ inputs.cd }}
         run: |
           # Go Tests
