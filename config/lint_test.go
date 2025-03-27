@@ -1,6 +1,21 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"strings"
+)
+
+func init() {
+	// Forcibly clear PostgreSQL environment variables to get consistent example
+	// results:
+	for _, kv := range os.Environ() {
+		k, _, _ := strings.Cut(kv, "=")
+		if strings.HasPrefix(k, `PG`) {
+			os.Unsetenv(k)
+		}
+	}
+}
 
 func ExampleLint() {
 	var c Config
