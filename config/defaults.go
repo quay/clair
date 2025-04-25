@@ -17,13 +17,9 @@ const (
 	// DefaultNotifierPollInterval is the default (and minimum) interval for the
 	// notifier's change poll interval. The notifier will poll the database for
 	// updated vulnerability databases at this rate.
-	DefaultNotifierPollInterval = 5 * time.Second
+	DefaultNotifierPollInterval = 6 * time.Hour
 	// DefaultNotifierDeliveryInterval is the default (and minimum) interval for
 	// the notifier's delivery interval. The notifier will attempt to deliver
 	// outstanding notifications at this rate.
-	DefaultNotifierDeliveryInterval = 5 * time.Second
+	DefaultNotifierDeliveryInterval = 1 * time.Hour
 )
-
-// BUG(hank) The DefaultNotifierPollInterval is absurdly low.
-
-// BUG(hank) The DefaultNotifierDeliveryInterval is absurdly low.
