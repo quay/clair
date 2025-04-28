@@ -7,8 +7,8 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/quay/zlog"
@@ -221,7 +221,7 @@ func (s *Store) PutNotifications(ctx context.Context, opts notifier.PutOpts) err
 		affected: putNotificationsAffected,
 	}
 
-	err := s.pool.BeginTxFunc(ctx, txOpt, func(tx pgx.Tx) error {
+	err := pgx.BeginTxFunc(ctx, s.pool, txOpt, func(tx pgx.Tx) error {
 		if err := txExec(ctx, metrics, tx,
 			`insertNotification`, insertNotification,
 			[]interface{}{opts.NotificationID}); err != nil {
@@ -347,7 +347,7 @@ func (s *Store) CollectNotifications(ctx context.Context) error {
 		affected: gcNotificationAffected,
 	}
 
-	err := s.pool.BeginTxFunc(ctx, txOpt, func(tx pgx.Tx) error {
+	err := pgx.BeginTxFunc(ctx, s.pool, txOpt, func(tx pgx.Tx) error {
 		var ok bool
 		if err := tx.QueryRow(ctx, tryLock, adminKeyspace, gcLock).Scan(&ok); err != nil {
 			return err

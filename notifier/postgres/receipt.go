@@ -5,8 +5,8 @@ import (
 	"errors"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
@@ -146,7 +146,7 @@ func (s *Store) PutReceipt(ctx context.Context, updater string, r notifier.Recei
 		counter:  putReceiptCounter,
 		affected: putReceiptAffected,
 	}
-	err := s.pool.BeginTxFunc(ctx, txOpt, func(tx pgx.Tx) error {
+	err := pgx.BeginTxFunc(ctx, s.pool, txOpt, func(tx pgx.Tx) error {
 		if err := txExec(ctx, metrics, tx,
 			`insertNotification`,
 			insertNotification,
