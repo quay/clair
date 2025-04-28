@@ -39,7 +39,7 @@ type Matcher struct {
 	// Deprecated: Pool size should be set through the ConnString member.
 	// Currently, Clair only uses the "pgxpool" package to connect to the
 	// database, so see
-	// https://pkg.go.dev/github.com/jackc/pgx/v4/pgxpool#ParseConfig for more
+	// https://pkg.go.dev/github.com/jackc/pgx/v5/pgxpool#ParseConfig for more
 	// information.
 	MaxConnPool int `yaml:"max_conn_pool,omitempty" json:"max_conn_pool,omitempty"`
 	// CacheAge controls how long clients should be hinted to cache responses
