@@ -8,11 +8,12 @@ import (
 	"regexp"
 
 	"github.com/Masterminds/semver"
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/quay/claircore"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/quay/zlog"
 	"github.com/urfave/cli/v2"
+
+	"github.com/quay/claircore"
 )
 
 // AdminCmd is the "admin" subcommand.
@@ -152,7 +153,7 @@ func adminPre470(c *cli.Context) error {
 	zlog.Debug(ctx).
 		Msg("resizing pool to 2 connections")
 	pgcfg.MaxConns = 2
-	pool, err := pgxpool.ConnectConfig(ctx, pgcfg)
+	pool, err := pgxpool.NewWithConfig(ctx, pgcfg)
 	if err != nil {
 		return fmt.Errorf("error creating pool: %w", err)
 	}
@@ -215,7 +216,7 @@ func adminPost470(c *cli.Context) error {
 	zlog.Debug(ctx).
 		Msg("resizing pool to 2 connections")
 	pgcfg.MaxConns = 2
-	pool, err := pgxpool.ConnectConfig(ctx, pgcfg)
+	pool, err := pgxpool.NewWithConfig(ctx, pgcfg)
 	if err != nil {
 		return fmt.Errorf("error creating pool: %w", err)
 	}
@@ -277,7 +278,7 @@ func adminPre473(c *cli.Context) error {
 	zlog.Debug(ctx).
 		Msg("resizing pool to 2 connections")
 	pgcfg.MaxConns = 2
-	pool, err := pgxpool.ConnectConfig(ctx, pgcfg)
+	pool, err := pgxpool.NewWithConfig(ctx, pgcfg)
 	if err != nil {
 		return fmt.Errorf("error creating pool: %w", err)
 	}
@@ -471,7 +472,7 @@ func createConnPool(ctx context.Context, dsn string, maxConns int32) (*pgxpool.P
 		Int32("pool size", maxConns).
 		Msg("resizing pool")
 	pgcfg.MaxConns = int32(maxConns)
-	pool, err := pgxpool.ConnectConfig(ctx, pgcfg)
+	pool, err := pgxpool.NewWithConfig(ctx, pgcfg)
 	if err != nil {
 		return nil, fmt.Errorf("error creating pool: %w", err)
 	}
@@ -522,7 +523,7 @@ func adminPre480(c *cli.Context) error {
 	zlog.Debug(ctx).
 		Msg("resizing pool to 1 connections")
 	pgcfg.MaxConns = 1
-	pool, err := pgxpool.ConnectConfig(ctx, pgcfg)
+	pool, err := pgxpool.NewWithConfig(ctx, pgcfg)
 	if err != nil {
 		return fmt.Errorf("error creating pool: %w", err)
 	}
@@ -574,7 +575,7 @@ func adminPost480(c *cli.Context) error {
 	zlog.Debug(ctx).
 		Msg("resizing pool to 2 connections")
 	pgcfg.MaxConns = 2
-	pool, err := pgxpool.ConnectConfig(ctx, pgcfg)
+	pool, err := pgxpool.NewWithConfig(ctx, pgcfg)
 	if err != nil {
 		return fmt.Errorf("error creating pool: %w", err)
 	}
