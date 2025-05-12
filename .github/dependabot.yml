@@ -10,8 +10,6 @@ updates:
       - dependency-type: "direct"
     schedule:
       interval: "weekly"
-    reviewers:
-      - "quay/babysitters"
     commit-message:
       prefix: "chore"
       include: "scope"
@@ -28,8 +26,6 @@ updates:
       - dependency-type: "direct"
     schedule:
       interval: "weekly"
-    reviewers:
-      - "quay/babysitters"
     commit-message:
       prefix: "chore"
       include: "scope"
