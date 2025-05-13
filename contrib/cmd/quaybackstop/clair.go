@@ -22,8 +22,8 @@ import (
 	"github.com/quay/clair/v4/cmd"
 
 	"github.com/go-jose/go-jose/v3"
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/quay/clair/config"
 	"github.com/rogpeppe/go-internal/lockedfile"
 	"golang.org/x/sync/errgroup"
@@ -68,7 +68,7 @@ func (a *App) SetClairConfig(s string) error {
 		init, done := context.WithTimeoutCause(context.Background(), 10*time.Second,
 			errors.New("too slow to do initial connection to Clair database"))
 		defer done()
-		return pgxpool.ConnectConfig(init, cfg)
+		return pgxpool.NewWithConfig(init, cfg)
 	})
 	return nil
 }
