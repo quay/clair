@@ -1,8 +1,8 @@
 module github.com/quay/clair/v4
 
-go 1.23.0
+go 1.24.0
 
-toolchain go1.24.1
+toolchain go1.24.3
 
 require (
 	github.com/Masterminds/semver v1.5.0
