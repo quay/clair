@@ -11,10 +11,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/klauspost/compress/zstd"
-	"github.com/quay/claircore/libvuln"
 	"github.com/urfave/cli/v2"
+
+	"github.com/quay/claircore/libvuln"
 
 	"github.com/quay/clair/v4/internal/httputil"
 )
@@ -101,7 +102,7 @@ func importAction(c *cli.Context) error {
 		in = dec
 	}
 
-	pool, err := pgxpool.Connect(ctx, cfg.Matcher.ConnString)
+	pool, err := pgxpool.New(ctx, cfg.Matcher.ConnString)
 	if err != nil {
 		return err
 	}
