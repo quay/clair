@@ -3,6 +3,7 @@ package webhook
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"net/url"
 	"sync"
@@ -12,9 +13,9 @@ import (
 	"github.com/quay/zlog"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
-	"github.com/quay/clair/v4/internal/codec"
 	"github.com/quay/clair/v4/internal/httputil"
-	"github.com/quay/clair/v4/notifier"
+	"github.com/quay/clair/v4/internal/json"
+	"github.com/quay/clair/v4/internal/json/jsontext"
 )
 
 // SignedOnce is used to print a deprecation notice, but only once per run.
@@ -67,26 +68,60 @@ func (d *Deliverer) Name() string {
 	return "webhook"
 }
 
+var options = sync.OnceValue(func() json.Options {
+	return json.WithMarshalers(json.MarshalToFunc(marshalCallback))
+})
+
+func marshalCallback(enc *jsontext.Encoder, cb *callbackRequest) error {
+	if err := enc.WriteToken(jsontext.BeginObject); err != nil {
+		return err
+	}
+	if err := enc.WriteToken(jsontext.String(`callback`)); err != nil {
+		return err
+	}
+	if err := enc.WriteToken(jsontext.String(cb.URL.String())); err != nil {
+		return err
+	}
+	if err := enc.WriteToken(jsontext.String(`notification_id`)); err != nil {
+		return err
+	}
+	if err := enc.WriteToken(jsontext.String(cb.ID.String())); err != nil {
+		return err
+	}
+	return enc.WriteToken(jsontext.EndObject)
+}
+
+type callbackRequest struct {
+	ID  *uuid.UUID
+	URL *url.URL
+}
+
 // Deliver implements the notifier.Deliverer interface.
 //
-// Deliver POSTS a webhook data structure to the configured target.
+// Deliver POSTs a webhook data structure to the configured target.
 func (d *Deliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
 	ctx = zlog.ContextWithValues(ctx,
 		"component", "notifier/webhook/Deliverer.Deliver",
 		"notification_id", nID.String(),
 	)
 
-	callback, err := d.callback.Parse(nID.String())
+	url, err := d.callback.Parse(nID.String())
 	if err != nil {
 		return err
 	}
-
-	wh := notifier.Callback{
-		NotificationID: nID,
-		Callback:       *callback,
+	cb := callbackRequest{
+		ID:  &nID,
+		URL: url,
 	}
 
-	req, err := httputil.NewRequestWithContext(ctx, http.MethodPost, d.target.String(), codec.JSONReader(&wh))
+	rd, wr := io.Pipe()
+	defer rd.Close()
+	go func() {
+		err := json.MarshalWrite(wr, &cb, options())
+		wr.CloseWithError(err)
+	}()
+
+	req, err := httputil.NewRequestWithContext(ctx, http.MethodPost, d.target.String(), rd)
 	if err != nil {
 		return err
 	}
@@ -102,7 +137,7 @@ func (d *Deliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
 	}
 
 	zlog.Info(ctx).
-		Stringer("callback", callback).
+		Stringer("callback", url).
 		Stringer("target", d.target).
 		Msg("dispatching webhook")
 
