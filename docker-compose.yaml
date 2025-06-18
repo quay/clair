@@ -7,6 +7,7 @@ x-anchors:
   jaeger: &jaeger-image docker.io/jaegertracing/all-in-one:1
   pgadmin: &pgadmin-image docker.io/dpage/pgadmin4:5.7
   postgres: &postgres-image docker.io/library/postgres:15
+  postgres-exporter: &postgres-exporter-image docker.io/prometheuscommunity/postgres-exporter:latest
   prom: &prom-image docker.io/prom/prometheus:latest
   pyroscope: &pyroscope-image docker.io/grafana/pyroscope:latest
   quay: &quay-image quay.io/projectquay/quay:latest
@@ -138,6 +139,16 @@ services:
     depends_on:
       - prometheus
       - pyroscope
+  postgres-exporter:
+    container_name: clair-postgres-exporter
+    profiles:
+      - debug
+    image: *postgres-exporter-image
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres@clair-database:5432/postgres?sslmode=disable"
+    depends_on:
+      clair-database:
+        condition: service_healthy
 
   # Notifier services -- use profile 'notifier'
   notifier: &notifier

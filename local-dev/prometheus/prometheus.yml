@@ -30,3 +30,8 @@ scrape_configs:
     static_configs:
       - targets: ['indexer-quay:8089']
 
+  - job_name: postgres
+    metrics_path: "/metrics"
+    static_configs:
+      - targets: ['clair-postgres-exporter:9187']
+
