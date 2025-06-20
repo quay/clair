@@ -10,14 +10,14 @@ import (
 	"time"
 
 	"github.com/go-jose/go-jose/v3/jwt"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/quay/clair/config"
 	"github.com/quay/claircore/datastore/postgres"
 	"github.com/quay/claircore/enricher/cvss"
 	"github.com/quay/claircore/libindex"
 	"github.com/quay/claircore/libvuln"
 	"github.com/quay/claircore/libvuln/driver"
-	"github.com/quay/claircore/pkg/ctxlock"
+	"github.com/quay/claircore/pkg/ctxlock/v2"
 	"github.com/quay/zlog"
 	"golang.org/x/net/publicsuffix"
 
@@ -116,7 +116,7 @@ func Services(ctx context.Context, cfg *config.Config) (*Srv, error) {
 func localIndexer(ctx context.Context, cfg *config.Config) (indexer.Service, error) {
 	const msg = "failed to initialize indexer: "
 	mkErr := func(err error) *clairerror.ErrNotInitialized {
-		return &clairerror.ErrNotInitialized{msg + err.Error()}
+		return &clairerror.ErrNotInitialized{Msg: msg + err.Error()}
 	}
 
 	pool, err := postgres.Connect(ctx, cfg.Indexer.ConnString, "libindex")
@@ -194,7 +194,7 @@ func localIndexer(ctx context.Context, cfg *config.Config) (indexer.Service, err
 func remoteIndexer(ctx context.Context, cfg *config.Config, addr string) (indexer.Service, error) {
 	const msg = "failed to initialize indexer client: "
 	mkErr := func(err error) *clairerror.ErrNotInitialized {
-		return &clairerror.ErrNotInitialized{msg + err.Error()}
+		return &clairerror.ErrNotInitialized{Msg: msg + err.Error()}
 	}
 	rc, err := remoteClient(ctx, cfg, intraserviceClaim, addr)
 	if err != nil {
@@ -299,7 +299,7 @@ func localMatcher(ctx context.Context, cfg *config.Config) (matcher.Service, err
 func remoteMatcher(ctx context.Context, cfg *config.Config, addr string) (matcher.Service, error) {
 	const msg = "failed to initialize matcher client: "
 	mkErr := func(err error) *clairerror.ErrNotInitialized {
-		return &clairerror.ErrNotInitialized{msg + err.Error()}
+		return &clairerror.ErrNotInitialized{Msg: msg + err.Error()}
 	}
 	rc, err := remoteClient(ctx, cfg, intraserviceClaim, addr)
 	if err != nil {
@@ -335,7 +335,7 @@ func localNotifier(ctx context.Context, cfg *config.Config, i indexer.Service, m
 			return nil, mkErr(err)
 		}
 	}
-	pool, err := pgxpool.ConnectConfig(ctx, poolcfg)
+	pool, err := pgxpool.NewWithConfig(ctx, poolcfg)
 	if err != nil {
 		return nil, mkErr(err)
 	}
