@@ -40,7 +40,7 @@ Documentation/reference/api.md: openapi.yaml
 # Intended to be checked-in, so not cleaned.
 
 contrib/openshift/grafana/dashboards/dashboard-clair.configmap.yaml: \
-	local-dev/grafana/provisioning/dashboards/dashboard.json \
+	local-dev/grafana/provisioning/dashboards/clair.json \
 	contrib/openshift/grafana/dashboard-clair.configmap.yaml.tpl
 	name=$$(sed 's/[\&/]/\\&/g;s/$$/\\n/;s/^/    /' $< | tr -d '\n')
 	sed "s/GRAFANA_MANIFEST/$$name/"\
