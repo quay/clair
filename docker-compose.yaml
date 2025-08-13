@@ -2,7 +2,7 @@
 # This is just to hold a bunch of yaml anchors and try to consolidate parts of
 # the config.
 x-anchors:
-  go: &go-image quay.io/projectquay/golang:1.23
+  go: &go-image quay.io/projectquay/golang:1.24
   grafana: &grafana-image docker.io/grafana/grafana:10.3.1
   jaeger: &jaeger-image docker.io/jaegertracing/all-in-one:1
   pgadmin: &pgadmin-image docker.io/dpage/pgadmin4:5.7
