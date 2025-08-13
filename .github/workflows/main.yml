@@ -30,7 +30,7 @@ jobs:
       - name: Checkout
         id: checkout
         if: ${{ !cancelled() }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Check Filenames
         if: ${{ !cancelled() && steps.checkout.conclusion == 'success' }}
         run: | # Check for all the characters Windows hates.
@@ -74,7 +74,7 @@ jobs:
     needs: ['lints']
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/documentation
         with:
           publish: false
