@@ -49,7 +49,7 @@ jobs:
     needs: [config]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - uses: ./.github/actions/go-cache
@@ -210,7 +210,7 @@ jobs:
             quay.io/${{ needs.config.outputs.image_repo }}:${{ needs.config.outputs.image_tag }}
       - name: Checkout
         if: needs.config.outputs.is_prerelease == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set Expiration
         if: needs.config.outputs.is_prerelease == 'true'
         uses: ./.github/actions/set-image-expiration
@@ -262,5 +262,5 @@ jobs:
     runs-on: ubuntu-latest
     needs: [release]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/documentation
