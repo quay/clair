@@ -15,11 +15,11 @@ import (
 func Example() {
 	enc := GetEncoder(os.Stdout)
 	defer PutEncoder(enc)
-	enc.MustEncode([]string{"a", "slice", "of", "strings"})
+	enc.Encode([]string{"a", "slice", "of", "strings"})
 	fmt.Fprintln(os.Stdout)
-	enc.MustEncode(nil)
+	enc.Encode(nil)
 	fmt.Fprintln(os.Stdout)
-	enc.MustEncode(map[string]string{})
+	enc.Encode(map[string]string{})
 	fmt.Fprintln(os.Stdout)
 	// Output: ["a","slice","of","strings"]
 	// null
