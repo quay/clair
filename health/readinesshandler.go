@@ -5,17 +5,17 @@ import (
 	"sync/atomic"
 )
 
-var ready *uint32 = new(uint32)
+var ready atomic.Uint32
 
 // Ready instructs the ReadinessHandler to begin serving 200 OK status.
 func Ready() {
-	atomic.StoreUint32(ready, uint32(1))
+	ready.Store(uint32(1))
 }
 
 // Unready instructs the ReadinessHandler to begin serving 503
 // Service Unavailable.
 func Unready() {
-	atomic.StoreUint32(ready, uint32(0))
+	ready.Store(uint32(0))
 }
 
 // ReadinessHandler will return a 200 OK or 503 "Service Unavailable" status
@@ -34,7 +34,7 @@ func ReadinessHandler() http.Handler {
 			return
 		}
 
-		if atomic.LoadUint32(ready) != 1 {
+		if ready.Load() != 1 {
 			w.WriteHeader(http.StatusServiceUnavailable)
 		}
 	})
