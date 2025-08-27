@@ -39,7 +39,7 @@ jobs:
       - name: Checkout
         id: checkout
         if: ${{ !cancelled() }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup Go
         id: setupgo
         if: ${{ !cancelled() && steps.checkout.conclusion == 'success' }}
