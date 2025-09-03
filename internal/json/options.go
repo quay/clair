@@ -1,0 +1,304 @@
+// Copyright 2023 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+//go:build !goexperiment.jsonv2 || !go1.27
+
+package json
+
+import (
+	"fmt"
+
+	"github.com/quay/clair/v4/internal/json/internal"
+	"github.com/quay/clair/v4/internal/json/internal/jsonflags"
+	"github.com/quay/clair/v4/internal/json/internal/jsonopts"
+)
+
+// Options configure [Marshal], [MarshalWrite], [MarshalEncode],
+// [Unmarshal], [UnmarshalRead], and [UnmarshalDecode] with specific features.
+// Each function takes in a variadic list of options, where properties
+// set in later options override the value of previously set properties.
+//
+// The Options type is identical to [encoding/json.Options] and
+// [encoding/json/jsontext.Options]. Options from the other packages can
+// be used interchangeably with functionality in this package.
+//
+// An Options value represents either a single option or a set of options.
+// It can be thought of as a Go map of option properties
+// (even though the underlying implementation avoids Go maps for performance).
+//
+// The constructors (e.g., [Deterministic]) return a value for a single option:
+//
+//	opt := Deterministic(true)
+//
+// which is analogous to creating a single entry map:
+//
+//	opt := Options{"Deterministic": true}
+//
+// [JoinOptions] composes multiple options values together:
+//
+//	out := JoinOptions(opts...)
+//
+// which is analogous to making a new map and copying the options over:
+//
+//	out := make(Options)
+//	for _, m := range opts {
+//		for k, v := range m {
+//			out[k] = v
+//		}
+//	}
+//
+// [GetOption] looks up the value of an options parameter:
+//
+//	v, ok := GetOption(opts, Deterministic)
+//
+// which is analogous to a Go map lookup:
+//
+//	v, ok := Options["Deterministic"]
+//
+// There is a single Options type, which is used with both marshal and unmarshal.
+// Some options affect both operations, while others only affect one operation:
+//
+//   - [StringifyNumbers] affects marshaling and unmarshaling
+//   - [Deterministic] affects marshaling only
+//   - [FormatNilSliceAsNull] affects marshaling only
+//   - [FormatNilMapAsNull] affects marshaling only
+//   - [OmitZeroStructFields] affects marshaling only
+//   - [MatchCaseInsensitiveNames] affects marshaling and unmarshaling
+//   - [RejectUnknownMembers] affects unmarshaling only
+//   - [WithMarshalers] affects marshaling only
+//   - [WithUnmarshalers] affects unmarshaling only
+//
+// Options that do not affect a particular operation are ignored.
+type Options = jsonopts.Options
+
+// JoinOptions coalesces the provided list of options into a single Options.
+// Properties set in later options override the value of previously set properties.
+func JoinOptions(srcs ...Options) Options {
+	var dst jsonopts.Struct
+	dst.Join(srcs...)
+	return &dst
+}
+
+// GetOption returns the value stored in opts with the provided setter,
+// reporting whether the value is present.
+// If not present, the returned value is the zero value for type T.
+//
+// Example usage:
+//
+//	v, ok := json.GetOption(opts, json.Deterministic)
+//
+// Options are most commonly introspected to alter the JSON representation of
+// [MarshalerTo.MarshalJSONTo] and [UnmarshalerFrom.UnmarshalJSONFrom] methods, and
+// [MarshalToFunc] and [UnmarshalFromFunc] functions.
+// In such cases, the presence bit should generally be ignored.
+func GetOption[T any](opts Options, setter func(T) Options) (T, bool) {
+	return jsonopts.GetOption(opts, setter)
+}
+
+// DefaultOptionsV2 is the full set of all options that define v2 semantics.
+// It is equivalent to the set of options in [encoding/json.DefaultOptionsV1]
+// all being set to false. All other options are not present.
+func DefaultOptionsV2() Options {
+	return &jsonopts.DefaultOptionsV2
+}
+
+// StringifyNumbers specifies that types that would normally be
+// encoded as a JSON number instead be encoded as a JSON string
+// containing the equivalent JSON number value.
+// When unmarshaling, the value is parsed from a JSON string
+// containing the JSON number without any surrounding whitespace.
+//
+// Specifying the `string` tag option on a Go struct field applies this option
+// to the top-level JSON value for that field. When applied via the `string`
+// tag option, StringifyNumbers option does not recursively apply to nested
+// JSON numbers within a JSON object or array.
+//
+// Like all options, explicitly specifying this option in a call to [Marshal],
+// [Unmarshal], etc, will apply recursively.
+//
+// A Go type with custom marshal/unmarshal that represents a JSON number
+// should respect the StringifyNumbers option and if specified
+// serialize as a JSON number within a JSON string.
+// Custom marshal/unmarshal should handle nested JSON objects using
+// [MarshalEncode]/[UnmarshalDecode], which will automatically apply the
+// non-recursive `string` tag option behavior.
+//
+// According to RFC 8259, section 6, a JSON implementation may choose to
+// limit the representation of a JSON number to an IEEE 754 binary64 value.
+// This may cause decoders to lose precision for int64 and uint64 types.
+// Quoting JSON numbers as a JSON string preserves the exact precision.
+//
+// This affects either marshaling or unmarshaling.
+func StringifyNumbers(v bool) Options {
+	if v {
+		return jsonflags.StringifyNumbers | 1
+	} else {
+		return jsonflags.StringifyNumbers | 0
+	}
+}
+
+// Deterministic specifies that marshaling the same input value will always
+// serialize as the same output bytes.
+//
+// For example, Go maps are marshaled sorted by key.
+//
+// For native Go types, Determinism is guaranteed across different instances of
+// identical binaries, but not across different builds of a program (such as
+// different source or toolchain version, different GOOS/GOARCH, different
+// build flags).
+//
+// A Go type with a custom marshaler should also respect the Deterministic
+// option and serialize deterministically if it is true.
+//
+// This only affects marshaling and is ignored when unmarshaling.
+func Deterministic(v bool) Options {
+	if v {
+		return jsonflags.Deterministic | 1
+	} else {
+		return jsonflags.Deterministic | 0
+	}
+}
+
+// FormatNilSliceAsNull specifies that a nil Go slice should marshal as a
+// JSON null instead of the default representation as an empty JSON array
+// (or an empty JSON string in the case of ~[]byte).
+//
+// This only affects marshaling and is ignored when unmarshaling.
+func FormatNilSliceAsNull(v bool) Options {
+	if v {
+		return jsonflags.FormatNilSliceAsNull | 1
+	} else {
+		return jsonflags.FormatNilSliceAsNull | 0
+	}
+}
+
+// FormatNilMapAsNull specifies that a nil Go map should marshal as a
+// JSON null instead of the default representation as an empty JSON object.
+//
+// This only affects marshaling and is ignored when unmarshaling.
+func FormatNilMapAsNull(v bool) Options {
+	if v {
+		return jsonflags.FormatNilMapAsNull | 1
+	} else {
+		return jsonflags.FormatNilMapAsNull | 0
+	}
+}
+
+// OmitZeroStructFields specifies that zero-valued fields of Go struct should be
+// omitted from the marshaled output.
+// A value is considered zero if its type has an "IsZero() bool" method that returns true,
+// or if it lacks such a method and the value is a Go zero value.
+// This option is equivalent to specifying the `omitzero` tag option
+// on every field in a Go struct.
+//
+// This only affects marshaling and is ignored when unmarshaling.
+func OmitZeroStructFields(v bool) Options {
+	if v {
+		return jsonflags.OmitZeroStructFields | 1
+	} else {
+		return jsonflags.OmitZeroStructFields | 0
+	}
+}
+
+// MatchCaseInsensitiveNames specifies that JSON object members are matched
+// against Go struct fields using a case-insensitive match of the name.
+// If a name matches multiple fields, the field whose name matches exactly is chosen.
+// If there is none, an error is reported.
+// Go struct fields explicitly marked with `case:strict` or `case:ignore`
+// always use case-sensitive (or case-insensitive) name matching,
+// regardless of the value of this option.
+//
+// This affects either marshaling or unmarshaling.
+//
+// Matching names case-insensitively also affects duplicate name detection
+// (assuming [jsontext.AllowDuplicateNames] is false) since
+// variations of the same name may match the same Go struct field.
+// For example, when unmarshaling, the names "foo" and "Foo" may both
+// match the same Go struct field and therefore be considered a duplicate name.
+// When marshaling, normally it is impossible for any two Go struct fields to
+// serialize in a way where they unmarshal into the same Go struct field
+// since they all have unique exact names.
+// However, it is possible for an
+// embedded fallback to contain a name that also matches the name for
+// a Go struct field, resulting in a duplicate name error.
+func MatchCaseInsensitiveNames(v bool) Options {
+	if v {
+		return jsonflags.MatchCaseInsensitiveNames | 1
+	} else {
+		return jsonflags.MatchCaseInsensitiveNames | 0
+	}
+}
+
+// RejectUnknownMembers specifies that unknown members should be rejected
+// when unmarshaling a JSON object.
+//
+// This only affects unmarshaling and is ignored when marshaling.
+func RejectUnknownMembers(v bool) Options {
+	if v {
+		return jsonflags.RejectUnknownMembers | 1
+	} else {
+		return jsonflags.RejectUnknownMembers | 0
+	}
+}
+
+// WithMarshalers specifies a list of type-specific marshalers to use,
+// which can be used to override the default marshal behavior for values
+// of particular types.
+//
+// This only affects marshaling and is ignored when unmarshaling.
+func WithMarshalers(v *Marshalers) Options {
+	return (*marshalersOption)(v)
+}
+
+// WithUnmarshalers specifies a list of type-specific unmarshalers to use,
+// which can be used to override the default unmarshal behavior for values
+// of particular types.
+//
+// This only affects unmarshaling and is ignored when marshaling.
+func WithUnmarshalers(v *Unmarshalers) Options {
+	return (*unmarshalersOption)(v)
+}
+
+// These option types are declared here instead of "jsonopts"
+// to avoid a dependency on "reflect" from "jsonopts".
+type (
+	marshalersOption   Marshalers
+	unmarshalersOption Unmarshalers
+)
+
+func (*marshalersOption) JSONOptions(internal.NotForPublicUse)   {}
+func (*unmarshalersOption) JSONOptions(internal.NotForPublicUse) {}
+
+// Inject support into "jsonopts" to handle these types.
+func init() {
+	jsonopts.GetUnknownOption = func(src jsonopts.Struct, zero jsonopts.Options) (any, bool) {
+		switch zero.(type) {
+		case *marshalersOption:
+			if !src.Flags.Has(jsonflags.Marshalers) {
+				return (*Marshalers)(nil), false
+			}
+			return src.Marshalers.(*Marshalers), true
+		case *unmarshalersOption:
+			if !src.Flags.Has(jsonflags.Unmarshalers) {
+				return (*Unmarshalers)(nil), false
+			}
+			return src.Unmarshalers.(*Unmarshalers), true
+		default:
+			panic(fmt.Sprintf("unknown option %T", zero))
+		}
+	}
+	jsonopts.JoinUnknownOption = func(dst jsonopts.Struct, src jsonopts.Options) jsonopts.Struct {
+		switch src := src.(type) {
+		case *marshalersOption:
+			dst.Flags.Set(jsonflags.Marshalers | 1)
+			dst.Marshalers = (*Marshalers)(src)
+		case *unmarshalersOption:
+			dst.Flags.Set(jsonflags.Unmarshalers | 1)
+			dst.Unmarshalers = (*Unmarshalers)(src)
+		default:
+			panic(fmt.Sprintf("unknown option %T", src))
+		}
+		return dst
+	}
+}
