@@ -1,0 +1,28 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/repository.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Repository",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "key": {
+      "type": "string"
+    },
+    "uri": {
+      "type": "string",
+      "format": "uri"
+    },
+    "cpe": {
+      "$ref": "cpe.schema.json"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ]
+}

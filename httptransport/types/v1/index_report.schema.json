@@ -1,0 +1,57 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/index_report.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IndexReport",
+  "type": "object",
+  "description": "A report of the Index process for a particular manifest. A client's usage of this is largely information. Clair uses this report for matching Vulnerabilities.",
+  "properties": {
+    "manifest_hash": {
+      "$ref": "digest.schema.json"
+    },
+    "state": {
+      "type": "string",
+      "description": "The current state of the index operation"
+    },
+    "err": {
+      "type": "string",
+      "description": "An error message on event of unsuccessful index"
+    },
+    "success": {
+      "type": "boolean",
+      "description": "A bool indicating succcessful index"
+    },
+    "packages": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "package.schema.json"
+      }
+    },
+    "distributions": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "distribution.schema.json"
+      }
+    },
+    "repository": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "repository.schema.json"
+      }
+    },
+    "environments": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "$ref": "environment.schema.json"
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "manifest_hash",
+    "state",
+    "success"
+  ]
+}
