@@ -68,7 +68,6 @@ func manifestAction(c *cli.Context) error {
 	})
 	eg.Go(func() error {
 		enc := codec.GetEncoder(os.Stdout)
-		defer codec.PutEncoder(enc)
 		for m := range result {
 			if err := enc.Encode(m); err != nil {
 				return err

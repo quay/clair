@@ -142,7 +142,6 @@ func (h *MatcherV1) vulnerabilityReport(w http.ResponseWriter, r *http.Request) 
 
 	defer writerError(w, &err)()
 	enc := codec.GetEncoder(w)
-	defer codec.PutEncoder(enc)
 	err = enc.Encode(vulnReport)
 }
 
@@ -180,7 +179,6 @@ func (h *MatcherV1) updateDiffHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer writerError(w, &err)()
 	enc := codec.GetEncoder(w)
-	defer codec.PutEncoder(enc)
 	err = enc.Encode(&diff)
 }
 
@@ -229,7 +227,6 @@ func (h *MatcherV1) updateOperationHandlerGet(w http.ResponseWriter, r *http.Req
 
 	defer writerError(w, &err)()
 	enc := codec.GetEncoder(w)
-	defer codec.PutEncoder(enc)
 	err = enc.Encode(&uos)
 }
 

@@ -67,11 +67,6 @@ func GetEncoder(w io.Writer, v ...Scheme) Encoder {
 	panic(invalidScheme(s))
 }
 
-// PutEncoder returns an encoder to the pool.
-//
-// Deprecated: This is no longer needed.
-func PutEncoder(v Encoder) {}
-
 // GetDecoder returns a [Decoder] configured to read from "r".
 //
 // An optional [Scheme] may be passed to change the encoding scheme.
@@ -90,8 +85,3 @@ func GetDecoder(r io.Reader, v ...Scheme) Decoder {
 	}
 	panic(invalidScheme(s))
 }
-
-// PutDecoder returns a decoder to the pool.
-//
-// Deprecated: This is no longer needed.
-func PutDecoder(v Decoder) {}
