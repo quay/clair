@@ -1,0 +1,44 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/notification_page.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Notification Page",
+  "type": "object",
+  "description": "A page description and list of notifications.",
+  "properties": {
+    "page": {
+      "description": "An object informing the client the next page to retrieve.",
+      "type": "object",
+      "properties": {
+        "size": {
+          "type": "integer"
+        },
+        "next": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "const": "-1"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "size"
+      ]
+    },
+    "notifications": {
+      "description": "Notifications within this page.",
+      "type": "array",
+      "items": {
+        "$ref": "notification.schema.json"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "page",
+    "notifications"
+  ]
+}

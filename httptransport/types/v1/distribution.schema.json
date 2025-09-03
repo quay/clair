@@ -1,0 +1,49 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/distribution.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Distribution",
+  "type": "object",
+  "description": "Distribution is the accompanying system context of a Package.",
+  "properties": {
+    "id": {
+      "description": "Unique ID for this Distribution. May be unique to the response document, not the whole system.",
+      "type": "string"
+    },
+    "did": {
+      "description": "A lower-case string (no spaces or other characters outside of 0–9, a–z, \".\", \"_\", and \"-\") identifying the operating system, excluding any version information and suitable for processing by scripts or usage in generated filenames.",
+      "type": "string"
+    },
+    "name": {
+      "description": "A string identifying the operating system.",
+      "type": "string"
+    },
+    "version": {
+      "description": "A string identifying the operating system version, excluding any OS name information, possibly including a release code name, and suitable for presentation to the user.",
+      "type": "string"
+    },
+    "version_code_name": {
+      "description": "A lower-case string (no spaces or other characters outside of 0–9, a–z, \".\", \"_\", and \"-\") identifying the operating system release code name, excluding any OS name information or release version, and suitable for processing by scripts or usage in generated filenames.",
+      "type": "string"
+    },
+    "version_id": {
+      "description": "A lower-case string (mostly numeric, no spaces or other characters outside of 0–9, a–z, \".\", \"_\", and \"-\") identifying the operating system version, excluding any OS name information or release code name.",
+      "type": "string"
+    },
+    "arch": {
+      "description": "A string identifying the OS architecture.",
+      "type": "string"
+    },
+    "cpe": {
+      "description": "Common Platform Enumeration name.",
+      "$ref": "cpe.schema.json"
+    },
+    "pretty_name": {
+      "description": "A pretty operating system name in a format suitable for presentation to the user.",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ]
+}

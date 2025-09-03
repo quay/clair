@@ -1,0 +1,20 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/error.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Error",
+  "type": "object",
+  "description": "A general error response.",
+  "properties": {
+    "code": {
+      "type": "string",
+      "description": "a code for this particular error"
+    },
+    "message": {
+      "type": "string",
+      "description": "a message with further detail"
+    }
+  },
+  "required": [
+    "message"
+  ]
+}
