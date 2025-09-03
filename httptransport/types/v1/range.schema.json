@@ -1,0 +1,19 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/range.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Range",
+  "type": "object",
+  "description": "A range of versions.",
+  "properties": {
+    "[": {
+      "type": "string",
+      "description": "Lower bound, inclusive."
+    },
+    ")": {
+      "type": "string",
+      "description": "Upper bound, exclusive."
+    }
+  },
+  "minProperties": 1,
+  "additionalProperties": false
+}

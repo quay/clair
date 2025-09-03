@@ -1,0 +1,34 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/repository.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Repository",
+  "type": "object",
+  "description": "Description of a software repository",
+  "properties": {
+    "id": {
+      "description": "Unique ID for this Repository. May be unique to the response document, not the whole system.",
+      "type": "string"
+    },
+    "name": {
+      "description": "Human-relevant name for the Repository.",
+      "type": "string"
+    },
+    "key": {
+      "description": "Machine-relevant name for the Repository.",
+      "type": "string"
+    },
+    "uri": {
+      "description": "URI describing the Repository.",
+      "type": "string",
+      "format": "uri"
+    },
+    "cpe": {
+      "description": "CPE name for the Repository.",
+      "$ref": "cpe.schema.json"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "id"
+  ]
+}
