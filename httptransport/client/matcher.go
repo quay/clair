@@ -51,7 +51,6 @@ func (c *HTTP) Scan(ctx context.Context, ir *claircore.IndexReport) (*claircore.
 	switch ct := req.Header.Get("content-type"); ct {
 	case "", `application/json`:
 		dec := codec.GetDecoder(resp.Body)
-		defer codec.PutDecoder(dec)
 		if err := dec.Decode(&vr); err != nil {
 			return nil, err
 		}
@@ -203,7 +202,6 @@ func (c *HTTP) updateOperations(ctx context.Context, req *http.Request, cache *u
 	case http.StatusOK:
 		m := make(map[string][]driver.UpdateOperation)
 		dec := codec.GetDecoder(res.Body)
-		defer codec.PutDecoder(dec)
 		if err := dec.Decode(&m); err != nil {
 			return nil, err
 		}
@@ -254,7 +252,6 @@ func (c *HTTP) UpdateDiff(ctx context.Context, prev, cur uuid.UUID) (*driver.Upd
 	}
 	d := driver.UpdateDiff{}
 	dec := codec.GetDecoder(res.Body)
-	defer codec.PutDecoder(dec)
 	if err := dec.Decode(&d); err != nil {
 		return nil, err
 	}

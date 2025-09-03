@@ -92,7 +92,6 @@ func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 	dec := codec.GetDecoder(r.Body)
-	defer codec.PutDecoder(dec)
 	switch r.Method {
 	case http.MethodPost:
 		state, err := h.srv.State(ctx)
@@ -132,7 +131,6 @@ func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
 		defer writerError(w, &err)()
 		w.WriteHeader(http.StatusCreated)
 		enc := codec.GetEncoder(w)
-		defer codec.PutEncoder(enc)
 		err = enc.Encode(report)
 	case http.MethodDelete:
 		var ds []claircore.Digest
@@ -149,7 +147,6 @@ func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
 		defer writerError(w, &err)()
 		w.WriteHeader(http.StatusOK)
 		enc := codec.GetEncoder(w)
-		defer codec.PutEncoder(enc)
 		err = enc.Encode(ds)
 	}
 }
@@ -203,7 +200,6 @@ func (h *IndexerV1) indexReportOne(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("etag", validator)
 		defer writerError(w, &err)()
 		enc := codec.GetEncoder(w)
-		defer codec.PutEncoder(enc)
 		err = enc.Encode(report)
 	case http.MethodDelete:
 		if _, err := h.srv.DeleteManifests(ctx, d); err != nil {
@@ -242,7 +238,6 @@ func (h *IndexerV1) indexState(w http.ResponseWriter, r *http.Request) {
 	defer writerError(w, &err)()
 	// TODO(hank) Don't use an encoder to write out like 40 bytes of json.
 	enc := codec.GetEncoder(w)
-	defer codec.PutEncoder(enc)
 	err = enc.Encode(struct {
 		State string `json:"state"`
 	}{
@@ -268,7 +263,6 @@ func (h *IndexerV1) affectedManifests(w http.ResponseWriter, r *http.Request) {
 		V []claircore.Vulnerability `json:"vulnerabilities"`
 	}
 	dec := codec.GetDecoder(r.Body)
-	defer codec.PutDecoder(dec)
 	if err := dec.Decode(&vulnerabilities); err != nil {
 		apiError(ctx, w, http.StatusBadRequest, "failed to deserialize vulnerabilities: %v", err)
 	}
@@ -280,7 +274,6 @@ func (h *IndexerV1) affectedManifests(w http.ResponseWriter, r *http.Request) {
 
 	defer writerError(w, &err)
 	enc := codec.GetEncoder(w)
-	defer codec.PutEncoder(enc)
 	err = enc.Encode(affected)
 }
 

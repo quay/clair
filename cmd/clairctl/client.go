@@ -211,7 +211,6 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 	}
 	var report claircore.IndexReport
 	dec := codec.GetDecoder(rd)
-	defer codec.PutDecoder(dec)
 	if err := dec.Decode(&report); err != nil {
 		zlog.Debug(ctx).
 			Err(err).
@@ -275,7 +274,6 @@ func (c *Client) VulnerabilityReport(ctx context.Context, id claircore.Digest) (
 	}
 	var report claircore.VulnerabilityReport
 	dec := codec.GetDecoder(res.Body)
-	defer codec.PutDecoder(dec)
 	if err := dec.Decode(&report); err != nil {
 		zlog.Debug(ctx).
 			Err(err).
