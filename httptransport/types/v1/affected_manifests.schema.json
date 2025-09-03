@@ -1,0 +1,31 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/affected_manifests.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Affected Manifests",
+  "type": "object",
+  "description": "**This is an internal type, documented for completeness.**\n\nManifests affected by the specified vulnerability objects.",
+  "properties": {
+    "vulnerabilities": {
+      "type": "object",
+      "description": "Vulnerability objects.",
+      "additionalProperties": {
+        "$ref": "vulnerability.schema.json"
+      }
+    },
+    "vulnerable_manifests": {
+      "type": "object",
+      "description": "Mapping of manifest digests to vulnerability identifiers.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "description": "An identifier to be used in the \"vulnerabilities\" object."
+        }
+      }
+    }
+  },
+  "required": [
+    "vulnerabilities",
+    "vulnerable_manifests"
+  ]
+}

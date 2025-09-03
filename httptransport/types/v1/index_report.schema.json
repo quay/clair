@@ -1,0 +1,62 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/index_report.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Index Report",
+  "type": "object",
+  "description": "An index of the contents of a Manifest.",
+  "properties": {
+    "manifest_hash": {
+      "$ref": "digest.schema.json",
+      "description": "The Manifest's digest."
+    },
+    "state": {
+      "type": "string",
+      "description": "The current state of the index operation"
+    },
+    "err": {
+      "type": "string",
+      "description": "An error message on event of unsuccessful index"
+    },
+    "success": {
+      "type": "boolean",
+      "description": "A bool indicating succcessful index"
+    },
+    "packages": {
+      "type": "object",
+      "description": "A map of Package objects indexed by a document-local identifier.",
+      "additionalProperties": {
+        "$ref": "package.schema.json"
+      }
+    },
+    "distributions": {
+      "type": "object",
+      "description": "A map of Distribution objects indexed by a document-local identifier.",
+      "additionalProperties": {
+        "$ref": "distribution.schema.json"
+      }
+    },
+    "repository": {
+      "type": "object",
+      "description": "A map of Repository objects indexed by a document-local identifier.",
+      "additionalProperties": {
+        "$ref": "repository.schema.json"
+      }
+    },
+    "environments": {
+      "type": "object",
+      "description": "A map of Environment arrays indexed by a Package's identifier.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "$ref": "environment.schema.json"
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "manifest_hash",
+    "state",
+    "success"
+  ]
+}

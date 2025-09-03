@@ -1,0 +1,55 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/package.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Package",
+  "type": "object",
+  "description": "Description of installed software.",
+  "properties": {
+    "id": {
+      "description": "Unique ID for this Package. May be unique to the response document, not the whole system.",
+      "type": "string"
+    },
+    "name": {
+      "description": "Identifier of this Package.\n\nThe uniqueness and scoping of this name depends on the packaging system.",
+      "type": "string"
+    },
+    "version": {
+      "description": "Version of this Package, as reported by the packaging system.",
+      "type": "string"
+    },
+    "kind": {
+      "description": "The \"kind\" of this Package.",
+      "enum": [
+        "BINARY",
+        "SOURCE"
+      ],
+      "default": "BINARY"
+    },
+    "source": {
+      "$ref": "#",
+      "description": "Source Package that produced the current binary Package, if known."
+    },
+    "normalized_version": {
+      "description": "Normalized representation of the discoverd version.\n\nThe format is not specific, but is guarenteed to be forward compatible.",
+      "type": "string"
+    },
+    "module": {
+      "description": "An identifier for intra-Repository grouping of packages.\n\nLikely only relevant on rpm-based systems.",
+      "type": "string"
+    },
+    "arch": {
+      "description": "Native architecture for the Package.",
+      "type": "string",
+      "$comment": "This should become and enum in the future."
+    },
+    "cpe": {
+      "$ref": "cpe.schema.json",
+      "description": "CPE Name for the Package."
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "version"
+  ]
+}

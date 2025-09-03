@@ -1,0 +1,14 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/normalized_severity.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Normalized Severity",
+  "description": "Standardized severity values.",
+  "enum": [
+    "Unknown",
+    "Negligible",
+    "Low",
+    "Medium",
+    "High",
+    "Critical"
+  ]
+}
