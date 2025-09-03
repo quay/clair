@@ -172,7 +172,6 @@ func (h *NotificationV1) get(w http.ResponseWriter, r *http.Request) {
 
 	defer writerError(w, &err)()
 	enc := codec.GetEncoder(w)
-	defer codec.PutEncoder(enc)
 	err = enc.Encode(&response)
 }
 

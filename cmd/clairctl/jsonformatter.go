@@ -19,6 +19,5 @@ func (f *jsonFormatter) Format(r *Result) error {
 }
 
 func (f *jsonFormatter) Close() error {
-	codec.PutEncoder(f.enc)
 	return f.c.Close()
 }
