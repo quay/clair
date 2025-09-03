@@ -35,9 +35,8 @@ func BenchmarkDecode(b *testing.B) {
 		"d": strings.Repeat(`D`, 2048),
 	}
 	got := make(map[string]string, len(want))
-	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		dec := GetDecoder(JSONReader(want))
 		err := dec.Decode(&got)
 		PutDecoder(dec)
@@ -59,9 +58,8 @@ func BenchmarkDecodeStdlib(b *testing.B) {
 		"d": strings.Repeat(`D`, 2048),
 	}
 	got := make(map[string]string, len(want))
-	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		x, err := json.Marshal(want)
 		if err != nil {
 			b.Error(err)
