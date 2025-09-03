@@ -110,3 +110,5 @@ require (
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sqlite v1.46.1 // indirect
 )
+
+tool github.com/quay/clair/v4/internal/cmd/alias_gen
