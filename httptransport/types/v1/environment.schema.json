@@ -1,0 +1,29 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/environment.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Environment",
+  "type": "object",
+  "description": "",
+  "properties": {
+    "package_db": {
+      "description": "",
+      "type": "string"
+    },
+    "distribution_id": {
+      "description": "",
+      "type": "string"
+    },
+    "introduced_in": {
+      "description": "",
+      "$ref": "digest.schema.json"
+    },
+    "repository_ids": {
+      "description": "",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

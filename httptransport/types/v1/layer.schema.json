@@ -1,0 +1,32 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/layer.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Layer",
+  "type": "object",
+  "properties": {
+    "hash": {
+      "$ref": "digest.schema.json"
+    },
+    "uri": {
+      "type": "string",
+      "description": ""
+    },
+    "headers": {
+      "description": "",
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9\\-_]+$": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "hash",
+    "uri"
+  ]
+}

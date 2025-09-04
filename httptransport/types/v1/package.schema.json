@@ -1,0 +1,40 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/package.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Package",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "source": {
+      "$ref": "#"
+    },
+    "normalized_version": {
+      "type": "string"
+    },
+    "module": {
+      "type": "string"
+    },
+    "arch": {
+      "type": "string"
+    },
+    "cpe": {
+      "$ref": "cpe.schema.json"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "version"
+  ]
+}

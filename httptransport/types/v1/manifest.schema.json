@@ -1,0 +1,22 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/manifest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Manifest",
+  "type": "object",
+  "description": "",
+  "properties": {
+    "hash": {
+      "$ref": "digest.schema.json"
+    },
+    "layers": {
+      "type": "array",
+      "items": {
+        "$ref": "layer.schema.json"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "hash"
+  ]
+}

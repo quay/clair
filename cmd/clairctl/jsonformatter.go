@@ -8,17 +8,16 @@ import (
 
 var _ Formatter = (*jsonFormatter)(nil)
 
-// JsonFormatter is a very simple formatter; it just calls
-// (*json.Encoder).Encode.
+// JsonFormatter outputs JSON.
 type jsonFormatter struct {
-	enc *codec.Encoder
+	enc codec.Encoder
 	c   io.Closer
 }
 
 func (f *jsonFormatter) Format(r *Result) error {
 	return f.enc.Encode(r.Report)
 }
+
 func (f *jsonFormatter) Close() error {
-	codec.PutEncoder(f.enc)
 	return f.c.Close()
 }
