@@ -43,7 +43,7 @@ jobs:
       - name: Setup Go
         id: setupgo
         if: ${{ !cancelled() && steps.checkout.conclusion == 'success' }}
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           cache: false
           go-version-file: ./config/go.mod

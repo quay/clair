@@ -52,7 +52,7 @@ jobs:
       - name: Check Go Version
         if: ${{ inputs.cd == '' && steps.checkout.conclusion == 'success' }}
         id: checkversion
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go }}
           cache: false
@@ -80,7 +80,7 @@ jobs:
       - name: Setup Go
         if: ${{ inputs.cd == '' && steps.check.outputs.cache-hit != 'true' }}
         id: setup-go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go }}
       - name: Warm Cache on Miss
@@ -146,7 +146,7 @@ jobs:
         uses: actions/checkout@v5
       - name: Setup Go
         id: setup-go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go }}
           cache: ${{ needs.setup.outputs.go-cache }}
