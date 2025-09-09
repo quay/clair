@@ -32,7 +32,7 @@ jobs:
     steps:
       - name: Map Arch
         id: arch
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           result-encoding: string
           script: |
@@ -61,7 +61,7 @@ jobs:
         # processes, but the setup-go action uses it in its key.
         if: ${{ inputs.cd == '' && steps.checkout.conclusion == 'success' }}
         id: imageos
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           result-encoding: string
           script: |
