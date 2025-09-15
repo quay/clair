@@ -1,0 +1,14 @@
+{
+  "hash": "sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3",
+  "layers": [
+    {
+      "hash": "sha256:2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36",
+      "uri": "https://storage.example.com/blob/2f077db56abccc19f16f140f629ae98e904b4b7d563957a7fc319bd11b82ba36",
+      "headers": {
+        "Authoriztion": [
+          "Bearer hunter2"
+        ]
+      }
+    }
+  ]
+}
