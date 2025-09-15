@@ -1,0 +1,9 @@
+{
+  "id": "1",
+  "did": "ubuntu",
+  "name": "Ubuntu",
+  "version": "18.04.3 LTS (Bionic Beaver)",
+  "version_code_name": "bionic",
+  "version_id": "18.04",
+  "pretty_name": "Ubuntu 18.04.3 LTS"
+}

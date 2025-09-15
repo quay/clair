@@ -92,6 +92,8 @@ func (h *MatcherV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.inner.ServeHTTP(w, r)
 }
 
+// TODO(hank) All of these handlers need to do content negotiation.
+
 func (h *MatcherV1) vulnerabilityReport(w http.ResponseWriter, r *http.Request) {
 	ctx := zlog.ContextWithValues(r.Context(),
 		"component", "httptransport/MatcherV1.vulnerabilityReport")
@@ -137,7 +139,7 @@ func (h *MatcherV1) vulnerabilityReport(w http.ResponseWriter, r *http.Request) 
 		apiError(ctx, w, http.StatusInternalServerError, "failed to start scan: %v", err)
 	}
 
-	w.Header().Set("content-type", "application/json")
+	w.Header().Set("content-type", "application/vnd.clair.index_report.v1+json")
 	setCacheControl(w, h.Cache)
 
 	defer writerError(w, &err)()
@@ -254,6 +256,7 @@ func (h *MatcherV1) updateOperationHandlerDelete(w http.ResponseWriter, r *http.
 	if err != nil {
 		apiError(ctx, w, http.StatusInternalServerError, "could not get update operations: %v", err)
 	}
+	// TODO(hank) This should return HTTP 204.
 }
 
 func init() {
