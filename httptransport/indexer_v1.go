@@ -250,7 +250,7 @@ func (h *IndexerV1) affectedManifests(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
 	}
-	allow := []string{"application/vnd.clair.affectedmanifests.v1+json", "application/json"}
+	allow := []string{"application/vnd.clair.affected_manifests.v1+json", "application/json"}
 	switch err := pickContentType(w, r, allow); {
 	case errors.Is(err, nil): // OK
 	case errors.Is(err, ErrMediaType):
