@@ -17,7 +17,7 @@ require (
 	github.com/klauspost/compress v1.18.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/quay/clair/config v1.4.2
-	github.com/quay/claircore v1.5.39
+	github.com/quay/claircore v1.5.40
 	github.com/quay/zlog v1.1.9
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
@@ -97,16 +97,16 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
-	github.com/ulikunitz/xz v0.5.14 // indirect
+	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/vbatts/tar-split v0.12.1 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
 	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.7.1 // indirect
-	go.uber.org/mock v0.5.2 // indirect
+	go.uber.org/mock v0.6.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/crypto v0.42.0 // indirect
-	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0 // indirect
+	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b // indirect
 	golang.org/x/mod v0.27.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	golang.org/x/text v0.29.0 // indirect
@@ -114,8 +114,8 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20250825161204-c5933d9347a5 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250825161204-c5933d9347a5 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect
-	modernc.org/libc v1.65.7 // indirect
+	modernc.org/libc v1.66.3 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.37.1 // indirect
+	modernc.org/sqlite v1.38.2 // indirect
 )
