@@ -53,6 +53,7 @@ func pickContentType(w http.ResponseWriter, r *http.Request, allow []string) err
 		w.Header().Set("content-type", allow[0])
 		return nil
 	}
+	w.Header().Add("Vary", "Accept")
 	var acceptable []accept
 	for _, part := range as {
 		for _, s := range strings.Split(part, ",") {
@@ -84,6 +85,7 @@ func pickContentType(w http.ResponseWriter, r *http.Request, allow []string) err
 			}
 		}
 	}
+	// TODO(hank) This isn't quite right.
 	w.WriteHeader(http.StatusUnsupportedMediaType)
 	return ErrMediaType
 }

@@ -59,7 +59,7 @@ func testNotificationHandlerDelete(ctx context.Context) func(*testing.T) {
 			t.Error(err)
 		}
 
-		h.delete(rr, req)
+		h.delete(ctx, rr, req)
 		res := rr.Result()
 		if res.StatusCode != http.StatusOK {
 			t.Fatalf("got: %v, wanted: %v", res.StatusCode, http.StatusOK)
@@ -110,7 +110,7 @@ func testNotificationHandlerGet(ctx context.Context) func(*testing.T) {
 			t.Error(err)
 		}
 
-		h.get(rr, req)
+		h.get(ctx, rr, req)
 		res := rr.Result()
 		if res.StatusCode != http.StatusOK {
 			t.Errorf("got: %v, wanted: %v", res.StatusCode, http.StatusOK)
@@ -177,7 +177,7 @@ func testNotificationHandlerGetParams(ctx context.Context) func(*testing.T) {
 			t.Error(err)
 		}
 
-		h.get(rr, req)
+		h.get(ctx, rr, req)
 		res := rr.Result()
 		if res.StatusCode != http.StatusOK {
 			t.Errorf("got: %v, wanted: %v", res.StatusCode, http.StatusOK)

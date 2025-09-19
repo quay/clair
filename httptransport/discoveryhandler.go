@@ -3,7 +3,7 @@ package httptransport
 import (
 	"bytes"
 	"context"
-	_ "embed" // for json and etag
+	_ "embed" // for OpenAPI docs and etags
 	"errors"
 	"io"
 	"net/http"
@@ -39,9 +39,7 @@ func DiscoveryHandler(_ context.Context, prefix string, topt otelhttp.Option) ht
 	// These functions are written back-to-front.
 	var inner http.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		if r.Method != http.MethodGet {
-			apiError(ctx, w, http.StatusMethodNotAllowed, "endpoint only allows GET")
-		}
+		checkMethod(ctx, w, r, http.MethodGet)
 		switch err := pickContentType(w, r, allow); {
 		case errors.Is(err, nil):
 		case errors.Is(err, ErrMediaType):
@@ -50,6 +48,7 @@ func DiscoveryHandler(_ context.Context, prefix string, topt otelhttp.Option) ht
 			apiError(ctx, w, http.StatusInternalServerError, "unexpected error: %v", err)
 		}
 		h := w.Header()
+		// The [pickContentType] call will have populated this or errored.
 		kind := h.Get(`Content-Type`)
 		var src *bytes.Reader
 		switch kind[len(kind)-4:] {

@@ -53,7 +53,7 @@ type IndexerV1 struct {
 
 var _ http.Handler = (*IndexerV1)(nil)
 
-// ServeHTTP implements http.Handler.
+// ServeHTTP implements [http.Handler].
 func (h *IndexerV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	r = withRequestID(r)
@@ -84,12 +84,8 @@ func (h *IndexerV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	switch r.Method {
-	case http.MethodPost:
-	case http.MethodDelete:
-	default:
-		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
-	}
+	checkMethod(ctx, w, r, http.MethodPost, http.MethodDelete)
+
 	defer r.Body.Close()
 	dec := codec.GetDecoder(r.Body)
 	switch r.Method {
@@ -158,19 +154,19 @@ const (
 
 func (h *IndexerV1) indexReportOne(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	switch r.Method {
-	case http.MethodGet:
-	case http.MethodDelete:
-	default:
-		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
-	}
+	checkMethod(ctx, w, r, http.MethodGet, http.MethodDelete)
+
 	d, err := getDigest(w, r)
 	if err != nil {
 		apiError(ctx, w, http.StatusBadRequest, "malformed path: %v", err)
 	}
 	switch r.Method {
 	case http.MethodGet:
-		allow := []string{"application/vnd.clair.indexreport.v1+json", "application/json"}
+		allow := []string{
+			"application/vnd.clair.index_report.v1+json",
+			"application/json",
+			"application/vnd.clair.indexreport.v1+json", // Previous spelling, kept for backwards compatibility.
+		}
 		switch err := pickContentType(w, r, allow); {
 		case errors.Is(err, nil): // OK
 		case errors.Is(err, ErrMediaType):
@@ -211,10 +207,13 @@ func (h *IndexerV1) indexReportOne(w http.ResponseWriter, r *http.Request) {
 
 func (h *IndexerV1) indexState(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	if r.Method != http.MethodGet {
-		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
+	checkMethod(ctx, w, r, http.MethodGet)
+
+	allow := []string{
+		"application/vnd.clair.index_state.v1+json",
+		"application/json",
+		"application/vnd.clair.indexstate.v1+json", // Previous spelling, kept for backwards compatibility.
 	}
-	allow := []string{"application/vnd.clair.indexstate.v1+json", "application/json"}
 	switch err := pickContentType(w, r, allow); {
 	case errors.Is(err, nil): // OK
 	case errors.Is(err, ErrMediaType):
@@ -247,9 +246,8 @@ func (h *IndexerV1) indexState(w http.ResponseWriter, r *http.Request) {
 
 func (h *IndexerV1) affectedManifests(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	if r.Method != http.MethodPost {
-		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
-	}
+	checkMethod(ctx, w, r, http.MethodPost)
+
 	allow := []string{"application/vnd.clair.affected_manifests.v1+json", "application/json"}
 	switch err := pickContentType(w, r, allow); {
 	case errors.Is(err, nil): // OK

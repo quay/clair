@@ -83,18 +83,20 @@ func (h *NotificationV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *NotificationV1) serveHTTP(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	checkMethod(ctx, w, r, http.MethodGet, http.MethodDelete)
 	switch r.Method {
 	case http.MethodGet:
-		h.get(w, r)
+		h.get(ctx, w, r)
 	case http.MethodDelete:
-		h.delete(w, r)
+		h.delete(ctx, w, r)
 	default:
-		apiError(r.Context(), w, http.StatusMethodNotAllowed, "endpoint only allows GET or DELETE")
+		panic("unreachable")
 	}
 }
 
-func (h *NotificationV1) delete(w http.ResponseWriter, r *http.Request) {
-	ctx := zlog.ContextWithValues(r.Context(), "component", "httptransport/NotificationV1.delete")
+func (h *NotificationV1) delete(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+	ctx = zlog.ContextWithValues(ctx, "component", "httptransport/NotificationV1.delete")
 	path := r.URL.Path
 	id := filepath.Base(path)
 	notificationID, err := uuid.Parse(id)
@@ -111,8 +113,8 @@ func (h *NotificationV1) delete(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get will return paginated notifications to the caller.
-func (h *NotificationV1) get(w http.ResponseWriter, r *http.Request) {
-	ctx := zlog.ContextWithValues(r.Context(), "component", "httptransport/NotificationV1.get")
+func (h *NotificationV1) get(ctx context.Context, w http.ResponseWriter, r *http.Request) {
+	ctx = zlog.ContextWithValues(ctx, "component", "httptransport/NotificationV1.get")
 	path := r.URL.Path
 	id := filepath.Base(path)
 	notificationID, err := uuid.Parse(id)
