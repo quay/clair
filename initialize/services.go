@@ -14,6 +14,7 @@ import (
 	"github.com/quay/clair/config"
 	"github.com/quay/claircore/datastore/postgres"
 	"github.com/quay/claircore/enricher/cvss"
+	"github.com/quay/claircore/enricher/rhcc"
 	"github.com/quay/claircore/libindex"
 	"github.com/quay/claircore/libvuln"
 	"github.com/quay/claircore/libvuln/driver"
@@ -288,6 +289,7 @@ func localMatcher(ctx context.Context, cfg *config.Config) (matcher.Service, err
 		Client:          cl,
 		Enrichers: []driver.Enricher{
 			&cvss.Enricher{},
+			&rhcc.Enricher{},
 		},
 	})
 	if err != nil {
