@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"path"
+	"strings"
 	"sync"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/quay/clair/config"
 	"github.com/quay/zlog"
 
+	json2 "github.com/quay/clair/v4/internal/json"
 	"github.com/quay/clair/v4/notifier"
 )
 
@@ -80,4 +82,49 @@ func TestDeliverer(t *testing.T) {
 	if got, want := wh.Callback.String(), cbURL.String(); got != want {
 		t.Fatalf("got: %v, wanted: %v", got, want)
 	}
+}
+
+func TestMarshal(t *testing.T) {
+	// Check that the "v0" format (no specific media type) is identical to
+	// stdlib output.
+	t.Run("V0", func(t *testing.T) {
+		var (
+			callback = "http://clair-notifier/notifier/api/v1/notification/"
+			noteID   = uuid.New()
+		)
+
+		want := func() string {
+			v := notifier.Callback{
+				NotificationID: noteID,
+			}
+			if err := v.Callback.UnmarshalBinary([]byte(callback)); err != nil {
+				t.Error(err)
+			}
+			b, err := json.Marshal(&v)
+			if err != nil {
+				t.Error(err)
+			}
+			return string(b)
+		}()
+
+		got := func() string {
+			url, err := url.Parse(callback)
+			if err != nil {
+				t.Error(err)
+			}
+			var b strings.Builder
+			cb := callbackRequest{
+				ID:  &noteID,
+				URL: url,
+			}
+			if err := json2.MarshalWrite(&b, &cb, options()); err != nil {
+				t.Error(err)
+			}
+			return b.String()
+		}()
+
+		if !cmp.Equal(got, want) {
+			t.Error(cmp.Diff(got, want))
+		}
+	})
 }
