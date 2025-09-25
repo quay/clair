@@ -1,0 +1,17 @@
+{
+  "id": "10",
+  "name": "libapt-pkg5.0",
+  "version": "1.6.11",
+  "kind": "binary",
+  "normalized_version": "",
+  "arch": "x86",
+  "module": "",
+  "cpe": "",
+  "source": {
+    "id": "9",
+    "name": "apt",
+    "version": "1.6.11",
+    "kind": "source",
+    "source": null
+  }
+}

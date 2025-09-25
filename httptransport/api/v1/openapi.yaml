@@ -1,0 +1,1111 @@
+openapi: 3.1.0
+info:
+  title: Clair Container Analyzer
+  description: |-
+    Clair is a set of cooperating microservices which can index and match a container image's content with known vulnerabilities.
+
+    **Note:** Any endpoints tagged "internal" or "unstable" are documented for completeness but are considered exempt from versioning.
+  version: 1.2.0
+  contact:
+    name: Clair Team
+    url: http://github.com/quay/clair
+    email: quay-devel@redhat.com
+  license:
+    name: Apache License 2.0
+    url: http://www.apache.org/licenses/
+externalDocs:
+  url: https://quay.github.io/clair/
+tags:
+  - name: indexer
+  - name: matcher
+  - name: notifier
+  - name: internal
+  - name: unstable
+paths:
+  /indexer/api/v1/index_report:
+    post:
+      operationId: Index
+      requestBody:
+        description: Manifest to index.
+        required: true
+        content:
+          application/vnd.clair.manifest.v1+json:
+            schema:
+              $ref: '#/components/schemas/manifest'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/manifest'
+      responses:
+        "400":
+          $ref: '#/components/responses/bad_request'
+        "415":
+          $ref: '#/components/responses/unsupported_media_type'
+        default:
+          $ref: '#/components/responses/oops'
+        "201":
+          description: |-
+            IndexReport created.
+
+            Clients may want to avoid reading the body if simply submitting the manifest for later vulnerability reporting.
+          content:
+            application/vnd.clair.index_report.v1+json:
+              schema:
+                $ref: '#/components/schemas/index_report'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/index_report'
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+            Link:
+              $ref: '#/components/headers/Link'
+          links:
+            retrieve:
+              operationId: GetIndexReport
+              parameters:
+                digest: $request.body#/hash
+            delete:
+              operationId: DeleteManifest
+              parameters:
+                digest: $request.body#/hash
+            report:
+              operationId: GetVulnerabilityReport
+              parameters:
+                digest: $request.body#/hash
+        "412":
+          description: Precondition Failed
+      tags:
+        - indexer
+      summary: Index the contents of a Manifest
+      description: By submitting a Manifest object to this endpoint Clair will fetch the layers, scan each layer's contents, and provide an index of discovered packages, repository and distribution information.
+    delete:
+      operationId: DeleteManifests
+      requestBody:
+        description: Array of manifest digests to delete.
+        required: true
+        content:
+          application/vnd.clair.bulk_delete.v1+json:
+            schema:
+              $ref: '#/components/schemas/bulk_delete'
+          application/json:
+            schema:
+              $ref: '#/components/schemas/bulk_delete'
+      responses:
+        "200":
+          description: Successfully deleted manifests.
+          headers:
+            Clair-Error:
+              $ref: '#/components/headers/Clair-Error'
+          content:
+            application/vnd.clair.bulk_delete.v1+json:
+              schema:
+                $ref: '#/components/schemas/bulk_delete'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/bulk_delete'
+        "400":
+          $ref: '#/components/responses/bad_request'
+        "415":
+          $ref: '#/components/responses/unsupported_media_type'
+        default:
+          $ref: '#/components/responses/oops'
+      tags:
+        - indexer
+      summary: Delete the referenced manifests.
+      description: Given a Manifest's content addressable hash, any data related to it will be removed if it exists.
+  /indexer/api/v1/index_report/{digest}:
+    delete:
+      operationId: DeleteManifest
+      responses:
+        "400":
+          $ref: '#/components/responses/bad_request'
+        "415":
+          $ref: '#/components/responses/unsupported_media_type'
+        default:
+          $ref: '#/components/responses/oops'
+        "204":
+          description: Success
+      tags:
+        - indexer
+      summary: Delete the referenced manifest.
+      description: Given a Manifest's content addressable hash, any data related to it will be removed it it exists.
+    get:
+      operationId: GetIndexReport
+      responses:
+        "200":
+          description: IndexReport retrieved
+          headers:
+            Clair-Error:
+              $ref: '#/components/headers/Clair-Error'
+          content:
+            application/vnd.clair.index_report.v1+json:
+              schema:
+                $ref: '#/components/schemas/index_report'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/index_report'
+        "400":
+          $ref: '#/components/responses/bad_request'
+        "415":
+          $ref: '#/components/responses/unsupported_media_type'
+        default:
+          $ref: '#/components/responses/oops'
+        "404":
+          $ref: '#/components/responses/not_found'
+      tags:
+        - indexer
+      summary: Retrieve the IndexReport for the referenced manifest.
+      description: Given a Manifest's content addressable hash, an IndexReport will be retrieved if it exists.
+    parameters:
+      - $ref: '#/components/parameters/digest'
+  /indexer/api/v1/index_state:
+    get:
+      operationId: IndexState
+      responses:
+        "200":
+          description: Indexer State
+          headers:
+            Etag:
+              $ref: '#/components/headers/Etag'
+          content:
+            application/vnd.clair.index_state.v1+json:
+              schema:
+                $ref: '#/components/schemas/index_state'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/index_state'
+        "304":
+          description: Not Modified
+      tags:
+        - indexer
+      summary: Report the indexer's internal configuration and state.
+      description: |-
+        The index state endpoint returns a json structure indicating the indexer's internal configuration state.
+        A client may be interested in this as a signal that manifests may need to be re-indexed.
+  /indexer/api/v1/internal/affected_manifest:
+    post:
+      tags:
+        - internal
+        - unstable
+        - indexer
+      operationId: AffectedManifests
+      responses:
+        "200":
+          description: TODO
+          headers:
+            Clair-Error:
+              $ref: '#/components/headers/Clair-Error'
+          content:
+            application/vnd.clair.affected_manifests.v1+json:
+              schema:
+                $ref: '#/components/schemas/affected_manifests'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/affected_manifests'
+        "400":
+          $ref: '#/components/responses/bad_request'
+        "415":
+          $ref: '#/components/responses/unsupported_media_type'
+        default:
+          $ref: '#/components/responses/oops'
+      summary: Retrieve the set of manifests affected by the provided vulnerabilities.
+      description: ""
+      x-cli-ignore: true
+  /matcher/api/v1/internal/update_diff:
+    get:
+      tags:
+        - internal
+        - unstable
+        - matcher
+      operationId: GetUpdateDiff
+      responses:
+        "200":
+          description: TODO
+          headers:
+            Clair-Error:
+              $ref: '#/components/headers/Clair-Error'
+          content:
+            application/vnd.clair.update_diff.v1+json:
+              schema:
+                $ref: '#/components/schemas/update_diff'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/update_diff'
+        "400":
+          $ref: '#/components/responses/bad_request'
+        "415":
+          $ref: '#/components/responses/unsupported_media_type'
+        default:
+          $ref: '#/components/responses/oops'
+      parameters:
+        - in: query
+          name: cur
+          schema:
+            $ref: '#/components/schemas/token'
+          description: TKTK
+        - in: query
+          name: prev
+          schema:
+            $ref: '#/components/schemas/token'
+          description: TKTK
+      x-cli-ignore: true
+  /matcher/api/v1/internal/update_operation:
+    post:
+      tags:
+        - internal
+        - unstable
+        - matcher
+      operationId: UpdateOperation
+      responses:
+        "200":
+          description: TODO
+          headers:
+            Clair-Error:
+              $ref: '#/components/headers/Clair-Error'
+          content:
+            application/vnd.clair.affected_manifests.v1+json:
+              schema:
+                $ref: '#/components/schemas/affected_manifests'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/affected_manifests'
+        "400":
+          $ref: '#/components/responses/bad_request'
+        "415":
+          $ref: '#/components/responses/unsupported_media_type'
+        default:
+          $ref: '#/components/responses/oops'
+      x-cli-ignore: true
+  /matcher/api/v1/vulnerability_report/{digest}:
+    get:
+      operationId: GetVulnerabilityReport
+      responses:
+        "400":
+          $ref: '#/components/responses/bad_request'
+        "415":
+          $ref: '#/components/responses/unsupported_media_type'
+        default:
+          $ref: '#/components/responses/oops'
+        "201":
+          description: Vulnerability Report Created
+          content:
+            application/vnd.clair.vulnerability_report.v1+json:
+              schema:
+                $ref: '#/components/schemas/vulnerability_report'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/vulnerability_report'
+        "404":
+          $ref: '#/components/responses/not_found'
+      tags:
+        - matcher
+      summary: Retrieve a VulnerabilityReport for the referenced manifest.
+      description: Given a Manifest's content addressable hash a VulnerabilityReport will be created. The Manifest **must** have been Indexed first via the Index endpoint.
+    parameters:
+      - $ref: '#/components/parameters/digest'
+  /notifier/api/v1/notification/{id}:
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          $ref: '#/components/schemas/token'
+        description: A notification ID returned by a callback
+    delete:
+      operationId: DeleteNotification
+      responses:
+        "200":
+          description: Success
+          headers:
+            Clair-Error:
+              $ref: '#/components/headers/Clair-Error'
+        "400":
+          $ref: '#/components/responses/bad_request'
+        "415":
+          $ref: '#/components/responses/unsupported_media_type'
+        default:
+          $ref: '#/components/responses/oops'
+        "204":
+          description: TODO
+      tags:
+        - notifier
+      summary: Delete the referenced notification set.
+      description: |-
+        Issues a delete of the provided notification id and all associated notifications.
+        After this delete clients will no longer be able to retrieve notifications.
+    get:
+      operationId: GetNotification
+      parameters:
+        - in: query
+          name: page_size
+          schema:
+            type: integer
+          description: The maximum number of notifications to deliver in a single page.
+        - in: query
+          name: next
+          schema:
+            type: string
+          description: The next page to fetch via id. Typically this number is provided on initial response in the "page.next" field. The first request should omit this field.
+      responses:
+        "200":
+          description: A paginated list of notifications
+          headers:
+            Clair-Error:
+              $ref: '#/components/headers/Clair-Error'
+          content:
+            application/vnd.clair.notification_page.v1+json:
+              schema:
+                $ref: '#/components/schemas/notification_page'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/notification_page'
+        "400":
+          $ref: '#/components/responses/bad_request'
+        "415":
+          $ref: '#/components/responses/unsupported_media_type'
+        default:
+          $ref: '#/components/responses/oops'
+        "304":
+          description: Not modified
+      tags:
+        - notifier
+      summary: Retrieve pages of the referenced notification set.
+      description: By performing a GET with an id as a path parameter, the client will retrieve a paginated response of notification objects.
+security: []
+webhooks:
+  notification:
+    post:
+      tags:
+        - notifier
+      requestBody:
+        content:
+          application/vnd.clair.notification.v1+json:
+            schema:
+              $ref: '#/components/schemas/notification'
+      responses:
+        "200":
+          description: TODO
+components:
+  schemas:
+    token:
+      type: string
+      description: An opaque token previously obtained from the service.
+    affected_manifests:
+      $id: https://clairproject.org/api/http/v1/affected_manifests.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Affected Manifests
+      type: object
+      description: |-
+        **This is an internal type, documented for completeness.**
+
+        Manifests affected by the specified vulnerability objects.
+      properties:
+        vulnerabilities:
+          type: object
+          description: Vulnerability objects.
+          additionalProperties:
+            $ref: vulnerability.schema.json
+        vulnerable_manifests:
+          type: object
+          description: Mapping of manifest digests to vulnerability identifiers.
+          additionalProperties:
+            type: array
+            items:
+              type: string
+              description: An identifier to be used in the "#/vulnerabilities" object.
+      required:
+        - vulnerable_manifests
+    bulk_delete:
+      $id: https://clairproject.org/api/http/v1/bulk_delete.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Bulk Delete
+      type: array
+      description: Array of manifest digests to delete from the system.
+      items:
+        $ref: digest.schema.json
+        description: Manifest digest to delete from the system.
+    cpe:
+      $id: https://clairproject.org/api/http/v1/cpe.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Common Platform Enumeration Name
+      description: This is a CPE Name in either v2.2 "URI" form or v2.3 "Formatted String" form.
+      $comment: Clair only produces v2.3 CPE Names. Any v2.2 Names will be normalized into v2.3 form.
+      oneOf:
+        - description: 'This is the CPE 2.2 regexp: https://cpe.mitre.org/specification/2.2/cpe-language_2.2.xsd'
+          type: string
+          pattern: ^[c][pP][eE]:/[AHOaho]?(:[A-Za-z0-9\._\-~%]*){0,6}$
+        - description: 'This is the CPE 2.3 regexp: https://csrc.nist.gov/schema/cpe/2.3/cpe-naming_2.3.xsd'
+          type: string
+          pattern: ^cpe:2\.3:[aho\*\-](:(((\?*|\*?)([a-zA-Z0-9\-\._]|(\\[\\\*\?!"#$$%&'\(\)\+,/:;<=>@\[\]\^`\{\|}~]))+(\?*|\*?))|[\*\-])){5}(:(([a-zA-Z]{2,3}(-([a-zA-Z]{2}|[0-9]{3}))?)|[\*\-]))(:(((\?*|\*?)([a-zA-Z0-9\-\._]|(\\[\\\*\?!"#$$%&'\(\)\+,/:;<=>@\[\]\^`\{\|}~]))+(\?*|\*?))|[\*\-])){4}$
+      examples:
+        - cpe:/a:microsoft:internet_explorer:8.0.6001:beta
+        - cpe:2.3:a:microsoft:internet_explorer:8.0.6001:beta:*:*:*:*:*:*
+    digest:
+      $id: https://clairproject.org/api/http/v1/digest.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Digest
+      description: A digest acts as a content identifier, enabling content addressability.
+      oneOf:
+        - $comment: 'SHA256: MUST be implemented'
+          description: SHA256
+          type: string
+          pattern: ^sha256:[a-f0-9]{64}$
+        - $comment: 'SHA512: MAY be implemented'
+          description: SHA512
+          type: string
+          pattern: ^sha512:[a-f0-9]{128}$
+        - $comment: 'BLAKE3: MAY be implemented'
+          description: |-
+            BLAKE3
+
+            **Currently not implemented.**
+          type: string
+          pattern: ^blake3:[a-f0-9]{64}$
+    distribution:
+      $id: https://clairproject.org/api/http/v1/distribution.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Distribution
+      type: object
+      description: Distribution is the accompanying system context of a Package.
+      properties:
+        id:
+          description: Unique ID for this Distribution. May be unique to the response document, not the whole system.
+          type: string
+        did:
+          description: A lower-case string (no spaces or other characters outside of 0–9, a–z, ".", "_", and "-") identifying the operating system, excluding any version information and suitable for processing by scripts or usage in generated filenames.
+          type: string
+        name:
+          description: A string identifying the operating system.
+          type: string
+        version:
+          description: A string identifying the operating system version, excluding any OS name information, possibly including a release code name, and suitable for presentation to the user.
+          type: string
+        version_code_name:
+          description: A lower-case string (no spaces or other characters outside of 0–9, a–z, ".", "_", and "-") identifying the operating system release code name, excluding any OS name information or release version, and suitable for processing by scripts or usage in generated filenames.
+          type: string
+        version_id:
+          description: A lower-case string (mostly numeric, no spaces or other characters outside of 0–9, a–z, ".", "_", and "-") identifying the operating system version, excluding any OS name information or release code name.
+          type: string
+        arch:
+          description: A string identifying the OS architecture.
+          type: string
+        cpe:
+          description: Common Platform Enumeration name.
+          $ref: cpe.schema.json
+        pretty_name:
+          description: A pretty operating system name in a format suitable for presentation to the user.
+          type: string
+      additionalProperties: false
+      required:
+        - id
+      examples:
+        - id: "1"
+          did: ubuntu
+          name: Ubuntu
+          version: 18.04.3 LTS (Bionic Beaver)
+          version_code_name: bionic
+          version_id: "18.04"
+          pretty_name: Ubuntu 18.04.3 LTS
+    environment:
+      $id: https://clairproject.org/api/http/v1/environment.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Environment
+      type: object
+      description: Environment describes the surrounding environment a package was discovered in.
+      properties:
+        package_db:
+          description: The database the associated Package was discovered in.
+          type: string
+        distribution_id:
+          description: The ID of the Distribution of the associated Package.
+          type: string
+        introduced_in:
+          description: The Layer the associated Package was introduced in.
+          $ref: digest.schema.json
+        repository_ids:
+          description: The IDs of the Repositories of the associated Package.
+          type: array
+          items:
+            type: string
+      additionalProperties: false
+      examples:
+        - value:
+            package_db: var/lib/dpkg/status
+            introduced_in: sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a
+            distribution_id: "1"
+    error:
+      $id: https://clairproject.org/api/http/v1/error.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Error
+      type: object
+      description: A general error response.
+      properties:
+        code:
+          type: string
+          description: a code for this particular error
+        message:
+          type: string
+          description: a message with further detail
+      required:
+        - message
+    index_report:
+      $id: https://clairproject.org/api/http/v1/index_report.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: IndexReport
+      type: object
+      description: An index of the contents of a Manifest.
+      properties:
+        manifest_hash:
+          $ref: digest.schema.json
+          description: The Manifest's digest.
+        state:
+          type: string
+          description: The current state of the index operation
+        err:
+          type: string
+          description: An error message on event of unsuccessful index
+        success:
+          type: boolean
+          description: A bool indicating succcessful index
+        packages:
+          type: object
+          additionalProperties:
+            $ref: package.schema.json
+        distributions:
+          type: object
+          additionalProperties:
+            $ref: distribution.schema.json
+        repository:
+          type: object
+          additionalProperties:
+            $ref: repository.schema.json
+        environments:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: environment.schema.json
+      additionalProperties: false
+      required:
+        - manifest_hash
+        - state
+        - success
+    index_state:
+      $id: https://clairproject.org/api/http/v1/index_state.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Index State
+      type: object
+      description: Information on the state of the indexer system.
+      properties:
+        state:
+          type: string
+          description: an opaque token
+      required:
+        - state
+    layer:
+      $id: https://clairproject.org/api/http/v1/layer.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Layer
+      type: object
+      description: Layer is a description of a container layer. It should contain enough information to fetch the layer.
+      properties:
+        hash:
+          $ref: digest.schema.json
+          description: Digest of the layer blob.
+        uri:
+          type: string
+          description: A URI indicating where the layer blob can be downloaded from.
+        headers:
+          description: Any additional HTTP-style headers needed for requesting layers.
+          type: object
+          patternProperties:
+            ^[a-zA-Z0-9\-_]+$:
+              type: array
+              items:
+                type: string
+        media_type:
+          description: The OCI Layer media type for this layer.
+          type: string
+          pattern: ^application/vnd\.oci\.image\.layer\.v1\.tar(\+(gzip|zstd))?$
+      additionalProperties: false
+      required:
+        - hash
+        - uri
+    manifest:
+      $id: https://clairproject.org/api/http/v1/manifest.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Manifest
+      type: object
+      description: A description of an OCI Image Manifest.
+      properties:
+        hash:
+          $ref: digest.schema.json
+          description: |-
+            The OCI Image Manifest's digest.
+
+            This is used as an identifier throughout the system. This **SHOULD** be the same as the OCI Image Manifest's digest, but this is not enforced.
+        layers:
+          type: array
+          description: The OCI Layers making up the Image, in order.
+          items:
+            $ref: layer.schema.json
+      additionalProperties: false
+      required:
+        - hash
+      examples:
+        - hash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+          layers:
+            - hash: sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b856
+              uri: https://storage.example.com/blob/e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b856
+    normalized_severity:
+      $id: https://clairproject.org/api/http/v1/normalized_severity.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Normalized Severity
+      description: Standardized severity values.
+      enum:
+        - Unknown
+        - Negligible
+        - Low
+        - Medium
+        - High
+        - Critical
+    notification_page:
+      $id: https://clairproject.org/api/http/v1/notification_page.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Notification Page
+      type: object
+      description: A page description and list of notifications.
+      properties:
+        page:
+          description: An object informing the client the next page to retrieve.
+          type: object
+          properties:
+            size:
+              type: integer
+            next:
+              oneOf:
+                - type: string
+                - const: "-1"
+          additionalProperties: false
+          required:
+            - size
+        notifications:
+          description: Notifications within this page.
+          type: array
+          items:
+            $ref: notification.schema.json
+      additionalProperties: false
+      required:
+        - page
+        - notifications
+      examples:
+        - page:
+            size: 0
+            next: "-1"
+          notifications: []
+    notification:
+      $id: https://clairproject.org/api/http/v1/notification.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Notification
+      type: object
+      description: A change in a manifest affected by a vulnerability.
+      properties:
+        id:
+          description: Unique identifier for this notification.
+          type: string
+        manifest:
+          $ref: digest.schema.json
+          description: The digest of the manifest affected by the provided vulnerability.
+        reason:
+          description: The reason for the notifcation.
+          enum:
+            - added
+            - removed
+        vulnerability:
+          $ref: vulnerability_summary.schema.json
+      additionalProperties: false
+      required:
+        - id
+        - manifest
+        - reason
+        - vulnerability
+    package:
+      $id: https://clairproject.org/api/http/v1/package.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Package
+      type: object
+      description: Description of installed software.
+      properties:
+        id:
+          description: Unique ID for this Package. May be unique to the response document, not the whole system.
+          type: string
+        name:
+          description: |-
+            Identifier of this Package.
+
+            The uniqueness and scoping of this name depends on the packaging system.
+          type: string
+        version:
+          description: Version of this Package, as reported by the packaging system.
+          type: string
+        kind:
+          description: The "kind" of this Package.
+          enum:
+            - binary
+            - source
+          default: binary
+        source:
+          $ref: package.schema.json
+          description: Source Package that produced the current binary Package, if known.
+        normalized_version:
+          description: |-
+            Normalized representation of the discoverd version.
+
+            The format is not specific, but is guarenteed to be forward compatible.
+          type: string
+        module:
+          description: |-
+            An identifier for intra-Repository grouping of packages.
+
+            Likely only relevant on rpm-based systems.
+          type: string
+        arch:
+          description: Native architecture for the Package.
+          type: string
+          $comment: This should become and enum in the future.
+        cpe:
+          $ref: cpe.schema.json
+          description: CPE Name for the Package.
+      additionalProperties: false
+      required:
+        - name
+        - version
+      examples:
+        - id: "10"
+          name: libapt-pkg5.0
+          version: 1.6.11
+          kind: binary
+          normalized_version: ""
+          arch: x86
+          module: ""
+          cpe: ""
+          source:
+            id: "9"
+            name: apt
+            version: 1.6.11
+            kind: source
+            source: null
+    range:
+      $id: https://clairproject.org/api/http/v1/range.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Range
+      type: object
+      description: A range of versions.
+      properties:
+        '[':
+          type: string
+          description: Lower bound, inclusive.
+        ):
+          type: string
+          description: Upper bound, exclusive.
+      minProperties: 1
+      additionalProperties: false
+    repository:
+      $id: https://clairproject.org/api/http/v1/repository.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Repository
+      type: object
+      description: Description of a software repository
+      properties:
+        id:
+          description: Unique ID for this Repository. May be unique to the response document, not the whole system.
+          type: string
+        name:
+          description: Human-relevant name for the Repository.
+          type: string
+        key:
+          description: Machine-relevant name for the Repository.
+          type: string
+        uri:
+          description: URI describing the Repository.
+          type: string
+          format: uri
+        cpe:
+          description: CPE name for the Repository.
+          $ref: cpe.schema.json
+      additionalProperties: false
+      required:
+        - id
+    update_diff:
+      $id: https://clairproject.org/api/http/v1/update_diff.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Update Difference
+      type: object
+      description: |-
+        **This is an internal type, documented for completeness.**
+
+        TKTK
+      additionalProperties: false
+      required: []
+    vulnerability_core:
+      $id: https://clairproject.org/api/http/v1/vulnerability_core.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Vulnerability Core
+      type: object
+      description: The core elements of vulnerabilities in the Clair system.
+      properties:
+        name:
+          type: string
+          description: Human-readable name, as presented in the vendor data.
+        fixed_in_version:
+          type: string
+          description: Version string, as presented in the vendor data.
+        severity:
+          type: string
+          description: Severity, as presented in the vendor data.
+        normalized_severity:
+          $ref: normalized_severity.schema.json
+          description: A well defined set of severity strings guaranteed to be present.
+        range:
+          $ref: range.schema.json
+          description: Range of versions the vulnerability applies to.
+        arch_op:
+          description: Flag indicating how the referenced package's "arch" member should be interpreted.
+          enum:
+            - equals
+            - not equals
+            - pattern match
+        package:
+          $ref: package.schema.json
+          description: A package description
+        distribution:
+          $ref: distribution.schema.json
+          description: A distribution description
+        repository:
+          $ref: repository.schema.json
+          description: A repository description
+      required:
+        - name
+        - normalized_severity
+      dependentRequired:
+        package:
+          - arch_op
+      anyOf:
+        - required:
+            - package
+        - required:
+            - repository
+        - required:
+            - distribution
+    vulnerability_report:
+      $id: https://clairproject.org/api/http/v1/vulnerability_report.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: VulnerabilityReport
+      type: object
+      description: A report expressing discovered packages, package environments, and package vulnerabilities within a Manifest.
+      properties:
+        manifest_hash:
+          $ref: digest.schema.json
+        packages:
+          type: object
+          description: A map of Package objects indexed by "/id"
+          additionalProperties:
+            $ref: package.schema.json
+        distributions:
+          type: object
+          description: A map of Distribution objects indexed by "/id"
+          additionalProperties:
+            $ref: distribution.schema.json
+        repository:
+          type: object
+          description: A map of Repository objects indexed by "/id"
+          additionalProperties:
+            $ref: repository.schema.json
+        environments:
+          type: object
+          description: A map of Environment arrays indexed by a Package "/id"
+          additionalProperties:
+            type: array
+            items:
+              $ref: environment.schema.json
+        vulnerabilities:
+          type: object
+          description: A map of Vulnerabilities indexed by "/id"
+          additionalProperties:
+            $ref: vulnerability.schema.json
+        package_vulnerabilities:
+          type: object
+          description: A mapping of Vulnerability "/id" lists indexed by Package "/id"
+          additionalProperties:
+            type: array
+            items:
+              type: string
+        enrichments:
+          type: object
+          description: A mapping of extra "enrichment" data by type
+          additionalProperties:
+            type: array
+      additionalProperties: false
+      required:
+        - distributions
+        - environments
+        - manifest_hash
+        - packages
+        - package_vulnerabilities
+        - vulnerabilities
+    vulnerability:
+      $id: https://clairproject.org/api/http/v1/vulnerability.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Vulnerability
+      type: object
+      description: Description of a software flaw.
+      $ref: vulnerability_core.schema.json
+      properties:
+        id:
+          description: ""
+          type: string
+        updater:
+          description: ""
+          type: string
+        description:
+          description: ""
+          type: string
+        issued:
+          description: ""
+          type: string
+          format: date-time
+        links:
+          description: ""
+          type: string
+      unevaluatedProperties: false
+      required:
+        - id
+        - updater
+      examples:
+        - id: "356835"
+          updater: ubuntu
+          name: CVE-2009-5155
+          description: In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.
+          links: https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-5155 http://people.canonical.com/~ubuntu-security/cve/2009/CVE-2009-5155.html https://sourceware.org/bugzilla/show_bug.cgi?id=11053 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=22793 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=32806 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34238 https://sourceware.org/bugzilla/show_bug.cgi?id=18986
+          severity: Low
+          normalized_severity: Low
+          package:
+            id: "0"
+            name: glibc
+            version: 2.27-0ubuntu1
+            kind: binary
+            source: null
+          dist:
+            id: "0"
+            did: ubuntu
+            name: Ubuntu
+            version: 18.04.3 LTS (Bionic Beaver)
+            version_code_name: bionic
+            version_id: "18.04"
+            arch: amd64
+          repo:
+            id: "0"
+            name: Ubuntu 18.04.3 LTS
+          issued: "2019-10-12T07:20:50.52Z"
+          fixed_in_version: 2.28-0ubuntu1
+    vulnerability_summary:
+      $id: https://clairproject.org/api/http/v1/vulnerability_summary.schema.json
+      $schema: https://json-schema.org/draft/2020-12/schema
+      title: Vulnerability Summary
+      type: object
+      description: A summary of a vulnerability.
+      $ref: vulnerability_core.schema.json
+      unevaluatedProperties: false
+      examples:
+        - name: CVE-2009-5155
+          description: In the GNU C Library (aka glibc or libc6) before 2.28, parse_reg_exp in posix/regcomp.c misparses alternatives, which allows attackers to cause a denial of service (assertion failure and application exit) or trigger an incorrect result by attempting a regular-expression match.
+          normalized_severity: Low
+          fixed_in_version: v0.0.1
+          links: http://link-to-advisory
+          package:
+            id: "0"
+            name: glibc
+            version: v0.0.1-rc1
+          dist:
+            id: "0"
+            did: ubuntu
+            name: Ubuntu
+            version: 18.04.3 LTS (Bionic Beaver)
+            version_code_name: bionic
+            version_id: "18.04"
+          repo:
+            id: "0"
+            name: Ubuntu 18.04.3 LTS
+  responses:
+    bad_request:
+      description: Bad Request
+      content:
+        application/vnd.clair.error.v1+json:
+          schema:
+            $ref: '#/components/schemas/error'
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    oops:
+      description: Internal Server Error
+      content:
+        application/vnd.clair.error.v1+json:
+          schema:
+            $ref: '#/components/schemas/error'
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    not_found:
+      description: Not Found
+      content:
+        application/vnd.clair.error.v1+json:
+          schema:
+            $ref: '#/components/schemas/error'
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+    unsupported_media_type:
+      description: Unsupported Media Type
+      content:
+        application/vnd.clair.error.v1+json:
+          schema:
+            $ref: '#/components/schemas/error'
+        application/json:
+          schema:
+            $ref: '#/components/schemas/error'
+  parameters:
+    digest:
+      description: OCI-compatible digest of a referred object.
+      name: digest
+      in: path
+      schema:
+        $ref: '#/components/schemas/digest'
+      required: true
+  headers:
+    Clair-Error:
+      description: This is a trailer containing any errors encountered while writing the response.
+      style: simple
+      schema:
+        type: string
+    Etag:
+      description: HTTP [ETag header](https://httpwg.org/specs/rfc9110.html#field.etag)
+      style: simple
+      schema:
+        type: string
+    Link:
+      description: Web Linking [Link header](https://httpwg.org/specs/rfc8288.html#header)
+      style: simple
+      schema:
+        type: string
+    Location:
+      description: HTTP [Location header](https://httpwg.org/specs/rfc9110.html#field.location)
+      style: simple
+      required: true
+      schema:
+        type: string
+  securitySchemes:
+    psk:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT with preshared key and allow-listed issuers
+      description: Clair's authentication scheme.

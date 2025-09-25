@@ -1,0 +1,39 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/layer.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Layer",
+  "type": "object",
+  "description": "Layer is a description of a container layer. It should contain enough information to fetch the layer.",
+  "properties": {
+    "hash": {
+      "$ref": "digest.schema.json",
+      "description": "Digest of the layer blob."
+    },
+    "uri": {
+      "type": "string",
+      "description": "A URI indicating where the layer blob can be downloaded from."
+    },
+    "headers": {
+      "description": "Any additional HTTP-style headers needed for requesting layers.",
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9\\-_]+$": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "media_type": {
+      "description": "The OCI Layer media type for this layer.",
+      "type": "string",
+      "pattern": "^application/vnd\\.oci\\.image\\.layer\\.v1\\.tar(\\+(gzip|zstd))?$"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "hash",
+    "uri"
+  ]
+}

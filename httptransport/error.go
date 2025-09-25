@@ -1,14 +1,17 @@
 package httptransport
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
+	"strings"
 
 	"github.com/quay/zlog"
+
+	types "github.com/quay/clair/v4/httptransport/types/v1"
+	"github.com/quay/clair/v4/internal/codec"
 )
 
 // StatusClientClosedRequest is a nonstandard HTTP status code used when the
@@ -17,12 +20,13 @@ import (
 // This convention is cribbed from Nginx.
 const statusClientClosedRequest = 499
 
-// ApiError writes an untyped (that is, "application/json") error with the
+// ApiError writes a v1 error ("application/vnd.clair.error.v1+json") with the
 // provided HTTP status code and message.
 //
 // ApiError does not return, but instead causes the goroutine to exit.
-func apiError(ctx context.Context, w http.ResponseWriter, code int, f string, v ...interface{}) {
+func apiError(ctx context.Context, w http.ResponseWriter, code int, f string, v ...any) {
 	const errheader = `Clair-Error`
+	const ctype = `application/vnd.clair.error.v1+json`
 	disconnect := false
 	select {
 	case <-ctx.Done():
@@ -45,37 +49,25 @@ func apiError(ctx context.Context, w http.ResponseWriter, code int, f string, v 
 	}
 
 	h := w.Header()
-	h.Del("link")
-	h.Set("content-type", "application/json")
+	// Remove the links that use API relations: they should only be used on
+	// successful responses.
+	h[`Link`] = slices.DeleteFunc(h[`Link`], func(v string) bool {
+		return strings.Contains(v, `rel="https://projectquay.io/clair/v1`)
+	})
+	h.Set("content-type", ctype)
 	h.Set("x-content-type-options", "nosniff")
 	h.Set("trailer", errheader)
 	w.WriteHeader(code)
 
-	var buf bytes.Buffer
-	buf.WriteString(`{"code":"`)
-	switch code {
-	case http.StatusBadRequest:
-		buf.WriteString("bad-request")
-	case http.StatusMethodNotAllowed:
-		buf.WriteString("method-not-allowed")
-	case http.StatusNotFound:
-		buf.WriteString("not-found")
-	case http.StatusTooManyRequests:
-		buf.WriteString("too-many-requests")
-	default:
-		buf.WriteString("internal-error")
+	enc := codec.GetEncoder(w, codec.SchemeV1)
+	val := types.Error{
+		Code:    code,
+		Message: fmt.Sprintf(f, v...),
 	}
-	buf.WriteByte('"')
-	if f != "" {
-		buf.WriteString(`,"message":`)
-		b, _ := json.Marshal(fmt.Sprintf(f, v...)) // OK use of encoding/json.
-		buf.Write(b)
-	}
-	buf.WriteByte('}')
-
-	if _, err := buf.WriteTo(w); err != nil {
+	if err := enc.Encode(&val); err != nil {
 		h.Set(errheader, err.Error())
 	}
+
 	switch err := http.NewResponseController(w).Flush(); {
 	case errors.Is(err, nil):
 	case errors.Is(err, http.ErrNotSupported):
@@ -86,4 +78,14 @@ func apiError(ctx context.Context, w http.ResponseWriter, code int, f string, v 
 			Msg("unable to flush http response")
 	}
 	panic(http.ErrAbortHandler)
+}
+
+// CheckMethod returns if the request method is in the "allow" slice, or calls
+// [apiError] with appropriate arguments.
+func checkMethod(ctx context.Context, w http.ResponseWriter, r *http.Request, allow ...string) {
+	if slices.Contains(allow, r.Method) {
+		return
+	}
+	w.Header().Set(`Allow`, strings.Join(allow, ", "))
+	apiError(ctx, w, http.StatusMethodNotAllowed, "method %q disallowed", r.Method)
 }

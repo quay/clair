@@ -53,7 +53,7 @@ type IndexerV1 struct {
 
 var _ http.Handler = (*IndexerV1)(nil)
 
-// ServeHTTP implements http.Handler.
+// ServeHTTP implements [http.Handler].
 func (h *IndexerV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	r = withRequestID(r)
@@ -84,15 +84,10 @@ func (h *IndexerV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	switch r.Method {
-	case http.MethodPost:
-	case http.MethodDelete:
-	default:
-		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
-	}
+	checkMethod(ctx, w, r, http.MethodPost, http.MethodDelete)
+
 	defer r.Body.Close()
 	dec := codec.GetDecoder(r.Body)
-	defer codec.PutDecoder(dec)
 	switch r.Method {
 	case http.MethodPost:
 		state, err := h.srv.State(ctx)
@@ -132,7 +127,6 @@ func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
 		defer writerError(w, &err)()
 		w.WriteHeader(http.StatusCreated)
 		enc := codec.GetEncoder(w)
-		defer codec.PutEncoder(enc)
 		err = enc.Encode(report)
 	case http.MethodDelete:
 		var ds []claircore.Digest
@@ -149,7 +143,6 @@ func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
 		defer writerError(w, &err)()
 		w.WriteHeader(http.StatusOK)
 		enc := codec.GetEncoder(w)
-		defer codec.PutEncoder(enc)
 		err = enc.Encode(ds)
 	}
 }
@@ -161,19 +154,19 @@ const (
 
 func (h *IndexerV1) indexReportOne(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	switch r.Method {
-	case http.MethodGet:
-	case http.MethodDelete:
-	default:
-		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
-	}
+	checkMethod(ctx, w, r, http.MethodGet, http.MethodDelete)
+
 	d, err := getDigest(w, r)
 	if err != nil {
 		apiError(ctx, w, http.StatusBadRequest, "malformed path: %v", err)
 	}
 	switch r.Method {
 	case http.MethodGet:
-		allow := []string{"application/vnd.clair.indexreport.v1+json", "application/json"}
+		allow := []string{
+			"application/vnd.clair.index_report.v1+json",
+			"application/json",
+			"application/vnd.clair.indexreport.v1+json", // Previous spelling, kept for backwards compatibility.
+		}
 		switch err := pickContentType(w, r, allow); {
 		case errors.Is(err, nil): // OK
 		case errors.Is(err, ErrMediaType):
@@ -203,7 +196,6 @@ func (h *IndexerV1) indexReportOne(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("etag", validator)
 		defer writerError(w, &err)()
 		enc := codec.GetEncoder(w)
-		defer codec.PutEncoder(enc)
 		err = enc.Encode(report)
 	case http.MethodDelete:
 		if _, err := h.srv.DeleteManifests(ctx, d); err != nil {
@@ -215,10 +207,13 @@ func (h *IndexerV1) indexReportOne(w http.ResponseWriter, r *http.Request) {
 
 func (h *IndexerV1) indexState(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	if r.Method != http.MethodGet {
-		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
+	checkMethod(ctx, w, r, http.MethodGet)
+
+	allow := []string{
+		"application/vnd.clair.index_state.v1+json",
+		"application/json",
+		"application/vnd.clair.indexstate.v1+json", // Previous spelling, kept for backwards compatibility.
 	}
-	allow := []string{"application/vnd.clair.indexstate.v1+json", "application/json"}
 	switch err := pickContentType(w, r, allow); {
 	case errors.Is(err, nil): // OK
 	case errors.Is(err, ErrMediaType):
@@ -242,7 +237,6 @@ func (h *IndexerV1) indexState(w http.ResponseWriter, r *http.Request) {
 	defer writerError(w, &err)()
 	// TODO(hank) Don't use an encoder to write out like 40 bytes of json.
 	enc := codec.GetEncoder(w)
-	defer codec.PutEncoder(enc)
 	err = enc.Encode(struct {
 		State string `json:"state"`
 	}{
@@ -252,10 +246,9 @@ func (h *IndexerV1) indexState(w http.ResponseWriter, r *http.Request) {
 
 func (h *IndexerV1) affectedManifests(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	if r.Method != http.MethodPost {
-		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
-	}
-	allow := []string{"application/vnd.clair.affectedmanifests.v1+json", "application/json"}
+	checkMethod(ctx, w, r, http.MethodPost)
+
+	allow := []string{"application/vnd.clair.affected_manifests.v1+json", "application/json"}
 	switch err := pickContentType(w, r, allow); {
 	case errors.Is(err, nil): // OK
 	case errors.Is(err, ErrMediaType):
@@ -268,7 +261,6 @@ func (h *IndexerV1) affectedManifests(w http.ResponseWriter, r *http.Request) {
 		V []claircore.Vulnerability `json:"vulnerabilities"`
 	}
 	dec := codec.GetDecoder(r.Body)
-	defer codec.PutDecoder(dec)
 	if err := dec.Decode(&vulnerabilities); err != nil {
 		apiError(ctx, w, http.StatusBadRequest, "failed to deserialize vulnerabilities: %v", err)
 	}
@@ -280,7 +272,6 @@ func (h *IndexerV1) affectedManifests(w http.ResponseWriter, r *http.Request) {
 
 	defer writerError(w, &err)
 	enc := codec.GetEncoder(w)
-	defer codec.PutEncoder(enc)
 	err = enc.Encode(affected)
 }
 
