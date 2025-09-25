@@ -16,7 +16,7 @@ require (
 	github.com/jackc/pgx/v5 v5.7.6
 	github.com/klauspost/compress v1.18.0
 	github.com/prometheus/client_golang v1.23.2
-	github.com/quay/clair/config v1.4.2
+	github.com/quay/clair/config v1.4.3
 	github.com/quay/claircore v1.5.42
 	github.com/quay/zlog v1.1.9
 	github.com/rabbitmq/amqp091-go v1.10.0

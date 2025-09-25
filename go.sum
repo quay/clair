@@ -198,8 +198,8 @@ github.com/prometheus/otlptranslator v0.0.2 h1:+1CdeLVrRQ6Psmhnobldo0kTp96Rj80DR
 github.com/prometheus/otlptranslator v0.0.2/go.mod h1:P8AwMgdD7XEr6QRUJ2QWLpiAZTgTE2UYgjlu3svompI=
 github.com/prometheus/procfs v0.17.0 h1:FuLQ+05u4ZI+SS/w9+BWEM2TXiHKsUQ9TADiRH7DuK0=
 github.com/prometheus/procfs v0.17.0/go.mod h1:oPQLaDAMRbA+u8H5Pbfq+dl3VDAvHxMUOVhe0wYB2zw=
-github.com/quay/clair/config v1.4.2 h1:6bB/3+3DJGO7pfDA4gC7WlXxA4G+Oz4X3h2nug8E4Ww=
-github.com/quay/clair/config v1.4.2/go.mod h1:MyYm2qGw55+I598zEpwpFFmBq1jp5NLIhBhCigv6tRM=
+github.com/quay/clair/config v1.4.3 h1:ZrvqKJrAR2Noyl1XcMl9oOucdMJsdjGzqQqT/rzxb50=
+github.com/quay/clair/config v1.4.3/go.mod h1:MyYm2qGw55+I598zEpwpFFmBq1jp5NLIhBhCigv6tRM=
 github.com/quay/claircore v1.5.42 h1:EC+JtIXkMhXB84I0k+n14Cmxxcry/8XbgeEIQ2iekzs=
 github.com/quay/claircore v1.5.42/go.mod h1:NtQyQECDSpU7WqyjKknD35cchdfbtpQ9qp7Paekdma0=
 github.com/quay/claircore/toolkit v1.0.0/go.mod h1:3ELtgf92x7o1JCTSKVOAqhcnCTXc4s5qiGaEDx62i20=

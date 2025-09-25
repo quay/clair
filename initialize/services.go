@@ -276,6 +276,12 @@ func localMatcher(ctx context.Context, cfg *config.Config) (matcher.Service, err
 		return nil, mkErr(err)
 	}
 
+	ers := []driver.Enricher{}
+	if !cfg.Matcher.DisableEnrichment {
+		zlog.Info(ctx).Msg("enrichment enabled")
+		ers = append(ers, &cvss.Enricher{})
+	}
+
 	s, err := libvuln.New(ctx, &libvuln.Options{
 		Store:           store,
 		Locker:          locker,
@@ -286,9 +292,7 @@ func localMatcher(ctx context.Context, cfg *config.Config) (matcher.Service, err
 		MatcherNames:    cfg.Matchers.Names,
 		MatcherConfigs:  matcherConfigs,
 		Client:          cl,
-		Enrichers: []driver.Enricher{
-			&cvss.Enricher{},
-		},
+		Enrichers:       ers,
 	})
 	if err != nil {
 		return nil, mkErr(err)

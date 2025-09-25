@@ -303,6 +303,11 @@ A boolean value.
 
 Whether to run background updates or not.
 
+#### `$.matcher.disable_enrichment`
+A boolean value.
+
+Whether to enrich the returned vulnerabilities or not.
+
 #### `$.matcher.update_retention`
 An integer value limiting the number of update operations kept in the database.
 
