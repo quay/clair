@@ -57,6 +57,8 @@ type Matcher struct {
 	// This should be toggled on if vulnerabilities are being provided by
 	// another mechanism.
 	DisableUpdaters bool `yaml:"disable_updaters,omitempty" json:"disable_updaters,omitempty"`
+	// DisableEnrichment disables the enrichment of vulnerability data.
+	DisableEnrichment bool `yaml:"disable_enrichment,omitempty" json:"disable_enrichment,omitempty"`
 }
 
 func (m *Matcher) validate(mode Mode) ([]Warning, error) {
