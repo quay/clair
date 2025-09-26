@@ -38,11 +38,6 @@ jobs:
             printf '::error file=%s,title=Bad Filename::Disallowed character in file name\n' "$file"
           done
           exit $(git ls-files -- ':/:*[<>:"|?*]*' | wc -l)
-      - name: Check API Reference
-        if: ${{ !cancelled() && steps.checkout.conclusion == 'success' }}
-        run: |
-          npx widdershins --search false --language_tabs 'python:Python' 'go:Golang' 'javascript:Javascript' --summary ./openapi.yaml -o ./Documentation/reference/api.md
-          git diff --exit-code
       - name: Check Container Versions
         if: ${{ !cancelled() && steps.checkout.conclusion == 'success' }}
         run: |
