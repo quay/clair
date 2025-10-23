@@ -38,6 +38,8 @@ const (
 	KeysAPIPath                  = notifierRoot + apiRoot + "services/notifier/keys"
 	KeyByIDAPIPath               = notifierRoot + apiRoot + "services/notifier/keys/"
 	OpenAPIV1Path                = "/openapi/v1"
+	// TODO(hank) These are not actually used anymore. Is it worth keeping them
+	// just to keep API compatibility/documentation?
 )
 
 // New configures an http.Handler serving the v1 API or a portion of it,

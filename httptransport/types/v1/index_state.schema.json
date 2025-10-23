@@ -1,0 +1,16 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/index_state.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Index State",
+  "type": "object",
+  "description": "Information on the state of the indexer system.",
+  "properties": {
+    "state": {
+      "type": "string",
+      "description": "an opaque token"
+    }
+  },
+  "required": [
+    "state"
+  ]
+}
