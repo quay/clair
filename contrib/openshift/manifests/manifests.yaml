@@ -12,6 +12,9 @@ objects:
   - apiVersion: apps/v1
     kind: StatefulSet
     metadata:
+      annotations:
+        ${{CLAIR_DISABLE_MIN_REPLICAS_CHECK}}: ${{CLAIR_DISABLE_MIN_REPLICAS_REASON}}
+        ${{CLAIR_DISABLE_ANTI_AFFINITY_CHECK}}: ${{CLAIR_DISABLE_ANTI_AFFINITY_REASON}}
       name: clair-indexer
       labels:
         service: indexer
@@ -95,6 +98,9 @@ objects:
       labels:
         service: matcher
         app: clair
+      annotations:
+        ${{CLAIR_DISABLE_MIN_REPLICAS_CHECK}}: ${{CLAIR_DISABLE_MIN_REPLICAS_REASON}}
+        ${{CLAIR_DISABLE_ANTI_AFFINITY_CHECK}}: ${{CLAIR_DISABLE_ANTI_AFFINITY_REASON}}
     spec:
       replicas: ${{MATCHER_DEPLOYMENT_REPLICAS}}
       selector:
@@ -158,6 +164,9 @@ objects:
     kind: Deployment
     metadata:
       name: clair-notifier
+      annotations:
+        ${{CLAIR_DISABLE_MIN_REPLICAS_CHECK}}: ${{CLAIR_DISABLE_MIN_REPLICAS_REASON}}
+        ${{CLAIR_DISABLE_ANTI_AFFINITY_CHECK}}: ${{CLAIR_DISABLE_ANTI_AFFINITY_REASON}}
       labels:
         service: notifier
         app: clair
@@ -391,3 +400,16 @@ parameters:
     value: "clair"
     displayName: clair service account
     description: name of the service account to use for API interaction
+  # DVO
+  - name: CLAIR_DISABLE_MIN_REPLICAS_CHECK
+    displayName: Disable Minimum Replicas Check
+    value: "min-replicas-check-not-disabled"
+  - name: CLAIR_DISABLE_MIN_REPLICAS_REASON
+    displayName: Reason for Disabling Minimum Replicas Check
+    value: ""
+  - name: CLAIR_DISABLE_ANTI_AFFINITY_CHECK
+    value: "anti-affinity-check-not-disabled"
+    displayName: disable DVO check for anti-affinity
+  - name: CLAIR_DISABLE_ANTI_AFFINITY_CHECK
+    value: ""
+    displayName: reason for disabling anti-affinity check
