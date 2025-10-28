@@ -410,6 +410,6 @@ parameters:
   - name: CLAIR_DISABLE_ANTI_AFFINITY_CHECK
     value: "anti-affinity-check-not-disabled"
     displayName: disable DVO check for anti-affinity
-  - name: CLAIR_DISABLE_ANTI_AFFINITY_CHECK
+  - name: CLAIR_DISABLE_ANTI_AFFINITY_REASON
     value: ""
     displayName: reason for disabling anti-affinity check
