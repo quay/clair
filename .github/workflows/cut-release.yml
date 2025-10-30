@@ -126,7 +126,7 @@ jobs:
       GOARCH: ${{matrix.goarch}}
     steps:
       - name: Fetch Artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         id: download
         with:
           name: clair-release
@@ -159,7 +159,7 @@ jobs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - name: Fetch Artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         id: download
         with:
           name: clair-release
@@ -178,7 +178,7 @@ jobs:
     needs: [config, release-archive, release]
     steps:
       - name: Fetch Artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         id: download
         with:
           name: clair-release
@@ -242,7 +242,7 @@ jobs:
             goarch: 's390x'
     steps:
       - name: Fetch Artifacts
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         id: download
         with:
           pattern: clairctl-*
