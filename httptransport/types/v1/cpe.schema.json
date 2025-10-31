@@ -1,0 +1,20 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/cpe.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Common Platform Enumeration Name",
+  "description": "This is a CPE Name in either v2.2 \"URI\" form or v2.3 \"Formatted String\" form.",
+  "$comment": "Clair only produces v2.3 CPE Names. Any v2.2 Names will be normalized into v2.3 form.",
+  "type": "string",
+  "oneOf": [
+    {
+      "description": "This is the CPE 2.2 regexp: https://cpe.mitre.org/specification/2.2/cpe-language_2.2.xsd",
+      "type": "string",
+      "pattern": "^[c][pP][eE]:/[AHOaho]?(:[A-Za-z0-9\\._\\-~%]*){0,6}$"
+    },
+    {
+      "description": "This is the CPE 2.3 regexp: https://csrc.nist.gov/schema/cpe/2.3/cpe-naming_2.3.xsd",
+      "type": "string",
+      "pattern": "^cpe:2\\.3:[aho\\*\\-](:(((\\?*|\\*?)([a-zA-Z0-9\\-\\._]|(\\\\[\\\\\\*\\?!\"#$$%&'\\(\\)\\+,/:;<=>@\\[\\]\\^`\\{\\|}~]))+(\\?*|\\*?))|[\\*\\-])){5}(:(([a-zA-Z]{2,3}(-([a-zA-Z]{2}|[0-9]{3}))?)|[\\*\\-]))(:(((\\?*|\\*?)([a-zA-Z0-9\\-\\._]|(\\\\[\\\\\\*\\?!\"#$$%&'\\(\\)\\+,/:;<=>@\\[\\]\\^`\\{\\|}~]))+(\\?*|\\*?))|[\\*\\-])){4}$"
+    }
+  ]
+}

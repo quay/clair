@@ -108,6 +108,7 @@ func (h *NotificationV1) delete(w http.ResponseWriter, r *http.Request) {
 		zlog.Warn(ctx).Err(err).Msg("could not delete notification")
 		apiError(ctx, w, http.StatusInternalServerError, "could not delete notification: %v", err)
 	}
+	// TODO(hank) This should return HTTP 204.
 }
 
 // Get will return paginated notifications to the caller.
@@ -146,7 +147,7 @@ func (h *NotificationV1) get(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	allow := []string{"application/vnd.clair.notification.v1+json", "application/json"}
+	allow := []string{"application/vnd.clair.notification_page.v1+json", "application/json"}
 	switch err := pickContentType(w, r, allow); {
 	case errors.Is(err, nil): // OK
 	case errors.Is(err, ErrMediaType):

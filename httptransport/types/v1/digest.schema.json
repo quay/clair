@@ -1,0 +1,27 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/digest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Digest",
+  "description": "A digest acts as a content identifier, enabling content addressability.",
+  "type": "string",
+  "anyOf": [
+    {
+      "$comment": "SHA256: MUST be implemented",
+      "description": "SHA256",
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    {
+      "$comment": "SHA512: MAY be implemented",
+      "description": "SHA512",
+      "type": "string",
+      "pattern": "^sha512:[a-f0-9]{128}$"
+    },
+    {
+      "$comment": "BLAKE3: MAY be implemented",
+      "description": "BLAKE3\n\n**Currently not implemented.**",
+      "type": "string",
+      "pattern": "^blake3:[a-f0-9]{64}$"
+    }
+  ]
+}

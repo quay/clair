@@ -1,0 +1,11 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/bulk_delete.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bulk Delete",
+  "type": "array",
+  "description": "Array of manifest digests to delete from the system.",
+  "items": {
+    "$ref": "digest.schema.json",
+    "description": "Manifest digest to delete from the system."
+  }
+}
