@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"path"
 	"runtime/pprof"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -29,15 +30,42 @@ func getDigest(_ http.ResponseWriter, r *http.Request) (d claircore.Digest, err 
 	return claircore.ParseDigest(dStr)
 }
 
-// PickContentType sets the response's "Content-Type" header.
+// PickContentType does content negotiation or calls [apiError].
+//
+// Any values in the "allow" slice after "application/json" will be removed from
+// the response headers and messages.
+//
+// # POST
+//
+// The [http.Request]'s "Content-Type" must appear in the "allow" slice.
+// If not present, an API Error of "Unsupported Media Type" will be reported.
+//
+// The passed [http.ResponseWriter] and [http.Request] are not modified.
+//
+// # DELETE
+//
+// DELETE requests are handled like POST requests.
+//
+// # GET
 //
 // If "Accept" headers are not present in the request, the first element of the
 // "allow" slice is used.
 //
 // If "Accept" headers are present, the first (ordered by "q" value) media type
-// in the "allow" slice is chosen. If there are no common media types, "415
-// Unsupported Media Type" is written and ErrMediaType is reported.
-func pickContentType(w http.ResponseWriter, r *http.Request, allow []string) error {
+// in the "allow" slice is chosen. If there are no common media types, and API
+// Error of "Not Acceptable" will be reported.
+//
+// Once an acceptable value is identified, the [http.ResponseWriter] has its
+// "Vary" and "Content-Type" headers modified.
+func pickContentType(w http.ResponseWriter, r *http.Request, allow []string) {
+	const genericJSON = `application/json`
+	// Helper to modify "allow" to remove compatibility entries.
+	clipCompat := func() {
+		if idx := slices.Index(allow, genericJSON); idx != -1 {
+			allow = allow[:idx]
+		}
+	}
+
 	// There's no canonical algorithm for this, it's all server-dependent
 	// behavior. Our algorithm is:
 	//
@@ -48,47 +76,73 @@ func pickContentType(w http.ResponseWriter, r *http.Request, allow []string) err
 	//
 	// BUG(hank) Content type negotiation does an O(n*m) comparison driven on
 	// user input, which may be a DoS issue.
-	as, ok := r.Header["Accept"]
-	if !ok {
-		w.Header().Set("content-type", allow[0])
-		return nil
-	}
-	w.Header().Add("Vary", "Accept")
-	var acceptable []accept
-	for _, part := range as {
-		for _, s := range strings.Split(part, ",") {
-			a := accept{}
-			mt, p, err := mime.ParseMediaType(strings.TrimSpace(s))
-			if err != nil {
-				return err
-			}
-			a.Q = 1.0
-			if qs, ok := p["q"]; ok {
-				a.Q, _ = strconv.ParseFloat(qs, 64)
-			}
-			typ := strings.Split(mt, "/")
-			a.Type = typ[0]
-			a.Subtype = typ[1]
-			acceptable = append(acceptable, a)
+
+	h := w.Header()
+	switch r.Method {
+	case http.MethodPost, http.MethodDelete:
+		vs, ok := r.Header[hdrContentType]
+		fn := func(s string) bool { return slices.Contains(allow, s) }
+		if ok && slices.ContainsFunc(vs, fn) {
+			return
 		}
-	}
-	if len(acceptable) == 0 {
-		w.Header().Set("content-type", allow[0])
-		return nil
-	}
-	sort.SliceStable(acceptable, func(i, j int) bool { return acceptable[i].Q > acceptable[j].Q })
-	for _, l := range acceptable {
-		for _, a := range allow {
-			if l.Match(a) {
-				w.Header().Set("content-type", a)
-				return nil
+		// Body semantics around DELETE are weird, so just treat it like
+		// POST.
+		clipCompat()
+		h[hdrAcceptPost] = allow
+		apiError(r.Context(), w, http.StatusUnsupportedMediaType,
+			"content type must be one of: %s", strings.Join(allow, ", "))
+	case http.MethodGet:
+		as, ok := r.Header[hdrAccept]
+		if !ok || len(as) == 0 {
+			h.Set(hdrContentType, allow[0])
+			return
+		}
+		var acceptable []accept
+		for _, part := range as {
+			for _, s := range strings.Split(part, ",") {
+				a := accept{}
+				mt, p, err := mime.ParseMediaType(strings.TrimSpace(s))
+				if err != nil {
+					// TODO(hank) log this error?
+					continue
+				}
+				a.Q = 1.0
+				if qs, ok := p["q"]; ok {
+					a.Q, _ = strconv.ParseFloat(qs, 64)
+				}
+				typ := strings.Split(mt, "/")
+				a.Type = typ[0]
+				a.Subtype = typ[1]
+				acceptable = append(acceptable, a)
 			}
 		}
+		if len(acceptable) != 0 {
+			sort.SliceStable(acceptable, func(i, j int) bool { return acceptable[i].Q > acceptable[j].Q })
+			for _, l := range acceptable {
+				for _, a := range allow {
+					if l.Match(a) {
+						h.Add(hdrVary, hdrAccept)
+						h.Set(hdrContentType, a)
+						return
+					}
+				}
+			}
+		}
+
+		// If here, we need to return an error and report what we understand.
+		clipCompat()
+		h[hdrAccept] = allow
+		apiError(r.Context(), w, http.StatusNotAcceptable,
+			"requested type must be one of: %s", strings.Join(allow, ", "))
 	}
-	// TODO(hank) This isn't quite right.
-	w.WriteHeader(http.StatusUnsupportedMediaType)
-	return ErrMediaType
 }
+
+var (
+	hdrContentType = http.CanonicalHeaderKey(`content-type`)
+	hdrAccept      = http.CanonicalHeaderKey(`accept`)
+	hdrAcceptPost  = http.CanonicalHeaderKey(`accept-post`)
+	hdrVary        = http.CanonicalHeaderKey(`vary`)
+)
 
 // ErrMediaType is returned if no common media types can be found for a given
 // request.

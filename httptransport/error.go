@@ -60,11 +60,8 @@ func apiError(ctx context.Context, w http.ResponseWriter, code int, f string, v 
 	w.WriteHeader(code)
 
 	enc := codec.GetEncoder(w, codec.SchemeV1)
-	val := types.Error{
-		Code:    code,
-		Message: fmt.Sprintf(f, v...),
-	}
-	if err := enc.Encode(&val); err != nil {
+	val := types.NewError(code, f, v...)
+	if err := enc.Encode(val); err != nil {
 		h.Set(errheader, err.Error())
 	}
 

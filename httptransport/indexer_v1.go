@@ -167,13 +167,7 @@ func (h *IndexerV1) indexReportOne(w http.ResponseWriter, r *http.Request) {
 			"application/json",
 			"application/vnd.clair.indexreport.v1+json", // Previous spelling, kept for backwards compatibility.
 		}
-		switch err := pickContentType(w, r, allow); {
-		case errors.Is(err, nil): // OK
-		case errors.Is(err, ErrMediaType):
-			apiError(ctx, w, http.StatusUnsupportedMediaType, "unable to negotiate common media type for %v", allow)
-		default:
-			apiError(ctx, w, http.StatusBadRequest, "malformed request: %v", err)
-		}
+		pickContentType(w, r, allow)
 
 		state, err := h.srv.State(ctx)
 		if err != nil {
@@ -214,13 +208,8 @@ func (h *IndexerV1) indexState(w http.ResponseWriter, r *http.Request) {
 		"application/json",
 		"application/vnd.clair.indexstate.v1+json", // Previous spelling, kept for backwards compatibility.
 	}
-	switch err := pickContentType(w, r, allow); {
-	case errors.Is(err, nil): // OK
-	case errors.Is(err, ErrMediaType):
-		apiError(ctx, w, http.StatusUnsupportedMediaType, "unable to negotiate common media type for %v", allow)
-	default:
-		apiError(ctx, w, http.StatusBadRequest, "malformed request: %v", err)
-	}
+	pickContentType(w, r, allow)
+
 	s, err := h.srv.State(ctx)
 	if err != nil {
 		apiError(ctx, w, http.StatusInternalServerError, "could not retrieve indexer state: %v", err)
@@ -249,13 +238,7 @@ func (h *IndexerV1) affectedManifests(w http.ResponseWriter, r *http.Request) {
 	checkMethod(ctx, w, r, http.MethodPost)
 
 	allow := []string{"application/vnd.clair.affected_manifests.v1+json", "application/json"}
-	switch err := pickContentType(w, r, allow); {
-	case errors.Is(err, nil): // OK
-	case errors.Is(err, ErrMediaType):
-		apiError(ctx, w, http.StatusUnsupportedMediaType, "unable to negotiate common media type for %v", allow)
-	default:
-		apiError(ctx, w, http.StatusBadRequest, "malformed request: %v", err)
-	}
+	pickContentType(w, r, allow)
 
 	var vulnerabilities struct {
 		V []claircore.Vulnerability `json:"vulnerabilities"`
