@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go: ['oldstable', 'stable']
+        go: ['stable']
     outputs:
       go-cache: ${{ steps.check.outputs.cache-hit == 'true' || steps.setup-go.outputs.cache-hit == 'true' || steps.warm.conclusion == 'success' }}
       runner-arch: ${{ steps.arch.outputs.result }}
@@ -104,7 +104,7 @@ jobs:
     needs: ['setup']
     strategy:
       matrix:
-        go: ['oldstable', 'stable']
+        go: ['stable']
         platform: ${{ inputs.qemu && fromJSON('["amd64","arm64","ppc64le","s390x"]') || fromJSON('["amd64"]')}}
       fail-fast: false
     services:
