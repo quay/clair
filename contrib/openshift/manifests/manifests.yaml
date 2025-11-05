@@ -41,8 +41,21 @@ objects:
           labels:
             service: indexer
             app: clair
+            ${{INDEXER_COMPONENT_LABEL_KEY}}: ${{INDEXER_COMPONENT_LABEL_VALUE}}
         spec:
           serviceAccountName: ${SERVICE_ACCOUNT}
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 1
+                  podAffinityTerm:
+                    labelSelector:
+                      matchExpressions:
+                        - key: ${{INDEXER_COMPONENT_LABEL_KEY}}
+                          operator: In
+                          values:
+                            - ${{INDEXER_COMPONENT_LABEL_VALUE}}
+                    topologyKey: kubernetes.io/hostname
           volumes:
             - name: clair-config
               secret:
@@ -113,8 +126,21 @@ objects:
           labels:
             service: matcher
             app: clair
+            ${{MATCHER_COMPONENT_LABEL_KEY}}: ${{MATCHER_COMPONENT_LABEL_VALUE}}
         spec:
           serviceAccountName: ${SERVICE_ACCOUNT}
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 1
+                  podAffinityTerm:
+                    labelSelector:
+                      matchExpressions:
+                        - key: ${{MATCHER_COMPONENT_LABEL_KEY}}
+                          operator: In
+                          values:
+                            - ${{MATCHER_COMPONENT_LABEL_VALUE}}
+                    topologyKey: kubernetes.io/hostname
           volumes:
             - name: clair-config
               secret:
@@ -182,8 +208,21 @@ objects:
           labels:
             service: notifier
             app: clair
+            ${{NOTIFIER_COMPONENT_LABEL_KEY}}: ${{NOTIFIER_COMPONENT_LABEL_VALUE}}
         spec:
           serviceAccountName: ${SERVICE_ACCOUNT}
+          affinity:
+            podAntiAffinity:
+              preferredDuringSchedulingIgnoredDuringExecution:
+                - weight: 1
+                  podAffinityTerm:
+                    labelSelector:
+                      matchExpressions:
+                        - key: ${{NOTIFIER_COMPONENT_LABEL_KEY}}
+                          operator: In
+                          values:
+                            - ${{NOTIFIER_COMPONENT_LABEL_VALUE}}
+                    topologyKey: kubernetes.io/hostname
           volumes:
             - name: clair-config
               secret:
@@ -333,6 +372,12 @@ parameters:
   - name: INDEXER_STORAGE_REQS
     value: "200Gi"
     displayName: the indexer's VPC volume size
+  - name: INDEXER_COMPONENT_LABEL_KEY
+    value: "clair-indexer-component"
+    displayName: the label key used for indexer pod anti-affinity
+  - name: INDEXER_COMPONENT_LABEL_VALUE
+    value: "indexer"
+    displayName: the label value used for indexer pod anti-affinity
   #
   # matcher params
   #
@@ -351,6 +396,12 @@ parameters:
   - name: MATCHER_MEM_REQS
     value: "4096Mi"
     displayName: the matcher's memory requests in vCPUs
+  - name: MATCHER_COMPONENT_LABEL_KEY
+    value: "clair-matcher-component"
+    displayName: the label key used for matcher pod anti-affinity
+  - name: MATCHER_COMPONENT_LABEL_VALUE
+    value: "matcher"
+    displayName: the label value used for matcher pod anti-affinity
   #
   # notifier params
   #
@@ -369,6 +420,12 @@ parameters:
   - name: NOTIFIER_MEM_REQS
     value: "4096Mi"
     displayName: the matcher's memory requests in vCPUs
+  - name: NOTIFIER_COMPONENT_LABEL_KEY
+    value: "clair-notifier-component"
+    displayName: the label key used for notifier pod anti-affinity
+  - name: NOTIFIER_COMPONENT_LABEL_VALUE
+    value: "notifier"
+    displayName: the label value used for notifier pod anti-affinity
   #
   # shared params
   #
