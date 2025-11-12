@@ -135,6 +135,12 @@ func serveAPI(ctx context.Context, cfg *config.Config) func() error {
 			BaseContext: func(_ net.Listener) context.Context {
 				return context.WithoutCancel(ctx)
 			},
+			Protocols: func() *http.Protocols {
+				var p http.Protocols
+				p.SetHTTP1(true)
+				p.SetUnencryptedHTTP2(true)
+				return &p
+			}(),
 		}
 		srv.Handler, err = httptransport.New(ctx, cfg, srvs.Indexer, srvs.Matcher, srvs.Notifier)
 		if err != nil {
@@ -151,6 +157,7 @@ func serveAPI(ctx context.Context, cfg *config.Config) func() error {
 			}
 			cfg.NextProtos = []string{"h2"}
 			srv.TLSConfig = cfg
+			srv.Protocols.SetHTTP2(true)
 			l = tls.NewListener(l, cfg)
 		}
 		health.Ready()
