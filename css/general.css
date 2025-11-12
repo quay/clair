@@ -1,7 +1,5 @@
 /* Base styles and content styles */
 
-@import 'variables.css';
-
 :root {
     /* Browser default font-size is 16px, this way 1 rem = 10px */
     font-size: 62.5%;
@@ -88,11 +86,12 @@ h6:target::before {
     box-sizing: border-box;
     background-color: var(--bg);
 }
-.no-js .page-wrapper,
+html:not(.js) .page-wrapper,
 .js:not(.sidebar-resizing) .page-wrapper {
     transition: margin-left 0.3s ease, transform 0.3s ease; /* Animation: slide away */
 }
-[dir=rtl] .js:not(.sidebar-resizing) .page-wrapper {
+[dir=rtl]:not(.js) .page-wrapper,
+[dir=rtl].js:not(.sidebar-resizing) .page-wrapper {
     transition: margin-right 0.3s ease, transform 0.3s ease; /* Animation: slide away */
 }
 
@@ -192,16 +191,63 @@ kbd {
     vertical-align: middle;
 }
 
-:not(.footnote-definition) + .footnote-definition,
-.footnote-definition + :not(.footnote-definition) {
-    margin-block-start: 2em;
+sup {
+    /* Set the line-height for superscript and footnote references so that there
+       isn't an awkward space appearing above lines that contain the footnote.
+
+       See https://github.com/rust-lang/mdBook/pull/2443#discussion_r1813773583
+       for an explanation.
+    */
+    line-height: 0;
 }
+
 .footnote-definition {
     font-size: 0.9em;
-    margin: 0.5em 0;
 }
-.footnote-definition p {
-    display: inline;
+/* The default spacing for a list is a little too large. */
+.footnote-definition ul,
+.footnote-definition ol {
+    padding-left: 20px;
+}
+.footnote-definition > li {
+    /* Required to position the ::before target */
+    position: relative;
+}
+.footnote-definition > li:target {
+    scroll-margin-top: 50vh;
+}
+.footnote-reference:target {
+    scroll-margin-top: 50vh;
+}
+/* Draws a border around the footnote (including the marker) when it is selected.
+   TODO: If there are multiple linkbacks, highlight which one you just came
+   from so you know which one to click.
+*/
+.footnote-definition > li:target::before {
+    border: 2px solid var(--footnote-highlight);
+    border-radius: 6px;
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    bottom: -8px;
+    left: -32px;
+    pointer-events: none;
+    content: "";
+}
+/* Pulses the footnote reference so you can quickly see where you left off reading.
+   This could use some improvement.
+*/
+@media not (prefers-reduced-motion) {
+    .footnote-reference:target  {
+        animation: fn-highlight 0.8s;
+        border-radius: 2px;
+    }
+
+    @keyframes fn-highlight {
+        from {
+            background-color: var(--footnote-highlight);
+        }
+    }
 }
 
 .tooltiptext {
