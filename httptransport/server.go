@@ -6,6 +6,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/quay/clair/config"
@@ -119,7 +121,27 @@ func New(ctx context.Context, conf *config.Config, indexer indexer.Service, matc
 		return final, nil
 	}
 	mux.Handle("/robots.txt", robotsHandler)
-	return mux, nil
+	return responseHeaders(mux), nil
+}
+
+func responseHeaders(next http.Handler) http.Handler {
+	descs := []string{
+		`<` + OpenAPIV1Path + `>; rel="service-desc"; title="V1 API"; type="application/openapi+json"`,
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch p := r.URL.EscapedPath(); {
+		case p == "/robots.txt": // Do nothing.
+		case strings.HasPrefix(p, apiRoot):
+			// See https://datatracker.ietf.org/doc/html/rfc8631 and https://datatracker.ietf.org/doc/html/rfc5988
+			w.Header().Add("Link", descs[0])
+		default: // Some unknown path, insert relevant links.
+			w.Header().Add("Link", `<https://quay.github.io/clair/>; rel="service-doc"; title="Documentation"`)
+			for _, l := range descs {
+				w.Header().Add("Link", l)
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // IntraserviceIssuer is the issuer that will be used if Clair is configured to
@@ -128,14 +150,8 @@ const IntraserviceIssuer = `clair-intraservice`
 
 // Unmodified determines whether to return a conditional response.
 func unmodified(r *http.Request, v string) bool {
-	if vs, ok := r.Header["If-None-Match"]; ok {
-		for _, rv := range vs {
-			if rv == v {
-				return true
-			}
-		}
-	}
-	return false
+	vs, ok := r.Header["If-None-Match"]
+	return ok && slices.Contains(vs, v)
 }
 
 // WriterError is a helper that closes over an error that may be returned after

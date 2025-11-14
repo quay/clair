@@ -97,17 +97,27 @@ func (h *MatcherV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *MatcherV1) vulnerabilityReport(w http.ResponseWriter, r *http.Request) {
 	ctx := zlog.ContextWithValues(r.Context(),
 		"component", "httptransport/MatcherV1.vulnerabilityReport")
+	checkMethod(ctx, w, r, http.MethodGet)
 
-	if r.Method != http.MethodGet {
-		apiError(ctx, w, http.StatusMethodNotAllowed, "endpoint only allows GET")
-	}
 	ctx, done := context.WithCancel(ctx)
 	defer done()
 	ctx = httptrace.WithClientTrace(ctx, oteltrace.NewClientTrace(ctx))
 
+	allow := []string{
+		"application/vnd.clair.vulnerability_report.v1+json",
+		"application/json",
+	}
+	switch err := pickContentType(w, r, allow); {
+	case errors.Is(err, nil): // OK
+	case errors.Is(err, ErrMediaType):
+		apiError(ctx, w, http.StatusUnsupportedMediaType, "unable to negotiate common media type for %v", allow)
+	default:
+		apiError(ctx, w, http.StatusBadRequest, "malformed request: %v", err)
+	}
+
 	manifestStr := path.Base(r.URL.Path)
 	if manifestStr == "" {
-		apiError(ctx, w, http.StatusBadRequest, "malformed path. provide a single manifest hash")
+		apiError(ctx, w, http.StatusBadRequest, "malformed path: provide a single manifest hash")
 	}
 	manifest, err := claircore.ParseDigest(manifestStr)
 	if err != nil {
@@ -144,17 +154,14 @@ func (h *MatcherV1) vulnerabilityReport(w http.ResponseWriter, r *http.Request) 
 
 	defer writerError(w, &err)()
 	enc := codec.GetEncoder(w)
-	defer codec.PutEncoder(enc)
 	err = enc.Encode(vulnReport)
 }
 
 func (h *MatcherV1) updateDiffHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := zlog.ContextWithValues(r.Context(),
 		"component", "httptransport/MatcherV1.updateDiffHandler")
+	checkMethod(ctx, w, r, http.MethodGet)
 
-	if r.Method != http.MethodGet {
-		apiError(ctx, w, http.StatusMethodNotAllowed, "endpoint only allows GET")
-	}
 	// prev param is optional.
 	var prev uuid.UUID
 	var err error
@@ -182,19 +189,13 @@ func (h *MatcherV1) updateDiffHandler(w http.ResponseWriter, r *http.Request) {
 
 	defer writerError(w, &err)()
 	enc := codec.GetEncoder(w)
-	defer codec.PutEncoder(enc)
 	err = enc.Encode(&diff)
 }
 
 func (h *MatcherV1) updateOperationHandlerGet(w http.ResponseWriter, r *http.Request) {
 	ctx := zlog.ContextWithValues(r.Context(),
 		"component", "httptransport/MatcherV1.updateOperationHandlerGet")
-
-	switch r.Method {
-	case http.MethodGet:
-	default:
-		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
-	}
+	checkMethod(ctx, w, r, http.MethodGet)
 
 	kind := driver.VulnerabilityKind
 	switch k := r.URL.Query().Get("kind"); k {
@@ -231,18 +232,13 @@ func (h *MatcherV1) updateOperationHandlerGet(w http.ResponseWriter, r *http.Req
 
 	defer writerError(w, &err)()
 	enc := codec.GetEncoder(w)
-	defer codec.PutEncoder(enc)
 	err = enc.Encode(&uos)
 }
 
 func (h *MatcherV1) updateOperationHandlerDelete(w http.ResponseWriter, r *http.Request) {
 	ctx := zlog.ContextWithValues(r.Context(),
 		"component", "httptransport/MatcherV1.updateOperationHandlerDelete")
-	switch r.Method {
-	case http.MethodDelete:
-	default:
-		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
-	}
+	checkMethod(ctx, w, r, http.MethodDelete)
 
 	path := r.URL.Path
 	id := filepath.Base(path)
