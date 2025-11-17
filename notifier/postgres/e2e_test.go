@@ -264,7 +264,7 @@ func (e *e2e) SetDeliveryFailed(ctx context.Context) func(*testing.T) {
 			t.Errorf("got: %d, want: %d", got, want)
 		}
 		if got := ids[0]; !cmp.Equal(got, want) {
-			t.Errorf(cmp.Diff(got, want))
+			t.Errorf("%s", cmp.Diff(got, want))
 		}
 	}
 }
@@ -296,7 +296,7 @@ func (e *e2e) SetDeleted(ctx context.Context) func(*testing.T) {
 			t.Errorf("got: %d, want: %d", got, want)
 		}
 		if got := ids[0]; !cmp.Equal(got, want) {
-			t.Errorf(cmp.Diff(got, want))
+			t.Errorf("%s", cmp.Diff(got, want))
 		}
 	}
 }

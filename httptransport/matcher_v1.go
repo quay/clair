@@ -114,7 +114,7 @@ func (h *MatcherV1) vulnerabilityReport(w http.ResponseWriter, r *http.Request) 
 
 	initd, err := h.srv.Initialized(ctx)
 	if err != nil {
-		apiError(ctx, w, http.StatusInternalServerError, err.Error())
+		apiError(ctx, w, http.StatusInternalServerError, "%v", err.Error())
 	}
 	if !initd {
 		w.WriteHeader(http.StatusAccepted)

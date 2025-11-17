@@ -15,7 +15,7 @@
 # limitations under the License.
 
 ARG GOTOOLCHAIN=local
-ARG GO_VERSION=1.22
+ARG GO_VERSION=1.24
 FROM --platform=$BUILDPLATFORM quay.io/projectquay/golang:${GO_VERSION} AS build
 WORKDIR /build
 RUN --mount=type=cache,target=/root/.cache/go-build \
