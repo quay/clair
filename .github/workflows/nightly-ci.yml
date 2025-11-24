@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Checkout
         id: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Make package expressions
         id: config
         if: ${{ !cancelled() && steps.checkout.conclusion == 'success' }}

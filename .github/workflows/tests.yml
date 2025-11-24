@@ -48,7 +48,7 @@ jobs:
       - name: Checkout
         if: ${{ inputs.cd == '' }}
         id: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Check Go Version
         if: ${{ inputs.cd == '' && steps.checkout.conclusion == 'success' }}
         id: checkversion
@@ -143,7 +143,7 @@ jobs:
           docker exec ${{ job.services.rabbitmq.id }} rabbitmqctl set_permissions -p localhost clair '.*' '.*' '.*'
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Setup Go
         id: setup-go
         uses: actions/setup-go@v6
