@@ -139,11 +139,11 @@ github.com/prometheus/procfs v0.17.0 h1:FuLQ+05u4ZI+SS/w9+BWEM2TXiHKsUQ9TADiRH7D
 github.com/prometheus/procfs v0.17.0/go.mod h1:oPQLaDAMRbA+u8H5Pbfq+dl3VDAvHxMUOVhe0wYB2zw=
 github.com/quay/clair/config v1.4.3 h1:ZrvqKJrAR2Noyl1XcMl9oOucdMJsdjGzqQqT/rzxb50=
 github.com/quay/clair/config v1.4.3/go.mod h1:MyYm2qGw55+I598zEpwpFFmBq1jp5NLIhBhCigv6tRM=
-github.com/quay/claircore v1.5.45 h1:I1tzV+wQo6RJeL3TqR06KFjdvlWzkarxlYXUdACGRnM=
-github.com/quay/claircore v1.5.45/go.mod h1:yrM+K0mQ//wzZi0Bq9cIku0rQz/fV/sCjXbY8IkC4Y8=
+github.com/quay/claircore v1.5.46 h1:gG5pqtyFIJcjsDgZA+dsICNl3U4Kymo6OS+oVaPwbxE=
+github.com/quay/claircore v1.5.46/go.mod h1:PYAACdI99elSBL31m/bRM3pdQSPoD0sbYccRcza/9Zs=
 github.com/quay/claircore/toolkit v1.0.0/go.mod h1:3ELtgf92x7o1JCTSKVOAqhcnCTXc4s5qiGaEDx62i20=
-github.com/quay/claircore/toolkit v1.2.4 h1:Ld7rve32pUOrfR+7jJA9nGHeZ8nPejpEgNWkJ7OPJZM=
-github.com/quay/claircore/toolkit v1.2.4/go.mod h1:m6ZRpxJClVAraNpIYyCsW/ULF/33ye7KkGTyNTMwvDY=
+github.com/quay/claircore/toolkit v1.3.0 h1:QncygaArnuSKbkPESD2zMDz5xJLWlJxAGPZ69XCYA5o=
+github.com/quay/claircore/toolkit v1.3.0/go.mod h1:REVn3WdU+9yMurWa+h9mfuiPWYzKqSaKIGWZ4Xanj5g=
 github.com/quay/claircore/updater/driver v1.0.0 h1:w7dAUjO3GBK6RjNyTZ2Kwz0l/Wuic3ykKJWPB80uA94=
 github.com/quay/claircore/updater/driver v1.0.0/go.mod h1:My5aY1wBpgxcWaHQZ0VoPmmj/EzuH7fq4ntzJbos4OI=
 github.com/quay/goval-parser v0.8.8 h1:Uf+f9iF2GIR5GPUY2pGoa9il2+4cdES44ZlM0mWm4cA=
@@ -242,8 +242,8 @@ golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b/go.mod h1:3//PLf8L/X+8b4vuAf
 golang.org/x/mod v0.4.2/go.mod h1:s0Qsj1ACt9ePp/hMypM3fl4fZqREWJwdYDEqhRiZZUA=
 golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4/go.mod h1:jJ57K6gSWd91VN4djpZkiMVwK6gcyfeH4XE8wZrZaV4=
 golang.org/x/mod v0.8.0/go.mod h1:iBbtSCu2XBx23ZKBPSOrRkjjQPZFPuis4dIYUhu/chs=
-golang.org/x/mod v0.29.0 h1:HV8lRxZC4l2cr3Zq1LvtOsi/ThTgWnUk/y64QSs8GwA=
-golang.org/x/mod v0.29.0/go.mod h1:NyhrlYXJ2H4eJiRy/WDBO6HMqZQ6q9nk4JzS3NuCK+w=
+golang.org/x/mod v0.30.0 h1:fDEXFVZ/fmCKProc/yAXXUijritrDzahmwwefnjoPFk=
+golang.org/x/mod v0.30.0/go.mod h1:lAsf5O2EvJeSFMiBxXDki7sCgAxEUcZHXoXMKT4GJKc=
 golang.org/x/net v0.0.0-20190311183353-d8887717615a/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
 golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
 golang.org/x/net v0.0.0-20190603091049-60506f45cf65/go.mod h1:HSz+uSET+XFnRR8LxR5pz3Of3rY3CfYBVs4xY44aLks=
@@ -302,8 +302,8 @@ golang.org/x/tools v0.0.0-20191119224855-298f0cb1881e/go.mod h1:b+2E5dAYhXwXZwtn
 golang.org/x/tools v0.1.1/go.mod h1:o0xws9oXOQQZyjljx8fwUC0k7L1pTE6eaCbjGeHmOkk=
 golang.org/x/tools v0.1.12/go.mod h1:hNGJHUnrk76NpqgfD5Aqm5Crs+Hm0VOH/i9J2+nxYbc=
 golang.org/x/tools v0.6.0/go.mod h1:Xwgl3UAJ/d3gWutnCtw505GrjyAbvKui8lOU390QaIU=
-golang.org/x/tools v0.38.0 h1:Hx2Xv8hISq8Lm16jvBZ2VQf+RLmbd7wVUsALibYI/IQ=
-golang.org/x/tools v0.38.0/go.mod h1:yEsQ/d/YK8cjh0L6rZlY8tgtlKiBNTL14pGDJPJpYQs=
+golang.org/x/tools v0.39.0 h1:ik4ho21kwuQln40uelmciQPp9SipgNDdrafrYA4TmQQ=
+golang.org/x/tools v0.39.0/go.mod h1:JnefbkDPyD8UU2kI5fuf8ZX4/yUeh9W877ZeBONxUqQ=
 golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
