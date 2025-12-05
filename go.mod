@@ -8,7 +8,7 @@ require (
 	github.com/go-jose/go-jose/v3 v3.0.4
 	github.com/go-stomp/stomp/v3 v3.1.5
 	github.com/google/go-cmp v0.7.0
-	github.com/google/go-containerregistry v0.20.6
+	github.com/google/go-containerregistry v0.20.7
 	github.com/google/uuid v1.6.0
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.9
 	github.com/jackc/pgx/v5 v5.7.6
@@ -50,9 +50,9 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/containerd/stargz-snapshotter/estargz v0.16.3 // indirect
+	github.com/containerd/stargz-snapshotter/estargz v0.18.1 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
-	github.com/docker/cli v28.2.2+incompatible // indirect
+	github.com/docker/cli v29.0.3+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.9.3 // indirect
 	github.com/doug-martin/goqu/v8 v8.6.0 // indirect
@@ -81,7 +81,6 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/package-url/packageurl-go v0.1.3 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.66.1 // indirect
 	github.com/prometheus/otlptranslator v0.0.2 // indirect
@@ -93,7 +92,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/ulikunitz/xz v0.5.15 // indirect
-	github.com/vbatts/tar-split v0.12.1 // indirect
+	github.com/vbatts/tar-split v0.12.2 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect
