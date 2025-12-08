@@ -91,7 +91,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: touch changelog
       - name: Upload Release Archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: clair-release
           path: |
@@ -144,7 +144,7 @@ jobs:
             -o "clairctl-${{matrix.goos}}-${{matrix.goarch}}"\
             ./cmd/clairctl
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: clairctl-${{matrix.goos}}-${{matrix.goarch}}
           path: clairctl-${{matrix.goos}}-${{matrix.goarch}}
