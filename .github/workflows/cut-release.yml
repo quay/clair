@@ -13,7 +13,7 @@ jobs:
     runs-on: 'ubuntu-latest'
     strategy:
       matrix:
-        image: ['quay.io/projectquay/golang:1.22']
+        image: ['quay.io/projectquay/golang:1.24']
     container:
       image: ${{ matrix.image }}
     outputs:
@@ -49,7 +49,7 @@ jobs:
     needs: [config]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: ./.github/actions/go-cache
@@ -91,7 +91,7 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         run: touch changelog
       - name: Upload Release Archive
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: clair-release
           path: |
@@ -111,8 +111,6 @@ jobs:
         exclude:
           - goos: darwin
             goarch: '386'
-          - goos: darwin
-            goarch: arm64
           - goos: windows
             goarch: '386'
           - goos: windows
@@ -128,14 +126,14 @@ jobs:
       GOARCH: ${{matrix.goarch}}
     steps:
       - name: Fetch Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         id: download
         with:
           name: clair-release
       - name: Unpack
         run: |
           tar -xz -f ${{steps.download.outputs.download-path}}/clair-${{ needs.config.outputs.version }}.tar.gz --strip-components=1
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: ${{ needs.config.outputs.build_go_version }}
       - name: Build
@@ -146,7 +144,7 @@ jobs:
             -o "clairctl-${{matrix.goos}}-${{matrix.goarch}}"\
             ./cmd/clairctl
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: clairctl-${{matrix.goos}}-${{matrix.goarch}}
           path: clairctl-${{matrix.goos}}-${{matrix.goarch}}
@@ -161,7 +159,7 @@ jobs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - name: Fetch Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         id: download
         with:
           name: clair-release
@@ -180,7 +178,7 @@ jobs:
     needs: [config, release-archive, release]
     steps:
       - name: Fetch Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         id: download
         with:
           name: clair-release
@@ -212,7 +210,7 @@ jobs:
             quay.io/${{ needs.config.outputs.image_repo }}:${{ needs.config.outputs.image_tag }}
       - name: Checkout
         if: needs.config.outputs.is_prerelease == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Set Expiration
         if: needs.config.outputs.is_prerelease == 'true'
         uses: ./.github/actions/set-image-expiration
@@ -232,8 +230,6 @@ jobs:
         exclude:
           - goos: darwin
             goarch: '386'
-          - goos: darwin
-            goarch: arm64
           - goos: windows
             goarch: '386'
           - goos: darwin
@@ -246,7 +242,7 @@ jobs:
             goarch: 's390x'
     steps:
       - name: Fetch Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         id: download
         with:
           pattern: clairctl-*
@@ -266,5 +262,5 @@ jobs:
     runs-on: ubuntu-latest
     needs: [release]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: ./.github/actions/documentation

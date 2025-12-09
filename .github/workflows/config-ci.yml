@@ -39,11 +39,11 @@ jobs:
       - name: Checkout
         id: checkout
         if: ${{ !cancelled() }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Setup Go
         id: setupgo
         if: ${{ !cancelled() && steps.checkout.conclusion == 'success' }}
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           cache: false
           go-version-file: ./config/go.mod

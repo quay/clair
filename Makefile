@@ -29,18 +29,8 @@ rm_pat =
 all:
 	$(go) build ./cmd/...
 
-# Use https://github.com/Mermade/widdershins to convert openapi.yaml to
-# markdown. You'll need to have npx to run this.
-Documentation/reference/api.md: openapi.yaml
-	npx --yes widdershins\
-		--search false \
-		--language_tabs 'python:Python' 'go:Golang' 'javascript:Javascript' \
-		--summary $< \
-		-o $@
-# Intended to be checked-in, so not cleaned.
-
 contrib/openshift/grafana/dashboards/dashboard-clair.configmap.yaml: \
-	local-dev/grafana/provisioning/dashboards/dashboard.json \
+	local-dev/grafana/provisioning/dashboards/clair.json \
 	contrib/openshift/grafana/dashboard-clair.configmap.yaml.tpl
 	name=$$(sed 's/[\&/]/\\&/g;s/$$/\\n/;s/^/    /' $< | tr -d '\n')
 	sed "s/GRAFANA_MANIFEST/$$name/"\

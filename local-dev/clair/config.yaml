@@ -31,7 +31,7 @@ notifier:
   matcher_addr: http://clair-matcher:6060/
   connstring: host=clair-database user=clair dbname=notifier sslmode=disable
   migrations: true
-  delivery_interval: 30s
+  delivery_interval: 1m
   poll_interval: 1m
   webhook:
     target: "http://webhook-target/"
@@ -48,11 +48,11 @@ notifier:
   #   callback: "http://clair-notifier/notifier/api/v1/notification"
 # tracing and metrics config
 trace:
-  name: "jaeger"
+  name: "otlp"
 #  probability: 1
-  jaeger:
-    agent:
-      endpoint: "clair-jaeger:6831"
-    service_name: "clair"
+  otlp:
+    http:
+      endpoint: "clair-jaeger:4318"
+      insecure: true
 metrics:
   name: "prometheus"

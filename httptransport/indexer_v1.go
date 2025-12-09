@@ -173,7 +173,7 @@ func (h *IndexerV1) indexReportOne(w http.ResponseWriter, r *http.Request) {
 	}
 	switch r.Method {
 	case http.MethodGet:
-		allow := []string{"application/vnd.clair.indexreport.v1+json", "application/json"}
+		allow := []string{"application/vnd.clair.index_report.v1+json", "application/json"}
 		switch err := pickContentType(w, r, allow); {
 		case errors.Is(err, nil): // OK
 		case errors.Is(err, ErrMediaType):
@@ -218,7 +218,7 @@ func (h *IndexerV1) indexState(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
 	}
-	allow := []string{"application/vnd.clair.indexstate.v1+json", "application/json"}
+	allow := []string{"application/vnd.clair.index_state.v1+json", "application/json"}
 	switch err := pickContentType(w, r, allow); {
 	case errors.Is(err, nil): // OK
 	case errors.Is(err, ErrMediaType):
@@ -255,7 +255,7 @@ func (h *IndexerV1) affectedManifests(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		apiError(ctx, w, http.StatusMethodNotAllowed, "method disallowed: %s", r.Method)
 	}
-	allow := []string{"application/vnd.clair.affectedmanifests.v1+json", "application/json"}
+	allow := []string{"application/vnd.clair.affected_manifests.v1+json", "application/json"}
 	switch err := pickContentType(w, r, allow); {
 	case errors.Is(err, nil): // OK
 	case errors.Is(err, ErrMediaType):

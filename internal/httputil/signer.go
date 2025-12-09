@@ -22,15 +22,15 @@ import (
 //   - $.notifier.matcher_addr
 //   - $.matcher.indexer_addr
 func NewSigner(ctx context.Context, cfg *config.Config, cl jwt.Claims) (*Signer, error) {
+	s := Signer{
+		use:   make(map[string]struct{}),
+		claim: cl,
+	}
 	if cfg.Auth.PSK == nil {
 		zlog.Debug(ctx).
 			Str("component", "internal/httputil/NewSigner").
 			Msg("authentication disabled")
-		return new(Signer), nil
-	}
-	s := Signer{
-		use:   make(map[string]struct{}),
-		claim: cl,
+		return &s, nil
 	}
 	if cfg.Notifier.Webhook != nil {
 		if err := s.Add(ctx, cfg.Notifier.Webhook.Target); err != nil {

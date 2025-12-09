@@ -19,4 +19,8 @@ providers:
 metrics:
   prometheus:
     addServicesLabels: true
+tracing:
+  otlp:
+    http:
+      endpoint: http://clair-jaeger:4318/v1/traces
 accessLog: {}

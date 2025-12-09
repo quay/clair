@@ -43,11 +43,11 @@ jobs:
         with:
           platforms: all
       - uses: docker/setup-buildx-action@v3
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - id: setup-go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
           check-latest: true
@@ -76,6 +76,10 @@ jobs:
           mkdir "${{ runner.temp }}/build"
           git archive --add-file=go.mod --add-file=go.sum origin/main |
             tar -x -C "${{ runner.temp }}/build"
+          (
+            cd "${{ runner.temp }}/build"
+            go mod vendor
+          )
       - uses: docker/build-push-action@v6
         if: steps.novelty.outputs.cache-hit != 'true'
         with:

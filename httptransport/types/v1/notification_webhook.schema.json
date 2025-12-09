@@ -1,0 +1,23 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/notification_webhook.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Notification Webhook",
+  "type": "object",
+  "description": "Webhook sent to a configured service to begin retrieving notifications.",
+  "properties": {
+    "notification_id": {
+      "description": "Unique identifier for this notification.",
+      "type": "string"
+    },
+    "callback": {
+      "description": "A URL to retrieve paginated Notification objects.",
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "notification_id",
+    "callback"
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "value": {
+    "package_db": "var/lib/dpkg/status",
+    "introduced_in": "sha256:35c102085707f703de2d9eaad8752d6fe1b8f02b5d2149f1d8357c9cc7fb7d0a",
+    "distribution_id": "1"
+  }
+}

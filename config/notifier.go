@@ -40,15 +40,15 @@ type Notifier struct {
 	// A time.ParseDuration parsable string
 	//
 	// The frequency at which the notifier will query at Matcher for Update Operations.
-	// If a value smaller then 1 second is provided it will be replaced with the
-	// default 5 second poll interval.
+	// If a value smaller then 1 minute is provided it will be replaced with the
+	// default 6 hour poll interval as the default updater period is 6 hours.
 	PollInterval Duration `yaml:"poll_interval,omitempty" json:"poll_interval,omitempty"`
 	// A time.ParseDuration parsable string
 	//
 	// The frequency at which the notifier attempt delivery of created or previously failed
 	// notifications
-	// If a value smaller then 1 second is provided it will be replaced with the
-	// default 5 second delivery interval.
+	// If a value smaller then 1 minute is provided it will be replaced with the
+	// default 1 hour delivery interval.
 	DeliveryInterval Duration `yaml:"delivery_interval,omitempty" json:"delivery_interval,omitempty"`
 	// DisableSummary disables summarizing vulnerabilities per-manifest.
 	//
@@ -70,10 +70,10 @@ func (n *Notifier) validate(mode Mode) ([]Warning, error) {
 	if mode != ComboMode && mode != NotifierMode {
 		return nil, nil
 	}
-	if n.PollInterval < Duration(1*time.Second) {
+	if n.PollInterval < Duration(1*time.Minute) {
 		n.PollInterval = Duration(DefaultNotifierPollInterval)
 	}
-	if n.DeliveryInterval < Duration(1*time.Second) {
+	if n.DeliveryInterval < Duration(1*time.Minute) {
 		n.DeliveryInterval = Duration(DefaultNotifierDeliveryInterval)
 	}
 	switch mode {

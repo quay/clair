@@ -39,7 +39,7 @@ type Matcher struct {
 	// Deprecated: Pool size should be set through the ConnString member.
 	// Currently, Clair only uses the "pgxpool" package to connect to the
 	// database, so see
-	// https://pkg.go.dev/github.com/jackc/pgx/v4/pgxpool#ParseConfig for more
+	// https://pkg.go.dev/github.com/jackc/pgx/v5/pgxpool#ParseConfig for more
 	// information.
 	MaxConnPool int `yaml:"max_conn_pool,omitempty" json:"max_conn_pool,omitempty"`
 	// CacheAge controls how long clients should be hinted to cache responses
@@ -57,6 +57,8 @@ type Matcher struct {
 	// This should be toggled on if vulnerabilities are being provided by
 	// another mechanism.
 	DisableUpdaters bool `yaml:"disable_updaters,omitempty" json:"disable_updaters,omitempty"`
+	// DisableEnrichment disables the enrichment of vulnerability data.
+	DisableEnrichment bool `yaml:"disable_enrichment,omitempty" json:"disable_enrichment,omitempty"`
 }
 
 func (m *Matcher) validate(mode Mode) ([]Warning, error) {

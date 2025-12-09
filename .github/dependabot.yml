@@ -7,12 +7,32 @@ updates:
   - package-ecosystem: "gomod"
     directory: "/"
     allow:
-     - dependency-type: "direct"
+      - dependency-type: "direct"
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      otel:
+        patterns:
+          - "go.opentelemetry.io/otel/*"
+      golang-x:
+        patterns:
+          - "golang.org/x/*"
   - package-ecosystem: "gomod"
     directory: "/config"
     allow:
-     - dependency-type: "direct"
+      - dependency-type: "direct"
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      otel:
+        patterns:
+          - "go.opentelemetry.io/otel/*"
+      golang-x:
+        patterns:
+          - "golang.org/x/*"

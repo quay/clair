@@ -1,2 +1,3 @@
 cmd/build.go export-subst
 *.go diff=golang
+Documentation/reference/api.md linguist-generated

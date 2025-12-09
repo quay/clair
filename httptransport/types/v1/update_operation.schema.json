@@ -1,0 +1,42 @@
+{
+  "$id": "https://clairproject.org/api/http/v1/update_operation.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Update Operation",
+  "type": "object",
+  "description": "**This is an internal type, documented for completeness.**\n\nAn update operations describes an update of the internal vulnerability database.",
+  "properties": {
+    "ref": {
+      "type": "string",
+      "description": "A unique identifier for this update operation."
+    },
+    "updater": {
+      "description": "The \"updater\" component that was run.",
+      "$comment": "This is not as useful as it could be: an end user needs to know too much about Clair(core)'s internals to make sense of it.",
+      "type": "string"
+    },
+    "fingerprint": {
+      "description": "The stored \"fingerprint\" of this run.",
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "description": "When this operation was run.",
+      "format": "date-time"
+    },
+    "kind": {
+      "description": "The kind of data this operation updated.",
+      "enum": [
+        "vulnerability",
+        "enrichment"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "ref",
+    "updater",
+    "fingerprint",
+    "date",
+    "kind"
+  ]
+}

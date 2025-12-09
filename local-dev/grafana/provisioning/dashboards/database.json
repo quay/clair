@@ -1,0 +1,720 @@
+{
+    "id": null,
+    "title": "PostgreSQL Performance Dashboard",
+    "uid": "postgres-performance-dashboard4",
+    "tags": ["postgres", "database", "performance", "new"],
+    "timezone": "browser",
+    "schemaVersion": 30,
+    "version": 1,
+    "refresh": "30s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "datasource",
+          "type": "datasource",
+          "query": "prometheus",
+          "current": {
+            "selected": false,
+            "text": "Prometheus",
+            "value": "Prometheus"
+          },
+          "hide": 0,
+          "includeAll": false,
+          "multi": false,
+          "refresh": 1
+        },
+        {
+          "name": "instance",
+          "type": "query",
+          "query": "label_values(pg_up, instance)",
+          "current": {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          "hide": 0,
+          "includeAll": true,
+          "multi": true,
+          "refresh": 1,
+          "allValue": ".*",
+          "datasource": "$datasource"
+        }
+      ]
+    },
+    "graphTooltip": 2,
+    "panels": [
+      {
+        "title": "Overview",
+        "type": "row",
+        "gridPos": {
+          "x": 0,
+          "y": 0,
+          "w": 24,
+          "h": 1
+        },
+        "id": 100
+      },
+      {
+        "title": "Database Status",
+        "type": "stat",
+        "gridPos": {
+          "x": 0,
+          "y": 1,
+          "w": 4,
+          "h": 4
+        },
+        "id": 101,
+        "targets": [
+          {
+            "expr": "pg_up{instance=~\"$instance\"}",
+            "legendFormat": "Database Status",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "red",
+                  "value": 0
+                },
+                {
+                  "color": "green",
+                  "value": 1
+                }
+              ]
+            },
+            "mappings": [
+              {
+                "options": {
+                  "0": {
+                    "text": "DOWN"
+                  },
+                  "1": {
+                    "text": "UP"
+                  }
+                },
+                "type": "value"
+              }
+            ]
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"],
+            "fields": ""
+          },
+          "orientation": "auto",
+          "textMode": "auto",
+          "colorMode": "background"
+        }
+      },
+      {
+        "title": "Total Databases",
+        "type": "stat",
+        "gridPos": {
+          "x": 4,
+          "y": 1,
+          "w": 4,
+          "h": 4
+        },
+        "id": 102,
+        "targets": [
+          {
+            "expr": "count(pg_stat_database_numbackends{instance=~\"$instance\", datname!=\"template0\", datname!=\"template1\"})",
+            "legendFormat": "Databases",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        }
+      },
+      {
+        "title": "Total Connections",
+        "type": "stat",
+        "gridPos": {
+          "x": 8,
+          "y": 1,
+          "w": 4,
+          "h": 4
+        },
+        "id": 103,
+        "targets": [
+          {
+            "expr": "sum(pg_stat_database_numbackends{instance=~\"$instance\"})",
+            "legendFormat": "Connections",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        }
+      },
+      {
+        "title": "Queries Per Second",
+        "type": "stat",
+        "gridPos": {
+          "x": 12,
+          "y": 1,
+          "w": 4,
+          "h": 4
+        },
+        "id": 104,
+        "targets": [
+          {
+            "expr": "sum(rate(pg_stat_database_xact_commit{instance=~\"$instance\"}[5m]) + rate(pg_stat_database_xact_rollback{instance=~\"$instance\"}[5m]))",
+            "legendFormat": "QPS",
+            "refId": "A"
+          }
+        ],
+                 "fieldConfig": {
+           "defaults": {
+             "color": {
+               "mode": "palette-classic"
+             },
+             "unit": "ops"
+           }
+         }
+      },
+      {
+        "title": "Active Queries",
+        "type": "stat",
+        "gridPos": {
+          "x": 16,
+          "y": 1,
+          "w": 8,
+          "h": 4
+        },
+        "id": 105,
+        "targets": [
+          {
+            "expr": "sum by (datname) (pg_stat_activity_count{instance=~\"$instance\", state=\"active\"})",
+            "legendFormat": "{{datname}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": 0
+                },
+                {
+                  "color": "yellow",
+                  "value": 10
+                },
+                {
+                  "color": "red",
+                  "value": 25
+                }
+              ]
+            },
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "title": "Connections & Activity",
+        "type": "row",
+        "gridPos": {
+          "x": 0,
+          "y": 5,
+          "w": 24,
+          "h": 1
+        },
+        "id": 200
+      },
+      {
+        "title": "Active Connections by Database",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 6,
+          "w": 12,
+          "h": 8
+        },
+        "id": 201,
+        "targets": [
+          {
+            "expr": "pg_stat_database_numbackends{instance=~\"$instance\", datname!=\"template0\", datname!=\"template1\"}",
+            "legendFormat": "{{datname}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "fillOpacity": 10,
+              "stacking": {
+                "mode": "none"
+              }
+            }
+          }
+        }
+      },
+      {
+        "title": "Connection States",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 12,
+          "y": 6,
+          "w": 12,
+          "h": 8
+        },
+        "id": 202,
+        "targets": [
+          {
+            "expr": "sum by (state) (pg_stat_activity_count{instance=~\"$instance\"})",
+            "legendFormat": "{{state}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "linear",
+              "fillOpacity": 10,
+              "stacking": {
+                "mode": "normal"
+              }
+            }
+          }
+        }
+      },
+      {
+        "title": "Max Connections vs Current",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 14,
+          "w": 24,
+          "h": 6
+        },
+        "id": 203,
+        "targets": [
+          {
+            "expr": "pg_settings_max_connections{instance=~\"$instance\"}",
+            "legendFormat": "Max Connections",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(pg_stat_database_numbackends{instance=~\"$instance\"})",
+            "legendFormat": "Current Connections",
+            "refId": "B"
+          }
+        ]
+      },
+      
+       
+      {
+        "title": "Transaction Activity",
+        "type": "row",
+        "gridPos": {
+          "x": 0,
+          "y": 20,
+          "w": 24,
+          "h": 1
+        },
+        "id": 300
+      },
+      {
+        "title": "Transactions per Second",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 21,
+          "w": 12,
+          "h": 8
+        },
+        "id": 301,
+        "targets": [
+          {
+            "expr": "sum(rate(pg_stat_database_xact_commit{instance=~\"$instance\"}[5m]))",
+            "legendFormat": "Commits/sec",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(pg_stat_database_xact_rollback{instance=~\"$instance\"}[5m]))",
+            "legendFormat": "Rollbacks/sec",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps"
+          }
+        }
+      },
+      {
+        "title": "Transaction Activity by Database",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 12,
+          "y": 21,
+          "w": 12,
+          "h": 8
+        },
+        "id": 302,
+        "targets": [
+          {
+            "expr": "rate(pg_stat_database_xact_commit{instance=~\"$instance\", datname!=\"template0\", datname!=\"template1\"}[5m])",
+            "legendFormat": "{{datname}} commits",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(pg_stat_database_xact_rollback{instance=~\"$instance\", datname!=\"template0\", datname!=\"template1\"}[5m])",
+            "legendFormat": "{{datname}} rollbacks",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "title": "Deadlocks",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 29,
+          "w": 8,
+          "h": 6
+        },
+        "id": 303,
+        "targets": [
+          {
+            "expr": "rate(pg_stat_database_deadlocks{instance=~\"$instance\"}[5m])",
+            "legendFormat": "{{datname}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "title": "Conflicts",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 8,
+          "y": 29,
+          "w": 8,
+          "h": 6
+        },
+        "id": 304,
+        "targets": [
+          {
+            "expr": "rate(pg_stat_database_conflicts{instance=~\"$instance\"}[5m])",
+            "legendFormat": "{{datname}}",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "title": "Temporary Files",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 16,
+          "y": 29,
+          "w": 8,
+          "h": 6
+        },
+        "id": 305,
+        "targets": [
+          {
+            "expr": "rate(pg_stat_database_temp_files{instance=~\"$instance\"}[5m])",
+            "legendFormat": "{{datname}} Files",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(pg_stat_database_temp_bytes{instance=~\"$instance\"}[5m])",
+            "legendFormat": "{{datname}} Bytes",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "title": "I/O & Performance",
+        "type": "row",
+        "gridPos": {
+          "x": 0,
+          "y": 35,
+          "w": 24,
+          "h": 1
+        },
+        "id": 400
+      },
+      {
+        "title": "Disk I/O - Blocks Read vs Hit",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 36,
+          "w": 12,
+          "h": 8
+        },
+        "id": 401,
+        "targets": [
+          {
+            "expr": "sum(rate(pg_stat_database_blks_read{instance=~\"$instance\"}[5m]))",
+            "legendFormat": "Blocks Read from Disk",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(pg_stat_database_blks_hit{instance=~\"$instance\"}[5m]))",
+            "legendFormat": "Blocks Hit from Cache",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "title": "Buffer Cache Hit Ratio by Database",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 12,
+          "y": 36,
+          "w": 12,
+          "h": 8
+        },
+        "id": 402,
+        "targets": [
+          {
+            "expr": "rate(pg_stat_database_blks_hit{instance=~\"$instance\", datname!=\"template0\", datname!=\"template1\"}[5m]) / (rate(pg_stat_database_blks_hit{instance=~\"$instance\", datname!=\"template0\", datname!=\"template1\"}[5m]) + rate(pg_stat_database_blks_read{instance=~\"$instance\", datname!=\"template0\", datname!=\"template1\"}[5m])) * 100",
+            "legendFormat": "{{datname}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        }
+      },
+      {
+        "title": "Tuple Activity",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 44,
+          "w": 12,
+          "h": 8
+        },
+        "id": 403,
+        "targets": [
+          {
+            "expr": "sum(rate(pg_stat_database_tup_returned{instance=~\"$instance\"}[5m]))",
+            "legendFormat": "Rows Returned",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(pg_stat_database_tup_fetched{instance=~\"$instance\"}[5m]))",
+            "legendFormat": "Rows Fetched",
+            "refId": "B"
+          },
+          {
+            "expr": "sum(rate(pg_stat_database_tup_inserted{instance=~\"$instance\"}[5m]))",
+            "legendFormat": "Rows Inserted",
+            "refId": "C"
+          },
+          {
+            "expr": "sum(rate(pg_stat_database_tup_updated{instance=~\"$instance\"}[5m]))",
+            "legendFormat": "Rows Updated",
+            "refId": "D"
+          },
+          {
+            "expr": "sum(rate(pg_stat_database_tup_deleted{instance=~\"$instance\"}[5m]))",
+            "legendFormat": "Rows Deleted",
+            "refId": "E"
+          }
+        ]
+      },
+      {
+        "title": "Sequential vs Index Scans",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 12,
+          "y": 44,
+          "w": 12,
+          "h": 8
+        },
+        "id": 404,
+        "targets": [
+          {
+            "expr": "sum(rate(pg_stat_user_tables_seq_scan{instance=~\"$instance\"}[5m]))",
+            "legendFormat": "Sequential Scans",
+            "refId": "A"
+          },
+          {
+            "expr": "sum(rate(pg_stat_user_tables_idx_scan{instance=~\"$instance\"}[5m]))",
+            "legendFormat": "Index Scans",
+            "refId": "B"
+          }
+        ]
+      },
+      {
+        "title": "Locks & Blocking",
+        "type": "row",
+        "gridPos": {
+          "x": 0,
+          "y": 52,
+          "w": 24,
+          "h": 1
+        },
+        "id": 500
+      },
+      {
+        "title": "Lock Types",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 53,
+          "w": 12,
+          "h": 8
+        },
+        "id": 501,
+        "targets": [
+          {
+            "expr": "pg_locks_count{instance=~\"$instance\"}",
+            "legendFormat": "{{mode}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "stacking": {
+                "mode": "normal"
+              }
+            }
+          }
+        }
+      },
+      {
+        "title": "Lock Waits",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 12,
+          "y": 53,
+          "w": 12,
+          "h": 8
+        },
+        "id": 502,
+        "targets": [
+          {
+            "expr": "pg_stat_activity_count{instance=~\"$instance\", state=\"active\", wait_event_type=\"Lock\"}",
+            "legendFormat": "Waiting for Locks",
+            "refId": "A"
+          }
+        ]
+      },
+      {
+        "title": "System Resources",
+        "type": "row",
+        "gridPos": {
+          "x": 0,
+          "y": 61,
+          "w": 24,
+          "h": 1
+        },
+        "id": 600
+      },
+      {
+        "title": "Memory Usage",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 0,
+          "y": 62,
+          "w": 8,
+          "h": 8
+        },
+        "id": 601,
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes{instance=~\"$instance\"}",
+            "legendFormat": "Resident Memory",
+            "refId": "A"
+          },
+          {
+            "expr": "process_virtual_memory_bytes{instance=~\"$instance\"}",
+            "legendFormat": "Virtual Memory",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bytes"
+          }
+        }
+      },
+      {
+        "title": "CPU Usage",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 8,
+          "y": 62,
+          "w": 8,
+          "h": 8
+        },
+        "id": 602,
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total{instance=~\"$instance\"}[5m]) * 100",
+            "legendFormat": "{{job}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        }
+      },
+      {
+        "title": "Database Size",
+        "type": "timeseries",
+        "gridPos": {
+          "x": 16,
+          "y": 62,
+          "w": 8,
+          "h": 8
+        },
+        "id": 603,
+        "targets": [
+          {
+            "expr": "pg_database_size_bytes{instance=~\"$instance\", datname!=\"template0\", datname!=\"template1\"}",
+            "legendFormat": "{{datname}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "bytes"
+          }
+                 }
+       }
+     ]
+  }
