@@ -1,4 +1,4 @@
-# Clair
+ # Clair
 
 [![Docker Repository on Quay](https://quay.io/repository/projectquay/clair/status "Docker Repository on Quay")](https://quay.io/repository/projectquay/clair)
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/quay/clair/v4 "Go Documentation")](https://pkg.go.dev/github.com/quay/clair/v4)
