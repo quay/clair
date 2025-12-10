@@ -11,7 +11,7 @@ Further information and usage is an effort left to the reader.
 ## Updates Diffs
 
 The `update_diff/` endpoint exposes the api for diffing two update operations. 
-This is used by the notifier to determine the added and removed vulnerabilities on security databsae update.
+This is used by the notifier to determine the added and removed vulnerabilities on security database update.
 
 ## Update Operation
 
