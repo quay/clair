@@ -2,6 +2,183 @@
 ## [Unreleased]
 
 
+
+<a name="v4.9.0"></a>
+## [v4.9.0] - 2025-12-08
+### All
+- [1aca06b8](https://github.com/quay/clair/commit/1aca06b8155b038d4d2f480cab58e938cf156337): fix formatted print calls
+### Amqp
+- [1a9f8769](https://github.com/quay/clair/commit/1a9f8769746a484fba6acdd2d4a88da661f1eb28): add deprecation notice
+### Build(Deps)
+- [e4feca46](https://github.com/quay/clair/commit/e4feca46d5cea624c2764b427f3e9f1b07deaeeb): bump golang.org/x/time from 0.7.0 to 0.8.0
+- [f54011b5](https://github.com/quay/clair/commit/f54011b57c4fb44d153a3ab15f9dc1a80bb182a9): bump golang.org/x/sync from 0.8.0 to 0.9.0
+- [ee5524b8](https://github.com/quay/clair/commit/ee5524b897ae19af977f8b5fc7de19c30e925fce): bump go.opentelemetry.io/otel/sdk from 1.31.0 to 1.32.0
+- [757b649c](https://github.com/quay/clair/commit/757b649c3286a01948e0342985d4c09915f6c392): bump go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
+- [20c0040f](https://github.com/quay/clair/commit/20c0040f8982f2fed944fb4182bac5aa3c56ada4): bump github.com/go-stomp/stomp/v3 from 3.1.2 to 3.1.3
+- [1607766c](https://github.com/quay/clair/commit/1607766cc5691378c70a6113a57d3a2086c65e63): bump github.com/prometheus/client_golang
+- [0a3a4611](https://github.com/quay/clair/commit/0a3a4611964014c0c9846d8c79acdd062af9c17d): bump go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace
+- [12ea7bf9](https://github.com/quay/clair/commit/12ea7bf97273f2a22d72dddd76bd7fb7e717838f): bump go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
+- [146d4a67](https://github.com/quay/clair/commit/146d4a670c8d24774206bc5b30deb506901f3c7d): bump github.com/urfave/cli/v2 from 2.27.3 to 2.27.5
+- [50003694](https://github.com/quay/clair/commit/5000369402f550817eaa1364ba6eccce3691aa2e): bump github.com/klauspost/compress from 1.17.10 to 1.17.11
+- [6069bb24](https://github.com/quay/clair/commit/6069bb249b9228210a988b3ecb883f1adcd77e7a): bump go.opentelemetry.io/otel/exporters/stdout/stdouttrace
+### Chore
+- [cbfd97b6](https://github.com/quay/clair/commit/cbfd97b655b59c192bda4aefde5dc0c8cd3ae8bb): fix typos in config.yaml.sample
+- [7c9c079b](https://github.com/quay/clair/commit/7c9c079bc643e8f1383ad476f624331938d30d61): update claircore to v1.5.48
+- [8e9a6d46](https://github.com/quay/clair/commit/8e9a6d4629288f02a24368105598d02ef6ec0583): update claircore to v1.5.47
+- [804ef6a4](https://github.com/quay/clair/commit/804ef6a4890f6aa3a96f9910b6be14876b7623a5): update claircore to v1.5.46
+- [a50727a3](https://github.com/quay/clair/commit/a50727a3f281079fffa90b0172f99c8c0f6a027c): add DVO ignore annotations
+- [8d991938](https://github.com/quay/clair/commit/8d991938a30759da699ea7dd696a4b9bb79ff9dc): update claircore to v1.5.45
+- [ff2059cf](https://github.com/quay/clair/commit/ff2059cf2cbaa422967cc920edf6bbd82d77ed15): update claircore to v1.5.44
+- [db51ed82](https://github.com/quay/clair/commit/db51ed82dc8d62bf1051c8286f98233e728b3dab): update claircore to v1.5.42
+- [c2dc1766](https://github.com/quay/clair/commit/c2dc1766fffcb7126c3d63299f1702a7be4e2ce9): update claircore to v1.5.41
+- [8aa9e1e2](https://github.com/quay/clair/commit/8aa9e1e205961e855159a698e5a8f97089e91a3c): update claircore to v1.5.40
+- [eca299b7](https://github.com/quay/clair/commit/eca299b706af03bb4517bd6f4717744708bced16): update go references to go1.24
+- [1660b66b](https://github.com/quay/clair/commit/1660b66bd59630b9513a1a0f16cbdd4e552ed43f): upgrade from pgx v4 to v5
+- [68d03bae](https://github.com/quay/clair/commit/68d03bae216bbfe785b2fd52c66ac3481c21792d): remove reviews from dependabot config
+- [0c5292e7](https://github.com/quay/clair/commit/0c5292e7b19a6271d8c7ea5da72dc5ef66fba3e7): upgrade config module to v1.4.2
+- [e5d4c19c](https://github.com/quay/clair/commit/e5d4c19cb3f448f1f057124a916f8056abb0325b): update minimum go version to 1.23
+- [e45fbf0e](https://github.com/quay/clair/commit/e45fbf0e762de8fad56200cdbc22547df7c112d3): update claircore to v1.5.35
+- [708bf2f5](https://github.com/quay/clair/commit/708bf2f54c7715fd77fa874030740995c60a1c6a): update local-dev tracing configs to fix errors
+- [216ca2f1](https://github.com/quay/clair/commit/216ca2f1df0677e4ac0e42758d1fc16010e344ed): update claircore to v1.5.34
+- [dde57fc1](https://github.com/quay/clair/commit/dde57fc11d5328f3bb2d561e2df2a312fb812a01): update openAPI spec to remove SourcePackage
+- [e5149fd3](https://github.com/quay/clair/commit/e5149fd3ebb1e730ee549af3098a5fc60ccbf0f5): group some dependencies to avoid excessive PRs
+- [60ebea73](https://github.com/quay/clair/commit/60ebea73e6abd1c69005e86edf26aefd7a6df23f): update claircore to v1.5.33
+### Chore(Deps)
+- [f598d3ec](https://github.com/quay/clair/commit/f598d3ec6c2c091f9ec15da2988e0f579dd6bddc): bump go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
+- [a952e3c6](https://github.com/quay/clair/commit/a952e3c66d3482aa7285b58836beaf195bc4b88f): bump the otel group with 11 updates
+- [878fbceb](https://github.com/quay/clair/commit/878fbceb42510407fece6b4f46ea66335491af21): bump github.com/google/go-containerregistry
+- [468e409c](https://github.com/quay/clair/commit/468e409ce4ddfb459e48023a5c898753fb1fd68f): bump actions/upload-artifact from 4 to 5
+- [c87bc8f0](https://github.com/quay/clair/commit/c87bc8f075780714db8f2251285d86f649212f05): bump github.com/klauspost/compress from 1.18.1 to 1.18.2
+- [2a5c11fd](https://github.com/quay/clair/commit/2a5c11fd121e9c40cf7e601bce67f119a380def8): bump actions/checkout from 5 to 6
+- [b12439f4](https://github.com/quay/clair/commit/b12439f4fadd467b198b4f226c4d2fb6a466fe26): bump golang.org/x/crypto from 0.44.0 to 0.45.0
+- [e169a50a](https://github.com/quay/clair/commit/e169a50a7971142e77e0f9194676424bbbe3493f): bump google.golang.org/grpc from 1.76.0 to 1.77.0
+- [3e778f2c](https://github.com/quay/clair/commit/3e778f2c2c3a4d0674aa1da2e540dc2a32abaecd): bump golang.org/x/net in the golang-x group
+- [4563ccbd](https://github.com/quay/clair/commit/4563ccbd8481f0f651b09e8f6e07e2d561850c31): bump github.com/go-stomp/stomp/v3 from 3.1.3 to 3.1.5
+- [195cdb06](https://github.com/quay/clair/commit/195cdb06b3e76ceb2e565178898af2d45d416e5c): bump golang.org/x/sync in the golang-x group
+- [b50044f4](https://github.com/quay/clair/commit/b50044f42e2780fab6db3147138c4c52193ade84): bump actions/download-artifact from 5 to 6
+- [1b429595](https://github.com/quay/clair/commit/1b42959514e932319d63e27dbb98545b622728f7): bump github.com/klauspost/compress from 1.18.0 to 1.18.1
+- [e439e4df](https://github.com/quay/clair/commit/e439e4df7a2db9922b7043d09071809d5ce8f6d8): bump the golang-x group with 2 updates
+- [fe37c68b](https://github.com/quay/clair/commit/fe37c68b97f59e0fe526ca97bad05210a74ef004): bump google.golang.org/grpc from 1.75.1 to 1.76.0
+- [ee6ea1c8](https://github.com/quay/clair/commit/ee6ea1c8816bc1f6541f4aa5dabc08f5b704ff2e): bump github.com/quay/claircore from 1.5.42 to 1.5.43
+- [afcfd7f0](https://github.com/quay/clair/commit/afcfd7f0b7013ecfd38f71883b511f5bda6646f8): bump google.golang.org/grpc from 1.75.0 to 1.75.1
+- [6a4937e4](https://github.com/quay/clair/commit/6a4937e45475a9c910dd0b3bef3803efb3d14166): bump the golang-x group across 1 directory with 3 updates
+- [53cf68e9](https://github.com/quay/clair/commit/53cf68e9b024baf58d99b5a1ed90e57ea9861942): bump github.com/jackc/pgx/v5 from 5.7.5 to 5.7.6
+- [e9850949](https://github.com/quay/clair/commit/e9850949db1eddca2de7c0c1fc568aaa1cd2f83b): bump github.com/prometheus/client_golang
+- [290969cd](https://github.com/quay/clair/commit/290969cd1ef8f9e87cf12a658b8223b0ac4a5635): bump actions/stale from 9 to 10
+- [5b5519b5](https://github.com/quay/clair/commit/5b5519b5e264c4107166b3f26239aac0ce696bac): bump actions/github-script from 7 to 8
+- [b78c76b1](https://github.com/quay/clair/commit/b78c76b152890837cb2961039af982d404a35ff0): bump actions/setup-go from 5 to 6
+- [b1f4716b](https://github.com/quay/clair/commit/b1f4716b279fdddb143b0cf5c65a5a5b4f62c43d): bump go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace
+- [93174450](https://github.com/quay/clair/commit/93174450e69ef63b1f2b0368a13aac0a818aba70): bump github.com/grafana/pyroscope-go/godeltaprof
+- [0f1fde39](https://github.com/quay/clair/commit/0f1fde397494c03329574edbaf2b9e4f66a56103): bump the otel group with 11 updates
+- [8dbb0f48](https://github.com/quay/clair/commit/8dbb0f4868eea306a5c9ae1576c2fd4041446b6f): bump golang.org/x/net in the golang-x group
+- [a35a1281](https://github.com/quay/clair/commit/a35a12819da47d1ac10519788be4adce24f6c33a): bump github.com/ulikunitz/xz from 0.5.11 to 0.5.14
+- [1fa9a753](https://github.com/quay/clair/commit/1fa9a75352b7304dc25a42808ae8c51b12d344b2): bump actions/checkout from 4 to 5
+- [f0b0949c](https://github.com/quay/clair/commit/f0b0949cf7eb3168f4b471414c99ae846a95a7e7): bump actions/download-artifact from 4 to 5
+- [890f4a1b](https://github.com/quay/clair/commit/890f4a1bc06b6817db91e38a9c6211019a171bcf): bump github.com/prometheus/client_golang
+- [80add42b](https://github.com/quay/clair/commit/80add42bbc040210aecc60cbde3a760ad71b5cb6): bump google.golang.org/grpc from 1.73.0 to 1.75.0
+- [e4746794](https://github.com/quay/clair/commit/e4746794de3720b6f49b8ec67afc84b8df4ab0d4): bump github.com/jackc/pgx/v5 from 5.7.4 to 5.7.5
+- [ba6fe31c](https://github.com/quay/clair/commit/ba6fe31c743674b828c5cee5ca269fe2545f1871): bump go.opentelemetry.io/otel/exporters/prometheus
+- [40b0402e](https://github.com/quay/clair/commit/40b0402e4945d6e28076b0bf8345550fb64cba35): bump the golang-x group with 2 updates
+- [f9635886](https://github.com/quay/clair/commit/f96358865c699367dd3fa197c7b579c73780ec3d): bump github.com/quay/zlog from 1.1.8 to 1.1.9
+- [4415106e](https://github.com/quay/clair/commit/4415106e79b9ef686133f7f9dc218c5c64e16da2): bump go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace
+- [b7325ada](https://github.com/quay/clair/commit/b7325adaaea397ceda18b86e75295d43781b0bd7): bump go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
+- [78b92595](https://github.com/quay/clair/commit/78b92595494b4cc2a221dd1d8f8f19235ee594e9): bump the otel group with 11 updates
+- [62956271](https://github.com/quay/clair/commit/629562717ccdd276f0d23ea2d2a814f817fa9b5b): bump github.com/urfave/cli/v2 from 2.27.6 to 2.27.7
+- [440eee8e](https://github.com/quay/clair/commit/440eee8e1dccfd24f55cf97b23a52e3666c346cc): bump github.com/google/go-containerregistry
+- [e75e2e2b](https://github.com/quay/clair/commit/e75e2e2b43d2990f656c7505f0dcc61c4a3219eb): bump the golang-x group with 3 updates
+- [cf20adbd](https://github.com/quay/clair/commit/cf20adbddc9dd63917e6321cd5c0d1f0467d51cf): bump google.golang.org/grpc from 1.72.2 to 1.73.0
+- [d9c211b4](https://github.com/quay/clair/commit/d9c211b4eedfc4254005fc99ff02b9e6d730e9ac): bump github.com/quay/claircore from 1.5.37 to 1.5.38
+- [6338de8b](https://github.com/quay/clair/commit/6338de8b2318c30973eba180969e49242e42f50c): bump github.com/ugorji/go/codec from 1.2.12 to 1.2.14
+- [566271a1](https://github.com/quay/clair/commit/566271a163f8be8817e9c2d6e199aa5cf229b3b8): bump go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace
+- [3e3a2d33](https://github.com/quay/clair/commit/3e3a2d336195c8a64ece2ae387c0f556c76d165a): bump github.com/google/go-containerregistry
+- [81b725ba](https://github.com/quay/clair/commit/81b725ba9ee96443e9013dc3817edd4677beee38): bump google.golang.org/grpc from 1.72.1 to 1.72.2
+- [faad36e2](https://github.com/quay/clair/commit/faad36e2c040e7588c6be9cc2dc91f39b037ae68): bump the otel group with 11 updates
+- [7979e036](https://github.com/quay/clair/commit/7979e036f09e90e12a61aa7152bbc8d780cdbc08): bump google.golang.org/grpc from 1.72.0 to 1.72.1
+- [99ab2c1a](https://github.com/quay/clair/commit/99ab2c1ab17bb58e9e2e7ff10fc5a524d0e8d60d): bump the golang-x group with 2 updates
+- [a166f610](https://github.com/quay/clair/commit/a166f6103a50b3374797f7825270fc74d95ca51c): bump github.com/quay/claircore from 1.5.36 to 1.5.37
+- [d8e9dcf4](https://github.com/quay/clair/commit/d8e9dcf43083d7c5812f85190ffaeebe2b4e8db9): bump google.golang.org/grpc from 1.71.1 to 1.72.0
+- [bfa8f11d](https://github.com/quay/clair/commit/bfa8f11de0d6ff542c23c5146248473b932b9b4b): bump github.com/quay/claircore from 1.5.35 to 1.5.36
+- [f8a41628](https://github.com/quay/clair/commit/f8a4162819ca57e13e073c7e52ab78093347cd84): bump github.com/prometheus/client_golang
+- [7ce22abe](https://github.com/quay/clair/commit/7ce22abec64cc1ffa0b96522f9c1903340539ff4): bump google.golang.org/grpc from 1.71.0 to 1.71.1
+- [c53cf2ba](https://github.com/quay/clair/commit/c53cf2bafc79dcd13b8a27532da5e2118dc0d1a3): bump the golang-x group with 2 updates
+- [a5833a44](https://github.com/quay/clair/commit/a5833a4405c11add7666e1532551a5d71e3036e5): bump golang.org/x/net in the golang-x group
+- [cc6fb14a](https://github.com/quay/clair/commit/cc6fb14ada0f9af9411fef5a247dad04a77e269b): bump github.com/rs/zerolog from 1.33.0 to 1.34.0
+- [851e4a36](https://github.com/quay/clair/commit/851e4a36dfd093bda1a81ff555a13c6d8fae38bb): bump github.com/urfave/cli/v2 from 2.27.5 to 2.27.6
+- [e9997624](https://github.com/quay/clair/commit/e9997624ee9ae9e030052f764f9b2e428a9021f7): bump go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace
+- [a73e832b](https://github.com/quay/clair/commit/a73e832bb478f34ec5cc74f3e63d79be4a0b8867): bump github.com/prometheus/client_golang
+- [35110e9e](https://github.com/quay/clair/commit/35110e9e3b285dfefa2f8e4e858fb24fda84d245): bump go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
+- [0a9866e3](https://github.com/quay/clair/commit/0a9866e39c2398ecf80b289c1b90227f0c1ba966): bump the golang-x group with 3 updates
+- [1ce14606](https://github.com/quay/clair/commit/1ce146061c87336eb3f41d394fbab4e15b237922): bump the otel group with 11 updates
+- [919d5287](https://github.com/quay/clair/commit/919d5287ee85489e211f0f909078a7ff204af886): bump github.com/google/go-cmp in /config
+- [2673e4f4](https://github.com/quay/clair/commit/2673e4f4a9adf3b836d0ba9d6b5dd28823f540ce): bump github.com/rogpeppe/go-internal from 1.13.1 to 1.14.1
+- [cf7af98a](https://github.com/quay/clair/commit/cf7af98a4571e2a05ca0839000be2ca275a647c6): bump github.com/go-jose/go-jose/v3 from 3.0.3 to 3.0.4
+- [6c9fae1e](https://github.com/quay/clair/commit/6c9fae1e29f50dc11871f28cbe51d609120a065b): bump github.com/google/go-cmp from 0.6.0 to 0.7.0
+- [707d8049](https://github.com/quay/clair/commit/707d80495e98786757f31f7028bc54f98e524276): bump github.com/prometheus/client_golang
+- [136a618f](https://github.com/quay/clair/commit/136a618f241f48c00a32b0386e9225bb5d1dfa7d): bump github.com/klauspost/compress from 1.17.11 to 1.18.0
+- [3e7c6e74](https://github.com/quay/clair/commit/3e7c6e7463307ebef02b708e85d3092c41771e44): bump the golang-x group with 3 updates
+- [73db520d](https://github.com/quay/clair/commit/73db520d4c8d0a55e8aa2e4f507412443f12226a): bump github.com/evanphx/json-patch/v5 from 5.9.10 to 5.9.11
+- [a3a60f10](https://github.com/quay/clair/commit/a3a60f1017a482909f9451c04501d9c3c179855f): bump google.golang.org/grpc from 1.69.4 to 1.70.0
+- [cc29705c](https://github.com/quay/clair/commit/cc29705c7cb02f77566db47dc57c4cac78032420): bump github.com/evanphx/json-patch/v5 from 5.9.0 to 5.9.10
+- [d05b4049](https://github.com/quay/clair/commit/d05b4049c7cceda76416b35795ef9290f82c5d95): bump go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace
+- [8b99d320](https://github.com/quay/clair/commit/8b99d32021936f2eadda01c38b2bb788272cb7bb): bump the otel group with 11 updates
+- [b2c66991](https://github.com/quay/clair/commit/b2c669913bbd4ef1a7df5c2dfad6459ee8fcb117): bump google.golang.org/grpc from 1.69.2 to 1.69.4
+- [ef4a1f11](https://github.com/quay/clair/commit/ef4a1f113ae4c192feeadaf50571ff8f11ddb6ed): bump the golang-x group with 2 updates
+- [38b77499](https://github.com/quay/clair/commit/38b774994da0481efb4b852d86b96332167baef8): bump golang.org/x/net in the golang-x group
+- [80c0381a](https://github.com/quay/clair/commit/80c0381a0d6de6ab79b04294980c1d7e59deb72a): bump the otel group across 1 directory with 2 updates
+- [3eff1ef1](https://github.com/quay/clair/commit/3eff1ef131d17b383fdf84172818f6e8d5d307e2): bump go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace
+- [5bf85313](https://github.com/quay/clair/commit/5bf853139ea1a3cdcc5ee73fe21b18c7fef4fe35): bump go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp
+- [9ebb61d9](https://github.com/quay/clair/commit/9ebb61d945cc8b61d507adee56e020788bcfb931): bump golang.org/x/crypto from 0.30.0 to 0.31.0
+- [0881e079](https://github.com/quay/clair/commit/0881e07960cd3799d78707760876cf713e7de29a): bump the golang-x group with 2 updates
+- [f556ef16](https://github.com/quay/clair/commit/f556ef162483b3e39605d7073c0ab02108323da1): bump go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace
+- [bf8737a1](https://github.com/quay/clair/commit/bf8737a14ae5ab91e1747238f327feade8d9084b): bump golang.org/x/net in the golang-x group
+- [f1d9aae4](https://github.com/quay/clair/commit/f1d9aae4eb4952687c02f7ba1f9237e2d8510fd2): bump go.opentelemetry.io/otel/exporters/stdout/stdouttrace
+### Chore(Manifests)
+- [48b75fe4](https://github.com/quay/clair/commit/48b75fe45d534081c65d3a55e8206b8ca405f276): add anti-affinity rules
+### Ci
+- [a0a35fd7](https://github.com/quay/clair/commit/a0a35fd7b6f2aed63adf9feb2c5d5af76a93278e): Allow go test to access un-vendored dependencies
+### Cicd
+- [ab791a2e](https://github.com/quay/clair/commit/ab791a2ee21107beb49cd516807f1b15c21b085e): run multiarch tests without a full container
+- [935a61f3](https://github.com/quay/clair/commit/935a61f3142baf1d426d52cb20dddc74a259cc99): vendor modules into nightly source
+### Clairctl
+- [4c93f8ea](https://github.com/quay/clair/commit/4c93f8ea2611855503e9c0ca18e0d5e7f9aa55e7): Print a friendly error on panic
+ -  [#2221](https://github.com/quay/clair/issues/2221)### Config
+- [0db9beaf](https://github.com/quay/clair/commit/0db9beaf1c5fa7da76d03a06672000666f62b591): add ability to disable enrichment
+- [7ab81b38](https://github.com/quay/clair/commit/7ab81b3866677804f19dffdf29422d6213a4ba2c): clean environment in example
+### Dev
+- [503215f5](https://github.com/quay/clair/commit/503215f5100fff89ea1656281394a151fd9cb8b5): rename dashboard.json file to clair.json
+- [65cd4244](https://github.com/quay/clair/commit/65cd4244e3b322e7a9c75482cdd6696b6ab24ec3): add a grafana dashboard for postgres stats
+### Docker
+- [10485679](https://github.com/quay/clair/commit/1048567920dd7aa56442c55c3b928a09f5f9899d): remove version line from docker-compose.yaml
+### Docker-Compose
+- [8c71b46e](https://github.com/quay/clair/commit/8c71b46e83770234c08e86dea1fa53f01c6a8ad8): update containers
+### Enrichments
+- [6527a9ec](https://github.com/quay/clair/commit/6527a9ec3e9ab360cb2ed18646041e628fd2dcda): disable enrichers if config option is set
+### Fix
+- [0a8c3864](https://github.com/quay/clair/commit/0a8c3864648d43fa2650742dba351efdd8c035fe): typo in variable name
+### Go.Mod
+- [6db583f7](https://github.com/quay/clair/commit/6db583f7dcffaa3d94ba7566df23b79dc430057e): Update Go version to 1.24.9 for CVE-2025-47907
+### Health
+- [b57b9fa6](https://github.com/quay/clair/commit/b57b9fa642ab2cb561fb205f5349fd81adb56c82): using atomic.Uint32
+### Introspection
+- [797c2f45](https://github.com/quay/clair/commit/797c2f45fbd8b3c6660a5ef5979e62ffa0b26107): implement OTLP support for metrics and traces
+### Misc
+- [5891f64b](https://github.com/quay/clair/commit/5891f64bd2451ddf62ad01176416aa8eccba9b79): remove API doc make target, CI check
+### Notifier
+- [a9a68e18](https://github.com/quay/clair/commit/a9a68e18dd8e4fec4d05a2e82dda92e14b7542e3): increase default durations to be more reasonable
+### Openapi
+- [8c540b96](https://github.com/quay/clair/commit/8c540b964f6b8afc99f6a82f60fede028fc739f1): rebuild OpenAPI spec
+### Signer
+- [1c6d0496](https://github.com/quay/clair/commit/1c6d0496ea19a72b0d0dcaff959b4554d19b7b9e): initialize before checking for PSK
+ - Fixes [#2214](https://github.com/quay/clair/issues/2214) -  [#2221](https://github.com/quay/clair/issues/2221)### Stomp
+- [b2501ba3](https://github.com/quay/clair/commit/b2501ba3f277034283d1ecfb30b6fb808ab8ffc9): ignore Unsubscribe error in test
+- [0b8e3507](https://github.com/quay/clair/commit/0b8e3507a0425fde64932627245a66458cb853da): add deprecation notice
+- [684be8d0](https://github.com/quay/clair/commit/684be8d043d43b66915fbf0d8976c1230a15f9b3): catch test-specific error
+### Types/V1
+- [50d0164b](https://github.com/quay/clair/commit/50d0164b0cf9d305f4cc5af1f0a9787e67623ca9): add JSON API v1 types and schemas
+### Reverts
+- cicd: exclude darwin/arm64
+
+
 <a name="v4.8.0"></a>
 ## [v4.8.0] - 2024-10-09
 ### 'Chore
@@ -146,6 +323,7 @@
 - [67b92e71](https://github.com/quay/clair/commit/67b92e71ca3ae3017add43f846e9c4b83f9fd29f): bump golang.org/x/net from 0.12.0 to 0.15.0
 - [a478ce91](https://github.com/quay/clair/commit/a478ce918566144d58b50ffb892cb33a11992036): bump github.com/pyroscope-io/godeltaprof
 ### Chore
+- [05680a2b](https://github.com/quay/clair/commit/05680a2bd328410c3aa19de39f3226acc3c234d6): v4.8.0 changelog bump
 - [94113d95](https://github.com/quay/clair/commit/94113d9539b83a25829a540afdb965a579d96c6e): update claircore to v1.5.32
 - [e77deb98](https://github.com/quay/clair/commit/e77deb9820c6d8896c377d228f5741ea57b7bc2f): update config module to v1.4.1
 - [e5fca953](https://github.com/quay/clair/commit/e5fca9539437286efbbbe5ead42972607ac149a5): update references to rhel updater to rhel-vex updater
@@ -2645,7 +2823,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.8.0...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.9.0...HEAD
+[v4.9.0]: https://github.com/quay/clair/compare/v4.8.0...v4.9.0
 [v4.8.0]: https://github.com/quay/clair/compare/v4.7.4...v4.8.0
 [v4.7.4]: https://github.com/quay/clair/compare/v4.7.3...v4.7.4
 [v4.7.3]: https://github.com/quay/clair/compare/v4.7.2...v4.7.3
