@@ -1,7 +1,6 @@
 package client_test
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -21,8 +20,7 @@ import (
 
 // TestDiffer puts the Differ methods of the client through its paces.
 func TestDiffer(t *testing.T) {
-	ctx, done := context.WithCancel(context.Background())
-	defer done()
+	ctx := t.Context()
 
 	t.Run("OK", func(t *testing.T) {
 		t.Run("Delete", func(t *testing.T) {
