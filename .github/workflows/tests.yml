@@ -69,7 +69,7 @@ jobs:
       - name: Check Cache
         if: ${{ inputs.cd == '' && steps.checkout.conclusion == 'success' }}
         id: check
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           key: >-
             setup-go-${{ runner.os }}-${{ steps.imageos.outputs.result }}-go-${{ steps.checkversion.outputs.go-version }}-${{ hashFiles('go.sum') }}
@@ -152,7 +152,7 @@ jobs:
           cache: ${{ needs.setup.outputs.go-cache }}
       - name: Assets Cache
         id: assets
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@v5
         with:
           key: integration-assets-${{ hashFiles('go.sum') }}
           restore-keys: |
