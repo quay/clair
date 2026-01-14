@@ -15,7 +15,7 @@ require (
 	github.com/klauspost/compress v1.18.3
 	github.com/prometheus/client_golang v1.23.2
 	github.com/quay/clair/config v1.4.3
-	github.com/quay/claircore v1.5.48
+	github.com/quay/claircore v1.5.49-0.20260112032931-db75b36765bd
 	github.com/quay/claircore/toolkit v1.4.0
 	github.com/quay/zlog v1.1.9
 	github.com/quay/zlog/v2 v2.0.0
@@ -111,5 +111,5 @@ require (
 	modernc.org/libc v1.66.10 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.39.1 // indirect
+	modernc.org/sqlite v1.42.2 // indirect
 )
