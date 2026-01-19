@@ -12,7 +12,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.9
 	github.com/jackc/pgx/v5 v5.8.0
-	github.com/klauspost/compress v1.18.2
+	github.com/klauspost/compress v1.18.3
 	github.com/prometheus/client_golang v1.23.2
 	github.com/quay/clair/config v1.4.3
 	github.com/quay/claircore v1.5.48
