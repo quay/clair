@@ -3,6 +3,7 @@ package httptransport
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"net/http/httptrace"
 	"path"
@@ -14,7 +15,6 @@ import (
 	"github.com/quay/claircore"
 	indexerController "github.com/quay/claircore/indexer/controller"
 	"github.com/quay/claircore/libvuln/driver"
-	"github.com/quay/zlog"
 	oteltrace "go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
@@ -76,18 +76,16 @@ func (h *MatcherV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, nil):
 		case errors.Is(err, http.ErrNotSupported): // Skip
 		default:
-			zlog.Warn(ctx).
-				Err(err).
-				Msg("unable to flush http response")
+			slog.WarnContext(ctx, "unable to flush http response",
+				"reason", err)
 		}
-		zlog.Info(ctx).
-			Str("remote_addr", r.RemoteAddr).
-			Str("method", r.Method).
-			Str("request_uri", r.RequestURI).
-			Int("status", status).
-			Int64("written", length).
-			Dur("duration", time.Since(start)).
-			Msg("handled HTTP request")
+		slog.InfoContext(ctx, "handled HTTP request",
+			"remote_addr", r.RemoteAddr,
+			"method", r.Method,
+			"request_uri", r.RequestURI,
+			"status", status,
+			"written", length,
+			"duration", time.Since(start))
 	}()
 	h.inner.ServeHTTP(w, r)
 }
@@ -95,9 +93,7 @@ func (h *MatcherV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // TODO(hank) All of these handlers need to do content negotiation.
 
 func (h *MatcherV1) vulnerabilityReport(w http.ResponseWriter, r *http.Request) {
-	ctx := zlog.ContextWithValues(r.Context(),
-		"component", "httptransport/MatcherV1.vulnerabilityReport")
-
+	ctx := r.Context()
 	if r.Method != http.MethodGet {
 		apiError(ctx, w, http.StatusMethodNotAllowed, "endpoint only allows GET")
 	}
@@ -149,9 +145,7 @@ func (h *MatcherV1) vulnerabilityReport(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *MatcherV1) updateDiffHandler(w http.ResponseWriter, r *http.Request) {
-	ctx := zlog.ContextWithValues(r.Context(),
-		"component", "httptransport/MatcherV1.updateDiffHandler")
-
+	ctx := r.Context()
 	if r.Method != http.MethodGet {
 		apiError(ctx, w, http.StatusMethodNotAllowed, "endpoint only allows GET")
 	}
@@ -187,9 +181,7 @@ func (h *MatcherV1) updateDiffHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MatcherV1) updateOperationHandlerGet(w http.ResponseWriter, r *http.Request) {
-	ctx := zlog.ContextWithValues(r.Context(),
-		"component", "httptransport/MatcherV1.updateOperationHandlerGet")
-
+	ctx := r.Context()
 	switch r.Method {
 	case http.MethodGet:
 	default:
@@ -236,8 +228,7 @@ func (h *MatcherV1) updateOperationHandlerGet(w http.ResponseWriter, r *http.Req
 }
 
 func (h *MatcherV1) updateOperationHandlerDelete(w http.ResponseWriter, r *http.Request) {
-	ctx := zlog.ContextWithValues(r.Context(),
-		"component", "httptransport/MatcherV1.updateOperationHandlerDelete")
+	ctx := r.Context()
 	switch r.Method {
 	case http.MethodDelete:
 	default:
@@ -248,7 +239,7 @@ func (h *MatcherV1) updateOperationHandlerDelete(w http.ResponseWriter, r *http.
 	id := filepath.Base(path)
 	uuid, err := uuid.Parse(id)
 	if err != nil {
-		zlog.Warn(ctx).Err(err).Msg("could not deserialize manifest")
+		slog.WarnContext(ctx, "could not deserialize manifest", "reason", err)
 		apiError(ctx, w, http.StatusBadRequest, "could not deserialize manifest: %v", err)
 	}
 

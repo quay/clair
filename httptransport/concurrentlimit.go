@@ -1,11 +1,11 @@
 package httptransport
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/quay/zlog"
 	"golang.org/x/sync/semaphore"
 )
 
@@ -39,12 +39,11 @@ func (l *limitHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if !sem.TryAcquire(1) {
 			concurrentLimitedCounter.WithLabelValues(endpt, r.Method).Add(1)
 			ctx := r.Context()
-			zlog.Info(ctx).
-				Str("remote_addr", r.RemoteAddr).
-				Str("method", r.Method).
-				Str("request_uri", r.RequestURI).
-				Int("status", http.StatusTooManyRequests).
-				Msg("rate limited HTTP request")
+			slog.InfoContext(ctx, "rate limited HTTP request",
+				"remote_addr", r.RemoteAddr,
+				"method", r.Method,
+				"request_uri", r.RequestURI,
+				"status", http.StatusTooManyRequests)
 
 			apiError(ctx, w, http.StatusTooManyRequests, "server handling too many requests")
 		}

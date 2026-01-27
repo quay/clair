@@ -16,7 +16,7 @@ import (
 	"sync"
 
 	"github.com/quay/claircore"
-	"github.com/quay/zlog"
+	"github.com/quay/claircore/toolkit/log"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -141,7 +141,7 @@ func withRequestID(r *http.Request) *http.Request {
 		defer idPool.Put(rng)
 		tid = fmt.Sprintf("%016x", rng.Uint64())
 	}
-	ctx = zlog.ContextWithValues(ctx, key, tid)
+	ctx = log.With(ctx, key, tid)
 	ctx = pprof.WithLabels(ctx, pprof.Labels(profile, tid))
 	return r.WithContext(ctx)
 }

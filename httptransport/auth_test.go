@@ -14,7 +14,7 @@ import (
 
 	"github.com/go-jose/go-jose/v3/jwt"
 	"github.com/quay/clair/config"
-	"github.com/quay/zlog"
+	"github.com/quay/claircore/test"
 
 	"github.com/quay/clair/v4/internal/httputil"
 )
@@ -33,7 +33,7 @@ var defaultClaims = jwt.Claims{
 
 func (tc *authTestcase) Run(ctx context.Context) func(*testing.T) {
 	return func(t *testing.T) {
-		ctx := zlog.Test(ctx, t)
+		ctx := test.Logging(t, ctx)
 		// Generate a nonce to return upon request.
 		b := make([]byte, 16)
 		if _, err := io.ReadFull(rand.Reader, b); err != nil {
@@ -170,7 +170,7 @@ func TestAuth(t *testing.T) {
 		},
 	}
 
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	for _, tc := range tt {
 		t.Run(tc.Name, tc.Run(ctx))
 	}

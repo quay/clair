@@ -7,12 +7,12 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log/slog"
 	"net/http"
 	"slices"
 	"sync"
 	"time"
 
-	"github.com/quay/zlog"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/quay/clair/v4/internal/httputil"
@@ -98,18 +98,16 @@ func DiscoveryHandler(_ context.Context, prefix string, topt otelhttp.Option) ht
 			case errors.Is(err, http.ErrNotSupported):
 				// Skip
 			default:
-				zlog.Warn(ctx).
-					Err(err).
-					Msg("unable to flush http response")
+				slog.WarnContext(ctx, "unable to flush http response",
+					"reason", err)
 			}
-			zlog.Info(ctx).
-				Str("remote_addr", r.RemoteAddr).
-				Str("method", r.Method).
-				Str("request_uri", r.RequestURI).
-				Int("status", status).
-				Int64("written", length).
-				Dur("duration", time.Since(start)).
-				Msg("handled HTTP request")
+			slog.InfoContext(ctx, "handled HTTP request",
+				"remote_addr", r.RemoteAddr,
+				"method", r.Method,
+				"request_uri", r.RequestURI,
+				"status", status,
+				"written", length,
+				"duration", time.Since(start))
 		}()
 		inner.ServeHTTP(w, r)
 	})

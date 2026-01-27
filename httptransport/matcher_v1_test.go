@@ -14,7 +14,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/quay/claircore/libvuln/driver"
-	"github.com/quay/zlog"
+	"github.com/quay/claircore/test"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/trace"
 
@@ -33,8 +33,7 @@ func TestUpdateDiffHandler(t *testing.T) {
 // TestUpdateDiffMatcher confirms the UpdateDiff handler provides
 // the correct status codes when a matcher returns an error or success
 func testUpdateDiffMatcher(t *testing.T) {
-	ctx := context.Background()
-	ctx = zlog.Test(ctx, t)
+	ctx := test.Logging(t)
 	t.Parallel()
 	mOK := &matcher.Mock{
 		UpdateDiff_: func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error) {
@@ -117,8 +116,7 @@ func testUpdateDiffMatcher(t *testing.T) {
 // TestUpdateDiffHandlerParams confirms the UpdateDiff handler
 // returns correct status codes given a set or url parameters
 func testUpdateDiffHandlerParams(t *testing.T) {
-	ctx := context.Background()
-	ctx = zlog.Test(ctx, t)
+	ctx := test.Logging(t)
 	t.Parallel()
 	table := []struct {
 		name       string
@@ -196,8 +194,7 @@ func testUpdateDiffHandlerParams(t *testing.T) {
 // TestUpdateDiffHandlerMethods confirms the UpdateDiffHandler responds correctly
 // to unaccepted HTTP methods.
 func testUpdateDiffHandlerMethods(t *testing.T) {
-	ctx := context.Background()
-	ctx = zlog.Test(ctx, t)
+	ctx := test.Logging(t)
 	t.Parallel()
 	mOK := &matcher.Mock{
 		UpdateDiff_: func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error) {
@@ -251,8 +248,7 @@ func TestUpdateOperationHandler(t *testing.T) {
 // testUpdateOperationHandlerErrors confirms the handler perfoms the correct
 // actions when a matcher.Differ is failing.
 func testUpdateOperationHandlerErrors(t *testing.T) {
-	ctx := context.Background()
-	ctx = zlog.Test(ctx, t)
+	ctx := test.Logging(t)
 	t.Parallel()
 
 	id := uuid.New().String()
@@ -308,8 +304,7 @@ func testUpdateOperationHandlerErrors(t *testing.T) {
 // testUpdateOperationHandlerMethods confirms the handler only responds
 // to the desired methods.
 func testUpdateOperationHandlerMethods(t *testing.T) {
-	ctx := context.Background()
-	ctx = zlog.Test(ctx, t)
+	ctx := test.Logging(t)
 	t.Parallel()
 	h := NewMatcherV1(ctx, "", &matcher.Mock{}, &indexer.Mock{}, time.Second*10, otelhttp.WithTracerProvider(trace.NewNoopTracerProvider()))
 	srv := httptest.NewUnstartedServer(h)
@@ -344,8 +339,7 @@ func testUpdateOperationHandlerMethods(t *testing.T) {
 // testUpdateOperationHandlerGet confirms the handler performs the correct
 // actions on GET.
 func testUpdateOperationHandlerGet(t *testing.T) {
-	ctx := context.Background()
-	ctx = zlog.Test(ctx, t)
+	ctx := test.Logging(t)
 	t.Parallel()
 
 	id := uuid.New()

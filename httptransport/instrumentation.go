@@ -2,11 +2,11 @@ package httptransport
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/quay/zlog"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -120,9 +120,8 @@ func catchAbort(h http.Handler) http.Handler {
 				return
 			}
 			w.WriteHeader(http.StatusInternalServerError)
-			zlog.Warn(r.Context()).
-				Interface("panic", rec).
-				Msg("handler panicked; please file a bug")
+			slog.WarnContext(r.Context(), "handler panicked; please file a bug",
+				"panic", rec)
 		}()
 		h.ServeHTTP(w, r)
 	})
