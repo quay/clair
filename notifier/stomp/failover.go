@@ -4,12 +4,12 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"log/slog"
 	"net"
 	"time"
 
 	gostomp "github.com/go-stomp/stomp/v3"
 	"github.com/quay/clair/config"
-	"github.com/quay/zlog"
 )
 
 // failOver will return the first successful connection made against the provided
@@ -70,15 +70,12 @@ func (f *failOver) Dial(ctx context.Context, addr string) (*gostomp.Conn, error)
 // The caller MUST call conn.Disconnect() to close the underlying TCP connection
 // when finished.
 func (f *failOver) Connection(ctx context.Context) (*gostomp.Conn, error) {
-	ctx = zlog.ContextWithValues(ctx, "component", "notifier/stomp/failOver.Connection")
-
 	for _, addr := range f.addrs {
 		conn, err := f.Dial(ctx, addr)
 		if err != nil {
-			zlog.Debug(ctx).
-				Str("broker", addr).
-				Err(err).
-				Msg("failed to dial broker, attempting next")
+			slog.DebugContext(ctx, "failed to dial broker, attempting next",
+				"broker", addr,
+				"reason", err)
 			continue
 		}
 		return conn, nil

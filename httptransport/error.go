@@ -6,9 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
-
-	"github.com/quay/zlog"
 )
 
 // StatusClientClosedRequest is a nonstandard HTTP status code used when the
@@ -29,14 +28,11 @@ func apiError(ctx context.Context, w http.ResponseWriter, code int, f string, v 
 		disconnect = true
 	default:
 	}
-	if ev := zlog.Debug(ctx); ev.Enabled() {
-		ev.
-			Bool("disconnect", disconnect).
-			Int("code", code).
-			Str("error", fmt.Sprintf(f, v...)).
-			Msg("http error response")
-	} else {
-		ev.Send()
+	if l := slog.Default(); l.Enabled(ctx, slog.LevelDebug) {
+		l.DebugContext(ctx, "http error response",
+			"disconnect", disconnect,
+			"code", code,
+			"message", fmt.Sprintf(f, v...))
 	}
 	if disconnect {
 		// Exit immediately if there's no client to read the response, anyway.
@@ -81,9 +77,8 @@ func apiError(ctx context.Context, w http.ResponseWriter, code int, f string, v 
 	case errors.Is(err, http.ErrNotSupported):
 		// Skip
 	default:
-		zlog.Warn(ctx).
-			Err(err).
-			Msg("unable to flush http response")
+		slog.WarnContext(ctx, "unable to flush http response",
+			"reason", err)
 	}
 	panic(http.ErrAbortHandler)
 }

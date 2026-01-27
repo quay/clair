@@ -15,8 +15,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/quay/clair/config"
 	"github.com/quay/claircore"
+	"github.com/quay/claircore/test"
 	"github.com/quay/claircore/test/integration"
-	"github.com/quay/zlog"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/quay/clair/v4/notifier"
@@ -127,7 +127,7 @@ func TestDeliverer(t *testing.T) {
 	// code tested against ActiveMQ, but this was migrated to make the setup
 	// simpler.
 	integration.Skip(t)
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	const (
 		callback = "http://clair-notifier/notifier/api/v1/notifications/"
 	)
@@ -196,7 +196,7 @@ func TestDeliverer(t *testing.T) {
 func TestDirectDeliverer(t *testing.T) {
 	t.Parallel()
 	integration.Skip(t)
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 
 	table := []struct {
 		name         string
@@ -216,7 +216,7 @@ func TestDirectDeliverer(t *testing.T) {
 	for _, tt := range table {
 		queue := `/queue/` + uuid.New().String()
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := zlog.Test(ctx, t)
+			ctx := test.Logging(t, ctx)
 			// deliverer test
 			conf := config.STOMP{
 				Direct:      true,

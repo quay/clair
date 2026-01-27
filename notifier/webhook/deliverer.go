@@ -3,13 +3,13 @@ package webhook
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"sync"
 
 	"github.com/google/uuid"
 	"github.com/quay/clair/config"
-	"github.com/quay/zlog"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/internal/codec"
@@ -71,10 +71,7 @@ func (d *Deliverer) Name() string {
 //
 // Deliver POSTS a webhook data structure to the configured target.
 func (d *Deliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
-	ctx = zlog.ContextWithValues(ctx,
-		"component", "notifier/webhook/Deliverer.Deliver",
-		"notification_id", nID.String(),
-	)
+	log := slog.With("notification_id", &nID)
 
 	callback, err := d.callback.Parse(nID.String())
 	if err != nil {
@@ -101,10 +98,9 @@ func (d *Deliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
 		}
 	}
 
-	zlog.Info(ctx).
-		Stringer("callback", callback).
-		Stringer("target", d.target).
-		Msg("dispatching webhook")
+	log.InfoContext(ctx, "dispatching webhook",
+		"callback", callback,
+		"target", d.target)
 
 	resp, err := d.c.Do(req)
 	if err != nil {

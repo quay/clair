@@ -3,13 +3,12 @@ package auto
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/quay/zlog"
 )
 
 // Profiling enables block and mutex profiling.
@@ -47,11 +46,10 @@ func Profiling() {
 	runtime.SetBlockProfileRate(blockCur)
 	mutexPrev := runtime.SetMutexProfileFraction(mutexCur)
 	msgs = append(msgs, func(ctx context.Context) {
-		zlog.Info(ctx).
-			Bool("from_env", fromEnv).
-			Dur("block_rate", time.Duration(blockCur)*time.Nanosecond).
-			Str("prev_mutex_frac", fmt.Sprintf("1/%d", mutexPrev)).
-			Str("cur_mutex_frac", fmt.Sprintf("1/%d", mutexCur)).
-			Msg("profiling rates configured")
+		slog.InfoContext(ctx, "profiling rates configured",
+			"from_env", fromEnv,
+			"block_rate", time.Duration(blockCur)*time.Nanosecond,
+			"prev_mutex_frac", fmt.Sprintf("1/%d", mutexPrev),
+			"cur_mutex_frac", fmt.Sprintf("1/%d", mutexCur))
 	})
 }

@@ -11,11 +11,11 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
-	"github.com/quay/zlog"
+	"github.com/quay/claircore/test"
 )
 
 func TestMetric(t *testing.T) {
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	want := strings.NewReader(`
 # HELP clair_http_test_request_total A total count of http requests for the given path
 # TYPE clair_http_test_request_total counter

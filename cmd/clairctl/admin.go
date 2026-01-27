@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"regexp"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/quay/claircore"
-	"github.com/quay/zlog"
 	"github.com/urfave/cli/v2"
 )
 
@@ -142,15 +142,13 @@ func adminPre470(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("error parsing dsn: %w", err)
 	}
-	zlog.Info(ctx).
-		Str("host", pgcfg.ConnConfig.Host).
-		Str("database", pgcfg.ConnConfig.Database).
-		Str("user", pgcfg.ConnConfig.User).
-		Uint16("port", pgcfg.ConnConfig.Port).
-		Msg("using discovered connection params")
+	slog.InfoContext(ctx, "using discovered connection params",
+		"host", pgcfg.ConnConfig.Host,
+		"database", pgcfg.ConnConfig.Database,
+		"user", pgcfg.ConnConfig.User,
+		"port", pgcfg.ConnConfig.Port)
 
-	zlog.Debug(ctx).
-		Msg("resizing pool to 2 connections")
+	slog.DebugContext(ctx, "resizing pool to 2 connections")
 	pgcfg.MaxConns = 2
 	pool, err := pgxpool.NewWithConfig(ctx, pgcfg)
 	if err != nil {
@@ -168,19 +166,18 @@ func adminPre470(c *cli.Context) error {
 		var ok *bool
 		if err := conn.QueryRow(ctx, checkindex).Scan(&ok); err != nil {
 			if !errors.Is(err, pgx.ErrNoRows) {
-				zlog.Info(ctx).
-					AnErr("index_check", err).
-					Msg("error checking index existence")
+				slog.InfoContext(ctx, "error checking index existence",
+					"reason", err)
 			}
 		}
-		var query = mkindex
+		query := mkindex
 		if ok != nil && !*ok { // If it exists but isn't valid:
 			query = reindex
 		}
 		if _, err := conn.Exec(ctx, query); err != nil {
 			return fmt.Errorf("error (re)indexing database: %w", err)
 		}
-		zlog.Info(ctx).Msg("pre v4.7.0 admin done")
+		slog.InfoContext(ctx, "pre v4.7.0 admin done")
 		return nil
 	})
 }
@@ -205,15 +202,13 @@ func adminPost470(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("error parsing dsn: %w", err)
 	}
-	zlog.Info(ctx).
-		Str("host", pgcfg.ConnConfig.Host).
-		Str("database", pgcfg.ConnConfig.Database).
-		Str("user", pgcfg.ConnConfig.User).
-		Uint16("port", pgcfg.ConnConfig.Port).
-		Msg("using discovered connection params")
+	slog.InfoContext(ctx, "using discovered connection params",
+		"host", pgcfg.ConnConfig.Host,
+		"database", pgcfg.ConnConfig.Database,
+		"user", pgcfg.ConnConfig.User,
+		"port", pgcfg.ConnConfig.Port)
 
-	zlog.Debug(ctx).
-		Msg("resizing pool to 2 connections")
+	slog.DebugContext(ctx, "resizing pool to 2 connections")
 	pgcfg.MaxConns = 2
 	pool, err := pgxpool.NewWithConfig(ctx, pgcfg)
 	if err != nil {
@@ -242,7 +237,7 @@ func adminPost470(c *cli.Context) error {
 			return fmt.Errorf("error deleting vulns: %w", err)
 		}
 
-		zlog.Info(ctx).Msg("post v4.7.0 admin done")
+		slog.InfoContext(ctx, "post v4.7.0 admin done")
 		return nil
 	})
 }
@@ -267,15 +262,13 @@ func adminPre473(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("error parsing dsn: %w", err)
 	}
-	zlog.Info(ctx).
-		Str("host", pgcfg.ConnConfig.Host).
-		Str("database", pgcfg.ConnConfig.Database).
-		Str("user", pgcfg.ConnConfig.User).
-		Uint16("port", pgcfg.ConnConfig.Port).
-		Msg("using discovered connection params")
+	slog.InfoContext(ctx, "using discovered connection params",
+		"host", pgcfg.ConnConfig.Host,
+		"database", pgcfg.ConnConfig.Database,
+		"user", pgcfg.ConnConfig.User,
+		"port", pgcfg.ConnConfig.Port)
 
-	zlog.Debug(ctx).
-		Msg("resizing pool to 2 connections")
+	slog.DebugContext(ctx, "resizing pool to 2 connections")
 	pgcfg.MaxConns = 2
 	pool, err := pgxpool.NewWithConfig(ctx, pgcfg)
 	if err != nil {
@@ -293,19 +286,18 @@ func adminPre473(c *cli.Context) error {
 		var ok *bool
 		if err := conn.QueryRow(ctx, checkindex).Scan(&ok); err != nil {
 			if !errors.Is(err, pgx.ErrNoRows) {
-				zlog.Info(ctx).
-					AnErr("index_check", err).
-					Msg("error checking index existence")
+				slog.InfoContext(ctx, "error checking index existence",
+					"reason", err)
 			}
 		}
-		var query = mkindex
+		query := mkindex
 		if ok != nil && !*ok { // If it exists but isn't valid:
 			query = reindex
 		}
 		if _, err := conn.Exec(ctx, query); err != nil {
 			return fmt.Errorf("error (re)indexing database: %w", err)
 		}
-		zlog.Info(ctx).Msg("pre v4.7.3 admin done")
+		slog.InfoContext(ctx, "pre v4.7.3 admin done")
 		return nil
 	})
 }
@@ -383,9 +375,8 @@ func updateGoPackages(c *cli.Context) error {
 				if err != nil {
 					return err
 				}
-				ctx = zlog.ContextWithValues(ctx, "package_name", p, "version", version)
-				zlog.Debug(ctx).
-					Msg("working on version")
+				log := slog.With("package_name", p, "version", version)
+				log.DebugContext(ctx, "working on version")
 
 				var nv claircore.Version
 				ver, err := semver.NewVersion(version)
@@ -393,9 +384,7 @@ func updateGoPackages(c *cli.Context) error {
 				case errors.Is(err, nil):
 					nv = fromSemver(ver)
 				default:
-					zlog.Warn(ctx).
-						Err(err).
-						Msg("error parsing semver")
+					log.WarnContext(ctx, "error parsing semver", "reason", err)
 					continue
 				}
 				var (
@@ -411,10 +400,9 @@ func updateGoPackages(c *cli.Context) error {
 				if err != nil {
 					return fmt.Errorf("error updating packages: %w", err)
 				}
-				zlog.Info(ctx).
-					Int64("package_id", id).
-					Int64("rows affected", tag.RowsAffected()).
-					Msg("successfully updated package row")
+				slog.InfoContext(ctx, "successfully updated package row",
+					"package_id", id,
+					"rows affected", tag.RowsAffected())
 			}
 			return nil
 		})
@@ -460,16 +448,13 @@ func createConnPool(ctx context.Context, dsn string, maxConns int32) (*pgxpool.P
 	if err != nil {
 		return nil, fmt.Errorf("error parsing dsn: %w", err)
 	}
-	zlog.Info(ctx).
-		Str("host", pgcfg.ConnConfig.Host).
-		Str("database", pgcfg.ConnConfig.Database).
-		Str("user", pgcfg.ConnConfig.User).
-		Uint16("port", pgcfg.ConnConfig.Port).
-		Msg("using discovered connection params")
+	slog.InfoContext(ctx, "using discovered connection params",
+		"host", pgcfg.ConnConfig.Host,
+		"database", pgcfg.ConnConfig.Database,
+		"user", pgcfg.ConnConfig.User,
+		"port", pgcfg.ConnConfig.Port)
 
-	zlog.Debug(ctx).
-		Int32("pool size", maxConns).
-		Msg("resizing pool")
+	slog.DebugContext(ctx, "resizing pool", "pool_size", maxConns)
 	pgcfg.MaxConns = int32(maxConns)
 	pool, err := pgxpool.NewWithConfig(ctx, pgcfg)
 	if err != nil {
@@ -512,15 +497,13 @@ func adminPre480(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("error parsing dsn: %w", err)
 	}
-	zlog.Info(ctx).
-		Str("host", pgcfg.ConnConfig.Host).
-		Str("database", pgcfg.ConnConfig.Database).
-		Str("user", pgcfg.ConnConfig.User).
-		Uint16("port", pgcfg.ConnConfig.Port).
-		Msg("using discovered connection params")
+	slog.InfoContext(ctx, "using discovered connection params",
+		"host", pgcfg.ConnConfig.Host,
+		"database", pgcfg.ConnConfig.Database,
+		"user", pgcfg.ConnConfig.User,
+		"port", pgcfg.ConnConfig.Port)
 
-	zlog.Debug(ctx).
-		Msg("resizing pool to 1 connections")
+	slog.DebugContext(ctx, "resizing pool to 1 connections")
 	pgcfg.MaxConns = 1
 	pool, err := pgxpool.NewWithConfig(ctx, pgcfg)
 	if err != nil {
@@ -538,8 +521,8 @@ func adminPre480(c *cli.Context) error {
 		if _, err := conn.Exec(ctx, setMatcherMigration); err != nil {
 			return fmt.Errorf("error setting matcher migration: %w", err)
 		}
-		zlog.Debug(ctx).Msg("Set migration version done")
-		zlog.Info(ctx).Msg("pre v4.8.0 admin done")
+		slog.DebugContext(ctx, "Set migration version done")
+		slog.InfoContext(ctx, "pre v4.8.0 admin done")
 		return nil
 	})
 }
@@ -564,15 +547,13 @@ func adminPost480(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("error parsing dsn: %w", err)
 	}
-	zlog.Info(ctx).
-		Str("host", pgcfg.ConnConfig.Host).
-		Str("database", pgcfg.ConnConfig.Database).
-		Str("user", pgcfg.ConnConfig.User).
-		Uint16("port", pgcfg.ConnConfig.Port).
-		Msg("using discovered connection params")
+	slog.InfoContext(ctx, "using discovered connection params",
+		"host", pgcfg.ConnConfig.Host,
+		"database", pgcfg.ConnConfig.Database,
+		"user", pgcfg.ConnConfig.User,
+		"port", pgcfg.ConnConfig.Port)
 
-	zlog.Debug(ctx).
-		Msg("resizing pool to 2 connections")
+	slog.DebugContext(ctx, "resizing pool to 2 connections")
 	pgcfg.MaxConns = 2
 	pool, err := pgxpool.NewWithConfig(ctx, pgcfg)
 	if err != nil {
@@ -606,16 +587,16 @@ func adminPost480(c *cli.Context) error {
 		if err := rows.Err(); err != nil {
 			return err
 		}
-		zlog.Debug(ctx).Strs("updaters", updaters).Msg("Got updaters")
+		slog.DebugContext(ctx, "got updaters", "updaters", updaters)
 		if _, err := conn.Exec(ctx, deleteOVALUO, updaters); err != nil {
 			return fmt.Errorf("error deleting OVAL update_operations: %w", err)
 		}
-		zlog.Debug(ctx).Msg("Delete update_operations done")
+		slog.DebugContext(ctx, "delete update_operations done")
 		if _, err := conn.Exec(ctx, deleteOVALVulns, updaters); err != nil {
 			return fmt.Errorf("error deleting OVAL vulns: %w", err)
 		}
-		zlog.Debug(ctx).Msg("Delete vulns done")
-		zlog.Info(ctx).Msg("post v4.8.0 admin done")
+		slog.DebugContext(ctx, "delete vulns done")
+		slog.InfoContext(ctx, "post v4.8.0 admin done")
 		return nil
 	})
 }

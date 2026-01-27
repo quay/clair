@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"runtime"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/quay/clair/config"
-	"github.com/quay/zlog"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/quay/clair/v4/indexer"
@@ -67,27 +67,25 @@ type Opts struct {
 
 // New returns a configured notifier subsystem.
 func New(ctx context.Context, store notifier.Store, locks notifier.Locker, opts Opts) (*Notifier, error) {
-	ctx = zlog.ContextWithValues(ctx, "component", "notifier/service/New")
 	srv := Notifier{store: store}
 
 	// Check for test mode.
 	if tm := os.Getenv("NOTIFIER_TEST_MODE"); tm != "" {
-		zlog.Warn(ctx).
-			Stringer("interval", opts.PollInterval).
-			Msg("NOTIFIER TEST MODE ENABLED. NOTIFIER WILL CREATE TEST NOTIFICATIONS ON A SET INTERVAL")
+		slog.WarnContext(ctx,
+			"notifier will create test notifications on a set interval",
+			"test_mode_enabled", true,
+			"interval", opts.PollInterval)
 		testModeInit(ctx, &opts)
 	}
 
 	// Configure the Poller.
-	zlog.Info(ctx).
-		Stringer("interval", opts.PollInterval).
-		Msg("initializing poller")
+	slog.InfoContext(ctx, "initializing poller",
+		"interval", opts.PollInterval)
 	srv.poll = notifier.NewPoller(store, opts.Matcher, opts.PollInterval)
 
 	// Configure the Processor.
-	zlog.Info(ctx).
-		Int("count", processors).
-		Msg("initializing processors")
+	slog.InfoContext(ctx, "initializing processors",
+		"count", processors)
 	srv.proc = notifier.NewProcessor(store, locks, opts.Indexer, opts.Matcher)
 	srv.proc.NoSummary = opts.DisableSummary
 
@@ -98,9 +96,8 @@ func New(ctx context.Context, store notifier.Store, locks notifier.Locker, opts 
 	// time.
 	switch {
 	case opts.Webhook != nil:
-		zlog.Info(ctx).
-			Int("count", deliveries).
-			Msg("initializing webhook deliverers")
+		slog.InfoContext(ctx, "initializing webhook deliverers",
+			"count", deliveries)
 		del, err = webhook.New(opts.Webhook, opts.Client, opts.Signer)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create webhook deliverer: %v", err)
@@ -108,8 +105,8 @@ func New(ctx context.Context, store notifier.Store, locks notifier.Locker, opts 
 	case opts.AMQP != nil:
 		conf := opts.AMQP
 		if len(conf.URIs) == 0 {
-			zlog.Warn(ctx).
-				Msg("amqp delivery misconfigured: no broker URIs to connect to")
+			slog.WarnContext(ctx, "amqp delivery misconfigured",
+				"reason", "no broker URIs to connect to")
 			break
 		}
 		if conf.Direct {
@@ -126,8 +123,8 @@ func New(ctx context.Context, store notifier.Store, locks notifier.Locker, opts 
 	case opts.STOMP != nil:
 		conf := opts.STOMP
 		if len(conf.URIs) == 0 {
-			zlog.Warn(ctx).
-				Msg("stomp delivery misconfigured: no broker URIs to connect to")
+			slog.WarnContext(ctx, "stomp delivery misconfigured",
+				"reason", "no broker URIs to connect to")
 			break
 		}
 		if conf.Direct {
@@ -168,7 +165,6 @@ func testModeInit(ctx context.Context, opts *Opts) error {
 //
 // Canceling the supplied Context should return context.Canceled.
 func (s *Notifier) Run(ctx context.Context) error {
-	ctx = zlog.ContextWithValues(ctx, "component", "notifier/service/Notifier.Run")
 	// Channel for poller to processor communication.
 	ch := make(chan notifier.Event, notifier.MaxChanSize)
 	eg, ctx := errgroup.WithContext(ctx)
@@ -190,7 +186,6 @@ func (s *Notifier) Run(ctx context.Context) error {
 // Gc is the garbage collection process.
 func (s *Notifier) gc(ctx context.Context) func() error {
 	// BUG(hank) The garbage collection period is currently unconfigurable.
-	ctx = zlog.ContextWithValues(ctx, "component", "notifier/service/Notifier.gc")
 	ticker := time.NewTicker(time.Hour)
 	return func() error {
 		defer ticker.Stop()
@@ -199,10 +194,13 @@ func (s *Notifier) gc(ctx context.Context) func() error {
 			case <-ctx.Done():
 				return ctx.Err()
 			case <-ticker.C:
+				attrs := make([]slog.Attr, 1, 2)
+				attrs[0] = slog.Bool("success", true)
 				if err := s.store.CollectNotifications(ctx); err != nil {
-					zlog.Info(ctx).Err(err).Msg("gc errored")
+					attrs[0].Value = slog.BoolValue(false)
+					attrs = append(attrs, slog.String("reason", err.Error()))
 				}
-				zlog.Info(ctx).Msg("gc done")
+				slog.LogAttrs(ctx, slog.LevelInfo, "gc done", attrs...)
 			}
 		}
 	}

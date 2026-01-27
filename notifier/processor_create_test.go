@@ -3,6 +3,7 @@ package notifier
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sort"
 	"sync/atomic"
 	"testing"
@@ -12,7 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
-	"github.com/quay/zlog"
+	"github.com/quay/claircore/test"
 
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
@@ -80,7 +81,7 @@ func TestProcessCreate(t *testing.T) {
 // available
 func testProcessorStoreErr(t *testing.T) {
 	t.Parallel()
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	e := Event{
 		updater: testUpdater,
 		uo:      processorUpdateOps[testUpdater][0],
@@ -114,7 +115,7 @@ func testProcessorStoreErr(t *testing.T) {
 		matcher: mm,
 	}
 
-	err := p.create(ctx, e, uuid.Nil)
+	err := p.create(ctx, slog.Default(), e, uuid.Nil)
 	if err == nil {
 		t.Fatalf("expected err")
 	}
@@ -124,7 +125,7 @@ func testProcessorStoreErr(t *testing.T) {
 // available
 func testProcessorIndexerErr(t *testing.T) {
 	t.Parallel()
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	e := Event{
 		updater: testUpdater,
 		uo:      processorUpdateOps[testUpdater][0],
@@ -155,7 +156,7 @@ func testProcessorIndexerErr(t *testing.T) {
 		matcher: mm,
 	}
 
-	err := p.create(ctx, e, uuid.Nil)
+	err := p.create(ctx, slog.Default(), e, uuid.Nil)
 	if err == nil {
 		t.Fatalf("expected err")
 	}
@@ -165,7 +166,7 @@ func testProcessorIndexerErr(t *testing.T) {
 // available
 func testProcessorMatcherErr(t *testing.T) {
 	t.Parallel()
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	e := Event{
 		updater: testUpdater,
 		uo:      processorUpdateOps[testUpdater][0],
@@ -193,7 +194,7 @@ func testProcessorMatcherErr(t *testing.T) {
 		matcher: mm,
 	}
 
-	err := p.create(ctx, e, uuid.Nil)
+	err := p.create(ctx, slog.Default(), e, uuid.Nil)
 	if err == nil {
 		t.Fatalf("expected err")
 	}
@@ -202,7 +203,7 @@ func testProcessorMatcherErr(t *testing.T) {
 // testProcessorCreate confirms notifications are created correctly.
 func testProcessorCreate(t *testing.T) {
 	t.Parallel()
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	e := Event{
 		updater: testUpdater,
 		uo:      processorUpdateOps[testUpdater][0],
@@ -261,7 +262,7 @@ func testProcessorCreate(t *testing.T) {
 		matcher: mm,
 	}
 
-	err := p.create(ctx, e, uuid.Nil)
+	err := p.create(ctx, slog.Default(), e, uuid.Nil)
 	if err != nil {
 		t.Fatalf("unexpected err: %v", err)
 	}

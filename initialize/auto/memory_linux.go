@@ -6,12 +6,11 @@ import (
 	"context"
 	"errors"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path"
 	"runtime/debug"
 	"strconv"
-
-	"github.com/quay/zlog"
 )
 
 // Memory sets the runtime's memory limit based on information gleaned from the
@@ -30,9 +29,8 @@ func Memory() {
 	switch {
 	case err != nil:
 		msgs = append(msgs, func(ctx context.Context) {
-			zlog.Error(ctx).
-				Err(err).
-				Msg("unable to guess memory limit")
+			slog.ErrorContext(ctx, "unable to guess memory limit",
+				"reason", err)
 		})
 		return
 	case lim == doNothing:
@@ -46,10 +44,9 @@ func Memory() {
 	tgt := lim - (lim / 20)
 	debug.SetMemoryLimit(tgt)
 	msgs = append(msgs, func(ctx context.Context) {
-		zlog.Info(ctx).
-			Int64("lim", lim).
-			Int64("target", tgt).
-			Msg("set memory limit")
+		slog.InfoContext(ctx, "set memory limit",
+			"lim", lim,
+			"target", tgt)
 	})
 }
 

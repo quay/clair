@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sync"
 
 	"github.com/google/uuid"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
-	"github.com/quay/zlog"
 	"golang.org/x/sync/errgroup"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
@@ -53,35 +53,29 @@ func NewProcessor(store Store, l Locker, indexer indexer.Service, matcher matche
 //
 // Canceling the ctx will end the processing.
 func (p *Processor) Process(ctx context.Context, c <-chan Event) error {
-	ctx = zlog.ContextWithValues(ctx, "component", "notifier/Processor.process")
-
-	zlog.Debug(ctx).Msg("processing events")
+	slog.DebugContext(ctx, "processing events")
 	for {
 		select {
 		case <-ctx.Done():
-			zlog.Info(ctx).Msg("context canceled: ending event processing")
+			slog.InfoContext(ctx, "context canceled: ending event processing")
 			return ctx.Err()
 		case e := <-c:
-			ctx := zlog.ContextWithValues(ctx,
-				"updater", e.updater,
-				"UOID", e.uo.Ref.String(),
-			)
-			zlog.Debug(ctx).Msg("processing")
+			log := slog.With("updater", e.updater, "UOID", e.uo.Ref)
+			log.DebugContext(ctx, "processing")
 			if err := func() error {
 				ctx, done := p.locks.TryLock(ctx, e.uo.Ref.String())
 				defer done()
 				if err := ctx.Err(); err != nil {
 					return err
 				}
-				safe, prev := p.safe(ctx, e)
+				safe, prev := p.safe(ctx, log, e)
 				if !safe {
 					return nil
 				}
-				return p.create(ctx, e, prev)
+				return p.create(ctx, log, e, prev)
 			}(); err != nil {
-				zlog.Error(ctx).
-					Err(err).
-					Msg("failed to create notifications")
+				log.WarnContext(ctx, "failed to create notifications",
+					"reason", err)
 			}
 		}
 	}
@@ -91,20 +85,17 @@ func (p *Processor) Process(ctx context.Context, c <-chan Event) error {
 // notifications
 //
 // will be performed under a distributed lock
-func (p *Processor) create(ctx context.Context, e Event, prev uuid.UUID) error {
-	ctx = zlog.ContextWithValues(ctx, "component", "notifier/Processor.create")
-	zlog.Debug(ctx).
-		Stringer("prev", prev).
-		Stringer("cur", e.uo.Ref).
-		Msg("retrieving diff")
+func (p *Processor) create(ctx context.Context, log *slog.Logger, e Event, prev uuid.UUID) error {
+	log.DebugContext(ctx, "retrieving diff",
+		"prev", prev,
+		"cur", e.uo.Ref)
 	diff, err := p.matcher.UpdateDiff(ctx, prev, e.uo.Ref)
 	if err != nil {
 		return fmt.Errorf("failed to get update diff: %v", err)
 	}
-	zlog.Debug(ctx).
-		Int("removed", len(diff.Removed)).
-		Int("added", len(diff.Added)).
-		Msg("diff results")
+	log.DebugContext(ctx, "diff results",
+		"removed", len(diff.Removed),
+		"added", len(diff.Added))
 
 	tab := notifTab{
 		N:      make([]Notification, 0),
@@ -118,7 +109,7 @@ func (p *Processor) create(ctx context.Context, e Event, prev uuid.UUID) error {
 	}
 
 	// Don't count up the affected manifests unless we're going to print it.
-	if ev := zlog.Debug(ctx); ev.Enabled() {
+	if log.Enabled(ctx, slog.LevelDebug) {
 		var added, removed int
 		for _, n := range tab.N {
 			switch n.Reason {
@@ -128,10 +119,9 @@ func (p *Processor) create(ctx context.Context, e Event, prev uuid.UUID) error {
 				removed++
 			}
 		}
-		ev.
-			Int("added", added).
-			Int("removed", removed).
-			Msg("affected manifest counts")
+		log.DebugContext(ctx, "affected manifest counts",
+			"added", added,
+			"removed", removed)
 	}
 
 	if len(tab.N) == 0 {
@@ -142,8 +132,7 @@ func (p *Processor) create(ctx context.Context, e Event, prev uuid.UUID) error {
 			UOID:           e.uo.Ref,
 			Status:         Delivered,
 		}
-		zlog.Debug(ctx).
-			Msg("no affected manifests for update operation, setting to delivered.")
+		log.DebugContext(ctx, "no affected manifests for update operation, setting to delivered")
 		err := p.store.PutReceipt(ctx, e.uo.Updater, r)
 		if err != nil {
 			return fmt.Errorf("failed to put receipt: %v", err)
@@ -269,9 +258,7 @@ func getAffected(ctx context.Context, ic indexer.Service, nosummary bool, vs []c
 // returned
 //
 // will be performed under a distributed lock.
-func (p *Processor) safe(ctx context.Context, e Event) (bool, uuid.UUID) {
-	ctx = zlog.ContextWithValues(ctx, "component", "notifier/Processor.safe")
-
+func (p *Processor) safe(ctx context.Context, log *slog.Logger, e Event) (bool, uuid.UUID) {
 	// confirm we are not making duplicate notifications
 	var errNoReceipt *clairerror.ErrNoReceipt
 	_, err := p.store.ReceiptByUOID(ctx, e.uo.Ref)
@@ -279,13 +266,11 @@ func (p *Processor) safe(ctx context.Context, e Event) (bool, uuid.UUID) {
 	case errors.As(err, &errNoReceipt):
 		// hop out of switch
 	case err != nil:
-		zlog.Error(ctx).
-			Err(err).
-			Msg("received error getting receipt by UOID")
+		log.WarnContext(ctx, "received error getting receipt by UOID",
+			"reason", err)
 		return false, uuid.Nil
 	default:
-		zlog.Info(ctx).
-			Msg("receipt created by another processor. will not process notifications")
+		log.InfoContext(ctx, "receipt created by another processor; will not process notifications")
 		return false, uuid.Nil
 	}
 
@@ -295,14 +280,12 @@ func (p *Processor) safe(ctx context.Context, e Event) (bool, uuid.UUID) {
 	// but code path is not implemented. implement this to optimize.
 	all, err := p.matcher.UpdateOperations(ctx, driver.VulnerabilityKind)
 	if err != nil {
-		zlog.Error(ctx).
-			Err(err).
-			Msg("received error getting update operations from matcher")
+		log.WarnContext(ctx, "received error getting update operations from matcher",
+			"reason", err)
 		return false, uuid.Nil
 	}
 	if _, ok := all[e.updater]; !ok {
-		zlog.Warn(ctx).
-			Msg("updater missing from update operations returned from matcher. matcher may have garbage collected")
+		log.WarnContext(ctx, "updater missing from update operations returned from matcher (may have been garbage collected)")
 		return false, uuid.Nil
 	}
 
@@ -319,9 +302,8 @@ func (p *Processor) safe(ctx context.Context, e Event) (bool, uuid.UUID) {
 	}
 
 	if current.Ref.String() != e.uo.Ref.String() {
-		zlog.Info(ctx).
-			Stringer("new", current.Ref).
-			Msg("newer update operation is present, will not process notifications")
+		log.InfoContext(ctx, "newer update operation is present, will not process notifications",
+			"new", current.Ref)
 		return false, uuid.Nil
 	}
 	return true, prev.Ref

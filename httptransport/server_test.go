@@ -13,7 +13,7 @@ import (
 	"github.com/quay/clair/config"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
-	"github.com/quay/zlog"
+	"github.com/quay/claircore/test"
 
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
@@ -44,7 +44,7 @@ func TestUpdateEndpoints(t *testing.T) {
 			return nil, nil
 		},
 	}
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	h, err := New(ctx, &config.Config{Mode: config.MatcherMode}, i, m, nil)
 	if err != nil {
 		t.Error(err)

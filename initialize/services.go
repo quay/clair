@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/http/cookiejar"
 	"time"
@@ -18,7 +19,6 @@ import (
 	"github.com/quay/claircore/libvuln"
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/claircore/pkg/ctxlock/v2"
-	"github.com/quay/zlog"
 	"golang.org/x/net/publicsuffix"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
@@ -56,9 +56,8 @@ type Srv struct {
 // Services configures the services needed for a given mode according to the
 // provided configuration.
 func Services(ctx context.Context, cfg *config.Config) (*Srv, error) {
-	ctx = zlog.ContextWithValues(ctx, "component", "initialize/Services")
-	zlog.Info(ctx).Msg("begin service initialization")
-	defer zlog.Info(ctx).Msg("end service initialization")
+	slog.InfoContext(ctx, "begin service initialization")
+	defer slog.InfoContext(ctx, "end service initialization")
 
 	var srv Srv
 	var err error
@@ -278,7 +277,7 @@ func localMatcher(ctx context.Context, cfg *config.Config) (matcher.Service, err
 
 	ers := []driver.Enricher{}
 	if !cfg.Matcher.DisableEnrichment {
-		zlog.Info(ctx).Msg("enrichment enabled")
+		slog.InfoContext(ctx, "enrichment enabled")
 		ers = append(ers, &cvss.Enricher{})
 	}
 
@@ -364,14 +363,14 @@ func localNotifier(ctx context.Context, cfg *config.Config, i indexer.Service, m
 	switch {
 	case err == nil:
 	case errors.Is(err, service.ErrNoDelivery):
-		zlog.Info(ctx).AnErr("reason", err).Msg("notifier disabled")
+		slog.InfoContext(ctx, "notifier disabled", "reason", err)
 		return nil, nil
 	default:
 		return nil, mkErr(err)
 	}
 	go func() {
 		if err := s.Run(ctx); err != context.Canceled {
-			zlog.Error(ctx).Err(err).Msg("unexpected notifier error")
+			slog.ErrorContext(ctx, "unexpected notifier error", "reason", err)
 		}
 	}()
 	return s, nil
