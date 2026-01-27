@@ -4,13 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log/slog"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/quay/zlog"
 	"github.com/remind101/migrate"
 
 	"github.com/quay/clair/v4/notifier/migrations"
@@ -30,14 +30,13 @@ func NewStore(pool *pgxpool.Pool) *Store {
 
 // Init initializes the database using the specified config.
 func Init(ctx context.Context, cfg *pgx.ConnConfig) error {
-	ctx = zlog.ContextWithValues(ctx, "component", "notifier/postgres/Init")
 	db, err := sql.Open("pgx", stdlib.RegisterConnConfig(cfg))
 	if err != nil {
 		return fmt.Errorf("failed to open db: %w", err)
 	}
 	defer db.Close()
 
-	zlog.Info(ctx).Msg("performing notifier migrations")
+	slog.InfoContext(ctx, "performing notifier migrations")
 	migrator := migrate.NewPostgresMigrator(db)
 	migrator.Table = migrations.MigrationTable
 	if err := migrator.Exec(migrate.Up, migrations.Migrations...); err != nil {

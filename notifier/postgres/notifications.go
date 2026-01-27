@@ -11,7 +11,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/quay/zlog"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/notifier"
@@ -322,7 +321,6 @@ func (r *notificationSource) Columns() []string {
 // may decide to gc notifications which have not been set deleted after some
 // period of time, thus this condition should not be checked.
 func (s *Store) CollectNotifications(ctx context.Context) error {
-	ctx = zlog.ContextWithValues(ctx, "component", "notifier/postgres/Store.CollectNotifications")
 	const (
 		tryLock            = `SELECT pg_try_advisory_xact_lock($1, $2);`
 		deleteNotification = `DELETE FROM notification USING receipt WHERE id = receipt.notification_id AND receipt.status = 'deleted'::receiptstatus;`
