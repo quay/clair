@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"path"
 	"time"
 
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/pkg/tarfs"
-	"github.com/quay/zlog"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/quay/clair/v4/indexer"
@@ -66,18 +66,16 @@ func (h *IndexerV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, nil):
 		case errors.Is(err, http.ErrNotSupported): // Skip
 		default:
-			zlog.Warn(ctx).
-				Err(err).
-				Msg("unable to flush http response")
+			slog.WarnContext(ctx, "unable to flush http response",
+				"reason", err)
 		}
-		zlog.Info(ctx).
-			Str("remote_addr", r.RemoteAddr).
-			Str("method", r.Method).
-			Str("request_uri", r.RequestURI).
-			Int("status", status).
-			Int64("written", length).
-			Dur("duration", time.Since(start)).
-			Msg("handled HTTP request")
+		slog.InfoContext(ctx, "handled HTTP request",
+			"remote_addr", r.RemoteAddr,
+			"method", r.Method,
+			"request_uri", r.RequestURI,
+			"status", status,
+			"written", length,
+			"duration", time.Since(start))
 	}()
 	h.inner.ServeHTTP(w, r)
 }
@@ -143,9 +141,8 @@ func (h *IndexerV1) indexReport(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			apiError(ctx, w, http.StatusInternalServerError, "could not delete manifests: %v", err)
 		}
-		zlog.Debug(ctx).
-			Int("count", len(ds)).
-			Msg("manifests deleted")
+		slog.DebugContext(ctx, "manifests deleted",
+			"count", len(ds))
 		defer writerError(w, &err)()
 		w.WriteHeader(http.StatusOK)
 		enc := codec.GetEncoder(w)

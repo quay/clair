@@ -5,10 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/quay/clair/config"
-	"github.com/quay/zlog"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/notifier"
@@ -66,7 +66,7 @@ func (d *DirectDeliverer) Deliver(ctx context.Context, nID uuid.UUID) error {
 			return
 		}
 		if err := tx.AbortWithReceipt(); err != nil {
-			zlog.Warn(ctx).Err(err).Msg("transaction aborted")
+			slog.WarnContext(ctx, "transaction aborted", "reason", err)
 		}
 	}()
 

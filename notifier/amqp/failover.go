@@ -4,11 +4,11 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"sync"
 
 	"github.com/quay/clair/config"
-	"github.com/quay/zlog"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -27,20 +27,16 @@ type failOver struct {
 // Connection returns an AMQP connection to the first broker which successfully
 // handshakes.
 func (f *failOver) Connection(ctx context.Context) (*amqp.Connection, error) {
-	ctx = zlog.ContextWithValues(ctx,
-		"component", "notifier/amqp/failOver.Connection")
-
 	f.RLock()
 	if f.conn != nil && !f.conn.IsClosed() {
-		zlog.Debug(ctx).
-			Msg("existing connection exist and is not closed. returning this connection")
+		slog.DebugContext(ctx, "reusing connection", "address", f.conn.LocalAddr())
 		f.RUnlock()
 		return f.conn, nil
 	}
 	f.RUnlock()
 
 	for _, uri := range f.uris {
-		ctx := zlog.ContextWithValues(ctx, "broker", uri.String())
+		log := slog.With("broker", uri)
 		// safe to always call DialTLS per docs:
 		// 'DialTLS will use the provided tls.Config when it encounters an amqps:// scheme and will dial a plain connection when it encounters an amqp:// scheme.'
 		conn, err := amqp.DialTLS(uri.String(), f.tls)
@@ -48,8 +44,8 @@ func (f *failOver) Connection(ctx context.Context) (*amqp.Connection, error) {
 			if conn != nil {
 				conn.Close()
 			}
-			zlog.Info(ctx).
-				Msg("failed to connect to AMQP broker. attempting next broker")
+			log.InfoContext(ctx, "failed to connect to AMQP broker; attempting next broker",
+				"reason", err)
 			continue
 		}
 		ch, err := conn.Channel()
@@ -57,8 +53,8 @@ func (f *failOver) Connection(ctx context.Context) (*amqp.Connection, error) {
 			if conn != nil {
 				conn.Close()
 			}
-			zlog.Info(ctx).
-				Msg("could not obtain initial AMQP channel for passive exchange declare. attempting next broker")
+			log.InfoContext(ctx, "could not obtain initial AMQP channel; attempting next broker",
+				"reason", err)
 			continue
 		}
 		// if the name is "" it's the default exchange which
@@ -78,8 +74,8 @@ func (f *failOver) Connection(ctx context.Context) (*amqp.Connection, error) {
 				if conn != nil {
 					conn.Close()
 				}
-				zlog.Info(ctx).
-					Msg("could not obtain initial AMQP channel for passive exchange declare. attempting next broker")
+				log.InfoContext(ctx, "could not declare AMQP exchange; attempting next broker",
+					"reason", err)
 				continue
 			}
 		}

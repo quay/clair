@@ -13,7 +13,7 @@ import (
 
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/pkg/tarfs"
-	"github.com/quay/zlog"
+	"github.com/quay/claircore/test"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/trace"
 
@@ -22,8 +22,7 @@ import (
 )
 
 func TestIndexReportBadLayer(t *testing.T) {
-	ctx := context.Background()
-	ctx = zlog.Test(ctx, t)
+	ctx := test.Logging(t)
 
 	i := &indexer.Mock{
 		State_: func(ctx context.Context) (string, error) {
@@ -42,7 +41,7 @@ func TestIndexReportBadLayer(t *testing.T) {
 	srv.Start()
 	defer srv.Close()
 	t.Run("Report", func(t *testing.T) {
-		ctx := zlog.Test(ctx, t)
+		ctx := test.Logging(t, ctx)
 		const path = `/index_report`
 		t.Run("POST", func(t *testing.T) {
 			const body = `{"hash":"sha256:0000000000000000000000000000000000000000000000000000000000000000",` +
@@ -65,8 +64,7 @@ func TestIndexReportBadLayer(t *testing.T) {
 }
 
 func TestIndexerV1(t *testing.T) {
-	ctx := context.Background()
-	ctx = zlog.Test(ctx, t)
+	ctx := test.Logging(t)
 
 	digest := claircore.MustParseDigest("sha256:0000000000000000000000000000000000000000000000000000000000000000")
 	i := &indexer.Mock{
@@ -105,7 +103,7 @@ func TestIndexerV1(t *testing.T) {
 	defer srv.Close()
 
 	t.Run("State", func(t *testing.T) {
-		ctx := zlog.Test(ctx, t)
+		ctx := test.Logging(t, ctx)
 		const path = `/index_state`
 		t.Run("GET", func(t *testing.T) {
 			req, err := httputil.NewRequestWithContext(ctx, http.MethodGet, srv.URL+path, nil)
@@ -124,7 +122,7 @@ func TestIndexerV1(t *testing.T) {
 		})
 	})
 	t.Run("Report", func(t *testing.T) {
-		ctx := zlog.Test(ctx, t)
+		ctx := test.Logging(t, ctx)
 		const path = `/index_report`
 		t.Run("POST", func(t *testing.T) {
 			const body = `{"hash":"sha256:0000000000000000000000000000000000000000000000000000000000000000",` +
@@ -185,7 +183,7 @@ func TestIndexerV1(t *testing.T) {
 		})
 	})
 	t.Run("ReportOne", func(t *testing.T) {
-		ctx := zlog.Test(ctx, t)
+		ctx := test.Logging(t, ctx)
 		const path = `/index_report/sha256:0000000000000000000000000000000000000000000000000000000000000000`
 		t.Run("DELETE", func(t *testing.T) {
 			req, err := httputil.NewRequestWithContext(ctx, http.MethodDelete, srv.URL+path, nil)
@@ -219,7 +217,7 @@ func TestIndexerV1(t *testing.T) {
 		})
 	})
 	t.Run("AffectedManifests", func(t *testing.T) {
-		ctx := zlog.Test(ctx, t)
+		ctx := test.Logging(t, ctx)
 		const path = `/internal/affected_manifest/`
 		t.Run("POST", func(t *testing.T) {
 			const body = `{"vulnerabilities":[]}`

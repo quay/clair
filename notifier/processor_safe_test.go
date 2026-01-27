@@ -3,12 +3,13 @@ package notifier
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/quay/claircore/libvuln/driver"
-	"github.com/quay/zlog"
+	"github.com/quay/claircore/test"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 	"github.com/quay/clair/v4/matcher"
@@ -19,7 +20,7 @@ var (
 	start              = time.Now()
 	processorUpdateOps = map[string][]driver.UpdateOperation{
 		// the array will be sorted by newest UO
-		testUpdater: []driver.UpdateOperation{
+		testUpdater: {
 			{
 				Ref:         uuid.New(),
 				Date:        start,
@@ -49,7 +50,7 @@ func TestProcessorSafe(t *testing.T) {
 // testSafe confirms when all safety guards pass the processor will
 // create notifications.
 func testSafe(t *testing.T) {
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	sm := &MockStore{
 		ReceiptByUOID_: func(ctx context.Context, id uuid.UUID) (Receipt, error) {
 			return Receipt{}, &clairerror.ErrNoReceipt{}
@@ -68,7 +69,7 @@ func testSafe(t *testing.T) {
 		updater: testUpdater,
 		uo:      processorUpdateOps[testUpdater][0],
 	}
-	b, _ := p.safe(ctx, e)
+	b, _ := p.safe(ctx, slog.Default(), e)
 	if !b {
 		t.Fatalf("got: %v, want: %v", b, true)
 	}
@@ -76,7 +77,7 @@ func testSafe(t *testing.T) {
 
 // testUnsafeStoreErr confirms notifications will not be created if Store is returning an error.
 func testUnsafeStoreErr(t *testing.T) {
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	sm := &MockStore{
 		ReceiptByUOID_: func(ctx context.Context, id uuid.UUID) (Receipt, error) {
 			return Receipt{}, fmt.Errorf("expected")
@@ -97,7 +98,7 @@ func testUnsafeStoreErr(t *testing.T) {
 		updater: testUpdater,
 		uo:      processorUpdateOps[testUpdater][0],
 	}
-	b, _ := p.safe(ctx, e)
+	b, _ := p.safe(ctx, slog.Default(), e)
 	if b {
 		t.Fatalf("got: %v, want: %v", b, false)
 	}
@@ -105,7 +106,7 @@ func testUnsafeStoreErr(t *testing.T) {
 
 // testUnsafeMatcherErr confirms notifications will not be created if Matcher is returning an error.
 func testUnsafeMatcherErr(t *testing.T) {
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	sm := &MockStore{
 		ReceiptByUOID_: func(ctx context.Context, id uuid.UUID) (Receipt, error) {
 			return Receipt{}, &clairerror.ErrNoReceipt{}
@@ -126,7 +127,7 @@ func testUnsafeMatcherErr(t *testing.T) {
 		updater: testUpdater,
 		uo:      processorUpdateOps[testUpdater][0],
 	}
-	b, _ := p.safe(ctx, e)
+	b, _ := p.safe(ctx, slog.Default(), e)
 	if b {
 		t.Fatalf("got: %v, want: %v", b, false)
 	}
@@ -135,7 +136,7 @@ func testUnsafeMatcherErr(t *testing.T) {
 // testSafeStaleUOID confirms the guard against creating stale notifications
 // works correctly.
 func testUnsafeStaleUOID(t *testing.T) {
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	sm := &MockStore{
 		ReceiptByUOID_: func(ctx context.Context, id uuid.UUID) (Receipt, error) {
 			return Receipt{}, &clairerror.ErrNoReceipt{}
@@ -157,7 +158,7 @@ func testUnsafeStaleUOID(t *testing.T) {
 		uo:      processorUpdateOps[testUpdater][1],
 	}
 
-	b, _ := p.safe(ctx, e)
+	b, _ := p.safe(ctx, slog.Default(), e)
 	if b {
 		t.Fatalf("got: %v, want: %v", b, false)
 	}
@@ -166,7 +167,7 @@ func testUnsafeStaleUOID(t *testing.T) {
 // testUnsafeDuplications confirms the guard against creating
 // duplicate notifications works correctly.
 func testUnsafeDuplications(t *testing.T) {
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	sm := &MockStore{
 		ReceiptByUOID_: func(ctx context.Context, id uuid.UUID) (Receipt, error) {
 			return Receipt{}, nil
@@ -187,7 +188,7 @@ func testUnsafeDuplications(t *testing.T) {
 		updater: testUpdater,
 		uo:      processorUpdateOps[testUpdater][0],
 	}
-	b, _ := p.safe(ctx, e)
+	b, _ := p.safe(ctx, slog.Default(), e)
 	if b {
 		t.Fatalf("got: %v, want: %v", b, false)
 	}

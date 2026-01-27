@@ -1,13 +1,12 @@
 package postgres
 
 import (
-	"context"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/quay/claircore"
+	"github.com/quay/claircore/test"
 	"github.com/quay/claircore/test/integration"
-	"github.com/quay/zlog"
 
 	"github.com/quay/clair/v4/notifier"
 )
@@ -68,8 +67,7 @@ func TestPagination(t *testing.T) {
 
 	for _, tt := range table {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
-			ctx = zlog.Test(ctx, t)
+			ctx := test.Logging(t)
 			store := TestingStore(ctx, t)
 
 			noteID := uuid.New()

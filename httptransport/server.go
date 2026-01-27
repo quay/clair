@@ -5,11 +5,11 @@ package httptransport
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/quay/clair/config"
-	"github.com/quay/zlog"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"golang.org/x/sync/semaphore"
@@ -47,10 +47,9 @@ const (
 func New(ctx context.Context, conf *config.Config, indexer indexer.Service, matcher matcher.Service, notifier notifier.Service) (http.Handler, error) {
 	mux := http.NewServeMux()
 	traceOpt := otelhttp.WithTracerProvider(otel.GetTracerProvider())
-	ctx = zlog.ContextWithValues(ctx, "component", "httptransport/New")
 
 	mux.Handle(OpenAPIV1Path, DiscoveryHandler(ctx, OpenAPIV1Path, traceOpt))
-	zlog.Info(ctx).Str("path", OpenAPIV1Path).Msg("openapi discovery configured")
+	slog.InfoContext(ctx, "openapi discovery configured", "path", OpenAPIV1Path)
 
 	// NOTE(hank) My brain always wants to rewrite constructions like the
 	// following as a switch, but this is actually cleaner as an "if" sequence.
@@ -101,16 +100,14 @@ func New(ctx context.Context, conf *config.Config, indexer indexer.Service, matc
 		mux.Handle(prefix, v1)
 	}
 	if conf.Mode == config.ComboMode && notifier == nil {
-		zlog.Debug(ctx).Msg("skipping unconfigured notifier")
+		slog.DebugContext(ctx, "skipping unconfigured notifier")
 	}
 	// Add endpoint authentication if configured to add auth. Must happen after
 	// mux was configured for given mode.
 	if conf.Auth.Any() {
 		h, err := authHandler(conf, mux)
 		if err != nil {
-			zlog.Warn(ctx).
-				Err(err).
-				Msg("received error configuring auth middleware")
+			slog.WarnContext(ctx, "received error configuring auth middleware", "reason", err)
 			return nil, err
 		}
 		final := http.NewServeMux()

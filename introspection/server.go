@@ -5,6 +5,7 @@ package introspection
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net"
 	"net/http"
 	"net/http/pprof"
@@ -13,7 +14,6 @@ import (
 	deltapprof "github.com/grafana/pyroscope-go/godeltaprof/http/pprof"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/quay/clair/config"
-	"github.com/quay/zlog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
@@ -74,14 +74,11 @@ type Server struct {
 // New constructs a [*Server], which has an embedded [*http.Server].
 func New(ctx context.Context, conf *config.Config, health func() bool) (*Server, error) {
 	var err error
-	ctx = zlog.ContextWithValues(ctx, "component", "introspection/New")
-
 	var addr string
 	if conf.IntrospectionAddr == "" {
 		addr = DefaultIntrospectionAddr
-		zlog.Info(ctx).
-			Str("address", addr).
-			Msg("no introspection address provided; using default")
+		slog.InfoContext(ctx, "no introspection address provided; using default",
+			"address", addr)
 	} else {
 		addr = conf.IntrospectionAddr
 	}
@@ -97,7 +94,7 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 
 	// check for health
 	if health == nil {
-		zlog.Warn(ctx).Msg("no health check configured; unconditionally reporting OK")
+		slog.WarnContext(ctx, "no health check configured; unconditionally reporting OK")
 		i.health = func() bool { return true }
 	} else {
 		i.health = health
@@ -118,10 +115,9 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 		if p := conf.Metrics.Prometheus.Endpoint; p != nil {
 			endpoint = *p
 		}
-		zlog.Info(ctx).
-			Str("endpoint", endpoint).
-			Str("server", i.Addr).
-			Msg("configuring prometheus")
+		slog.InfoContext(ctx, "configuring prometheus",
+			"endpoint", endpoint,
+			"server", i.Addr)
 
 		i.Handle(endpoint, promhttp.Handler())
 
@@ -156,10 +152,10 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 		}
 
 		// Print a warning as long as direct prometheus metrics exist in "our" packages.
-		zlog.Warn(ctx).Msg("OTLP metrics should be considered beta; metrics may be missing")
+		slog.WarnContext(ctx, "OTLP metrics should be considered beta; metrics may be missing")
 		mr = metric.NewPeriodicReader(ex)
 	default:
-		zlog.Info(ctx).Msg("no metrics enabled")
+		slog.InfoContext(ctx, "no metrics enabled")
 	}
 	if err != nil {
 		return nil, fmt.Errorf("error configuring metrics: %w", err)
@@ -177,7 +173,8 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 			ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 			defer cancel()
 			if err := mp.Shutdown(ctx); err != nil {
-				zlog.Error(ctx).Err(err).Msg("error shutting down metric provider")
+				slog.ErrorContext(ctx, "error shutting down metric provider",
+					"reason", err)
 			}
 		})
 	}
@@ -223,7 +220,7 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 		var e jaeger.EndpointOption
 		switch mode {
 		case "agent":
-			zlog.Info(ctx).Msg("configuring jaeger exporter to push to agent")
+			slog.InfoContext(ctx, "configuring jaeger exporter to push to agent")
 			var opt []jaeger.AgentEndpointOption
 			if endpoint != "" {
 				host, port, err := net.SplitHostPort(endpoint)
@@ -239,7 +236,7 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 			}
 			e = jaeger.WithAgentEndpoint(opt...)
 		case "collector":
-			zlog.Info(ctx).Msg("configuring jaeger exporter to push to collector")
+			slog.InfoContext(ctx, "configuring jaeger exporter to push to collector")
 			var opt []jaeger.CollectorEndpointOption
 			if endpoint != "" {
 				opt = append(opt, jaeger.WithEndpoint(endpoint))
@@ -287,7 +284,7 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 
 		exporter, err = otlptrace.New(ctx, c)
 	default:
-		zlog.Info(ctx).Msg("no distributed tracing enabled")
+		slog.InfoContext(ctx, "no distributed tracing enabled")
 	}
 	if err != nil {
 		return nil, fmt.Errorf("error configuring tracing: %w", err)
@@ -303,14 +300,15 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 		)
 		otel.SetTracerProvider(tp)
 		i.Server.RegisterOnShutdown(func() {
-			zlog.Info(ctx).Msg("shutting down trace provider")
+			slog.InfoContext(ctx, "shutting down trace provider")
 			ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 			defer cancel()
 			if err := tp.Shutdown(ctx); err != nil {
-				zlog.Error(ctx).Err(err).Msg("error shutting down trace provider")
+				slog.ErrorContext(ctx, "error shutting down trace provider",
+					"reason", err)
 			}
 		})
-		zlog.Info(ctx).Msg("distributed tracing configured")
+		slog.InfoContext(ctx, "distributed tracing configured")
 	}
 
 	// configure diagnostics

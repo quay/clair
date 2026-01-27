@@ -6,12 +6,11 @@ import (
 	"context"
 	"errors"
 	"io/fs"
+	"log/slog"
 	"os"
 	"path"
 	"runtime"
 	"strconv"
-
-	"github.com/quay/zlog"
 )
 
 // CPU guesses a good number for GOMAXPROCS based on information gleaned from
@@ -25,18 +24,16 @@ func CPU() {
 	gmp, err := cgLookup(root)
 	if err != nil {
 		msgs = append(msgs, func(ctx context.Context) {
-			zlog.Error(ctx).
-				Err(err).
-				Msg("unable to guess GOMAXPROCS value")
+			slog.ErrorContext(ctx, "unable to guess GOMAXPROCS value",
+				"reason", err)
 		})
 		return
 	}
 	prev := runtime.GOMAXPROCS(gmp)
 	msgs = append(msgs, func(ctx context.Context) {
-		zlog.Info(ctx).
-			Int("cur", gmp).
-			Int("prev", prev).
-			Msg("set GOMAXPROCS value")
+		slog.InfoContext(ctx, "set GOMAXPROCS value",
+			"cur", gmp,
+			"prev", prev)
 	})
 }
 

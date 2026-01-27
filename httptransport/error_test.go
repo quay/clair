@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/quay/zlog"
+	"github.com/quay/claircore/test"
 
 	"github.com/quay/clair/v4/internal/httputil"
 )
@@ -24,7 +24,7 @@ func TestClientDisconnect(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() { close(handlerDone) }()
 		w = httputil.ResponseRecorder(&status, nil, w)
-		ctx := zlog.Test(r.Context(), t) // The error handler emits logs.
+		ctx := test.Logging(t, r.Context()) // The error handler emits logs.
 		close(reqStart)
 		<-ctx.Done()
 		apiError(ctx, w, http.StatusOK, "hello from the handler")

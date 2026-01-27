@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"path"
@@ -15,7 +16,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote/transport"
 	"github.com/quay/claircore"
-	"github.com/quay/zlog"
 	"github.com/tomnomnom/linkheader"
 
 	"github.com/quay/clair/v4/cmd"
@@ -91,10 +91,9 @@ func (c *Client) getValidator(_ context.Context, path string) string {
 }
 
 func (c *Client) setValidator(ctx context.Context, path, v string) {
-	zlog.Debug(ctx).
-		Str("path", path).
-		Str("validator", v).
-		Msg("setting validator")
+	slog.DebugContext(ctx, "setting validator",
+		"path", path,
+		"validator", v)
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.validator[path] = v
@@ -112,9 +111,8 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 	)
 	fp, err := c.host.Parse(path.Join(c.host.RequestURI(), httptransport.IndexReportAPIPath, id.String()))
 	if err != nil {
-		zlog.Debug(ctx).
-			Err(err).
-			Msg("unable to construct index_report url")
+		slog.DebugContext(ctx, "unable to construct index_report url",
+			"reason", err)
 		return err
 	}
 	req, err = c.request(ctx, fp, http.MethodGet)
@@ -123,23 +121,29 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 	}
 	res, err = c.client.Do(req)
 	if err != nil {
-		zlog.Debug(ctx).
-			Err(err).
-			Stringer("url", req.URL).
-			Msg("request failed")
+		slog.DebugContext(ctx, "request failed",
+			"url", req.URL,
+			"reason", err)
 		return err
 	}
 	defer res.Body.Close()
-	ev := zlog.Debug(ctx).
-		Str("method", res.Request.Method).
-		Str("path", res.Request.URL.Path).
-		Str("status", res.Status)
-	if ev.Enabled() && res.ContentLength > 0 && res.ContentLength <= 256 {
-		var buf bytes.Buffer
-		buf.ReadFrom(io.LimitReader(res.Body, 256))
-		ev.Stringer("body", &buf)
+	{
+		l := slog.Default()
+		attrs := []slog.Attr{
+			slog.String("method", res.Request.Method),
+			slog.String("path", res.Request.URL.Path),
+			slog.String("status", res.Status),
+		}
+		const lim = 256
+		if l.Enabled(ctx, slog.LevelDebug) &&
+			res.ContentLength > 0 && res.ContentLength <= lim {
+			var buf bytes.Buffer
+			buf.Grow(lim)
+			buf.ReadFrom(io.LimitReader(res.Body, lim))
+			attrs = append(attrs, slog.Any("body", &buf))
+		}
+		l.LogAttrs(ctx, slog.LevelDebug, "response", attrs...)
 	}
-	ev.Send()
 	switch res.StatusCode {
 	case http.StatusNotFound, http.StatusOK:
 	case http.StatusNotModified:
@@ -149,20 +153,18 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 	}
 
 	if m == nil {
-		ev := zlog.Debug(ctx).
-			Stringer("manifest", id)
+		l := slog.With("manifest", id)
 		if res.StatusCode == http.StatusNotFound {
-			ev.Msg("don't have needed manifest")
+			l.DebugContext(ctx, "don't have needed manifest")
 			return errNovelManifest
 		}
-		ev.Msg("manifest may be out-of-date")
+		l.DebugContext(ctx, "manifest may be out-of-date")
 		return errNeedManifest
 	}
 	ru, err := c.host.Parse(path.Join(c.host.RequestURI(), httptransport.IndexAPIPath))
 	if err != nil {
-		zlog.Debug(ctx).
-			Err(err).
-			Msg("unable to construct index_report url")
+		slog.DebugContext(ctx, "unable to construct index_report url",
+			"reason", err)
 		return err
 	}
 
@@ -173,18 +175,16 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 	req.Body = codec.JSONReader(m)
 	res, err = c.client.Do(req)
 	if err != nil {
-		zlog.Debug(ctx).
-			Err(err).
-			Stringer("url", req.URL).
-			Msg("request failed")
+		slog.DebugContext(ctx, "request failed",
+			"reason", err,
+			"url", req.URL)
 		return err
 	}
 	defer res.Body.Close()
-	zlog.Debug(ctx).
-		Str("method", res.Request.Method).
-		Str("path", res.Request.URL.Path).
-		Str("status", res.Status).
-		Send()
+	slog.DebugContext(ctx, "response",
+		"method", res.Request.Method,
+		"path", res.Request.URL.Path,
+		"status", res.Status)
 	switch res.StatusCode {
 	case http.StatusOK:
 	case http.StatusCreated:
@@ -199,10 +199,9 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 		var buf bytes.Buffer
 		// Ignore error, because what would we do with it here?
 		ct, _ := buf.ReadFrom(res.Body)
-		zlog.Info(ctx).
-			Int64("size", ct).
-			Stringer("response", &buf).
-			Msg("body seems short")
+		slog.InfoContext(ctx, "body seems short",
+			"size", ct,
+			"response", &buf)
 		rd = &buf
 	case res.ContentLength < 0: // Streaming
 		fallthrough
@@ -213,9 +212,8 @@ func (c *Client) IndexReport(ctx context.Context, id claircore.Digest, m *clairc
 	dec := codec.GetDecoder(rd)
 	defer codec.PutDecoder(dec)
 	if err := dec.Decode(&report); err != nil {
-		zlog.Debug(ctx).
-			Err(err).
-			Msg("unable to decode json payload")
+		slog.DebugContext(ctx, "unable to decode json payload",
+			"reason", err)
 		return err
 	}
 	if !report.Success && report.Err != "" {
@@ -242,9 +240,8 @@ func (c *Client) VulnerabilityReport(ctx context.Context, id claircore.Digest) (
 	)
 	u, err := c.host.Parse(path.Join(c.host.RequestURI(), httptransport.VulnerabilityReportPath, id.String()))
 	if err != nil {
-		zlog.Debug(ctx).
-			Err(err).
-			Msg("unable to construct vulnerability_report url")
+		slog.DebugContext(ctx, "unable to construct vulnerability_report url",
+			"reason", err)
 		return nil, err
 	}
 	req, err = c.request(ctx, u, http.MethodGet)
@@ -253,18 +250,16 @@ func (c *Client) VulnerabilityReport(ctx context.Context, id claircore.Digest) (
 	}
 	res, err = c.client.Do(req)
 	if err != nil {
-		zlog.Debug(ctx).
-			Err(err).
-			Stringer("url", req.URL).
-			Msg("request failed")
+		slog.DebugContext(ctx, "request failed",
+			"reason", err,
+			"url", req.URL)
 		return nil, err
 	}
 	defer res.Body.Close()
-	zlog.Debug(ctx).
-		Str("method", res.Request.Method).
-		Str("path", res.Request.URL.Path).
-		Str("status", res.Status).
-		Send()
+	slog.DebugContext(ctx, "response",
+		"method", res.Request.Method,
+		"path", res.Request.URL.Path,
+		"status", res.Status)
 	switch res.StatusCode {
 	case http.StatusOK:
 	case http.StatusNotModified:
@@ -277,9 +272,8 @@ func (c *Client) VulnerabilityReport(ctx context.Context, id claircore.Digest) (
 	dec := codec.GetDecoder(res.Body)
 	defer codec.PutDecoder(dec)
 	if err := dec.Decode(&report); err != nil {
-		zlog.Debug(ctx).
-			Err(err).
-			Msg("unable to decode json payload")
+		slog.DebugContext(ctx, "unable to decode json payload",
+			"reason", err)
 		return nil, err
 	}
 
@@ -303,18 +297,16 @@ func (c *Client) DeleteIndexReports(ctx context.Context, ds []claircore.Digest) 
 	req.Body = codec.JSONReader(ds)
 	res, err = c.client.Do(req)
 	if err != nil {
-		zlog.Debug(ctx).
-			Err(err).
-			Stringer("url", req.URL).
-			Msg("request failed")
+		slog.DebugContext(ctx, "request failed",
+			"reason", err,
+			"url", req.URL)
 		return err
 	}
 	defer res.Body.Close()
-	zlog.Debug(ctx).
-		Str("method", res.Request.Method).
-		Str("path", res.Request.URL.Path).
-		Str("status", res.Status).
-		Send()
+	slog.DebugContext(ctx, "response",
+		"method", res.Request.Method,
+		"path", res.Request.URL.Path,
+		"status", res.Status)
 	switch res.StatusCode {
 	case http.StatusOK:
 	default:
