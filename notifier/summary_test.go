@@ -2,19 +2,20 @@ package notifier
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 
 	"github.com/google/uuid"
 	"github.com/quay/claircore"
 	"github.com/quay/claircore/libvuln/driver"
-	"github.com/quay/zlog"
+	"github.com/quay/claircore/test"
 
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/matcher"
 )
 
 func TestNotificationSummary(t *testing.T) {
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 
 	// This is a bunch of supporting data structures.
 	updater := uuid.New().String()
@@ -81,7 +82,7 @@ func TestNotificationSummary(t *testing.T) {
 			return nil
 		},
 	}
-	if err := p.create(ctx, e, uuid.Nil); err != nil {
+	if err := p.create(ctx, slog.Default(), e, uuid.Nil); err != nil {
 		t.Error(err)
 	}
 
@@ -99,7 +100,7 @@ func TestNotificationSummary(t *testing.T) {
 			return nil
 		},
 	}
-	if err := p.create(ctx, e, uuid.Nil); err != nil {
+	if err := p.create(ctx, slog.Default(), e, uuid.Nil); err != nil {
 		t.Error(err)
 	}
 }

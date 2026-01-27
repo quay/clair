@@ -3,10 +3,10 @@ package notifier
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/quay/zlog"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
 )
@@ -37,12 +37,7 @@ func NewDelivery(store Store, l Locker, d Deliverer, interval time.Duration) *De
 //
 // Canceling the ctx will end delivery.
 func (d *Delivery) Deliver(ctx context.Context) error {
-	ctx = zlog.ContextWithValues(ctx,
-		"deliverer", d.Deliverer.Name(),
-		"component", "notifier/Delivery.Deliver",
-	)
-	zlog.Info(ctx).
-		Msg("delivering notifications")
+	slog.InfoContext(ctx, "delivering notifications")
 
 	ticker := time.NewTicker(d.interval)
 	defer ticker.Stop()
@@ -51,12 +46,10 @@ func (d *Delivery) Deliver(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-ticker.C:
-			zlog.Debug(ctx).
-				Msg("delivery tick")
+			slog.DebugContext(ctx, "delivery tick")
 			if err := d.RunDelivery(ctx); err != nil {
-				zlog.Error(ctx).
-					Err(err).
-					Msg("encountered error on tick")
+				slog.WarnContext(ctx, "encountered error on tick",
+					"reason", err)
 			}
 		}
 	}
@@ -65,11 +58,6 @@ func (d *Delivery) Deliver(ctx context.Context) error {
 // RunDelivery determines notifications to deliver and
 // calls the implemented Deliverer to perform the actions.
 func (d *Delivery) RunDelivery(ctx context.Context) error {
-	ctx = zlog.ContextWithValues(ctx,
-		"deliverer", d.Deliverer.Name(),
-		"component", "notifier/Delivery.RunDelivery",
-	)
-
 	toDeliver := []uuid.UUID{}
 	// get created
 	created, err := d.store.Created(ctx)
@@ -77,9 +65,8 @@ func (d *Delivery) RunDelivery(ctx context.Context) error {
 		return err
 	}
 	if sz := len(created); sz != 0 {
-		zlog.Info(ctx).
-			Int("created", sz).
-			Msg("notification ids in created status")
+		slog.InfoContext(ctx, "notification ids in created status",
+			"created", sz)
 		toDeliver = append(toDeliver, created...)
 	}
 
@@ -89,9 +76,8 @@ func (d *Delivery) RunDelivery(ctx context.Context) error {
 		return err
 	}
 	if sz := len(failed); sz != 0 {
-		zlog.Info(ctx).
-			Int("failed", sz).
-			Msg("notification ids in failed status")
+		slog.InfoContext(ctx, "notification ids in failed status",
+			"failed", sz)
 		toDeliver = append(toDeliver, failed...)
 	}
 
@@ -99,10 +85,9 @@ func (d *Delivery) RunDelivery(ctx context.Context) error {
 		var err error
 		ctx, done := d.locks.TryLock(ctx, nID.String())
 		if ok := ctx.Err(); !errors.Is(ok, nil) {
-			zlog.Debug(ctx).
-				Err(ok).
-				Stringer("notification_id", nID).
-				Msg("unable to get lock")
+			slog.DebugContext(ctx, "unable to get lock",
+				"reason", ok,
+				"notification_id", nID)
 		} else {
 			err = d.do(ctx, nID)
 		}
@@ -119,15 +104,9 @@ func (d *Delivery) RunDelivery(ctx context.Context) error {
 //
 // do's actions should be performed under a distributed lock.
 func (d *Delivery) do(ctx context.Context, nID uuid.UUID) error {
-	ctx = zlog.ContextWithValues(ctx,
-		"notification_id", nID.String(),
-		"component", "notifier/Delivery.do",
-	)
-
 	// if we have a direct deliverer provide the notifications to it.
 	if dd, ok := d.Deliverer.(DirectDeliverer); ok {
-		zlog.Debug(ctx).
-			Msg("providing direct deliverer notifications")
+		slog.DebugContext(ctx, "providing direct deliverer notifications")
 		notifications, _, err := d.store.Notifications(ctx, nID, nil)
 		if err != nil {
 			return err
@@ -145,8 +124,7 @@ func (d *Delivery) do(ctx context.Context, nID uuid.UUID) error {
 		if errors.As(err, &dErr) {
 			// OK for this to fail, notification will stay in Created status.
 			// store is failing, lets back off it tho until next tick.
-			zlog.Info(ctx).
-				Msg("failed to deliver notifications")
+			slog.InfoContext(ctx, "failed to deliver notifications")
 			err := d.store.SetDeliveryFailed(ctx, nID)
 			if err != nil {
 				return err
@@ -170,7 +148,6 @@ func (d *Delivery) do(ctx context.Context, nID uuid.UUID) error {
 			return err
 		}
 	}
-	zlog.Info(ctx).
-		Msg("successfully delivered notifications")
+	slog.InfoContext(ctx, "successfully delivered notifications")
 	return nil
 }
