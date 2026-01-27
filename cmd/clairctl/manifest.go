@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -12,7 +13,6 @@ import (
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/quay/claircore"
-	"github.com/quay/zlog"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sync/errgroup"
 
@@ -29,7 +29,7 @@ var ManifestCmd = &cli.Command{
 
 func manifestAction(c *cli.Context) error {
 	ctx := c.Context
-	zlog.Debug(ctx).Msg("manifest")
+	slog.DebugContext(ctx, "manifest")
 	args := c.Args()
 	if args.Len() == 0 {
 		return errors.New("missing needed arguments")
@@ -49,19 +49,15 @@ func manifestAction(c *cli.Context) error {
 
 	for i := 0; i < args.Len(); i++ {
 		name := args.Get(i)
-		zlog.Debug(ctx).Str("name", name).Msg("fetching")
+		l := slog.With("name", name)
+		l.DebugContext(ctx, "fetching")
 		eg.Go(func() error {
 			m, err := Inspect(ctx, name)
 			if err != nil {
-				zlog.Debug(ctx).
-					Str("name", name).
-					Err(err).
-					Send()
+				l.DebugContext(ctx, "inspect failure", "reason", err)
 				return err
 			}
-			zlog.Debug(ctx).
-				Str("name", name).
-				Msg("ok")
+			l.DebugContext(ctx, "ok")
 			result <- m
 			return nil
 		})
@@ -101,19 +97,16 @@ func Inspect(ctx context.Context, r string) (*claircore.Manifest, error) {
 		return nil, err
 	}
 	out := claircore.Manifest{Hash: ccd}
-	zlog.Debug(ctx).
-		Str("ref", r).
-		Stringer("digest", ccd).
-		Msg("found manifest")
+	log := slog.With("ref", r)
+	log.DebugContext(ctx, "found manifest",
+		"digest", ccd)
 
 	ls, err := img.Layers()
 	if err != nil {
 		return nil, err
 	}
-	zlog.Debug(ctx).
-		Str("ref", r).
-		Int("count", len(ls)).
-		Msg("found layers")
+	log.DebugContext(ctx, "found layers",
+		"count", len(ls))
 
 	repo := ref.Context()
 	rURL := url.URL{
@@ -151,11 +144,10 @@ func Inspect(ctx context.Context, r string) (*claircore.Manifest, error) {
 		}
 		res.Body.Close()
 		if res.StatusCode != http.StatusPartialContent {
-			zlog.Warn(ctx).
-				Int("statuscode", res.StatusCode).
-				Int("len", int(res.ContentLength)).
-				Str("url", u.String()).
-				Msg("server might not support requests with Range HTTP header")
+			log.WarnContext(ctx, "server might not support requests with Range HTTP header",
+				"statuscode", res.StatusCode,
+				"len", int(res.ContentLength),
+				"url", u)
 		}
 
 		res.Request.Header.Del("User-Agent")

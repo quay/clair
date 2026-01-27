@@ -3,31 +3,20 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"runtime/debug"
-	"time"
 
 	"github.com/go-jose/go-jose/v3/jwt"
 	"github.com/quay/clair/config"
 	_ "github.com/quay/claircore/updater/defaults"
-	"github.com/quay/zlog"
-	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v2"
 
 	"github.com/quay/clair/v4/cmd"
+	"github.com/quay/clair/v4/internal/logging"
 )
 
-var (
-	logout = zerolog.New(&zerolog.ConsoleWriter{
-		Out:        os.Stderr,
-		TimeFormat: time.RFC3339,
-	}).Level(zerolog.InfoLevel).
-		With().
-		Timestamp().
-		Logger()
-
-	commonClaim = jwt.Claims{}
-)
+var commonClaim = jwt.Claims{}
 
 func main() {
 	var exit int
@@ -50,12 +39,11 @@ func main() {
 		EnableBashCompletion: true,
 		Before: func(c *cli.Context) error {
 			if c.IsSet("q") {
-				logout = logout.Level(zerolog.WarnLevel)
+				logging.Level.Set(slog.LevelWarn)
 			}
 			if c.IsSet("D") {
-				logout = logout.Level(zerolog.DebugLevel)
+				logging.Level.Set(slog.LevelDebug)
 			}
-			zlog.Set(&logout)
 			commonClaim.Issuer = c.String("issuer")
 			return nil
 		},
@@ -98,7 +86,7 @@ func main() {
 				if err, ok := err.(cli.ExitCoder); ok {
 					exit = err.ExitCode()
 				}
-				logout.Error().Err(err).Send()
+				slog.ErrorContext(c.Context, "error exit", "reason", err)
 			}
 		},
 	}

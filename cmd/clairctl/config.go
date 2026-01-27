@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 
-	"github.com/quay/zlog"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v3"
 )
@@ -46,12 +46,12 @@ Again:
 		j.SetIndent("", "\t")
 		enc = j
 	case "yaml":
-		zlog.Warn(ctx).Msg("some values do no round-trip the yaml encoder correctly -- make sure to consult the documentation")
+		slog.WarnContext(ctx, "some values do no round-trip the yaml encoder correctly -- make sure to consult the documentation")
 		y := yaml.NewEncoder(os.Stdout)
 		y.SetIndent(2)
 		enc = y
 	default:
-		zlog.Info(ctx).Str("out", v).Msg("unknown 'out' kind, using 'json'")
+		slog.InfoContext(ctx, "unknown 'out' kind, using 'json'", "out", v)
 		c.Set("out", "json")
 		goto Again
 	}
