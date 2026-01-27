@@ -1,20 +1,18 @@
 package amqp
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
 	"time"
 
-	"golang.org/x/sync/errgroup"
-
 	"github.com/google/uuid"
 	"github.com/quay/clair/config"
+	"github.com/quay/claircore/test"
 	"github.com/quay/claircore/test/integration"
-	"github.com/quay/zlog"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"golang.org/x/sync/errgroup"
 )
 
 const (
@@ -25,7 +23,7 @@ const (
 // callback is successfully delivered to the amqp broker.
 func TestDeliverer(t *testing.T) {
 	integration.Skip(t)
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	const (
 		callback = "http://clair-notifier/notifier/api/v1/notification"
 	)
