@@ -3,6 +3,7 @@ package httptransport
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"path"
 	"path/filepath"
@@ -10,7 +11,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/quay/zlog"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/quay/clair/v4/internal/codec"
@@ -66,18 +66,15 @@ func (h *NotificationV1) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, nil):
 		case errors.Is(err, http.ErrNotSupported): // Skip
 		default:
-			zlog.Warn(ctx).
-				Err(err).
-				Msg("unable to flush http response")
+			slog.WarnContext(ctx, "unable to flush http response", "reason", err)
 		}
-		zlog.Info(ctx).
-			Str("remote_addr", r.RemoteAddr).
-			Str("method", r.Method).
-			Str("request_uri", r.RequestURI).
-			Int("status", status).
-			Int64("written", length).
-			Dur("duration", time.Since(start)).
-			Msg("handled HTTP request")
+		slog.InfoContext(ctx, "handled HTTP request",
+			"remote_addr", r.RemoteAddr,
+			"method", r.Method,
+			"request_uri", r.RequestURI,
+			"status", status,
+			"written", length,
+			"duration", time.Since(start))
 	}()
 	h.inner.ServeHTTP(w, r)
 }
@@ -94,18 +91,18 @@ func (h *NotificationV1) serveHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *NotificationV1) delete(w http.ResponseWriter, r *http.Request) {
-	ctx := zlog.ContextWithValues(r.Context(), "component", "httptransport/NotificationV1.delete")
+	ctx := r.Context()
 	path := r.URL.Path
 	id := filepath.Base(path)
 	notificationID, err := uuid.Parse(id)
 	if err != nil {
-		zlog.Warn(ctx).Err(err).Msg("could not parse notification id")
+		slog.WarnContext(ctx, "could not parse notification id", "reason", err)
 		apiError(ctx, w, http.StatusBadRequest, "could not parse notification id: %v", err)
 	}
 
 	err = h.serv.DeleteNotifications(ctx, notificationID)
 	if err != nil {
-		zlog.Warn(ctx).Err(err).Msg("could not delete notification")
+		slog.WarnContext(ctx, "could not delete notification", "reason", err)
 		apiError(ctx, w, http.StatusInternalServerError, "could not delete notification: %v", err)
 	}
 	// TODO(hank) This should return HTTP 204.
@@ -113,12 +110,12 @@ func (h *NotificationV1) delete(w http.ResponseWriter, r *http.Request) {
 
 // Get will return paginated notifications to the caller.
 func (h *NotificationV1) get(w http.ResponseWriter, r *http.Request) {
-	ctx := zlog.ContextWithValues(r.Context(), "component", "httptransport/NotificationV1.get")
+	ctx := r.Context()
 	path := r.URL.Path
 	id := filepath.Base(path)
 	notificationID, err := uuid.Parse(id)
 	if err != nil {
-		zlog.Warn(ctx).Err(err).Msg("could not parse notification id")
+		slog.WarnContext(ctx, "could not parse notification id", "reason", err)
 		apiError(ctx, w, http.StatusBadRequest, "could not parse notification id: %v", err)
 	}
 

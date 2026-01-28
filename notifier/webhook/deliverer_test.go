@@ -1,7 +1,6 @@
 package webhook
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -13,7 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
 	"github.com/quay/clair/config"
-	"github.com/quay/zlog"
+	"github.com/quay/claircore/test"
 
 	"github.com/quay/clair/v4/notifier"
 )
@@ -48,7 +47,7 @@ func TestDeliverer(t *testing.T) {
 		},
 	))
 	defer server.Close()
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	conf := config.Webhook{
 		Callback: callback,
 		Target:   server.URL,

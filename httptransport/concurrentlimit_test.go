@@ -9,15 +9,14 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/quay/zlog"
+	"github.com/quay/claircore/test"
 	"golang.org/x/sync/semaphore"
 
 	"github.com/quay/clair/v4/internal/httputil"
 )
 
 func TestConcurrentRequests(t *testing.T) {
-	ctx := context.Background()
-	ctx = zlog.Test(ctx, t)
+	ctx := test.Logging(t)
 	sem := semaphore.NewWeighted(1)
 	// Ret controls when the http server returns.
 	// Ready is strobed once the first request is seen.

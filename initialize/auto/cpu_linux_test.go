@@ -8,7 +8,7 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/quay/zlog"
+	"github.com/quay/claircore/test"
 )
 
 var (
@@ -41,7 +41,7 @@ type cgTestcase struct {
 
 func (tc cgTestcase) Run(ctx context.Context, t *testing.T) {
 	t.Run(tc.Name, func(t *testing.T) {
-		ctx := zlog.Test(ctx, t)
+		ctx := test.Logging(t)
 		gmp, err := cgLookup(tc.In)
 		if err != tc.Err {
 			t.Error(err)
@@ -54,7 +54,7 @@ func (tc cgTestcase) Run(ctx context.Context, t *testing.T) {
 }
 
 func TestCPUDetection(t *testing.T) {
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	t.Run("V1", func(t *testing.T) {
 		tt := []cgTestcase{
 			{
@@ -94,7 +94,7 @@ func TestCPUDetection(t *testing.T) {
 				Want: 1,
 			},
 		}
-		ctx := zlog.Test(ctx, t)
+		ctx := test.Logging(t, ctx)
 		for _, tc := range tt {
 			tc.Run(ctx, t)
 		}
@@ -122,7 +122,7 @@ func TestCPUDetection(t *testing.T) {
 				Want: 4,
 			},
 		}
-		ctx := zlog.Test(ctx, t)
+		ctx := test.Logging(t, ctx)
 		for _, tc := range tt {
 			tc.Run(ctx, t)
 		}

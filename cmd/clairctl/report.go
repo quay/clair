@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"os"
 
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	"github.com/quay/claircore"
-	"github.com/quay/zlog"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/sync/errgroup"
 
@@ -79,20 +79,20 @@ func (o *outFmt) String() string {
 func (o *outFmt) Formatter(ctx context.Context, w io.WriteCloser) Formatter {
 	switch o.fmt {
 	case "", "text":
-		zlog.Debug(ctx).Msg("using text output")
+		slog.DebugContext(ctx, "using text output")
 		r, err := newTextFormatter(w)
 		if err != nil {
 			panic(err)
 		}
 		return r
 	case "json":
-		zlog.Debug(ctx).Msg("using json output")
+		slog.DebugContext(ctx, "using json output")
 		return &jsonFormatter{
 			enc: codec.GetEncoder(w),
 			c:   w,
 		}
 	case "xml":
-		zlog.Debug(ctx).Msg("using xml output")
+		slog.DebugContext(ctx, "using xml output")
 		return &xmlFormatter{
 			enc: xml.NewEncoder(w),
 			c:   w,
@@ -169,20 +169,16 @@ func reportAction(c *cli.Context) error {
 
 	for i := 0; i < args.Len(); i++ {
 		ref := args.Get(i)
-		ctx := zlog.ContextWithValues(ctx, "ref", ref)
-		zlog.Debug(ctx).
-			Msg("fetching")
+		log := slog.With("ref", ref)
+		log.DebugContext(ctx, "fetching")
 		eg.Go(func() error {
 			d, err := resolveRef(ctx, ref)
 			if err != nil {
-				zlog.Debug(ctx).
-					Err(err).
-					Send()
+				log.DebugContext(ctx, "unable to resolve ref", "reason", err)
 				return err
 			}
-			ctx := zlog.ContextWithValues(ctx, "digest", d.String())
-			zlog.Debug(ctx).
-				Msg("found manifest")
+			log := log.With("digest", d)
+			log.DebugContext(ctx, "found manifest")
 
 			// This bit is tricky:
 			//
@@ -196,29 +192,25 @@ func reportAction(c *cli.Context) error {
 			if ct > 20 {
 				return errors.New("too many attempts")
 			}
-			zlog.Debug(ctx).
-				Int("attempt", ct).
-				Msg("requesting index_report")
+			log.DebugContext(ctx, "requesting index_report",
+				"attempt", ct)
 			err = cc.IndexReport(ctx, d, m)
 			switch {
 			case err == nil:
 			case errors.Is(err, errNeedManifest):
 				if c.Bool("novel") {
-					zlog.Debug(ctx).
-						Msg("manifest already known, skipping upload")
+					log.DebugContext(ctx, "manifest already known, skipping upload")
 					break
 				}
 				fallthrough
 			case errors.Is(err, errNovelManifest):
 				m, err = Inspect(ctx, ref)
 				if err != nil {
-					zlog.Debug(ctx).
-						Err(err).
-						Msg("manifest error")
+					log.DebugContext(ctx, "manifest error",
+						"reason", err)
 					if keepgoing {
-						zlog.Info(ctx).
-							Err(err).
-							Msg("ignoring manifest error")
+						log.InfoContext(ctx, "ignoring manifest error",
+							"error", err)
 						return nil
 					}
 					return err
@@ -226,9 +218,8 @@ func reportAction(c *cli.Context) error {
 				ct++
 				goto Again
 			default:
-				zlog.Debug(ctx).
-					Err(err).
-					Msg("index error")
+				log.DebugContext(ctx, "index error",
+					"reason", err)
 				if keepgoing {
 					return nil
 				}

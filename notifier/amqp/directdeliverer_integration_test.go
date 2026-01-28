@@ -1,7 +1,6 @@
 package amqp
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -11,8 +10,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/quay/clair/config"
 	"github.com/quay/claircore"
+	"github.com/quay/claircore/test"
 	"github.com/quay/claircore/test/integration"
-	"github.com/quay/zlog"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"golang.org/x/sync/errgroup"
 
@@ -23,7 +22,7 @@ import (
 // to the AMQP queue with rollup works correctly.
 func TestDirectDeliverer(t *testing.T) {
 	integration.Skip(t)
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	// test start
 	table := []struct {
 		name         string
@@ -94,7 +93,7 @@ func TestDirectDeliverer(t *testing.T) {
 	}
 	for _, tt := range table {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := zlog.Test(ctx, t)
+			ctx := test.Logging(t, ctx)
 			// rabbitmq queue declare
 
 			queueAndKey := tt.name + "-" + uuid.New().String()

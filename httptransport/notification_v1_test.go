@@ -11,7 +11,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/uuid"
-	"github.com/quay/zlog"
+	"github.com/quay/claircore/test"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/trace"
 
@@ -22,7 +22,7 @@ import (
 
 // TestUpdateOperationHandler is a parallel harness for testing a UpdateOperation handler.
 func TestNotificationsHandler(t *testing.T) {
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	t.Run("Methods", testNotificationsHandlerMethods(ctx))
 	t.Run("Get", testNotificationHandlerGet(ctx))
 	t.Run("GetParams", testNotificationHandlerGetParams(ctx))
@@ -36,7 +36,7 @@ var notifierTraceOpt = otelhttp.WithTracerProvider(trace.NewNoopTracerProvider()
 func testNotificationHandlerDelete(ctx context.Context) func(*testing.T) {
 	return func(t *testing.T) {
 		t.Parallel()
-		ctx := zlog.Test(ctx, t)
+		ctx := test.Logging(t, ctx)
 		noteID := uuid.New()
 
 		nm := &service.Mock{
@@ -71,7 +71,7 @@ func testNotificationHandlerDelete(ctx context.Context) func(*testing.T) {
 func testNotificationHandlerGet(ctx context.Context) func(*testing.T) {
 	return func(t *testing.T) {
 		t.Parallel()
-		ctx := zlog.Test(ctx, t)
+		ctx := test.Logging(t, ctx)
 		var (
 			nextID     = uuid.New()
 			inPageWant = notifier.Page{
@@ -130,7 +130,7 @@ func testNotificationHandlerGet(ctx context.Context) func(*testing.T) {
 func testNotificationHandlerGetParams(ctx context.Context) func(*testing.T) {
 	return func(t *testing.T) {
 		t.Parallel()
-		ctx := zlog.Test(ctx, t)
+		ctx := test.Logging(t, ctx)
 		const (
 			pageSizeParam = "100"
 			pageParam     = "10"
@@ -195,7 +195,7 @@ func testNotificationHandlerGetParams(ctx context.Context) func(*testing.T) {
 func testNotificationsHandlerMethods(ctx context.Context) func(*testing.T) {
 	return func(t *testing.T) {
 		t.Parallel()
-		ctx := zlog.Test(ctx, t)
+		ctx := test.Logging(t, ctx)
 		h, err := NewNotificationV1(ctx, `/notifier/api/v1/`, &service.Mock{}, notifierTraceOpt)
 		if err != nil {
 			t.Error(err)

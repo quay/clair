@@ -11,14 +11,13 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/quay/claircore/test"
 	"github.com/quay/claircore/test/integration"
-	"github.com/quay/zlog"
 
 	"github.com/quay/clair/v4/notifier"
 )
 
 func TestNotificationCopy(t *testing.T) {
 	integration.NeedDB(t)
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	for _, tc := range []notificationCopyTestcase{
 		{Count: 1},
 		{Count: 10},
@@ -58,7 +57,7 @@ func (n *notificationCopyTestcase) Setup(t testing.TB) {
 func (n notificationCopyTestcase) Func(ctx context.Context) func(*testing.T) {
 	id := uuid.New()
 	return func(t *testing.T) {
-		ctx := zlog.Test(ctx, t)
+		ctx := test.Logging(t, ctx)
 		n.Setup(t)
 		src := copyNotifications(&id, n.Notifications)
 		s := TestingStore(ctx, t)

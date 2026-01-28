@@ -2,6 +2,7 @@ package httputil
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"time"
@@ -9,7 +10,6 @@ import (
 	"github.com/go-jose/go-jose/v3"
 	"github.com/go-jose/go-jose/v3/jwt"
 	"github.com/quay/clair/config"
-	"github.com/quay/zlog"
 )
 
 // NewSigner constructs a signer according to the provided Config and claim.
@@ -27,9 +27,7 @@ func NewSigner(ctx context.Context, cfg *config.Config, cl jwt.Claims) (*Signer,
 		claim: cl,
 	}
 	if cfg.Auth.PSK == nil {
-		zlog.Debug(ctx).
-			Str("component", "internal/httputil/NewSigner").
-			Msg("authentication disabled")
+		slog.DebugContext(ctx, "authentication disabled")
 		return &s, nil
 	}
 	if cfg.Notifier.Webhook != nil {
@@ -56,13 +54,13 @@ func NewSigner(ctx context.Context, cfg *config.Config, cl jwt.Claims) (*Signer,
 		return nil, err
 	}
 	s.signer = signer
-	if zlog.Debug(ctx).Enabled() {
+	if l := slog.Default(); l.Enabled(ctx, slog.LevelDebug) {
 		as := make([]string, 0, len(s.use))
 		for a := range s.use {
 			as = append(as, a)
 		}
-		zlog.Debug(ctx).Strs("authorities", as).
-			Msg("enabling signing for authorities")
+		l.DebugContext(ctx, "enabling signing for authorities",
+			"authorities", as)
 	}
 	return &s, nil
 }

@@ -15,12 +15,12 @@ require (
 	github.com/klauspost/compress v1.18.3
 	github.com/prometheus/client_golang v1.23.2
 	github.com/quay/clair/config v1.4.3
-	github.com/quay/claircore v1.5.48
-	github.com/quay/zlog v1.1.9
+	github.com/quay/claircore v1.5.49-0.20260112032931-db75b36765bd
+	github.com/quay/claircore/toolkit v1.4.0
+	github.com/quay/zlog/v2 v2.0.0
 	github.com/rabbitmq/amqp091-go v1.10.0
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
 	github.com/rogpeppe/go-internal v1.14.1
-	github.com/rs/zerolog v1.34.0
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
 	github.com/ugorji/go/codec v1.2.14
 	github.com/urfave/cli/v2 v2.27.7
@@ -72,7 +72,6 @@ require (
 	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d // indirect
 	github.com/knqyf263/go-rpm-version v0.0.0-20170716094938-74609b86c936 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
@@ -84,7 +83,6 @@ require (
 	github.com/prometheus/common v0.67.4 // indirect
 	github.com/prometheus/otlptranslator v1.0.0 // indirect
 	github.com/prometheus/procfs v0.19.2 // indirect
-	github.com/quay/claircore/toolkit v1.3.0 // indirect
 	github.com/quay/claircore/updater/driver v1.0.0 // indirect
 	github.com/quay/goval-parser v0.8.8 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -110,5 +108,5 @@ require (
 	modernc.org/libc v1.66.10 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.39.1 // indirect
+	modernc.org/sqlite v1.42.2 // indirect
 )

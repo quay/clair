@@ -1,21 +1,20 @@
 package httptransport
 
 import (
-	"context"
 	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/quay/zlog"
+	"github.com/quay/claircore/test"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/trace/noop"
 )
 
 func TestDiscovery(t *testing.T) {
 	t.Run("Endpoint", func(t *testing.T) {
-		ctx := zlog.Test(context.Background(), t)
+		ctx := test.Logging(t)
 		h := DiscoveryHandler(ctx, OpenAPIV1Path, otelhttp.WithTracerProvider(noop.NewTracerProvider()))
 
 		r := httptest.NewRecorder()
@@ -49,7 +48,7 @@ func TestDiscovery(t *testing.T) {
 	})
 
 	t.Run("Failure", func(t *testing.T) {
-		ctx := zlog.Test(context.Background(), t)
+		ctx := test.Logging(t)
 		h := DiscoveryHandler(ctx, OpenAPIV1Path, otelhttp.WithTracerProvider(noop.NewTracerProvider()))
 
 		r := httptest.NewRecorder()

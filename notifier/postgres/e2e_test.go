@@ -14,7 +14,6 @@ import (
 	"github.com/quay/claircore"
 	cctest "github.com/quay/claircore/test"
 	"github.com/quay/claircore/test/integration"
-	"github.com/quay/zlog"
 
 	"github.com/quay/clair/v4/notifier"
 )
@@ -24,14 +23,14 @@ import (
 // correctly.
 func TestE2E(t *testing.T) {
 	integration.NeedDB(t)
-	ctx := zlog.Test(context.Background(), t)
+	ctx := cctest.Logging(t)
 	for _, e := range []*e2e{
 		NewE2E(ctx, t, 1),
 		NewE2E(ctx, t, 10),
 		NewE2E(ctx, t, 100),
 	} {
 		t.Run(strconv.Itoa(len(e.notifications)), func(t *testing.T) {
-			ctx := zlog.Test(ctx, t)
+			ctx := cctest.Logging(t, ctx)
 			e.Run(ctx, t)
 		})
 	}
@@ -112,7 +111,7 @@ func (e *e2e) Run(ctx context.Context, t *testing.T) {
 // error occurs.
 func (e *e2e) PutNotifications(ctx context.Context) func(*testing.T) {
 	return func(t *testing.T) {
-		ctx := zlog.Test(ctx, t)
+		ctx := cctest.Logging(t, ctx)
 		opts := notifier.PutOpts{
 			Updater:        e.updater,
 			NotificationID: e.notificationID,
@@ -129,7 +128,7 @@ func (e *e2e) PutNotifications(ctx context.Context) func(*testing.T) {
 // layer is queried for all created, a specific receipt, or a receipt by UOID.
 func (e *e2e) Created(ctx context.Context) func(*testing.T) {
 	return func(t *testing.T) {
-		ctx := zlog.Test(ctx, t)
+		ctx := cctest.Logging(t, ctx)
 		ids, err := e.store.Created(ctx)
 		if err != nil {
 			t.Error(err)
@@ -170,11 +169,11 @@ func (e *e2e) Created(ctx context.Context) func(*testing.T) {
 // database when providing the notification ID.
 func (e *e2e) Notifications(ctx context.Context) func(*testing.T) {
 	return func(t *testing.T) {
-		ctx := zlog.Test(ctx, t)
+		ctx := cctest.Logging(t, ctx)
 		want := e.notificationID
 		inner := func(p *notifier.Page) func(*testing.T) {
 			return func(t *testing.T) {
-				ctx := zlog.Test(ctx, t)
+				ctx := cctest.Logging(t, ctx)
 				var ns []notifier.Notification
 				for {
 					rs, np, err := e.store.Notifications(ctx, want, p)
@@ -217,7 +216,7 @@ func (e *e2e) Notifications(ctx context.Context) func(*testing.T) {
 // delivered.
 func (e *e2e) SetDelivered(ctx context.Context) func(*testing.T) {
 	return func(t *testing.T) {
-		ctx := zlog.Test(ctx, t)
+		ctx := cctest.Logging(t, ctx)
 		want := e.notificationID
 		err := e.store.SetDelivered(ctx, want)
 		if err != nil {
@@ -240,7 +239,7 @@ func (e *e2e) SetDelivered(ctx context.Context) func(*testing.T) {
 // delivered.
 func (e *e2e) SetDeliveryFailed(ctx context.Context) func(*testing.T) {
 	return func(t *testing.T) {
-		ctx := zlog.Test(ctx, t)
+		ctx := cctest.Logging(t, ctx)
 		want := e.notificationID
 		err := e.store.SetDeliveryFailed(ctx, want)
 		if err != nil {
@@ -272,7 +271,7 @@ func (e *e2e) SetDeliveryFailed(ctx context.Context) func(*testing.T) {
 // SetDeleted ...
 func (e *e2e) SetDeleted(ctx context.Context) func(*testing.T) {
 	return func(t *testing.T) {
-		ctx := zlog.Test(ctx, t)
+		ctx := cctest.Logging(t, ctx)
 		want := e.notificationID
 		err := e.store.SetDeleted(ctx, want)
 		if err != nil {
@@ -304,7 +303,7 @@ func (e *e2e) SetDeleted(ctx context.Context) func(*testing.T) {
 // PutReceipt will confirm a receipt can be directly placed into the database.
 func (e *e2e) PutReceipt(ctx context.Context) func(*testing.T) {
 	return func(t *testing.T) {
-		ctx := zlog.Test(ctx, t)
+		ctx := cctest.Logging(t, ctx)
 		want := notifier.Receipt{
 			NotificationID: uuid.New(),
 			UOID:           uuid.New(),
@@ -336,7 +335,7 @@ func (e *e2e) PutReceipt(ctx context.Context) func(*testing.T) {
 func (e *e2e) CollectNotifications(ctx context.Context) func(*testing.T) {
 	const jump = `UPDATE receipt SET ts = (CURRENT_TIMESTAMP - INTERVAL '21 days') WHERE notification_id = $1;`
 	return func(t *testing.T) {
-		ctx := zlog.Test(ctx, t)
+		ctx := cctest.Logging(t, ctx)
 		pool := e.store.pool
 		// Jump our receipt back in time.
 		if _, err := pool.Exec(ctx, jump, e.notificationID); err != nil {

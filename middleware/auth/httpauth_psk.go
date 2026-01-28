@@ -2,11 +2,11 @@ package auth
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/go-jose/go-jose/v3/jwt"
-	"github.com/quay/zlog"
 )
 
 // PSK implements the AuthCheck interface.
@@ -27,30 +27,28 @@ func NewPSK(key []byte, issuer []string) (*PSK, error) {
 }
 
 // Check implements AuthCheck
-func (p *PSK) Check(_ context.Context, r *http.Request) bool {
-	ctx := zlog.ContextWithValues(r.Context(), "component", "middleware/auth/PSK.Check")
-
+func (p *PSK) Check(ctx context.Context, r *http.Request) bool {
 	wt, ok := fromHeader(r)
 	if !ok {
-		zlog.Debug(ctx).Msg("failed to retrieve jwt from header")
+		slog.DebugContext(ctx, "failed to retrieve jwt from header")
 		return false
 	}
 	tok, err := jwt.ParseSigned(wt)
 	if err != nil {
-		zlog.Debug(ctx).Err(err).Msg("failed to parse jwt")
+		slog.DebugContext(ctx, "failed to parse jwt", "reason", err)
 		return false
 	}
 	cl := jwt.Claims{}
 	if err := tok.Claims(p.key, &cl); err != nil {
-		zlog.Debug(ctx).Err(err).Msg("failed to parse jwt")
+		slog.DebugContext(ctx, "failed to parse jwt", "reason", err)
 		return false
 	}
 
-	ctx = zlog.ContextWithValues(ctx, "iss", cl.Issuer)
+	log := slog.With("iss", cl.Issuer)
 	if err := cl.ValidateWithLeeway(jwt.Expected{
 		Time: time.Now(),
 	}, 15*time.Second); err != nil {
-		zlog.Debug(ctx).Err(err).Msg("could not validate claims")
+		log.DebugContext(ctx, "could not validate claims", "reason", err)
 		return false
 	}
 
@@ -59,7 +57,7 @@ func (p *PSK) Check(_ context.Context, r *http.Request) bool {
 			break
 		}
 		if i == len(p.iss)-1 {
-			zlog.Debug(ctx).Err(err).Msg("could not verify issuer")
+			slog.DebugContext(ctx, "could not verify issuer", "reason", err)
 			return false
 		}
 	}

@@ -8,7 +8,7 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/quay/zlog"
+	"github.com/quay/claircore/test"
 )
 
 type memTestcase struct {
@@ -22,7 +22,7 @@ func (tc memTestcase) Run(ctx context.Context, t *testing.T) {
 	t.Helper()
 	t.Run(tc.Name, func(t *testing.T) {
 		t.Helper()
-		ctx := zlog.Test(ctx, t)
+		ctx := test.Logging(t)
 		lim, err := memLookup(tc.In)
 		if err != tc.Err {
 			t.Error(err)
@@ -43,7 +43,7 @@ func TestMemoryDetection(t *testing.T) {
 		lim   = &fstest.MapFile{Data: []byte(fmt.Sprintln(limInt))}
 		noLim = &fstest.MapFile{Data: []byte(fmt.Sprintln(noLimInt))}
 	)
-	ctx := zlog.Test(context.Background(), t)
+	ctx := test.Logging(t)
 	t.Run("V1", func(t *testing.T) {
 		tt := []memTestcase{
 			{
@@ -71,7 +71,7 @@ func TestMemoryDetection(t *testing.T) {
 				Want: limInt,
 			},
 		}
-		ctx := zlog.Test(ctx, t)
+		ctx := test.Logging(t, ctx)
 		for _, tc := range tt {
 			tc.Run(ctx, t)
 		}
@@ -102,7 +102,7 @@ func TestMemoryDetection(t *testing.T) {
 				Want: limInt,
 			},
 		}
-		ctx := zlog.Test(ctx, t)
+		ctx := test.Logging(t, ctx)
 		for _, tc := range tt {
 			tc.Run(ctx, t)
 		}

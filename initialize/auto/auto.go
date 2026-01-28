@@ -6,8 +6,7 @@ package auto
 
 import (
 	"context"
-
-	"github.com/quay/zlog"
+	"log/slog"
 )
 
 var msgs = []func(context.Context){}
@@ -18,7 +17,7 @@ func init() {
 	Profiling()
 }
 
-// PrintLogs uses zlog to report any messages queued up from the runs of
+// PrintLogs uses slog to report any messages queued up from the runs of
 // functions since the last call to PrintLogs.
 func PrintLogs(ctx context.Context) {
 	for _, f := range msgs {
@@ -30,13 +29,13 @@ func PrintLogs(ctx context.Context) {
 // DebugLog is a helper to log static strings.
 func debugLog(m string) {
 	msgs = append(msgs, func(ctx context.Context) {
-		zlog.Debug(ctx).Msg(m)
+		slog.DebugContext(ctx, m)
 	})
 }
 
 // InfoLog is a helper to log static strings.
 func infoLog(m string) {
 	msgs = append(msgs, func(ctx context.Context) {
-		zlog.Info(ctx).Msg(m)
+		slog.InfoContext(ctx, m)
 	})
 }
