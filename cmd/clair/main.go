@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"context"
 	"crypto/tls"
 	"errors"
@@ -129,6 +130,13 @@ func main() {
 }
 
 func serveAPI(ctx context.Context, cfg *config.Config) func() error {
+	apicfg := &cfg.API.V1
+	if !*apicfg.Enabled {
+		return func() error {
+			zlog.Info(ctx).Msg("http transport disabled")
+			return nil
+		}
+	}
 	return func() error {
 		zlog.Info(ctx).Msg("launching http transport")
 		srvs, err := initialize.Services(ctx, cfg)
@@ -144,12 +152,12 @@ func serveAPI(ctx context.Context, cfg *config.Config) func() error {
 		if err != nil {
 			return fmt.Errorf("http transport configuration failed: %w", err)
 		}
-		l, err := net.Listen("tcp", cfg.HTTPListenAddr)
+		l, err := listenAPI(ctx, cfg)
 		if err != nil {
 			return fmt.Errorf("http transport configuration failed: %w", err)
 		}
-		if cfg.TLS != nil {
-			cfg, err := cfg.TLS.Config()
+		if tlscfg := cmp.Or(apicfg.TLS, cfg.TLS); tlscfg != nil {
+			cfg, err := tlscfg.Config()
 			if err != nil {
 				return fmt.Errorf("tls configuration failed: %w", err)
 			}
@@ -186,10 +194,17 @@ func serveIntrospection(ctx context.Context, cfg *config.Config) func() error {
 				Msg("introspection server configuration failed; continuing anyway")
 			return nil
 		}
+		l, err := listenIntrospection(ctx, cfg)
+		if err != nil {
+			zlog.Warn(ctx).
+				Err(err).
+				Msg("introspection server configuration failed; continuing anyway")
+			return nil
+		}
 
 		var eg errgroup.Group
 		eg.Go(func() error {
-			if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			if err := srv.Serve(l); !errors.Is(err, http.ErrServerClosed) {
 				zlog.Warn(ctx).
 					Err(err).
 					Msg("introspection server failed to launch; continuing anyway")
