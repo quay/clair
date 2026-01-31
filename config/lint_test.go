@@ -27,8 +27,6 @@ func ExampleLint() {
 	}
 	// Output:
 	// error: <nil>
-	// warning: http listen address not provided, default will be used (at $.http_listen_addr)
-	// warning: introspection address not provided, default will be used (at $.introspection_addr)
 	// warning: connection string is empty and no relevant environment variables found (at $.indexer.connstring)
 	// warning: connection string is empty and no relevant environment variables found (at $.matcher.connstring)
 	// warning: updater period is very aggressive: most sources are updated daily (at $.matcher.period)
@@ -36,4 +34,8 @@ func ExampleLint() {
 	// warning: connection string is empty and no relevant environment variables found (at $.notifier.connstring)
 	// warning: interval is very fast: may result in increased workload (at $.notifier.poll_interval)
 	// warning: interval is very fast: may result in increased workload (at $.notifier.delivery_interval)
+	// warning: listen network not provided, default will be used (at $.api.v1.network)
+	// warning: listen address not provided, default will be used (at $.api.v1.address)
+	// warning: listen network not provided, default will be used (at $.introspection.network)
+	// warning: listen address not provided, default will be used (at $.introspection.address)
 }

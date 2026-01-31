@@ -47,9 +47,6 @@ type Config struct {
 }
 
 func (c *Config) validate(mode Mode) ([]Warning, error) {
-	if c.HTTPListenAddr == "" {
-		c.HTTPListenAddr = DefaultAddress
-	}
 	if c.Matcher.DisableUpdaters {
 		c.Updaters.Sets = []string{}
 	}
@@ -59,23 +56,25 @@ func (c *Config) validate(mode Mode) ([]Warning, error) {
 	default:
 		return nil, fmt.Errorf("unknown mode: %q", mode)
 	}
-	if _, _, err := net.SplitHostPort(c.HTTPListenAddr); err != nil {
-		return nil, err
+	if c.HTTPListenAddr != "" {
+		if _, _, err := net.SplitHostPort(c.HTTPListenAddr); err != nil {
+			return nil, err
+		}
 	}
 	return c.lint()
 }
 
 func (c *Config) lint() (ws []Warning, err error) {
-	if c.HTTPListenAddr == "" {
+	if c.HTTPListenAddr != "" {
 		ws = append(ws, Warning{
-			path: ".http_listen_addr",
-			msg:  `http listen address not provided, default will be used`,
+			path:  ".http_listen_addr",
+			inner: fmt.Errorf(`configuration via $.api.v1 is preferred: %w`, ErrDeprecated),
 		})
 	}
-	if c.IntrospectionAddr == "" {
+	if c.IntrospectionAddr != "" {
 		ws = append(ws, Warning{
-			path: ".introspection_addr",
-			msg:  `introspection address not provided, default will be used`,
+			path:  ".introspection_addr",
+			inner: fmt.Errorf(`configuration via $.introspection is preferred: %w`, ErrDeprecated),
 		})
 	}
 	return ws, nil
