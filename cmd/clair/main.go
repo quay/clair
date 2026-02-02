@@ -107,6 +107,8 @@ func main() {
 	slog.InfoContext(ctx, "registered signal handler")
 	go func() {
 		<-sig.Done()
+		notify(msgStopping,
+			msgStatus, fmt.Sprintf("received signal (%v)", context.Cause(sig)))
 		stop()
 		slog.InfoContext(ctx, "unregistered signal handler")
 	}()
@@ -116,6 +118,8 @@ func main() {
 	srvs.Go(serveAPI(srvctx, &conf))
 
 	slog.InfoContext(ctx, "ready", "version", cmd.Version)
+	notify(msgReady,
+		msgStatus, fmt.Sprintf("version: %s", cmd.Version))
 	if err := srvs.Wait(); err != nil {
 		slog.ErrorContext(ctx, "fatal error", "reason", err)
 		fail = true
