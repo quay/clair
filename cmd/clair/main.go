@@ -105,6 +105,8 @@ func main() {
 	zlog.Info(ctx).Msg("registered signal handler")
 	go func() {
 		<-sig.Done()
+		notify(msgStopping,
+			msgStatus, fmt.Sprintf("received signal (%v)", context.Cause(sig)))
 		stop()
 		zlog.Info(ctx).Msg("unregistered signal handler")
 	}()
@@ -116,6 +118,8 @@ func main() {
 	zlog.Info(ctx).
 		Str("version", cmd.Version).
 		Msg("ready")
+	notify(msgReady,
+		msgStatus, fmt.Sprintf("version: %s", cmd.Version))
 	if err := srvs.Wait(); err != nil {
 		zlog.Error(ctx).
 			Err(err).
