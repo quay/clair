@@ -98,8 +98,9 @@ func main() {
 	}()
 
 	srvs, srvctx := errgroup.WithContext(sig)
+	srvctx, teardown := context.WithCancelCause(srvctx)
 	srvs.Go(serveIntrospection(srvctx, flags.Config))
-	srvs.Go(serveAPI(srvctx, flags.Config))
+	srvs.Go(serveAPI(srvctx, flags.Config, teardown))
 
 	slog.InfoContext(ctx, "ready", "version", cmd.Version)
 	notify(msgReady,
@@ -110,7 +111,7 @@ func main() {
 	}
 }
 
-func serveAPI(ctx context.Context, cfg *config.Config) func() error {
+func serveAPI(ctx context.Context, cfg *config.Config, teardown context.CancelCauseFunc) func() error {
 	apicfg := &cfg.API.V1
 	if !*apicfg.Enabled {
 		return func() error {
@@ -134,6 +135,10 @@ func serveAPI(ctx context.Context, cfg *config.Config) func() error {
 				p.SetUnencryptedHTTP2(true)
 				return &p
 			}(),
+		}
+		if t := time.Duration(apicfg.IdleTimeout); t != 0 {
+			idle := newIdleMonitor(ctx, t, teardown)
+			srv.ConnState = idle.ServerHook
 		}
 		srv.Handler, err = httptransport.New(ctx, cfg, srvs.Indexer, srvs.Matcher, srvs.Notifier)
 		if err != nil {
