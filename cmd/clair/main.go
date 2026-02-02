@@ -113,8 +113,9 @@ func main() {
 	}()
 
 	srvs, srvctx := errgroup.WithContext(sig)
+	srvctx, teardown := context.WithCancelCause(srvctx)
 	srvs.Go(serveIntrospection(srvctx, &conf))
-	srvs.Go(serveAPI(srvctx, &conf))
+	srvs.Go(serveAPI(srvctx, &conf, teardown))
 
 	zlog.Info(ctx).
 		Str("version", cmd.Version).
@@ -129,7 +130,7 @@ func main() {
 	}
 }
 
-func serveAPI(ctx context.Context, cfg *config.Config) func() error {
+func serveAPI(ctx context.Context, cfg *config.Config, teardown context.CancelCauseFunc) func() error {
 	apicfg := &cfg.API.V1
 	if !*apicfg.Enabled {
 		return func() error {
@@ -147,6 +148,10 @@ func serveAPI(ctx context.Context, cfg *config.Config) func() error {
 			BaseContext: func(_ net.Listener) context.Context {
 				return context.WithoutCancel(ctx)
 			},
+		}
+		if t := time.Duration(apicfg.IdleTimeout); t != 0 {
+			idle := newIdleMonitor(ctx, t, teardown)
+			srv.ConnState = idle.ServerHook
 		}
 		srv.Handler, err = httptransport.New(ctx, cfg, srvs.Indexer, srvs.Matcher, srvs.Notifier)
 		if err != nil {
