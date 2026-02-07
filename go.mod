@@ -50,7 +50,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/containerd/stargz-snapshotter/estargz v0.18.1 // indirect
+	github.com/containerd/stargz-snapshotter/estargz v0.18.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/docker/cli v29.0.3+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
