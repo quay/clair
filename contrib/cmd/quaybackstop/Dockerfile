@@ -1,4 +1,4 @@
-# syntax=docker.io/docker/dockerfile:1.7
+# syntax=docker.io/docker/dockerfile:1.21
 
 # Copyright 2024 clair authors
 #
