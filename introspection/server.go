@@ -55,9 +55,6 @@ const (
 	ReadyEndpoint       = "/readyz"
 )
 
-// DefaultIntrospectionAddr is the default address if not provided in the configuration.
-const DefaultIntrospectionAddr = ":8089"
-
 // Server provides an HTTP server exposing Clair metrics and debugging information.
 type Server struct {
 	// configuration provided when starting Clair
@@ -76,20 +73,9 @@ func New(ctx context.Context, conf *config.Config, health func() bool) (*Server,
 	var err error
 	ctx = zlog.ContextWithValues(ctx, "component", "introspection/New")
 
-	var addr string
-	if conf.IntrospectionAddr == "" {
-		addr = DefaultIntrospectionAddr
-		zlog.Info(ctx).
-			Str("address", addr).
-			Msg("no introspection address provided; using default")
-	} else {
-		addr = conf.IntrospectionAddr
-	}
-
 	i := &Server{
 		conf: conf,
 		Server: &http.Server{
-			Addr:        addr,
 			BaseContext: func(_ net.Listener) context.Context { return ctx },
 		},
 		ServeMux: http.NewServeMux(),

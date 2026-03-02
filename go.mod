@@ -46,6 +46,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
+replace github.com/quay/clair/config => ./config
+
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
