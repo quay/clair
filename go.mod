@@ -1,6 +1,6 @@
 module github.com/quay/clair/v4
 
-go 1.25.0
+go 1.25.6
 
 require (
 	github.com/Masterminds/semver v1.5.0
@@ -8,7 +8,7 @@ require (
 	github.com/go-jose/go-jose/v3 v3.0.4
 	github.com/go-stomp/stomp/v3 v3.1.5
 	github.com/google/go-cmp v0.7.0
-	github.com/google/go-containerregistry v0.20.7
+	github.com/google/go-containerregistry v0.21.2
 	github.com/google/uuid v1.6.0
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.9
 	github.com/jackc/pgx/v5 v5.8.0
@@ -50,9 +50,9 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/containerd/stargz-snapshotter/estargz v0.18.1 // indirect
+	github.com/containerd/stargz-snapshotter/estargz v0.18.2 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
-	github.com/docker/cli v29.0.3+incompatible // indirect
+	github.com/docker/cli v29.2.1+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.9.3 // indirect
 	github.com/doug-martin/goqu/v8 v8.6.0 // indirect
