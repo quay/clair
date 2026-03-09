@@ -160,7 +160,7 @@ jobs:
           path: |
             ~/.cache/clair-testing
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
         if: ${{ matrix.platform != needs.setup.outputs.runner-arch }}
         with:
           platforms: linux/${{ matrix.platform }}
