@@ -42,7 +42,7 @@ jobs:
       - uses: docker/setup-qemu-action@v3
         with:
           platforms: all
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@v4
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
