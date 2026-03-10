@@ -110,3 +110,7 @@ require (
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sqlite v1.46.1 // indirect
 )
+
+// Pin pgx to v5.5.3 to avoid goroutine leak in ctxwatch.ContextWatcher
+// introduced in v5.5.4. See https://github.com/jackc/pgx/issues/1999
+replace github.com/jackc/pgx/v5 => github.com/jackc/pgx/v5 v5.5.3
