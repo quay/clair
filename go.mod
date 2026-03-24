@@ -11,11 +11,11 @@ require (
 	github.com/google/go-containerregistry v0.20.7
 	github.com/google/uuid v1.6.0
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.9
-	github.com/jackc/pgx/v5 v5.8.0
+	github.com/jackc/pgx/v5 v5.9.1
 	github.com/klauspost/compress v1.18.4
 	github.com/prometheus/client_golang v1.23.2
 	github.com/quay/clair/config v1.4.3
-	github.com/quay/claircore v1.5.50
+	github.com/quay/claircore v1.5.51
 	github.com/quay/claircore/toolkit v1.4.0
 	github.com/quay/zlog/v2 v2.1.0
 	github.com/rabbitmq/amqp091-go v1.10.0
@@ -78,7 +78,7 @@ require (
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
-	github.com/package-url/packageurl-go v0.1.4 // indirect
+	github.com/package-url/packageurl-go v0.1.5 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.67.5 // indirect
 	github.com/prometheus/otlptranslator v1.0.0 // indirect
