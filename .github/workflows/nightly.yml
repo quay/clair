@@ -80,7 +80,7 @@ jobs:
             cd "${{ runner.temp }}/build"
             go mod vendor
           )
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         if: steps.novelty.outputs.cache-hit != 'true'
         with:
           cache-from: type=gha
