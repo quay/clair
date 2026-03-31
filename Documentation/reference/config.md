@@ -330,6 +330,7 @@ If the value is nil the default list of Matchers will run:
 * alpine-matcher
 * aws-matcher
 * debian-matcher
+* echo-matcher
 * gobin
 * java-maven
 * oracle
@@ -366,6 +367,7 @@ If the value is nil (or `null` in yaml) the default set of Updaters will run:
 * alpine
 * aws
 * debian
+* echo
 * oracle
 * osv
 * photon
