@@ -13,6 +13,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/quay/clair/v4/cmd"
+	_ "github.com/quay/clair/v4/echo"
 	"github.com/quay/clair/v4/internal/logging"
 )
 

@@ -13,15 +13,25 @@ import (
 	"github.com/go-jose/go-jose/v3/jwt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/quay/clair/config"
+	"github.com/quay/claircore/alpine"
 	"github.com/quay/claircore/datastore/postgres"
 	"github.com/quay/claircore/enricher/cvss"
+	"github.com/quay/claircore/gobin"
+	ccindexer "github.com/quay/claircore/indexer"
+	"github.com/quay/claircore/java"
 	"github.com/quay/claircore/libindex"
 	"github.com/quay/claircore/libvuln"
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/claircore/pkg/ctxlock/v2"
+	"github.com/quay/claircore/python"
+	"github.com/quay/claircore/rhel"
+	"github.com/quay/claircore/rhel/rhcc"
+	"github.com/quay/claircore/rpm"
+	"github.com/quay/claircore/ruby"
 	"golang.org/x/net/publicsuffix"
 
 	clairerror "github.com/quay/clair/v4/clair-error"
+	"github.com/quay/clair/v4/echo"
 	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/httptransport/client"
 	"github.com/quay/clair/v4/indexer"
@@ -131,9 +141,25 @@ func localIndexer(ctx context.Context, cfg *config.Config) (indexer.Service, err
 		return nil, mkErr(err)
 	}
 
+	// Explicitly set ecosystems to include the Echo distribution scanner
+	// in the dpkg ecosystem. This overrides claircore's defaults
+	// (libindex.New sets these when Ecosystems is nil).
+	ecosystems := []*ccindexer.Ecosystem{
+		echo.NewDpkgEcosystem(ctx),
+		alpine.NewEcosystem(ctx),
+		rhel.NewEcosystem(ctx),
+		rpm.NewEcosystem(ctx),
+		python.NewEcosystem(ctx),
+		java.NewEcosystem(ctx),
+		rhcc.NewEcosystem(ctx),
+		gobin.NewEcosystem(ctx),
+		ruby.NewEcosystem(ctx),
+	}
+
 	opts := libindex.Options{
 		Store:                store,
 		Locker:               locker,
+		Ecosystems:           ecosystems,
 		ScanLockRetry:        time.Duration(cfg.Indexer.ScanLockRetry) * time.Second,
 		LayerScanConcurrency: cfg.Indexer.LayerScanConcurrency,
 	}
