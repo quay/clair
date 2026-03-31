@@ -13,6 +13,7 @@ require (
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.9
 	github.com/jackc/pgx/v5 v5.9.1
 	github.com/klauspost/compress v1.18.4
+	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d
 	github.com/prometheus/client_golang v1.23.2
 	github.com/quay/clair/config v1.4.3
 	github.com/quay/claircore v1.5.51
@@ -69,7 +70,6 @@ require (
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/knqyf263/go-apk-version v0.0.0-20200609155635-041fdbb8563f // indirect
-	github.com/knqyf263/go-deb-version v0.0.0-20190517075300-09fca494f03d // indirect
 	github.com/knqyf263/go-rpm-version v0.0.0-20170716094938-74609b86c936 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
