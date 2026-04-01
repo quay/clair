@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"runtime/pprof"
 	"time"
 
 	"github.com/quay/clair/config"
@@ -46,8 +47,11 @@ func main() {
 
 	// parse conf from cli
 	var conf config.Config
+	var cpuprofile, memprofile string
 	flag.String("conf", "", "The file system path to Clair's config file.")
 	flag.String("mode", "", "The operation mode for this server, will default to combo.")
+	flag.StringVar(&cpuprofile, "cpuprofile", "", "Write cpu profile to `file`.")
+	flag.StringVar(&memprofile, "memprofile", "", "Write memory profile to `file`.")
 	flag.Parse()
 	flag.VisitAll(func(f *flag.Flag) {
 		fv := f.Value.(flag.Getter).Get().(string)
@@ -82,6 +86,34 @@ func main() {
 		}
 	})
 
+	// Set up CPU profiling, if asked for:
+	if cpuprofile != "" {
+		f, err := os.Create(cpuprofile)
+		if err != nil {
+			bail("could not create CPU profile", "reason", err)
+		}
+		defer f.Close()
+		if err := pprof.StartCPUProfile(f); err != nil {
+			bail("could not start CPU profile", "reason", err)
+		}
+		defer pprof.StopCPUProfile()
+	}
+	// Defer collecting a Memory profile, if asked for:
+	if memprofile != "" {
+		defer func() {
+			f, err := os.Create(memprofile)
+			if err != nil {
+				slog.Error("could not create memory profile", "reason", err)
+				return
+			}
+			runtime.GC() // get up-to-date statistics
+			if err := pprof.Lookup("allocs").WriteTo(f, 0); err != nil {
+				slog.Error("could not write memory profile", "reason", err)
+			}
+			f.Close()
+		}()
+	}
+
 	// Grab the warnings to print after the logger is configured.
 	ws, err := config.Validate(&conf)
 	if err != nil {
@@ -100,6 +132,9 @@ func main() {
 			"lint", ws)
 	}
 	auto.PrintLogs(ctx)
+	if cpu, mem := cpuprofile != "", memprofile != ""; cpu || mem {
+		slog.InfoContext(ctx, "profiling enabled", "cpu", cpu, "mem", mem)
+	}
 
 	// Signal handler, for orderly shutdown.
 	sig, stop := signal.NotifyContext(ctx, append(platformShutdown, os.Interrupt)...)
