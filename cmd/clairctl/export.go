@@ -16,6 +16,7 @@ import (
 	_ "github.com/quay/claircore/updater/defaults"
 	"github.com/urfave/cli/v2"
 
+	_ "github.com/quay/clair/v4/echo"
 	"github.com/quay/clair/v4/internal/httputil"
 )
 

@@ -19,6 +19,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/quay/clair/v4/cmd"
+	_ "github.com/quay/clair/v4/echo"
 	"github.com/quay/clair/v4/health"
 	"github.com/quay/clair/v4/httptransport"
 	"github.com/quay/clair/v4/initialize"

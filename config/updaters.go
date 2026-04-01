@@ -23,6 +23,7 @@ type Updaters struct {
 	// "aws"
 	// "clair.cvss"
 	// "debian"
+	// "echo"
 	// "oracle"
 	// "osv"
 	// "photon"
