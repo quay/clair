@@ -12,7 +12,6 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
-	"runtime/pprof"
 	"time"
 
 	"github.com/quay/clair/config"
@@ -25,11 +24,6 @@ import (
 	"github.com/quay/clair/v4/initialize"
 	"github.com/quay/clair/v4/initialize/auto"
 	"github.com/quay/clair/v4/introspection"
-)
-
-const (
-	envConfig = `CLAIR_CONF`
-	envMode   = `CLAIR_MODE`
 )
 
 func main() {
@@ -45,77 +39,30 @@ func main() {
 		runtime.Goexit()
 	}
 
-	// parse conf from cli
-	var conf config.Config
-	var cpuprofile, memprofile string
-	flag.String("conf", "", "The file system path to Clair's config file.")
-	flag.String("mode", "", "The operation mode for this server, will default to combo.")
-	flag.StringVar(&cpuprofile, "cpuprofile", "", "Write cpu profile to `file`.")
-	flag.StringVar(&memprofile, "memprofile", "", "Write memory profile to `file`.")
-	flag.Parse()
-	flag.VisitAll(func(f *flag.Flag) {
-		fv := f.Value.(flag.Getter).Get().(string)
-		var key string
-		switch f.Name {
-		case "conf":
-			key = envConfig
-		case "mode":
-			key = envMode
-		}
-		v, ok := os.LookupEnv(key)
-		if fv == "" && !ok {
-			bail("missing flag or environment variable", "flag", "-"+f.Name, "variable", key)
-		}
-		if fv == "" && ok {
-			fv = v
-		}
-		switch f.Name {
-		case "conf":
-			if err := cmd.LoadConfig(&conf, fv, true); err != nil {
-				bail("failed loading config", "reason", err)
-			}
-		case "mode":
-			if fv == "" {
-				fv = "combo"
-			}
-			m, err := config.ParseMode(fv)
-			if err != nil {
-				bail("bad mode", "mode", fv, "reason", err)
-			}
-			conf.Mode = m
-		}
-	})
-
-	// Set up CPU profiling, if asked for:
-	if cpuprofile != "" {
-		f, err := os.Create(cpuprofile)
-		if err != nil {
-			bail("could not create CPU profile", "reason", err)
-		}
-		defer f.Close()
-		if err := pprof.StartCPUProfile(f); err != nil {
-			bail("could not start CPU profile", "reason", err)
-		}
-		defer pprof.StopCPUProfile()
+	var flags Flags
+	err := flags.Parse(os.Args[1:])
+	switch {
+	case err == nil:
+	case errors.Is(err, flag.ErrHelp):
+		os.Exit(0)
+	default:
+		os.Exit(2)
 	}
-	// Defer collecting a Memory profile, if asked for:
-	if memprofile != "" {
-		defer func() {
-			f, err := os.Create(memprofile)
-			if err != nil {
-				slog.Error("could not create memory profile", "reason", err)
-				return
-			}
-			runtime.GC() // get up-to-date statistics
-			if err := pprof.Lookup("allocs").WriteTo(f, 0); err != nil {
-				slog.Error("could not write memory profile", "reason", err)
-			}
-			f.Close()
-		}()
+	cpu, err := flags.SetupCPUProfile()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
+	defer cpu()
+	mem, err := flags.SetupMemProfile()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	defer mem()
 
 	// Grab the warnings to print after the logger is configured.
-	ws, err := config.Validate(&conf)
+	ws, err := config.Validate(flags.Config)
 	if err != nil {
 		bail("failed to validate config", "reason", err)
 	}
@@ -123,7 +70,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if err := initialize.Logging(ctx, &conf); err != nil {
+	if err := initialize.Logging(ctx, flags.Config); err != nil {
 		bail("failed to set up logging", "reason", err)
 	}
 	slog.InfoContext(ctx, "starting", "version", cmd.Version)
@@ -132,7 +79,7 @@ func main() {
 			"lint", ws)
 	}
 	auto.PrintLogs(ctx)
-	if cpu, mem := cpuprofile != "", memprofile != ""; cpu || mem {
+	if cpu, mem := flags.CPUProfile != "", flags.MemProfile != ""; cpu || mem {
 		slog.InfoContext(ctx, "profiling enabled", "cpu", cpu, "mem", mem)
 	}
 
@@ -147,8 +94,8 @@ func main() {
 	}()
 
 	srvs, srvctx := errgroup.WithContext(sig)
-	srvs.Go(serveIntrospection(srvctx, &conf))
-	srvs.Go(serveAPI(srvctx, &conf))
+	srvs.Go(serveIntrospection(srvctx, flags.Config))
+	srvs.Go(serveAPI(srvctx, flags.Config))
 
 	slog.InfoContext(ctx, "ready", "version", cmd.Version)
 	if err := srvs.Wait(); err != nil {
