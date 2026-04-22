@@ -9,6 +9,7 @@ require (
 	github.com/go-stomp/stomp/v3 v3.1.5
 	github.com/google/go-cmp v0.7.0
 	github.com/google/go-containerregistry v0.21.5
+	github.com/google/jsonschema-go v0.4.2
 	github.com/google/uuid v1.6.0
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.9
 	github.com/jackc/pgx/v5 v5.9.2
@@ -22,7 +23,6 @@ require (
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
 	github.com/rogpeppe/go-internal v1.14.1
 	github.com/tomnomnom/linkheader v0.0.0-20180905144013-02ca5825eb80
-	github.com/ugorji/go/codec v1.2.14
 	github.com/urfave/cli/v2 v2.27.7
 	go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace v0.68.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.68.0
@@ -42,6 +42,7 @@ require (
 	golang.org/x/net v0.53.0
 	golang.org/x/sync v0.20.0
 	golang.org/x/time v0.15.0
+	golang.org/x/tools v0.44.0
 	google.golang.org/grpc v1.80.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -100,7 +101,6 @@ require (
 	golang.org/x/mod v0.35.0 // indirect
 	golang.org/x/sys v0.43.0 // indirect
 	golang.org/x/text v0.36.0 // indirect
-	golang.org/x/tools v0.44.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260401024825-9d38bb4040a9 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260401024825-9d38bb4040a9 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
@@ -110,3 +110,5 @@ require (
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sqlite v1.46.1 // indirect
 )
+
+tool github.com/quay/clair/v4/internal/cmd/alias_gen
