@@ -140,8 +140,8 @@ github.com/quay/goval-parser v0.8.8 h1:Uf+f9iF2GIR5GPUY2pGoa9il2+4cdES44ZlM0mWm4
 github.com/quay/goval-parser v0.8.8/go.mod h1:Y0NTNfPYOC7yxsYKzJOrscTWUPq1+QbtHw4XpPXWPMc=
 github.com/quay/zlog/v2 v2.1.0 h1:U55jQXHqB3NyWEt0iPESzIOjQho3PG4HWfXj9j40vEs=
 github.com/quay/zlog/v2 v2.1.0/go.mod h1:+FmBwcNIbXOKRWfaIqHGPF+g9WW4hn+OiomLN7eC/dM=
-github.com/rabbitmq/amqp091-go v1.10.0 h1:STpn5XsHlHGcecLmMFCtg7mqq0RnD+zFr4uzukfVhBw=
-github.com/rabbitmq/amqp091-go v1.10.0/go.mod h1:Hy4jKW5kQART1u+JkDTF9YYOQUHXqMuhrgxOEeS7G4o=
+github.com/rabbitmq/amqp091-go v1.11.0 h1:HxIctVm9Gid/Vtn706necmZ7Wj6pgGI2eqplRbEY8O8=
+github.com/rabbitmq/amqp091-go v1.11.0/go.mod h1:Hy4jKW5kQART1u+JkDTF9YYOQUHXqMuhrgxOEeS7G4o=
 github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319 h1:ukjThsA2ou7AmovpwtMVkNQSuoN/v5U16+JomTz3c7o=
 github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319/go.mod h1:rhSvwcijY9wfmrBYrfCvapX8/xOTV46NAUjBRgUyJqc=
 github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec h1:W09IVJc94icq4NjY3clb7Lk8O1qJ8BdBEF8z0ibU0rE=
