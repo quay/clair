@@ -17,7 +17,7 @@ require (
 	github.com/quay/clair/config v1.4.3
 	github.com/quay/claircore v1.5.52
 	github.com/quay/claircore/toolkit v1.6.0
-	github.com/quay/zlog/v2 v2.1.0
+	github.com/quay/zlog/v2 v2.1.1
 	github.com/rabbitmq/amqp091-go v1.11.0
 	github.com/remind101/migrate v0.0.0-20170729031349-52c1edff7319
 	github.com/rogpeppe/go-internal v1.14.1
