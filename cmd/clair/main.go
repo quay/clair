@@ -46,6 +46,7 @@ func main() {
 	case errors.Is(err, flag.ErrHelp):
 		os.Exit(0)
 	default:
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
 	cpu, err := flags.SetupCPUProfile()
