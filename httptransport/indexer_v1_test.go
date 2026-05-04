@@ -15,7 +15,7 @@ import (
 	"github.com/quay/claircore/pkg/tarfs"
 	"github.com/quay/claircore/test"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/internal/httputil"
@@ -32,7 +32,7 @@ func TestIndexReportBadLayer(t *testing.T) {
 			return nil, tarfs.ErrFormat
 		},
 	}
-	v1, err := NewIndexerV1(ctx, "", i, otelhttp.WithTracerProvider(trace.NewNoopTracerProvider()))
+	v1, err := NewIndexerV1(ctx, "", i, otelhttp.WithTracerProvider(noop.NewTracerProvider()))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -93,7 +93,7 @@ func TestIndexerV1(t *testing.T) {
 		},
 	}
 
-	v1, err := NewIndexerV1(ctx, "", i, otelhttp.WithTracerProvider(trace.NewNoopTracerProvider()))
+	v1, err := NewIndexerV1(ctx, "", i, otelhttp.WithTracerProvider(noop.NewTracerProvider()))
 	if err != nil {
 		t.Fatal(err)
 	}

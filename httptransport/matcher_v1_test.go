@@ -16,7 +16,7 @@ import (
 	"github.com/quay/claircore/libvuln/driver"
 	"github.com/quay/claircore/test"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/quay/clair/v4/indexer"
 	"github.com/quay/clair/v4/internal/httputil"
@@ -40,13 +40,13 @@ func testUpdateDiffMatcher(t *testing.T) {
 			return nil, nil
 		},
 	}
-	hOK := NewMatcherV1(ctx, "", mOK, &indexer.Mock{}, time.Second*10, otelhttp.WithTracerProvider(trace.NewNoopTracerProvider()))
+	hOK := NewMatcherV1(ctx, "", mOK, &indexer.Mock{}, time.Second*10, otelhttp.WithTracerProvider(noop.NewTracerProvider()))
 	mErr := &matcher.Mock{
 		UpdateDiff_: func(context.Context, uuid.UUID, uuid.UUID) (*driver.UpdateDiff, error) {
 			return nil, fmt.Errorf("expected error")
 		},
 	}
-	hErr := NewMatcherV1(ctx, "", mErr, &indexer.Mock{}, time.Second*10, otelhttp.WithTracerProvider(trace.NewNoopTracerProvider()))
+	hErr := NewMatcherV1(ctx, "", mErr, &indexer.Mock{}, time.Second*10, otelhttp.WithTracerProvider(noop.NewTracerProvider()))
 
 	srvOK := httptest.NewUnstartedServer(hOK)
 	srvOK.Config.BaseContext = func(_ net.Listener) context.Context { return ctx }
@@ -155,7 +155,7 @@ func testUpdateDiffHandlerParams(t *testing.T) {
 			return nil, nil
 		},
 	}
-	h := NewMatcherV1(ctx, "", mOK, &indexer.Mock{}, time.Second*10, otelhttp.WithTracerProvider(trace.NewNoopTracerProvider()))
+	h := NewMatcherV1(ctx, "", mOK, &indexer.Mock{}, time.Second*10, otelhttp.WithTracerProvider(noop.NewTracerProvider()))
 	srv := httptest.NewUnstartedServer(h)
 	srv.Config.BaseContext = func(_ net.Listener) context.Context { return ctx }
 	srv.Start()
@@ -201,7 +201,7 @@ func testUpdateDiffHandlerMethods(t *testing.T) {
 			return nil, nil
 		},
 	}
-	h := NewMatcherV1(ctx, "", mOK, &indexer.Mock{}, time.Second*10, otelhttp.WithTracerProvider(trace.NewNoopTracerProvider()))
+	h := NewMatcherV1(ctx, "", mOK, &indexer.Mock{}, time.Second*10, otelhttp.WithTracerProvider(noop.NewTracerProvider()))
 	srv := httptest.NewUnstartedServer(h)
 	srv.Config.BaseContext = func(_ net.Listener) context.Context { return ctx }
 	srv.Start()
@@ -266,7 +266,7 @@ func testUpdateOperationHandlerErrors(t *testing.T) {
 			return nil, ErrExpected
 		},
 	}
-	h := NewMatcherV1(ctx, "", m, &indexer.Mock{}, time.Second*10, otelhttp.WithTracerProvider(trace.NewNoopTracerProvider()))
+	h := NewMatcherV1(ctx, "", m, &indexer.Mock{}, time.Second*10, otelhttp.WithTracerProvider(noop.NewTracerProvider()))
 	srv := httptest.NewUnstartedServer(h)
 	srv.Config.BaseContext = func(_ net.Listener) context.Context { return ctx }
 	srv.Start()
@@ -306,7 +306,7 @@ func testUpdateOperationHandlerErrors(t *testing.T) {
 func testUpdateOperationHandlerMethods(t *testing.T) {
 	ctx := test.Logging(t)
 	t.Parallel()
-	h := NewMatcherV1(ctx, "", &matcher.Mock{}, &indexer.Mock{}, time.Second*10, otelhttp.WithTracerProvider(trace.NewNoopTracerProvider()))
+	h := NewMatcherV1(ctx, "", &matcher.Mock{}, &indexer.Mock{}, time.Second*10, otelhttp.WithTracerProvider(noop.NewTracerProvider()))
 	srv := httptest.NewUnstartedServer(h)
 	srv.Config.BaseContext = func(_ net.Listener) context.Context { return ctx }
 	srv.Start()
@@ -359,7 +359,7 @@ func testUpdateOperationHandlerGet(t *testing.T) {
 			return nil, nil
 		},
 	}
-	h := NewMatcherV1(ctx, "", m, &indexer.Mock{}, time.Second*10, otelhttp.WithTracerProvider(trace.NewNoopTracerProvider()))
+	h := NewMatcherV1(ctx, "", m, &indexer.Mock{}, time.Second*10, otelhttp.WithTracerProvider(noop.NewTracerProvider()))
 	srv := httptest.NewUnstartedServer(h)
 	srv.Config.BaseContext = func(_ net.Listener) context.Context { return ctx }
 	srv.Start()

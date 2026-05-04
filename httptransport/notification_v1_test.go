@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/quay/claircore/test"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.opentelemetry.io/otel/trace"
+	"go.opentelemetry.io/otel/trace/noop"
 
 	"github.com/quay/clair/v4/internal/httputil"
 	"github.com/quay/clair/v4/notifier"
@@ -29,7 +29,7 @@ func TestNotificationsHandler(t *testing.T) {
 	t.Run("Delete", testNotificationHandlerDelete(ctx))
 }
 
-var notifierTraceOpt = otelhttp.WithTracerProvider(trace.NewNoopTracerProvider())
+var notifierTraceOpt = otelhttp.WithTracerProvider(noop.NewTracerProvider())
 
 // testNotificationHandlerDelete confirms the handler performs a delete
 // correctly
