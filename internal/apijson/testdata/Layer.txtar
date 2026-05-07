@@ -1,0 +1,21 @@
+-- Simple.in.json --
+{
+  "hash": "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+  "uri": "tag:example",
+  "otherkey": null,
+  "headers": {
+    "a": [
+      "b"
+    ]
+  }
+}
+-- Simple.want.json --
+{
+  "hash": "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+  "uri": "tag:example",
+  "headers": {
+    "a": [
+      "b"
+    ]
+  }
+}
