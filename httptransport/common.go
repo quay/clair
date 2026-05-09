@@ -35,8 +35,8 @@ func getDigest(_ http.ResponseWriter, r *http.Request) (d claircore.Digest, err 
 // "allow" slice is used.
 //
 // If "Accept" headers are present, the first (ordered by "q" value) media type
-// in the "allow" slice is chosen. If there are no common media types, "415
-// Unsupported Media Type" is written and ErrMediaType is reported.
+// in the "allow" slice is chosen. If there are no common media types,
+// ErrMediaType is reported.
 func pickContentType(w http.ResponseWriter, r *http.Request, allow []string) error {
 	// There's no canonical algorithm for this, it's all server-dependent
 	// behavior. Our algorithm is:
@@ -84,7 +84,6 @@ func pickContentType(w http.ResponseWriter, r *http.Request, allow []string) err
 			}
 		}
 	}
-	w.WriteHeader(http.StatusUnsupportedMediaType)
 	return ErrMediaType
 }
 

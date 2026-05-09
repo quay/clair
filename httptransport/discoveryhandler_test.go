@@ -67,5 +67,8 @@ func TestDiscovery(t *testing.T) {
 		if got, want := resp.StatusCode, http.StatusUnsupportedMediaType; got != want {
 			t.Errorf("got status code: %v want status code: %v", got, want)
 		}
+		if got, want := resp.Header.Get("content-type"), "application/json"; got != want {
+			t.Errorf("got content-type: %q, want: %q", got, want)
+		}
 	})
 }
