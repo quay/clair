@@ -12,7 +12,7 @@ import (
 
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	"github.com/quay/clair/config"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // LoadConfig loads the named config file or reports an error.
