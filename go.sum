@@ -102,8 +102,8 @@ github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
 github.com/opencontainers/image-spec v1.1.1 h1:y0fUlFfIZhPF1W537XOLg0/fcx6zcHCJwooC2xJA040=
 github.com/opencontainers/image-spec v1.1.1/go.mod h1:qpqAh3Dmcf36wStyyWU+kCeDgrGnAve2nCC8+7h8Q0M=
-github.com/package-url/packageurl-go v0.1.5 h1:O4efRXja2XQ5CtiiYiCZ22k/m7i5ugLiAghgcC+eDgk=
-github.com/package-url/packageurl-go v0.1.5/go.mod h1:nKAWB8E6uk1MHqiS/lQb9pYBGH2+mdJ2PJc2s50dQY0=
+github.com/package-url/packageurl-go v0.1.6 h1:YO3p6u1XmCUliivUg/qWphaY8vI6hxSnnPv7Bfg3m5M=
+github.com/package-url/packageurl-go v0.1.6/go.mod h1:nKAWB8E6uk1MHqiS/lQb9pYBGH2+mdJ2PJc2s50dQY0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/prometheus/client_golang v1.23.2 h1:Je96obch5RDVy3FDMndoUsjAhG5Edi49h0RJWRi/o0o=
@@ -121,8 +121,8 @@ github.com/quay/clair/config v1.4.3/go.mod h1:MyYm2qGw55+I598zEpwpFFmBq1jp5NLIhB
 github.com/quay/claircore v1.5.52 h1:4A75rDdkdZns5dTYVTI4RYizjurFeorge+Gn2LH1Ii8=
 github.com/quay/claircore v1.5.52/go.mod h1:Ypvuqks5guwqEOcHsm/7/wBVLM3XFcan7tm2EeilYPg=
 github.com/quay/claircore/toolkit v1.0.0/go.mod h1:3ELtgf92x7o1JCTSKVOAqhcnCTXc4s5qiGaEDx62i20=
-github.com/quay/claircore/toolkit v1.6.0 h1:NZ0NCfV/H26y0NCbADwA+c2yBrOJvZ2v66Wkn6tPpPU=
-github.com/quay/claircore/toolkit v1.6.0/go.mod h1:i7JAbOOpIzbhKiopTuqqvMinx54yJiYEBIN6/9nqH7c=
+github.com/quay/claircore/toolkit v1.6.1 h1:a3X1v28n5bo05T94cBlaoPU8xYCErRGPM3l6AlmYWj4=
+github.com/quay/claircore/toolkit v1.6.1/go.mod h1:dTzlp1pgNchc+CN73HJiG9+e0ygU54QPt397eXnGGo4=
 github.com/quay/claircore/updater/driver v1.0.0 h1:w7dAUjO3GBK6RjNyTZ2Kwz0l/Wuic3ykKJWPB80uA94=
 github.com/quay/claircore/updater/driver v1.0.0/go.mod h1:My5aY1wBpgxcWaHQZ0VoPmmj/EzuH7fq4ntzJbos4OI=
 github.com/quay/goval-parser v0.8.8 h1:Uf+f9iF2GIR5GPUY2pGoa9il2+4cdES44ZlM0mWm4cA=
