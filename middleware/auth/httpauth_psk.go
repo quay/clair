@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 )
 
 // PSK implements the AuthCheck interface.
@@ -33,7 +34,7 @@ func (p *PSK) Check(ctx context.Context, r *http.Request) bool {
 		slog.DebugContext(ctx, "failed to retrieve jwt from header")
 		return false
 	}
-	tok, err := jwt.ParseSigned(wt)
+	tok, err := jwt.ParseSigned(wt, []jose.SignatureAlgorithm{jose.HS256, jose.HS384, jose.HS512})
 	if err != nil {
 		slog.DebugContext(ctx, "failed to parse jwt", "reason", err)
 		return false
