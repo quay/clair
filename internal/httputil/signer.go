@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/go-jose/go-jose/v3"
-	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 	"github.com/quay/clair/config"
 )
 
@@ -103,7 +103,7 @@ func (s *Signer) Sign(ctx context.Context, req *http.Request) error {
 	cl.IssuedAt = jwt.NewNumericDate(now)
 	cl.NotBefore = jwt.NewNumericDate(now.Add(-jwt.DefaultLeeway))
 	cl.Expiry = jwt.NewNumericDate(now.Add(jwt.DefaultLeeway))
-	h, err := jwt.Signed(s.signer).Claims(&cl).CompactSerialize()
+	h, err := jwt.Signed(s.signer).Claims(&cl).Serialize()
 	if err != nil {
 		return err
 	}
