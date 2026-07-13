@@ -43,7 +43,7 @@ jobs:
         with:
           platforms: all
       - uses: docker/setup-buildx-action@v4
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - id: setup-go
