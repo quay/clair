@@ -8,7 +8,7 @@ require (
 	github.com/go-jose/go-jose/v3 v3.0.5
 	github.com/go-stomp/stomp/v3 v3.1.5
 	github.com/google/go-cmp v0.7.0
-	github.com/google/go-containerregistry v0.21.6
+	github.com/google/go-containerregistry v0.21.7
 	github.com/google/uuid v1.6.0
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.11
 	github.com/jackc/pgx/v5 v5.10.0
@@ -51,7 +51,7 @@ require (
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
-	github.com/docker/cli v29.4.3+incompatible // indirect
+	github.com/docker/cli v29.5.3+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.9.3 // indirect
 	github.com/doug-martin/goqu/v8 v8.6.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -89,10 +89,10 @@ require (
 	go.uber.org/mock v0.6.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	golang.org/x/crypto v0.53.0 // indirect
-	golang.org/x/mod v0.36.0 // indirect
+	golang.org/x/mod v0.37.0 // indirect
 	golang.org/x/sys v0.46.0 // indirect
 	golang.org/x/text v0.38.0 // indirect
-	golang.org/x/tools v0.45.0 // indirect
+	golang.org/x/tools v0.46.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
