@@ -1,0 +1,24 @@
+dist:
+  name: otelcollector
+  description: Clair-flavored OpenTelemetry Collector binary
+  output_path: ./_build
+  version: '0.1.0'
+exporters:
+- gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsxrayexporter v0.109.0
+- gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter v0.109.0
+- gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusremotewriteexporter v0.109.0
+- gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/sentryexporter v0.109.0
+- gomod: go.opentelemetry.io/collector/exporter/debugexporter v0.109.0
+
+receivers:
+- gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v0.109.0
+
+processors:
+- gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.109.0
+
+providers:
+- gomod: go.opentelemetry.io/collector/confmap/provider/envprovider v1.15.0
+- gomod: go.opentelemetry.io/collector/confmap/provider/fileprovider v1.15.0
+- gomod: go.opentelemetry.io/collector/confmap/provider/httpprovider v0.109.0
+- gomod: go.opentelemetry.io/collector/confmap/provider/httpsprovider v0.109.0
+- gomod: go.opentelemetry.io/collector/confmap/provider/yamlprovider v0.109.0
