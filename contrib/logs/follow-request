@@ -1,0 +1,4 @@
+#!/bin/sh
+id=${1?Missing \"id\" argument}
+shift 1
+exec jq -c -r -n --arg id "${id}" '[ inputs | select(.request_id == $id) ] | sort_by(.time) | .[]' -- "$@"
