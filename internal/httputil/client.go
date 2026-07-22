@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/cookiejar"
+	"net/netip"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,7 +28,7 @@ func NewClient(ctx context.Context, localOnly bool) (*http.Client, error) {
 	dialer := &net.Dialer{}
 	// Set a control function if we're restricting subnets.
 	if localOnly {
-		dialer.Control = ctlLocalOnly
+		dialer.ControlContext = ctlLocalOnly
 	}
 	tr.DialContext = dialer.DialContext
 
@@ -43,36 +44,47 @@ func NewClient(ctx context.Context, localOnly bool) (*http.Client, error) {
 	}, nil
 }
 
-func ctlLocalOnly(network, address string, _ syscall.RawConn) error {
-	// Future-proof for QUIC by allowing UDP here.
-	if !strings.HasPrefix(network, "tcp") && !strings.HasPrefix(network, "udp") {
+func ctlLocalOnly(_ context.Context, network, address string, _ syscall.RawConn) error {
+	// Now that this has a Context'd version, we could jam a policy engine in
+	// here if someone really feeling froggy.
+	switch {
+	case strings.HasPrefix(network, "tcp"): // OK
+	case strings.HasPrefix(network, "udp"): // OK
+	case strings.HasPrefix(network, "unix"):
+		// Local by definition.
+		return nil
+	default:
 		return &net.AddrError{
 			Addr: network + "!" + address,
-			Err:  "disallowed by policy",
+			Err:  fmt.Sprintf("disallowed by policy: network %q", network),
 		}
 	}
-	host, _, err := net.SplitHostPort(address)
+
+	ap, err := netip.ParseAddrPort(address)
 	if err != nil {
 		return &net.AddrError{
-			Addr: network + "!" + address,
-			Err:  "martian address",
+			Addr: address,
+			Err:  fmt.Sprintf("unable to parse address: %v", err),
 		}
 	}
-	addr := net.ParseIP(host)
-	if addr == nil {
+	switch addr := ap.Addr(); {
+	case addr.IsMulticast():
+		// Assert this is a unicast address.
+		// There was a draft RFC for handling HTTP/3 over multicast QUIC, but it's expired so this seems OK to do.
 		return &net.AddrError{
-			Addr: network + "!" + address,
-			Err:  "martian address",
+			Addr: ap.String(),
+			Err:  "disallowed by policy: address is multicast",
 		}
-	}
-	if !addr.IsPrivate() &&
-		!addr.IsLoopback() &&
-		!addr.IsLinkLocalUnicast() {
+	case addr.IsLoopback(): // OK
+	case addr.IsLinkLocalUnicast(): // OK
+	case addr.IsPrivate(): // OK
+	default:
 		return &net.AddrError{
-			Addr: network + "!" + address,
-			Err:  "disallowed by policy",
+			Addr: ap.String(),
+			Err:  "disallowed by policy: not loopback, link-local, or private",
 		}
 	}
+
 	return nil
 }
 
