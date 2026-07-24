@@ -25,8 +25,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-jose/go-jose/v3"
-	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 	"github.com/google/uuid"
 
 	"github.com/quay/clair/v4/notifier"
@@ -253,7 +253,7 @@ func (h *Recv) sign(req *http.Request) error {
 	cl.IssuedAt = jwt.NewNumericDate(now)
 	cl.NotBefore = jwt.NewNumericDate(now.Add(-jwt.DefaultLeeway))
 	cl.Expiry = jwt.NewNumericDate(now.Add(jwt.DefaultLeeway))
-	tok, err := jwt.Signed(h.Signer).Claims(&cl).CompactSerialize()
+	tok, err := jwt.Signed(h.Signer).Claims(&cl).Serialize()
 	if err != nil {
 		return err
 	}

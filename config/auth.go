@@ -86,6 +86,11 @@ func (a *AuthPSK) validate(_ Mode) ([]Warning, error) {
 			msg: "key is empty",
 		}
 	}
+	if len(a.Key) < 32 {
+		return nil, &Warning{
+			msg:  "key is too short: must be at least 32 bytes",
+		}
+	}
 	if len(a.Issuer) == 0 {
 		return nil, &Warning{
 			path: ".iss",
