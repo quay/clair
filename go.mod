@@ -13,7 +13,7 @@ require (
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.11
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/klauspost/compress v1.19.1
-	github.com/prometheus/client_golang v1.23.2
+	github.com/prometheus/client_golang v1.24.1
 	github.com/quay/clair/config v1.4.3
 	github.com/quay/claircore v1.5.52
 	github.com/quay/claircore/toolkit v1.6.0
@@ -73,9 +73,9 @@ require (
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/package-url/packageurl-go v0.1.5 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
-	github.com/prometheus/common v0.67.5 // indirect
+	github.com/prometheus/common v0.70.1 // indirect
 	github.com/prometheus/otlptranslator v1.0.0 // indirect
-	github.com/prometheus/procfs v0.20.1 // indirect
+	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/quay/claircore/updater/driver v1.0.0 // indirect
 	github.com/quay/goval-parser v0.8.8 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
@@ -87,7 +87,6 @@ require (
 	go.opentelemetry.io/otel/metric v1.44.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.10.0 // indirect
 	go.uber.org/mock v0.6.0 // indirect
-	go.yaml.in/yaml/v2 v2.4.4 // indirect
 	golang.org/x/crypto v0.54.0 // indirect
 	golang.org/x/mod v0.37.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
