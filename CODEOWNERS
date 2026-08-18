@@ -1,1 +1,4 @@
 *	@quay/clair
+contrib/Containerfile.art	@quay/redhat-team
+contrib/container-name-repos-map.json   @quay/redhat-team
+contrib/repository-to-cpe.json  @quay/redhat-team
