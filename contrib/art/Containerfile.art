@@ -18,7 +18,7 @@ LABEL io.k8s.description="Clair vulnerability scanner for Red Hat Quay"
 LABEL io.openshift.tags="quay,clair,security"
 LABEL summary="Clair vulnerability scanner for Red Hat Quay"
 LABEL description="Clair vulnerability scanner for Red Hat Quay"
-#LABEL cpe="cpe:/a:redhat:quay::el9"
+LABEL cpe="cpe:/a:redhat:quay::el9"
 LABEL vendor="Red Hat, Inc."
 LABEL distribution-scope="restricted"
 LABEL url="https://docs.redhat.com/en/documentation/red_hat_quay"
@@ -33,9 +33,9 @@ ENV CLAIR_CONF=/config/config.yaml \
     CLAIR_MODE=combo \
     SSL_CERT_DIR="/etc/ssl/certs:/etc/pki/tls/certs:/var/run/certs"
 
-USER nobody:nobody
+RUN mkdir -p /data && cp /cachi2/output/deps/generic/repository-to-cpe.json /cachi2/output/deps/generic/container-name-repos-map.json /data/
 
 COPY --from=build /app/clair /bin/clair
 COPY --from=build /app/clairctl /bin/clairctl
-ADD https://raw.githubusercontent.com/quay/quay-konflux-components/redhat-3.17/components/clair/data/repository-to-cpe.json /data/
-ADD https://raw.githubusercontent.com/quay/quay-konflux-components/redhat-3.17/components/clair/data/container-name-repos-map.json /data/
+
+USER nobody:nobody
