@@ -12,6 +12,7 @@ NOTICE
 /book
 /contrib
 !/contrib/cmd
+!/contrib/*.json
 /Documenatation
 /etc
 /local-dev
