@@ -65,7 +65,7 @@ jobs:
           gzip clair.tar
           mv clair.tar.gz clair-${{ needs.config.outputs.version }}.tar.gz
       - name: Cache Changelog
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         id: chglog-cache
         if: github.event_name != 'workflow_dispatch'
         with:
@@ -133,7 +133,7 @@ jobs:
       - name: Unpack
         run: |
           tar -xz -f ${{steps.download.outputs.download-path}}/clair-${{ needs.config.outputs.version }}.tar.gz --strip-components=1
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           go-version: ${{ needs.config.outputs.build_go_version }}
       - name: Build

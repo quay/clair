@@ -1,0 +1,41 @@
+FROM registry.redhat.io/ubi9/go-toolset:1.25 AS build
+
+WORKDIR /app
+COPY . .
+
+RUN GOEXPERIMENT=strictfipsruntime go build -tags strictfipsruntime -mod=mod \
+	-ldflags="-s -w" \
+	-o . \
+	-trimpath \
+	./cmd/...
+
+FROM registry.redhat.io/ubi9/ubi-minimal:latest
+
+LABEL com.redhat.component="clair-container"
+LABEL name="quay/clair-rhel9"
+LABEL io.k8s.display-name="Red Hat Quay - Clair"
+LABEL io.k8s.description="Clair vulnerability scanner for Red Hat Quay"
+LABEL io.openshift.tags="quay,clair,security"
+LABEL summary="Clair vulnerability scanner for Red Hat Quay"
+LABEL description="Clair vulnerability scanner for Red Hat Quay"
+#LABEL cpe="cpe:/a:redhat:quay::el9"
+LABEL vendor="Red Hat, Inc."
+LABEL distribution-scope="restricted"
+LABEL url="https://docs.redhat.com/en/documentation/red_hat_quay"
+LABEL maintainer="support@redhat.com"
+
+ENTRYPOINT ["/usr/bin/clair"]
+VOLUME /config
+EXPOSE 6060
+WORKDIR /run
+
+ENV CLAIR_CONF=/config/config.yaml \
+    CLAIR_MODE=combo \
+    SSL_CERT_DIR="/etc/ssl/certs:/etc/pki/tls/certs:/var/run/certs"
+
+USER nobody:nobody
+
+COPY --from=build /app/clair /bin/clair
+COPY --from=build /app/clairctl /bin/clairctl
+ADD https://raw.githubusercontent.com/quay/quay-konflux-components/redhat-3.17/components/clair/data/repository-to-cpe.json /data/
+ADD https://raw.githubusercontent.com/quay/quay-konflux-components/redhat-3.17/components/clair/data/container-name-repos-map.json /data/
