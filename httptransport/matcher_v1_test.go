@@ -346,7 +346,18 @@ func testUpdateOperationHandlerGet(t *testing.T) {
 	idStr := "\"" + id.String() + "\""
 	var called bool
 	var latestCalled bool
+	var deleteCalled bool
 	m := &matcher.Mock{
+		DeleteUpdateOperations_: func(_ context.Context, refs ...uuid.UUID) (int64, error) {
+			deleteCalled = true
+			if got, want := len(refs), 1; got != want {
+				t.Fatalf("got: %v, want: %v", got, want)
+			}
+			if got, want := refs[0], id; got != want {
+				t.Fatalf("got: %v, want: %v", got, want)
+			}
+			return 1, nil
+		},
 		LatestUpdateOperation_: func(context.Context, driver.UpdateKind) (uuid.UUID, error) {
 			return id, nil
 		},
@@ -410,5 +421,20 @@ func testUpdateOperationHandlerGet(t *testing.T) {
 	etag = resp.Header.Get("etag")
 	if etag != idStr {
 		t.Fatalf("got: %v, want: %v", etag, id.String())
+	}
+
+	req, err = httputil.NewRequestWithContext(ctx, http.MethodDelete, srv.URL+path.Join("/", "internal", "update_operation", id.String()), nil)
+	if err != nil {
+		t.Fatalf("failed to create request: %v", err)
+	}
+	resp, err = c.Do(req)
+	if err != nil {
+		t.Fatalf("failed to make request: %v", err)
+	}
+	if resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("got: %v, want: %v", resp.StatusCode, http.StatusNoContent)
+	}
+	if !deleteCalled {
+		t.Fatalf("got: %v, want: %v", deleteCalled, true)
 	}
 }

@@ -315,15 +315,12 @@ paths:
       summary: Retrieve Update Operations
       description: Retrive all known or just the latest Update Operations.
       x-cli-ignore: true
-  /matcher/api/v1/internal/update_operation/{digest}:
+  /matcher/api/v1/internal/update_operation/{id}:
     delete:
       operationId: DeleteUpdateOperation
       responses:
-        "200":
+        "204":
           description: Success
-          headers:
-            Clair-Error:
-              $ref: '#/components/headers/Clair-Error'
         "400":
           $ref: '#/components/responses/bad_request'
         "415":
@@ -338,7 +335,7 @@ paths:
         After this delete clients will no longer be able to generate a diff against this Update Operation.
       x-cli-ignore: true
     parameters:
-      - $ref: '#/components/parameters/digest'
+      - $ref: '#/components/parameters/update_operation_id'
   /matcher/api/v1/vulnerability_report/{digest}:
     get:
       operationId: GetVulnerabilityReport
@@ -1300,6 +1297,14 @@ components:
       in: path
       schema:
         $ref: '#/components/schemas/digest'
+      required: true
+    update_operation_id:
+      description: UUID of the update operation to delete.
+      name: id
+      in: path
+      schema:
+        type: string
+        format: uuid
       required: true
   headers:
     Clair-Error:

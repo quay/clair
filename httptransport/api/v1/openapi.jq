@@ -250,12 +250,16 @@ def responses($r):
         ],
       },
     },
-    "\($path_match)/internal/update_operation/{digest}": {
+    "\($path_match)/internal/update_operation/{id}": {
       delete: {
         operationId: "DeleteUpdateOperation",
-        responses: (responses({})),
+        responses: (responses({
+          "204": {
+            description: "Success",
+          },
+        }) | del(.["200"])),
       },
-      parameters: [ param_ref("digest") ],
+      parameters: [ param_ref("update_operation_id") ],
     },
     "\($path_match)/internal/update_diff": {
       get: {
@@ -348,6 +352,16 @@ def responses($r):
         name: "digest",
         in: "path",
         schema: schema_ref("digest"),
+        required: true,
+      },
+      update_operation_id: {
+        description: "UUID of the update operation to delete.",
+        name: "id",
+        in: "path",
+        schema: {
+          type: "string",
+          format: "uuid",
+        },
         required: true,
       }
     },
