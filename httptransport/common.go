@@ -66,6 +66,13 @@ func pickContentType(w http.ResponseWriter, r *http.Request, allow []string) err
 				a.Q, _ = strconv.ParseFloat(qs, 64)
 			}
 			typ := strings.Split(mt, "/")
+			if len(typ) != 2 {
+				// ParseMediaType accepts bare tokens like "*", which have no
+				// subtype. Skip them instead of indexing out of range; if
+				// nothing acceptable is left, the default type is served
+				// below.
+				continue
+			}
 			a.Type = typ[0]
 			a.Subtype = typ[1]
 			acceptable = append(acceptable, a)
