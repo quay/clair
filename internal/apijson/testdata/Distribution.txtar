@@ -1,0 +1,25 @@
+-- Simple.in.json --
+{
+  "id": "0",
+  "foo": "bar",
+  "did": "linux",
+  "name": "Linux 3.11",
+  "version": "3.11",
+  "version_code_name": "For Workgroups",
+  "version_id": "3",
+  "arch": "amd64",
+  "pretty_name": "Linux 3.11 For Workgroups",
+  "cpe": "cpe:2.3:o:*:*:*:*:*:*:*:*:*:*"
+}
+-- Simple.want.json --
+{
+  "id": "0",
+  "did": "linux",
+  "name": "Linux 3.11",
+  "version": "3.11",
+  "version_code_name": "For Workgroups",
+  "version_id": "3",
+  "arch": "amd64",
+  "pretty_name": "Linux 3.11 For Workgroups",
+  "cpe": "cpe:2.3:o:*:*:*:*:*:*:*:*:*:*"
+}

@@ -1,0 +1,18 @@
+-- Simple.in.json --
+{
+  "package_db": "rpm:/var/lib/rpm",
+  "introduced_in": "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+  "distribution_id": "0",
+  "repository_ids": [
+    "0"
+  ]
+}
+-- Simple.want.json --
+{
+  "package_db": "rpm:/var/lib/rpm",
+  "introduced_in": "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+  "distribution_id": "0",
+  "repository_ids": [
+    "0"
+  ]
+}

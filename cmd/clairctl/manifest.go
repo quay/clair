@@ -9,6 +9,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 
 	"github.com/google/go-containerregistry/pkg/name"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
@@ -36,22 +37,16 @@ func manifestAction(c *cli.Context) error {
 	}
 
 	result := make(chan *claircore.Manifest)
-	done := make(chan struct{})
 	eg, ctx := errgroup.WithContext(c.Context)
-	go func() {
-		defer close(done)
-		enc := codec.GetEncoder(os.Stdout)
-		defer codec.PutEncoder(enc)
-		for m := range result {
-			enc.MustEncode(m)
-		}
-	}()
+	var workers sync.WaitGroup
+	workers.Add(args.Len())
 
-	for i := 0; i < args.Len(); i++ {
+	for i := range args.Len() {
 		name := args.Get(i)
 		l := slog.With("name", name)
 		l.DebugContext(ctx, "fetching")
 		eg.Go(func() error {
+			defer workers.Done()
 			m, err := Inspect(ctx, name)
 			if err != nil {
 				l.DebugContext(ctx, "inspect failure", "reason", err)
@@ -62,11 +57,24 @@ func manifestAction(c *cli.Context) error {
 			return nil
 		})
 	}
+	eg.Go(func() error {
+		workers.Wait()
+		close(result)
+		return nil
+	})
+	eg.Go(func() error {
+		enc := codec.GetEncoder(os.Stdout)
+		for m := range result {
+			if err := enc.Encode(m); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+
 	if err := eg.Wait(); err != nil {
 		return err
 	}
-	close(result)
-	<-done
 	return nil
 }
 
