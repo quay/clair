@@ -2,7 +2,7 @@
   "$id": "https://clairproject.org/api/http/v1/digest.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Digest",
-  "description": "A digest acts as a content identifier, enabling content addressability.",
+  "description": "A digest acts as a content identifier, enabling content addressability",
   "type": "string",
   "anyOf": [
     {

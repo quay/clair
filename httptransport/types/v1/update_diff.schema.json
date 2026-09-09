@@ -3,25 +3,25 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Update Difference",
   "type": "object",
-  "description": "**This is an internal type, documented for completeness.**\n\nAn update difference describes changes between two Update Operations.",
+  "description": "**This is an internal type, documented for completeness.**\n\nAn update difference describes changes between two Update Operations",
   "properties": {
     "prev": {
-      "description": "The previous Update Operation.",
+      "description": "The previous Update Operation",
       "$ref": "update_operation.schema.json"
     },
     "cur": {
-      "description": "The current Update Operation.",
+      "description": "The current Update Operation",
       "$ref": "update_operation.schema.json"
     },
     "added": {
-      "description": "Vulnerabilities present in \"cur\", but not \"prev\".",
+      "description": "Vulnerabilities present in \"cur\", but not \"prev\"",
       "type": "array",
       "items": {
         "$ref": "vulnerability.schema.json"
       }
     },
     "removed": {
-      "description": "Vulnerabilities present in \"prev\", but not \"cur\".",
+      "description": "Vulnerabilities present in \"prev\", but not \"cur\"",
       "type": "array",
       "items": {
         "$ref": "vulnerability.schema.json"
