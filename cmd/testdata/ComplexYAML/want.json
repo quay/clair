@@ -10,7 +10,7 @@
   },
   "auth": {
     "psk": {
-      "key": "c2VjcmV0",
+      "key": "c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2U=",
       "iss": [
         "quay",
         "clairctl"
