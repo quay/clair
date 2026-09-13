@@ -1,7 +1,6 @@
 package config_test
 
 import (
-	"bytes"
 	"testing"
 
 	"github.com/quay/clair/config"
@@ -9,36 +8,40 @@ import (
 
 func TestEnumMarshal(t *testing.T) {
 	t.Run("LogLevel", func(t *testing.T) {
-		tt := [][]byte{
-			[]byte("info"),
-			[]byte("debug-color"),
-			[]byte("debug"),
-			[]byte("warn"),
-			[]byte("error"),
-			[]byte("fatal"),
-			[]byte("panic"),
+		type testcase struct {
+			Level  config.LogLevel
+			String string
+		}
+		tt := []testcase{
+			{Level: config.TraceLog, String: "trace"},
+			{Level: config.DebugColorLog, String: "debug-color"},
+			{Level: config.DebugLog, String: "debug"},
+			{Level: config.InfoLog, String: "info"},
+			{Level: config.WarnLog, String: "warn"},
+			{Level: config.ErrorLog, String: "error"},
+			{Level: config.FatalLog, String: "fatal"},
+			{Level: config.PanicLog, String: "panic"},
 		}
 		t.Run("Marshal", func(t *testing.T) {
-			for i, want := range tt {
-				l := config.LogLevel(i)
-				got, err := l.MarshalText()
+			for _, tc := range tt {
+				m, err := tc.Level.MarshalText()
 				if err != nil {
 					t.Error(err)
 					continue
 				}
-				if !bytes.Equal(got, want) {
+				if got, want := string(m), tc.String; got != want {
 					t.Errorf("got: %q, want: %q", got, want)
 				}
 			}
 		})
 		t.Run("Unmarshal", func(t *testing.T) {
-			for want, in := range tt {
-				var l config.LogLevel
-				if err := l.UnmarshalText(in); err != nil {
+			for _, tc := range tt {
+				var got config.LogLevel
+				if err := got.UnmarshalText([]byte(tc.String)); err != nil {
 					t.Error(err)
 					continue
 				}
-				if got := int(l); got != want {
+				if want := tc.Level; got != want {
 					t.Errorf("got: %q, want: %q", got, want)
 				}
 			}
