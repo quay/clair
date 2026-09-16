@@ -12,7 +12,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/go-jose/go-jose/v4/jwt"
 	"github.com/quay/clair/config"
 	"github.com/quay/claircore/test"
 
@@ -116,7 +116,7 @@ func (tc *authTestcase) Run(ctx context.Context) func(*testing.T) {
 
 // TestAuth tests configuring both http server and client.
 func TestAuth(t *testing.T) {
-	fakeKey := []byte("deadbeef")
+	fakeKey := []byte("deadbeefdeadbeefdeadbeefdeadbeef")
 	tt := []authTestcase{
 		{Name: "None"},
 		{
@@ -153,7 +153,7 @@ func TestAuth(t *testing.T) {
 				},
 			},
 			ShouldFail: true,
-			ConfigMod:  func(_ *testing.T, cfg *config.Config) { cfg.Auth.PSK.Key = []byte("badbeef") },
+			ConfigMod:  func(_ *testing.T, cfg *config.Config) { cfg.Auth.PSK.Key = []byte("badbeefbadbeefbadbeefbadbeefbadb") },
 		},
 		{
 			Name: "PSKFail",

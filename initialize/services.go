@@ -10,7 +10,7 @@ import (
 	"net/http/cookiejar"
 	"time"
 
-	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/go-jose/go-jose/v4/jwt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/quay/clair/config"
 	"github.com/quay/claircore/datastore/postgres"

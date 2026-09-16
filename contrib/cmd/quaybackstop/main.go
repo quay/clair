@@ -34,8 +34,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/go-jose/go-jose/v3"
-	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/quay/clair/config"
 )
@@ -291,7 +291,7 @@ func (a *App) NewRequestWithContext(ctx context.Context, method string, url *url
 		cl.NotBefore = jwt.NewNumericDate(now.Add(-jwt.DefaultLeeway))
 		a.clairTokenResign = now.Add(15 * time.Minute)
 		cl.Expiry = jwt.NewNumericDate(a.clairTokenResign)
-		tok, err := jwt.Signed(a.jwtSigner).Claims(&cl).CompactSerialize()
+		tok, err := jwt.Signed(a.jwtSigner).Claims(&cl).Serialize()
 		if err != nil {
 			return nil, fmt.Errorf("jwt construction: %w", err)
 		}

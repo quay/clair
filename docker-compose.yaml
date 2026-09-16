@@ -172,7 +172,7 @@ services:
       - ./notifier/webhook/cmd/webhookd
       - -D
       - -key
-      - c2VjcmV0
+      - c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2U=
   rabbitmq:
     # This provides STOMP and AMQP on the usual ports.
     # The web UI is available on /rabbitmq

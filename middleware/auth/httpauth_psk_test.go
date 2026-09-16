@@ -14,8 +14,8 @@ import (
 	"testing/quick"
 	"time"
 
-	"github.com/go-jose/go-jose/v3"
-	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 
 	"github.com/quay/clair/v4/internal/httputil"
 )
@@ -40,6 +40,9 @@ var signAlgo = []jose.SignatureAlgorithm{
 
 // implements the Generate interface from testing/quick package.
 func (tc *pskTestcase) Generate(rand *rand.Rand, sz int) reflect.Value {
+	if sz < 64 {
+		sz = 64
+	}
 	b := make([]byte, sz)
 	t := &pskTestcase{
 		key:    make([]byte, sz),
@@ -111,7 +114,7 @@ func roundtrips(t *testing.T) func(*pskTestcase) bool {
 			Expiry:    jwt.NewNumericDate(now.Add(time.Minute)),
 			IssuedAt:  jwt.NewNumericDate(now),
 			NotBefore: jwt.NewNumericDate(now),
-		}).CompactSerialize()
+		}).Serialize()
 		if err != nil {
 			t.Error(err)
 			return false
