@@ -1,5 +1,5 @@
 ---
-title: Clair Container Analyzer v1.2.0
+title: Clair Container Analyzer v1.3.0
 language_tabs:
   - python: Python
   - go: Golang
@@ -19,7 +19,7 @@ headingLevel: 2
 
 <!-- Generator: Widdershins v4.0.1 -->
 
-<h1 id="clair-container-analyzer">Clair Container Analyzer v1.2.0</h1>
+<h1 id="clair-container-analyzer">Clair Container Analyzer v1.3.0</h1>
 
 > Scroll down for code samples, example requests and responses. Select a language for code samples from the tabs above or the mobile navigation menu.
 
@@ -1503,9 +1503,9 @@ Affected Manifests
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|vulnerabilities|object|true|none|Vulnerability objects.|
+|vulnerabilities|object|true|none|Vulnerability objects|
 |» **additionalProperties**|[vulnerability.schema.json](#schemavulnerability.schema.json)|false|none|none|
-|vulnerable_manifests|object|true|none|Mapping of manifest digests to vulnerability identifiers.|
+|vulnerable_manifests|object|true|none|Mapping of manifest digests to vulnerability identifiers|
 |» **additionalProperties**|[string]|false|none|none|
 
 <h2 id="tocS_bulk_delete">bulk_delete</h2>
@@ -1528,7 +1528,7 @@ Bulk Delete
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|Bulk Delete|[[digest.schema.json](#schemadigest.schema.json)]|false|none|Array of manifest digests to delete from the system.|
+|Bulk Delete|[[digest.schema.json](#schemadigest.schema.json)]|false|none|Array of manifest digests to delete from the system|
 
 <h2 id="tocS_cpe">cpe</h2>
 <!-- backwards compatibility -->
@@ -1548,7 +1548,7 @@ Common Platform Enumeration Name
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|Common Platform Enumeration Name|any|false|none|This is a CPE Name in either v2.2 "URI" form or v2.3 "Formatted String" form.|
+|Common Platform Enumeration Name|string|false|none|This is a CPE Name in either v2.2 "URI" form or v2.3 "Formatted String" form|
 
 oneOf
 
@@ -1580,7 +1580,7 @@ Digest
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|Digest|string|false|none|A digest acts as a content identifier, enabling content addressability.|
+|Digest|string|false|none|A digest acts as a content identifier, enabling content addressability|
 
 anyOf
 
@@ -1626,15 +1626,15 @@ Distribution
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|id|string|true|none|Unique ID for this Distribution. May be unique to the response document, not the whole system.|
-|did|string|false|none|A lower-case string (no spaces or other characters outside of 0–9, a–z, ".", "_", and "-") identifying the operating system, excluding any version information and suitable for processing by scripts or usage in generated filenames.|
-|name|string|false|none|A string identifying the operating system.|
-|version|string|false|none|A string identifying the operating system version, excluding any OS name information, possibly including a release code name, and suitable for presentation to the user.|
-|version_code_name|string|false|none|A lower-case string (no spaces or other characters outside of 0–9, a–z, ".", "_", and "-") identifying the operating system release code name, excluding any OS name information or release version, and suitable for processing by scripts or usage in generated filenames.|
-|version_id|string|false|none|A lower-case string (mostly numeric, no spaces or other characters outside of 0–9, a–z, ".", "_", and "-") identifying the operating system version, excluding any OS name information or release code name.|
-|arch|string|false|none|A string identifying the OS architecture.|
-|cpe|[cpe.schema.json](#schemacpe.schema.json)|false|none|Common Platform Enumeration name.|
-|pretty_name|string|false|none|A pretty operating system name in a format suitable for presentation to the user.|
+|id|string|true|none|Unique ID for this Distribution. May be unique to the response document, not the whole system|
+|did|string|false|none|A lower-case string (no spaces or other characters outside of 0–9, a–z, ".", "_", and "-") identifying the operating system, excluding any version information and suitable for processing by scripts or usage in generated filenames|
+|name|string|false|none|A string identifying the operating system|
+|version|string|false|none|A string identifying the operating system version, excluding any OS name information, possibly including a release code name, and suitable for presentation to the user|
+|version_code_name|string|false|none|A lower-case string (no spaces or other characters outside of 0–9, a–z, ".", "_", and "-") identifying the operating system release code name, excluding any OS name information or release version, and suitable for processing by scripts or usage in generated filenames|
+|version_id|string|false|none|A lower-case string (mostly numeric, no spaces or other characters outside of 0–9, a–z, ".", "_", and "-") identifying the operating system version, excluding any OS name information or release code name|
+|arch|string|false|none|A string identifying the OS architecture|
+|cpe|[cpe.schema.json](#schemacpe.schema.json)|false|none|Common Platform Enumeration name|
+|pretty_name|string|false|none|A pretty operating system name in a format suitable for presentation to the user|
 
 <h2 id="tocS_environment">environment</h2>
 <!-- backwards compatibility -->
@@ -1660,10 +1660,10 @@ Environment
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|package_db|string|false|none|The database the associated Package was discovered in.|
-|distribution_id|string|false|none|The ID of the Distribution of the associated Package.|
-|introduced_in|[digest.schema.json](#schemadigest.schema.json)|false|none|The Layer the associated Package was introduced in.|
-|repository_ids|[string]|false|none|The IDs of the Repositories of the associated Package.|
+|package_db|string|false|none|The database the associated Package was discovered in|
+|distribution_id|string|false|none|The ID of the Distribution of the associated Package|
+|introduced_in|[digest.schema.json](#schemadigest.schema.json)|false|none|The Layer the associated Package was introduced in|
+|repository_ids|[string]|false|none|The IDs of the Repositories of the associated Package|
 
 <h2 id="tocS_error">error</h2>
 <!-- backwards compatibility -->
@@ -1719,17 +1719,17 @@ Index Report
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|manifest_hash|[digest.schema.json](#schemadigest.schema.json)|true|none|The Manifest's digest.|
+|manifest_hash|[digest.schema.json](#schemadigest.schema.json)|true|none|The Manifest's digest|
 |state|string|true|none|The current state of the index operation|
 |err|string|false|none|An error message on event of unsuccessful index|
 |success|boolean|true|none|A bool indicating succcessful index|
-|packages|object|false|none|A map of Package objects indexed by a document-local identifier.|
+|packages|object|false|none|A map of Package objects indexed by a document-local identifier|
 |» **additionalProperties**|[package.schema.json](#schemapackage.schema.json)|false|none|none|
-|distributions|object|false|none|A map of Distribution objects indexed by a document-local identifier.|
+|distributions|object|false|none|A map of Distribution objects indexed by a document-local identifier|
 |» **additionalProperties**|[distribution.schema.json](#schemadistribution.schema.json)|false|none|none|
-|repository|object|false|none|A map of Repository objects indexed by a document-local identifier.|
+|repository|object|false|none|A map of Repository objects indexed by a document-local identifier|
 |» **additionalProperties**|[repository.schema.json](#schemarepository.schema.json)|false|none|none|
-|environments|object|false|none|A map of Environment arrays indexed by a Package's identifier.|
+|environments|object|false|none|A map of Environment arrays indexed by a Package's identifier|
 |» **additionalProperties**|[[environment.schema.json](#schemaenvironment.schema.json)]|false|none|none|
 
 <h2 id="tocS_index_state">index_state</h2>
@@ -1764,7 +1764,7 @@ Index State
 ```json
 {
   "hash": null,
-  "uri": "string",
+  "uri": "http://example.com",
   "headers": {},
   "media_type": "string"
 }
@@ -1777,11 +1777,11 @@ Layer
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|hash|[digest.schema.json](#schemadigest.schema.json)|true|none|Digest of the layer blob.|
-|uri|string|true|none|A URI indicating where the layer blob can be downloaded from.|
-|headers|object|false|none|Any additional HTTP-style headers needed for requesting layers.|
+|hash|[digest.schema.json](#schemadigest.schema.json)|true|none|Digest of the layer blob|
+|uri|string(uri)|true|none|A URI indicating where the layer blob can be downloaded from|
+|headers|object|false|none|Any additional HTTP-style headers needed for requesting layers|
 |» ^[a-zA-Z0-9\-_]+$|[string]|false|none|none|
-|media_type|string|false|none|The OCI Layer media type for this layer.|
+|media_type|string|false|none|The OCI Layer media type for this layer|
 
 <h2 id="tocS_manifest">manifest</h2>
 <!-- backwards compatibility -->
@@ -1814,8 +1814,8 @@ Manifest
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|hash|[digest.schema.json](#schemadigest.schema.json)|true|none|The OCI Image Manifest's digest.<br><br>This is used as an identifier throughout the system. This **SHOULD** be the same as the OCI Image Manifest's digest, but this is not enforced.|
-|layers|[[layer.schema.json](#schemalayer.schema.json)]|false|none|The OCI Layers making up the Image, in order.|
+|hash|[digest.schema.json](#schemadigest.schema.json)|true|none|The OCI Image Manifest's digest.<br><br>This is used as an identifier throughout the system. This **SHOULD** be the same as the OCI Image Manifest's digest, but this is not enforced|
+|layers|[[layer.schema.json](#schemalayer.schema.json)]|false|none|The OCI Layers making up the Image, in order|
 
 <h2 id="tocS_normalized_severity">normalized_severity</h2>
 <!-- backwards compatibility -->
@@ -1835,7 +1835,7 @@ Normalized Severity
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|Normalized Severity|any|false|none|Standardized severity values.|
+|Normalized Severity|any|false|none|Standardized severity values|
 
 #### Enumerated Values
 
@@ -1908,10 +1908,10 @@ Notification Page
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|page|object|true|none|An object informing the client the next page to retrieve.|
-|» size|integer|true|none|The number of notifications contained in this page.|
-|» next|string|false|none|The identififer to pass into the "next" parameter of a future GetNotification request.<br><br>If not present, there are no additional pages.|
-|notifications|[[notification.schema.json](#schemanotification.schema.json)]|true|none|Notifications within this page.|
+|page|object|true|none|An object informing the client the next page to retrieve|
+|» size|integer|true|none|The number of notifications contained in this page|
+|» next|string|false|none|The identififer to pass into the "next" parameter of a future GetNotification request.<br><br>If not present, there are no additional pages|
+|notifications|[[notification.schema.json](#schemanotification.schema.json)]|true|none|Notifications within this page|
 
 <h2 id="tocS_notification">notification</h2>
 <!-- backwards compatibility -->
@@ -1936,9 +1936,9 @@ Notification
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|id|string|true|none|Unique identifier for this notification.|
-|manifest|[digest.schema.json](#schemadigest.schema.json)|true|none|The digest of the manifest affected by the provided vulnerability.|
-|reason|any|true|none|The reason for the notifcation.|
+|id|string|true|none|Unique identifier for this notification|
+|manifest|[digest.schema.json](#schemadigest.schema.json)|true|none|The digest of the manifest affected by the provided vulnerability|
+|reason|any|true|none|The reason for the notifcation|
 |vulnerability|[vulnerability_summary.schema.json](#schemavulnerability_summary.schema.json)|true|none|none|
 
 #### Enumerated Values
@@ -1969,8 +1969,8 @@ Notification Webhook
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|notification_id|string|true|none|Unique identifier for this notification.|
-|callback|string(uri)|true|none|A URL to retrieve paginated Notification objects.|
+|notification_id|string|true|none|Unique identifier for this notification|
+|callback|string(uri)|true|none|A URL to retrieve paginated Notification objects|
 
 <h2 id="tocS_package">package</h2>
 <!-- backwards compatibility -->
@@ -2006,15 +2006,15 @@ Package
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|id|string|false|none|Unique ID for this Package. May be unique to the response document, not the whole system.|
-|name|string|true|none|Identifier of this Package.<br><br>The uniqueness and scoping of this name depends on the packaging system.|
-|version|string|true|none|Version of this Package, as reported by the packaging system.|
-|kind|any|false|none|The "kind" of this Package.|
-|source|[#](#schema#)|false|none|Source Package that produced the current binary Package, if known.|
-|normalized_version|string|false|none|Normalized representation of the discoverd version.<br><br>The format is not specific, but is guarenteed to be forward compatible.|
-|module|string|false|none|An identifier for intra-Repository grouping of packages.<br><br>Likely only relevant on rpm-based systems.|
-|arch|string|false|none|Native architecture for the Package.|
-|cpe|[cpe.schema.json](#schemacpe.schema.json)|false|none|CPE Name for the Package.|
+|id|string|false|none|Unique ID for this Package. May be unique to the response document, not the whole system|
+|name|string|true|none|Identifier of this Package.<br><br>The uniqueness and scoping of this name depends on the packaging system|
+|version|string|true|none|Version of this Package, as reported by the packaging system|
+|kind|any|false|none|The "kind" of this Package|
+|source|[#](#schema#)|false|none|Source Package that produced the current binary Package, if known|
+|normalized_version|string|false|none|Normalized representation of the discoverd version.<br><br>The format is not specific, but is guarenteed to be forward compatible|
+|module|string|false|none|An identifier for intra-Repository grouping of packages.<br><br>Likely only relevant on rpm-based systems|
+|arch|string|false|none|Native architecture for the Package|
+|cpe|[cpe.schema.json](#schemacpe.schema.json)|false|none|CPE Name for the Package|
 
 #### Enumerated Values
 
@@ -2022,6 +2022,11 @@ Package
 |---|---|
 |kind|BINARY|
 |kind|SOURCE|
+|kind|unknown|
+|kind|binary|
+|kind|source|
+|kind|layer|
+|kind|ancestry|
 
 <h2 id="tocS_range">range</h2>
 <!-- backwards compatibility -->
@@ -2044,8 +2049,8 @@ Range
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|[|string|false|none|Lower bound, inclusive.|
-|)|string|false|none|Upper bound, exclusive.|
+|[|string|false|none|Lower bound, inclusive|
+|)|string|false|none|Upper bound, exclusive|
 
 <h2 id="tocS_repository">repository</h2>
 <!-- backwards compatibility -->
@@ -2071,11 +2076,11 @@ Repository
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|id|string|true|none|Unique ID for this Repository. May be unique to the response document, not the whole system.|
-|name|string|false|none|Human-relevant name for the Repository.|
-|key|string|false|none|Machine-relevant name for the Repository.|
-|uri|string(uri)|false|none|URI describing the Repository.|
-|cpe|[cpe.schema.json](#schemacpe.schema.json)|false|none|CPE name for the Repository.|
+|id|string|true|none|Unique ID for this Repository. May be unique to the response document, not the whole system|
+|name|string|false|none|Human-relevant name for the Repository|
+|key|string|false|none|Machine-relevant name for the Repository|
+|uri|string(uri)|false|none|URI describing the Repository|
+|cpe|[cpe.schema.json](#schemacpe.schema.json)|false|none|CPE name for the Repository|
 
 <h2 id="tocS_update_diff">update_diff</h2>
 <!-- backwards compatibility -->
@@ -2100,10 +2105,10 @@ Update Difference
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|prev|[update_operation.schema.json](#schemaupdate_operation.schema.json)|false|none|The previous Update Operation.|
-|cur|[update_operation.schema.json](#schemaupdate_operation.schema.json)|true|none|The current Update Operation.|
-|added|[[vulnerability.schema.json](#schemavulnerability.schema.json)]|true|none|Vulnerabilities present in "cur", but not "prev".|
-|removed|[[vulnerability.schema.json](#schemavulnerability.schema.json)]|true|none|Vulnerabilities present in "prev", but not "cur".|
+|prev|[update_operation.schema.json](#schemaupdate_operation.schema.json)|false|none|The previous Update Operation|
+|cur|[update_operation.schema.json](#schemaupdate_operation.schema.json)|true|none|The current Update Operation|
+|added|[[vulnerability.schema.json](#schemavulnerability.schema.json)]|true|none|Vulnerabilities present in "cur", but not "prev"|
+|removed|[[vulnerability.schema.json](#schemavulnerability.schema.json)]|true|none|Vulnerabilities present in "prev", but not "cur"|
 
 <h2 id="tocS_update_operation">update_operation</h2>
 <!-- backwards compatibility -->
@@ -2129,11 +2134,11 @@ Update Operation
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|ref|string(uuid)|true|none|A unique identifier for this update operation.|
-|updater|string|true|none|The "updater" component that was run.|
-|fingerprint|string|true|none|The stored "fingerprint" of this run.|
-|date|string(date-time)|true|none|When this operation was run.|
-|kind|any|true|none|The kind of data this operation updated.|
+|ref|string(uuid)|true|none|A unique identifier for this update operation|
+|updater|string|true|none|The "updater" component that was run|
+|fingerprint|string|true|none|The stored "fingerprint" of this run|
+|date|string(date-time)|true|none|When this operation was run|
+|kind|any|true|none|The kind of data this operation updated|
 
 #### Enumerated Values
 
@@ -2193,12 +2198,12 @@ Vulnerability Core
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|name|string|true|none|Human-readable name, as presented in the vendor data.|
-|fixed_in_version|string|false|none|Version string, as presented in the vendor data.|
-|severity|string|false|none|Severity, as presented in the vendor data.|
-|normalized_severity|[normalized_severity.schema.json](#schemanormalized_severity.schema.json)|true|none|A well defined set of severity strings guaranteed to be present.|
-|range|[range.schema.json](#schemarange.schema.json)|false|none|Range of versions the vulnerability applies to.|
-|arch_op|any|false|none|Flag indicating how the referenced package's "arch" member should be interpreted.|
+|name|string|true|none|Human-readable name, as presented in the vendor data|
+|fixed_in_version|string|false|none|Version string, as presented in the vendor data|
+|severity|string|false|none|Severity, as presented in the vendor data|
+|normalized_severity|[normalized_severity.schema.json](#schemanormalized_severity.schema.json)|true|none|A well defined set of severity strings guaranteed to be present|
+|range|[range.schema.json](#schemarange.schema.json)|false|none|Range of versions the vulnerability applies to|
+|arch_op|any|false|none|Flag indicating how the referenced package's "arch" member should be interpreted|
 |package|[package.schema.json](#schemapackage.schema.json)|false|none|A package description|
 |distribution|[distribution.schema.json](#schemadistribution.schema.json)|false|none|A distribution description|
 |repository|[repository.schema.json](#schemarepository.schema.json)|false|none|A repository description|
@@ -2269,18 +2274,18 @@ Vulnerability Report
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|manifest_hash|[digest.schema.json](#schemadigest.schema.json)|true|none|The Manifest's digest.|
-|packages|object|true|none|A map of Package objects indexed by a document-local identifier.|
+|manifest_hash|[digest.schema.json](#schemadigest.schema.json)|true|none|The Manifest's digest|
+|packages|object|true|none|A map of Package objects indexed by a document-local identifier|
 |» **additionalProperties**|[package.schema.json](#schemapackage.schema.json)|false|none|none|
-|distributions|object|true|none|A map of Distribution objects indexed by a document-local identifier.|
+|distributions|object|true|none|A map of Distribution objects indexed by a document-local identifier|
 |» **additionalProperties**|[distribution.schema.json](#schemadistribution.schema.json)|false|none|none|
-|repository|object|false|none|A map of Repository objects indexed by a document-local identifier.|
+|repository|object|false|none|A map of Repository objects indexed by a document-local identifier|
 |» **additionalProperties**|[repository.schema.json](#schemarepository.schema.json)|false|none|none|
-|environments|object|true|none|A map of Environment arrays indexed by a Package's identifier.|
+|environments|object|true|none|A map of Environment arrays indexed by a Package's identifier|
 |» **additionalProperties**|[[environment.schema.json](#schemaenvironment.schema.json)]|false|none|none|
-|vulnerabilities|object|true|none|A map of Vulnerabilities indexed by a document-local identifier.|
+|vulnerabilities|object|true|none|A map of Vulnerabilities indexed by a document-local identifier|
 |» **additionalProperties**|[vulnerability.schema.json](#schemavulnerability.schema.json)|false|none|none|
-|package_vulnerabilities|object|true|none|A mapping of Vulnerability identifier lists indexed by Package identifier.|
+|package_vulnerabilities|object|true|none|A mapping of Vulnerability identifier lists indexed by Package identifier|
 |» **additionalProperties**|[string]|false|none|none|
 |enrichments|object|false|none|A mapping of extra "enrichment" data by type|
 |» **additionalProperties**|array|false|none|none|
@@ -2321,7 +2326,7 @@ Vulnerability Summaries
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|Vulnerability Summaries|[[vulnerability_summary.schema.json](#schemavulnerability_summary.schema.json)]|false|none|**This is an internal type, documented for completeness.**<br><br>This is an array of pseudo-Vulnerability objects used for reverse-lookup.|
+|Vulnerability Summaries|[[vulnerability_summary.schema.json](#schemavulnerability_summary.schema.json)]|false|none|**This is an internal type, documented for completeness.**<br><br>This is an array of pseudo-Vulnerability objects used for reverse-lookup|
 
 <h2 id="tocS_vulnerability_summary">vulnerability_summary</h2>
 <!-- backwards compatibility -->

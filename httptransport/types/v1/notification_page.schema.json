@@ -3,18 +3,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Notification Page",
   "type": "object",
-  "description": "A page description and list of notifications.",
+  "description": "A page description and list of notifications",
   "properties": {
     "page": {
-      "description": "An object informing the client the next page to retrieve.",
+      "description": "An object informing the client the next page to retrieve",
       "type": "object",
       "properties": {
         "size": {
-          "description": "The number of notifications contained in this page.",
+          "description": "The number of notifications contained in this page",
           "type": "integer"
         },
         "next": {
-          "description": "The identififer to pass into the \"next\" parameter of a future GetNotification request.\n\nIf not present, there are no additional pages.",
+          "description": "The identififer to pass into the \"next\" parameter of a future GetNotification request.\n\nIf not present, there are no additional pages",
           "type": "string"
         }
       },
@@ -24,7 +24,7 @@
       ]
     },
     "notifications": {
-      "description": "Notifications within this page.",
+      "description": "Notifications within this page",
       "type": "array",
       "items": {
         "$ref": "notification.schema.json"
