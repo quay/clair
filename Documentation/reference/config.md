@@ -78,8 +78,11 @@ Please see the [go module documentation][godoc_config] for additional documentat
 [godoc_config]: https://pkg.go.dev/github.com/quay/clair/config
 
 ```
-http_listen_addr: ""
-introspection_addr: ""
+api:
+  v1:
+    enabled: true
+introspection:
+  enabled: true
 log_level: ""
 tls: {}
 indexer:
@@ -158,18 +161,59 @@ more information.
 # `$.metrics.otlp.http.client_tls.root_ca`
 # `$.metrics.otlp.grpc.client_tls`
 # `$.metrics.otlp.grpc.client_tls.root_ca`
+# `$.api.v1.tls`
+# `$.api.v1.tls.root_ca`
+# `$.http_listen_addr`
+# `$.introspection_addr`
 -->
 
-### `$.http_listen_addr`
-A string in `<host>:<port>` format where `<host>` can be an empty string.
+### `$.api`
 
-This configures where the HTTP API is exposed.
+Configuration for the Clair API.
+
+#### `$.api.v1`
+Configuration for the v1 Clair API.
+
 See `/openapi/v1` for the API spec.
 
-### `$.introspection_addr`
-A string in `<host>:<port>` format where `<host>` can be an empty string.
+##### `$.api.v1.enabled`
+Whether the v1 HTTP API is enabled. Defaults to `true`.
 
-This configures where Clair's metrics and health endpoints are exposed.
+##### `$.api.v1.network`
+The network (suitable for [`net.Dial`](https://pkg.go.dev/net#Dial)) that the v1
+HTTP API should be exposed on. Defaults to `"tcp"`.
+
+##### `$.api.v1.address`
+The address (suitable for [`net.Dial`](https://pkg.go.dev/net#Dial)) that the v1
+HTTP API should be exposed on.
+
+##### `$.api.v1.idle_timeout`
+If configured, have the process exit if the v1 HTTP API has not served a request
+for the specified duration.
+
+##### `$.api.v1.tls.cert`
+The TLS certificate to be used. Must be a full-chain certificate, as in nginx.
+
+##### `$.api.v1.tls.key`
+A key file for the TLS certificate. Encryption is not supported on the key.
+
+### `$.introspection`
+Configuration for Clair's metrics and health endpoints.
+
+#### `$.introspection.enabled`
+Whether the introspection HTTP server is enabled. Defaults to `true`.
+
+#### `$.introspection.required`
+Whether the introspection HTTP server should terminate the process if unable to
+start. Defaults to `false`.
+
+#### `$.introspection.network`
+The network (suitable for [`net.Dial`](https://pkg.go.dev/net#Dial)) that the
+introspection HTTP server should be exposed on. Defaults to `"tcp"`.
+
+#### `$.introspection.address`
+The address (suitable for [`net.Dial`](https://pkg.go.dev/net#Dial)) that the
+introspection HTTP server should be exposed on.
 
 ### `$.log_level`
 Set the logging level.

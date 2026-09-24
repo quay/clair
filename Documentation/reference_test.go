@@ -33,7 +33,7 @@ func TestConfigReference(t *testing.T) {
 		t.Error(err)
 	}
 	var want []string
-	if err := walk(&want, "$", reflect.TypeOf(config.Config{})); err != nil {
+	if err := walk(&want, "$", reflect.TypeFor[config.Config]()); err != nil {
 		t.Error(err)
 	}
 	sort.Strings(want)
@@ -43,11 +43,9 @@ func TestConfigReference(t *testing.T) {
 	}
 }
 
-type walkFunc func(interface{}) ([]string, error)
-
 func walk(ws *[]string, path string, t reflect.Type) error {
 	// Dereference the pointer, if this is a pointer.
-	if t.Kind() == reflect.Ptr {
+	if t.Kind() == reflect.Pointer {
 		t = t.Elem()
 	}
 	if t.Kind() == reflect.Struct {

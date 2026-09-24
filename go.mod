@@ -46,6 +46,8 @@ require (
 	google.golang.org/grpc v1.83.2
 )
 
+replace github.com/quay/clair/config => ./config
+
 require (
 	cel.dev/expr v0.25.2 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
