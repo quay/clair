@@ -2,6 +2,69 @@ package config
 
 import "fmt"
 
+// Introspection is the configuration for Clair's introspection and debugging
+// endpoints.
+type Introspection struct {
+	// Enabled configures enabling the Introspection server at all.
+	//
+	// If unset, defaults to "true".
+	Enabled *bool `yaml:"enabled" json:"enabled"`
+
+	// Required configures Clair to exit with an error if the Introspection
+	// server fails to start.
+	//
+	// Defaults to "false".
+	Required bool `yaml:"required" json:"required"`
+
+	// Network configures the network type to be used for serving Introspection
+	// requests.
+	//
+	// If unset, [DefaultIntrospectionNetwork] will be used.
+	// See also: [net.Dial].
+	Network string `yaml:"network" json:"network"`
+
+	// Address configures the address to listen on for serving Introspection
+	// requests. The format depends on the "network" member.
+	//
+	// If unset, [DefaultIntrospectionAddress] will be used.
+	// See also: [net.Dial].
+	Address string `yaml:"address" json:"address"`
+}
+
+func (i *Introspection) validate(_ Mode) ([]Warning, error) {
+	switch {
+	case i.Enabled == nil:
+		i.Enabled = &[]bool{true}[0] // TODO(go1.26) Use the "new(true)" syntax.
+	case !*i.Enabled:
+		return nil, nil
+	}
+	if i.Network == "" {
+		i.Network = DefaultIntrospectionNetwork
+	}
+	if i.Address == "" {
+		i.Address = DefaultIntrospectionAddress
+	}
+
+	return i.lint()
+}
+
+func (i *Introspection) lint() (ws []Warning, err error) {
+	if i.Network == "" {
+		ws = append(ws, Warning{
+			path: ".network",
+			msg:  `listen network not provided, default will be used`,
+		})
+	}
+	if i.Address == "" {
+		ws = append(ws, Warning{
+			path: ".address",
+			msg:  `listen address not provided, default will be used`,
+		})
+	}
+
+	return ws, nil
+}
+
 // Trace specifies how to configure Clair's tracing support.
 //
 // The "Name" key must match the provider to use.
