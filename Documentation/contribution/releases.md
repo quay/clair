@@ -3,13 +3,17 @@
 Clair releases are cut roughly every three months and actively maintained for
 six.
 
-This means that bugfixes should be landed on `master` (if applicable) and then
+This means that bugfixes should be landed on `main` (if applicable) and then
 marked for backporting to a minor version's release branch. The process for
 doing this is not yet formalized.
 
 ## Process
 
 ### Minor
+
+Run the "prepare-release" workflow in GH to create PR to update the changelog.
+
+Review and merge changelog update PR.
 
 When cutting a new minor release, two things need to be done: creating a tag and
 creating a release branch. This can be done like so:
@@ -19,9 +23,14 @@ git tag -as v4.x.0 HEAD
 git push upstream HEAD:release-4.x tag v4.x.0
 ```
 
-Then, a "release" needs to be created in the Github UI using the created tag.
+Check that a "release" has been created in the Github UI for the created tag.
 
 ### Patch
+
+Run the "prepare-release" workflow in GH to create PR to update the changelog
+(the target branch should be the release branch).
+
+Review and merge changelog update PR.
 
 A patch release is just like a minor release with the caveat that minor version
 tags should *only* appear on release branches and a new branch does not need to
@@ -33,7 +42,7 @@ git tag -as v4.x.1 HEAD
 git push upstream tag v4.x.1
 ```
 
-Then, a "release" needs to be created in the Github UI using the created tag.
+Check that a "release" has been created in the Github UI for the created tag.
 
 ### Creating Artifacts
 
