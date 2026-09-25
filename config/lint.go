@@ -31,12 +31,31 @@ type linter interface {
 // Users can treat them like errors and use the sentinel values exported by this
 // package.
 type Warning struct {
+	// Should have "inner" XOR "msg" populated.
 	inner error
-	path  string // json-schema style path
 	msg   string
+	path  string // json-schema style path
 }
 
-// Should have inner xor msg
+// AppendText implements [encoding.TextAppender].
+func (w Warning) AppendText(b []byte) ([]byte, error) {
+	if w.inner != nil {
+		b = append(b, w.inner.Error()...)
+	} else {
+		b = append(b, w.msg...)
+	}
+	b = append(b, " (at "...)
+	b = append(b, w.path...)
+	b = append(b, ')')
+	return b, nil
+}
+
+// MarshalText implements [encoding.TextMarshaler].
+//
+// Prefer using [Warning.AppendText].
+func (w Warning) MarshalText() ([]byte, error) {
+	return w.AppendText(nil)
+}
 
 func (w *Warning) Error() string {
 	var b strings.Builder
