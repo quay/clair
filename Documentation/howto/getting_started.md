@@ -12,8 +12,9 @@ The release artifacts also include the clairctl command line tool.
 ## Official Containers
 
 Clair is officially packaged and released as a container at
-[quay.io/projectquay/clair]. The `latest` tag tracks the git development branch,
-and version tags are built from the corresponding release.
+[quay.io/projectquay/clair]. The `nightly` tag tracks the git development branch
+(dated `nightly-YYYY-MM-DD` tags are kept as well), and version tags are built
+from the corresponding release. There is no `latest` tag.
 
 [quay.io/projectquay/clair]: https://quay.io/repository/projectquay/clair
 
