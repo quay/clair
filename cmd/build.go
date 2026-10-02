@@ -85,7 +85,7 @@ func init() {
 	switch {
 	case Version != "":
 		// Had our version injected at build: do nothing.
-	case len(describe) > 0 && describe[0] != '$' && !strings.HasPrefix(describe, "%(describe:"):
+	case len(describe) > 0 && !strings.HasPrefix(describe, "$") && !strings.HasPrefix(describe, "%(describe:"):
 		// Some git versions apparently don't know about the describe format
 		// verb, so need to check that it's not just "%(describe..."
 		Version = describe
