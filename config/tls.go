@@ -15,13 +15,13 @@ import (
 //
 // Using the environment variables "SSL_CERT_DIR" or "SSL_CERT_FILE" or
 // modifying the system's trust store are the ways to modify root CAs for all
-// outgoing TLS connections.
+// outgoing TLS connections. The Clair release containers have `/var/run/certs`
+// added to the list already.
 type TLS struct {
 	// The filesystem path where a root CA can be read.
 	//
-	// This can also be controlled by the SSL_CERT_FILE and SSL_CERT_DIR
-	// environment variables, or adding the relevant certs to the system trust
-	// store.
+	// Deprecated: Use the "SSL_CERT_FILE" or "SSL_CERT_DIR" environment
+	// variables, or add the relevant certs to the system trust store.
 	RootCA string `yaml:"root_ca" json:"root_ca"`
 	// The filesystem path where a TLS certificate can be read.
 	Cert string `yaml:"cert" json:"cert"`
@@ -29,9 +29,9 @@ type TLS struct {
 	Key string `yaml:"key" json:"key"`
 }
 
-// Config returns a tls.Config modified according to the TLS struct.
+// Config returns a [tls.Config] modified according to the TLS struct.
 //
-// If the *TLS is nil, a default tls.Config is returned.
+// If the receiver is nil, a default [tls.Config] is returned.
 func (t *TLS) Config() (*tls.Config, error) {
 	var cfg tls.Config
 	if t == nil {
