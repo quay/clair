@@ -39,6 +39,17 @@ func TestValidateFailure(t *testing.T) {
 		}
 	}
 
+	expectError := func(want string) func(*testing.T, *config.Config, error) {
+		return func(t *testing.T, _ *config.Config, err error) {
+			if err == nil {
+				t.Fatal("unexpected success")
+			}
+			if got := err.Error(); got != want {
+				t.Errorf("got error %q, want %q", got, want)
+			}
+		}
+	}
+
 	// Tests on the base Config struct.
 	tt := []ValidateTestcase{
 		{
@@ -90,7 +101,20 @@ func TestValidateFailure(t *testing.T) {
 						PSK: &config.AuthPSK{},
 					},
 				},
-				Check: shouldFail,
+				Check: expectError("key is empty (at )"),
+			},
+			{
+				Name: "BadPSKKeyLen",
+				Conf: config.Config{
+					Mode: config.IndexerMode,
+					Auth: config.Auth{
+						PSK: &config.AuthPSK{
+							Key:    config.Base64([]byte{0xde, 0xad, 0xbe, 0xef}),
+							Issuer: []string{"iss"},
+						},
+					},
+				},
+				Check: expectError("key is too short: must be at least 32 bytes (at )"),
 			},
 			{
 				Name: "BadPSKIssuer",
@@ -98,11 +122,11 @@ func TestValidateFailure(t *testing.T) {
 					Mode: config.IndexerMode,
 					Auth: config.Auth{
 						PSK: &config.AuthPSK{
-							Key: config.Base64([]byte{0xde, 0xad, 0xbe, 0xef}),
+							Key: config.Base64([]byte("deadbeefdeadbeefdeadbeefdeadbeef")),
 						},
 					},
 				},
-				Check: shouldFail,
+				Check: expectError("no issuers defined (at .iss)"),
 			},
 		}
 		for _, tc := range tt {

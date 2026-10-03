@@ -21,7 +21,7 @@ import (
 
 	"github.com/quay/clair/v4/cmd"
 
-	"github.com/go-jose/go-jose/v3"
+	"github.com/go-jose/go-jose/v4"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/quay/clair/config"
