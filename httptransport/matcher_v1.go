@@ -239,15 +239,15 @@ func (h *MatcherV1) updateOperationHandlerDelete(w http.ResponseWriter, r *http.
 	id := filepath.Base(path)
 	uuid, err := uuid.Parse(id)
 	if err != nil {
-		slog.WarnContext(ctx, "could not deserialize manifest", "reason", err)
-		apiError(ctx, w, http.StatusBadRequest, "could not deserialize manifest: %v", err)
+		slog.WarnContext(ctx, "could not parse update operation id", "reason", err)
+		apiError(ctx, w, http.StatusBadRequest, "could not parse update operation id: %v", err)
 	}
 
 	_, err = h.srv.DeleteUpdateOperations(ctx, uuid)
 	if err != nil {
 		apiError(ctx, w, http.StatusInternalServerError, "could not get update operations: %v", err)
 	}
-	// TODO(hank) This should return HTTP 204.
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func init() {
