@@ -52,7 +52,6 @@ func (s *HTTP) AffectedManifests(ctx context.Context, v []claircore.Vulnerabilit
 	switch ct := req.Header.Get("content-type"); ct {
 	case "", `application/json`:
 		dec := codec.GetDecoder(resp.Body)
-		defer codec.PutDecoder(dec)
 		if err := dec.Decode(&a); err != nil {
 			return nil, err
 		}
@@ -98,7 +97,6 @@ func (s *HTTP) Index(ctx context.Context, manifest *claircore.Manifest) (*clairc
 	switch ct := resp.Header.Get("content-type"); ct {
 	case "", `application/json`:
 		dec := codec.GetDecoder(resp.Body)
-		defer codec.PutDecoder(dec)
 		if err := dec.Decode(&ir); err != nil {
 			return nil, err
 		}
@@ -142,7 +140,6 @@ func (s *HTTP) IndexReport(ctx context.Context, manifest claircore.Digest) (*cla
 
 	ir := &claircore.IndexReport{}
 	dec := codec.GetDecoder(resp.Body)
-	defer codec.PutDecoder(dec)
 	if err := dec.Decode(ir); err != nil {
 		return nil, false, &clairerror.ErrBadIndexReport{E: err}
 	}
@@ -199,7 +196,6 @@ func (s *HTTP) DeleteManifests(ctx context.Context, d ...claircore.Digest) ([]cl
 	}
 	var ret []claircore.Digest
 	dec := codec.GetDecoder(resp.Body)
-	defer codec.PutDecoder(dec)
 	if err := dec.Decode(&ret); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}

@@ -1,0 +1,20 @@
+-- Simple.in.json --
+{
+  "id": "0",
+  "name": "hello",
+  "version": "1.0.0",
+  "kind": "BINARY",
+  "normalized_version": "semver:1.0.0",
+  "arch": "amd64",
+  "cpe": "cpe:/a"
+}
+-- Simple.want.json --
+{
+  "id": "0",
+  "name": "hello",
+  "version": "1.0.0",
+  "kind": "BINARY",
+  "arch": "amd64",
+  "normalized_version": "semver:1.0.0.0.0.0.0.0.0.0",
+  "cpe": "cpe:2.3:a:*:*:*:*:*:*:*:*:*:*"
+}

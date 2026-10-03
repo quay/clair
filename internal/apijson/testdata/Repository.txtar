@@ -1,0 +1,33 @@
+-- Simple.in.json --
+{
+  "id": "0",
+  "extrakey": null,
+  "name": "a",
+  "key": "b",
+  "uri": "tag:example",
+  "cpe": "cpe:2.3:o:*:*:*:*:*:*:*:*:*:*"
+}
+-- Simple.want.json --
+{
+  "id": "0",
+  "name": "a",
+  "key": "b",
+  "uri": "tag:example",
+  "cpe": "cpe:2.3:o:*:*:*:*:*:*:*:*:*:*"
+}
+-- CPE22.in.json --
+{
+  "id": "0",
+  "name": "a",
+  "key": "b",
+  "uri": "tag:example",
+  "cpe": "cpe:/o"
+}
+-- CPE22.want.json --
+{
+  "id": "0",
+  "name": "a",
+  "key": "b",
+  "uri": "tag:example",
+  "cpe": "cpe:2.3:o:*:*:*:*:*:*:*:*:*:*"
+}

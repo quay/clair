@@ -1,0 +1,117 @@
+-- Simple.in.json --
+{
+  "manifest_hash": "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+  "state": "Success",
+  "packages": {
+    "0": {
+      "id": "0",
+      "name": "hello",
+      "version": "1.0.0",
+      "kind": "BINARY",
+      "normalized_version": "semver:1.0.0",
+      "arch": "amd64",
+      "cpe": "cpe:/a"
+    }
+  },
+  "distributions": {
+    "0": {
+      "id": "0",
+      "did": "linux",
+      "name": "Linux 3.11",
+      "version": "3.11",
+      "version_code_name": "For Workgroups",
+      "version_id": "3",
+      "arch": "amd64",
+      "cpe": "cpe:/o",
+      "pretty_name": "Linux 3.11 For Workgroups"
+    }
+  },
+  "repository": {
+    "0": {
+      "id": "0",
+      "name": "a",
+      "key": "b",
+      "uri": "tag:example",
+      "cpe": "cpe:/o"
+    }
+  },
+  "environments": {
+    "0": [
+      {
+        "package_db": "rpm:/var/lib/rpm",
+        "introduced_in": "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+        "distribution_id": "0",
+        "repository_ids": [
+          "0"
+        ]
+      }
+    ]
+  },
+  "success": true,
+  "otherkey:": null
+}
+-- Simple.want.json --
+{
+  "manifest_hash": "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+  "state": "Success",
+  "success": true,
+  "packages": {
+    "0": {
+      "id": "0",
+      "name": "hello",
+      "version": "1.0.0",
+      "kind": "BINARY",
+      "arch": "amd64",
+      "normalized_version": "semver:1.0.0.0.0.0.0.0.0.0",
+      "cpe": "cpe:2.3:a:*:*:*:*:*:*:*:*:*:*"
+    }
+  },
+  "distributions": {
+    "0": {
+      "id": "0",
+      "did": "linux",
+      "name": "Linux 3.11",
+      "version": "3.11",
+      "version_code_name": "For Workgroups",
+      "version_id": "3",
+      "arch": "amd64",
+      "pretty_name": "Linux 3.11 For Workgroups",
+      "cpe": "cpe:2.3:o:*:*:*:*:*:*:*:*:*:*"
+    }
+  },
+  "repository": {
+    "0": {
+      "id": "0",
+      "name": "a",
+      "key": "b",
+      "uri": "tag:example",
+      "cpe": "cpe:2.3:o:*:*:*:*:*:*:*:*:*:*"
+    }
+  },
+  "environments": {
+    "0": [
+      {
+        "package_db": "rpm:/var/lib/rpm",
+        "distribution_id": "0",
+        "introduced_in": "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+        "repository_ids": [
+          "0"
+        ]
+      }
+    ]
+  }
+}
+-- Error.in.json --
+{
+  "manifest_hash": "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+  "state": "Error",
+  "success": false,
+  "err": "test error"
+}
+-- Error.want.json --
+{
+  "manifest_hash": "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+  "state": "Error",
+  "success": false,
+  "err": "test error"
+}
