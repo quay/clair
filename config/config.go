@@ -19,7 +19,7 @@ type Config struct {
 	// environment variable is the recommended way to do that. The release
 	// container has `/var/run/certs` added to the list already.
 	TLS *TLS `yaml:"tls,omitempty" json:"tls,omitempty"`
-	// Sets which mode the clair instance will run.
+	// Sets which mode the Clair instance will run.
 	Mode Mode `yaml:"-" json:"-"`
 	// A string in <host>:<port> format where <host> can be an empty string.
 	//
@@ -31,15 +31,18 @@ type Config struct {
 	// exposes Clair's metrics and health endpoints.
 	IntrospectionAddr string `yaml:"introspection_addr" json:"introspection_addr"`
 	// Set the logging level.
-	LogLevel LogLevel `yaml:"log_level" json:"log_level"`
-	Indexer  Indexer  `yaml:"indexer,omitempty" json:"indexer,omitempty"`
-	Matcher  Matcher  `yaml:"matcher,omitempty" json:"matcher,omitempty"`
-	Matchers Matchers `yaml:"matchers,omitempty" json:"matchers,omitempty"`
-	Updaters Updaters `yaml:"updaters,omitempty" json:"updaters,omitempty"`
-	Notifier Notifier `yaml:"notifier,omitempty" json:"notifier,omitempty"`
-	Auth     Auth     `yaml:"auth,omitempty" json:"auth,omitempty"`
-	Trace    Trace    `yaml:"trace,omitempty" json:"trace,omitempty"`
-	Metrics  Metrics  `yaml:"metrics,omitempty" json:"metrics,omitempty"`
+	//
+	// Deprecated: Use the "Logging" member.
+	LogLevel *LogLevel `yaml:"log_level,omitempty" json:"log_level,omitempty"`
+	Indexer  Indexer   `yaml:"indexer,omitempty" json:"indexer,omitempty"`
+	Matcher  Matcher   `yaml:"matcher,omitempty" json:"matcher,omitempty"`
+	Matchers Matchers  `yaml:"matchers,omitempty" json:"matchers,omitempty"`
+	Updaters Updaters  `yaml:"updaters,omitempty" json:"updaters,omitempty"`
+	Notifier Notifier  `yaml:"notifier,omitempty" json:"notifier,omitempty"`
+	Auth     Auth      `yaml:"auth,omitempty" json:"auth,omitempty"`
+	Trace    Trace     `yaml:"trace,omitempty" json:"trace,omitempty"`
+	Metrics  Metrics   `yaml:"metrics,omitempty" json:"metrics,omitempty"`
+	Logging  Logging   `yaml:"logging,omitempty" json:"logging,omitempty"`
 }
 
 func (c *Config) validate(mode Mode) ([]Warning, error) {
@@ -58,6 +61,10 @@ func (c *Config) validate(mode Mode) ([]Warning, error) {
 	if _, _, err := net.SplitHostPort(c.HTTPListenAddr); err != nil {
 		return nil, err
 	}
+	if c.LogLevel != nil {
+		c.Logging.Level = *c.LogLevel
+	}
+
 	return c.lint()
 }
 
@@ -72,6 +79,12 @@ func (c *Config) lint() (ws []Warning, err error) {
 		ws = append(ws, Warning{
 			path: ".introspection_addr",
 			msg:  `introspection address not provided, default will be used`,
+		})
+	}
+	if c.LogLevel != nil {
+		ws = append(ws, Warning{
+			path: ".log_level",
+			msg:  `"log_level" is deprecated, use "logging"`,
 		})
 	}
 	return ws, nil
