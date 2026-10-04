@@ -1,9 +1,13 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
+	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func init() {
@@ -36,4 +40,18 @@ func ExampleLint() {
 	// warning: connection string is empty and no relevant environment variables found (at $.notifier.connstring)
 	// warning: interval is very fast: may result in increased workload (at $.notifier.poll_interval)
 	// warning: interval is very fast: may result in increased workload (at $.notifier.delivery_interval)
+}
+
+func TestWarningJSON(t *testing.T) {
+	b, err := json.Marshal([]Warning{
+		{msg: "oops", path: "$"},
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	const want = `["oops (at $)"]`
+	if got := string(b); !cmp.Equal(got, want) {
+		t.Error(cmp.Diff(got, want))
+	}
 }
