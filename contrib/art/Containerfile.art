@@ -1,28 +1,20 @@
-FROM registry.redhat.io/ubi8/go-toolset:1.26 AS build
+FROM registry.redhat.io/ubi8/go-toolset:latest AS build
 
 WORKDIR /app
 COPY . .
 
+ARG clair_version
+
 RUN GOEXPERIMENT=strictfipsruntime go build -tags strictfipsruntime -mod=mod \
-	-ldflags="-s -w" \
+	-ldflags="-s -w$(test -n "$clair_version" && printf " -X 'github.com/quay/clair/v4/cmd.Version=%s (user)'" "${clair_version}")" \
 	-o . \
 	-trimpath \
 	./cmd/...
 
+
 FROM registry.redhat.io/ubi8/ubi-minimal:latest
 
-LABEL com.redhat.component="clair-container"
-LABEL name="quay/clair-rhel8"
-LABEL io.k8s.display-name="Red Hat Quay - Clair"
-LABEL io.k8s.description="Clair vulnerability scanner for Red Hat Quay"
-LABEL io.openshift.tags="quay,clair,security"
-LABEL summary="Clair vulnerability scanner for Red Hat Quay"
-LABEL description="Clair vulnerability scanner for Red Hat Quay"
-LABEL cpe="cpe:/a:redhat:quay:3.14::el8"
-LABEL vendor="Red Hat, Inc."
-LABEL distribution-scope="restricted"
-LABEL url="https://docs.redhat.com/en/documentation/red_hat_quay"
-LABEL maintainer="support@redhat.com"
+ARG clair_version
 
 ENTRYPOINT ["/usr/bin/clair"]
 VOLUME /config
@@ -33,9 +25,17 @@ ENV CLAIR_CONF=/config/config.yaml \
     CLAIR_MODE=combo \
     SSL_CERT_DIR="/etc/ssl/certs:/etc/pki/tls/certs:/var/run/certs"
 
-RUN mkdir -p /data && cp /cachi2/output/deps/generic/repository-to-cpe.json /cachi2/output/deps/generic/container-name-repos-map.json /data/
+USER nobody:nobody
+
+LABEL com.redhat.component="clair-container"
+LABEL name="quay/clair-rhel8"
+LABEL io.k8s.display-name="Red Hat Quay - Clair"
+LABEL io.k8s.description="Clair vulnerability scanner for Red Hat Quay"
+LABEL io.openshift.tags="quay,clair,security"
+LABEL summary="Clair vulnerability scanner for Red Hat Quay"
+LABEL description="Clair vulnerability scanner for Red Hat Quay"
+LABEL vendor="Red Hat, Inc."
+LABEL maintainer="quay-devel@redhat.com"
 
 COPY --from=build /app/clair /bin/clair
 COPY --from=build /app/clairctl /bin/clairctl
-
-USER nobody:nobody
