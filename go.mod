@@ -1,6 +1,6 @@
 module github.com/quay/clair/v4
 
-go 1.25.0
+go 1.26.0
 
 require (
 	github.com/Masterminds/semver v1.5.0
@@ -15,7 +15,7 @@ require (
 	github.com/klauspost/compress v1.20.1
 	github.com/prometheus/client_golang v1.24.1
 	github.com/quay/clair/config v1.4.3
-	github.com/quay/claircore v1.6.0
+	github.com/quay/claircore v1.6.1
 	github.com/quay/claircore/toolkit v1.7.0
 	github.com/quay/zlog/v2 v2.1.1
 	github.com/rabbitmq/amqp091-go v1.13.0
@@ -99,8 +99,8 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260819154853-08b0e4226688 // indirect
 	google.golang.org/protobuf v1.36.12 // indirect
 	gotest.tools/v3 v3.5.2 // indirect
-	modernc.org/libc v1.74.4 // indirect
+	modernc.org/libc v1.75.6 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
-	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.57.0 // indirect
+	modernc.org/memory v1.12.1 // indirect
+	modernc.org/sqlite v1.58.0 // indirect
 )
