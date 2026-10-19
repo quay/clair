@@ -32,7 +32,7 @@ def responses($r):
       "",
       "**Note:** Any endpoints tagged \"internal\" are documented for completeness but are considered exempt from versioning.",
       ""] | join("\n") | sub("[[:space:]]*$"; "")),
-    version: "1.2.0",
+    version: "1.3.0",
     contact: {
       name: "Clair Team",
       url: "http://github.com/quay/clair",

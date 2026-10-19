@@ -3,7 +3,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Update Operations",
   "type": "object",
-  "description": "**This is an internal type, documented for completeness.**\n\nA mapping of updater id to Update Operation(s).",
+  "description": "**This is an internal type, documented for completeness.**\n\nA mapping of updater id to Update Operation(s)",
   "additionalProperties": {
     "type": "array",
     "items": {

@@ -3,18 +3,18 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Notification",
   "type": "object",
-  "description": "A change in a manifest affected by a vulnerability.",
+  "description": "A change in a manifest affected by a vulnerability",
   "properties": {
     "id": {
-      "description": "Unique identifier for this notification.",
+      "description": "Unique identifier for this notification",
       "type": "string"
     },
     "manifest": {
       "$ref": "digest.schema.json",
-      "description": "The digest of the manifest affected by the provided vulnerability."
+      "description": "The digest of the manifest affected by the provided vulnerability"
     },
     "reason": {
-      "description": "The reason for the notifcation.",
+      "description": "The reason for the notifcation",
       "enum": [
         "added",
         "removed"

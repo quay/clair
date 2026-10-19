@@ -3,7 +3,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Error",
   "type": "object",
-  "description": "A general error response.",
+  "description": "A general error response",
   "properties": {
     "code": {
       "type": "string",
