@@ -11,8 +11,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/klauspost/compress/zstd"
+	"github.com/quay/claircore/datastore/postgres"
 	"github.com/quay/claircore/libvuln"
 	"github.com/urfave/cli/v2"
 
@@ -101,7 +101,7 @@ func importAction(c *cli.Context) error {
 		in = dec
 	}
 
-	pool, err := pgxpool.New(ctx, cfg.Matcher.ConnString)
+	pool, err := postgres.Connect(ctx, cfg.Matcher.ConnString, `clairctl`)
 	if err != nil {
 		return err
 	}
