@@ -20,7 +20,7 @@
 #     --local context=. --local dockerfile=contrib/cmd/quaybackstop
 
 ARG GOTOOLCHAIN=local
-ARG GO_VERSION=1.25
+ARG GO_VERSION=1.26
 FROM --platform=$BUILDPLATFORM quay.io/projectquay/golang:${GO_VERSION} AS build
 WORKDIR /build
 RUN --mount=type=cache,target=/root/.cache/go-build \
