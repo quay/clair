@@ -15,7 +15,7 @@ require (
 	github.com/klauspost/compress v1.20.1
 	github.com/prometheus/client_golang v1.25.0
 	github.com/quay/clair/config v1.4.3
-	github.com/quay/claircore v1.6.2
+	github.com/quay/claircore v1.6.3
 	github.com/quay/claircore/toolkit v1.7.0
 	github.com/quay/zlog/v2 v2.1.1
 	github.com/rabbitmq/amqp091-go v1.16.0
