@@ -2,9 +2,116 @@
 ## [Unreleased]
 
 
+<a name="v4.10.0-rc.0"></a>
+## [v4.10.0-rc.0] - 2026-11-11
+### Chore
+- [263f0f68](https://github.com/quay/clair/commit/263f0f687480194d4a2b7b46965f3161a3d6a73d): update claircore to v1.6.3
+- [2f1f7d22](https://github.com/quay/clair/commit/2f1f7d22e020fdc310890b9c58d407d229aa4b48): update Go images to 1.26
+- [34177047](https://github.com/quay/clair/commit/341770474e1662c9016057262f5303a852fe8c86): update claircore to v1.6.2
+- [978bc11d](https://github.com/quay/clair/commit/978bc11d44db24895312fae3a230fdcc60240e9a): update claircore to v1.6.0
+- [32121718](https://github.com/quay/clair/commit/321217184d8d942ae4a02287060851bd1cae733a): add clair-maintainers to CODEOWNERS
+- [99453516](https://github.com/quay/clair/commit/9945351615a768599eeab1d23b009308dfc2b096): replace gopkg.in/yaml.v3 as it has been deprecated
+- [e52ee811](https://github.com/quay/clair/commit/e52ee811c77ce76177dd169c21468ba79c9155b8): Add Enrichment latency panel to sample dashboard
+- [e87a300a](https://github.com/quay/clair/commit/e87a300a48d6f3f6a06861a8e9c39179e3c848ec): remove refs to deprecated trace.NewNoopTracerProvider
+- [b843a58f](https://github.com/quay/clair/commit/b843a58fb1cea517f64234ac16747891bb5da905): update zlog to v2.1.1
+- [508e6dba](https://github.com/quay/clair/commit/508e6dba3ea211740379d0da2de5f3300b9463a5): update claircore to v1.5.51
+- [594b6e7a](https://github.com/quay/clair/commit/594b6e7aff6dd8135ddee3c50122671a7efdb76a): update general project go version to 1.25
+- [adfd42e2](https://github.com/quay/clair/commit/adfd42e29fb2b8e6b3e999725b2d64ece81d2193): update claircore to v1.5.50
+- [75e20ccd](https://github.com/quay/clair/commit/75e20ccd243b375fa636a8f30ab134ff9e2a14a4): fix typo in api_internal.md
+### Chore(Deps)
+- [876766fc](https://github.com/quay/clair/commit/876766fc955620883440cb9ce322ba78c13e3535): bump go.yaml.in/yaml/v3 from 3.0.5 to 3.0.6
+- [c52db8fb](https://github.com/quay/clair/commit/c52db8fbcff869fc388e58c3c34fd92d2ddd54fc): bump github.com/klauspost/compress from 1.20.1 to 1.20.3
+- [82150014](https://github.com/quay/clair/commit/8215001488c212eaaf32759931fda8e777396f2d): bump github.com/jackc/pgx/v5 from 5.11.0 to 5.12.0
+- [e98a64d6](https://github.com/quay/clair/commit/e98a64d6e6c1efbe909c443f141231fef4634b97): bump the golang-x group across 1 directory with 2 updates
+- [5d84f1f2](https://github.com/quay/clair/commit/5d84f1f2af2d9a49270edd30bae402ca84144ffd): bump google.golang.org/grpc from 1.83.2 to 1.85.0
+- [5671b4f7](https://github.com/quay/clair/commit/5671b4f759f41f587c381ed491f988b8fcf8c467): bump github.com/rabbitmq/amqp091-go from 1.13.0 to 1.16.0
+- [c5f3e32d](https://github.com/quay/clair/commit/c5f3e32d80019d88602ac2f45e4c51e52c8c7826): bump github.com/go-stomp/stomp/v3 from 3.1.5 to 3.2.1
+- [195abb85](https://github.com/quay/clair/commit/195abb858e6bf5e22a3b0bd893c3eda38a6e198c): bump the otel group across 1 directory with 12 updates
+- [4cec58a0](https://github.com/quay/clair/commit/4cec58a01bc3b91bd448e1f8ca3d9a5166701807): bump github.com/klauspost/compress from 1.20.0 to 1.20.1
+- [c9ac9a0a](https://github.com/quay/clair/commit/c9ac9a0aa5651670a690854fc2c12adfc951243f): bump github.com/klauspost/compress from 1.19.2 to 1.20.0
+- [5fa4b744](https://github.com/quay/clair/commit/5fa4b74401927f4227a67adcb26a1ab6926ea582): bump go.opentelemetry.io/otel/exporters/stdout/stdouttrace
+- [058c4fa9](https://github.com/quay/clair/commit/058c4fa963f5747e0827a2be8d8b87c6913fd278): bump github.com/jackc/pgx/v5 from 5.10.0 to 5.11.0
+- [49678ca2](https://github.com/quay/clair/commit/49678ca232613ec47b6b269cf586579446c7d870): bump the otel group across 1 directory with 14 updates
+- [9b9f531b](https://github.com/quay/clair/commit/9b9f531bba28711bfdeffb960a6c3867d372862c): bump google.golang.org/grpc from 1.82.1 to 1.83.2
+- [10f22879](https://github.com/quay/clair/commit/10f22879f74841df017f9ccd858f0e1c29d7df01): bump github.com/google/go-containerregistry
+- [3953837d](https://github.com/quay/clair/commit/3953837d2f51cdef577bd2b655ebfcec5d396deb): bump actions/stale from 10 to 11
+- [d293e896](https://github.com/quay/clair/commit/d293e896e311eb1fdce3d9802ed6667e2d66323b): bump actions/setup-go from 6 to 7
+- [45453753](https://github.com/quay/clair/commit/45453753db0d9048c69929c89c91ace1ffdb62bf): bump actions/cache from 5 to 6
+- [eb22407d](https://github.com/quay/clair/commit/eb22407da3d3ee32534ed956be3696080754288d): bump google.golang.org/grpc from 1.81.1 to 1.82.1
+- [6e78de95](https://github.com/quay/clair/commit/6e78de95b8041a9b828755612a4d3e329912664d): bump github.com/prometheus/client_golang
+- [8a6aba54](https://github.com/quay/clair/commit/8a6aba54574f75d29073e3909458862d79f7072a): bump github.com/klauspost/compress from 1.19.0 to 1.19.1
+- [c7b29460](https://github.com/quay/clair/commit/c7b2946029cdd21eef8cdfc12df36d1d128060d5): bump github.com/rabbitmq/amqp091-go from 1.11.0 to 1.13.0
+- [fbc62bba](https://github.com/quay/clair/commit/fbc62bba52e15bed85ee7e47b4c7079988a0cda0): bump the golang-x group across 1 directory with 2 updates
+- [248f642e](https://github.com/quay/clair/commit/248f642ecbc96e3d8ee431ebee1c5770771d70ca): bump github.com/klauspost/compress from 1.18.7 to 1.19.0
+- [0f750adb](https://github.com/quay/clair/commit/0f750adb7f13c8a3fe5bd5e46618afcfff9956a1): bump github.com/google/go-containerregistry
+- [45d21fa1](https://github.com/quay/clair/commit/45d21fa1c7bf8dd665f92c1e73e1677f0207df5a): bump actions/checkout from 6 to 7
+- [f75709a1](https://github.com/quay/clair/commit/f75709a10fc00fdd9e15650cff37207069b03d92): bump github.com/klauspost/compress from 1.18.6 to 1.18.7
+- [1ef310cf](https://github.com/quay/clair/commit/1ef310cf3820cc09f3fad275c1214415f565a646): bump the golang-x group across 1 directory with 2 updates
+- [d1326077](https://github.com/quay/clair/commit/d1326077e73a9d2ad7c27dc0c6c479f56f3429ce): bump github.com/jackc/pgx/v5 from 5.9.2 to 5.10.0
+- [c3b13eb7](https://github.com/quay/clair/commit/c3b13eb7b9a8666c3a577c7e3e897339783a97bd): bump github.com/rogpeppe/go-internal from 1.14.1 to 1.15.0
+- [7f601675](https://github.com/quay/clair/commit/7f6016754aa48d5430160e179605865aa01e36b4): bump github.com/google/go-containerregistry
+- [8ba399ee](https://github.com/quay/clair/commit/8ba399eeb20a1dabc7c8be086f17d438fc80f7f5): bump github.com/grafana/pyroscope-go/godeltaprof
+- [38bc5a70](https://github.com/quay/clair/commit/38bc5a704e85ef1fc29bce938c5efdfa67ef2fc6): bump the otel group with 14 updates
+- [2b364fbe](https://github.com/quay/clair/commit/2b364fbeeb6889e3a7588acadfa11388d1f0a876): bump golang.org/x/net
+- [30bf14a0](https://github.com/quay/clair/commit/30bf14a0b820feec1a41cf3b18eaac1d68e3192f): bump google.golang.org/grpc from 1.81.0 to 1.81.1
+- [973a773c](https://github.com/quay/clair/commit/973a773c65f68dde1bb36fcea52a4d6334fa43ba): bump golang.org/x/net
+- [6d7cc9e4](https://github.com/quay/clair/commit/6d7cc9e433aabfaa915f933688606d42e7d1137e): bump github.com/grafana/pyroscope-go/godeltaprof
+- [c9721931](https://github.com/quay/clair/commit/c972193136e1dfc82ce43262cce288bddc55fef1): bump google.golang.org/grpc from 1.80.0 to 1.81.0
+- [52515373](https://github.com/quay/clair/commit/52515373326cc056be08e07a64f1ed443e48ddf3): bump github.com/klauspost/compress from 1.18.5 to 1.18.6
+- [afdb4667](https://github.com/quay/clair/commit/afdb4667d918d182f351e2b2b0cca5afc5260259): bump github.com/quay/claircore from 1.5.51 to 1.5.52
+- [83c8ed31](https://github.com/quay/clair/commit/83c8ed313defae35ed381623b8b982ed2efd06e3): bump github.com/rabbitmq/amqp091-go from 1.10.0 to 1.11.0
+- [b1d65517](https://github.com/quay/clair/commit/b1d65517c9c8530464da6e2af1367400e84a0dd8): bump github.com/jackc/pgx/v5 from 5.9.1 to 5.9.2
+- [f66fd148](https://github.com/quay/clair/commit/f66fd148d66a57f1383c835d8f44c7c887e2d0c0): bump github.com/quay/claircore/toolkit from 1.4.0 to 1.6.0
+- [1ea50102](https://github.com/quay/clair/commit/1ea501029cbd380dc0614c0cfe0a5adfc2629654): bump go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace
+- [c1ed2d40](https://github.com/quay/clair/commit/c1ed2d40026fd9e7e24a738c3cebd29c567a79c2): bump github.com/google/go-containerregistry
+- [3b94e283](https://github.com/quay/clair/commit/3b94e2830f0cacd7e1d146fb79dd768fd9bf4db8): bump actions/github-script from 8 to 9
+- [7412c8c3](https://github.com/quay/clair/commit/7412c8c3fbd5db47c45220021fe4d4b500289b46): bump the otel group with 11 updates
+- [97c4d32b](https://github.com/quay/clair/commit/97c4d32bc9725068ba39c9919c7aa22500117fc3): bump github.com/klauspost/compress from 1.18.4 to 1.18.5
+- [55f77805](https://github.com/quay/clair/commit/55f77805f73578062318853061e01958d4b6b068): bump github.com/go-jose/go-jose/v3 from 3.0.4 to 3.0.5
+- [c8a47eb5](https://github.com/quay/clair/commit/c8a47eb5d168dc0d5b291433915d41c0730fda89): bump docker/setup-qemu-action from 3 to 4
+- [5f359714](https://github.com/quay/clair/commit/5f3597143db00cba6ade3c05b1fad0557682591b): bump docker/build-push-action from 6 to 7
+- [1731cd91](https://github.com/quay/clair/commit/1731cd913868abc4639214c4918abb0f14613816): bump docker/login-action from 3 to 4
+- [b908bdf4](https://github.com/quay/clair/commit/b908bdf4fa1a90db897b172610b41d787131261d): bump docker/setup-buildx-action from 3 to 4
+- [84265031](https://github.com/quay/clair/commit/842650315b7b83e71564b291aa654c72de18ed79): bump actions/download-artifact from 7 to 8
+- [546721d8](https://github.com/quay/clair/commit/546721d81a1a329a363a9bee206079951d7f09c4): bump google.golang.org/grpc from 1.79.1 to 1.79.3
+- [eab7aaf8](https://github.com/quay/clair/commit/eab7aaf8adf4249bfba6d0c9ab661aa7437c1e65): bump the golang-x group across 1 directory with 3 updates
+- [effe37da](https://github.com/quay/clair/commit/effe37da043e1242e4a70c7e16d160b4dd1c6f5b): bump go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace
+- [378b050a](https://github.com/quay/clair/commit/378b050a25520daecac217faed3c859d986f2f15): bump the otel group with 11 updates
+- [a7fb24ef](https://github.com/quay/clair/commit/a7fb24ef1b73fb99d3099ebe58248fac15674bde): bump the otel group with 11 updates
+- [47fa5264](https://github.com/quay/clair/commit/47fa5264c682df8fc8093cf92c729f47bc012ff7): bump actions/upload-artifact from 6 to 7
+- [a9dfee29](https://github.com/quay/clair/commit/a9dfee291ac4dfe0d3e34e8ce86b9cb1b5440657): bump go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace
+- [929b8002](https://github.com/quay/clair/commit/929b8002b8beb83c19f69139fa165e1e4b1ad56b): bump golang.org/x/net in the golang-x group
+- [b119849b](https://github.com/quay/clair/commit/b119849be4a78de415d19bab8962687802e957b8): bump github.com/klauspost/compress from 1.18.3 to 1.18.4
+- [d31ff3f4](https://github.com/quay/clair/commit/d31ff3f423de0c40294376bacdb349e754b3acbf): bump the otel group with 11 updates
+- [320c953f](https://github.com/quay/clair/commit/320c953fdc27c3be71447d46afda41ce0f112476): bump github.com/klauspost/compress from 1.18.2 to 1.18.3
+- [f72735ee](https://github.com/quay/clair/commit/f72735eedafc96b04bbb95e7bebfc51407c55813): bump golang.org/x/net in the golang-x group
+- [635cf74f](https://github.com/quay/clair/commit/635cf74fdfae654e08169aa8dc67d63269e54299): bump google.golang.org/grpc from 1.77.0 to 1.78.0
+- [07b1f470](https://github.com/quay/clair/commit/07b1f470e0d218ed16338526e2ef3d0633dd57eb): bump github.com/jackc/pgx/v5 from 5.7.6 to 5.8.0
+- [eec2d5e0](https://github.com/quay/clair/commit/eec2d5e080c9614f1145c70b2b6c6f12b08f0e11): bump actions/upload-artifact from 5 to 6
+- [37ac5618](https://github.com/quay/clair/commit/37ac5618681c1a915c6319b5dee6f27689edb379): bump peter-evans/create-pull-request from 7 to 8
+- [fefde5e1](https://github.com/quay/clair/commit/fefde5e16533f4cb0ee7ce9eec411a526fe1deae): bump actions/cache from 4 to 5
+- [08c50917](https://github.com/quay/clair/commit/08c50917fc00545469155768c0ebb70c111648c0): bump actions/download-artifact from 6 to 7
+- [47c5ba61](https://github.com/quay/clair/commit/47c5ba61a33189ac55390de52073eed4b33bec01): bump go.opentelemetry.io/contrib/instrumentation/net/http/httptrace/otelhttptrace
+- [674b570e](https://github.com/quay/clair/commit/674b570e1bb919dfc5e2f763a5b8f7c95ed578b7): bump the golang-x group with 2 updates
+### Cicd
+- [0fceddec](https://github.com/quay/clair/commit/0fceddec0e67ec206d8fcbca4b1e11ab7d7cc60c): additional dependabot grouping
+### Clair
+- [33676f01](https://github.com/quay/clair/commit/33676f01ef328d5fc1afaa0eac404a64d25f2eb8): enable h2c
+- [3303894a](https://github.com/quay/clair/commit/3303894ac6930819ec1f681c95fea8e083a2689b): print flag parse errors
+- [68aad348](https://github.com/quay/clair/commit/68aad3485dce5a7ad45472c26b55b13609ba78f8): fix profile flags
+- [104efb91](https://github.com/quay/clair/commit/104efb913c98ae3b4b796f60c8b39cb46cf5d1ba): add profiling flags
+- [bab68a8c](https://github.com/quay/clair/commit/bab68a8c624cfbc65515a9e44cfd18a75cf14804): migrate to log/slog
+### Contrib
+- [8abddba5](https://github.com/quay/clair/commit/8abddba5a03722096d5ed061a4dc43440af10545): Add Containerfile.art for ART onboarding
+- [282382a8](https://github.com/quay/clair/commit/282382a8bd15559252aec0372d47b98aa06ffe78): remove jenkins jobs
+### Httptransport
+- [f77fca48](https://github.com/quay/clair/commit/f77fca488fe9feaa731171c31911300fc232162e): fix negotiated error responses
+- [92271f66](https://github.com/quay/clair/commit/92271f66ba178c6da1f523b332c9c1a2ab61374d): handle breaking `otelhttp` change
+### Refactor
+- [e685ebfb](https://github.com/quay/clair/commit/e685ebfbede0149fdf3271b327fb8412479f2d03): replace context.WithCancel with t.Context
 
 <a name="v4.9.0"></a>
-## [v4.9.0] - 2025-12-08
+## [v4.9.0] - 2025-12-10
 ### All
 - [1aca06b8](https://github.com/quay/clair/commit/1aca06b8155b038d4d2f480cab58e938cf156337): fix formatted print calls
 ### Amqp
@@ -22,6 +129,7 @@
 - [50003694](https://github.com/quay/clair/commit/5000369402f550817eaa1364ba6eccce3691aa2e): bump github.com/klauspost/compress from 1.17.10 to 1.17.11
 - [6069bb24](https://github.com/quay/clair/commit/6069bb249b9228210a988b3ecb883f1adcd77e7a): bump go.opentelemetry.io/otel/exporters/stdout/stdouttrace
 ### Chore
+- [f6a412cc](https://github.com/quay/clair/commit/f6a412ccbfc4c3db83005348584d437348826763): v4.9.0 changelog bump
 - [cbfd97b6](https://github.com/quay/clair/commit/cbfd97b655b59c192bda4aefde5dc0c8cd3ae8bb): fix typos in config.yaml.sample
 - [7c9c079b](https://github.com/quay/clair/commit/7c9c079bc643e8f1383ad476f624331938d30d61): update claircore to v1.5.48
 - [8e9a6d46](https://github.com/quay/clair/commit/8e9a6d4629288f02a24368105598d02ef6ec0583): update claircore to v1.5.47
@@ -2823,7 +2931,8 @@
 - Merge pull request [#4](https://github.com/quay/clair/issues/4) from Quentin-M/reduce_tx
 
 
-[Unreleased]: https://github.com/quay/clair/compare/v4.9.0...HEAD
+[Unreleased]: https://github.com/quay/clair/compare/v4.10.0-rc.0...HEAD
+[v4.10.0-rc.0]: https://github.com/quay/clair/compare/v4.9.0...v4.10.0-rc.0
 [v4.9.0]: https://github.com/quay/clair/compare/v4.8.0...v4.9.0
 [v4.8.0]: https://github.com/quay/clair/compare/v4.7.4...v4.8.0
 [v4.7.4]: https://github.com/quay/clair/compare/v4.7.3...v4.7.4
