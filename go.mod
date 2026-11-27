@@ -1,6 +1,6 @@
 module github.com/quay/clair/v4
 
-go 1.22.0
+go 1.25.0
 
 require (
 	github.com/Masterminds/semver v1.5.0
@@ -13,7 +13,7 @@ require (
 	github.com/grafana/pyroscope-go/godeltaprof v0.1.8
 	github.com/jackc/pgconn v1.14.3
 	github.com/jackc/pgx/v4 v4.18.3
-	github.com/klauspost/compress v1.17.10
+	github.com/klauspost/compress v1.20.2
 	github.com/prometheus/client_golang v1.20.4
 	github.com/quay/clair/config v1.4.1
 	github.com/quay/claircore v1.5.32
