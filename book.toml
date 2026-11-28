@@ -12,3 +12,6 @@ create-missing = true
 [output.html]
 git-repository-url= "https://github.com/quay/clair"
 preferred-dark-theme = "coal"
+
+[preprocessor.history]
+command = "go run Documentation/history.go"
