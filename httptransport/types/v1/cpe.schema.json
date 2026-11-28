@@ -2,7 +2,7 @@
   "$id": "https://clairproject.org/api/http/v1/cpe.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Common Platform Enumeration Name",
-  "description": "This is a CPE Name in either v2.2 \"URI\" form or v2.3 \"Formatted String\" form.",
+  "description": "This is a CPE Name in either v2.2 \"URI\" form or v2.3 \"Formatted String\" form",
   "$comment": "Clair only produces v2.3 CPE Names. Any v2.2 Names will be normalized into v2.3 form.",
   "type": "string",
   "oneOf": [

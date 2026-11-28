@@ -3,9 +3,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Bulk Delete",
   "type": "array",
-  "description": "Array of manifest digests to delete from the system.",
+  "description": "Array of manifest digests to delete from the system",
   "items": {
     "$ref": "digest.schema.json",
-    "description": "Manifest digest to delete from the system."
+    "description": "Manifest digest to delete from the system"
   }
 }

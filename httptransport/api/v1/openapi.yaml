@@ -5,7 +5,7 @@ info:
     Clair is a set of cooperating microservices which can index and match a container image's content with known vulnerabilities.
 
     **Note:** Any endpoints tagged "internal" are documented for completeness but are considered exempt from versioning.
-  version: 1.2.0
+  version: 1.3.0
   contact:
     name: Clair Team
     url: http://github.com/quay/clair
@@ -463,21 +463,21 @@ components:
       description: |-
         **This is an internal type, documented for completeness.**
 
-        Manifests affected by the specified vulnerability objects.
+        Manifests affected by the specified vulnerability objects
       properties:
         vulnerabilities:
           type: object
-          description: Vulnerability objects.
+          description: Vulnerability objects
           additionalProperties:
             $ref: vulnerability.schema.json
         vulnerable_manifests:
           type: object
-          description: Mapping of manifest digests to vulnerability identifiers.
+          description: Mapping of manifest digests to vulnerability identifiers
           additionalProperties:
             type: array
             items:
               type: string
-              description: An identifier to be used in the "vulnerabilities" object.
+              description: An identifier to be used in the "vulnerabilities" object
       required:
         - vulnerabilities
         - vulnerable_manifests
@@ -493,18 +493,19 @@ components:
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Bulk Delete
       type: array
-      description: Array of manifest digests to delete from the system.
+      description: Array of manifest digests to delete from the system
       items:
         $ref: digest.schema.json
-        description: Manifest digest to delete from the system.
+        description: Manifest digest to delete from the system
       examples:
         - - sha256:fc84b5febd328eccaa913807716887b3eb5ed08bc22cc6933a9ebf82766725e3
     cpe:
       $id: https://clairproject.org/api/http/v1/cpe.schema.json
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Common Platform Enumeration Name
-      description: This is a CPE Name in either v2.2 "URI" form or v2.3 "Formatted String" form.
+      description: This is a CPE Name in either v2.2 "URI" form or v2.3 "Formatted String" form
       $comment: Clair only produces v2.3 CPE Names. Any v2.2 Names will be normalized into v2.3 form.
+      type: string
       oneOf:
         - description: 'This is the CPE 2.2 regexp: https://cpe.mitre.org/specification/2.2/cpe-language_2.2.xsd'
           type: string
@@ -519,7 +520,7 @@ components:
       $id: https://clairproject.org/api/http/v1/digest.schema.json
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Digest
-      description: A digest acts as a content identifier, enabling content addressability.
+      description: A digest acts as a content identifier, enabling content addressability
       type: string
       anyOf:
         - $comment: 'SHA256: MUST be implemented'
@@ -546,34 +547,34 @@ components:
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Distribution
       type: object
-      description: Distribution is the accompanying system context of a Package.
+      description: Distribution is the accompanying system context of a Package
       properties:
         id:
-          description: Unique ID for this Distribution. May be unique to the response document, not the whole system.
+          description: Unique ID for this Distribution. May be unique to the response document, not the whole system
           type: string
         did:
-          description: A lower-case string (no spaces or other characters outside of 0–9, a–z, ".", "_", and "-") identifying the operating system, excluding any version information and suitable for processing by scripts or usage in generated filenames.
+          description: A lower-case string (no spaces or other characters outside of 0–9, a–z, ".", "_", and "-") identifying the operating system, excluding any version information and suitable for processing by scripts or usage in generated filenames
           type: string
         name:
-          description: A string identifying the operating system.
+          description: A string identifying the operating system
           type: string
         version:
-          description: A string identifying the operating system version, excluding any OS name information, possibly including a release code name, and suitable for presentation to the user.
+          description: A string identifying the operating system version, excluding any OS name information, possibly including a release code name, and suitable for presentation to the user
           type: string
         version_code_name:
-          description: A lower-case string (no spaces or other characters outside of 0–9, a–z, ".", "_", and "-") identifying the operating system release code name, excluding any OS name information or release version, and suitable for processing by scripts or usage in generated filenames.
+          description: A lower-case string (no spaces or other characters outside of 0–9, a–z, ".", "_", and "-") identifying the operating system release code name, excluding any OS name information or release version, and suitable for processing by scripts or usage in generated filenames
           type: string
         version_id:
-          description: A lower-case string (mostly numeric, no spaces or other characters outside of 0–9, a–z, ".", "_", and "-") identifying the operating system version, excluding any OS name information or release code name.
+          description: A lower-case string (mostly numeric, no spaces or other characters outside of 0–9, a–z, ".", "_", and "-") identifying the operating system version, excluding any OS name information or release code name
           type: string
         arch:
-          description: A string identifying the OS architecture.
+          description: A string identifying the OS architecture
           type: string
         cpe:
-          description: Common Platform Enumeration name.
+          description: Common Platform Enumeration name
           $ref: cpe.schema.json
         pretty_name:
-          description: A pretty operating system name in a format suitable for presentation to the user.
+          description: A pretty operating system name in a format suitable for presentation to the user
           type: string
       additionalProperties: false
       required:
@@ -591,19 +592,19 @@ components:
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Environment
       type: object
-      description: Environment describes the surrounding environment a package was discovered in.
+      description: Environment describes the surrounding environment a package was discovered in
       properties:
         package_db:
-          description: The database the associated Package was discovered in.
+          description: The database the associated Package was discovered in
           type: string
         distribution_id:
-          description: The ID of the Distribution of the associated Package.
+          description: The ID of the Distribution of the associated Package
           type: string
         introduced_in:
-          description: The Layer the associated Package was introduced in.
+          description: The Layer the associated Package was introduced in
           $ref: digest.schema.json
         repository_ids:
-          description: The IDs of the Repositories of the associated Package.
+          description: The IDs of the Repositories of the associated Package
           type: array
           items:
             type: string
@@ -618,7 +619,7 @@ components:
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Error
       type: object
-      description: A general error response.
+      description: A general error response
       properties:
         code:
           type: string
@@ -633,11 +634,11 @@ components:
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Index Report
       type: object
-      description: An index of the contents of a Manifest.
+      description: An index of the contents of a Manifest
       properties:
         manifest_hash:
           $ref: digest.schema.json
-          description: The Manifest's digest.
+          description: The Manifest's digest
         state:
           type: string
           description: The current state of the index operation
@@ -649,22 +650,22 @@ components:
           description: A bool indicating succcessful index
         packages:
           type: object
-          description: A map of Package objects indexed by a document-local identifier.
+          description: A map of Package objects indexed by a document-local identifier
           additionalProperties:
             $ref: package.schema.json
         distributions:
           type: object
-          description: A map of Distribution objects indexed by a document-local identifier.
+          description: A map of Distribution objects indexed by a document-local identifier
           additionalProperties:
             $ref: distribution.schema.json
         repository:
           type: object
-          description: A map of Repository objects indexed by a document-local identifier.
+          description: A map of Repository objects indexed by a document-local identifier
           additionalProperties:
             $ref: repository.schema.json
         environments:
           type: object
-          description: A map of Environment arrays indexed by a Package's identifier.
+          description: A map of Environment arrays indexed by a Package's identifier
           additionalProperties:
             type: array
             items:
@@ -679,7 +680,7 @@ components:
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Index State
       type: object
-      description: Information on the state of the indexer system.
+      description: Information on the state of the indexer system
       properties:
         state:
           type: string
@@ -691,16 +692,17 @@ components:
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Layer
       type: object
-      description: Layer is a description of a container layer. It should contain enough information to fetch the layer.
+      description: Layer is a description of a container layer. It should contain enough information to fetch the layer
       properties:
         hash:
           $ref: digest.schema.json
-          description: Digest of the layer blob.
+          description: Digest of the layer blob
         uri:
           type: string
-          description: A URI indicating where the layer blob can be downloaded from.
+          format: uri
+          description: A URI indicating where the layer blob can be downloaded from
         headers:
-          description: Any additional HTTP-style headers needed for requesting layers.
+          description: Any additional HTTP-style headers needed for requesting layers
           type: object
           patternProperties:
             ^[a-zA-Z0-9\-_]+$:
@@ -708,7 +710,7 @@ components:
               items:
                 type: string
         media_type:
-          description: The OCI Layer media type for this layer.
+          description: The OCI Layer media type for this layer
           type: string
           pattern: ^application/vnd\.oci\.image\.layer\.v1\.tar(\+(gzip|zstd))?$
       additionalProperties: false
@@ -720,17 +722,17 @@ components:
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Manifest
       type: object
-      description: A description of an OCI Image Manifest.
+      description: A description of an OCI Image Manifest
       properties:
         hash:
           $ref: digest.schema.json
           description: |-
             The OCI Image Manifest's digest.
 
-            This is used as an identifier throughout the system. This **SHOULD** be the same as the OCI Image Manifest's digest, but this is not enforced.
+            This is used as an identifier throughout the system. This **SHOULD** be the same as the OCI Image Manifest's digest, but this is not enforced
         layers:
           type: array
-          description: The OCI Layers making up the Image, in order.
+          description: The OCI Layers making up the Image, in order
           items:
             $ref: layer.schema.json
       additionalProperties: false
@@ -748,7 +750,7 @@ components:
       $id: https://clairproject.org/api/http/v1/normalized_severity.schema.json
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Normalized Severity
-      description: Standardized severity values.
+      description: Standardized severity values
       enum:
         - Unknown
         - Negligible
@@ -761,26 +763,26 @@ components:
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Notification Page
       type: object
-      description: A page description and list of notifications.
+      description: A page description and list of notifications
       properties:
         page:
-          description: An object informing the client the next page to retrieve.
+          description: An object informing the client the next page to retrieve
           type: object
           properties:
             size:
-              description: The number of notifications contained in this page.
+              description: The number of notifications contained in this page
               type: integer
             next:
               description: |-
                 The identififer to pass into the "next" parameter of a future GetNotification request.
 
-                If not present, there are no additional pages.
+                If not present, there are no additional pages
               type: string
           additionalProperties: false
           required:
             - size
         notifications:
-          description: Notifications within this page.
+          description: Notifications within this page
           type: array
           items:
             $ref: notification.schema.json
@@ -827,16 +829,16 @@ components:
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Notification
       type: object
-      description: A change in a manifest affected by a vulnerability.
+      description: A change in a manifest affected by a vulnerability
       properties:
         id:
-          description: Unique identifier for this notification.
+          description: Unique identifier for this notification
           type: string
         manifest:
           $ref: digest.schema.json
-          description: The digest of the manifest affected by the provided vulnerability.
+          description: The digest of the manifest affected by the provided vulnerability
         reason:
-          description: The reason for the notifcation.
+          description: The reason for the notifcation
           enum:
             - added
             - removed
@@ -853,13 +855,13 @@ components:
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Notification Webhook
       type: object
-      description: Webhook sent to a configured service to begin retrieving notifications.
+      description: Webhook sent to a configured service to begin retrieving notifications
       properties:
         notification_id:
-          description: Unique identifier for this notification.
+          description: Unique identifier for this notification
           type: string
         callback:
-          description: A URL to retrieve paginated Notification objects.
+          description: A URL to retrieve paginated Notification objects
           type: string
           format: uri
       additionalProperties: false
@@ -871,48 +873,54 @@ components:
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Package
       type: object
-      description: Description of installed software.
+      description: Description of installed software
       properties:
         id:
-          description: Unique ID for this Package. May be unique to the response document, not the whole system.
+          description: Unique ID for this Package. May be unique to the response document, not the whole system
           type: string
         name:
           description: |-
             Identifier of this Package.
 
-            The uniqueness and scoping of this name depends on the packaging system.
+            The uniqueness and scoping of this name depends on the packaging system
           type: string
         version:
-          description: Version of this Package, as reported by the packaging system.
+          description: Version of this Package, as reported by the packaging system
           type: string
         kind:
-          description: The "kind" of this Package.
+          description: The "kind" of this Package
+          $comment: The upper-case variants were returned from previous versions.
           enum:
             - BINARY
             - SOURCE
-          default: BINARY
+            - unknown
+            - binary
+            - source
+            - layer
+            - ancestry
+          default: binary
         source:
           $ref: '#'
-          description: Source Package that produced the current binary Package, if known.
+          description: Source Package that produced the current binary Package, if known
         normalized_version:
           description: |-
             Normalized representation of the discoverd version.
 
-            The format is not specific, but is guarenteed to be forward compatible.
+            The format is not specific, but is guarenteed to be forward compatible
           type: string
         module:
           description: |-
             An identifier for intra-Repository grouping of packages.
 
-            Likely only relevant on rpm-based systems.
+            Likely only relevant on rpm-based systems
           type: string
         arch:
-          description: Native architecture for the Package.
+          description: Native architecture for the Package
           type: string
           $comment: This should become and enum in the future.
         cpe:
           $ref: cpe.schema.json
-          description: CPE Name for the Package.
+          description: CPE Name for the Package
       additionalProperties: false
       required:
         - name
@@ -937,14 +945,14 @@ components:
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Range
       type: object
-      description: A range of versions.
+      description: A range of versions
       properties:
         '[':
           type: string
-          description: Lower bound, inclusive.
+          description: Lower bound, inclusive
         ):
           type: string
-          description: Upper bound, exclusive.
+          description: Upper bound, exclusive
       minProperties: 1
       additionalProperties: false
     repository:
@@ -955,20 +963,20 @@ components:
       description: Description of a software repository
       properties:
         id:
-          description: Unique ID for this Repository. May be unique to the response document, not the whole system.
+          description: Unique ID for this Repository. May be unique to the response document, not the whole system
           type: string
         name:
-          description: Human-relevant name for the Repository.
+          description: Human-relevant name for the Repository
           type: string
         key:
-          description: Machine-relevant name for the Repository.
+          description: Machine-relevant name for the Repository
           type: string
         uri:
-          description: URI describing the Repository.
+          description: URI describing the Repository
           type: string
           format: uri
         cpe:
-          description: CPE name for the Repository.
+          description: CPE name for the Repository
           $ref: cpe.schema.json
       additionalProperties: false
       required:
@@ -981,21 +989,21 @@ components:
       description: |-
         **This is an internal type, documented for completeness.**
 
-        An update difference describes changes between two Update Operations.
+        An update difference describes changes between two Update Operations
       properties:
         prev:
-          description: The previous Update Operation.
+          description: The previous Update Operation
           $ref: update_operation.schema.json
         cur:
-          description: The current Update Operation.
+          description: The current Update Operation
           $ref: update_operation.schema.json
         added:
-          description: Vulnerabilities present in "cur", but not "prev".
+          description: Vulnerabilities present in "cur", but not "prev"
           type: array
           items:
             $ref: vulnerability.schema.json
         removed:
-          description: Vulnerabilities present in "prev", but not "cur".
+          description: Vulnerabilities present in "prev", but not "cur"
           type: array
           items:
             $ref: vulnerability.schema.json
@@ -1012,25 +1020,25 @@ components:
       description: |-
         **This is an internal type, documented for completeness.**
 
-        An update operations describes an update of the internal vulnerability database.
+        An update operations describes an update of the internal vulnerability database
       properties:
         ref:
           type: string
-          description: A unique identifier for this update operation.
+          description: A unique identifier for this update operation
           format: uuid
         updater:
-          description: The "updater" component that was run.
+          description: The "updater" component that was run
           $comment: 'This is not as useful as it could be: an end user needs to know too much about Clair(core)''s internals to make sense of it.'
           type: string
         fingerprint:
-          description: The stored "fingerprint" of this run.
+          description: The stored "fingerprint" of this run
           type: string
         date:
           type: string
-          description: When this operation was run.
+          description: When this operation was run
           format: date-time
         kind:
-          description: The kind of data this operation updated.
+          description: The kind of data this operation updated
           enum:
             - vulnerability
             - enrichment
@@ -1049,7 +1057,7 @@ components:
       description: |-
         **This is an internal type, documented for completeness.**
 
-        A mapping of updater id to Update Operation(s).
+        A mapping of updater id to Update Operation(s)
       additionalProperties:
         type: array
         items:
@@ -1059,25 +1067,25 @@ components:
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Vulnerability Core
       type: object
-      description: The core elements of vulnerabilities in the Clair system.
+      description: The core elements of vulnerabilities in the Clair system
       properties:
         name:
           type: string
-          description: Human-readable name, as presented in the vendor data.
+          description: Human-readable name, as presented in the vendor data
         fixed_in_version:
           type: string
-          description: Version string, as presented in the vendor data.
+          description: Version string, as presented in the vendor data
         severity:
           type: string
-          description: Severity, as presented in the vendor data.
+          description: Severity, as presented in the vendor data
         normalized_severity:
           $ref: normalized_severity.schema.json
-          description: A well defined set of severity strings guaranteed to be present.
+          description: A well defined set of severity strings guaranteed to be present
         range:
           $ref: range.schema.json
-          description: Range of versions the vulnerability applies to.
+          description: Range of versions the vulnerability applies to
         arch_op:
-          description: Flag indicating how the referenced package's "arch" member should be interpreted.
+          description: Flag indicating how the referenced package's "arch" member should be interpreted
           enum:
             - equals
             - not equals
@@ -1109,41 +1117,41 @@ components:
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Vulnerability Report
       type: object
-      description: A report with discovered packages, package environments, and package vulnerabilities within a Manifest.
+      description: A report with discovered packages, package environments, and package vulnerabilities within a Manifest
       properties:
         manifest_hash:
           $ref: digest.schema.json
-          description: The Manifest's digest.
+          description: The Manifest's digest
         packages:
           type: object
-          description: A map of Package objects indexed by a document-local identifier.
+          description: A map of Package objects indexed by a document-local identifier
           additionalProperties:
             $ref: package.schema.json
         distributions:
           type: object
-          description: A map of Distribution objects indexed by a document-local identifier.
+          description: A map of Distribution objects indexed by a document-local identifier
           additionalProperties:
             $ref: distribution.schema.json
         repository:
           type: object
-          description: A map of Repository objects indexed by a document-local identifier.
+          description: A map of Repository objects indexed by a document-local identifier
           additionalProperties:
             $ref: repository.schema.json
         environments:
           type: object
-          description: A map of Environment arrays indexed by a Package's identifier.
+          description: A map of Environment arrays indexed by a Package's identifier
           additionalProperties:
             type: array
             items:
               $ref: environment.schema.json
         vulnerabilities:
           type: object
-          description: A map of Vulnerabilities indexed by a document-local identifier.
+          description: A map of Vulnerabilities indexed by a document-local identifier
           additionalProperties:
             $ref: vulnerability.schema.json
         package_vulnerabilities:
           type: object
-          description: A mapping of Vulnerability identifier lists indexed by Package identifier.
+          description: A mapping of Vulnerability identifier lists indexed by Package identifier
           additionalProperties:
             type: array
             items:
@@ -1166,24 +1174,24 @@ components:
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Vulnerability
       type: object
-      description: Description of a software flaw.
+      description: Description of a software flaw
       $ref: vulnerability_core.schema.json
       properties:
         id:
-          description: Unique ID for this Vulnerabiltity. May be unique to the response document, not the whole system.
+          description: Unique ID for this Vulnerabiltity. May be unique to the response document, not the whole system
           type: string
         updater:
-          description: The updater component this Vulnerability came from.
+          description: The updater component this Vulnerability came from
           type: string
         description:
-          description: A human-readable description of the vulnerability.
+          description: A human-readable description of the vulnerability
           type: string
         issued:
-          description: The datetime this Vulnerability was issued, if known.
+          description: The datetime this Vulnerability was issued, if known
           type: string
           format: date-time
         links:
-          description: Space-separated URIs to more information.
+          description: Space-separated URIs to more information
           type: string
       unevaluatedProperties: false
       required:
@@ -1224,16 +1232,16 @@ components:
       description: |-
         **This is an internal type, documented for completeness.**
 
-        This is an array of pseudo-Vulnerability objects used for reverse-lookup.
+        This is an array of pseudo-Vulnerability objects used for reverse-lookup
       items:
-        description: Summary vulnerability objects.
+        description: Summary vulnerability objects
         $ref: vulnerability_summary.schema.json
     vulnerability_summary:
       $id: https://clairproject.org/api/http/v1/vulnerability_summary.schema.json
       $schema: https://json-schema.org/draft/2020-12/schema
       title: Vulnerability Summary
       type: object
-      description: A summary of a vulnerability.
+      description: A summary of a vulnerability
       $ref: vulnerability_core.schema.json
       unevaluatedProperties: false
       examples:

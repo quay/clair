@@ -19,7 +19,7 @@ for cmd in sha256sum git jq yq npx; do
 		exit 1
 	fi
 done
-local root=$(git rev-parse --show-toplevel)
+local root=$(jj workspace root 2>/dev/null || git rev-parse --show-toplevel)
 
 function jq() {
 	command jq --exit-status "$@"
@@ -36,7 +36,9 @@ function schemalint() {
 		[[ -f \"$tmp\" ]] && rm \"$tmp\"
 	" EXIT
 	npx --yes @sourcemeta/jsonschema metaschema --resolve "$1" "$1" &>>"$tmp"
-	npx --yes @sourcemeta/jsonschema lint       --resolve "$1" "$1" &>>"$tmp"
+	npx --yes @sourcemeta/jsonschema lint\
+		--exclude top_level_examples\
+		--resolve "$1" "$1" &>>"$tmp"
 }
 
 function widdershins() {
@@ -73,7 +75,7 @@ function render() {
 	done
 
 	jq --null-input \
-		'reduce (inputs|(.["$id"]|split("/")|.[-1]|rtrimstr(".schema.json")) as $k|{components:{schemas:{$k:.}}}) as $it({};. * $it)'\
+		'reduce (inputs|(.["$id"]|split("/")|.[-1]|rtrimstr(".schema.json")) as $k|{components:{schemas:{$k:.}}}) as $it({};. * $it) | del(..|.["x-lint-exclude"]?)'\
 		*.schema.json >openapi.types.json
 
 
