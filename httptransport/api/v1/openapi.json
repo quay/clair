@@ -464,17 +464,12 @@
         "x-cli-ignore": true
       }
     },
-    "/matcher/api/v1/internal/update_operation/{digest}": {
+    "/matcher/api/v1/internal/update_operation/{id}": {
       "delete": {
         "operationId": "DeleteUpdateOperation",
         "responses": {
-          "200": {
-            "description": "Success",
-            "headers": {
-              "Clair-Error": {
-                "$ref": "#/components/headers/Clair-Error"
-              }
-            }
+          "204": {
+            "description": "Success"
           },
           "400": {
             "$ref": "#/components/responses/bad_request"
@@ -495,7 +490,7 @@
       },
       "parameters": [
         {
-          "$ref": "#/components/parameters/digest"
+          "$ref": "#/components/parameters/update_operation_id"
         }
       ]
     },
@@ -1784,6 +1779,16 @@
         "in": "path",
         "schema": {
           "$ref": "#/components/schemas/digest"
+        },
+        "required": true
+      },
+      "update_operation_id": {
+        "description": "UUID of the update operation to delete.",
+        "name": "id",
+        "in": "path",
+        "schema": {
+          "type": "string",
+          "format": "uuid"
         },
         "required": true
       }

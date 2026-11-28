@@ -1359,9 +1359,9 @@ headers = {
   'Accept': 'application/vnd.clair.error.v1+json'
 }
 
-r = requests.delete('/matcher/api/v1/internal/update_operation/{digest}', headers = headers)
+r = requests.delete('/matcher/api/v1/internal/update_operation/{id}', headers = headers)
 
-print(r.json())
+print(r.status_code)
 
 ```
 
@@ -1380,7 +1380,7 @@ func main() {
     }
 
     data := bytes.NewBuffer([]byte{jsonReq})
-    req, err := http.NewRequest("DELETE", "/matcher/api/v1/internal/update_operation/{digest}", data)
+    req, err := http.NewRequest("DELETE", "/matcher/api/v1/internal/update_operation/{id}", data)
     req.Header = headers
 
     client := &http.Client{}
@@ -1396,21 +1396,19 @@ const headers = {
   'Accept':'application/vnd.clair.error.v1+json'
 };
 
-fetch('/matcher/api/v1/internal/update_operation/{digest}',
+fetch('/matcher/api/v1/internal/update_operation/{id}',
 {
   method: 'DELETE',
 
   headers: headers
 })
 .then(function(res) {
-    return res.json();
-}).then(function(body) {
-    console.log(body);
+    console.log(res.status);
 });
 
 ```
 
-`DELETE /matcher/api/v1/internal/update_operation/{digest}`
+`DELETE /matcher/api/v1/internal/update_operation/{id}`
 
 Issues a delete of the provided Update Operation ID and all associated data.
 After this delete clients will no longer be able to generate a diff against this Update Operation.
@@ -1419,7 +1417,7 @@ After this delete clients will no longer be able to generate a diff against this
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
-|digest|path|[digest](#schemadigest)|true|OCI-compatible digest of a referred object.|
+|id|path|string(uuid)|true|UUID of the update operation to delete.|
 
 > Example responses
 
@@ -1436,16 +1434,10 @@ After this delete clients will no longer be able to generate a diff against this
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Success|None|
+|204|[No Content](https://tools.ietf.org/html/rfc7231#section-6.3.5)|Success|None|
 |400|[Bad Request](https://tools.ietf.org/html/rfc7231#section-6.5.1)|Bad Request|[error](#schemaerror)|
 |415|[Unsupported Media Type](https://tools.ietf.org/html/rfc7231#section-6.5.13)|Unsupported Media Type|[error](#schemaerror)|
 |default|Default|Internal Server Error|[error](#schemaerror)|
-
-### Response Headers
-
-|Status|Header|Type|Format|Description|
-|---|---|---|---|---|
-|200|Clair-Error|string||This is a trailer containing any errors encountered while writing the response.|
 
 <aside class="warning">
 To perform this operation, you must be authenticated by means of one of the following methods:
@@ -2340,4 +2332,3 @@ Vulnerability Summary
 ### Properties
 
 *None*
-
