@@ -46,6 +46,8 @@ require (
 	google.golang.org/grpc v1.85.0
 )
 
+replace github.com/quay/clair/config => ./config
+
 require (
 	cel.dev/expr v0.25.3 // indirect
 	github.com/CycloneDX/cyclonedx-go v0.12.0 // indirect
